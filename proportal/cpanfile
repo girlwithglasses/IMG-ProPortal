@@ -1,0 +1,37 @@
+requires "Dancer2" => "0.160003";
+# requires "Dancer2::Plugin::Auth::Extensible" => "0";
+requires "Dancer2::Plugin::Database" => "0";
+# requires "Dancer2::Plugin::DBIC" => 0;
+requires "Dancer2::Session::CGISession" => "0";
+# requires "Dancer2::Session::PSGI" => "0";
+requires "DBI" => "0";
+# requires "DBIx::Class" => "0";
+# requires "DBIx::Class::Schema::Loader" => "0";
+# requires "DBIx::Connector" => "0.50";
+requires "DBIx::DataModel" => "2.46";
+# requires "ExtUtils::MakeMaker" => "0";
+requires "Import::Base" => "0";
+requires "JSON" => "2.90";
+# requires "local::lib" => "0";
+requires "Moo" => "2.0";
+# requires "Plack::MiddleWare::Log::Contextual" => "0";
+# requires "Plack::Middleware::Session" => "0";
+requires "String::CamelCase" => "0";
+requires "Template::Plugin::JSON" => "0";
+# requires "Text::CSV_XS" => "0";
+requires "Type::Tiny" => 0;
+
+recommends "Plack::Middleware::Debug" => "0";
+# recommends "YAML"             => "0";
+recommends "URL::Encode::XS"  => "0";
+recommends "CGI::Deurl::XS"   => "0";
+recommends "HTTP::Parser::XS" => "0";
+
+on "test" => sub {
+	requires "Test::Exception"            => "0";
+	requires "Test::Fatal"            => "0";
+	requires "Test::More"            => "0";
+	requires "HTTP::Request::Common" => "0";
+	requires "HTTP::Cookies" => "0";
+
+};

@@ -1,0 +1,45 @@
+input[type="text"], input[type="email"], input[type="url"], input[type="password"], input[type="search"], textarea {
+	color: #ced5d9;
+}
+
+button, html input[type="button"], input[type="reset"], input[type="submit"] {
+	border: none;
+	background: $secondary;
+	color: white;
+//	padding: 4px 6px;
+	text-transform: uppercase;
+	vertical-align: middle;
+}
+
+.fillable, .fillable .cont {
+	overflow: hidden;
+}
+.fillable .filler {
+	width: 100%;
+}
+
+.formLine {
+    overflow: hidden;
+}
+.formLine input {
+    width: 100%;
+}
+.formLine label {
+    float: left;
+}
+.formLine span {
+    display: block;
+    overflow: hidden;
+    padding: 0 $gutter*.5;
+}
+.formLine button {
+    float: right;
+	padding: 0 $gutter;
+}
+/*
+.formLine input, .formLine button {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+*/

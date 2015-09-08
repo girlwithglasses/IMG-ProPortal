@@ -1,0 +1,57 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: Clade Graph';
+%]
+<h2>Sample Distribution by Clade</h2>
+[%	#INCLUDE inc/show_data_set_selection_section.html.tt %]
+<p>
+	A little bit of blurb about the cladogram here.
+</p>
+<section class="clade" id="primary">
+<h3>Species distribution by Clade</h3>
+<p>Filter by ecosystem type:</p>
+[%	IF data_filters && data_filters.all %]
+<ul>
+[%	# filter domain
+		FOR fd IN data_filters.all.keys.sort;
+			FOR f IN data_filters.all.$fd.values; %]
+<li><a href="[% links.clade %][% f.id %]">[% f.label %]</a>[%
+				IF data_filters.active && data_filters.active.$fd == f.id;
+		%] (currently displayed)[%
+				END; %]
+</li>
+[%			END; %]
+<li><a href="[% links.clade %]">no filter</a>[%
+			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
+			END; %]</li>
+[%		END; %]
+</ul>
+[% END %]
+<div id="clade">
+</div>
+</section>
+<section role="complementary" class="init" id="info">
+<ul class="noDot">
+	<li class="instructions">
+		<h3>Sample details</h3>
+		<p>
+			Click on a clade to view the details.
+		</p>
+	</li>
+[%	FOREACH clade IN results.data.keys.sort;
+		c = results.data.$clade; %]
+<li data-clade-id="[% c.id %]" id="[% c.id %]" class="clade_details">
+	<h4>Genus [% c.genus %]</h4>
+	<h5>Clade [% c.label %], [% c.count %] species</h5>
+	<p><a href="[% links.genome_list_clade %][% c.label %]">View species in table browser</a></p>
+	<ul>
+	[%		FOREACH g IN c.genomes %]
+		<li><a href="[% links.taxon %][% g.taxon_oid %]">[% g.taxon_display_name %]</a> ([% g.ecosystem_subtype %])</li>
+	[%		END %]
+	</ul>
+</li>
+[%	END; %]
+</ul>
+</section>
+</article>
+[%	END; %]

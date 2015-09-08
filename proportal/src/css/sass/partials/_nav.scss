@@ -1,0 +1,31 @@
+/* partials/nav */
+
+.sidebar {
+
+	li {
+		padding: $gutter;
+
+		&:hover {
+
+		}
+
+		a {
+			&:hover, &:focus, &:active {
+				border-bottom-width: 1px;
+			}
+			&:hover, &:focus {
+				border-bottom-style: dotted;
+			}
+			&:active {
+				border-bottom-style: solid;
+			}
+		}
+	}
+}
+
+
+.menu {}
+
+.sub-menu {}
+
+.menu-item {}

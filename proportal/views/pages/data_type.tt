@@ -1,0 +1,97 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: Data Type Inventory';
+%]
+<h2>Data Type Inventory</h2>
+[%	genomes = results.isolate;
+	metagen = results.metagenome; %]
+<p>Filter by ecosystem type:</p>
+[%	IF data_filters && data_filters.all %]
+<ul>
+[%	# filter domain
+		FOR fd IN data_filters.all.keys.sort;
+			FOR f IN data_filters.all.$fd.values; %]
+<li><a href="[% links.data_type %][% f.id %]">[% f.label %]</a>[%
+				IF data_filters.active && data_filters.active.$fd == f.id;
+		%] (currently displayed)[%
+				END; %]
+</li>
+[%			END; %]
+<li><a href="[% links.data_type %]">no filter</a>[%
+			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
+			END; %]</li>
+[%		END; %]
+</ul>
+[% END %]
+<section id="primary">
+	<h3>Data Type</h3>
+	<h4>Genomes</h4>
+[%	IF genomes && genomes.keys.size > 0 %]
+	<ul role="tree">
+[%		FOREACH es IN genomes.keys.sort %]
+		<li>[% es %] ([% genomes.$es.size %])
+			<ul>
+[%			FOREACH r IN genomes.$es %]
+				<li><a href="[% links.taxon %][% r.taxon_oid %]">[% r.taxon_display_name %]</a></li>
+[%			END %]
+			</ul>
+		</li>
+[%		END %]
+	</ul>
+[%	ELSE; %]
+<p>No genomes found</p>
+[%	END; %]
+<!-- metagenome data -->
+	<h4>Metagenomes</h4>
+[%	IF metagen && metagen.keys.size > 0 %]
+	<ul role="tree">
+[%		FOREACH es IN metagen.keys.sort %]
+		<li>[% es %] ([% metagen.$es.size %])
+			<ul>
+[%			FOREACH r IN metagen.$es %]
+				<li><a href="[% links.taxon %][% r.taxon_oid %]">[% r.taxon_display_name %]</a></li>
+[%			END %]
+			</ul>
+		</li>
+[%		END %]
+	</ul>
+[%	ELSE; %]
+<p>No metagenomes found</p>
+[%	END; %]
+</section>
+<section id="info" role="complementary">
+	<h3>Information</h3>
+	<p>The left panel lists public marine isolate genomes and metagenomes (excluding combined samples) in IMG. Click on the list to expand.
+	</p>
+	<table>
+	<caption>IMG Datamart Statistics</caption>
+	<thead>
+	<tr><th class="L">Genomes</th><th class="L">Count</th></tr>
+	</thead>
+	<tbody>
+[%	IF genomes && genomes.keys.size > 0;
+		FOREACH es IN genomes.keys.sort %]
+		<tr><td><a href="[% links.genome_list %][% es %]">[% es %]</a></td>
+			<td>[% genomes.$es.size %]</td>
+		</tr>
+[%		END;
+	ELSE %]
+		<tr><td colspan="2">No genomes found</td></tr>
+[%	END; %]
+	</tbody>
+	<tbody>
+		<tr><th class="L">Metagenomes</th><th class="L">Count</th></tr>
+[%	IF metagen && metagen.keys.size > 0;
+		FOREACH es IN metagen.keys.sort %]
+		<tr>
+			<td><a href="[% links.genome_list_ecosystem_subtype %][% es %]">[% es %]</a></td>
+			<td>[% metagen.$es.size %]</td>
+		</tr>
+[%		END;
+	ELSE; %]
+		<tr><td colspan="2">No metagenomes found</td></tr>
+[%	END; %]
+	</tbody>
+	</table>
+</section>
+[% END %]

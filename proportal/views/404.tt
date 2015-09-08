@@ -1,0 +1,9 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: 404 Error';
+%]
+<h2>Page not found</h2>
+<p class="error">
+	Sorry, that page does not seem to exist! Are you sure the URL is correct?
+</p>
+[%	END; %]

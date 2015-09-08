@@ -1,0 +1,60 @@
+/* partials/layout */
+// make sure that all the article content stays in the container
+.content-wrap, article {
+	@include cf;
+	clear: both;
+}
+
+
+@include maxw( $nar- ) {
+
+	.content-wrap {
+		clear: both;
+	}
+	#about, #user-guide, #news, .content-wrap article {
+		width: 100%;
+		padding: 0;
+	}
+}
+
+@include minmax( $nar, $med- ) {
+
+	#about {
+		width: 100%;
+	}
+	#user-guide, #news {
+		width: 50%;
+		float: left;
+	}
+
+}
+
+@include minw( $med ) {
+
+	.content-wrap article { // article
+		width: 80%;
+		float: right;
+	}
+	.content-wrap nav { // section navigation
+		width: 20%;
+		float: left;
+	}
+	.footer {
+		clear: both;
+	}
+	#about, #user-guide, #news {
+		width: 33.3%;
+		padding: 0;
+		float: left;
+	}
+	#primary {
+		float: left;
+		width: 66.6%;
+	}
+	#info {
+		width: 33.3%;
+		float: right;
+		padding-left: $gutter;
+	}
+
+}

@@ -1,0 +1,25 @@
+/* partials/utils */
+
+
+// General utility css classes
+.floatR { float: right; }
+.floatL { float: left; }
+.L { text-align: left; }
+.C { text-align: center; }
+.R { text-align: right; }
+.clearR { clear: right; }
+.clearL { clear: left; }
+.clear { clear: both; }
+.gutterR { margin-right: $gutter; }
+.nospace { margin: 0; }
+.ib { display: inline-block; }
+
+.reset-box {
+  @include reset-box;
+}
+
+
+// clearfix styling
+.cf {
+	@include cf;
+}

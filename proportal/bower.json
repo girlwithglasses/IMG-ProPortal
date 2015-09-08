@@ -1,0 +1,26 @@
+{
+  "name": "proportal",
+  "version": "0.0.0",
+  "description": "Interface to Prochlorococcus and related data in IMG",
+  "main": "lib/ProPortal.pm",
+  "keywords": [
+    "perl"
+  ],
+  "authors": [
+    "aireland"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/bower/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~3.5.5",
+    "normalize.css": "~3.0.3",
+    "d3-tip": "~0.6.7"
+  }
+}

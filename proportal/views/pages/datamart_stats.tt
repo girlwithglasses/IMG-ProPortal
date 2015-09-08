@@ -1,0 +1,31 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: DataMart Stats';
+	type = result.type;
+%]
+<h2>Data Mart Statistics</h2>
+<table>
+	<caption>Stats data</caption>
+	<thead>
+	<tr>
+		<th>Organism type</th>
+		<th>Count</th>
+	</tr>
+	</thead>
+	<tbody>
+[%	FOREACH t IN type.keys.sort; %]
+	<tr>
+		<td><a href="[% cfg.pp_app %][% links.genome %][% t %]">[% labels.$t %]</td><td>[% type.$t.size %]</td>
+	</tr>
+[%	END %]
+	</tbody>
+	<tfoot>
+	<tr>
+		<td>Total data sets</td>
+		<td><a href="[% cfg.pp_app %][% links.genome %]datamart">[% result.total %]</a></td>
+	</tr>
+	</tfoot>
+</table>
+<pre>
+</pre>
+[% END %]

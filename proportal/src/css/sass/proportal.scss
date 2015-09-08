@@ -1,0 +1,29 @@
+// Main SASS file
+
+// Modules
+@import "modules/mixins";
+@import "modules/variables";
+@import "modules/colours";
+// @import "modules/fonts";
+
+// set up basic formatting
+@import "modules/base"; 	// reset
+@import "modules/typo"; 	// typography
+@import "modules/utils";	// various utility classes
+
+// Partials
+@import "partials/wrapper";
+@import "partials/layout";	// general page layouts
+@import "partials/header";
+@import "partials/footer";
+@import "partials/menu";	// IMG menu
+@import "partials/nav"; 	// ProPortal navigation
+@import "partials/main";
+@import "partials/forms";
+@import "partials/tables";
+@import "partials/extras";	// extra bits and pieces
+
+// print style
+@import "partials/print";
+
+// body { @include background-grid(1.5em, #ccc); }

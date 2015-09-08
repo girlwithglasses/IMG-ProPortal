@@ -1,0 +1,24 @@
+/* partials/footer */
+
+.footer {
+	clear: both;
+	border-top: .25rem solid $primary;
+	padding-top: $gutter;
+
+	ul {
+		list-style: none;
+		margin-left: 0;
+	}
+	.img {
+		padding: .5rem;
+	}
+}
+
+.collab {
+	margin: 0;
+	a {
+		display: block;
+		float: right;
+	}
+}
+

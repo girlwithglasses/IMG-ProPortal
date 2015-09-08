@@ -1,0 +1,23 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: Location Map';
+%]
+<h2>Sample Distribution by Depth</h2>
+[%	INCLUDE inc/show_data_set_selection_section.html.tt %]
+<p>
+	There are [% number %] public genomes, of which [% displayed %] are displayed on the map below. Only public projects that have provided longitude latitude coordinates are displayed; if the coordinates are incorrect, the project will not appear on the map.
+</p>
+<p>
+	Map pins represent location counts; some pins may have multiple genomes.
+</p>
+<section class="map">
+<h3>Sample locations</h3>
+<div id="map_canvas"></div>
+</section>
+<section role="complementary" class="details">
+<h3>Sample details</h3>
+<p id="detail_info_div">
+	Click on a marker to view the project details.
+</p>
+</section>
+[%	END; %]

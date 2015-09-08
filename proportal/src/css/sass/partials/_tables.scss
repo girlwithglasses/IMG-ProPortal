@@ -1,0 +1,51 @@
+// tables
+
+table {
+	width: 100%;
+}
+
+// make our tables nice and spacious!
+th, td {
+	padding: $gutter;
+}
+
+tr {
+	border-bottom: 1px solid #999;
+}
+
+caption {
+	@if variable-exists(caption-bg) {
+		background-color: $caption-bg;
+	}
+	text-align: left;
+//	margin: 0;
+	padding: 0 $gutter 0;
+}
+
+// table header font, background colour
+thead tr {
+	@if variable-exists(thead) {
+		color: $thead;
+	}
+	@if variable-exists(thead-bg) {
+		background-color: $thead-bg;
+	}
+}
+
+tbody tr:nth-child(even) {
+	@if variable-exists(tr) {
+		color: $tr;
+	}
+	@if variable-exists(tr-bg) {
+		background-color: $tr-bg;
+	}
+}
+
+tbody tr:nth-child(odd) {
+	@if variable-exists(tr-odd) {
+		color: $tr-odd;
+	}
+	@if variable-exists(tr-odd-bg) {
+		background-color: $tr-odd-bg;
+	}
+}

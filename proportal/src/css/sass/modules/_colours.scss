@@ -1,0 +1,134 @@
+// modules/colours
+
+$text-color: #444;
+$body-bg: #fff;
+
+// primary colour for the theme
+$primary: rgb(100,140,170);
+// secondary colour
+$secondary: rgb(211,105,27);
+
+/** JGI colours:
+
+$black:   rgb(52,52,52);
+$dkgrey:  rgb(90,90,90);
+$midgrey: rgb(145,144,144);
+$reddish: rgb(211,105,27);
+$dk_blue: rgb(100,140,170);
+$green:   rgb(153,189,60);
+$lite_or: rgb(253,186,87);
+
+*/
+
+$nav-link: #000;
+$nav-link-bg: #9ce;
+
+@mixin r-border( $w, $col ){
+	border-right: $w solid $col;
+}
+
+@mixin l-border( $w, $col ) {
+	border-left: $w solid $col;
+}
+
+@mixin nav-link {
+	color: $nav-link;
+	background: $nav-link-bg;
+}
+
+@mixin v-link {
+	&:visited {
+		color: darken( #fff, 5% );
+		background: darken( $nav-link, 5% );
+	}
+}
+
+@mixin hf-link {
+	&:hover, &:focus {
+		color: saturate( $nav-link, 10% );
+		background: saturate( $nav-link-bg, 10% );
+	}
+}
+
+@mixin a-link {
+	&:active {
+		color: saturate( $nav-link, 20% );
+		background: saturate( $nav-link-bg, 20% );
+	}
+}
+
+@mixin nav-colours {
+	@include nav-link;
+	@include v-link;
+	@include hf-link;
+	@include a-link;
+}
+
+
+// selected text, selection background
+$selcn: #04A4CC;
+$selcn-bg: #444;
+
+// inserted text (<ins> element)
+$inserted-text-bg: deepskyblue;
+
+// change 'null' to a value to set these colours
+// link colours in main body text
+$main-link: $primary;
+$main-link-bg: null;
+
+// visited link
+$main-vlink: darken($main-link, 20%);
+$main-vlink-bg: null;
+
+// hover/focus link, background
+$main-hflink: null;
+$main-hflink-bg: null;
+
+// active link
+$main-alink: null;
+$main-alink-bg: null;
+
+// the bar on the left of a blockquote
+$blockquote-left-bar: #666;
+
+// form element border (e.g. on inputs)
+$form-element-border: #333;
+
+// header nav colours:
+$h-menu-border: #999;
+// background
+$h-menu-bg: $main-link;
+// link colour
+$h-menu-link: #fff;
+$h-menu: $h-menu-link;
+// link background
+$h-menu-link-bg: $main-link;
+// hover/focus/active link
+$h-menu-hfa-link: $h-menu-link;
+// hover/focus/active link bg
+$h-menu-hfa-link-bg: lighten( $h-menu-link-bg, 10% );
+
+// the current menu item
+$h-menu-current: $h-menu-link;
+$h-menu-current-bg: $h-menu-link-bg;
+$h-menu-current-hilite: deepskyblue;
+
+// table colours
+$caption-bg: null;
+
+// table head text, bg
+$thead: null;
+$thead-bg: lighten($main-link, 70%);
+
+// table head text, bg
+$tfoot: null;
+$tfoot-bg: lighten($main-link, 70%);
+
+// table contents, even row
+$tr: null;
+$tr-bg: #fff;
+
+// table contents, odd row
+$tr-odd: null;
+$tr-odd-bg: lighten($main-link, 80%);

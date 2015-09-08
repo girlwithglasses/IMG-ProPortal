@@ -1,0 +1,16 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: 500 Error';
+%]
+<h2>Internal Error</h2>
+<p class="error">
+	Uh-oh! Something went wrong internally.
+</p>
+
+<pre>
+message: [% message %]
+status : [% status %]
+title  : [% title %]
+exceptn: [% exception %]
+</pre>
+[%	END; %]
