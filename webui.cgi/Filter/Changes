@@ -1,0 +1,17 @@
+Revision history for Perl extension Filter::Handle.
+
+0.04  Tue Feb 20 16:14:05 20001
+	- test.pl now uses Test to run tests.
+
+0.03  Sat Aug 19 12:12:01 2000
+	- added README
+
+0.02  Fri Aug 18 9:15:12 2000
+	- changed OO interface; now must explicitly call
+	  print and printf methods; got rid of DESTROY
+	- fixed test script so that it doesn't write
+	  test string to STDOUT
+	- added tips, tricks, samples (to be expanded)
+
+0.01  Thu Aug 17 19:34:18 2000
+	- original version; created by h2xs 1.19
