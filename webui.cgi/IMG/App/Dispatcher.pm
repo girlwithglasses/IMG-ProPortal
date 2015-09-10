@@ -16,9 +16,22 @@ use Dancer2::Plugin;
 use Class::Load ':all';
 
 register 'cgi_dispatch' => sub {
-
 	return prepare_dispatch( @_ );
 };
+
+register 'prep_parse_params' => sub {
+	return prepare_to_parse( @_ );
+};
+
+
+sub prepare_to_parse {
+	my $dsl = shift;
+	my $req = shift;
+	my $app = $dsl->app;
+	my $prep_args = parse_params( $app, $req );
+
+	return $prep_args;
+}
 
 =head3 prepare_dispatch
 
@@ -40,13 +53,13 @@ sub prepare_dispatch {
 	my $req = shift;
 	my $app = $dsl->app;
 
-	say 'Running dispatcher';
+	debug 'Running dispatcher';
 
 #	say 'request: ' . Dumper $app;
 
 	my $prep_args = parse_params( $app, $req );
 
-	say 'prep_args: ' . Dumper $prep_args;
+	debug 'prep_args: ' . Dumper $prep_args;
 
 	my $sub_to_run = IMG::App::DispatchCore::prepare_dispatch_coderef( $prep_args ) unless defined $prep_args->{sub_to_run} && 'CODE' eq ref $prep_args->{sub_to_run};
 
@@ -111,7 +124,7 @@ sub parse_params {
             return;
         },
         Portal => sub {
-            %tmpl_args = ( current => "Find Genomes");
+            %tmpl_args = ( current => "FindGenomes");
         },
         ProjectId => sub {
             %tmpl_args = ( title => "Project ID List", current => "FindGenomes" );
@@ -1046,13 +1059,13 @@ Cart
 ClustalW
 CogCategoryDetail
 CompareGeneModelNeighborhood
+CompareGenomes
 CompTaxonStats
 CuraCartDataEntry
 CuraCartStor
 DataEvolution
 DistanceTree
 DotPlot
-EbiIprScan
 EggNog
 EgtCluster
 EmblFile
@@ -1064,6 +1077,7 @@ FindGenes
 FindGenesBlast
 FindGenesLucy
 FindGenomes
+FuncCartStor
 FuncProfile
 FunctionAlignment
 FunctionProfiler
@@ -1071,9 +1085,11 @@ GenBankFile
 GeneAnnotPager
 GeneCartChrViewer
 GeneCartDataEntry
+GeneCartStor
 GeneCassette
 GeneCassetteProfiler
 GeneCassetteSearch
+GeneDetail
 GeneInfoPager
 GeneNeighborhood
 GenePageEnvBlast
@@ -1083,12 +1099,13 @@ GenomeCart
 GenomeGeneOrtholog
 GenomeHits
 GenomeList
+GenomeListJSON
 GenomeProperty
-GreenGenesBlast
 Help
 HmpTaxonList
 HomologToolkit
 HorizontalTransfer
+IMG::Views::ViewMaker
 ImgCompound
 IMGContent
 ImgCpdCartStor
@@ -1116,6 +1133,7 @@ Kmer
 KoTermStats
 MeshTree
 MetaCyc
+MetaDetail
 MetaFileGraph
 MetaFileHits
 MetaGeneDetail
@@ -1139,7 +1157,6 @@ Operon
 OtfBlast
 Pangenome
 PathwayMaps
-PdbBlast
 PepStats
 PfamCategoryDetail
 PhyloClusterProfiler
@@ -1149,10 +1166,10 @@ PhylogenProfiler
 PhyloOccur
 PhyloProfile
 PhyloSim
-Portal
 ProfileQuery
 ProjectId
 ProteinCluster
+Questions
 RadialPhyloTree
 Registration
 RNAStudies
@@ -1165,6 +1182,7 @@ SixPack
 StudyViewer
 TaxonCircMaps
 TaxonDeleted
+TaxonDetail
 TaxonEdit
 TaxonList
 TaxonSearch
@@ -1172,6 +1190,14 @@ TigrBrowser
 TreeFile
 TreeQ
 Vista
+WebUtil
+Workspace
+WorkspaceFuncSet
+WorkspaceGeneSet
+WorkspaceGenomeSet
+WorkspaceJob
+WorkspaceRuleSet
+WorkspaceScafSet
 )];
 }
 
