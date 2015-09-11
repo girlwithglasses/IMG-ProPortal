@@ -1,0 +1,11 @@
+[%
+	WRAPPER layouts/default.html.tt;
+#	title = title;
+%]
+<div class="cf">
+[%	USE Dumper;
+	'<pre>';
+	Dumper.dump( content );
+	'</pre>'; %]
+</div>
+[%	END; %]

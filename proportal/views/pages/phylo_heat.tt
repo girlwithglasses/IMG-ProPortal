@@ -1,0 +1,13 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: Phylogram / Heat Map';
+%]
+<h2>Phylogram / Heat Map demo</h2>
+<p>
+	Blurb here!
+</p>
+<section class="cf">
+<div id='phylogram' class="floatL"></div>
+<div id='heatmap' class="floatL"></div>
+</section>
+[%	END; %]
