@@ -1,0 +1,130 @@
+__javascript__
+
+<h1>Function Search</h1>
+<p>
+Function search allows you to find functions in selected genomes by keyword.
+__mer_fs_note__
+</p>
+
+<form class="alignleft" method="post" action="__main_cgi__" enctype="application/x-www-form-urlencoded" name="mainForm">
+<table class='img' border="0" width="750">
+<tr>
+<th class="subhead">Keyword</th>
+<td>
+<input id="searchTerm" type="text" name="ffgSearchTerm" style="min-width:680px" /></td>
+</tr>
+<tr>
+<th class="subhead">Filters</th>
+<td>
+<select id="toHide" name="searchFilter" style="min-width:685px" onChange="showTip(this, 'ffgSearchTerm')">
+__searchFilterOptions__
+</select>
+</td>
+</tr>
+</table>
+
+<p>
+<script language='JavaScript' type='text/javascript'>
+function selectionTypeChanged() {
+    var radios = document.mainForm.selectType;
+    var radioLength = radios.length;
+
+    for (var i = 0; i < radioLength; i++) {
+	if (radios[i].checked == true) {
+            if (radios[i].value == "selGenomes") {
+                document.getElementById("one").style.display = 'block';
+                document.getElementById("two").style.display = 'block';
+                document.getElementById("domain-only").style.display = 'none';
+                document.getElementById("all-isolates").style.display = 'none';
+            } else if (radios[i].value == "selDomain") {
+                document.getElementById("one").style.display = 'none';
+                document.getElementById("two").style.display = 'none';
+                document.getElementById("domain-only").style.display = 'block';
+                document.getElementById("all-isolates").style.display = 'none';
+            } else if (radios[i].value == "allIsolates") {
+                document.getElementById("one").style.display = 'none';
+                document.getElementById("two").style.display = 'none';
+                document.getElementById("domain-only").style.display = 'none';
+                document.getElementById("all-isolates").style.display = 'block';
+            } else {
+                document.getElementById("one").style.display = 'none';
+                document.getElementById("two").style.display = 'none';
+                document.getElementById("domain-only").style.display = 'none';
+                document.getElementById("all-isolates").style.display = 'none';
+            }
+        }
+    }
+}
+</script>
+
+Search for functions in:
+<input id="selectType1" type="radio" checked="checked" style="vertical-align: text-bottom;"
+       value="selGenomes" name="selectType" onChange="selectionTypeChanged()">
+Selected Genomes
+<input id="selectType2" type="radio" style="vertical-align: text-bottom;"
+       value="selDomain" name="selectType" onChange="selectionTypeChanged()">
+Selected Domain
+<input id="selectType3" type="radio" style="vertical-align: text-bottom;"
+       value="allIsolates" name="selectType" onChange="selectionTypeChanged()">
+All Isolates
+</p>
+
+__genomeListFilter__
+<br/>
+
+<div id='restrictResultsArea' >
+<p>
+<script language='JavaScript' type='text/javascript'>
+function enableOrDisable() {
+    var radios = document.mainForm.restrictType;
+    var radioLength = radios.length;
+
+    if (document.mainForm.restrictResult.checked == true) {
+    	//alert("checked");
+    	for (var i = 0; i < radioLength; i++) {
+    	    radios[i].disabled = false;
+    	} 
+    } else {
+        //alert("unchecked");
+        for (var i = 0; i < radioLength; i++) {
+            radios[i].disabled = true;
+        } 
+    }
+}      
+</script>        
+
+<input type='checkbox' name='restrictResult' value='1' onclick=enableOrDisable() /><b>Restrict results (COG, KOG, Pfam and Tigrfam search only) to genes in:</b><br/>
+<input type='radio' name='restrictType' value='bio_cluster' style='vertical-align: text-bottom;' checked disabled/>Biosynthetic Cluster<br/>
+<input type='radio' name='restrictType' value='chrom_cassette' style='vertical-align: text-bottom;' disabled/>Chromosomal Cassette<br/>
+</p>
+</div>
+
+<input type='hidden'  name='section' value='FindFunctions' />
+<!--
+<input id="go" class="smdefbutton" type="submit" name="ffgFindFunctions" value="Go" />
+<input id="reset" class="smbutton" type="reset" name=".reset" value="Reset" onclick="return selectRest();" />
+-->
+
+__hint__
+
+<div class="clear"></div>
+</form>
+
+<!--
+<div id='examples'>
+-->
+
+<h3>Examples</h3>
+<p>- "kinase" as a Function Name may get "Shikimate kinase", etc.<br />
+- "EC:1.2.3.3" or "1.2.3.3" as an EC Number (exact) gets only genes associated with EC 1.2.3.3.<br />
+- "1.2.3" as an EC Number (inexact) returns genes associated with EC 1.2.3.3 and EC 1.1.2.3. <br/>
+- "IPR004462" (exact) or "kinase" or "Acetylglutamate" (inexact) gets
+  "IPR004462 Acetlyglutamate kinase".<br/>
+- "pfam00698" will retrieve that Pfam for Acl_trans_1.<br/>
+- "TIGR02478" will retrieve that TIGRfam for 6-phosphotructokinase.<br/>
+- "lipid"  return "Blood group  glycolipid biosynthesis-lactoseries", 
+  "Lipid Metabolism" for KEGG Pathway search.<br/>
+- Try the "kinase" example or see the IMG Term and Pathway browsers for valid terms and pathways.<br/>
+</p>
+</div>
+<div class="clear"></div>

@@ -1,0 +1,141 @@
+<h1>FTP README</h1>
+
+<p>
+Welcome to <b>IMG Beta</b> ftp download service, where you can download public genome 
+sequence files used in IMG http://img.jgi.doe.gov.<br/> 
+This is a completely <b>FREE</b> service with <b>limited resources</b>, so <b>PLEASE</b> be respectful to others 
+and <b>LIMIT</b> your ftp connect to <b>ONE</b> per session.
+If you are aggressive in connections, your IP will be blocked automatically.
+<br/><br/>
+Please be patient when waiting for the directory files
+to load on the web page 
+(since there are lots of them, in the thousands).
+<br/><br/>
+Thank you,
+<br/>
+IMG Team
+</p>
+
+<h2> img_&lt;x&gt;_&lt;version&gt; directory </h2>
+<p>
+<pre>
+00.taxon.tab.txt - List of taxon object identifiers (taxon_oid) and names
+&gt;&gt;&gt; Inside each &lt;taxon_oid&gt;.tar.gz file:
+&lt;taxon_oid&gt;.fna - FASTA nucleic acid files for taxon.
+&lt;taxon_oid&gt;.genes.fna - FASTA nucleic acid files for genes.
+&lt;taxon_oid&gt;.genes.faa - FASTA amnio acid files for genes.
+&lt;taxon_oid&gt;.intergenic.fna - FASTA for intergenic regions.
+&lt;taxon_oid&gt;.genes.tab.txt - Tab delimited files for genes.
+
+&lt;taxon_oid&gt; - Corresponds to taxon object identifier.
+
+Inside each &lt;taxon_oid&gt;.tar.gz bundle file:
+
+&lt;taxon_oid&gt;.fna - FASTA nucleic acid files for taxon.
+&lt;taxon_oid&gt;.genes.fna - FASTA nucleic acid files for genes.
+&lt;taxon_oid&gt;.genes.faa - FASTA amnio acid files for genes.
+&lt;taxon_oid&gt;.intergenic.fna - FASTA for intergenic regions.
+&lt;taxon_oid&gt;.genes.tab.txt - Tab delimited files for genes.
+&lt;taxon_oid&gt;.cog.tab.txt - Tab delimited files for COG annotation.
+&lt;taxon_oid&gt;.pfam.tab.txt - Tab delimited files for Pfam annotation.
+&lt;taxon_oid&gt;.tigrfam.tab.txt - Tab delimited files for TIGRFAM annotation.
+&lt;taxon_oid&gt;.ko.txt - Tab delimited files for KO and EC annotation.
+
+(For some of the smaller genomes, e.g., viruses, not all
+ annotation files is present.  If the genome has no
+ annotation of a certain type, e.g. no TIGRFAM's, 
+ the annotation file &lt;taxon_oid&gt;.tigrmfam.tab.txt is not there.)
+
+</pre>
+
+
+<h2>Structure of each tab delimited file</h2>
+<p>
+<pre>
+
+&lt;taxon_oid&gt; - Corresponds to taxon object identifier.
+
+Inside each &lt;taxon_oid&gt;.tar.gz bundle file:
+
+&lt;taxon_oid&gt;.fna - FASTA nucleic acid files for taxon.
+&lt;taxon_oid&gt;.genes.fna - FASTA nucleic acid files for genes.
+&lt;taxon_oid&gt;.genes.faa - FASTA amnio acid files for genes.
+&lt;taxon_oid&gt;.intergenic.fna - FASTA for intergenic regions.
+&lt;taxon_oid&gt;.genes.tab.txt - Tab delimited files for genes.
+&lt;taxon_oid&gt;.cog.tab.txt - Tab delimited files for COG annotation.
+&lt;taxon_oid&gt;.pfam.tab.txt - Tab delimited files for Pfam annotation.
+&lt;taxon_oid&gt;.tigrfam.tab.txt - Tab delimited files for TIGRFAM annotation.
+&lt;taxon_oid&gt;.ko.txt - Tab delimited files for KO and EC annotation.
+
+(For some of the smaller genomes, e.g., viruses, not all
+ annotation files is present.  If the genome has no
+ annotation of a certain type, e.g. no TIGRFAM's, 
+ the annotation file &lt;taxon_oid&gt;.tigrmfam.tab.txt is not there.)
+
+------------
+Structure of each tab delimited file:
+
+&lt;taxon_oid&gt;.genes.tab.txt  (basic gene information)
+-- gene_oid - Gene object identifier
+-- start_coord - Start coordinate on scaffold/contig
+-- end_coord - End coordinate on scaffold/contig
+-- strand - (+) or (-) strand
+-- GC - GC composition
+-- locus_type - CDS or an RNA type
+-- locus_tag - Locus tag label
+-- gene_symbol - Gene symbol (or name)
+-- description - Lengthier description of gene, product name
+-- scaffold_name - Scaffold (contig) of gene
+
+&lt;taxon_oid&gt;.cog.tab.txt (from NCBI RPSBLAST)
+-- gene_oid - Gene object identifier of query gene
+-- gene_length - Length of protein sequence
+-- percent_identity - Perceent identity of aligned amino acid residues
+-- query_start - Start coordinate of alignment on query gene
+-- query_end - End coordinate of alignment on query gene
+-- subj_start - Start coordinate of alignment on subject sequence
+-- subj_end - End coordinate of alignment on subject sequence
+-- evalue - Expectation value
+-- bit_score - Bit score of alignment
+-- cog_id - COG identifier
+-- cog_name - COG name
+-- cog_length - Length of COG consensus sequence
+
+&lt;taxon_oid&gt;.pfam.tab.txt (from EBI's pfam_scan which uses HMMER 3.0)
+-- gene_oid - Gene object identifier of query gene
+-- gene_length - Length of protein sequence
+-- query_start - Start coordinate of alignment on query gene
+-- query_end - End coordinate of alignment on query gene
+-- subj_start - Start coordinate of alignment on subject sequence
+-- subj_end - End coordinate of alignment on subject sequence
+-- evalue - Expectation value
+-- bit_score - Bit score of alignment
+-- pfam_id - Pfam identifier
+-- pfam_name - Pfam name
+-- pfam_length - Length of Pfam consensus sequence
+
+&lt;taxon_oid&gt;.tigrfam.tab.txt (from hmmscan HMMER3.0)
+-- gene_oid - Gene object identifier of query gene
+-- gene_length - Length of protein sequence
+-- query_start - Start coordinate of alignment on query gene
+-- query_end - End coordinate of alignment on query gene
+-- evalue - Expectation value
+-- bit_score - Bit score of alignment
+-- tigrfam_id - TIGRFAM identifier
+-- tigrfam_name - TIGRFAM name
+
+&lt;taxon_oid&gt;.ko.tab.txt (from NCBI BLASTP on KEGG genes)
+-- gene_oid - Gene object identifier of query gene
+-- gene_length - Length of protein sequence
+-- percent_identity - Perceent identity of aligned amino acid residues
+-- query_start - Start coordinate of alignment on query gene
+-- query_end - End coordinate of alignment on query gene
+-- subj_start - Start coordinate of alignment on subject sequence
+-- subj_end - End coordinate of alignment on subject sequence
+-- evalue - Expectation value
+-- bit_score - Bit score of alignment
+-- ko_id - KEGG Orthology (KO) identifier
+-- ko_name - KO name
+-- EC - Enzyme Commission (EC) assignment from KO
+
+</pre>

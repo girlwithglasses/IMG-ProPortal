@@ -1,0 +1,118 @@
+<!--<div style="width: 800px">-->
+<div style="width:1024px;">
+
+<style>
+path.line {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+path.area {
+  fill: #e7e7e7;
+}
+
+.axis {
+  shape-rendering: crispEdges;
+}
+
+.x.axis line, .x.axis path {
+  fill: none;
+  stroke: #000;
+}
+
+.y.axis line, .y.axis path {
+  fill: none;
+  stroke: #000;
+}
+</style>
+
+<h1>ANI Same Species Plot</h1>
+
+<p>
+Please select the type of points to plot:<br/>
+<input id="type1" type="radio" style="vertical-align: text-bottom;"
+       value="af-ani" name="pt_type" checked/>
+ANI1 vs. AF1 and ANI2 vs.AF2
+<input id="type2" type="radio" style="vertical-align: text-bottom;"
+       value="final" name="pt_type" />Final ANI vs. Final AF
+<br/><br/>
+
+Please select no more than 10 species to analyze the genomes in each species using pairwise ani:<br/>
+Domain: <select id="kingdom" onchange="fetchSpecies()">
+  <option value="none" selected>- Select -</option>
+  <option value="Arc">Archea</option>
+  <option value="Bac">Bacteria</option>
+  <option value="Euk">Eukaryota</option>
+</select>&nbsp;&nbsp;&nbsp;
+
+Species: <select id="species"></select>
+<input type="button" onclick="addSpecies()" value="Add Species"><br/>
+<br/>
+<input type="button" class="img" onclick="clearSpecies()" value="Clear">
+<input type="button" class="img" onclick="plotSpecies()" value="Plot">
+<ul id="species_to_plot"></ul>
+</p>
+
+<p>
+<svg id="svg1" width="640" height="480" />
+</p>
+
+<script src="<TMPL_VAR NAME=base_url>/d3.min.js"></script>
+<script src="<TMPL_VAR NAME=base_url>/AniPlotter.js"></script>
+<script>
+  var species = [];
+  var updateSpecies = function() {
+      var species_to_plot = d3.select('#species_to_plot').selectAll('li').data(species);
+      species_to_plot.enter().append('li');
+      species_to_plot.text(String);
+      species_to_plot.exit().remove();
+  }
+
+  var clearSpecies = function() {
+      species = [];
+          var plot = document.getElementById('svg1');
+          plot.innerHTML = "";
+
+      updateSpecies();
+  }
+
+  var plotSpecies = function() {
+      var url = ['<TMPL_VAR NAME=cgi_url>/xml.cgi?section=ANI&page=plotSameSpeciesPairwise'].concat(species).join('&genus_species=');
+
+      var e = document.getElementById('type1');
+      var pt_type = "type2";
+      if (e.checked == true) {
+          pt_type = "type1";
+      }
+      AniPlotter.plot('svg1', pt_type, {url: encodeURI(url)});
+  }
+
+  var addSpecies = function() {
+      var species_selection = document.getElementById('species');
+      if (species.indexOf(species_selection.value) !== 0) {
+          species.push(species_selection.value);
+          updateSpecies();
+      }
+  }
+
+  var fetchSpecies = function() {
+      var kingdom_selection = document.getElementById('kingdom');
+      if (kingdom_selection.value == 'none') {
+          clearSpecies();
+          var species = document.getElementById('species');
+          species.innerHTML = "";
+          return;
+      }
+
+    d3.json('<TMPL_VAR NAME=top_base_url>cgi-bin/species.cgi?domain='+kingdom_selection.value, function(data) {
+        var options = d3.select('#species').selectAll('option').data(data);
+        options.enter().append('option');
+        options.text(String);
+        options.exit().remove();
+    });
+  }
+</script>
+
+
+</div>

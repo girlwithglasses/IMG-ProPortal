@@ -1,0 +1,93 @@
+/*CSS for index page of IMG system */
+
+#stats{
+	position: absolute;
+	top: 220px;
+	left: 2px;
+	width: 200px;
+	background: #cae7ee;
+	}
+#stats h2{
+	/* --es 01/26/2006
+	font-size: 1.2em;
+	*/
+	font-size: 1.0em;
+	
+	font-weight: normal;
+	color: #333333;
+	text-align: center;
+	margin: 0;
+	}
+#stats table{width: 180px; margin: 0px 10px; margin-bottom: 1em;}
+#stats th, #stats td{
+	font-size: .70em;
+	
+	/*text-align: left;*/
+	border-top: 4px solid #cae7ee;
+	line-height: 1.2em;
+	padding: 2px 2px;
+	}
+#bluearrow{
+	position: absolute; 
+	left: 210px; 
+	/* --es 11/15/2005
+	top: 200px; 
+	*/
+	top: 220px; 
+	background-image: url(./images/long_blue_arrow.gif); 
+	width: 582px; 
+	height: 50px;
+}
+#intro{
+	position: absolute;
+	/* --es 11/15/2005
+	top: 270px;
+	*/
+	top: 290px;
+	left: 234px;
+	width: 496px;
+	background: #ffffff url(./images/jgi_introbg.gif);
+	padding: 0;
+	}
+#intro p{padding: 10px 20px;}
+#intro img.genomes{float: right; margin: 0; margin-right: 20px; padding: 0;}
+#intro img{margin:0; padding: 0; vertical-align: top;}
+#intro img.bottom{vertical-align: bottom; clear: right;}
+a:link{
+	color: #000099;
+	text-decoration: underline;
+	}
+a:visited{
+	color: #6666cc;
+	text-decoration: underline;
+	}
+a:hover{
+	color: #cc3300;
+	text-decoration: underline;
+	}
+p{
+	font-size: 0.75em;
+	
+	line-height: 1.3em;
+	padding: 0; margin: 0;
+	width: 330px;
+}
+
+#footer{
+	position: absolute;
+	left: 10px;
+	/* --es 09/25/2006
+	top: 500px;
+	*/
+	top: 500px;
+	width: 165px;
+	}
+#footer p{
+	margin-top: 0px;
+         
+        font-size: .7em;
+        line-height: 1.2em;
+        width: 165px;
+        color: #999999;
+}
+		

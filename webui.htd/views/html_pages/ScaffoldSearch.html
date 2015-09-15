@@ -1,0 +1,115 @@
+<h1>Scaffold Search</h1>
+<TMPL_VAR NAME=searchNote>
+
+<div>
+    <input id='section' type='hidden' name='section' value='ScaffoldSearch' /> 
+    <input id='page' type="hidden" name='page' value='searchResult' />
+    <input id='q_data_type' type="hidden" name='q_data_type' value='assembled' />
+
+<table class='img' border="0" >
+<tr>
+<th class="subhead">Filters</th>
+<td>
+<select id="toHide" name="searchFilter" style="min-width:700px" ">
+<TMPL_VAR NAME=searchFilterOptions>
+</select>
+</td>
+</tr>
+
+<tr style="display:table-row" id='keywordTableRow' >
+<th class="subhead">Keyword</th>
+<td>
+<input id="searchTerm" type="text" name="searchTerm" style="min-width:695px" />
+</td>
+</tr>
+
+<tr style="display:table-row" id='statPramTableRow'>
+<td colspan=2>
+
+<table border="0">
+
+<tr>
+<td>
+<table border="0">
+<tr>
+<td align="right">GC Percentage (0-100)</td>
+<td><input type="number" min="0" max="100" step="1" name="gcLow">-<input type="number" min="0" max="100" step="1" name="gcHigh"></td>
+</tr>
+<tr>
+<td align="right">Sequence Length (bp)</td>
+<td><input type="number" min="1" name="seqLengthLow">-<input type="number" min="1" name="seqLengthHigh"></td>
+</tr>
+<tr>
+<td align="right">Gene Count</td>
+<td><input type="number" min="0" name="geneCountLow">-<input type="number" min="0" name="geneCountHigh"></td>
+</tr>
+</table>
+</td>
+</tr>
+
+<tr>
+<td>
+<TMPL_IF NAME=include_metagenomes>
+<div style="background-color:#F8F4EF; width: 725px">
+<fieldset>
+<legend style="color:blue;font-weight:bold;">Metagenomes Only</legend>
+<table border="0">
+<tr>
+<td align="right" title="Applies only for metagenomes / samples">Read Depth</td>
+<td><input type="number" min="0"  name="readDepthLow">-<input type="number" min="0"  name="readDepthHigh"></td>
+</tr>
+<tr>
+<td align="right" title="Applies only for metagenomes / samples">Lineage Percentage (0-100)</td>
+<td><input type="number" min="0" max="100" step="1" name="lineagePercentLow">-<input type="number" min="0" max="100" step="1" name="lineagePercentHigh"></td>
+</tr>
+<tr>
+    <td align="right" title="Applies only for metagenomes / samples">Lineage Domain</td>
+    <td><TMPL_VAR NAME=selectDomain></td>
+</tr>
+
+<tr>
+    <td align="right">Lineage Phylum</td>
+    <td><TMPL_VAR NAME=selectPhylum></td>
+</tr>
+
+<tr>
+    <td align="right">Lineage Class</td>
+    <td><TMPL_VAR NAME=selectClass></td>
+</tr>
+
+<tr>
+    <td align="right">Lineage Order</td>
+    <td><TMPL_VAR NAME=selectOrder></td>
+</tr>
+
+<tr>
+    <td align="right">Lineage Family</td>
+    <td><TMPL_VAR NAME=selectFamily></td>
+</tr>
+
+<tr>
+    <td align="right">Lineage Genus</td>
+    <td><TMPL_VAR NAME=selectGenus></td>
+</tr>
+
+<tr>
+    <td align="right">Lineage Species</td>
+    <td><TMPL_VAR NAME=selectSpecies></td>
+</tr>
+</table>
+</fieldset>
+</div>
+</TMPL_IF>
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+</table>
+
+</div>
+
+

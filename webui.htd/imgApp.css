@@ -1,0 +1,306 @@
+/* Application override CSS for most pages in IMG system */
+
+table.tooltip {
+   border: 0px;
+}
+table.tooltip td {
+   padding: 0px 0px;
+}
+
+#footer p {
+    margin-top: 40px;
+    font-size: .8em;
+    line-height: 1.2em;
+    color: #999999; 
+    /* color: #333333; */
+    width: 30em;
+}   
+#home_footer{
+    position: absolute;
+    left: 10px;
+    top: 800px;
+    width: 165px;
+}
+#home_footer2{
+    position: absolute;
+    left: 10px;
+    top: 600px;
+    width: 165px;
+}
+#home_footer2 p{
+    margin-top: 0px;
+    
+    font-size: .8em;
+    line-height: 1.2em;
+    width: 165px;
+    color: #990000;
+}
+#home_footer p{
+    margin-top: 0px;
+    
+    font-size: .7em;
+    line-height: 1.2em;
+    width: 165px;
+    color: #999999;
+}
+		
+#message { 
+   width: 577px;
+   margin: 0; 
+   padding: 0px; 
+   margin-left: 1px;  
+   margin-top: 20px;  
+   vertical-align: bottom;
+}   
+#message p { 
+   
+   font-style: italic;
+   font-size: .75em; 
+   margin: 0px;
+   padding: 6px 10px;
+   border: 2px solid #99ccff;
+   line-height: 16px;
+}   
+
+/* --es 05/08/2007 does not work
+#mouseoveronly a:link a:visited a:hover { 
+    color: #000099;
+    text-decoration: none;
+}
+*/
+
+#hint {
+   width: 577px;
+   margin: 0;
+   padding: 0px;
+   margin-left: 1px;
+   margin-top: 20px;
+   vertical-align: bottom;
+}
+#hint img{
+   float: left;
+   padding: 0;
+   margin: 0;
+   position: relative;
+   left: -10px;
+   top: 0px;
+   z-index: 3;
+}
+#hint p {
+   
+   font-style: italic;
+   font-size: .75em;
+   margin: 0px;
+   padding: 6px 10px;
+   border: 2px solid #99ccff;
+   line-height: 16px;
+}
+#hint div {
+   
+   font-style: italic;
+   margin: 0px; 
+   padding: 6px 10px;
+   border: 2px solid #99ccff;
+   line-height: 16px; 
+} 
+
+#error {
+    width: 577px;
+    margin: 0;
+    padding: 0px;
+    margin-left: 1px;
+    margin-top: 20px;
+    vertical-align: bottom;
+}
+#error img {
+   float: left;
+   padding: 0;
+   margin: 0;
+   position: relative;
+   left: -10px;
+   top: -8px;
+   z-index: 3;
+}
+#error p {
+   
+   font-size: .75em;
+   margin: 0px;
+   padding: 6px 10px;
+   border: 2px solid #ff9999;
+   line-height: 16px;
+}
+
+#help_button{
+   position: absolute; 
+   top: 2px;
+   left: 760px; 
+   width: 30px;
+   background-color: #ffffff;
+}
+#status_line_z1{
+   position: absolute; 
+   top: 2px;
+   left: 596px; 
+   z-index: 1; 
+   width: 153px;
+   /** height: 25px; */
+   color: #6699cc; 
+   background-color: #ffffff;
+    
+   font-style: italic; 
+   font-size: .75em; 
+   line-height: 1.3em;
+}
+#status_line_z2{
+   position: absolute; 
+   top: 2px;
+   left: 596px; 
+   z-index: 2; 
+   width: 153px;
+   /** height: 25px; */
+   color: #6699cc; 
+   background-color: #ffffff;
+    
+   font-style: italic; 
+   font-size: .75em; 
+   line-height: 1.3em;
+}
+#status_box{
+   position: absolute; 
+   top: -90px; 
+   left: 590px; 
+   padding: 0;
+   margin: 0;
+   z-index: 0; 
+    
+   font-size: .75em; 
+   line-height: 1.3em;
+}
+#status_box p {
+   margin: 0;
+   padding: 0;
+    
+   font-size: 11px;
+}
+#status_box span {
+   font-size: 12px;
+   font-weight: bold;
+   color: #3399cc; 
+}
+#note {
+   color: #339933;
+    
+   font-size: 75%;
+}
+#status {
+   color: #000000;
+    
+}
+#list_header {
+    
+   font-weight: bold;
+   font-size: 80%;
+}
+#header_search {
+    position: absolute; 
+	/*old pos. 
+    top: 5px; */
+	top: 20px;
+    left: 595px; 
+    width: 300px; 
+    padding: 0; 
+    margin: 0;
+    z-index: 10;
+}
+#header_search p {
+    padding: 0; 
+    margin: 0; 
+    
+    font-size: 10px; 
+    color: white;
+}
+#header_search input {
+    padding: 0; 
+    margin:  0; 
+    vertical-align: bottom;
+}
+/* remove underline */
+#header_search a {
+    text-decoration:none;
+}
+
+/** 
+ * Dummy classes - Values will be replaced with
+ * something that's real or active by Perl.
+ */
+__Home_active__ { }
+__GeneSearch_active__ { }
+__Genomes_active__ { }
+__PhyloGeneSearch_active__ { }
+__GeneCart_active__ { }
+__GenomeStats_active__ { }
+__Preferences_active__ { }
+
+applet {
+   background-color: #ffffff;
+}
+area {
+   background-color: #00aa00;
+}
+title {
+   font-weight: bold;
+   background-color: #0000ff;
+}
+
+
+#genomes {
+    position: absolute; 
+    /*top: 60px; 
+    left: 600px; */
+	top: 26px; 
+    left: 446px;
+    z-index: 8; 
+    padding: 2px; 
+    margin: 0;
+}
+#genomes p{
+    margin: 0; 
+    padding: 0; 
+     
+    font-size: 11px;
+}
+#genomes span{
+   font-size: 12px; 
+   font-weight: bold; 
+   color: #3399cc;
+}
+
+input.downButton {
+   background-image: url(./images/rect.blue.png);
+   border: 0;
+   width: 10px;
+   height: 10px;
+   line-height: 10px;
+   margin: 0px 0px;
+}
+
+
+.alignleftGeneDetail {
+    float: left;
+    margin: .25em 30em 20px 0px;
+    padding: 5px;
+    background: #cae7ee;
+    border: 1px solid black;
+}
+
+.alignRightGeneDetail {
+    position: absolute;
+    left: 200px;
+    margin: 1.25em 30em 20px 0px;
+    padding-left: 20px;
+}
+
+.arrowimg {
+    border:0 none;
+}
+

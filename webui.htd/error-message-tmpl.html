@@ -1,0 +1,93 @@
+<noscript>
+    <!-- style="display: block" overrides the default of css display: none -->
+    <div id="error_content_js"
+        class="error_frame shadow"
+        style="display: block">
+        <img src='<TMPL_VAR NAME=base_url>/images/announcementsIcon.gif'/>
+        Your browser does not have JavaScript enabled. Please enable JavaScript to view IMG data
+        accurately.
+     </div>
+</noscript>
+
+<div id="error_content"
+    class="error_frame shadow"
+    style="display: none">
+</div>
+
+<!-- # IE must be IE 8+ for new css  -->
+<!--[if lt IE 7]>
+<div id="error_content_js" class="error_frame shadow" style="display: block" >
+    You should upgrade your copy of Internet Explorer (IE 8+) to view IMG accurately. 
+</div>      
+<![endif]--> 
+
+<div id="message_content_file" class="message_frame shadow" style="display: none" >
+    
+</div> 
+
+<TMPL_VAR NAME=java_test>
+
+<script type="text/javascript">
+var sysreqUrl = " See our <a href='<TMPL_VAR NAME=base_url>/doc/systemreqs.html'> System Requirements</a>";
+
+// cookies enabled
+if(! navigator.cookieEnabled) {
+    var div = document.getElementById('error_content');
+    div.style.display = "block";
+    div.innerHTML = "Please enable and accept cookies from *.jgi.doe.gov and *.jgi-psf.org." + sysreqUrl;  
+}
+
+//e.g. Firefox
+if (YAHOO.env.ua.gecko > 0) {
+    //document.write("<br/> FireFox " + YAHOO.env.ua.gecko);
+    var v = YAHOO.env.ua.gecko;
+    if(v < 19) {
+        var div = document.getElementById('error_content');
+        div.style.display = "block";
+        div.innerHTML = "Please update your FireFox to view IMG data accurately."  + sysreqUrl;
+    }
+}  
+
+//Microsoft Internet Explorer
+// Or leverage boolean coercion -- 0 evaulates as false
+if (YAHOO.env.ua.ie > 0) {
+    //document.write(" IE " + YAHOO.env.ua.ie);
+    var v = YAHOO.env.ua.ie;
+    if(v < 8) {
+        var div = document.getElementById('error_content');
+        div.style.display = "block";
+        div.innerHTML = "Please update your IE to view IMG data accurately."  + sysreqUrl;
+    }    
+}
+
+//Opera
+if (YAHOO.env.ua.opera) {
+    //document.write(" Opera " + YAHOO.env.ua.opera);
+}
+
+//Chrome
+if(YAHOO.env.ua.chrome) {
+    //document.write("<br/> Chrome " + YAHOO.env.ua.chrome + "<br/>");
+    var v = YAHOO.env.ua.chrome;
+    if(v < 25) {
+        var div = document.getElementById('error_content');
+        div.style.display = "block";
+        div.innerHTML = "Please update your Chrome to view IMG data accurately."  + sysreqUrl;
+    }    
+}
+
+
+//Safari, Webkit and Chrome
+if (YAHOO.env.ua.webkit) {
+    //document.write("<br/> Safari, Webkit " + YAHOO.env.ua.webkit +' ' + YAHOO.env.ua.chrome);
+    var v = YAHOO.env.ua.webkit;
+    if(v < 534) {
+        var div = document.getElementById('error_content');
+        div.style.display = "block";
+        div.innerHTML = "Please update your browser to view IMG data accurately.";    
+    }     
+} 
+
+
+
+</script>

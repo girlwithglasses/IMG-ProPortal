@@ -1,0 +1,104 @@
+__javascript__
+
+<h1>Gene Search</h1>
+<p>
+Find genes in selected genomes by keyword.  It's required to add selections into "<b>Selected Genomes</b>" unless blocked.
+__mer_fs_note__
+</p>
+
+<form class="alignleft" method="post" action="__main_cgi__" enctype="application/x-www-form-urlencoded" name="mainForm">
+
+<table class='img' border="0" width="750">
+<tr class='img'>
+<th class="subhead">Keyword</th>
+<td>
+<input id="searchTerm" type="text" name="searchTerm" style="min-width:680px" />
+</td>
+</tr>
+<tr>
+<th class="subhead">Filters</th>
+<td>
+<select id="toHide" name="searchFilter" style="min-width:685px" onChange="showTip(this, 'searchTerm')">
+__searchFilterOptions__
+</select>
+</td>
+</tr>
+<!--
+<tr>
+<td colspan=2 class="frame">
+__optionColumn__
+</td>
+</tr>
+-->
+</table>
+
+<input type='hidden' name='section' value='FindGenes' />
+<input type='hidden' name='page' value='geneSearchForm' />
+
+<br/>
+__genomeListFilter__
+<br/>
+
+<!--
+<input id="go" class="smdefbutton" type="submit" name="fgFindGenes" value="Go" />
+<input id="reset" class="smbutton" type="reset" name=".reset" value="Reset" onclick="return selectRest();"/>
+-->
+__hint__
+
+</form>
+
+<script type="text/javascript" >
+function unfoldDiv(divId, buttonId, showHideStatus) {
+    var newDisplay = "none";
+    var newValue  = "Show";
+    var newStatus = 'show';
+    if ( showHideStatus == 'show' ) {
+        newDisplay = "inline";
+        newValue  = "Hide";
+        newStatus = 'hide';
+    }
+    document.getElementById(divId).style.display = newDisplay;
+    document.getElementById(buttonId).value = newValue;
+    document.getElementById(buttonId).onclick = function () { unfoldDiv('examples_text', 'showHideButton', newStatus) };
+}
+</script>
+
+<!--
+<div id='examples' style="top:280px;left:450px;width:400px; " >
+-->
+<h3>Examples &nbsp;
+<input type="button" id="showHideButton" value="Hide" onClick="unfoldDiv('examples_text', 'showHideButton', 0)" >
+</h3>
+<div id='examples_text' >
+
+<p>- "kinase" as a Gene Product Name gets "Shikimate kinase".<br />
+- "fusA" as a Gene Symbol (exact) gets only genes with the symbol "fusA".<br />
+- "b0179" as a Locus Tag gets only genes with the locus tag "b0179". (Genome selection is ignored)<br />
+- "YP_002958367" will retrieve genes with that GenBank accession. (Genome selection is ignored)<br/>
+
+<!-- 
+- "fusion" for IMG ORF Type will retrieve all fusion genes.
+  (Other values include "dubious", "frameshift", "img_pseudo", "pseudo",
+   "obsolete", and "real".)<br/>
+-->
+- "638154502" for IMG Gene ID will directly retrieve gene with that
+  identifier. (Genome selection is ignored)<br/>
+- "16128172" for NCBI GI Number will retrieve the corresponding IMG gene.  
+   Only recent NCBI GI Number is supported in IMG.
+  (Genome selection is ignored)<br/>
+- Try the "phosphofructokinase" example or See IMG Term browser for valid IMG terms.<br/>
+- Generally, ID searches are 'exact' searches. Search on descriptive fields
+  are 'inexact', i.e. substring searches. Except when indicated otherwise,
+  all seraches are exact here.<br/>
+- "Acyl_transf_1, !PP-binding" as a comma separated list specification
+  will find genes that have the <i>Acyl_transf_1</i> domain and not 
+  <i>PP-binding</i>
+  in Pfam domain search.<br/>
+- "pfam00698, pfam00109, !pfam00668" as a comma separated list specification
+  will find genes that have the pfam domain hits <i>pfam00698</i>,
+  <i>pfam00109</i>,
+  and not <i>pfam00668</i> in Pfam domain search.<br/>
+<br/>
+</div>
+</p>
+</div>

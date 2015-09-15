@@ -1,0 +1,523 @@
+h1 {
+    font-size: 1.50em;
+    font-weight: normal;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+h2 {
+    font-size: 1.25em;
+    font-weight: normal;
+    color: #003366;
+}
+
+h3 {
+    font-size: 1.2em;
+    color: #336699;
+    font-style: normal;
+    font-weight: 600;
+}
+
+h4 {
+    font-size: 1.2em;
+    font-weight: normal;
+    font-style: italic;
+    font-weight: normal;
+}
+
+div#content_other ul,div#content_other ol,div#content_other p {
+    font-size: 12px;
+    line-height: 1.4em;
+}
+
+div#content_other option, div#content_other input, div#content_other select  {
+    font-size: 12px;
+}
+
+table.img {
+    border: 2px solid #99ccff;
+}
+
+table.img_darkborder { border: 2px solid #6699CC;}
+
+
+table.tooltip {
+    border: 0px;
+}
+
+table.tooltip td {
+    padding: 0;
+    border: 0px;
+}
+
+td.img, td.img_darkborder {
+    padding: 0px 4px;
+    border: 1px solid #99ccff;
+    font-size: 12px;
+}
+
+td.img_darkborder {
+    border: 1px solid #6699CC;
+}
+
+th.img, th.img_darkborder, th.img_liteText {
+    font-size: 12px;
+    font-weight: bold;
+    padding-bottom: 6px;
+    padding-top: 10px;
+    padding-left: 3px;
+    padding-right: 3px;
+    text-align: center;
+    border: 1px solid #99ccff;
+}
+
+th.img_darkborder {
+    border: 1px solid #6699CC;
+}
+
+th.img_liteText {
+    color: #07415A;
+}
+
+td.checkbox {
+    padding: 0px 4px;
+    border: 1px solid #99ccff;
+}
+
+td.frame {
+    padding-bottom: 1px;
+    padding-top: 1px;
+    text-align: left;
+    border: 1px solid #99ccff;
+}
+
+input.checkbox {
+    border: 2px solid #99ccff;
+}
+
+th.subhead {
+    font-size: .75em;
+    font-weight: bold;
+    padding-bottom: 1px;
+    padding-top: 1px;
+    text-align: left;
+    border: 1px solid #99ccff;
+}
+
+th.noborder {
+    font-size: .75em;
+    font-weight: bold;
+    padding-bottom: 6px;
+    padding-top: 10px;
+    padding-right: 5px;
+    /* text-align: left; */
+    border: 0px;
+}
+
+tr.highlight {
+    background-color: #e8f3fb;
+}
+
+input.arrowleftallbutton {
+    background-image: url("./images/arrow_left_all.png");
+    background-repeat: no-repeat;
+    background-color: white;
+    border: 0;
+    width: 30px;
+    height: 30px;
+    margin: 2px 2px;
+    cursor:pointer; cursor:hand;
+}
+
+input.arrowleftbutton {
+    background-image: url("./images/arrow_left.png");
+    background-repeat: no-repeat;
+    background-color: white;
+    border: 0;
+    width: 30px;
+    height: 30px;
+    margin: 2px 2px;
+    cursor:pointer; cursor:hand;
+}
+
+input.arrowrightallbutton {
+    background-image: url("./images/arrow_right_all.png");
+    background-repeat: no-repeat;
+    background-color: white;
+    border: 0;
+    width: 30px;
+    height: 30px;
+    margin: 2px 2px;
+    cursor:pointer; cursor:hand;
+}
+
+input.arrowrightbutton {
+    background-image: url("./images/arrow_right.png");
+    background-repeat: no-repeat;
+    background-color: white;
+    border: 0;
+    width: 30px;
+    height: 30px;
+    margin: 2px 2px;
+    cursor:pointer; cursor:hand;
+}
+
+input.tobutton {
+    background-image: url("./images/tobutton_blue.jpg");
+    background-repeat: no-repeat;
+    background-color: white;
+    border: 0;
+    width: 50px;
+    height: 40px;
+    margin: 5px 2px;
+    cursor:pointer; cursor:hand;
+}
+
+input.khakibutton {
+        display: inline-block;
+        text-align: center;
+        border-left:1px solid #8fc6de;
+        border-top:1px solid #8fc6de;
+        border-right:1px solid #6cacc8;
+        border-bottom:1px solid #6cacc8;
+        background: #f9fdfe;
+        border-radius:5px;
+        /*-moz-border-radius: 5px;*/
+        text-decoration:none;
+        color: #07415a;
+        font-weight: bold;
+        font-size: 12px;
+        padding:7px 10px;
+        margin: 5px 0;
+        width: 100px;
+        height: 30px;
+        vertical-align:middle;
+        clear:left;
+        overflow: visible;
+}
+
+input.khakibutton:hover {
+        border-left:1px solid #ade2b9;
+        border-top:1px solid #ade2b9;
+        border-right:1px solid #6dc07c;
+        border-bottom:1px solid #6dc07c;
+        background:#f9fdf8 url(./images/button_bg_over.png) repeat-x scroll left center;
+        cursor: pointer;
+}
+
+
+/*
+new buttons - ken
+*/
+input.actionbutton,
+input.smbutton,
+input.medbutton,
+input.lgbutton,
+input.smdefbutton,
+input.meddefbutton,
+input.lgdefbutton,
+input.tinybutton
+{
+        display: inline-block;
+        text-align: center;
+        border-left:1px solid #8fc6de;
+        border-top:1px solid #8fc6de;
+        border-right:1px solid #6cacc8;
+        border-bottom:1px solid #6cacc8;
+        background: #f9fdfe;
+        border-radius:5px;
+        /*-moz-border-radius: 5px;*/
+        text-decoration:none;
+        color: #000;
+        font-weight: bold;
+        font-size: 12px;
+        padding:7px 10px;
+        margin: 5px 0;
+        vertical-align:middle;
+        clear:left;
+        overflow: visible;
+}
+
+input.tinybutton {
+	    height: 17px;
+        font-weight: normal;
+        font-size: 11px;
+        padding: 0;
+        margin: 1px 0;
+}
+
+input.actionbutton {
+	    color: #07415A;
+}
+
+input.smbutton, input.smdefbutton, div.smbutton a {
+    min-width: 138px;
+
+}
+input.actionbutton, input.medbutton, input.meddefbutton, div.medbutton a {
+    min-width: 184px;
+}
+input.lgbutton, input.lgdefbutton, div.lgbutton a {
+    min-width: 258px;
+}
+
+div.smbutton a,
+div.medbutton a,
+div.lgbutton a,
+div.smdefbutton a,
+div.meddefbutton a,
+div.lgdefbutton a {
+        display: inline-block;
+        text-align: center;
+        border-left:1px solid #8fc6de;
+        border-top:1px solid #8fc6de;
+        border-right:1px solid #6cacc8;
+        border-bottom:1px solid #6cacc8;
+        background: #f9fdfe;
+        border-radius:5px;
+        /*-moz-border-radius: 5px;*/
+        text-decoration:none;
+        color: #000;
+        font-weight: bold;
+        font-size: 12px;
+        padding:7px 10px;
+        margin: 5px 0;
+        vertical-align:middle;
+        clear:left;
+        overflow: visible;
+    text-decoration:none;
+    color: black;
+}
+
+/*
+submit buttons
+*/
+input.smdefbutton,
+input.meddefbutton,
+input.lgdefbutton,
+div.smdefbutton a,
+div.meddefbutton a,
+div.lgdefbutton a {
+        background:#f9fdfe url(./images/button_bg.png) repeat-x scroll left center;
+}
+
+/*
+mouse hover over new button - ken
+*/
+input.actionbutton:hover,
+input.smbutton:hover,
+input.smdefbutton:hover,
+input.medbutton:hover,
+input.meddefbutton:hover,
+input.lgbutton:hover,
+input.lgdefbutton:hover,
+input.tinybutton:hover,
+div.smbutton a:hover,
+div.medbutton a:hover,
+div.lgbutton a:hover,
+div.smdefbutton a:hover,
+div.meddefbutton a:hover,
+div.lgdefbutton a:hover{
+        border-left:1px solid #ade2b9;
+        border-top:1px solid #ade2b9;
+        border-right:1px solid #6dc07c;
+        border-bottom:1px solid #6dc07c;
+        background:#f9fdf8 url(./images/button_bg_over.png) repeat-x scroll left center;
+        cursor: pointer;
+}
+
+
+input.actionbutton:active,
+input.smbutton:active,
+input.smdefbutton:active,
+input.medbutton:active,
+input.meddefbutton:active,
+input.lgbutton:active,
+input.lgdefbutton:active,
+input.tinybutton:active,
+div.smbutton a:active,
+div.medbutton a:active,
+div.lgbutton a:active,
+div.smdefbutton a:active,
+div.meddefbutton a:active,
+div.lgdefbutton a:active{
+    margin-top:6px;
+    margin-bottom:4px;
+}
+
+div#hint {
+    width: 577px;
+    margin: 0;
+    padding: 0px;
+    margin-left: 1px;
+    margin-top: 20px;
+    vertical-align: bottom;
+}
+
+div#hint img {
+    float: left;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    left: -10px;
+    top: 0px;
+    z-index: 3;
+}
+
+div#hint p {
+    font-style: italic;
+    font-size: .75em;
+    margin: 0px;
+    padding: 6px 10px;
+    border: 2px solid #99ccff;
+    line-height: 16px;
+}
+
+div.pdflink {
+
+}
+
+div.pdflink a {
+    background: url("./doc/images/icon_pdf.gif") no-repeat scroll left top
+        transparent;
+    display: block;
+    min-height: 21px;
+    padding-left: 25px;
+    text-decoration: none;
+}
+
+a.pdflink2 {
+    background: url("./doc/images/icon_pdf.gif") no-repeat scroll left top
+        transparent;
+    display: block;
+    min-height: 21px;
+    padding-left: 25px;
+    text-decoration: none;
+}
+
+#message {
+   width: 577px;
+   margin: 0;
+   padding: 0px;
+   margin-left: 1px;
+   margin-top: 20px;
+   vertical-align: bottom;
+}
+#message p {
+   font-style: italic;
+   font-size: .75em;
+   margin: 0px;
+   padding: 6px 10px;
+   border: 2px solid #99ccff;
+   line-height: 16px;
+}
+
+.arrowimg {
+    border:0 none;
+}
+
+/* hmp stuff */
+
+#hmp_logo {
+    float: right;
+    height: 80px;
+    width: 90px;
+    z-index: 100;
+}
+
+#jgi_new_logo {
+    float: left;
+    position: absolute;
+    z-index: 100;
+    /*border: medium none;*/
+    /*background: none repeat scroll 0 0 #FFFFFF;*/
+    padding: 10px 5px;
+    left: 10px;
+    /*border-radius : 5px;*/
+    height: 70px;
+}
+
+span.boldTitle{
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Taxondetail buttons */
+.genome-btn {
+    display: inline-block;
+    width: 138px;
+    height: 34px;
+}
+
+.genome-btn:hover {
+    background-position: 0 -34px;
+}
+
+.genome-btn span {
+  position: absolute;
+  top: -999em;
+}
+
+.browse-btn {
+    background: url('./images/browse_btn.png') no-repeat 0 0;
+}
+
+.blast-btn {
+    background: url('./images/blast_btn.png') no-repeat 0 0;
+}
+
+.download-btn {
+    background: url('./images/download_btn.png') no-repeat 0 0;
+}
+
+/*
+* genome filter list
+*/
+div#taxonDisplayArea {
+    overflow: auto;
+}
+
+div#taxonDisplayArea select {
+    min-width: 300px;
+}
+
+
+div#genomeConfiguration .myborder {
+    border: 2px solid #6699CC;
+    /*border-radius: 10px 10px 10px 10px;*/
+    display: block;
+    /*min-width:200px;*/
+    min-height:900px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+}
+
+div#genomeConfiguration td {
+    /* min-width:260px; */
+    vertical-align: top;
+    white-space:nowrap;
+    min-width:220px;
+}
+
+.hand {
+    cursor: pointer;
+}
+
+.bordered {
+	border: 2px solid #6699CC;
+	padding: 10px;
+	border-radius: 10px;
+}
+
+.bordered .half {
+	width: 50%;
+	margin: 0 10px;
+}
+
+
+
+.updated {
+	font-size: 10px;
+	font-style: italic;
+}

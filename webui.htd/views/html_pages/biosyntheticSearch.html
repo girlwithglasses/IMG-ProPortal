@@ -1,0 +1,118 @@
+<div>
+    <input type='hidden' name='section' value='BcSearch' /> 
+    <input type="hidden" name='page' value='bcSearchResult' />
+
+<table class='img' border="0" style="min-width:750px">
+
+<tr class='img'>
+<th class="subhead">Secondary Metabolite Name</th>
+<td>
+<input type="text" name="npName" style="min-width:650px" />
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Secondary Metabolite Activity</th>
+<td>
+<select name="npActivity" style="min-width:650px">
+__npActivityOptions__
+</select>
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Biosynthetic Enzymatic Activity Type</th>
+<td>
+__bcTypeOptions__
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Evidence</th>
+<td>
+<select name="evidence" style="min-width:650px">
+__evidenceOptions__
+</select>
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Prediction Probability</th>
+<td>
+From <input type="text" name="from_probability" size='25' onKeyPress='return numbersonly(event, 1)' />
+To <input type="text" name="to_probability" size='25' onKeyPress='return numbersonly(event, 1)' /> (0 - 1)
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Length Range</th>
+<td>
+From <input type="text" name="from_length" size='25' onKeyPress='return numbersonly(event, 0)' />
+To <input type="text" name="to_length" size='25' onKeyPress='return numbersonly(event, 0)' /> (bases)
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Gene Count</th>
+<td>
+From <input type="text" name="from_gene_cnt" size='25' onKeyPress='return numbersonly(event, 0)' />
+To <input type="text" name="to_gene_cnt" size='25' onKeyPress='return numbersonly(event, 0)' />
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Pfam ID (list)</th>
+<td>
+<input type="text" name="pfamSearchTerm" style="min-width:425px" /> (example: pfam02801, pfam00107, etc.)
+</td>
+</tr>
+
+<tr>
+<th class="subhead" rowspan="2">Phylogenetic Option</th>
+<td>
+  <table border="0">
+    <tr>
+      <td><b>Sequencing Status</b></td>
+      <td><b>Domain</b></td>
+    </tr>
+    <tr>
+      <td><select id="seqstatus" name="seqstatus">
+          <option selected="selected" value="Finished">Finished</option>
+          <option value="Permanent Draft">Permanent Draft</option>
+          <option value="Draft">Draft</option>
+          <option value="both">All Finished, Permanent Draft and Draft</option>
+        </select>
+      </td>
+      <td><select id="domainfilter" name="domainfilter">
+	  __domainOptions__
+        </select>
+      __showButton__
+      </td>
+    </tr>
+  </table>
+</td>
+</tr>
+
+<tr>
+<td>
+__phylogeneticTree__
+</td>
+</tr>
+
+<tr>
+<th class="subhead">Secondary Metabolite Type</th>
+<td>
+__npTypeOptions__
+</td>
+</tr>
+
+</table>
+
+<input id="go_bc" class="smdefbutton" type="button" name="bcSearchResult" value="Go"/>&nbsp;
+<input id="reset" class="smbutton" type="reset" name=".reset" value="Reset" onclick="return selectRest();"/>
+
+__hint__
+
+</div>
+
+__javascript__

@@ -1,0 +1,42 @@
+<form class='alignleft' method="post" action="__main_cgi__" 
+  name="metadataCategorySearchForm">
+<h2>Genome Search by Metadata Categories</h2>
+<p>
+Find genomes by metadata category keyword or substring.
+</p>
+
+<table class='img' border="0" width="400">
+<tr>
+<th class="subhead">Keyword:</th>
+<td>
+<input type="text" name="metadataCategorySearchTerm" size="43"></td>
+</tr>
+<tr>
+<th class="subhead">Filters:</th>
+<td>
+<select name="metadataCategorySearchFilter" style="width:247px" >
+__optionList__
+</select>
+</td>
+</tr>
+</table>
+
+<input type="hidden" name="section" value="FindGenomes" />
+<input type="hidden" name="page" value="metadataCategorySearchResults" />
+<input id="moreGo" type="submit" name="findMetadataCategory" value="Go" class="smdefbutton" />
+<input id="moreReset" type="reset" name=".reset" value="Reset" class="smbutton" />
+
+__hint__
+
+</form>
+
+
+<div id='examples'  style="top: 40px;">
+<h3>Examples</h3>
+<p>
+- "singles" as Cell Arrangement retrieves all genomes with the 
+  substring "Singles".<br/>
+- "ac" as Disease retrieves all genomes with the 
+  substring "ac" such as "Actinomycosis", "Acne", "Lactococcosis", etc.<br/>
+</p>
+</div>

@@ -1,0 +1,9 @@
+span.TreeviewSpanArea a {
+   font-size: 10pt;
+   font-family: "Karla", Helvetica, arial, sans-serif;
+   text-decoration: none;
+   color: black;
+}
+spanTreeviewSpanArea a:hover {
+   color: ''#820082';
+}

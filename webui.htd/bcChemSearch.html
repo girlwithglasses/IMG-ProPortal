@@ -1,0 +1,64 @@
+<script type="text/javascript">
+function limitText(limitField, charNumLimit) {
+    if (limitField.value.length > charNumLimit) {
+        limitField.value = limitField.value.substring(0, charNumLimit);
+    } 
+}
+</script>
+
+<div>
+    <input type='hidden' name='section' value='BcSearch' /> 
+    <input type="hidden" name='page' value='chemSearchRun' />
+
+
+<table border='0'>
+    <tr>
+    <td style="text-align:right; vertical-align: text-top; padding-bottom: 10px;"><b>Secondary Metabolite Name:</b></td>
+    <td style="padding-bottom: 10px;"> 
+        <input id="name" name="name" type="text" size='25' value="" 
+        onKeyDown="limitText(this, 64);" onKeyUp="limitText(this, 64);"
+        />
+    (name to identify your input)<br>
+    <i>e.g. Pyocyanin</i>
+    </td>
+    </tr>
+
+    <tr>
+    <td style="text-align:right; vertical-align: text-top; padding-bottom: 10px;"><span style="font-weight:bold; color:red;">SMILES:</span></td>
+    <td style="padding-bottom: 10px;"> 
+        <input id="smiles" name="smiles" type="text" size='70' value="" required/>
+                    <br>
+                    Use this tool to retrieve SMILES from a drawn structure: <a href='https://pubchem.ncbi.nlm.nih.gov/edit2/index.html?cnt=0' target="_blank">PubChem Sketcher</a>
+                    <br> <i>e.g. CN1C2=CC=CC=C2N=C3C1=CC=CC3=O</i>
+    </td>
+    </tr>
+    
+
+    <tr>
+    <td style="text-align:right; vertical-align: text-top; padding-bottom: 10px;"><b>Similarity Cutoff:</b></td>
+    <td style="padding-bottom: 10px;"> 
+        <input id="cutoff" name="cutoff" type="text" size='5' 
+                    style="color:gray;"
+                    value="0.5"
+                    onfocus="if(this.value== '0.5'){this.value=''}; this.style.color='black';"
+                    onKeyPress='return numbersonly(event, 1)' 
+                    required />
+    (value between 0 and 1, rounded to 2 decimal places)
+    <br> <i>e.g. 0.5</i>
+    </td>
+    </tr>
+
+    <tr>
+    <td style="text-align:right; vertical-align: text-top;"><b>Search Space:</b></td>
+    <td> 
+        <input type="radio" name="space" value="all">All IMG compounds<br>
+        <input type="radio" name="space" value="np" checked>All Biosynthetic Gene Cluster associated compounds    
+    </td>
+    </tr>
+    
+    
+</table>
+<br>
+    <input class="smdefbutton" type="submit" value="Go" name="searchNPs">&nbsp;
+    <input class="smbutton" type="reset" name="reset"> 
+</div>

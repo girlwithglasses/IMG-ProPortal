@@ -1,0 +1,57 @@
+<div style="width:1024px; align:center;">
+<h1 style="text-align:center">
+IMG-ABC:<br> 
+A knowledge base to fuel the discovery of biosynthetic gene clusters<br>
+and novel secondary metabolites in IMG
+</h1>
+
+<div style="text-align:justify; text-justify:inter-word;">
+<p>
+In the discovery of natural products, systematic exploration of large-scale genomic data is potentially one of the most 
+prolific discovery routes that remains largely underutilized due to the unavailability of resources that allow 
+this exploration in a systematic manner. The Integrated Microbial Genomes -- Atlas of Biosynthetic gene Clusters 
+(<a href='https://img.jgi.doe.gov/ABC'>IMG-ABC </a>) resource integrates the power of integrated 
+structural and functional genomics with annotated secondary metabolite biosynthetic gene clusters and associated secondary metabolites compounds in both isolate genomes and metagenomes. In addition to a comprehensive repertoire of chemical properties 
+that includes chemical structure, secondary metabolites are connected to the biosynthetic gene clusters known to produce them. 
+Integration with annotated metagenomes means that biosynthetic clusters in unculturable populations and rare taxa will 
+become accessible. Together with computationally predicted biosynthetic clusters, this resource will not only enable the 
+discovery of biosynthetic clusters putatively producing secondary metabolites with novel structures, but set the stage for 
+discovering genomic elements associated with biosynthesis of secondary metabolites.
+</p>
+</div>
+<br/>
+<div class="shadow" style="text-align:center; float:left; width:47%; border: 3px solid #32CD32; border-radius: 10px; padding-left: 10px; padding-bottom: 10px;">
+<h2>Biosynthetic Gene Clusters</h2>
+Clusters of genes whose expression leads<br/>to the synthesis of Secondary Metabolites<br/>
+<img style="width:300px; height:300px;" src="<TMPL_VAR NAME=base_url>/images/g2np_BC.jpg" alt="Biosynthetic Gene Clusters image">
+<br>
+<font color="#1E90FF">
+<TMPL_VAR NAME=bc_predicted> predicted
+</font>
+<br/>
+<br>
+<input class="smdefbutton" type='button' name='Browse BCs' value='Browse BCs'
+onclick="window.open('main.cgi?section=BiosyntheticStats&page=stats', '_self')"> &nbsp;&nbsp;
+<input class="smdefbutton" type='button' name='Search BCs' value='Search BCs'
+onclick="window.open('main.cgi?section=BcSearch&page=bcSearch', '_self')">
+</div>
+
+<div class="shadow" style="text-align:center; float:right; width:47%; border: 3px solid #00CED1; border-radius: 10px; margin-left: 10px; padding-left: 10px; padding-bottom: 10px;">
+<h2>Secondary Metabolites</h2>
+Small organic molecules produced<br/>by living organisms<br/>
+<img style="width:300px; height:300px;" src="<TMPL_VAR NAME=base_url>/images/g2np_np.jpg" alt="Secondary Metabolites image">
+<br/>
+<font color="#1E90FF">
+<TMPL_VAR NAME=np_items> structures
+</font>
+<br/>
+<br>
+<input class="smdefbutton" type='button' name='Browse SMs' value='Browse SMs'
+onclick="window.open('main.cgi?section=NaturalProd&page=list', '_self')"> &nbsp;&nbsp;
+<input class="smdefbutton" type='button' name='Search SMs' value='Search SMs'
+onclick="window.open('main.cgi?section=BcSearch&page=npSearches', '_self')">
+</div>
+</div>
+
+<div id='myclear'>
+</div>

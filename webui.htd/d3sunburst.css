@@ -1,0 +1,67 @@
+path {
+    stroke: #fff;
+    fill-rule: evenodd;
+}
+#ruler {
+    font-family: Helvetica, sans-serif;
+    font-size: 12px;
+    visibility: hidden;
+    white-space: nowrap;
+}
+#main {
+    float: left;
+    width: 600px;
+}
+#sidebar {
+    float: left;
+    width: 100px;
+}
+#chart_trail {
+    width: 960px;
+    height: 50px;
+}
+#legend {
+    padding: 10px 0 0 3px;
+}
+#sequence text, #legend text {
+    /*font-weight: 400;*/
+    fill: gray;
+}
+.label {
+    fill: gray;
+    font-family: Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-anchor: start;
+}
+#chart {
+    width: 550px;
+    position: relative;
+}
+#chart path {
+    stroke: #fff;
+}
+#explanation {
+  top: 260px;
+  left: 205px;
+  width: 140px;
+  text-align: center;
+  position: absolute;
+  color: #666;
+  z-index: -1;
+}
+#percentage {
+  font-size: 2.5em;
+}
+.tooltip {
+    position: absolute;
+    text-align: left;
+    min-width: 100px;
+    max-width: 200px;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lavender;
+    border: solid 1px lightgray;
+    color:gray;
+    opacity: 0;
+}

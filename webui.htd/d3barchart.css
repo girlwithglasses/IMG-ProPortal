@@ -1,0 +1,50 @@
+#ruler {
+    visibility: hidden;
+    white-space: nowrap;
+    font: 12px Helvetica; /* same as the title which is measured */
+}
+.tooltip {
+    position: absolute;
+    text-align: center;
+    min-width: 100px;
+    max-width: 200px;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lavender;
+    border: solid 1px lightgray;
+    color:gray;
+    opacity: 0;
+}
+.vlabel {
+    fill: gray;
+    font: 10px Helvetica;
+    text-anchor: start;
+}
+.hlabel {
+    fill: gray;
+    font: 12px Helvetica;
+    text-anchor: start;
+}
+.title {
+    fill: gray;
+    font: 12px Helvetica;
+    text-anchor: end;
+}
+.subtitle {
+    fill: #999;
+    font: 10px Helvetica;
+    text-anchor: end;
+}
+rect:hover {
+    fill: darkblue;
+}
+.axis {
+    font: 10px sans-serif;
+    fill: gray;
+}
+.axis path, .axis line {
+    fill: none;
+    stroke: gray;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
