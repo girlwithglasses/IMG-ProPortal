@@ -7,10 +7,6 @@
 # Your application's name
 	appname => "ProPortal",
 
-# The default layout to use for your application (located in
-# views/layouts/main.tt)
-# layout: "main"
-
 # when the charset is set to UTF-8 Dancer2 will handle for you
 # all the magic of encoding and decoding. You should not care
 # about unicode within your app when this setting is set (recommended).
@@ -51,8 +47,10 @@
 	main_cgi_url => 'https://img-proportal-dev.jgi-psf.org/cgi-bin/main.cgi',
 	base_url => 'https://img-proportal-dev.jgi-psf.org/',
 
-	sso_url_prefix => 'https://signon',
-	sso_domain => '.jgi-psf.org/',
-
+	# cookie name: jgi_return, value: url, domain: sso_domain
+	sso_enabled => 1,
+	sso_url_prefix => 'https://signon.',
+	sso_domain => 'jgi-psf.org',
+	sso_api_url => 'https://signon.jgi-psf.org/api/sessions/',
 }
 

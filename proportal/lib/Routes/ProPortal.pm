@@ -53,6 +53,7 @@ prefix '/proportal'; # => sub {
 		}x => sub {
 
 		var current => 'proportal';
+		var page => '/proportal';
 
 		my $pp = bootstrap( undef, config );
 

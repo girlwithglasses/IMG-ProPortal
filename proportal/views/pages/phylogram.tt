@@ -1,0 +1,13 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: Phylogram';
+%]
+	<h2>Phylogram</h2>
+  <p>The following trees use phylogenetic data from NCBI with taxon data from IMG, if available. Trees were generated using <a rel="external" href="http://phylot.biobyte.de/index.html">phyloT's common tree generator</a> with all IMG species with an NCBI taxon ID and the genus <em>Prochloro-</em> or <em>Synechococcus</em> as input.
+</p>
+	<div id='phylogram'></div>
+	<h2>Radial version</h2>
+	<div id='radialtree'></div>
+	<h2>Collapsible</h2>
+	<div id="collapse"></div>
+[%	END; %]

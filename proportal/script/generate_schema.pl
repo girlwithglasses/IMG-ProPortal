@@ -13,7 +13,7 @@ use local::lib;
 use File::Basename;
 
 use DBIx::Class::Schema::Loader qw/ make_schema_at /;
-
+use SQL::Translator;
 use IMG::Util::DB;
 
 =head2 generate_schema.pl

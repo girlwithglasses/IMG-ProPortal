@@ -1,0 +1,37 @@
+<h2>
+	Average Nucleotide Identity
+</h2>
+<p>
+	Average Nucleotide Identity (<abbr title="Average Nucleotide Identity">ANI</abbr>) is a measure of nucleotide-level genomic similarity between the coding regions of two genomes. <abbr title="Bidirectional best hits">BBH</abbr>s between a genome pair are computed as pairwise bidirectional best nSimScan hits of genes having 70% or more identity and at least 70% coverage of the shorter gene.
+</p>
+<div class="bordered">
+	<div class="half">
+		<p>The Alignment Fraction (AF) is computed as:</p>
+		<img width="300" src="[% cfg.base_url %]/images/AFformula.png" alt="Alignment fraction formula">
+	</div>
+	<div class="half">
+		<p>Average Nucleotide Identity is computed as:</p>
+		<img width="300" src="[% cfg.base_url %]/images/ANIformula.png" alt="Average nucleotide identity formula">
+	</div>
+</div>
+[%	IF print_stats %]
+<h3>
+	Statistics
+</h3>
+<p>
+	The alignment fraction (AF) and average nucleotide identity (ANI) have been computed for <strong>[% xcount %]</strong> genomes and <strong>[% ycount %]</strong> genome pairs.</p>
+	<p><strong>[% zcount %]</strong> pairs of these are between genomes assigned to the same taxonomics species.
+</p>
+<p>
+	Maximal clique enumeration generates <strong>[% acount %]</strong> clusters, including <strong>[% bcount %]</strong> genomes from <strong>[% ccount %]</strong> taxonomic species.</p>
+<p><strong>[% dcount %]</strong> genomes from <strong>[% ecount %]</strong> species are singletons.
+</p>
+[%	END %]
+<div class="C smdefbutton">
+	<a href="[% main.cgi?section=ANI&amp;page=pairwise %]" class="smdefbutton">Pairwise <abbr title="Average Nucleotide Identity">ANI</abbr></a>
+	<a href="[% main.cgi?section=ANI&amp;page=doSameSpeciesPlot %]" class="smdefbutton">Same Species Plot</a>
+	<a href="[% main.cgi?section=ANI&amp;page=overview %]" class="smdefbutton"><abbr title="Average Nucleotide Identity">ANI</abbr> Cliques</a>
+</div>
+[%	IF print_stats %]
+<p class="updated">Last updated [% date %]</p>
+[%	END %]

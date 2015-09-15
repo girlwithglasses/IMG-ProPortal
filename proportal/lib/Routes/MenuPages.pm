@@ -7,7 +7,18 @@ our $VERSION = '0.1';
 prefix '/menu';
 
 # render menu pages
-any '/*' => sub {
+
+get '/ANI' => sub {
+
+	# ANI::Home
+
+	# printLandingPage()
+
+	template 'pages/ani_home', { content => $data };
+
+};
+
+get '/*' => sub {
 	my $menu_page = request->dispatch_path;
 	var page => $menu_page;
 

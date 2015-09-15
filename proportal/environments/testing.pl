@@ -54,12 +54,18 @@
 		},
 	},
 
-	dbi_module => 'datamodel',
+	schema => {
+		img_core => {
+			module => 'DataModel::IMG_Core',
+			db_conf => 'imgsqlite',
+		},
+		img_gold => {
+			module => 'DataModel::IMG_Gold',
+			db_conf => 'imgsqlite',
+		},
+	},
 
-	primary_db => 'imgsqlite',
-#	primary_db => 'img_core',
-
-	db_conf => {
+	db => {
 		imgsqlite => {
 			driver => 'SQLite',
 			database => 'share/dbschema-img_core.db',
