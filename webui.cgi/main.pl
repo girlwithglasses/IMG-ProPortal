@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 34184 2015-09-03 21:41:29Z klchu $
+# $Id: main.pl 34199 2015-09-04 21:13:24Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -384,7 +384,21 @@ if ( param() ) {
         ANI => 'ANI',
         ProjectId => 'ProjectId',
         TreeFile => 'TreeFile',
+        ScaffoldSearch => 'ScaffoldSearch',
+        MeshTree => 'MeshTree',
+        AbundanceProfiles => 'AbundanceProfiles',
+        AbundanceTest => 'AbundanceTest',
+        AbundanceComparisons => 'AbundanceComparisons',
+        AbundanceComparisonsSub => 'AbundanceComparisonsSub',
+        AbundanceToolkit => 'AbundanceToolkit',
+        Artemis => 'Artemis',
     );
+
+    # testing sections
+    if($img_internal || $img_ken) {
+        $validSections{ProPortal} =  'ProPortal';
+        $validSections{Portal} =  'Portal';
+    }
 
     if ( $section eq "GenomeCart" ) {
         #
@@ -436,140 +450,7 @@ if ( param() ) {
         my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
         $section->dispatch($numTaxons);
 
-    } elsif ( $img_internal && $section eq 'ProPortal' ) {
 
-        # testing code - ken 
-        require ProPortal;
-        my $page = param('page');
-        if($page =~ /^kentest/) {
-            printAppHeader("Find Genomes");
-        } else {
-            printAppHeader("Home");
-        }
-        ProPortal::dispatch();
-
-    } elsif ($img_internal && $section eq 'Portal' ) {
-
-        # testing code - ken
-        require Portal;
-        printAppHeader("Find Genomes");
-        Portal::dispatch();
-
-    } elsif ( $section eq 'ScaffoldSearch' ) {
-        $pageTitle = "Scaffold Search";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        my $numTaxon = printAppHeader( "FindGenomes", '', '', $js );
-
-        require ScaffoldSearch;
-        ScaffoldSearch::dispatch($numTaxon);
-
-    } elsif ( $section eq 'MeshTree' ) {
-        require MeshTree;
-        $pageTitle = "Mesh Tree";
-
-        my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        printAppHeader( "FindFunctions", '', '', $js );
-        MeshTree::dispatch();
-
-    } elsif ( $section eq "AbundanceProfiles" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require AbundanceProfiles;
-        $pageTitle = "Abundance Profiles";
-
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        if ($include_metagenomes) {
-            printAppHeader( "CompareGenomes", '', '', $js, '', "userGuide_m.pdf#page=18" );
-        } else {
-            printAppHeader( "CompareGenomes", '', '', $js, '', "userGuide.pdf#page=49" );
-        }
-        AbundanceProfiles::dispatch();
-    } elsif ( $section eq "AbundanceTest" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require AbundanceTest;
-        $pageTitle = "Abundance Test";
-        printAppHeader("CompareGenomes")
-          if param("noHeader") eq "";
-        AbundanceTest::dispatch();
-    } elsif ( $section eq "AbundanceComparisons" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require AbundanceComparisons;
-        $pageTitle = "Abundance Comparisons";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        my $numTaxon;
-        if ($include_metagenomes) {
-            $numTaxon = printAppHeader( "CompareGenomes", '', '', $js, '', "userGuide_m.pdf#page=20" )
-              if param("noHeader") eq "";
-        } else {
-            $numTaxon = printAppHeader( "CompareGenomes", '', '', $js ) if param("noHeader") eq "";
-        }
-        AbundanceComparisons::dispatch($numTaxon);
-    } elsif ( $section eq "AbundanceComparisonsSub" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require AbundanceComparisonsSub;
-        $pageTitle = "Function Category Comparisons";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        my $numTaxon;
-        if ($include_metagenomes) {
-            $numTaxon = printAppHeader( "CompareGenomes", '', '', $js, '', "userGuide_m.pdf#page=23" )
-              if param("noHeader") eq "";
-        } else {
-            $numTaxon = printAppHeader( "CompareGenomes", '', '', $js )
-              if param("noHeader") eq "";
-        }
-        AbundanceComparisonsSub::dispatch($numTaxon);
-    } elsif ( $section eq "AbundanceToolkit" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require AbundanceToolkit;
-        $pageTitle = "Abundance Toolkit";
-        printAppHeader("CompareGenomes")
-          if param("noHeader") eq "";
-        AbundanceToolkit::dispatch();
-    } elsif ( $section eq "Artemis" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require Artemis;
-        $pageTitle = "Artemis";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        my $from = param("from");
-        my $numTaxon;
-        if ( $from eq "ACT" || $page =~ /^ACT/ || $page =~ /ACT$/ ) {
-            $numTaxon = printAppHeader( "CompareGenomes", '', '', $js );
-        } else {
-            $numTaxon = printAppHeader( "FindGenomes", '', '', $js )
-              if param("noHeader") eq "";
-        }
-        Artemis::dispatch($numTaxon);
     } elsif ( $section eq "ClustalW" ) {
         timeout( 60 * 40 );    # timeout in 40 minutes
         require ClustalW;
@@ -2100,9 +1981,9 @@ sub printMenuDiv {
     }
 
     # getsme
-    if ( $current eq "getsme" && !$abc ) {
-        $template->param( highlight_10 => 'class="highlight"' );
-    }
+#    if ( $current eq "getsme" && !$abc ) {
+#        $template->param( highlight_10 => 'class="highlight"' );
+#    }
 
     # My IMG
     if ( $current eq "MyIMG" ) {

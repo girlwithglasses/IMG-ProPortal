@@ -2,14 +2,18 @@
 
 .sidebar {
 
-	li {
-		padding: $gutter;
+//	background: lighten( rgb(145,144,144), 25%);
 
+	li {
+		border-left: .25rem solid transparent;
+	//	border-bottom: 1px solid #fff;
+		padding-left: .5rem;
 		&:hover {
 
 		}
 
 		a {
+			line-height: 2rem;
 			&:hover, &:focus, &:active {
 				border-bottom-width: 1px;
 			}
@@ -20,6 +24,9 @@
 				border-bottom-style: solid;
 			}
 		}
+	}
+	.current {
+		border-left-color: $secondary;
 	}
 }
 

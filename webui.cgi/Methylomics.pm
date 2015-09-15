@@ -1,6 +1,6 @@
 ############################################################################
 # Methylomics.pm - displays DNA methylation data
-# $Id: Methylomics.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: Methylomics.pm 34197 2015-09-04 18:29:38Z aratner $
 ############################################################################
 package Methylomics;
 my $section = "Methylomics";
@@ -1738,10 +1738,10 @@ sub printExperiments {
 	select s.IMG_taxon_oid, s.sample_oid, 
                $nvl(s.description, 'unknown'),
                count(distinct m.motif_summ_oid)
-	from meth_sample s, meth_motif_summary m
+	from meth_sample s
+        left join meth_motif_summary m 
+        on s.sample_oid = m.sample and s.experiment = m.experiment
 	where s.experiment = ?
-        and s.sample_oid = m.sample
-        and s.experiment = m.experiment
         group by s.IMG_taxon_oid, s.sample_oid, s.description
         order by s.IMG_taxon_oid, s.sample_oid
     };
@@ -1777,12 +1777,17 @@ sub printExperiments {
         my $row = $sd."<input type='checkbox' "
 	        . "name='exp_samples' value='$sample'/>\t"; 
         $row .= $sample."\t";
-        $row .= $desc.$sd 
-            . "<a href='$url' id='link$sample' target='_blank'>"
-	    . escHtml($desc)."</a>"."\t";
+
+	my $link1 = "<a href='$url' id='link$sample' target='_blank'>"
+	    . escHtml($desc)."</a>";
+	$link1 = $desc if !$cnt;
+        $row .= $desc.$sd.$link1."\t";
+
 	my $murl = "$section_cgi&page=motifsummary&taxon_oid=$taxon_oid"
 	         . "&sample_oid=$sample&exp_oid=$exp_oid";
-	$row .= $cnt.$sd.alink($murl, $cnt, "_blank")."\t";
+	my $link2 = alink($murl, $cnt, "_blank");
+	$link2 = $cnt if !$cnt;
+	$row .= $cnt.$sd.$link2."\t";
 
         if (scalar @study_taxons > 1) {
             my $genome = $taxon2info{ $taxon };

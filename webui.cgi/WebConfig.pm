@@ -221,7 +221,7 @@ sub getEnv {
 
     # new for 3.1 cgi caching
     # enable cgi cache 0 to disable
-    $e->{ cgi_cache_enable } = 1;
+    $e->{ cgi_cache_enable } = 0;
     # location of cache directory - this should be a unique directory
     # for each web site
     $e->{ cgi_cache_dir } =  $e->{ cgi_tmp_dir } . "/CGI_Cache";
@@ -303,7 +303,7 @@ sub getEnv {
 
   base_dir_stage => $base . "/webUI/webui.htd",
 
-  base_url => "https://img-proportal-dev.jgi-psf.org/",
+  base_url => "https://img-proportal-dev.jgi-psf.org/pristine_assets",
 #	base_url => 'https://localhost:5000/',
 
   cgi_cache_dir => $base . "/tmp",

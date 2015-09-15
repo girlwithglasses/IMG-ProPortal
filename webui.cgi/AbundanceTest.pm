@@ -27,6 +27,7 @@ my $include_metagenomes = $env->{ include_metagenomes };
 my $show_myimg_login = $env->{ show_myimg_login };
 my $img_lite = $env->{ img_lite };
 my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
+my $YUI = $env->{yui_dir_28};
 my $top_n_abundances = 10000;  # make a very large number
 my $max_query_taxons = 20;
 my $max_reference_taxons = 200;
@@ -41,10 +42,28 @@ my %function2IdType = (
 );
 my $fdr = 0.05;
 
+sub getPageTitle {
+    return 'Abundance Test';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+    if (WebUtil::paramMatch("noHeader") ne "") {
+        return @a;
+    } else {
+        @a = ('CompareGenomes');        
+        return @a;
+    }
+}
+
 ############################################################################
 # dispatch - Dispatch events.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param( "page" );
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
 

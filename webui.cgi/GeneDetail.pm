@@ -2,7 +2,7 @@
 # GeneDetail.pm - 2nd version
 #      --es 01/09/2007
 #
-# $Id: GeneDetail.pm 34088 2015-08-21 03:31:01Z imachen $
+# $Id: GeneDetail.pm 34209 2015-09-08 17:53:21Z imachen $
 ############################################################################
 package GeneDetail;
 my $section = "GeneDetail";
@@ -2440,7 +2440,32 @@ sub printIdenticalGenes {
     }
     $cur->finish();
     my $count = @recs;
-    return if $count == 0;
+
+    if ( ! $count ) {
+	## check 100 perc ident
+	my $sql = qq{
+           select gb.subj_gene, 'ublast'
+           from gene_dna_ublast\@core_v400_musk gb
+           where gb.query_gene = ?
+           union
+           select gb2.query_gene, 'ublast'
+           from gene_dna_ublast\@core_v400_musk gb2
+           where gb2.subj_gene = ?
+           order by 1
+           };
+        my $cur = execSql( $dbh, $sql, $verbose, $gene_oid, $gene_oid );
+	for ( ; ; ) {
+	    my ( $gene2, $method ) = $cur->fetchrow();
+	    last if !$gene2;
+	    my $r = "$gene2\t";
+	    $r .= "$method\t";
+	    push( @recs, $r );
+	}
+	$cur->finish();
+	$count = @recs;
+    }
+
+    return if ! $count;
 
     print "<tr class='img'>\n";
     print "<th class='subhead'>Identical Genes</th>\n";

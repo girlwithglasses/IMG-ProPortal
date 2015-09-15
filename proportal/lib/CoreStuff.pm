@@ -3,13 +3,9 @@ use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
 use Dancer2::Session::CGISession;
 use Sys::Hostname;
-use Role::Tiny::With;
 use IMG::App;
-
-with qw(
-	ProPortal::Views::Links
-	ProPortal::Views::Menu
-);
+use IMG::Views::Links;
+use IMG::Views::Menu;
 
 our $VERSION = '0.1';
 
@@ -47,17 +43,20 @@ hook before_template_render => sub {
 sub get_tmpl_vars {
 
 	my $output = shift // {};
+	my $current = var 'current';
+	my $page = var 'page';
 
-	$output->{navigation} = get_menus( config );
-	$output->{ext_links} = external_links();
-	$output->{links} = { %{ img_links( config ) }, %{ proportal_links( config ) } };
+	$output->{navigation} = IMG::Views::Menu::get_menus( config, $current, $page );
+
+	$output->{ext_links} = { sso_url => 'https://signon.jgi-psf.org' }; #IMG::Views::Links::get_ext_link();
+	$output->{links} = { %{ IMG::Views::Links::img_links( config ) }, %{ IMG::Views::Links::proportal_links( config ) } };
 	$output->{cfg} = config;
 	$output->{cfg}{server_name} = hostname;
 	$output->{cfg}{perl_v} = $];
 	$output->{cfg}{ora_service} = $ENV{ORA_SERVICE} || 'The Oracle is silent';
 	# build date
 	$output->{cfg}{remote_address} = request->forwarded_for_address // request->address;
-
+	$output->{cfg}{current_page} = $page;
 	if ( session->data ) {
 		debug "session data: " . Dumper session->data;
 		if ( session('name') ) {
@@ -65,6 +64,7 @@ sub get_tmpl_vars {
 			$output->{name} = session('name');
 		}
 	}
+#	debug "output: " . Dumper $output;
 }
 
 sub create_core {

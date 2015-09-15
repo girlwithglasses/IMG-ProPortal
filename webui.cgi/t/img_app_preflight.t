@@ -311,7 +311,14 @@ subtest 'directory_exists' => sub {
 		}
 	});
 
+	# make directory read-only
+	run_test({
+		config => {},
+		http_params => {},
+		err => $errors->{unavailable_msg}->( 'The IMG file system is not available. Please try again later.' ),
 
+
+	});
 
 
 	TODO : {

@@ -56,15 +56,14 @@ sub _generate_sso_info {
 sub _generate_db_data {
 
 	# read in the db config files
-use Util::DB;
-my $base = dirname( $Bin );
+	my $cfg = IMG::Util::DB::get_oracle_cfg_files;
 
-my $cfg = Util::DB::get_oracle_cfg_files;
+	for my $d (keys %$cfg) {
+		# read in the env files
+		my $p = Util::DB::get_oracle_connection_params({ database => $d });
 
-for my $d (keys %$cfg) {
-	# read in the env files
-	my $p = Util::DB::get_oracle_connection_params({ database => $d });
 
+	}
 
 	db => {
 		# config details

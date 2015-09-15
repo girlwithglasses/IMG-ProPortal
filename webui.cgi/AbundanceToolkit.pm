@@ -3,7 +3,7 @@
 #     measurements.
 #        --es 05/19/2007
 #
-# $Id: AbundanceToolkit.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: AbundanceToolkit.pm 34199 2015-09-04 21:13:24Z klchu $
 ############################################################################
 package AbundanceToolkit;
 
@@ -32,6 +32,10 @@ my $img_lite            = $env->{img_lite};
 my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
 my $preferences_url     = "$main_cgi?section=MyIMG&form=preferences";
 
+my $base_url            = $env->{base_url};
+my $YUI = $env->{yui_dir_28};
+
+
 my $top_n_abundances     = 10000;           # make a very large number
 my $max_query_taxons     = 20;
 my $max_reference_taxons = 200;
@@ -58,10 +62,28 @@ my %function2IdType = (
 
 my $estNormalizationText = "Normalize to Total Size for Unassembled Only";
 
+
+sub getPageTitle {
+    return 'Abundance Toolkit';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+    if (WebUtil::paramMatch("noHeader") ne "") {
+        return @a;
+    } else {
+        @a = ("CompareGenomes");
+        return @a;
+    }
+}
+
 ############################################################################
 # dispatch - Dispatch events.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
 

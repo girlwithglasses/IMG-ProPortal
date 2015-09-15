@@ -22,6 +22,7 @@ with
 	'IMG::App::JGISessionClient',
 #	'IMG::App::Logger',
 	'IMG::App::User',
+	'IMG::App::UserChecks',
 	'IMG::App::FileManager',
 	'IMG::Schema';
 

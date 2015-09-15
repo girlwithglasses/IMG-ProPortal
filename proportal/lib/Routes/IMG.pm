@@ -1,40 +1,29 @@
 package Routes::IMG;
-
-# use lib qw(
-# 	/global/u1/a/aireland/webUI/webui.cgi
-# 	/global/u1/a/aireland/webUI/proportal/lib
-# 	/global/u1/a/aireland/perl5/lib/perl5
-# );
-
 use IMG::Util::Base;
+use parent 'CoreStuff';
 use Dancer2 appname => 'ProPortal';
 use IMG::App::Dispatcher;
-use IMG::Views::ViewMaker;
-use Filter::Handle;
+# use IMG::Views::ViewMaker;
+use Filter::Handle qw( Filter UnFilter) ;
 our $VERSION = '0.1';
 
 any '/launch' => sub {
 	return '3... 2... 1... blast off!';
 };
 
+# menu pages
+
+
 prefix '/cgi-bin';
 
 any '/main.cgi?**' => sub {
 
-	say 'about to run cgi_dispatch';
-	my $rtn = cgi_dispatch( request );
-	my $n_taxa;
-	my $core = setting('_core');
+	my $rtn = prep_parse_params( request );
 	# get template variables
-	my $tmpl_vars = get_tmpl_vars();
-	$tmpl_vars->{title} = $rtn->{tmpl_args}{title};
-	# current -- which section
-	say 'rtn: ' . Dumper $rtn;
+	var current => $rtn->{tmpl_args}{current};
+	var page => $rtn->{tmpl_args}{module};
+
 	my $tmpl_inc;
-#	my $tmpl_vars = $rtn->{tmpl_args};
-	if ( $rtn->{tmpl_args}{ yui_js } ) {
-		push @{$tmpl_inc->{scripts}}, $rtn->{tmpl_args}{ yui_js };
-	}
 
 	for my $x ( 'yui_js', 'scripts' ) {
 		if ( $rtn->{tmpl_args}{ $x } ) {
@@ -46,7 +35,15 @@ any '/main.cgi?**' => sub {
 		push @{$tmpl_inc->{styles}}, $rtn->{tmpl_args}{include_styles};
 	}
 
+	template "pages/any_content", {
+		title => $rtn->{tmpl_args}{title},
+		tmpl_includes => $tmpl_inc,
+		content => $rtn
+	};
 
+=cut
+	my $n_taxa;
+	my $core = setting('_core');
 
 	if ( config->{async} ) {
 
@@ -63,20 +60,20 @@ any '/main.cgi?**' => sub {
 
 			# you can write more content
 			# all streaming
-			content 'Hello, again!';
+			Filter \*STDOUT, sub { content @_; };
 
-			my $output;
-			local $@;
-			eval {
-
-				open local *STDOUT, ">", \$output or die "Could not open STDOUT: $!";
+#			my $output;
+#			local $@;
+#			eval {
+#				open local *STDOUT, ">", \$output or die "Could not open STDOUT: $!";
 
 				$rtn->{sub_to_run}->( );
 
-				close local *STDOUT;
-
-			};
-			die $@ if $@;
+#				close local *STDOUT;
+#
+#			};
+#			die $@ if $@;
+			UnFilter \*STDOUT;
 
 			# print the bottom of the page
 			content img_render( tmpl_args => $rtn->{tmpl_args}, request => request, part => 'page_bottom' ) if 'default' eq $rtn->{tmpl};
@@ -118,12 +115,11 @@ any '/main.cgi?**' => sub {
 
 	$out .= img_render( tmpl_args => $rtn->{tmpl_args}, request => request, part => 'page_bottom' ) if 'default' eq $rtn->{tmpl};
 
-	template "pages/any_content.tt", { title => $rtn->{tmpl_args}{title}, tmpl_includes => $tmpl_inc, content => $output };
-
 	return;
 #	return $out;
 
 #	return { %$prep_args, sub_to_run => $sub_to_run };
+=cut
 
 };
 
@@ -137,5 +133,6 @@ any '/main.cgi' => sub {
 	return;
 
 };
+
 
 1;

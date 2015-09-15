@@ -4,11 +4,11 @@
 var gulp = require( "gulp" ),
 	/** @type {Object} Loader of Gulp plugins from `package.json` */
 	p = require( "gulp-load-plugins" )(),
-	source = '/Users/gwg/img-vagrant/proportal/src/',
+	source = 'src/',
 	ppcss  = 'proportal.css',
 	ppsass = 'proportal.scss',
 	ppjs   = 'proportal.js',
-	target = '/Users/gwg/img-vagrant/proportal/public/',
+	target = 'public/',
 	/** @type {Array} JS source files to concatenate and uglify */
 	uglifySrc = [
 

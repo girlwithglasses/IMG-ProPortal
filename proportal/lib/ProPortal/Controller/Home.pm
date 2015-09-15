@@ -14,13 +14,12 @@ sub render {
 	my $self = shift;
 
 	# get the news!
-	my $data = $self->run_query({
-		query => 'news',
-	});
+	local $@;
+	my $data = eval { $self->run_query({ query => 'news' }); };
 
 #	my $data = undef;
 
-	return $self->add_defaults_and_render( $data );
+	return $self->add_defaults_and_render( $data || undef );
 
 }
 

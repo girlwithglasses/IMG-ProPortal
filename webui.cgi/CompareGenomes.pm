@@ -3,7 +3,7 @@
 #   cumulative statistics.  Formerly taxonStatsRdbms.pl
 #      --es 07/07/2005
 #
-# $Id: CompareGenomes.pm 34179 2015-09-03 20:53:31Z aireland $
+# $Id: CompareGenomes.pm 34208 2015-09-08 17:52:43Z imachen $
 ############################################################################
 package CompareGenomes;
 my $section = "CompareGenomes";
@@ -98,6 +98,9 @@ sub dispatch {
     } elsif ( paramMatch("md5dna") ne "" ||
 	      $page eq "md5dna" ) {
     	printIdenticalGenes("md5dna");
+    } elsif ( paramMatch("ublast") ne "" ||
+	      $page eq "ublast" ) {
+    	printIdenticalGenes("ublast");
     } elsif ( paramMatch("requestTaxonRefresh") ne "" ||
 	      $page eq "requestTaxonRefresh" ) {
     	addTaxonRefreshRequest();
@@ -4278,6 +4281,7 @@ sub printReannotationComparison {
 
     my %label_mapping;
     $label_mapping{'md5dna'} = "Identical genes through md5 checksums";
+    $label_mapping{'ublast'} = "100 Percent Identity genes using Blast";
 
     my $rclause       = urClause("t.taxon_oid");
     my $imgClause = WebUtil::imgClauseNoTaxon('t.taxon_oid');
@@ -4314,9 +4318,22 @@ sub printReannotationComparison {
 	print "</tr>\n";
 
 	## comparison stats
-	for my $method ( 'md5dna' ) {
-	    my $sql1 = "select count(distinct gene_oid) from gene_mapping where taxon = ? and method = ?";
-	    my $cur1 = execSql( $dbh, $sql1, $verbose, $taxon_oid, $method );
+	for my $method ( 'md5dna', 'ublast' ) {
+	    my $sql1 = "";
+	    my $cur1;
+	    if ( $method eq 'md5dna' ) {
+		$sql1 = "select count(distinct gene_oid) from gene_mapping where taxon = ? and method = ?";
+	    $cur1 = execSql( $dbh, $sql1, $verbose, $taxon_oid, $method );
+
+	    }
+	    elsif ( $method eq 'ublast' ) {
+		$sql1 = "select count(distinct query_gene) from gene_dna_ublast\@core_v400_musk where query_gene in ((select gene_oid from gene where taxon = ?) minus (select gene_oid from gene_mapping where taxon = ?)) and perc_ident = 100";
+		$cur1 = execSql( $dbh, $sql1, $verbose, $taxon_oid, $taxon_oid );
+	    }
+	    else {
+		next;
+	    }
+
 	    my ($new_match) = $cur1->fetchrow();
 	    $cur1->finish();
 	    my $pc = ( $new_match / $total ) * 100 if ( $total != 0 );
@@ -4338,8 +4355,8 @@ sub printReannotationComparison {
 	    }
 	    print "<td class='img' align='right'>$pc\%</td>\n";
 	    print "</tr>\n";
-	}
-    }
+	}   # end method
+    }   # end for loop
 
     $cur->finish();
 
@@ -4375,9 +4392,21 @@ sub printReannotationComparison {
 	print "</tr>\n";
 
 	## comparison stats
-	for my $method ( 'md5dna' ) {
-	    my $sql1 = "select count(distinct old_gene) from gene_mapping where old_taxon = ? and method = ?";
-	    my $cur1 = execSql( $dbh, $sql1, $verbose, $taxon_oid, $method );
+	for my $method ( 'md5dna', 'ublast' ) {
+	    my $sql1 = "";
+	    my $cur1;
+	    if ( $method eq 'md5dna' ) {
+		$sql1 = "select count(distinct old_gene) from gene_mapping where old_taxon = ? and method = ?";
+		$cur1 = execSql( $dbh, $sql1, $verbose, $taxon_oid, $method );
+	    }
+	    elsif ( $method eq 'ublast' ) {
+		$sql1 = "select count(distinct subj_gene) from gene_dna_ublast\@core_v400_musk where subj_gene in ((select gene_oid from gene where taxon = ?) minus (select old_gene from gene_mapping where old_taxon = ?)) and perc_ident = 100";
+		$cur1 = execSql( $dbh, $sql1, $verbose, $taxon_oid, $taxon_oid );
+	    }
+	    else {
+		next;
+	    }
+
 	    my ($old_match) = $cur1->fetchrow();
 	    $cur1->finish();
 	    my $pc = ( $old_match / $total ) * 100 if ( $total != 0 );
@@ -4412,20 +4441,48 @@ sub printIdenticalGenes {
     my $old = param("old");
     my $gene_field_name = "gene_oid";
     my $taxon_field_name = "taxon";
-    if ( $old ) {
-	$gene_field_name = "old_gene";
-	$taxon_field_name = "old_taxon";
+    my $gene_name2 = 'query_gene';
+    if ( $method eq 'ublast' ) {
+	if ( $old ) {
+	    $gene_name2 = 'subj_gene';
+	    $gene_field_name = "old_gene";
+	}
+    }
+    else {
+	if ( $old ) {
+	    $gene_field_name = "old_gene";
+	    $taxon_field_name = "old_taxon";
+	}
     }
 
     $method =~ s/'/''/g;   # replace ' with '' just in case
-    my $sql = qq{
-        select distinct g.gene_oid, g.locus_type
-        from gene g, gene_mapping m
-        where m.$taxon_field_name = ?
-        and g.gene_oid = m.$gene_field_name
-        and m.method = '$method'
-        };
-    my $title = "Genes with Identical MD5 Checksums";
+    my $sql = "";
+    my $title = "";
+
+    if ( $method eq 'ublast' ) {
+	$sql = qq{
+            select distinct g.gene_oid, g.locus_type
+            from gene g
+            where g.taxon = ?
+            and g.gene_oid in
+                ((select gb.$gene_name2
+                  from gene_dna_ublast\@core_v400_musk gb
+                  where gb.perc_ident = 100) minus
+                 (select m.$gene_field_name from gene_mapping m))
+            };
+	$title = "Genes with 100 Percent Identity using Blast";
+    }
+    else {
+	$sql = qq{
+            select distinct g.gene_oid, g.locus_type
+            from gene g, gene_mapping m
+            where m.$taxon_field_name = ?
+            and g.gene_oid = m.$gene_field_name
+            and m.method = '$method'
+            };
+	$title = "Genes with Identical MD5 Checksums";
+    }
+
     TaxonDetailUtil::printGeneListSectionSorting1( $taxon_oid, $sql, $title, "", $taxon_oid );
 }
 

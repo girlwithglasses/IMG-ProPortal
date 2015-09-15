@@ -14,9 +14,6 @@ use File::Basename;
 #use Plack::Middleware::Conditional;
 
 my $base = dirname($Bin);
-say "base: $base";
-
-my $sessions_enabled = 0;
 
 use Plack::Builder;
 #use Log::Contextual qw(:log);
@@ -33,34 +30,30 @@ use Mojo::Server::PSGI;
 my $server = Mojo::Server::PSGI->new;
 $server->load_app( "$base/bin/podserver" );
 
-use AltProPortal;
+use ProPortalPackage;
 
 my $pp = sub {
-  AltProPortal->to_app;
+  ProPortalPackage->to_app;
 };
+
+use TestApp;
+
+my $test = sub {
+  TestApp->to_app;
+};
+
 
 builder {
 	enable "Deflater";
 #	enable "Static", path => qr#^/(images|css|js)#, root => $base . "/public";
 	enable "Debug";
 
-=cut
-	enable_if { $sessions_enabled } "Session",
-		state => Plack::Session::State::Cookie->new(
-			session_key => 'img_proportal',
-			domain => 'img.jgi.doe.gov',
-		),
-		store => Plack::Session::Store::File->new(
-			dir => "$base/tmp",
-			serializer => sub { ... },
-			deserializer => sub { ... },
-		);
-=cut
 #	mount "/cgi-bin" => $old_img->();
 #	enable "Log::Contextual";
 #	enable "Session", store => "File";
 	mount "/pod" => sub { $server->run(@_) };
 
 	mount "/" => $pp->();
+	mount '/test' => $test->();
 
 };

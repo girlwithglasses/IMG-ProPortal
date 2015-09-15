@@ -172,21 +172,85 @@ Update the access and modification times of a file
 
 @param  $file_with_path
 
-Warns if the file could not be touched.
+Warns if the file could not be touched; dies if file does not exist
 
 =cut
 
 sub file_touch {
-	my $self = shift;
-	my $file_path = shift || die 'No file specified';
+	my $file_path = shift // die 'No file specified';
+
+	die $file_path . ' does not exist' if ! -e $file_path;
 
 	# untaint path if necessary
 	if ( tainted($file_path) ) {
 		$file_path = IMG::Util::Untaint::check_file( $file_path )
 	}
-	utime( undef, undef, $file_path ) or warn "Could not touch $file_path: $!";
+
+	utime( undef, undef, $file_path ) || warn "Could not touch $file_path: $!";
 	return;
 }
+
+=head3
+
+does $d exist?
+
+=cut
+
+sub file_exists {
+	my $d = shift // die 'No file or directory specified';
+	return 1 if -e $d;
+	return 0;
+}
+
+=head3 is_readable
+
+is $d readable?
+
+=cut
+
+sub is_readable {
+	my $d = shift // die 'No file or directory specified';
+	return -r $d if file_exists($d);
+	die "$d does not exist";
+}
+
+=head3 is_writable
+
+is $d writable?
+
+=cut
+
+sub is_writable {
+	my $d = shift // die 'No file or directory specified';
+	return -w $d if file_exists($d);
+	die "$d does not exist";
+}
+
+=head3 is_dir
+
+is $d a directory?
+
+=cut
+
+sub is_dir {
+	my $d = shift // die 'No file or directory specified';
+	return -d $d if file_exists($d);
+	die "$d does not exist";
+}
+
+=head3 is_rw
+
+is $d readable and writable?
+
+=cut
+
+sub is_rw {
+	my $d = shift // die 'No file or directory specified';
+	return -r -w $d if file_exists($d);
+	die "$d does not exist";
+}
+
+
 
 
 1;

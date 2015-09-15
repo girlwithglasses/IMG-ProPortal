@@ -112,9 +112,27 @@ subtest 'read file' => sub {
 #	my $col_file = $app->read_file('genome_cart_cols');
 	ok( scalar @{$g_cart} == 10, '10 spp in genome cart' );
 
-	my $fn_cart = $app->read_file('func_cart_state');
-	say Dumper $fn_cart;
-	ok( 1, 'read in function cart' );
+	#
+	$app = TestApp->new(
+		config => {
+			cgi_tmp_dir => $base . '/files/sessions',
+			workspace_dir => $base . '/files/workspace'
+		},
+		session => FakeSession->new( id => '1a8ad3512d8d8d47073afb7d8a964ccb', data => { contact_oid => 111602 } ),
+	);
+
+	# get all the carts and their contents
+	for my $c ( qw( gene func scaf genome ) ) {
+		my $cart = $app->read_file( $c . "_cart_state" );
+		if ('func' eq $c) {
+			say "$c count: " . scalar keys %{$cart->{recs}};
+		}
+		else {
+			say "$c count: " . scalar @$cart;
+		}
+	}
+
+
 
 };
 

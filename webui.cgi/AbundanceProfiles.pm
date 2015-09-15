@@ -11,7 +11,7 @@
 #   are still pretty much the same, after sorting.)
 #    --es 10/10/2005
 #
-# $Id: AbundanceProfiles.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: AbundanceProfiles.pm 34199 2015-09-04 21:13:24Z klchu $
 ############################################################################
 package AbundanceProfiles;
 require Exporter;
@@ -34,27 +34,30 @@ use WorkspaceUtil;
 use GenomeListJSON;
 
 $| = 1;
-my $section = "AbundanceProfiles";
-my $env                 = getEnv();
-my $main_cgi            = $env->{main_cgi};
-my $section_cgi         = "$main_cgi?section=$section";
-my $cluster_bin         = $env->{cluster_bin};
-my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
-my $tmp_dir             = $env->{tmp_dir};
-my $include_metagenomes = $env->{include_metagenomes};
-my $img_internal        = $env->{img_internal};
-my $img_lite            = $env->{img_lite};
-my $user_restricted_site  = $env->{user_restricted_site};
-my $merfs_timeout_mins = $env->{merfs_timeout_mins};
-if ( ! $merfs_timeout_mins ) {
+my $section              = "AbundanceProfiles";
+my $env                  = getEnv();
+my $main_cgi             = $env->{main_cgi};
+my $section_cgi          = "$main_cgi?section=$section";
+my $cluster_bin          = $env->{cluster_bin};
+my $cgi_tmp_dir          = $env->{cgi_tmp_dir};
+my $tmp_dir              = $env->{tmp_dir};
+my $include_metagenomes  = $env->{include_metagenomes};
+my $img_internal         = $env->{img_internal};
+my $img_lite             = $env->{img_lite};
+my $user_restricted_site = $env->{user_restricted_site};
+my $base_dir             = $env->{base_dir};
+my $base_url             = $env->{base_url};
+my $YUI                  = $env->{yui_dir_28};
+my $merfs_timeout_mins   = $env->{merfs_timeout_mins};
+if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
 my $scaffold_cart = $env->{scaffold_cart};
 
-my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
-my $in_file = $env->{in_file};
-my $mer_data_dir   = $env->{mer_data_dir};
+my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
+my $in_file         = $env->{in_file};
+my $mer_data_dir    = $env->{mer_data_dir};
 
 my $max_taxon_selection        = 100;     # for heap map
 my $max_taxon_selection_matrix = 1000;    # for matrix
@@ -66,10 +69,33 @@ my $avgEstOrfs = 0;
 
 my $verbose = $env->{verbose};
 
+sub getPageTitle {
+    return 'Abundance Profiles';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
+
+    if ($include_metagenomes) {
+        @a = ( "CompareGenomes", '', '', $js, '', "userGuide_m.pdf#page=18" );
+    } else {
+        @a = ( "CompareGenomes", '', '', $js, '', "userGuide.pdf#page=49" );
+    }
+
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
 
@@ -119,7 +145,7 @@ sub printTopPage {
     print "<p>\n";
 
     my $sit = new StaticInnerTable();
-    $sit->addColSpec("Tool"       );
+    $sit->addColSpec("Tool");
     $sit->addColSpec("Description");
 
     # Row 1
@@ -132,25 +158,26 @@ sub printTopPage {
     # Row 2
     my $url = "$main_cgi?section=AbundanceProfileSearch";
     my $row = alink( $url, "Abundance Profile Search" );
-    $row .= "\tSearch for functions based on over or under abundance "
-	. "in other genomes.\t";
+    $row .= "\tSearch for functions based on over or under abundance " . "in other genomes.\t";
     $sit->addRow($row);
 
     if ($include_metagenomes) {
-	# Row 3
+
+        # Row 3
         my $url = "$main_cgi?section=AbundanceComparisons";
         my $row = alink( $url, "Function Comparisons" );
         $row .= "\tMultiple genome pairwise abundance comparisons.\t";
-	$sit->addRow($row);
+        $sit->addRow($row);
     }
 
     # this should be last tool in the list - ken
     if ($include_metagenomes) {
-	# Row 4
+
+        # Row 4
         my $url = "$main_cgi?section=AbundanceComparisonsSub";
         my $row = alink( $url, "Function Category Comparisons" );
-	$row .= "\tPairwise functional category abundance comparisons.\t";
-	$sit->addRow($row);
+        $row .= "\tPairwise functional category abundance comparisons.\t";
+        $sit->addRow($row);
     }
 
     $sit->printTable();
@@ -218,8 +245,7 @@ sub printMergeForm {
     # 1st row
     print "<tr>";
     print "<td valign='top'>";
-    print "<input type='radio' name='display' value='heap' "
-	. "onclick=\"myEnable('heap')\" checked='checked'/> Heat Map";
+    print "<input type='radio' name='display' value='heap' " . "onclick=\"myEnable('heap')\" checked='checked'/> Heat Map";
     print nbsp(2);
     print "</td>";
 
@@ -334,23 +360,17 @@ sub printMergeForm {
     if ($img_internal) {
         if ( $domain eq "all" ) {
             print "<p>";
-            print "Switch to "
-              . alink( "main.cgi?section=AbundanceProfiles&page=mergedForm",
-                       "Table View" );
+            print "Switch to " . alink( "main.cgi?section=AbundanceProfiles&page=mergedForm", "Table View" );
             print "</p>";
             printTreeView();
         } else {
             print "<p>";
-            print "Switch to "
-              . alink(
-                "main.cgi?section=AbundanceProfiles&page=mergedForm&domain=all",
-                "Tree View"
-              );
+            print "Switch to " . alink( "main.cgi?section=AbundanceProfiles&page=mergedForm&domain=all", "Tree View" );
             print "</p>";
-            TableUtil::printGenomeTable("", "", 1);
+            TableUtil::printGenomeTable( "", "", 1 );
         }
     } else {
-        TableUtil::printGenomeTable("", "", 1);
+        TableUtil::printGenomeTable( "", "", 1 );
     }
 
     print hiddenVar( "page", "mergeResults" );
@@ -361,13 +381,11 @@ sub printMergeForm {
 
     print "\n</form>\n";
 
-
     my $hint1a = domainLetterNoteParen();
     my $hint1b = completionLetterNoteParen();
-    my $hint2 = "Estimated by multiplying by read depth when available. "
-        . "Generally slower than Gene Count.";
-    my $hint3 = normalizationHint();
-    my $hint =  qq{
+    my $hint2  = "Estimated by multiplying by read depth when available. " . "Generally slower than Gene Count.";
+    my $hint3  = normalizationHint();
+    my $hint   = qq{
          <a name='hint1' href='#'></a>
          <b>1</b> - $hint1a<br/>\n$hint1b<br/>\n
          <a name='hint2' href='#'></a>
@@ -379,9 +397,6 @@ sub printMergeForm {
     print "<p><a href='#'>Back to Top</a></p>";
 
 }
-
-
-
 
 sub printMergeForm3 {
 
@@ -441,8 +456,7 @@ sub printMergeForm3 {
     # 1st row
     print "<tr>";
     print "<td valign='top'>";
-    print "<input type='radio' name='display' value='heap' "
-    . "onclick=\"myEnable('heap')\" checked='checked'/> Heat Map";
+    print "<input type='radio' name='display' value='heap' " . "onclick=\"myEnable('heap')\" checked='checked'/> Heat Map";
     print nbsp(2);
     print "</td>";
 
@@ -548,21 +562,17 @@ sub printMergeForm3 {
         </div>
     };
 
-
-    GenomeListJSON::printHiddenInputType($section, 'mergeResults');
+    GenomeListJSON::printHiddenInputType( $section, 'mergeResults' );
     GenomeListJSON::printGenomeListJsonDiv();
 
-    GenomeListJSON::printMySubmitButton( "", 'Go', "Go",
-                                         '', $section, 'mergeResults', 'meddefbutton' );
-
+    GenomeListJSON::printMySubmitButton( "", 'Go', "Go", '', $section, 'mergeResults', 'meddefbutton' );
 
     print "\n</form>\n";
     my $hint1a = domainLetterNoteParen();
     my $hint1b = completionLetterNoteParen();
-    my $hint2 = "Estimated by multiplying by read depth when available. "
-        . "Generally slower than Gene Count.";
-    my $hint3 = normalizationHint();
-    my $hint =  qq{
+    my $hint2  = "Estimated by multiplying by read depth when available. " . "Generally slower than Gene Count.";
+    my $hint3  = normalizationHint();
+    my $hint   = qq{
          <a name='hint1' href='#'></a>
          <b>1</b> - $hint1a<br/>\n$hint1b<br/>\n
          <a name='hint2' href='#'></a>
@@ -574,25 +584,6 @@ sub printMergeForm3 {
     print "<p><a href='#'>Back to Top</a></p>";
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 sub printScaffoldCartSelection {
     my $scaffold_cart_names_href = ScaffoldCart::getCartNames();
@@ -634,23 +625,15 @@ sub printTreeView {
 
     # tells TableUtil::getSelectedTaxons which form to used
 
-    my ( $root, $open, $domain, $openfile, $selectedfile, $domainfile ) =
-      TreeFileMgr::printTreeView();
+    my ( $root, $open, $domain, $openfile, $selectedfile, $domainfile ) = TreeFileMgr::printTreeView();
 
-# whole page is refreshed
-#TreeFileMgr::printTree($root, $open, $domain, $openfile, $selectedfile, $domainfile,
-#"section=AbundanceProfiles&page=mergedForm");
+    # whole page is refreshed
+    #TreeFileMgr::printTree($root, $open, $domain, $openfile, $selectedfile, $domainfile,
+    #"section=AbundanceProfiles&page=mergedForm");
 
     # ajax update page
-    TreeFileMgr::printTreeDiv(
-                               $root,
-                               $open,
-                               $domain,
-                               $openfile,
-                               $selectedfile,
-                               $domainfile,
-                               "section=TreeFileMgr&page=treediv"
-    );
+    TreeFileMgr::printTreeDiv( $root, $open, $domain, $openfile, $selectedfile, $domainfile,
+        "section=TreeFileMgr&page=treediv" );
 
     print "</div></p>\n";
 }
@@ -664,7 +647,7 @@ sub printMergeResults {
     my $xcopy           = param("xcopy");
     my $allRows         = param("allRows");
     my $funcsPerPage    = param("funcsPerPage");
-    $funcsPerPage = 500 if ($funcsPerPage == 0);
+    $funcsPerPage = 500 if ( $funcsPerPage == 0 );
 
     my $xcopy_text = "(Gene Count)";
     if ( $xcopy eq 'est_copy' ) {
@@ -678,9 +661,9 @@ sub printMergeResults {
     my $cluster          = param("cluster");
 
     my @selectGenomes = param('genomeFilterSelections');
-    my $find_toi_ref = \@selectGenomes; #getSelectedTaxons();
-    my @taxon_oids   = @$find_toi_ref;
-    my $nTaxons      = @taxon_oids;
+    my $find_toi_ref  = \@selectGenomes;                   #getSelectedTaxons();
+    my @taxon_oids    = @$find_toi_ref;
+    my $nTaxons       = @taxon_oids;
 
     # --es 12/17/08 bug fix for abundance toolkit
     param( "profileTaxonOid", @taxon_oids );
@@ -692,23 +675,22 @@ sub printMergeResults {
     }
 
     if ( $display eq "matrix" ) {
-        if (    $nTaxons < 1 && $vir_count == 0
-             || $nTaxons > $max_taxon_selection_matrix )
+        if (   $nTaxons < 1 && $vir_count == 0
+            || $nTaxons > $max_taxon_selection_matrix )
         {
-            webError( "Please select 1 to $max_taxon_selection_matrix genomes." )
-              ;
+            webError("Please select 1 to $max_taxon_selection_matrix genomes.");
         }
 
     } else {
-        if (    $nTaxons < 1 && $vir_count == 0
-             || $nTaxons > $max_taxon_selection )
+        if (   $nTaxons < 1 && $vir_count == 0
+            || $nTaxons > $max_taxon_selection )
         {
-            webError( "Please select 1 to $max_taxon_selection genomes." );
+            webError("Please select 1 to $max_taxon_selection genomes.");
         }
     }
 
-    if ( hasMerFsTaxons(\@taxon_oids) ) {
-	   timeout( 60 * $merfs_timeout_mins );
+    if ( hasMerFsTaxons( \@taxon_oids ) ) {
+        timeout( 60 * $merfs_timeout_mins );
     }
 
     if ( $display eq "heap" ) {
@@ -776,8 +758,8 @@ sub printAbundanceProfilesForm {
 
     my $hint1a = domainLetterNoteParen();
     my $hint1b = completionLetterNoteParen();
-    my $hint2 = normalizationHint();
-    my $hint =  qq{
+    my $hint2  = normalizationHint();
+    my $hint   = qq{
          <a name='hint1' href='#'></a>
          <b>1</b> - $hint1a<br/>\n$hint1b<br/>\n
          <a name='hint2' href='#'></a>
@@ -797,8 +779,7 @@ sub loadTaxonOid2EstOrfs {
 
     my $nTaxons = @$taxonOids_ref;
     if ( $nTaxons == 0 ) {
-        webLog(   "loadTaxonOid2EstOrfs: no taxon selected. "
-                . "Should not get here.\n" );
+        webLog( "loadTaxonOid2EstOrfs: no taxon selected. " . "Should not get here.\n" );
         webError("Please select at least one genome.");
     }
 
@@ -828,12 +809,10 @@ sub loadTaxonOid2EstOrfs {
     if ($scaffold_cart) {
         my @scaffold_cart_names = param("scaffold_cart_name");
         foreach my $sname (@scaffold_cart_names) {
-            my $scaffold_oids_aref =
-              ScaffoldCart::getScaffoldByCartName($sname);
-            my $virtual_taxon_oid =
-              ScaffoldCart::getVirtualTaxonIdForName($sname);
-            my $str = join( ",", @$scaffold_oids_aref );
-            my $sql = qq{
+            my $scaffold_oids_aref = ScaffoldCart::getScaffoldByCartName($sname);
+            my $virtual_taxon_oid  = ScaffoldCart::getVirtualTaxonIdForName($sname);
+            my $str                = join( ",", @$scaffold_oids_aref );
+            my $sql                = qq{
             select count(*)
             from gene g
             where g.scaffold in($str)
@@ -884,14 +863,13 @@ sub printAbundanceProfileResults {
     printResultHeader();
 
     my @selectGenomes = param('genomeFilterSelections');
-    my $find_toi_ref = \@selectGenomes; #getSelectedTaxons();
-    my @taxon_oids   = @$find_toi_ref;
+    my $find_toi_ref  = \@selectGenomes;                   #getSelectedTaxons();
+    my @taxon_oids    = @$find_toi_ref;
 
     if ($scaffold_cart) {
         my @scaffold_cart_names = param("scaffold_cart_name");
         foreach my $sname (@scaffold_cart_names) {
-            my $virtual_taxon_oid =
-              ScaffoldCart::getVirtualTaxonIdForName($sname);
+            my $virtual_taxon_oid = ScaffoldCart::getVirtualTaxonIdForName($sname);
             push( @taxon_oids, $virtual_taxon_oid );
         }
     }
@@ -904,8 +882,7 @@ sub printAbundanceProfileResults {
 
     loadTaxonOid2EstOrfs( \@taxon_oids );
 
-    my $count = printHeatMapFiles( $cluster, \@taxon_oids, $doNormalization,
-                                   $clusterMatchText, $data_type );
+    my $count = printHeatMapFiles( $cluster, \@taxon_oids, $doNormalization, $clusterMatchText, $data_type );
 
     printStatusLine( "$count clusters retrieved.", 2 );
     printResultFooter($doNormalization);
@@ -923,9 +900,7 @@ sub printResultFooter {
           . "in z-score normalization.  The z-score normalization "
           . "measures *relative* abundance with regards to the "
           . "distribution of values within one genome.<br/>";
-        $s .=
-            "- Other anomalies may result from large values "
-          . "saturating the highest heat map color.<br/>";
+        $s .= "- Other anomalies may result from large values " . "saturating the highest heat map color.<br/>";
     }
     printHint($s);
 }
@@ -963,8 +938,7 @@ sub printAbundanceProfileSort {
     my $stateFile2        = $state->{stateFile};
 
     if ( $stateFile2 ne $stateFile ) {
-        webLog(   "printAbundanceProfileSort: stateFile mismatch "
-                . "'$stateFile2' vs. '$stateFile'\n" );
+        webLog( "printAbundanceProfileSort: stateFile mismatch " . "'$stateFile2' vs. '$stateFile'\n" );
         WebUtil::webExit(-1);
     }
     webLog "retrieved done " . currDateTime() . "\n"
@@ -975,7 +949,7 @@ sub printAbundanceProfileSort {
 
     my $dbh = dbLogin();
     ## get MER-FS taxons
-    my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile($dbh, @$taxonOids_ref);
+    my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile( $dbh, @$taxonOids_ref );
 
     print "<p>\n";
     my $count = 0;
@@ -983,14 +957,15 @@ sub printAbundanceProfileSort {
         $count++;
         my $taxon_display_name = WebUtil::taxonOid2Name( $dbh, $taxon_oid );
         my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail";
-    	if ( $mer_fs_taxons{$taxon_oid} ) {
-    	    $taxon_display_name .= " (MER-FS)";
-    	    $url = "$main_cgi?section=MetaDetail&page=metaDetail";
-    	}
+        if ( $mer_fs_taxons{$taxon_oid} ) {
+            $taxon_display_name .= " (MER-FS)";
+            $url = "$main_cgi?section=MetaDetail&page=metaDetail";
+        }
         $url .= "&taxon_oid=$taxon_oid";
         print "$count - " . alink( $url, $taxon_display_name ) . "<br/>\n";
     }
     print "</p>\n";
+
     #$dbh->disconnect();
 
     my @sortedRowIds;
@@ -1072,36 +1047,35 @@ sub normalizationHint {
 sub getTaxonDict {
     my ($dict_ref) = @_;
 
-    my $dbh        = dbLogin();
-    my $sql        = qq{
+    my $dbh = dbLogin();
+    my $sql = qq{
        select taxon_oid, taxon_display_name, 'No'
        from taxon
     };
-    if ( $in_file ) {
-    	$sql = "select taxon_oid, taxon_display_name, $in_file from taxon";
+    if ($in_file) {
+        $sql = "select taxon_oid, taxon_display_name, $in_file from taxon";
     }
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ; ; ) {
         my ( $id, $name, $in_file ) = $cur->fetchrow();
         last if !$id;
 
-	if ( $in_file eq 'Yes' ) {
-	    $name .= " (MER-FS)";
-	}
+        if ( $in_file eq 'Yes' ) {
+            $name .= " (MER-FS)";
+        }
         $dict_ref->{$id} = $name;
     }
+
     #$dbh->disconnect();
 
     if ($scaffold_cart) {
         my @scaffold_cart_names = param("scaffold_cart_name");
         foreach my $sname (@scaffold_cart_names) {
-            my $virtual_taxon_oid =
-              ScaffoldCart::getVirtualTaxonIdForName($sname);
+            my $virtual_taxon_oid = ScaffoldCart::getVirtualTaxonIdForName($sname);
             $dict_ref->{$virtual_taxon_oid} = $sname;
         }
     }
 }
-
 
 ############################################################################
 # getOrthologDict - Map cluster_id -> cluster_name
@@ -1109,8 +1083,8 @@ sub getTaxonDict {
 sub getOrthologDict {
     my ($dict_ref) = @_;
 
-    my $dbh        = dbLogin();
-    my $sql        = qq{
+    my $dbh = dbLogin();
+    my $sql = qq{
        select cluster_id, cluster_name
        from bbh_cluster
        where cluster_name is not null
@@ -1121,6 +1095,7 @@ sub getOrthologDict {
         last if !$id;
         $dict_ref->{"oclust$id"} = $name;
     }
+
     #$dbh->disconnect();
 }
 
@@ -1136,13 +1111,12 @@ sub getOrthologDict {
 #      doNorm - Do normalization.
 ############################################################################
 sub loadMapDb {
-    my ( $dbh, $func_type, $taxonOids_ref, $outTable_ref, $outTableOrig_ref,
-         $doNorm, $data_type ) = @_;
+    my ( $dbh, $func_type, $taxonOids_ref, $outTable_ref, $outTableOrig_ref, $doNorm, $data_type ) = @_;
 
     printStartWorkingDiv();
 
     ## get MER-FS taxons
-    my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile($dbh, @$taxonOids_ref);
+    my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile( $dbh, @$taxonOids_ref );
 
     my %uniqueRowIds;
     my @columns;
@@ -1155,70 +1129,66 @@ sub loadMapDb {
         push( @columns,     \%rowId2Val );
         push( @columnsOrig, \%rowId2ValOrig );
 
-    	if ( $mer_fs_taxons{$taxon_oid} ) {
-    	    # MER-FS
-    	    $taxon_oid = sanitizeInt($taxon_oid);
+        if ( $mer_fs_taxons{$taxon_oid} ) {
 
-    	    my $file_name = "";
-    	    if ( $func_type eq "cog" ) {
-        		$file_name = 'cog_count.txt';
-    	    }
-            elsif ( $func_type eq 'enzyme' ) {
+            # MER-FS
+            $taxon_oid = sanitizeInt($taxon_oid);
+
+            my $file_name = "";
+            if ( $func_type eq "cog" ) {
+                $file_name = 'cog_count.txt';
+            } elsif ( $func_type eq 'enzyme' ) {
                 $file_name = 'ec_count.txt';
-            }
-            elsif ( $func_type eq 'ko' ) {
+            } elsif ( $func_type eq 'ko' ) {
                 $file_name = 'ko_count.txt';
+            } elsif ( $func_type eq 'pfam' ) {
+                $file_name = 'pfam_count.txt';
+            } elsif ( $func_type eq 'tigrfam' ) {
+                $file_name = 'tigr_count.txt';
             }
-    	    elsif ( $func_type eq 'pfam' ) {
-        		$file_name = 'pfam_count.txt';
-    	    }
-    	    elsif ( $func_type eq 'tigrfam' ) {
-        		$file_name = 'tigr_count.txt';
-    	    }
 
-    	    if ( $file_name ) {
-                my @type_list = MetaUtil::getDataTypeList( $data_type );
-                for my $t2 ( @type_list ) {
-                    my $file = $mer_data_dir . "/" . $taxon_oid .
-                        "/" . $t2 . "/" . $file_name;
+            if ($file_name) {
+                my @type_list = MetaUtil::getDataTypeList($data_type);
+                for my $t2 (@type_list) {
+                    my $file = $mer_data_dir . "/" . $taxon_oid . "/" . $t2 . "/" . $file_name;
                     if ( -e $file ) {
                         my $fh = newReadFileHandle($file);
-                        if ( ! $fh ) {
+                        if ( !$fh ) {
                             next;
                         }
 
                         while ( my $line = $fh->getline() ) {
                             chomp $line;
-                            my ($id, $cnt) = split(/\t/, $line);
-            			    $rowId2Val{$id}     = $cnt;
-            			    $rowId2ValOrig{$id} = $cnt;
-            			    $uniqueRowIds{$id}  = 1;
-                        }   # end while line
-            			close $fh;
+                            my ( $id, $cnt ) = split( /\t/, $line );
+                            $rowId2Val{$id}     = $cnt;
+                            $rowId2ValOrig{$id} = $cnt;
+                            $uniqueRowIds{$id}  = 1;
+                        }    # end while line
+                        close $fh;
                     }
-                }   # end for data_type
-    	    }
-    	}
-    	else {
-    	    # DB
-    	    my $scaffold_cart_name;
+                }    # end for data_type
+            }
+        } else {
+
+            # DB
+            my $scaffold_cart_name;
             if ( $scaffold_cart && $taxon_oid < 0 ) {
                 $scaffold_cart_name = ScaffoldCart::getCartNameForTaxonOid($taxon_oid);
             }
-            my ( $cur, $scaffold_oids_str) = AbundanceToolkit::getFuncProfileCur(
-                $dbh, 'gene_count', $func_type, $taxon_oid, $scaffold_cart_name );
-    	    for ( ; ; ) {
-        		my ( $id, $cnt ) = $cur->fetchrow();
-        		last if !$id;
-        		$rowId2Val{$id}     = $cnt;
-        		$rowId2ValOrig{$id} = $cnt;
-        		$uniqueRowIds{$id}  = 1;
-    	    }
-    	    $cur->finish();
+            my ( $cur, $scaffold_oids_str ) =
+              AbundanceToolkit::getFuncProfileCur( $dbh, 'gene_count', $func_type, $taxon_oid, $scaffold_cart_name );
+            for ( ; ; ) {
+                my ( $id, $cnt ) = $cur->fetchrow();
+                last if !$id;
+                $rowId2Val{$id}     = $cnt;
+                $rowId2ValOrig{$id} = $cnt;
+                $uniqueRowIds{$id}  = 1;
+            }
+            $cur->finish();
 
             OracleUtil::truncTable( $dbh, "gtt_num_id" )
-                if ( $scaffold_oids_str =~ /gtt_num_id/i );
-    	}
+              if ( $scaffold_oids_str =~ /gtt_num_id/i );
+        }
     }
 
     if ( $doNorm eq "z" || $doNorm eq "genomeSize" ) {
@@ -1283,8 +1253,7 @@ sub genomeSizeNormalize {
 
     my $total_gene_count = $taxonOid2EstOrfs_ref->{$taxon_oid};
     if ( $total_gene_count == 0 ) {
-        webLog(   "genomeSizeNormalize: total_gene_count=0 "
-                . "for taxon_oid=$taxon_oid\n" );
+        webLog( "genomeSizeNormalize: total_gene_count=0 " . "for taxon_oid=$taxon_oid\n" );
         WebUtil::webExit(-1);
     }
     my $scale = $avgEstOrfs / $total_gene_count;
@@ -1572,7 +1541,7 @@ sub printHeatMapFiles {
 
     my $dbh = dbLogin();
 
-    my $rowDict_ref = AbundanceToolkit::getFuncDict($dbh, $func_type);
+    my $rowDict_ref = AbundanceToolkit::getFuncDict( $dbh, $func_type );
 
     my %table;
     my %tableOrig;
@@ -1591,42 +1560,44 @@ sub printHeatMapFiles {
     print "<p>\n";
 
     ## get MER-FS taxons
-    my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile($dbh, @$taxonOids_ref);
+    my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile( $dbh, @$taxonOids_ref );
 
     my $count = 0;
     for my $taxon_oid (@$taxonOids_ref) {
         $count++;
         my $taxon_display_name = WebUtil::taxonOid2Name( $dbh, $taxon_oid );
-        my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail";
+        my $url                = "$main_cgi?section=TaxonDetail&page=taxonDetail";
 
-    	if ( $mer_fs_taxons{$taxon_oid} ) {
-    	    $taxon_display_name .= " (MER-FS)";
-    	    if ( $data_type =~ /assembled/i || $data_type =~ /unassembled/i ) {
+        if ( $mer_fs_taxons{$taxon_oid} ) {
+            $taxon_display_name .= " (MER-FS)";
+            if ( $data_type =~ /assembled/i || $data_type =~ /unassembled/i ) {
                 $taxon_display_name .= " ($data_type)";
-    	    }
-    	    $url = "$main_cgi?section=MetaDetail&page=metaDetail";
-    	}
+            }
+            $url = "$main_cgi?section=MetaDetail&page=metaDetail";
+        }
 
         $url .= "&taxon_oid=$taxon_oid";
         print "$count - " . alink( $url, $taxon_display_name ) . "<br/>\n";
     }
     print "</p>\n";
+
     #$dbh->disconnect();
 
     my $stateFile = "${func_type}_heatMap$$";
+
     #print "printHeatMapFiles() stateFile: $stateFile<br/>\n";
     my $state = {
-          orderedRowIds    => \@orderedRowIds,
-          func_type        => $func_type,
-          table            => \%table,
-          tableOrig        => \%tableOrig,
-          taxonOids        => $taxonOids_ref,
-          doNorm           => $doNorm,
-          rowDict          => $rowDict_ref,
-          colDict          => \%colDict,
-          clusterMatchText => $clusterMatchText,
-          data_type        => $data_type,
-          stateFile        => $stateFile,
+        orderedRowIds    => \@orderedRowIds,
+        func_type        => $func_type,
+        table            => \%table,
+        tableOrig        => \%tableOrig,
+        taxonOids        => $taxonOids_ref,
+        doNorm           => $doNorm,
+        rowDict          => $rowDict_ref,
+        colDict          => \%colDict,
+        clusterMatchText => $clusterMatchText,
+        data_type        => $data_type,
+        stateFile        => $stateFile,
     };
     store( $state, checkTmpPath("$cgi_tmp_dir/$stateFile") );
 
@@ -1663,12 +1634,8 @@ sub printHeatMapColumns {
             $count++;
             print "<td valign='top'>\n";
             my ( $imageFile, $html ) = genOneHeatMapFile(
-                  $func_type,     $count,
-                  $table_ref,     \@batch,
-                  $taxonOids_ref, $doNorm,
-                  $rowDict_ref,   $colDict_ref,
-                  $tableOrig_ref, $clusterMatchText,
-                  $data_type,     $stateFile
+                $func_type,   $count,       $table_ref,     \@batch,           $taxonOids_ref, $doNorm,
+                $rowDict_ref, $colDict_ref, $tableOrig_ref, $clusterMatchText, $data_type,     $stateFile
             );
             print "$html\n";
             @batch = ();
@@ -1680,12 +1647,8 @@ sub printHeatMapColumns {
         $count++;
         print "<td valign='top'>\n";
         my ( $imageFile, $html ) = genOneHeatMapFile(
-                  $func_type,     $count,
-                  $table_ref,     \@batch,
-                  $taxonOids_ref, $doNorm,
-                  $rowDict_ref,   $colDict_ref,
-                  $tableOrig_ref, $clusterMatchText,
-                  $data_type,     $stateFile
+            $func_type,   $count,       $table_ref,     \@batch,           $taxonOids_ref, $doNorm,
+            $rowDict_ref, $colDict_ref, $tableOrig_ref, $clusterMatchText, $data_type,     $stateFile
         );
         print "$html\n";
         print "</td>\n";
@@ -1699,10 +1662,8 @@ sub printHeatMapColumns {
 ############################################################################
 sub genOneHeatMapFile {
     my (
-         $func_type,         $cntId,         $table_ref,
-         $orderedRowIds_ref, $taxonOids_ref, $doNorm,
-         $rowDict_ref,       $colDict_ref,   $tableOrig_ref,
-         $clusterMatchText,  $data_type,     $stateFile
+        $func_type,   $cntId,       $table_ref,     $orderedRowIds_ref, $taxonOids_ref, $doNorm,
+        $rowDict_ref, $colDict_ref, $tableOrig_ref, $clusterMatchText,  $data_type,     $stateFile
       )
       = @_;
 
@@ -1711,12 +1672,12 @@ sub genOneHeatMapFile {
     webLog "make heat map $outFile " . currDateTime() . "\n" if $verbose >= 1;
     my $n_rows = @$orderedRowIds_ref;
     my $n_cols = @$taxonOids_ref;
-    my $args = {
-                 id         => $id,
-                 n_rows     => $n_rows,
-                 n_cols     => $n_cols,
-                 image_file => $outFile,
-                 taxon_aref => $taxonOids_ref
+    my $args   = {
+        id         => $id,
+        n_rows     => $n_rows,
+        n_cols     => $n_cols,
+        image_file => $outFile,
+        taxon_aref => $taxonOids_ref
     };
     my $hm = new ProfileHeatMap($args);
     my @a;
@@ -1751,10 +1712,10 @@ sub genOneHeatMapFile {
             }
         }
     }
-    my $html =
-      $hm->draw( \@a, $orderedRowIds_ref, $taxonOids_ref, $rowDict_ref,
-                 $colDict_ref, $tableOrig_ref, $clusterMatchText, $stateFile,
-                 $func_type, $data_type );
+    my $html = $hm->draw(
+        \@a,            $orderedRowIds_ref, $taxonOids_ref, $rowDict_ref, $colDict_ref,
+        $tableOrig_ref, $clusterMatchText,  $stateFile,     $func_type,   $data_type
+    );
     $hm->printToFile();
     return ( $outFile, $html );
 }
@@ -1798,13 +1759,12 @@ sub printAbundanceCellGeneList {
     my $dbh = dbLogin();
     printStatusLine( "Loading ...", 1 );
 
-    my $isTaxonInFile = AbundanceToolkit::printAbundanceGeneListSubHeader(
-        $dbh, $func_type, $rowId, $taxon_oid, $data_type);
+    my $isTaxonInFile =
+      AbundanceToolkit::printAbundanceGeneListSubHeader( $dbh, $func_type, $rowId, $taxon_oid, $data_type );
 
-    if ( $isTaxonInFile ) {
+    if ($isTaxonInFile) {
         AbundanceToolkit::printMetaGeneList( $rowId, $taxon_oid, $data_type );
-    }
-    else {
+    } else {
 
         my $sql;
         if ( $rowId =~ /^COG/ ) {
@@ -1863,7 +1823,7 @@ sub printAbundanceCellGeneList {
         }
 
         my @binds = ( $rowId, $taxon_oid, 'CDS', 'No' );
-        AbundanceToolkit::printDbGeneList(  $dbh, $sql, \@binds );
+        AbundanceToolkit::printDbGeneList( $dbh, $sql, \@binds );
     }
 
     print end_form();

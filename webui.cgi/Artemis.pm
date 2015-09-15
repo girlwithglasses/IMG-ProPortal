@@ -1,7 +1,7 @@
 ############################################################################
 # Artemis.pm - Handle web artemis start up.
 #     --es 09/13/2007
-# $Id: Artemis.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: Artemis.pm 34199 2015-09-04 21:13:24Z klchu $
 ############################################################################
 package Artemis;
 use strict;
@@ -46,11 +46,41 @@ my $YUI           = $env->{yui_dir_28};
 my $yui_tables    = $env->{yui_tables};
 my $USE_YUI = 0;
 
+sub getPageTitle {
+    return 'Artemis';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+    if (WebUtil::paramMatch("noHeader") ne "") {
+        return @a;
+    } else {
+        
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+        my $from = param("from");
+        my $page = param('page');
+        if ( $from eq "ACT" || $page =~ /^ACT/ || $page =~ /ACT$/ ) {
+            @a = ( "CompareGenomes", '', '', $js );
+        } else {
+            @a = ( "FindGenomes", '', '', $js );
+        }
+
+        return @a;
+    }
+}
+
 ############################################################################
 # dispatch
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
 

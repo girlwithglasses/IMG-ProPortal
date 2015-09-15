@@ -1,7 +1,7 @@
 #
 #
 #
-# $Id: ScaffoldSearch.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: ScaffoldSearch.pm 34199 2015-09-04 21:13:24Z klchu $
 
 package ScaffoldSearch;
 use POSIX qw(ceil floor); 
@@ -33,7 +33,7 @@ my $cgi_tmp_dir              = $env->{cgi_tmp_dir};
 my $tmp_dir                  = $env->{tmp_dir};
 my $include_metagenomes      = $env->{include_metagenomes};
 my $scaffold_cart = $env->{scaffold_cart};
-
+my $YUI = $env->{yui_dir_28};
 ## We use the max count for both gene and scaffold display
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 my $maxGeneListResults = 1000;
@@ -48,9 +48,25 @@ if ( ! $merfs_timeout_mins ) {
 ## Let's try 10 min to see how it works
 $merfs_timeout_mins = 10;
 
+sub getPageTitle {
+    return 'Scaffold Search';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+
+    require GenomeListJSON;
+    my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
+    my @a = ("FindGenomes", '', '', $js);
+    return @a;
+}
 
 sub dispatch {
-    my ($numTaxon) = @_;
+     my ( $self, $numTaxon ) = @_;
 
     my $page = param('page');
     if ( $page eq 'searchResult' ) {

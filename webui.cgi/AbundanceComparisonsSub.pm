@@ -2,7 +2,7 @@
 # AbundanceComparisons.pm - Tool to allow for multiple pairwise
 #   genome abundance comparisons.
 #        --es 06/11/2007
-# $Id: AbundanceComparisonsSub.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: AbundanceComparisonsSub.pm 34199 2015-09-04 21:13:24Z klchu $
 ############################################################################
 package AbundanceComparisonsSub;
 
@@ -28,6 +28,7 @@ my $section_cgi         = "$main_cgi?section=$section";
 my $inner_cgi           = $env->{inner_cgi};
 my $verbose             = $env->{verbose};
 my $base_dir            = $env->{base_dir};
+my $base_url            = $env->{base_url};
 my $img_internal        = $env->{img_internal};
 my $include_img_terms   = $env->{include_img_terms};
 my $include_metagenomes = $env->{include_metagenomes};
@@ -35,7 +36,7 @@ my $show_myimg_login    = $env->{show_myimg_login};
 my $img_lite            = $env->{img_lite};
 my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
 my $show_myimg_login    = $env->{show_myimg_login};
-
+my $YUI = $env->{yui_dir_28};
 my $top_n_abundances     = 10000; # make a very large number
 my $max_query_taxons     = 20;
 my $max_reference_taxons = 200;
@@ -76,11 +77,40 @@ my %func_text = (
     'tigrfam'  => 'TIGRfam Category Role',
 );
 
+sub getPageTitle {
+    return 'Function Category Comparisons';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+    if (WebUtil::paramMatch("noHeader") ne "") {
+        return @a;
+    } else {
+        
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+        if ($include_metagenomes) {
+            @a = ( "CompareGenomes", '', '', $js, '', "userGuide_m.pdf#page=23" );
+        } else {
+            @a = ("CompareGenomes", '', '', $js );
+        }
+
+        return @a;
+    }
+}
+
+
 ############################################################################
 # dispatch - Dispatch events.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
 

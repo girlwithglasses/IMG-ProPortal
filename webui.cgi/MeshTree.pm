@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MeshTree.pm 32572 2015-01-16 20:54:23Z aratner $
+# $Id: MeshTree.pm 34199 2015-09-04 21:13:24Z klchu $
 ############################################################################
 package MeshTree;
 
@@ -25,6 +25,7 @@ my $tmp_dir              = $env->{tmp_dir};
 my $main_cgi             = $env->{main_cgi};
 my $verbose              = $env->{verbose};
 my $base_url             = $env->{base_url};
+my $base_dir                 = $env->{base_dir};
 my $YUI                  = $env->{yui_dir_28};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $img_ken              = $env->{img_ken};
@@ -37,7 +38,24 @@ my $nvl = getNvl();
 my $pubchem_baseurl = "http://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?cid=";
 my $mfile           = '/global/homes/i/imachen/script/test1.txt';
 
+sub getPageTitle {
+    return 'Mesh Tree';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
+
+    my @a = ( "FindFunctions", '', '', $js );
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param('page');
 
     if ( $page eq 'compound' ) {
@@ -89,14 +107,17 @@ sub dispatch {
         my $compoundId = param('compoundId');
         printTreeActDiv($compoundId);
     } elsif ( $page eq 'jsonANIPhylo' ) {
+
         # ajax call to print all img ani phylum tree
         print header( -type => "application/json" );
         printTreeJsonANIPhylo();
     } elsif ( $page eq 'jsonBcPhylo' ) {
+
         # ajax call to print all img bc phylum tree
         print header( -type => "application/json" );
         printTreeJsonBcPhylo();
     } elsif ( $page eq 'jsonNpPhylo' ) {
+
         # ajax call to print all img bc phylum tree
         print header( -type => "application/json" );
         printTreeJsonNpPhylo();
@@ -250,7 +271,6 @@ sub printUnclassifiedBcList {
     printStatusLine( "$cnt loaded", 2 );
 }
 
-
 sub printEcBcList {
     my $ecId = param('ecId');
     my $type = param('type');
@@ -258,12 +278,12 @@ sub printEcBcList {
 
     my $fromClause;
     my $stmtClause;
-    if($type eq 'Experimental') {
-       $fromClause = ', bio_cluster_data_new bcd';
-       $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Experimental'";
-    } elsif($type eq 'Predicted') {
-       $fromClause = ', bio_cluster_data_new bcd';
-       $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Predicted'";
+    if ( $type eq 'Experimental' ) {
+        $fromClause = ', bio_cluster_data_new bcd';
+        $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Experimental'";
+    } elsif ( $type eq 'Predicted' ) {
+        $fromClause = ', bio_cluster_data_new bcd';
+        $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Predicted'";
     }
 
     # all ec info
@@ -386,12 +406,12 @@ sub printEcList {
 
     my $fromClause;
     my $stmtClause;
-    if($type eq 'Experimental') {
-       $fromClause = ', bio_cluster_data_new bcd';
-       $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Experimental'";
-    } elsif($type eq 'Predicted') {
-       $fromClause = ', bio_cluster_data_new bcd';
-       $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Predicted'";
+    if ( $type eq 'Experimental' ) {
+        $fromClause = ', bio_cluster_data_new bcd';
+        $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Experimental'";
+    } elsif ( $type eq 'Predicted' ) {
+        $fromClause = ', bio_cluster_data_new bcd';
+        $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Predicted'";
     }
 
     my $sql = qq{
@@ -594,6 +614,7 @@ sub printBCList {
 
         my $tx = $bc2tx{$bcid};
         if ( $tx eq "" ) {
+
             #$r .= ' obsolete' . $sd . 'obsolete genome' . "\t";
             next;
         } else {
@@ -1128,7 +1149,7 @@ sub printTreeEcDiv {
     # TOD print a selector for both, experimental and predicated
     # default is both
     #if ($img_ken) {
-        print qq{
+    print qq{
             <br>
  <select id='ecMeshTreeSelect' onchange="ecMeshTreeSelector('$xml_cgi', '$base_url/images/yui_progressbar.gif')">
   <option value="both" selected>Both</option>
@@ -1136,6 +1157,7 @@ sub printTreeEcDiv {
   <option value="Predicted">Predicated</option>
 </select>             
         };
+
     #}
 
     print qq{
@@ -1173,7 +1195,8 @@ sub printTreeBcDiv {
 }
 
 sub printBCTypeTreeDiv {
-    my $mytree = getBCTypeTree(); 
+    my $mytree = getBCTypeTree();
+
     # style='border:1px solid #99ccff;'
     print qq{
         <div id="meshtree_static"></div>
@@ -1184,7 +1207,7 @@ sub printBCTypeTreeDiv {
             });
         </script>
     };
- }
+}
 
 sub getBCTypeTree {
     my $dbh = dbLogin();
@@ -1193,30 +1216,29 @@ sub getBCTypeTree {
         from bc_type
     };
 
-    my $aref = OracleUtil::execSqlCached
-	($dbh, $sql, 'getBcTypes', 0);
+    my $aref = OracleUtil::execSqlCached( $dbh, $sql, 'getBcTypes', 0 );
 
     my %bc_types;
     foreach my $inner_aref (@$aref) {
-	my ( $bc_type, $desc ) = @$inner_aref;
-	$bc_types{$bc_type} = $desc;
+        my ( $bc_type, $desc ) = @$inner_aref;
+        $bc_types{$bc_type} = $desc;
     }
 
     # built the array:
     my @array;
-    foreach my $bc_type (sort keys %bc_types) {
-	my $desc =  $bc_types{$bc_type};
-	my @suba;	    
-	my %subhash;
+    foreach my $bc_type ( sort keys %bc_types ) {
+        my $desc = $bc_types{$bc_type};
+        my @suba;
+        my %subhash;
 
-	my $key = $bc_type;
-	$subhash{'key'} = $key;
-	$subhash{'name'}   = $desc;
-	$subhash{'isLeaf'} = 'true';
-	push( @array, \%subhash );
+        my $key = $bc_type;
+        $subhash{'key'}    = $key;
+        $subhash{'name'}   = $desc;
+        $subhash{'isLeaf'} = 'true';
+        push( @array, \%subhash );
     }
 
-    return encode_json(\@array);
+    return encode_json( \@array );
 }
 
 # to remove zeros $var += 0; which will turn 00005.67 into 5.67 in $var.
@@ -1290,16 +1312,16 @@ sub printTreeAllJsonEc {
 
     my %ecNames = %$ec_href;
 
-
     my $fromClause;
     my $stmtClause;
-    if($type eq 'Experimental') {
-       $fromClause = ', bio_cluster_data_new bcd';
-       $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Experimental'";
-    } elsif($type eq 'Predicted') {
-       $fromClause = ', bio_cluster_data_new bcd';
-       $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Predicted'";
+    if ( $type eq 'Experimental' ) {
+        $fromClause = ', bio_cluster_data_new bcd';
+        $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Experimental'";
+    } elsif ( $type eq 'Predicted' ) {
+        $fromClause = ', bio_cluster_data_new bcd';
+        $stmtClause = "and bf.cluster_id = bcd.cluster_id and bcd.evidence = 'Predicted'";
     }
+
     # node query ? not just leaf
     #my $rclause   = WebUtil::urClause('t.taxon_oid');
     #my $imgClause = WebUtil::imgClauseNoTaxon('t.taxon_oid');
@@ -1316,8 +1338,7 @@ sub printTreeAllJsonEc {
 
         #$sid = WebUtil::getSessionId();
     }
-    
-   
+
     my $nodes_aref = OracleUtil::execSqlCached( $dbh, $sql, 'nodesJsonEc' . $sid . $type );
     my %nodes;
     foreach my $inner_aref (@$nodes_aref) {
@@ -1417,7 +1438,6 @@ sub printTreeAllJsonEc {
 
     my $unclassifiedCount = 0;
 
-
     # I need to add taxon obsol. public etcS
 
     printJsonEc( \%ecNames, \%nodes, $unclassifiedCount );
@@ -1480,7 +1500,7 @@ sub getUnclassifiedBcCount {
             and icmt.compound_oid = npbs.compound_oid )
     };
 
-    my $aref = OracleUtil::execSqlCached( $dbh, $sql, 'getUnclassifiedBcCount' );
+    my $aref       = OracleUtil::execSqlCached( $dbh, $sql, 'getUnclassifiedBcCount' );
     my $inner_aref = $aref->[0];
     my $count      = $inner_aref->[0];
 
@@ -2438,8 +2458,8 @@ sub printJsonEc {
 ############################################################################
 sub printTreeJsonANIPhylo {
     my $domainfilter = param('domainfilter');
-    my $seqstatus = param('seqstatus');
-    my $array_ref = getTreePhylo( $domainfilter, 'ani', $seqstatus );
+    my $seqstatus    = param('seqstatus');
+    my $array_ref    = getTreePhylo( $domainfilter, 'ani', $seqstatus );
     print encode_json($array_ref);
 }
 
@@ -2448,8 +2468,8 @@ sub printTreeJsonANIPhylo {
 ############################################################################
 sub printTreeJsonBcPhylo {
     my $domainfilter = param('domainfilter');
-    my $seqstatus = param('seqstatus');
-    my $array_ref = getTreePhylo( $domainfilter, 'bc', $seqstatus );
+    my $seqstatus    = param('seqstatus');
+    my $array_ref    = getTreePhylo( $domainfilter, 'bc', $seqstatus );
     print encode_json($array_ref);
 }
 
@@ -2458,8 +2478,8 @@ sub printTreeJsonBcPhylo {
 ############################################################################
 sub printTreeJsonNpPhylo {
     my $domainfilter = param('domainfilter');
-    my $seqstatus = param('seqstatus');
-    my $array_ref = getTreePhylo( $domainfilter, 'np', $seqstatus );
+    my $seqstatus    = param('seqstatus');
+    my $array_ref    = getTreePhylo( $domainfilter, 'np', $seqstatus );
     print encode_json($array_ref);
 }
 
@@ -2476,26 +2496,25 @@ sub getTreePhylo {
     my $cacheFilename;
     my ( $sql, @binds );
     if ( $treeType eq 'np' ) {
-        ( $sql, @binds ) = getTreeNpPhyloSql($domainfilter, $seqstatus);
+        ( $sql, @binds ) = getTreeNpPhyloSql( $domainfilter, $seqstatus );
         $cacheFilename = 'getTreeNpPhyloSql_' . $domainfilter . '_' . $seqstatus . '_' . $contact_oid;
     } elsif ( $treeType eq 'ani' ) {
-        ( $sql, @binds ) = getTreeANIPhyloSql($domainfilter, $seqstatus);
+        ( $sql, @binds ) = getTreeANIPhyloSql( $domainfilter, $seqstatus );
         $cacheFilename = 'getTreeANIPhyloSql_' . $domainfilter . '_' . $seqstatus . '_' . $contact_oid;
     } else {
-        ( $sql, @binds ) = getTreeBcPhyloSql($domainfilter, $seqstatus);
+        ( $sql, @binds ) = getTreeBcPhyloSql( $domainfilter, $seqstatus );
         $cacheFilename = 'getTreeBcPhyloSql_' . $domainfilter . '_' . $seqstatus . '_' . $contact_oid;
     }
 
-    my $dbh = dbLogin();
-    my $aref = OracleUtil::execSqlCached
-	($dbh, $sql, $cacheFilename, 0, @binds);
+    my $dbh  = dbLogin();
+    my $aref = OracleUtil::execSqlCached( $dbh, $sql, $cacheFilename, 0, @binds );
 
     my %key2count;
     my @array;
 
     foreach my $inner_aref (@$aref) {
-        my ( $domain, $phylum, $ir_class, $ir_order, $family,
-	     $genus, $species, $seq_status, $taxon_oid, $cnt ) = @$inner_aref;
+        my ( $domain, $phylum, $ir_class, $ir_order, $family, $genus, $species, $seq_status, $taxon_oid, $cnt ) =
+          @$inner_aref;
         my @suba;
 
         my $key = $domain;
@@ -2552,34 +2571,34 @@ sub getTreePhylo {
         $subhash{'isLeaf'} = 'false';
         push( @suba, \%subhash );
 
-	my $anikey;
-	if ($treeType eq "ani") {
-	    $species = $Unassigned if ( !$species );
-	    my @a = split( /\s+/, $species );
-	    if ( $#a >= 1 ) {
-		$species = $a[1];
-	    }
-	    $anikey = "$genus $species";
-	}
+        my $anikey;
+        if ( $treeType eq "ani" ) {
+            $species = $Unassigned if ( !$species );
+            my @a = split( /\s+/, $species );
+            if ( $#a >= 1 ) {
+                $species = $a[1];
+            }
+            $anikey = "$genus $species";
+        }
 
         my %subhash;
-	if ($treeType eq "ani") {
-            $subhash{'count'} = $cnt; 
-            $subhash{'key'} = $anikey;
-            $subhash{'name'} = $anikey;
-            $subhash{'isLeaf'} = 'true';
-            $subhash{'tooltip'} = $cnt.' total clique(s) for species: '.$anikey;
+        if ( $treeType eq "ani" ) {
+            $subhash{'count'}   = $cnt;
+            $subhash{'key'}     = $anikey;
+            $subhash{'name'}    = $anikey;
+            $subhash{'isLeaf'}  = 'true';
+            $subhash{'tooltip'} = $cnt . ' total clique(s) for species: ' . $anikey;
 
-	} else {
-	    $subhash{'key'} = $taxon_oid;
-	    $species = $Unassigned if ( !$species );
-	    $subhash{'name'} = $species;
-	    $subhash{'isLeaf'} = 'true';
-	    my $d = substr( $domain, 0, 1 );
-	    $seq_status = substr( $seq_status, 0, 1 );
-	    $subhash{'status'} = "($d)[$seq_status]";
-	    $subhash{'count'} = $cnt;
-	}
+        } else {
+            $subhash{'key'} = $taxon_oid;
+            $species = $Unassigned if ( !$species );
+            $subhash{'name'}   = $species;
+            $subhash{'isLeaf'} = 'true';
+            my $d = substr( $domain, 0, 1 );
+            $seq_status = substr( $seq_status, 0, 1 );
+            $subhash{'status'} = "($d)[$seq_status]";
+            $subhash{'count'}  = $cnt;
+        }
         push( @suba, \%subhash );
 
         push( @array, \@suba );
@@ -2606,21 +2625,21 @@ sub getTreePhylo {
 }
 
 sub getTreeANIPhyloSql {
-    my ($domainfilter, $seqstatus) = @_;
+    my ( $domainfilter, $seqstatus ) = @_;
 
     my $rclause   = WebUtil::urClause("t");
     my $imgClause = WebUtil::imgClause("t");
 
     my $domainClause;
     my @binds;
-    if ($domainfilter && $domainfilter ne 'all') {
+    if ( $domainfilter && $domainfilter ne 'all' ) {
         $domainClause = 'and t.domain = ? ';
         push( @binds, $domainfilter );
     }
     my $statusClause;
-    if ($seqstatus && $seqstatus ne "both") {
-	$statusClause = 'and t.seq_status = ? ';
-	push( @binds, $seqstatus );
+    if ( $seqstatus && $seqstatus ne "both" ) {
+        $statusClause = 'and t.seq_status = ? ';
+        push( @binds, $seqstatus );
     }
 
     #TODO Anna -what exactly do we need here?
@@ -2644,7 +2663,7 @@ sub getTreeANIPhyloSql {
 }
 
 sub getTreeBcPhyloSql {
-    my ($domainfilter, $seqstatus) = @_;
+    my ( $domainfilter, $seqstatus ) = @_;
 
     my $rclause   = WebUtil::urClause("t");
     my $imgClause = WebUtil::imgClause("t");
@@ -2656,9 +2675,9 @@ sub getTreeBcPhyloSql {
         push( @binds, $domainfilter );
     }
     my $statusClause;
-    if ($seqstatus && $seqstatus ne "both") {
-	$statusClause = 'and t.seq_status = ? ';
-	push( @binds, $seqstatus );
+    if ( $seqstatus && $seqstatus ne "both" ) {
+        $statusClause = 'and t.seq_status = ? ';
+        push( @binds, $seqstatus );
     }
 
     my $sql = qq{
@@ -2681,7 +2700,7 @@ sub getTreeBcPhyloSql {
 }
 
 sub getTreeNpPhyloSql {
-    my ($domainfilter, $seqstatus) = @_;
+    my ( $domainfilter, $seqstatus ) = @_;
 
     my $rclause   = WebUtil::urClause("t");
     my $imgClause = WebUtil::imgClause("t");
@@ -2693,9 +2712,9 @@ sub getTreeNpPhyloSql {
         push( @binds, $domainfilter );
     }
     my $statusClause;
-    if ($seqstatus && $seqstatus ne "both") {
-	$statusClause = 'and t.seq_status = ? ';
-	push( @binds, $seqstatus );
+    if ( $seqstatus && $seqstatus ne "both" ) {
+        $statusClause = 'and t.seq_status = ? ';
+        push( @binds, $seqstatus );
     }
 
     my $sql = qq{

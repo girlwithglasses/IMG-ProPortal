@@ -289,33 +289,6 @@ sub max_cgi_process_check {
 
 }
 
-package IMG::IO::FileTest;
-use strict;
-use warnings;
-
-sub is_readable {
-	my $d = shift;
-	return 1 if -r $d;
-	return 0;
-}
-
-sub is_writable {
-	my $d = shift;
-	return 1 if -w $d;
-	return 0;
-}
-
-sub is_dir {
-	my $d = shift;
-	return 1 if -d $d;
-	return 0;
-}
-
-1;
-
-package IMG::App::PreFlight;
-
-
 =head3 check_dir
 
 Make sure that a directory is accessible
@@ -330,30 +303,21 @@ sub check_dir {
 
 	my $dir_check = sub {
 		my $d = shift;
-		return 1 if IMG::IO::FileTest::is_dir( $d ) and IMG::IO::FileTest::is_readable( $d ) and IMG::IO::FileTest::is_writable( $d );
+		return 1 if IMG::IO::File::is_dir( $d ) and IMG::IO::File::is_rw( $d );
 		return 0;
 	};
 
 	local $@;
-
 	my $result = $self->time_me( 5, $dir_check, $dir );
-
 	return undef if $result;
-
-# 	my $tf = IMG::Util::Timed::timed_function(
-# 		fn => sub {
-# 			return 1 if -d -e $dir;
-# 			return 0;
-# 		},
-# 		fn_timeout => 10,
-# 		handler => sub {
-# 			die 'The IMG web file system has timed out. Please try again later.';
-# 		},
-# 	);
-#
-# 	if ( defined $tf->{result} && 1 == $tf->{result} ) {
-# 		return undef;
-# 	}
+	if ( $@ ) {
+		# timeout
+		# warn 'Accessing ' . $dir . ' timed out';
+	}
+	else {
+		# permissions error
+		# warn 'Permissions error when accessing ' . $dir;
+	}
 
 	return {
 		status => 503,
@@ -366,7 +330,6 @@ sub time_me {
 	my $self = shift;
 	my $time = shift;
 	timeout $time, @_ => sub {
-#		say "args: " . Dumper [ @_ ];
 		my ( $fn, $args ) = @_;
 		return $fn->( $args );
 	};

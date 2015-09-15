@@ -1,20 +1,34 @@
 package IMG::Views::Menu;
 
 use IMG::Util::Base;
-use IMG::Views::Links;
+use IMG::Views::Links qw( get_link_data );
 use Role::Tiny;
 
 my $url = {
 	main_cgi_url => 'http://localhost/',
 	server => 'http://img.jgi.doe.gov/',
 	img_google_site => 'https://sites.google.com/a/lbl.gov/img-form/',
+	base_url     => 'http://localhost/',
 };
+
+sub init {
+	my $config = shift // confess "init requires a configuration hash for URL generation";
+
+	if (! ref $config || ref $config ne 'HASH' || ! $config->{main_cgi_url} || ! $config->{pp_app} ) {
+		confess "init requires a configuration hash for URL generation";
+	}
+	for my $v ( qw( main_cgi_url server base_url ) ) {
+		$url->{$v} = $config->{$v} if defined $config->{$v};
+	}
+	$url->{init_run} = 1;
+	return;
+}
 
 =head3 get_menus
 
 Get the page menus
 
-@param  $cfg     - config, e.g. from webEnv()
+@param  $config     - config, e.g. from webEnv()
 @param  $section - the section of the menu to display in the left-hand nav
 
 @output hashref with structure
@@ -24,46 +38,188 @@ Get the page menus
 =cut
 
 sub get_menus {
-	my $cfg = shift;
-	my $section = shift;
-#	say "cfg: " . Dumper $cfg;
-	$url->{main_cgi_url} = $cfg->{main_cgi_url} if $cfg->{main_cgi_url};
-
-	if (! $section || $self->can( $section ) ) {
-		carp "menu section $section does not exist!";
-		return { menu_bar => $self->img_menu_bar };
+	my $config = shift;
+	if ( ! $url->{init_run} ) {
+		if ( not defined $config ) {
+			confess "get_menus requires a configuration hash for URL generation";
+		}
+		init( $config );
 	}
 
+	my $section = shift;
+	my $url = shift;
+
+	if (! $section && ! $url ) { #|| $self->can( $section ) ) {
+		warn "menu section does not exist!";
+	#	return { menu_bar => $self->img_menu_bar };
+		return { menu_bar => make_menus() };
+	}
+
+	my $grp = get_group( $section, $url );
+	populate_links( $grp );
 	return {
-		menu_bar => $self->img_menu_bar,
-		section_nav => $self->$section,
+		menu_bar => make_menus(),
+	#	menu_bar => $self->img_menu_bar,
+		section_nav => $grp,
 	};
 
 }
 
 sub make_menus {
-
-	my $cfg = shift;
-	my $page = shift; # current page
-	my $section = get_group( $page );
+	my $config = shift;
+	if ( ! $url->{init_run} ) {
+		if ( not defined $config ) {
+			confess "make_menus requires a configuration hash for URL generation";
+		}
+		init( $config );
+	}
 
 	# get the menu structures and populate the links
 	my $menus = get_menu_items();
-	for my $m ( @$menus ) {
-		populate_links( $m );
-
-
-	}
+#	say 'menus: ' . Dumper $menus;
+	populate_links( $menus );
+	return $menus;
 }
 
 
 sub populate_links {
 	my $data_struct = shift;
 
-	for my $i ( @$data_struct ) {
-		# scalar:
-		if ( ! ref $i ) {
-			get_link( $i );
+	if ('ARRAY' eq ref $data_struct) {
+		for my $i ( @$data_struct ) {
+			# scalar: replace with the link data
+			if ( ! ref $i ) {
+				my $ld = get_link_data( $i );
+				$ld->{id} = $i;
+				if ( $ld->{url} && ref $ld->{url} && 'HASH' eq ref $ld->{url} ) {
+					# turn it into a link
+					my $link = $url->{main_cgi_url} . IMG::Views::Links::old_link_gen( $ld->{url} );
+					$ld->{url} = $link;
+				}
+				$i = $ld;
+			}
+			else {
+				if ( $i->{id} ) {
+					my $data = get_link_data( $i->{id} );
+					for (keys %$data) {
+						$i->{$_} = $data->{$_};
+					}
+				}
+				populate_links( $i->{submenu} ) if defined $i->{submenu};
+			}
+		}
+	}
+	elsif ('HASH' eq ref $data_struct) {
+		if ( $data_struct->{id} ) {
+			my $data = get_link_data( $data_struct->{id} );
+			for (keys %$data) {
+				$data_struct->{$_} = $data->{$_};
+			}
+		}
+		populate_links( $data_struct->{submenu} ) if defined $data_struct->{submenu};
+	}
+}
+
+sub get_subtree {
+
+	my $struct = shift;
+
+#	say 'struct: ' . Dumper $struct;
+
+	my $menu_page = shift;
+	if ( ref $struct && 'ARRAY' eq ref $struct ) {
+		for ( @$struct ) {
+			next unless ref $_;
+			if ( $_->{id} && $menu_page eq $_->{id} ) {
+				say 'found the thing I was looking for!';
+				return $_;
+			}
+			my $results = get_subtree( $_->{submenu}, $menu_page ) if $_->{submenu};
+			return $results if $results;
+		}
+	}
+	return undef;
+}
+
+
+sub search_menu {
+	my $id = shift // die 'No ID supplied';
+	my $menus = get_menu_items();
+	my $rslt = get_subtree( $menus, $id );
+	if ( $rslt ) {
+		populate_links( $rslt );
+	}
+	return $rslt;
+}
+
+
+sub find_parent_menu {
+	my $id = shift // die 'No ID supplied';
+	my $menus = get_menu_items();
+	for my $m ( @$menus ) {
+		my $rslt = get_subtree( [ $m ], $id );
+		if ( $rslt ) {
+			populate_links( $m );
+			return $m;
+		}
+	}
+	return;
+}
+
+
+sub get_group {
+	my $section = shift;
+	my $url = shift;
+
+	say 'section: ' . ( '>>' . $section . '<<' || 'undefined' );
+
+	my $mapping = {
+		FindGenomes    => genomes(),
+		FindGenes      => genes(),
+		FindFunctions  => functions(),
+		CompareGenomes => compare_genomes(),
+		AnaCart        => analysis(),
+		Methylomics    => omics(),
+#		abc(),
+		about          => using(),
+		MyIMG          => my_img(),
+		'/proportal'   => proportal(),
+		proportal      => proportal(),
+	};
+
+	if ( defined $section && $mapping->{ $section } ) {
+		say 'We definitely have this one!';
+		return $mapping->{ $section };
+	}
+	else {
+		if ( defined $url && $url =~ m!/menu/! ) {
+			return find_parent_menu( $url );
+		}
+	}
+	say 'but for some reason, we are not returning it!';
+	return home();
+
+}
+
+
+sub get_menu_items {
+
+	return [
+#		home(),
+		proportal(),
+		genomes(),
+		genes(),
+		functions(),
+		compare_genomes(),
+		analysis(),
+		omics(),
+#		abc(),
+		using(),
+		my_img(),
+		datamarts(),
+	];
+
+}
 
 =head3 img_menu_bar
 
@@ -74,38 +230,55 @@ This gets rendered by Template::Toolkit
 =cut
 
 sub img_menu_bar {
-
-	my $cfg = shift;
+#	my $self = shift;
+	my $config = shift;
 
 	my $menu = {
 		L => [
-			$self->home,
-			$self->genomes,
-			$self->genes,
-			$self->functions,
-			$self->compare_genomes,
-			$self->analysis,
-			$self->omics,
-			$self->abc,
-			$self->datamarts,
+			home(),
+			genomes(),
+			genes(),
+			functions(),
+			compare_genomes(),
+			analysis(),
+			omics(),
+			abc(),
+			datamarts(),
 		],
 		R => [
-			$self->my_img,
-			$self->using,
+			using(),
+			my_img(),
 		]
 	};
 }
 
 sub home {
 	return {
-		{ title => 'Home', url => $cfg->{base_url} }
+		title => 'Home',
+		url => $url->{base_url}
+	};
+}
+
+sub proportal {
+
+	return {
+		id => 'proportal',
+		submenu =>
+		[
+#			'proportal', # home page
+			'proportal/clade',
+			'proportal/data_type',
+			'proportal/location',
+			'proportal/phylogram',
+			'proportal/phylo_heat',
+		],
 	};
 }
 
 sub genomes {
 
 	return {
-		title => "Find Genomes",
+		id => '/menu/FindGenomes',
 		submenu =>
 		[
 			'TreeFile',
@@ -119,19 +292,18 @@ sub genomes {
 sub genes {
 
 	return {
-		title => "Find Genes"
+		id => '/menu/FindGenes',
 		submenu =>
 		[
 			'FindGenes/findGenes',
 			'FindGenes/geneSearch',
 			'GeneCassetteSearch',
 			'FindGenesBlast',
-			{	title => 'Gene Cassette Profilers',
+			{	id => '/menu/cassetteProfilers',
 				submenu =>
 				[
-					'GeneCassetteProfiler/genetools' -- ????
 					'PhylogenProfiler',
-					'GeneCassetteProfiler/geneContextPhyloProfiler2' (gene_cassettes),
+					'GeneCassetteProfiler',
 				],
 			}
 		],
@@ -141,12 +313,13 @@ sub genes {
 sub functions {
 
 	return {
-		title => "Find Functions",
+		id => '/menu/FindFunctions',
 		submenu =>
 		[
 			'FindFunctions/findFunctions',
 			'AllPwayBrowser',
-			{	title => 'COG',
+
+			{	id => '/menu/COG',
 				submenu =>
 				[
 					'FindFunctions/ffoAllCogCategories',
@@ -155,7 +328,7 @@ sub functions {
 					'FindFunctions/cogid2cat',
 				],
 			},
-			{	title => 'KOG',
+			{	id => '/menu/KOG',
 				submenu =>
 				[
 					'FindFunctions/ffoAllKogCategories',
@@ -163,7 +336,7 @@ sub functions {
 					'FindFunctions/kogList/stats',
 				],
 			},
-			{	title => 'Pfam',
+			{	id => '/menu/Pfam',
 				submenu =>
 				[
 					'FindFunctions/pfamCategories',
@@ -172,7 +345,7 @@ sub functions {
 					'FindFunctions/pfamListClans',
 				],
 			},
-			{	title => 'TIGRfam',
+			{	id => '/menu/TIGRfam',
 				submenu =>
 				[
 					'TigrBrowser/tigrBrowser',
@@ -180,21 +353,21 @@ sub functions {
 					'TigrBrowser/tigrfamList/stats',
 				],
 			},
-			{	title => 'Transporter Classification (TC)',
+			{	id => '/menu/TC',
 				submenu =>
 				[
 					'FindFunctions/ffoAllTc',
 					'FindFunctions/tcList',
 				],
 			},
-			{	title => 'KEGG',
+			{	id => '/menu/KEGG',
 				submenu =>
 				[
 					'FindFunctions/ffoAllKeggPathways/brite',
 					'FindFunctions/ffoAllKeggPathways/ko',
 				],
 			},
-			{	title => 'IMG Networks',
+			{	id => '/menu/IMGNetworks',
 				submenu =>
 				[
 					'ImgNetworkBrowser',
@@ -213,39 +386,41 @@ sub functions {
 sub compare_genomes {
 
 	return {
-		title => 'CompareGenomes',
+		id => '/menu/CompareGenomes',
 		submenu =>
 		[
 			'CompareGenomes',
-			'Vista/toppage',
+			{	id => '/menu/SyntenyViewers',
 				submenu =>
 				[
-					'Vista/vista',
+					'Vista',
 					'DotPlot',
 					'Artemis',
 				],
 			},
-			'AbundanceProfiles/topPage',
+			{	id => '/menu/AbundanceProfiles',
 				submenu =>
 				[
-					'AbundanceProfiles/mergedForm',
+					'AbundanceProfiles',
 					'AbundanceProfileSearch',
 					'AbundanceComparisons',
 					'AbundanceComparisonsSub',
 				],
 			},
-			'MetagPhyloDist/top',
+			{	id => '/menu/PhylogeneticDistribution',
 				submenu =>
 				[
-					'MetagPhyloDist/form',
+					'MetagPhyloDist',
 					'GenomeHits',
 					'RadialPhyloTree',
 				],
 			},
 
-			'ANI',
+			{	id => '/menu/ani',
 				submenu =>
 				[
+'ANI', #==> this page has content
+
 					'ANI/pairwise',
 					'ANI/doSameSpeciesPlot',
 					'ANI/overview',
@@ -263,7 +438,7 @@ sub compare_genomes {
 sub analysis {
 
 	return {
-		title => 'Analysis Cart',
+		id => '/menu/cart',
 		submenu =>
 		[
 			'GeneCartStor',
@@ -276,10 +451,11 @@ sub analysis {
 
 sub omics {
 
-	return
-	'ImgStatsOverview',
+	return {
+		id => '/menu/omics',
 		submenu =>
 		[
+			'ImgStatsOverview',
 			'IMGProteins',
 			'RNAStudies',
 			'Methylomics',
@@ -289,10 +465,14 @@ sub omics {
 
 sub abc {
 
-	return
-	'ABC',
+	return {
+		id => '/menu/abc',
 		submenu =>
 		[
+
+			'ABC',
+
+
 			'BcNpIDSearch',
 			'BiosyntheticStats',
 			'BcSearch/bcSearch',
@@ -305,20 +485,19 @@ sub abc {
 
 sub my_img {
 
-	return
-
-	'MyIMG',
+	return {
+		id => '/menu/MyIMG',
 		submenu =>
 		[
-			'MyIMG/home',
+			'MyIMG/home', # (same as MyIMG)
 			'MyIMG/myAnnotationsForm',
 			'MyIMG/myJobForm',
 			'MyIMG/preferences',
 			{
-				title => 'Workspace'
+				id => '/menu/Workspace',
 				submenu =>
 				[
-					'Workspace', label => 'Export Workspace' },
+					'Workspace', # label => 'Export Workspace' },
 					'WorkspaceGeneSet',
 					'WorkspaceFuncSet',
 					'WorkspaceGenomeSet',
@@ -333,19 +512,19 @@ sub my_img {
 
 sub datamarts {
 
-	return
-	{ url => 'http://img.jgi.doe.gov/', label => 'Data Marts',
+	return {
+		id => '/menu/DataMarts',
 		submenu =>
 		[
-			{ url => $url->{server} . '/w', title => 'IMG isolates', label => 'IMG',
+			{ 	id => '/menu/isolates',
 				submenu =>
 				[
-					{ url => $url->{server} . '/w', label => 'IMG' },
+					{ url => $url->{server} . '/w', label => 'IMG isolates' },
 					{ url => $url->{server} . '/er', title => 'IMG Expert Review', label => '<abbr title="IMG Expert Review">IMG ER</abbr>' },
 					{ url => $url->{server} . '/edu', title => 'IMG Education', label => '<abbr title="IMG Education">IMG EDU</abbr>' },
 				],
 			},
-			{ url => $url->{server} . '/m', title => 'IMG Metagenomes', label => '<abbr title="IMG Metagenomes">IMG M</abbr>',
+			{ 	id => '/menu/metagenomes',
 				submenu =>
 				[
 					{ url => $url->{server} . '/m', title => 'IMG Metagenomes', label => '<abbr title="IMG Metagenomes">IMG M</abbr>' },
@@ -353,43 +532,44 @@ sub datamarts {
 					{ url => 'https://img.jgi.doe.gov/cgi-bin/imgm_hmp/main.cgi', title => 'Human Microbiome Project Metagenomes', label => '<abbr title="Human Microbiome Project Metagenome">IMG HMP M</abbr>' },
 				],
 			},
-			{ url => '/abc', label => 'IMG ABC' },
-			{ url => 'https://img.jgi.doe.gov/submit', label => 'Submit Data Set' },
+			{ url => $url->{server} . '/abc', label => 'IMG ABC' },
+			{ url => $url->{server} . '/submit', label => 'Submit Data Set' },
 		],
 	};
 }
 
 sub using {
 
-return
-	{ url => $url->{server} . '/mer/doc/about_index.html', label => 'Using IMG',
+	return {
+		id => '/menu/UsingIMG',
 		submenu =>
 		[
-			{ url => $url->{server} . '/mer/doc/about_index.html', title => 'Information about IMG', label => 'About IMG/M ER',
+			{	id => '/menu/About',
 				submenu =>
 				[
-					{ url => 'https://img.jgi.doe.gov/#IMGMission', label => 'IMG Mission' },
+					{ url => $url->{server} . '/mer/doc/about_index.html', title => 'Information about IMG', label => 'About IMG/M ER', },
+					{ url => $url->{server} . '/#IMGMission', label => 'IMG Mission' },
 					{ url => $url->{img_google_site} . 'faq', title => 'Frequently Asked Questions', label => 'FAQ' },
 					{ url => $url->{img_google_site} . 'using-img/related-links', label => 'Related Links' },
 					{ url => $url->{img_google_site} . 'using-img/credits', label => 'Credits' },
 					{ url => $url->{img_google_site} . 'documents', title => 'documents', label => 'IMG Document Archive' },
 				],
 			},
-			{ url => $url->{server} . '/mer/doc/using_index.html', label => 'User Guide',
+			{ 	id => '/menu/UserGuide',
 				submenu =>
 				[
 					{ url => $url->{server} . '/mer/doc/systemreqs.html', label => 'System Requirements' },
-					'Help', title => 'Contains links to all menu pages and documents', label => 'Site Map' },
+					'Help',
 					{ url => $url->{img_google_site} . 'using-img/tutorial', label => 'Tutorial' },
 					{ url => $url->{server} . '/mer/doc/images/uiMap.pdf', label => 'User Interface Map' },
 					{ url => $url->{server} . '/mer/doc/SingleCellDataDecontamination.pdf', label => 'Single Cell Data Decontamination' },
 					{ url => $url->{server} . '/mer/doc/userGuide_m.pdf', title => 'User Manual IMG/M Addendum', label => 'IMG/M Addendum' },
 				],
 			},
-			'Help/policypage', label => 'Downloads',
+			{	id => '/menu/Downloads',
 				submenu =>
 				[
-					'Help/policypage', label => 'Data Usage Policy' },
+					'Help/policypage',
 					{ url => 'http://jgi.doe.gov/data-and-tools/data-management-policy-practices-resources/', label => 'Data Management Policy' },
 					{ url => 'http://jgi.doe.gov/collaborate-with-jgi/pmo-overview/policies/', label => 'Collaborate with JGI' },
 					{ url => 'https://groups.google.com/a/lbl.gov/d/msg/img-user-forum/o4Pjc_GV1js/EazHPcCk1hoJ', label => 'How to download' },
@@ -403,7 +583,7 @@ return
 			{ url => $url->{img_google_site} . 'using-img/publication', label => 'Publications' },
 			{ url => 'http://www.jgi.doe.gov/meetings/mgm/', label => 'MGM Workshop' },
 			{ url => $url->{img_google_site} . 'questions', label => 'IMG User Forum' },
-			{ url => $url->{main_cgi_url} . '?page=questions', title => 'Report bugs or issues', label => 'Report Bugs / Issues' },
+			'Questions',
 			{ url => $url->{img_google_site} . 'contact-us', label => 'Contact us' },
 			{ url => 'http://jgi.doe.gov/disclaimer/', label => 'Disclaimer' },
 		],

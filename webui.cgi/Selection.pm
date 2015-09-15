@@ -32,6 +32,12 @@ my $tmp_url             = $env->{tmp_url};
 my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
 my $yui_dir;
 
+sub create_yui_dir {
+    $yui_dir = WebUtil::getSessionDir() . '/yui';
+	if ( ! -e $yui_dir ) {
+		mkdir $yui_dir or webError("Can not make $yui_dir: $!");
+	}
+}
 #my $dir2 = WebUtil::getSessionDir();
 #$dir2 .= "/yui";
 #if ( !(-e "$dir2") ) {
@@ -46,10 +52,8 @@ $| = 1;
 #######################################################################
 sub dispatch {
     my $page = param("page");
-    $yui_dir = WebUtil::getSessionDir() . '/yui';
-	if ( ! -e $yui_dir ) {
-		mkdir $yui_dir or webError("Can not make $yui_dir: $!");
-	}
+
+	create_yui_dir();
 
     if ($page eq "getCheckboxes") {
     	print header( -type => "application/json" );
@@ -70,6 +74,8 @@ sub dispatch {
 # getCheckboxes - Read checkbox elements from previously created tmpfile
 ########################################################################
 sub getCheckboxes {
+
+	create_yui_dir() unless $yui_dir;
     my $tmpfile = param("tmpfile");
     my $chkState = param("chk"); # 1=checked; 0=unchecked
     my $init = param("init");    # 1=called by oIMGTable instantiation
@@ -213,7 +219,7 @@ sub updateCheckBox {
 ################################################################
 sub export {
     require HtmlUtil;
-
+	create_yui_dir() unless $yui_dir;
     my $tmpfile = param("tmpfile");
     my $chkRows = param('rows');
     my $colHeads = param('columns');
@@ -519,6 +525,7 @@ sub array_filter {
 ################################################################
 sub toggleCheckboxes {
     my $tmpfile = param("tmpfile");
+	create_yui_dir() unless $yui_dir;
     my $arrayStr = file2Str("$yui_dir/$tmpfile");
     my $chkState;
 

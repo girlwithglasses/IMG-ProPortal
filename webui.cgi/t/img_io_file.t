@@ -4,7 +4,7 @@ use FindBin qw/ $Bin /;
 use lib ( "$Bin/..", "$Bin/../../proportal/lib", "$Bin/lib" );
 use IMG::Util::Base 'Test';
 use File::Temp qw/tempfile tempdir/;
-
+use File::stat;
 use_ok('IMG::IO::File');
 
 my $data = [{
@@ -109,7 +109,72 @@ for my $d (@$data) {
 
 }
 
+# readable, writable, directory tests
 
+for my $f ( qw( file_exists is_readable is_writable is_dir is_rw ) ) {
+	# cheat by calling in OO manner
+	my $to_do = \&{ 'IMG::IO::File::' . $f };
 
+	throws_ok { $to_do->( undef ) } qr[No file or directory specified];
+
+	if ( 'file_exists' eq $f ) {
+		is( 0, $to_do->('A file I made up earlier'), 'test: ' . $f );
+	}
+	else {
+		throws_ok { $to_do->( 'A file I made up earlier' ) } qr[does not exist], "test: $f";
+	}
+}
+
+subtest 'directory checks' => sub {
+
+	my $d = tempdir();
+
+	ok( 1 == IMG::IO::File::is_dir( $d ), 'is directory' );
+	chmod 0400, $d;
+	ok( 1 == IMG::IO::File::is_readable( $d ), 'chmod 400: still readable' );
+	is( '', IMG::IO::File::is_rw( $d ), 'not rw' );
+	is( '', IMG::IO::File::is_writable( $d ), 'not writable' );
+	chmod 0200, $d;
+	is( '', IMG::IO::File::is_rw( $d ), 'chmod 200: not rw' );
+	ok( 1 == IMG::IO::File::is_writable( $d ), 'writable' );
+	is( '', IMG::IO::File::is_readable( $d ), 'not readable' );
+	chmod 0755, $d;
+	ok( 1 == IMG::IO::File::is_rw( $d ), 'dir is rw' );
+
+};
+
+subtest 'file checks' => sub {
+
+	my $d = tempfile();
+
+	is( '', IMG::IO::File::is_dir( $d ), 'not a directory' );
+	chmod 0400, $d;
+	ok( 1 == IMG::IO::File::is_readable( $d ), 'chmod 400: still readable' );
+	is( '', IMG::IO::File::is_rw( $d ), 'not rw' );
+	is( '', IMG::IO::File::is_writable( $d ), 'not writable' );
+	chmod 0200, $d;
+	is( '', IMG::IO::File::is_rw( $d ), 'chmod 200: not rw' );
+	ok( 1 == IMG::IO::File::is_writable( $d ), 'writable' );
+	is( '', IMG::IO::File::is_readable( $d ), 'not readable' );
+	chmod 0755, $d;
+	ok( 1 == IMG::IO::File::is_rw( $d ), 'dir is rw' );
+
+};
+
+# file touching
+subtest 'file touching' => sub {
+
+	throws_ok { IMG::IO::File::file_touch() } qr[No file specified];
+	throws_ok { IMG::IO::File::file_touch('A made up file') } qr[ does not exist];
+	my ($fh, $fn) = tempfile();
+	my $t = time;
+	lives_ok { IMG::IO::File::file_touch( $fn ) } 'Touching an extant file';
+	lives_ok { IMG::IO::File::file_touch( $fh ) } 'Using a filehandle instead';
+	my $sb = stat( $fn );
+	ok( $sb->mtime == $sb->atime, 'Checking a and m times' );
+	ok( ( $sb->mtime - $t ) < 2, 'Making sure the time diff is small' );
+	say 'mtime: ' . $sb->mtime . '; time: ' . $t;
+
+};
 
 done_testing();

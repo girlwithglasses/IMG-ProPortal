@@ -92,7 +92,7 @@ Get the name (path) of the user's workspace directory.
 
 sub get_workspace_dirname {
 	my $self = shift;
-	die 'Config parameter "workspace_dir" not set' unless $self->has_config && $self->config->{workspace_dir};
+	die 'Config parameter "workspace_dir" not set' unless $self->has_config && defined $self->config->{workspace_dir};
 	die 'User ID not found in session' unless $self->has_session && defined $self->session->read('contact_oid');
 	return catdir(
 		$self->config->{workspace_dir},
@@ -107,7 +107,7 @@ my $file_index = {
 
 	genome_cart_state => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'genomeCart.' . $self->session->id . '.stor'; }, fmt => 'aoa' },
 
-#	genome_cart_col_ids => { dirname => 'cart', fmt => 'array' },
+	genome_cart_col_ids => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.colid'; }, fmt => 'array' },
 
 	gene_cart_state => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.stor'; }, fmt => 'aoa' },
 
@@ -153,6 +153,17 @@ sub get_file_fmt {
 	die 'File ' . $file . ' is unknown';
 }
 
+=head3 get_filename
+
+Get the path and name of a file, given its id
+
+@param  $file   - file ID, e.g. 'genome_cart_state' or 'prefs'
+
+@return '/path/to/file'
+
+Dies if the file is not known.
+
+=cut
 
 sub get_filename {
 	my $self = shift;
@@ -172,13 +183,25 @@ sub get_filename {
 	die 'File ' . $file . ' is unknown';
 }
 
-sub touch_file {
+=head3 touch
+
+Touch a file, given its id. Uses IMG::IO::File::file_touch under the hood.
+
+@param  $file   - file ID, e.g. 'genome_cart_state' or 'prefs'
+
+Dies if the file is not known; file_touch dies if the file is not found, but this
+catches the error.
+
+=cut
+
+
+sub touch {
 	my $self = shift;
-	my $file = shift || die 'No file specified';
+	my $file = shift // die 'No file specified';
 	my $fn = $self->get_filename( $file );
-	if ( -e $fn ) {
-		IMG::IO::File::file_touch( $fn );
-	}
+	local $@;
+	eval { IMG::IO::File::file_touch( $fn ); };
+	return;
 }
 
 

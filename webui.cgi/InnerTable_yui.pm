@@ -76,7 +76,6 @@ use StaticInnerTable;
 
 my $env         = getEnv( );
 my $main_cgi    = $env->{ main_cgi };
-my $cgi_dir     = $env->{ cgi_dir };
 my $verbose     = $env->{ verbose };
 my $cgi_url     = $env->{ cgi_url };
 my $YUI         = $env->{yui_dir_28};     #get local path to YUI libraries

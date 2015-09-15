@@ -6,11 +6,9 @@
 package IMG::App::UserChecks;
 
 use IMG::Util::Base 'MooRole';
-use DBI;
-use JSON;
 use IMG::Model::Contact;
 use IMG::App::User;
-use IMG::App::JGISesssionClient;
+use IMG::App::JGISessionClient;
 use IMG::App::FileManager;
 
 requires 'config', 'session', 'check_jgi_session', 'get_jgi_user_json', 'get_db_contact_data';
@@ -66,8 +64,10 @@ Load user preferences from a saved file and save them in the session
 sub load_user_preferences {
 	my $self = shift;
 	# load prefs into the session
-	my $p_hash = $self->read_file('prefs');
-	if ( %$p_hash ) {
+	local $@;
+	my $p_hash = eval { $self->read_file('prefs'); };
+	return if $@;
+	if ( $p_hash && %$p_hash ) {
 		for ( keys %$p_hash ) {
 		#	session $_ => $p_hash->{$_};
 			$self->session->write( $_ => $p_hash->{$_} );
@@ -89,26 +89,33 @@ sub touch_cart_files {
 	my $cart_dir = $self->get_dirname('cart');
 	if ( -e $cart_dir ) {
 		# touch the cart
-		# ...
-		my @files = map { $_ . '_cart_state' } qw( gene genome scaf func cura );
+		my @carts = qw( gene genome scaf func cura );
 
 		# cura carts are only on user-restricted sites
 		if (! $self->config->{user_restricted_site} ) {
-			pop @files;
+			pop @carts;
 		}
 
-		for my $f ( @files ) {
+		for my $f ( map { $_ . '_cart_state' } @carts ) {
 			# touch the file (if it exists)
-			my $fn = $self->get_filename( $f );
-			if ( -e $fn ) {
-				$self->touch_file( path => $fn );
-			}
-			my $contents = $self->read_file( $f );
+			$self->touch( $f );
+			my $contents = eval { $self->read_file( $f ); };
+			if ( $contents ) {
 			# do something with this data?
+				if ('func_cart_state' eq $f) {
+					$self->session->write( $f, scalar keys %{$contents->{recs}} );
+				}
+				else {
+					$self->session->write( $f, scalar @$contents );
+				}
+			}
 		}
+
+		$self->touch( 'genome_cart_col_ids' );
+
 	}
 	# autocreate the cart directory?
-
+}
 
 =cut
 	require WebUtil;
@@ -151,7 +158,6 @@ sub touch_cart_files {
 	say "cart looks like this: " . Dumper \%cart;
 	return \%cart;
 =cut
-}
 
 
 1;

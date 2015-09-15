@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: AbundanceProfileSearch.pm 34100 2015-08-24 17:14:16Z klchu $
+# $Id: AbundanceProfileSearch.pm 34199 2015-09-04 21:13:24Z klchu $
 # Abundance Profile search / Conditional Function Profile
 ############################################################################
 package AbundanceProfileSearch;
@@ -70,7 +70,6 @@ sub getAppHeaderData {
         $template->param( YUI      => $YUI );
         my $js = $template->output;
 
-        my $numTaxon;
         if ($include_metagenomes) {
             @a = ( "CompareGenomes", '', '', $js, '', "userGuide_m.pdf#page=19" );
         } else {

@@ -6,7 +6,7 @@ has '_core' => (
 	is => 'ro',
 	predicate => 1,
 	handles => [ qw(
-		schema http_ua session user
+		config schema http_ua session user
 	) ],
 );
 

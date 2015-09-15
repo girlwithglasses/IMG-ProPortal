@@ -6,7 +6,7 @@
 #
 # for workspace the temp cart file is teh unsaved buffer file
 #
-# $Id: WorkspaceBcSet.pm 34184 2015-09-03 21:41:29Z klchu $
+# $Id: WorkspaceBcSet.pm 34198 2015-09-04 19:45:40Z klchu $
 ########################################################################
 package WorkspaceBcSet;
 
@@ -172,7 +172,7 @@ sub findPairwiseSimilarity {
 
     my $dbh = dbLogin();
     my $sql = qq{
-        select t.taxon_oid, t.in_file, t.taxon_display_name
+        select t.taxon_display_name
         from taxon t
         where t.taxon_oid = ?
     };
@@ -288,6 +288,8 @@ sub findPairwiseSimilarity {
     my %taxon_in_file;
     my %taxonOid2Name;
     my %taxonOid2Phylum;
+    my %taxonOid2GoldId;
+    my %golId2Habitat;
 
     if ( $#clusterIds > -1 ) {
 
@@ -323,22 +325,48 @@ sub findPairwiseSimilarity {
         my $oid_str = OracleUtil::getNumberIdsInClause( $dbh, @taxon_oids );
         my $sql     = qq{
             select t.taxon_oid, t.in_file, t.taxon_display_name, 
-            t.domain || '; ' || t.phylum || '; ' || t.ir_class || '; ' || t.ir_order || '; ' || t.family || '; ' || t.genus || '; ' || t.species 
+            t.domain || '; ' || t.phylum || '; ' || t.ir_class || '; ' || t.ir_order || '; ' || t.family || '; ' || t.genus || '; ' || t.species,
+            t.sequencing_gold_id
             from taxon t 
             where t.taxon_oid in ($oid_str)
         };
 
         my $cur = execSql( $dbh, $sql, $verbose );
         for ( ; ; ) {
-            my ( $tid, $in_file, $name, $phylum ) = $cur->fetchrow();
+            my ( $tid, $in_file, $name, $phylum, $goldId ) = $cur->fetchrow();
             last if !$tid;
             $taxon_in_file{$tid} = $in_file;
             $taxonOid2Name{$tid} = $name;
             $taxonOid2Phylum{$tid} = $phylum;
+            $taxonOid2GoldId{$tid} = $goldId;
         }
 
         #print Dumper \%taxon_in_file;
         #print "<br>\n";
+
+        print "Getting Habitat ...<br/>\n";
+        my @goldIds = values %taxonOid2GoldId;
+        if($#goldIds > -1) {
+            my $str = WebUtil::joinSqlQuoted( ',', @goldIds );
+            require GenomeList;
+            my $sbh = GenomeList::dbLoginProject();
+            my $sql = qq{
+            select gold_id, p.habitat
+            from project_info p
+            where gold_id in($str);
+            };
+            WebUtil::webLog("$sql\n");
+            my $cur = $sbh->prepare($sql);
+            $cur->execute();
+            for ( ; ; ) {
+                my ( $gid, $habitat ) = $cur->fetchrow_array();
+                last if !$gid;
+                $golId2Habitat{$gid} = $habitat; 
+            }
+            $cur->finish();
+            $sbh->disconnect();            
+        }
+
 
         print "Getting pfam count per cluster ...<br/>\n";
 
@@ -546,7 +574,11 @@ sub findPairwiseSimilarity {
             $np_links .= "  $np_name";
             $i++;
         }
-        $row .= $np_ids . $sd . $np_links . "\t";
+        if($np_ids) {
+            $row .= $np_ids . $sd . $np_links . "\t";
+        } else {
+            $row .= ''. $sd . '' . "\t";
+        }
 
         # taxon name
         my $name = $taxonOid2Name{$taxon_oid};
@@ -557,7 +589,13 @@ sub findPairwiseSimilarity {
         $row .= $phylum . $sd . $phylum . "\t";
         
         # habitat
-        $row .= '' . $sd . '' . "\t";
+        my $gid = $taxonOid2GoldId{$taxon_oid};
+        my $hab = $golId2Habitat{$gid} if ($gid);
+        if($hab) { 
+            $row .= $hab . $sd . $hab . "\t";
+        } else {
+            $row .= '' . $sd . '' . "\t";
+        }
 
         # scaffold oid
         my $scaffold_oid = $bcid2scaffold{$bcId};
@@ -580,7 +618,7 @@ sub findPairwiseSimilarity {
         if ($genbank_id) {
             $row .= $genbank_id . $sd . alink( "${ncbi_base_url}$genbank_id", $genbank_id ) . "\t";
         } else {
-            $row .= $genbank_id . $sd . $genbank_id . "\t";
+            $row .= ''. $sd . '' . "\t";
         }
 
 

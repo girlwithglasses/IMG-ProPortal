@@ -6,12 +6,9 @@
 package IMG::App::JGISessionClient;
 
 use IMG::Util::Base 'MooRole';
-use DBI;
 use JSON;
 use IMG::Model::Contact;
 use IMG::IO::File;
-use DataModel::IMG_Core;
-use DataModel::IMG_Gold;
 
 requires 'config', 'http_ua';
 

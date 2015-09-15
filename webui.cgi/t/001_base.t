@@ -7,7 +7,7 @@ use IMG::Util::Base 'Test';
 plan tests => 1;
 
 BEGIN {
-    use_ok( 'IMaGene' ) || print "Bail out!\n";
+    use_ok( 'Routes::IMG' ) || print "Bail out!\n";
 }
 
-diag( "Testing IMaGene, Perl $], $^X" );
+diag( "Testing IMG routes, Perl $], $^X" );

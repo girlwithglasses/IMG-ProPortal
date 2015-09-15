@@ -1,17 +1,20 @@
 [%
 	WRAPPER layouts/default.html.tt;
-#	title = title;
+#	title = content.title || content.label;
 %]
 <div class="cf">
-[%	VIEW app_list;
+[%	PROCESS inc/tool_descriptions.tt;
+
+
+	VIEW app_list;
 		BLOCK list %]
 	<ul role="tree">
 [%	FOREACH m IN item %]
 	  <li role="treeitem">
-	  	<h3><a href="[% m.url %]" [% IF m.title; ' title="' _ m.title _ '"'; END; %]>[% m.label %]</a></h3>
-[%		IF m.description; %]
-		[% m.description %]
-[%		END;
+	  	<h5 id="[% m.id %]"><a href="[% m.url %]">[% m.title || m.label %]</a></h5>
+[%		IF description.${m.id};
+			description.${m.id};
+		END;
 		IF m.submenu;
 			view.print(m.submenu.list);
 		END %]
@@ -22,9 +25,9 @@
 	END; # end view
 
 	IF content && content.id; %]
-<h1>[%	content.title || content.label %]</h1>
-[%		IF content.description;
-			content.description;
+<h2>[%	content.title || content.label %]</h2>
+[%		IF description.${content.id};
+			description.${content.id};
 		END;
 		IF content.submenu;
 			app_list.print(content.submenu);

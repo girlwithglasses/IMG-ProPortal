@@ -2,7 +2,7 @@
 # AbundanceComparisons.pm - Tool to allow for multiple pairwise
 #   genome abundance comparisons.
 #        --es 06/11/2007
-# $Id: AbundanceComparisons.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: AbundanceComparisons.pm 34199 2015-09-04 21:13:24Z klchu $
 ############################################################################
 package AbundanceComparisons;
 
@@ -43,6 +43,7 @@ my $user_restricted_site = $env->{user_restricted_site};
 my $in_file              = $env->{in_file};
 my $mer_data_dir         = $env->{mer_data_dir};
 my $default_timeout_mins = $env->{default_timeout_mins};
+my $YUI = $env->{yui_dir_28};
 my $merfs_timeout_mins   = $env->{merfs_timeout_mins};
 if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
@@ -61,11 +62,41 @@ my %function2IdType = (
 
 my $contact_oid = WebUtil::getContactOid();
 
+sub getPageTitle {
+    return 'Abundance Comparisons';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+    if (WebUtil::paramMatch("noHeader") ne "") {
+        return @a;
+    } else {
+        
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+        if ($include_metagenomes) {
+            @a = ( "CompareGenomes", '', '', $js, '', "userGuide_m.pdf#page=20"  );
+        } else {
+            @a = ("CompareGenomes", '', '', $js );
+        }
+
+        return @a;
+    }
+}
+
+
+
 ############################################################################
 # dispatch - Dispatch events.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
 

@@ -8,42 +8,33 @@ our $VERSION = '0.1';
 
 our @active_components = qw( home data_type location clade );
 
-my $pp;
-
 get '/test' => sub {
 
 	template 'pages/test', {};
 
 };
 
-
 prefix '/proportal'; # => sub {
 
 	# filterable queries
 	get qr{
-		/ (?<page> location | clade | data_type )
+		/ (?<page> location | clade | data_type | phylo_heat )
 		/? (?<ecosystem_subtype> neritic | pelagic | marginal )?
 		}x => sub {
 
 		my $c = captures;
 		my $p = delete $c->{page};
-		$pp = bootstrap( $p, config );
+
+		var current => 'proportal';
+		var page => 'proportal/' . $p;
+
+		my $pp = bootstrap( $p, config );
 
 		my $results;
 		if ($c->{ecosystem_subtype}) {
 			$pp->set_filters($c);
 		}
 		template "pages/" . $p, $pp->render();
-
-	};
-
-	get qr{
-		/ ( home | index )?
-		}x => sub {
-
-		$pp = bootstrap( undef, config );
-
-		template "pages/home", $pp->render();
 
 	};
 
@@ -54,6 +45,18 @@ prefix '/proportal'; # => sub {
 		$pp->set_filters({ taxon_oid => params->{taxon_oid} });
 
 		template "pages/genome_details", $pp->render();
+
+	};
+
+	get qr{
+		( / ( home | index ) )?
+		}x => sub {
+
+		var current => 'proportal';
+
+		my $pp = bootstrap( undef, config );
+
+		template "pages/home", $pp->render();
 
 	};
 
@@ -74,7 +77,8 @@ sub bootstrap {
 #	if ($cfg->{sessions_enabled}) {
 #		$cfg->{ session } = session;
 #	}
-	$cfg->{_core} = setting("_core");
+#	my $core = setting('_core') || create_core();
+	$cfg->{_core} = setting("_core") || create_core();
 
 	debug "Running bootstrap...";
 

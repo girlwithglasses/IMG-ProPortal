@@ -207,9 +207,11 @@ sub news {
 
 	say 'user: ' . Dumper $self;
 
+	die unless $self->can('user') && defined $self->user;
+
 	my $c_id = $self->user->contact_oid;
 #    my $contact_oid = WebUtil::getContactOid();
-	return unless $c_id;
+	die unless $c_id;
 
 #	my $sql = "select role from contact_img_groups\@imgsg_dev where contact_oid = ? and img_group = ? ";
 

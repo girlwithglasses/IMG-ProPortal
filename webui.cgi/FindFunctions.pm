@@ -6,7 +6,7 @@
 #  These were used in the days before this code was placed in Perl modules.
 #    --es 07/07/2005
 #
-# $Id: FindFunctions.pm 33902 2015-08-05 01:24:06Z jinghuahuang $
+# $Id: FindFunctions.pm 34211 2015-09-08 20:00:27Z klchu $
 ############################################################################
 package FindFunctions;
 my $section = "FindFunctions";
@@ -8197,9 +8197,9 @@ sub printKogList {
 
     print "<h1>Characterized KOGs</h1>\n";
 
-    print "<p>\n";
-    print "Note: uncharacterized KOGs are not included in this list.\n";
-    print "</p>\n";
+#    print "<p>\n";
+#    print "Note: uncharacterized KOGs are not included in this list.\n";
+#    print "</p>\n";
 
     printStatusLine( "Loading ...", 1 );
     printMainForm();
@@ -8263,7 +8263,7 @@ sub printKogList {
     for ( ; ; ) {
         my ( $kog_id, $kog_name ) = $cur->fetchrow();
         last if !$kog_id;
-        next if ( $kog_name =~ /^Uncharacterized/ );
+        #next if ( $kog_name =~ /^Uncharacterized/ );
         $count++;
         my $r;
         $r .= $sd . "<input type='checkbox' name='$select_id_name' " . "value='$kog_id' />" . "\t";
@@ -8323,9 +8323,9 @@ sub printCogList2 {
 
     print "<h1>Characterized COGs</h1>\n";
 
-    print "<p>\n";
-    print "Note: uncharacterized COGs are not included in this list.\n";
-    print "</p>\n";
+#    print "<p>\n";
+#    print "Note: uncharacterized COGs are not included in this list.\n";
+#    print "</p>\n";
 
     printStatusLine( "Loading ...", 1 );
     printMainForm();
@@ -8465,7 +8465,7 @@ sub printCogList2 {
     for ( ; ; ) {
         my ( $cog_id, $cog_name ) = $cur->fetchrow();
         last if !$cog_id;
-        next if ( $cog_name =~ /^Uncharacterized/ );
+#        next if ( $cog_name =~ /^Uncharacterized/ );
         $count++;
         my $r;
         $r .= $sd . "<input type='checkbox' name='$select_id_name' " . "value='$cog_id' />" . "\t";
