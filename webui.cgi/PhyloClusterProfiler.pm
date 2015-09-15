@@ -2,7 +2,7 @@
 # PhyloClusterProfiler.pm - Phylogenetic profiler, except using
 #    IMG clusters.         --es 07/13/11
 #
-# $Id: PhyloClusterProfiler.pm 31256 2014-06-25 06:27:22Z jinghuahuang $
+# $Id: PhyloClusterProfiler.pm 34217 2015-09-09 20:28:14Z klchu $
 ############################################################################
 package PhyloClusterProfiler;
 my $section = "PhyloClusterProfiler";
@@ -1112,24 +1112,24 @@ sub printPhyloProfileFormJob {
     printStatusLine( "$count rows loaded.", 2 );
     printJavaScript();
 
-    if ( $myimg_job ) {
-	### add computation on demand
-	print "<h2>Request Recomputation</h2>\n";
-	print "<p>\n"; 
-	print "You can request the phylogenetic profiler to be recomputed.\n";
-	print "<p>User Notes:";
-	print nbsp( 1 );
-	print "<input type='text' name='user_notes' value='' " .
-	    "size='60' maxLength='800' />\n";
-	print "<br/>";
-	my $name = "_section_MyIMG_computePhyloProfOnDemand";
-	print submit(
-		     -name  => $name,
-		     -value => "Request Recomputation",
-		     -class => "meddefbutton"
-		     );
-	print "</p>\n";
-    }
+#    if ( $myimg_job ) {
+#	### add computation on demand
+#	print "<h2>Request Recomputation</h2>\n";
+#	print "<p>\n"; 
+#	print "You can request the phylogenetic profiler to be recomputed.\n";
+#	print "<p>User Notes:";
+#	print nbsp( 1 );
+#	print "<input type='text' name='user_notes' value='' " .
+#	    "size='60' maxLength='800' />\n";
+#	print "<br/>";
+#	my $name = "_section_MyIMG_computePhyloProfOnDemand";
+#	print submit(
+#		     -name  => $name,
+#		     -value => "Request Recomputation",
+#		     -class => "meddefbutton"
+#		     );
+#	print "</p>\n";
+#    }
 
     print end_form();
 }

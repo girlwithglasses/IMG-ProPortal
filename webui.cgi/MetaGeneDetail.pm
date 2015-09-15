@@ -1,6 +1,6 @@
 ###########################################################################
 # MetaGeneDetail.pm - file version
-# $Id: MetaGeneDetail.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: MetaGeneDetail.pm 34254 2015-09-14 22:12:05Z klchu $
 ############################################################################
 package MetaGeneDetail;
 my $section = "MetaGeneDetail";
@@ -273,7 +273,7 @@ sub printHomologPage {
 
     printStatusLine( "Loading ...", 1 );
 
-    printHomologToolKit($gene_oid);
+    #printHomologToolKit($gene_oid);
     printCdsHomologs( $dbh, $taxon_oid, $data_type, $gene_oid );
 
     printStatusLine( "Loaded.", 2 );

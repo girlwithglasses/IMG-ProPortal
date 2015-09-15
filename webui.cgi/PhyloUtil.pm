@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id: PhyloUtil.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: PhyloUtil.pm 34217 2015-09-09 20:28:14Z klchu $
 ###########################################################################
 package PhyloUtil;
 
@@ -836,77 +836,77 @@ sub printBestBlastHits {
         </p>
     };
 
-    if ($myimg_job) {
-        ### add computation on demand
-        print "<h2>Request Recomputation</h2>\n";
-        print "<p>\n";
-        print "You can request the phylogenetic distribution of genes "
-        . "in this genome to be recomputed.\n";
-
-        my $sql2        = "select is_public from taxon where taxon_oid = ?";
-        my $cur2        = execSql( $dbh, $sql2, $verbose, $taxon_oid );
-        my ($is_public) = $cur2->fetchrow();
-        $cur2->finish();
-
-        if ( $is_public eq 'No' ) {
-            print "You can also select one or more private genomes from the list to be included in the computation.\n";
-            print "<p>\n";
-            print "<select name='private_taxon_oid' size='10' multiple>\n";
-            my $rclause = WebUtil::urClause("t");
-            my $imgClause = WebUtil::imgClause('t');
-
-            $sql2 = qq{
-                select t.taxon_oid, t.domain, t.seq_status,
-                       t.taxon_display_name
-                from taxon t
-                where t.is_public = 'No'
-                $rclause
-                $imgClause
-                order by t.domain, t.taxon_display_name
-            };
-            $cur2 = execSql( $dbh, $sql2, $verbose );
-            my $cnt2 = 0;
-
-            for ( ; ; ) {
-                my ( $t2, $domain, $seq_status, $name2 ) = $cur2->fetchrow();
-                last if !$t2;
-
-                if ( $t2 == $taxon_oid ) {
-                    # self
-                    next;
-                }
-
-                if ( length($domain) > 0 ) {
-                    $domain = substr( $domain, 0, 1 );
-                }
-                if ( length($seq_status) > 0 ) {
-                    $seq_status = substr( $seq_status, 0, 1 );
-                }
-
-                print "<option value='$t2'>$name2 [$domain][$seq_status]</option>\n";
-
-                $cnt2++;
-                if ( $cnt2 > 1000000 ) {
-                    last;
-                }
-            }
-            $cur2->finish();
-            print "</select>\n";
-        }
-
-        print "<p>User Notes: ";
-        print nbsp(1);
-        print "<input type='text' name='user_notes' value='' " 
-        . "size='60' maxLength='800' />\n";
-        print "<br/>";
-        my $name = "_section_MyIMG_computePhyloDistOnDemand";
-        print submit(
-                      -name  => $name,
-                      -value => "Request Recomputation",
-                      -class => "meddefbutton"
-        );
-        print "</p>\n";
-    }
+#    if ($myimg_job) {
+#        ### add computation on demand
+#        print "<h2>Request Recomputation</h2>\n";
+#        print "<p>\n";
+#        print "You can request the phylogenetic distribution of genes "
+#        . "in this genome to be recomputed.\n";
+#
+#        my $sql2        = "select is_public from taxon where taxon_oid = ?";
+#        my $cur2        = execSql( $dbh, $sql2, $verbose, $taxon_oid );
+#        my ($is_public) = $cur2->fetchrow();
+#        $cur2->finish();
+#
+#        if ( $is_public eq 'No' ) {
+#            print "You can also select one or more private genomes from the list to be included in the computation.\n";
+#            print "<p>\n";
+#            print "<select name='private_taxon_oid' size='10' multiple>\n";
+#            my $rclause = WebUtil::urClause("t");
+#            my $imgClause = WebUtil::imgClause('t');
+#
+#            $sql2 = qq{
+#                select t.taxon_oid, t.domain, t.seq_status,
+#                       t.taxon_display_name
+#                from taxon t
+#                where t.is_public = 'No'
+#                $rclause
+#                $imgClause
+#                order by t.domain, t.taxon_display_name
+#            };
+#            $cur2 = execSql( $dbh, $sql2, $verbose );
+#            my $cnt2 = 0;
+#
+#            for ( ; ; ) {
+#                my ( $t2, $domain, $seq_status, $name2 ) = $cur2->fetchrow();
+#                last if !$t2;
+#
+#                if ( $t2 == $taxon_oid ) {
+#                    # self
+#                    next;
+#                }
+#
+#                if ( length($domain) > 0 ) {
+#                    $domain = substr( $domain, 0, 1 );
+#                }
+#                if ( length($seq_status) > 0 ) {
+#                    $seq_status = substr( $seq_status, 0, 1 );
+#                }
+#
+#                print "<option value='$t2'>$name2 [$domain][$seq_status]</option>\n";
+#
+#                $cnt2++;
+#                if ( $cnt2 > 1000000 ) {
+#                    last;
+#                }
+#            }
+#            $cur2->finish();
+#            print "</select>\n";
+#        }
+#
+#        print "<p>User Notes: ";
+#        print nbsp(1);
+#        print "<input type='text' name='user_notes' value='' " 
+#        . "size='60' maxLength='800' />\n";
+#        print "<br/>";
+#        my $name = "_section_MyIMG_computePhyloDistOnDemand";
+#        print submit(
+#                      -name  => $name,
+#                      -value => "Request Recomputation",
+#                      -class => "meddefbutton"
+#        );
+#        print "</p>\n";
+#    }
 
 =removed per Natalia for IMG 3.3
     # compare action buttons
@@ -1783,26 +1783,26 @@ sub printFileBestBlastHits {
         print "<p>remain: remain30=$remain30, remain60=$remain60, remain90=$remain90\n";
     }
 
-    if ($myimg_job) {
-        ### add computation on demand
-        print "<h2>Request Recomputation</h2>\n";
-        print "<p>\n";
-        print "You can request the phylogenetic distribution of genes "
-          . "in this genome to be recomputed.\n";
-
-        print "<p>User Notes: ";
-        print nbsp(1);
-        print "<input type='text' name='user_notes' value='' "
-          . "size='60' maxLength='800' />\n";
-        print "<br/>";
-        my $name = "_section_MyIMG_computePhyloDistOnDemand";
-        print submit(
-            -name  => $name,
-            -value => "Request Recomputation",
-            -class => "meddefbutton"
-        );
-        print "</p>\n";
-    }
+#    if ($myimg_job) {
+#        ### add computation on demand
+#        print "<h2>Request Recomputation</h2>\n";
+#        print "<p>\n";
+#        print "You can request the phylogenetic distribution of genes "
+#          . "in this genome to be recomputed.\n";
+#
+#        print "<p>User Notes: ";
+#        print nbsp(1);
+#        print "<input type='text' name='user_notes' value='' "
+#          . "size='60' maxLength='800' />\n";
+#        print "<br/>";
+#        my $name = "_section_MyIMG_computePhyloDistOnDemand";
+#        print submit(
+#            -name  => $name,
+#            -value => "Request Recomputation",
+#            -class => "meddefbutton"
+#        );
+#        print "</p>\n";
+#    }
 
 }
 

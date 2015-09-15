@@ -18,42 +18,12 @@ $| = 1;
 
 my $env = WebConfig::getEnv();
 
-=cut
-
-my $cgi_dir              = $env->{cgi_dir};
-my $cgi_url              = $env->{cgi_url};
-my $main_cgi             = $env->{main_cgi};
-my $inner_cgi            = $env->{inner_cgi};
-my $tmp_url              = $env->{tmp_url};
-my $tmp_dir              = $env->{tmp_dir};
-my $verbose              = $env->{verbose};
-my $include_metagenomes  = $env->{include_metagenomes};
-my $web_data_dir         = $env->{web_data_dir};
-my $img_internal         = $env->{img_internal};
-my $user_restricted_site = $env->{user_restricted_site};
-my $cgi_tmp_dir          = $env->{cgi_tmp_dir};
-my $base_url             = $env->{base_url};
-my $img_ken              = $env->{img_ken};
-my $kegg_brite_tree_file = $env->{kegg_brite_tree_file};
-my $preferences_url      = "$main_cgi?section=MyIMG&page=preferences";
-
-my $maxGeneListResults = 1000;
-
-=cut
-
 my $cgi_cache_enable = $env->{cgi_cache_enable} // 1;
-
-my $cgi_cache_dir                = $env->{cgi_cache_dir};
-my $cgi_cache_default_expires_in = $env->{cgi_cache_default_expires_in} // 3600;
-my $cgi_cache_size               = $env->{cgi_cache_size} // 20 * 1024 * 1024;
-
-
-#$cgi_cache_size = 20 * 1024 * 1024 if ( $cgi_cache_size eq "" );
 
 #	check whether the cache is enabled or not
 if ( $cgi_cache_enable ) {
 	# defaults to being enabled
-    my $userCacheEnable = getSessionParam("userCacheEnable") || 'Yes';
+    my $userCacheEnable = WebUtil::getSessionParam("userCacheEnable") || 'Yes';
 	$cgi_cache_enable = ( 'Yes' eq $userCacheEnable ) ? 1 : 0;
 }
 
@@ -93,18 +63,13 @@ sub cgiCacheInitialize {
 
     if ($cgi_cache_enable) {
 
-        my $query = WebUtil::getCgi();
-        require MyIMG;
-        my $prefs_href = MyIMG::getSessionParamHash();
+		my $cgi_cache_dir                = $env->{cgi_cache_dir};
+		my $cgi_cache_default_expires_in = $env->{cgi_cache_default_expires_in} // 3600;
+		my $cgi_cache_size               = $env->{cgi_cache_size} // 20 * 1024 * 1024;
 
-        # user can change preferences so let's hack into
-        # cgi params and set the hide prefs
-        # the cgi cache system can decide to use cache or not - Ken
-        my $params = $query->Vars;
-        foreach my $key (keys %$prefs_href) {
-            $params->{$key} = $prefs_href->{$key};
-            #print "$key ".  $prefs_href->{$key} . " <br/>\n";
-        }
+
+		#$cgi_cache_size = 20 * 1024 * 1024 if ( $cgi_cache_size eq "" );
+
 
         # Set up a cache in /tmp/CGI_Cache/demo_cgi, with publicly
         # unreadable cache entries, a maximum size of 20 megabytes,
@@ -128,6 +93,19 @@ sub cgiCacheInitialize {
 				default_expires_in => $tmp_time,
 			}
 		});
+
+        my $query = WebUtil::getCgi();
+        require MyIMG;
+        my $prefs_href = MyIMG::getSessionParamHash();
+
+        # user can change preferences so let's hack into
+        # cgi params and set the hide prefs
+        # the cgi cache system can decide to use cache or not - Ken
+        my $params = $query->Vars;
+        foreach my $key (keys %$prefs_href) {
+            $params->{$key} = $prefs_href->{$key};
+            #print "$key ".  $prefs_href->{$key} . " <br/>\n";
+        }
 
         my $myhashkey;
         my $params = $query->Vars;

@@ -1,6 +1,6 @@
 ############################################################################
 # NaturalProd.pm
-# $Id: NaturalProd.pm 34152 2015-09-01 19:32:50Z klchu $
+# $Id: NaturalProd.pm 34217 2015-09-09 20:28:14Z klchu $
 ############################################################################
 package NaturalProd;
 my $section = "NaturalProd";
@@ -38,9 +38,66 @@ my $base_dir      = $env->{base_dir};
 my $metacyc_url   = $env->{metacyc_url};
 my $ncbi_base_url = $env->{ncbi_entrez_base_url};
 my $enable_biocluster = $env->{enable_biocluster};
+my $YUI = $env->{yui_dir_28};
+
+
+#    } elsif ( $section eq 'np' ) {
+#        $pageTitle = "Biosynthetic Clusters & Secondary Metabolites";
+#        printAppHeader( "getsme", '', '', '', '', 'GetSMe_intro.pdf' );
+#        require NaturalProd;
+#        NaturalProd::printLandingPage();
+#
+#    } elsif ( $section eq 'NaturalProd' ) {
+#        require NaturalProd;
+#        $pageTitle = "Secondary Metabolite Statistics";
+#
+#        my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
+#        $template->param( base_url => $base_url );
+#        $template->param( YUI      => $YUI );
+#        my $js = $template->output;
+#
+#        printAppHeader( "getsme", '', '', $js );
+#        NaturalProd::dispatch();
+
+sub getPageTitle {
+    my $section = param('section');
+    if($section eq 'NaturalProd') {
+        return "Secondary Metabolite Statistics";
+    } else {
+        # np
+        return "Biosynthetic Clusters & Secondary Metabolites"; 
+    }   
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my $section = param('section');
+    my @a;    
+    if($section eq 'NaturalProd') {
+        my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+        @a = ("getsme", '', '', $js);
+        return @a; 
+
+    } else {
+        # np
+        @a = ("getsme", '', '', '', '', 'GetSMe_intro.pdf' );
+        return @a; 
+    }
+}
 
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param('page');
+    my $section = param('section');
+
+    if($section eq 'np') {
+        printLandingPage();
+        return;
+    }
 
     if ( $page eq "naturalProd" ) {
         printTaxonNP();

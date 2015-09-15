@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MeshTree.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: MeshTree.pm 34218 2015-09-09 23:07:54Z klchu $
 ############################################################################
 package MeshTree;
 
@@ -1758,6 +1758,29 @@ sub printTreeAllDiv {
     if ($checkboxSelectionMode) {
         $checkboxSelectionYUIClass = "class='ygtv-checkbox'";
     }
+
+    print qq{
+        <div id="meshtreediv" >
+        <p> Loading Tree...
+        <img src="$base_url/images/yui_progressbar.gif" alt="loading tree" title="Please wait tree is loading">
+        </div>
+        <div id="treeDiv1" $checkboxSelectionYUIClass></div>
+        <script type="text/javascript">
+        initTree('$xml_cgi', $checkboxSelectionMode);
+        </script>
+    };
+
+}
+
+
+sub printTreeAllDivHomePage {
+    my $checkboxSelectionMode = 0;
+    my $checkboxSelectionYUIClass;
+
+    my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    print $template->output;
 
     print qq{
         <div id="meshtreediv" >

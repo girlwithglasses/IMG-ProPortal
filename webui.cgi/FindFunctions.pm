@@ -6,7 +6,7 @@
 #  These were used in the days before this code was placed in Perl modules.
 #    --es 07/07/2005
 #
-# $Id: FindFunctions.pm 34211 2015-09-08 20:00:27Z klchu $
+# $Id: FindFunctions.pm 34261 2015-09-15 18:14:42Z jinghuahuang $
 ############################################################################
 package FindFunctions;
 my $section = "FindFunctions";
@@ -303,7 +303,7 @@ sub dispatch {
 
 sub printCog2Cat {
     print qq{
-      <h1> COG Id Mapping to Categories</h1>   
+      <h1> COG ID Mapping to Categories</h1>   
     };
     my $rfh = newReadFileHandle( "$base_dir/cogid_and_cat.html" );
     

@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: MetaDetail.pm 34245 2015-09-14 17:25:50Z klchu $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -1390,6 +1390,8 @@ sub printTaxonDetail_ImgGold {
     checkTaxonPerm( $dbh, $taxon_oid );
 
     ## Now retrieve body of data for the real taxon_oid.
+    my $rclause   = WebUtil::urClause('tx');
+    my $imgClause = WebUtil::imgClause('tx');    
     my $sql = qq{
       select distinct tx.taxon_oid,
          tx.ncbi_taxon_id, tx.host_ncbi_taxon_id,
@@ -1410,6 +1412,8 @@ sub printTaxonDetail_ImgGold {
      tx.study_gold_id, tx.sequencing_gold_id, tx.genome_completion
       from taxon tx
       where tx.taxon_oid = ?
+      $rclause
+      $imgClause      
     };
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
     my (

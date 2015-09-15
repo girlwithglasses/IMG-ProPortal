@@ -5894,8 +5894,8 @@ sub printFileUploadForm {
 
     # need a different ENCTYPE for file upload
     print start_form( -name => "mainForm",
-		                        -enctype => "multipart/form-data",
-		      -action => "$section_cgi" );
+		              -enctype => "multipart/form-data",
+		              -action => "$section_cgi" );
 
     print "<p>\n"; # paragraph section puts text in proper font.
 

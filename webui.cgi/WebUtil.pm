@@ -3157,6 +3157,7 @@ sub getSession {
 sub getSessionParam {
     my ($arg) = @_;
 
+	initialize() unless $g_session;
 	if ( $g_session->can('param') ) {
 	    return $g_session->param($arg);
 	}

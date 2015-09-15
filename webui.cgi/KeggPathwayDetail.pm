@@ -1,7 +1,7 @@
 ############################################################################
 # KeggPathwayDetail.pm - Show detail page for kegg pathway.
 #   --es 07/08/2005
-# $Id: KeggPathwayDetail.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: KeggPathwayDetail.pm 34242 2015-09-14 16:31:02Z aratner $
 ############################################################################
 package KeggPathwayDetail;
 my $section = "KeggPathwayDetail";

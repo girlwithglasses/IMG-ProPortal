@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 34199 2015-09-04 21:13:24Z klchu $
+# $Id: main.pl 34226 2015-09-10 19:43:30Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -392,6 +392,9 @@ if ( param() ) {
         AbundanceComparisonsSub => 'AbundanceComparisonsSub',
         AbundanceToolkit => 'AbundanceToolkit',
         Artemis => 'Artemis',
+        np => 'NaturalProd',
+        NaturalProd => 'NaturalProd',
+        
     );
 
     # testing sections
@@ -576,23 +579,7 @@ if ( param() ) {
         printAppHeader( "getsme", '', '', $js );
         BiosyntheticStats::dispatch();
 
-    } elsif ( $section eq 'np' ) {
-        $pageTitle = "Biosynthetic Clusters & Secondary Metabolites";
-        printAppHeader( "getsme", '', '', '', '', 'GetSMe_intro.pdf' );
-        require NaturalProd;
-        NaturalProd::printLandingPage();
 
-    } elsif ( $section eq 'NaturalProd' ) {
-        require NaturalProd;
-        $pageTitle = "Secondary Metabolite Statistics";
-
-        my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        printAppHeader( "getsme", '', '', $js );
-        NaturalProd::dispatch();
     } elsif ( $section eq "BcNpIDSearch" ) {
         require BcNpIDSearch;
         $pageTitle = "Biosynthetic Cluster / Secondary Metabolite Search by ID";
@@ -2522,6 +2509,67 @@ sub printAppHeader {
     $numTaxons = "" if ( $numTaxons == 0 );
 
     if ( $current eq "Home" && $abc ) {
+        # new abc home page
+        # caching home page
+        my $sid  = getContactOid();
+        my $time = 3600 * 24;                    # 24 hour cache
+
+        printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
+        printMenuDiv( $current, $dbh );
+        printErrorDiv();
+
+        HtmlUtil::cgiCacheInitialize("homepage");
+        HtmlUtil::cgiCacheStart() or return;
+
+        my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
+
+        printAbcNavBar();
+        printContentHome();
+
+        my $templateFile = "$base_dir/home-v33a.html";
+        my $template = HTML::Template->new( filename => $templateFile );
+        print $template->output;
+
+print qq{  
+<div class='largeWidthDiv'>
+
+<div class="shadow" id='bcHomeDiv'>
+<h2>Biosynthetic Gene Clusters</h2>
+Clusters of genes whose expression leads<br/>to the synthesis of Secondary Metabolites
+<br><br>
+    <div style="text-align:left;>
+};
+    
+    require BiosyntheticStats;
+    BiosyntheticStats::printStatsHomePage(0);
+
+print qq{
+    </div>
+</div>
+};
+
+print qq{
+<div class="shadow" id='smHomeDiv'>
+<h2>Secondary Metabolites</h2>
+Small organic molecules produced<br/>by living organisms<br/>
+<div style="text-align:left;>
+};
+
+    require MeshTree;
+    MeshTree::printTreeAllDivHomePage();
+
+print qq{
+    </div>
+</div>
+</div>     
+};
+
+
+        HtmlUtil::cgiCacheStop();
+        
+                
+    } elsif ( $current eq "Home" && $abc ) {
+        # old abc home page
 
         # caching home page
         my $sid  = getContactOid();

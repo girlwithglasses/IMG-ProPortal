@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MetagPhyloDist.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: MetagPhyloDist.pm 34258 2015-09-15 01:59:20Z jinghuahuang $
 ############################################################################
 package MetagPhyloDist;
 
@@ -890,17 +890,17 @@ sub printResults {
         $filters_hash{$x} = $x;
     }
 
-    my @genomeFilterSelections = param('genomeFilterSelections');
-    my $find_toi_ref =  \@genomeFilterSelections; 
-    if ( $#$find_toi_ref < 0 ) {
+    my @find_toi = param('genomeFilterSelections');
+    if ( scalar(@find_toi) < 0 ) {
         # filter does not have taxon oids
-        my @taxon_oids = param("taxon_oid");
-        $find_toi_ref = \@taxon_oids;
+        @find_toi = param("taxon_oid");
     }
-    my $taxon_oids_str = join( ",", @$find_toi_ref );
-    if ( $#$find_toi_ref < 0 ) {
+    if ( scalar(@find_toi) < 0 ) {
         webError("Please select at least 1 genome.<br/>\n");
     }
+    my @find_toi_sorted = sort(@find_toi);
+    my $find_toi_ref =  \@find_toi_sorted; 
+    my $taxon_oids_str = join( ",", @find_toi_sorted );
 
     printMainForm();
     printStatusLine( "Loading ...", 1 );
@@ -1132,8 +1132,6 @@ sub printResults {
 
     print end_form();
 
-    #$dbh->disconnect();
-
     # PREPARE THE BAR CHART
     # width should depend on the number of catergories and number of genomes
     my $min_width   = 300;
@@ -1143,7 +1141,6 @@ sub printResults {
     my @chartseries;
     for ( my $i = 0 ; $i <= $#$find_toi_ref ; $i++ ) {
         my $oid = $find_toi_ref->[$i];
-        #push( @chartseries, "$oid" );
         my $name = $taxon_name_href->{$oid};
         push( @chartseries, "$oid - $name" );
     }
@@ -1353,7 +1350,7 @@ sub printTable {
     print $res "Genome Count\t";
 
     my $xcopyText = PhyloUtil::getXcopyText( $xcopy );
-    foreach my $id ( sort @$find_toi_ref ) {
+    foreach my $id ( @$find_toi_ref ) { #$find_toi_ref already sorted
         my $name = $taxon_name_href->{$id};
         my $abbr_name = WebUtil::abbrColName( $id, $name, 1 );
         if ( $mer_fs_taxons{$id} ) {
@@ -1445,7 +1442,7 @@ sub printTable {
         my $thref   = $gene_count_href->{$name};
         my $hl_href = $homolog_count_href->{$name};
         my $index   = 0;
-        foreach my $toid ( sort @$find_toi_ref ) {
+        foreach my $toid ( @$find_toi_ref ) {  #$find_toi_ref already sorted
             my $count = $thref->{$toid};
             $count = 0 if ( $count eq "" );
 
@@ -3197,17 +3194,17 @@ sub printBodySiteResults {
         $filters_hash{$x} = $x;
     }
 
-    my @genomeFilterSelections = param('genomeFilterSelections');
-    my $find_toi_ref = \@genomeFilterSelections;
-    if ( $#$find_toi_ref < 0 ) {
+    my @find_toi = param('genomeFilterSelections');
+    if ( scalar(@find_toi) < 0 ) {
         # filter does not have taxon oids
-        my @taxon_oids = param("taxon_oid");
-        $find_toi_ref = \@taxon_oids;
+        @find_toi = param("taxon_oid");
     }
-    my $taxon_oids_str = join( ",", @$find_toi_ref );
-    if ( $#$find_toi_ref < 0 ) {
+    if ( scalar(@find_toi) < 0 ) {
         webError("Please select at least 1 genome.<br/>\n");
     }
+    my @find_toi_sorted = sort(@find_toi);
+    my $find_toi_ref =  \@find_toi_sorted; 
+    my $taxon_oids_str = join( ",", @find_toi_sorted );
 
     printMainForm();
     printStatusLine( "Loading ...", 1 );
@@ -3578,7 +3575,7 @@ sub printTable_BodySite {
     print $res "Genome Count\t";
 
     my $xcopyText = PhyloUtil::getXcopyText( $xcopy );
-    foreach my $id ( sort @$find_toi_ref ) {
+    foreach my $id ( @$find_toi_ref ) { #$find_toi_ref already sorted
         my $name = $taxon_name_href->{$id};
 
         my $abbr_name = WebUtil::abbrColName( $id, $name, 1 );
@@ -3660,7 +3657,7 @@ sub printTable_BodySite {
         my $thref   = $gene_count_href->{$name};
         my $hl_href = $homolog_count_href->{$name};
         my $index   = 0;
-        foreach my $toid ( sort @$find_toi_ref ) {
+        foreach my $toid ( @$find_toi_ref ) {  #$find_toi_ref already sorted
             my $count = $thref->{$toid};
             $count = 0 if ( $count eq "" );
 

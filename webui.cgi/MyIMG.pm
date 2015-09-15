@@ -1,7 +1,7 @@
 ###########################################################################
 # MyImg.pm - Functions supporting MyIMG utilty.
 #    --es 04/16/2005
-# $Id: MyIMG.pm 34180 2015-09-03 21:12:12Z aireland $
+# $Id: MyIMG.pm 34235 2015-09-12 08:51:49Z jinghuahuang $
 ############################################################################
 package MyIMG;
 my $section = "MyIMG";
@@ -11380,9 +11380,10 @@ sub dbAddScaffoldGene {
 # printMyJobForm
 ############################################################################
 sub printMyJobForm {
-    my $contact_oid = WebUtil::getContactOid();
+    
     print "<h1>IMG User Computation Jobs</h1>\n";
 
+    my $contact_oid = WebUtil::getContactOid();
     if ( DataEntryUtil::db_isPublicUser($contact_oid) ) {
 
         # public user

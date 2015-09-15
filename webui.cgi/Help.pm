@@ -1,7 +1,7 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 34177 2015-09-03 20:25:21Z klchu $
+# $Id: Help.pm 34232 2015-09-11 17:59:09Z klchu $
 ############################################################################
 package Help;
 use strict;
@@ -72,8 +72,8 @@ sub dispatch {
 
 sub printNews {
     print qq{
-<h1>News</h1>
-<div style="width:950px;">
+<h1>News Releases</h1>
+<div id='newsReleases'>
     };
 
 
@@ -83,7 +83,14 @@ sub printNews {
         my $line;
         my $rfh = newReadFileHandle($file);
         while ( $line = $rfh->getline() ) {
-            print $line;
+            if($line =~ /^<b id='subject'>/) {
+                print '<h2>' . $line . "</h2>";
+#            } elsif ($line =~ /^<p>/) {
+#                $line =~ s/^<p>/<p style='font-size: 14px;'>/;
+#                print $line;
+            } else {
+                print $line;
+            }
         }
         close $rfh;
     }

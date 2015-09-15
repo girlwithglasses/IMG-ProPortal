@@ -1,6 +1,6 @@
 ############################################################################
 # RNAStudies.pm - displays rna expression data
-# $Id: RNAStudies.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: RNAStudies.pm 34239 2015-09-14 16:26:56Z aratner $
 ############################################################################
 package RNAStudies;
 my $section = "RNAStudies";

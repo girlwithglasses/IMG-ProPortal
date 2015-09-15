@@ -3,7 +3,7 @@
 #   of genes based on common homologs or subtraction of homologs.
 #      --es 02/28/2005
 #
-# $Id: PhylogenProfiler.pm 31256 2014-06-25 06:27:22Z jinghuahuang $
+# $Id: PhylogenProfiler.pm 34217 2015-09-09 20:28:14Z klchu $
 #
 ############################################################################
 package PhylogenProfiler;
@@ -789,24 +789,24 @@ sub printPhyloProfileFormFull {
     printStatusLine( "$count rows loaded.", 2 );
     printJavaScript();
 
-    if ( $myimg_job ) {
-	### add computation on demand
-	print "<h2>Request Recomputation</h2>\n";
-	print "<p>\n"; 
-	print "You can request the phylogenetic profiler to be recomputed.\n";
-	print "<p>User Notes:";
-	print nbsp( 1 );
-	print "<input type='text' name='user_notes' value='' " .
-	    "size='60' maxLength='800' />\n";
-	print "<br/>";
-	my $name = "_section_MyIMG_computePhyloProfOnDemand";
-	print submit(
-		     -name  => $name,
-		     -value => "Request Recomputation",
-		     -class => "meddefbutton"
-		     );
-	print "</p>\n";
-    }
+#    if ( $myimg_job ) {
+#	### add computation on demand
+#	print "<h2>Request Recomputation</h2>\n";
+#	print "<p>\n"; 
+#	print "You can request the phylogenetic profiler to be recomputed.\n";
+#	print "<p>User Notes:";
+#	print nbsp( 1 );
+#	print "<input type='text' name='user_notes' value='' " .
+#	    "size='60' maxLength='800' />\n";
+#	print "<br/>";
+#	my $name = "_section_MyIMG_computePhyloProfOnDemand";
+#	print submit(
+#		     -name  => $name,
+#		     -value => "Request Recomputation",
+#		     -class => "meddefbutton"
+#		     );
+#	print "</p>\n";
+#    }
 
     print end_form();
 }
@@ -1001,24 +1001,24 @@ $hideGFragment = "Yes" if $hideGFragment eq "";
 
     printStatusLine( "loaded.", 2 );
 
-    if ( $myimg_job ) {
-    ### add computation on demand
-    print "<h2>Request Recomputation</h2>\n";
-    print "<p>\n"; 
-    print "You can request the phylogenetic profiler to be recomputed.\n";
-    print "<p>User Notes:";
-    print nbsp( 1 );
-    print "<input type='text' name='user_notes' value='' " .
-        "size='60' maxLength='800' />\n";
-    print "<br/>";
-    my $name = "_section_MyIMG_computePhyloProfOnDemand";
-    print submit(
-             -name  => $name,
-             -value => "Request Recomputation",
-             -class => "meddefbutton"
-             );
-    print "</p>\n";
-    }
+#    if ( $myimg_job ) {
+#    ### add computation on demand
+#    print "<h2>Request Recomputation</h2>\n";
+#    print "<p>\n"; 
+#    print "You can request the phylogenetic profiler to be recomputed.\n";
+#    print "<p>User Notes:";
+#    print nbsp( 1 );
+#    print "<input type='text' name='user_notes' value='' " .
+#        "size='60' maxLength='800' />\n";
+#    print "<br/>";
+#    my $name = "_section_MyIMG_computePhyloProfOnDemand";
+#    print submit(
+#             -name  => $name,
+#             -value => "Request Recomputation",
+#             -class => "meddefbutton"
+#             );
+#    print "</p>\n";
+#    }
 
     print end_form();
     GenomeListJSON::showGenomeCart($numTaxon);
@@ -1510,24 +1510,24 @@ sub printPhyloProfileFormJob {
     printStatusLine( "$count rows loaded.", 2 );
     printJavaScript();
 
-    if ( $myimg_job ) {
-	### add computation on demand
-	print "<h2>Request Recomputation</h2>\n";
-	print "<p>\n"; 
-	print "You can request the phylogenetic profiler to be recomputed.\n";
-	print "<p>User Notes: ";
-	print nbsp( 1 );
-	print "<input type='text' name='user_notes' value='' " .
-	    "size='60' maxLength='800' />\n";
-	print "<br/>";
-	my $name = "_section_MyIMG_computePhyloProfOnDemand";
-	print submit(
-		     -name  => $name,
-		     -value => "Request Recomputation",
-		     -class => "meddefbutton"
-		     );
-	print "</p>\n";
-    }
+#    if ( $myimg_job ) {
+#	### add computation on demand
+#	print "<h2>Request Recomputation</h2>\n";
+#	print "<p>\n"; 
+#	print "You can request the phylogenetic profiler to be recomputed.\n";
+#	print "<p>User Notes: ";
+#	print nbsp( 1 );
+#	print "<input type='text' name='user_notes' value='' " .
+#	    "size='60' maxLength='800' />\n";
+#	print "<br/>";
+#	my $name = "_section_MyIMG_computePhyloProfOnDemand";
+#	print submit(
+#		     -name  => $name,
+#		     -value => "Request Recomputation",
+#		     -class => "meddefbutton"
+#		     );
+#	print "</p>\n";
+#    }
 
     print end_form();
 }

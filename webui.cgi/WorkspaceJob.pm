@@ -162,14 +162,14 @@ sub printJobMainForm {
 
     my $folder = $JOB_FOLDER;
 
-    #    my $super_user_flag = getSuperUser();
-    #    if ( $super_user_flag ne 'Yes' ) {
-    #	return;
-    #    }
-
     my $sid = getContactOid();
+    Workspace::inspectWorkspaceUsage( $sid, 1 );
 
-    #    my $jgi_user = Workspace::getIsJgiUser($sid);
+    #my $super_user_flag = getSuperUser();
+    #if ( $super_user_flag ne 'Yes' ) {
+    #    return;
+    #}
+    #my $jgi_user = Workspace::getIsJgiUser($sid);
 
     opendir( DIR, "$workspace_dir/$sid/$folder" )
       or webDie("failed to open folder list");
@@ -186,11 +186,6 @@ sub printJobMainForm {
     print $text;
 
     printMainForm();
-
-    #    my $super_user_flag = getSuperUser();
-    #    if ( $super_user_flag ne 'Yes' ) {
-    #	return;
-    #    }
 
     my $job_dir = "$workspace_dir/$sid/job";
     if ( !( -e $job_dir ) ) {
@@ -1213,6 +1208,8 @@ sub saveSelectedJobFunctions {
     my $sid = getContactOid();
     return if !$sid;
 
+    Workspace::inspectWorkspaceUsage( $sid );
+
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {
         webError("Please select one or more functions");
@@ -1265,6 +1262,8 @@ sub saveSelectedJobFunctions {
 sub saveSelectedJobFuncGenes {
     my $sid = getContactOid();
     return if !$sid;
+
+    Workspace::inspectWorkspaceUsage( $sid );
 
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {

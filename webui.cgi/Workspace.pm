@@ -7,7 +7,7 @@
 # filenames with white spaces     $filename =~ s/\s/_/g;
 # - ken
 #
-# $Id: Workspace.pm 34118 2015-08-26 21:06:23Z klchu $
+# $Id: Workspace.pm 34231 2015-09-11 06:29:27Z jinghuahuang $
 #
 ############################################################################
 package Workspace;
@@ -568,6 +568,7 @@ sub getDataSetNames {
 sub breakLargeSet {
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my @input_files = param("filename");
     #print "breakLargeSet() input_files @input_files<br/>\n";
@@ -2562,6 +2563,8 @@ sub execSaveAllGeneList {
 sub prepareSaveToWorkspace {
     my ( $sid, $folder ) = @_;
 
+    inspectWorkspaceUsage( $sid );
+
     my ( $filename, $ws_save_mode ) = inspectSaveToWorkspace( $sid, $folder );
 
     my $res;
@@ -2581,6 +2584,81 @@ sub prepareSaveToWorkspace {
     }
 
     return ($filename, $res, \%h2);
+}
+
+###############################################################################
+# inspectWorkspaceUsage
+###############################################################################
+sub inspectWorkspaceUsage {
+    my ( $sid, $printMsg ) = @_;
+
+    my $super_user = getSuperUser();
+    if ( $super_user eq 'Yes' ) {
+        return 0;
+    }
+
+    my $sql = qq{
+       select contact_oid, super_user, jgi_user, email, organization
+       from contact
+       where contact_oid = ?
+    };
+
+    my $dbh = dbLogin();
+    my $cur = execSql( $dbh, $sql, $verbose, $sid );
+    my ($c_oid, $s_user, $jgi_user, $email, $organization) = $cur->fetchrow();
+    $cur->finish();
+
+    if ( $s_user eq 'Yes' || $jgi_user eq 'Yes' 
+       || $organization =~ 'JGI' || $organization =~ /Joint Genome Institute/i ) {
+        return 0;
+    }
+
+    my $wksDir = "$workspace_dir/$sid";
+    my $size;
+    $size += getDirSize($wksDir, $size);
+
+    #print "workspace $wksDir size: $size<br/>\n";
+    if ( $size >= 5*1024*1024*1024 ) {
+        if ( $printMsg ) {
+            print "<p>";
+            print "<font color=red><b>Your workspace usage is over 5GB.  Please delete some of your files.</b></font>";
+            print "</p>";
+        }
+        else {
+            webError("Your workspace usage is over 5GB.  Please delete some of your files.");
+        }
+        return 1;
+    }
+    
+    return 0;
+}
+
+sub getDirSize {
+    my ($dir, $size) = @_;
+
+    opendir( Dir, $dir ) or die("dirList: cannot read '$dir'\n");
+    my @paths = grep(!/^\.\.?/, readdir(Dir));
+    closedir(Dir);
+
+    foreach my $path (@paths) {
+        #print "workspace path=$path<br/>\n";
+        #next if ($path =~ /^\.\.?/);
+
+        my $fullPath = "$dir/$path";
+        if (-f $fullPath) {
+            $size += WebUtil::fileSize($fullPath);
+            #print "workspace $fullPath size: $size<br/>\n";
+        }
+        elsif (-d $fullPath) {
+            $size += getDirSize($fullPath, $size);
+            #print "workspace $fullPath size: $size<br/>\n";
+        }
+        else {
+            print "workspace none $fullPath<br/>\n";            
+        }
+    }
+    
+    return $size;
 }
 
 ###############################################################################
@@ -4480,6 +4558,7 @@ sub removeSharing {
 sub saveIntersection {
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my $folder = param("directory");
 
@@ -4636,6 +4715,7 @@ sub saveIntersection {
 sub saveUnion {
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my $folder = param("directory");
 
@@ -4748,6 +4828,7 @@ sub saveSetOp {
     my ($isMinus) = @_;
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my $filename;
     if ($isMinus) {
@@ -4900,6 +4981,7 @@ sub saveGeneGenomes {
     #print "isSet: $isSet, isAlternativeName: $isAlternativeName<br/>\n";
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my @input_files;
     my @gene_oids;
@@ -5093,6 +5175,7 @@ sub saveGeneScaffolds {
     #print "isSet: $isSet, isAlternativeName: $isAlternativeName<br/>\n";
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my @input_files;
     my @gene_oids;
@@ -5347,6 +5430,7 @@ sub saveScaffoldGenes {
     #print "isSet: $isSet, isAlternativeName: $isAlternativeName<br/>\n";
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my @input_files;
     my @scaffold_oids;
@@ -5554,6 +5638,7 @@ sub saveScaffoldGenomes {
     #print "isSet: $isSet, isAlternativeName: $isAlternativeName<br/>\n";
 
     my $sid = getContactOid();
+    inspectWorkspaceUsage( $sid );
 
     my @input_files;
     my @scaffold_oids;
@@ -6827,8 +6912,6 @@ sub getIsJgiUser {
     my ( $c_oid, $isJgiUser ) = $cur->fetchrow_array();
     $cur->finish();
 
-    #$dbh->disconnect();
-
     if ( defined($c_oid) ) {
         return $isJgiUser;
     }
@@ -6842,6 +6925,10 @@ sub getIsJgiUser {
 sub printSubmitComputation {
     my ( $sid, $folder, $jobPrefix, $submitName, $moreInfo, $existing_jobs_ref ) = @_;
 
+    if ( inspectWorkspaceUsage( $sid, 1 ) ) {
+        return;
+    }
+    
     my $jobType    = 'function profile';
     my $wsSaveMode = 'ws_save_mode';
     my $jobResultName = 'job_result_name';

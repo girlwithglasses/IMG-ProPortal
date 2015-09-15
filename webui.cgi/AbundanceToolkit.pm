@@ -3,7 +3,7 @@
 #     measurements.
 #        --es 05/19/2007
 #
-# $Id: AbundanceToolkit.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: AbundanceToolkit.pm 34262 2015-09-15 20:30:52Z jinghuahuang $
 ############################################################################
 package AbundanceToolkit;
 
@@ -1397,8 +1397,9 @@ sub printMetaGeneList {
     my @gene_oids = ( keys %genes );
     my $nGenes = @gene_oids;
 
-    if ( $nGenes > 1000 ) {
-        print "<p><font color='red'>Too many genes -- gene product names are not displayed.</font><br/>\n";
+    my $maxGeneProductNames = 1000;
+    if ( $nGenes > $maxGeneProductNames ) {
+        print "<p><font color='red'>Too many genes -- gene product name display is limited to $maxGeneProductNames.</font><br/>\n";
     }
 
     my $maxGeneListResults = getSessionParam("maxGeneListResults");
@@ -1433,7 +1434,7 @@ sub printMetaGeneList {
           . "&data_type=$dt&gene_oid=$key'>$key</a></td>\t";
 
         my ( $value, $source );
-        if ( $nGenes > 1000 ) {
+        if ( $gene_count > $maxGeneProductNames ) {
             $value = "-";
         } else {
             ( $value, $source ) = MetaUtil::getGeneProdNameSource( $key, $tid, $dt );

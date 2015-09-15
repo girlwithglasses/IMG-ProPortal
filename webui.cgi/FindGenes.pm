@@ -3,7 +3,7 @@
 #  Module to handle the "Find Genes" menu tab option.
 #    --es 07/07/2005
 #
-# $Id: FindGenes.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: FindGenes.pm 34217 2015-09-09 20:28:14Z klchu $
 ############################################################################
 package FindGenes;
 my $section = "FindGenes";
@@ -360,8 +360,10 @@ sub printSearchFilterOptionList {
     }
     print qq{
         $img_term_synonyms
-        <option value="seed_iex">SEED Product Name/Subsystem (inexact)</option>
+        
     };
+    
+    # <option value="seed_iex">SEED Product Name/Subsystem (inexact)</option>
     if ($img_internal) {
         print qq{
             <option value="obsolete_flag_ex">Is Obsolete Gene ("Yes" or "No")</option>

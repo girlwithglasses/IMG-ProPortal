@@ -1,6 +1,6 @@
 ############################################################################
 # IMGProteins.pm - displays proteomic data
-# $Id: IMGProteins.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: IMGProteins.pm 34240 2015-09-14 16:27:38Z aratner $
 ############################################################################
 package IMGProteins;
 my $section = "IMGProteins";
