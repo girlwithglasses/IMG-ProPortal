@@ -8,37 +8,42 @@ prefix '/menu';
 
 # render menu pages
 
-get '/ANI' => sub {
+get qr{
+	/ani
+	}xi => sub {
 
 	# ANI::Home
+	require ANI::Home;
 
-	# printLandingPage()
+	var page => request->dispatch_path;
+	my $content = menu_maker( request->dispatch_path );
+	$content->{tmpl_includes}{content_tmpl} = 'pages/ani_home.tt';
 
-	template 'pages/ani_home', { content => $data };
+	my $data = ANI::Home::render();
+
+	template "pages/menu_page", { content => $content, data => $data };
 
 };
 
 get '/*' => sub {
 	my $menu_page = request->dispatch_path;
 	var page => $menu_page;
+	my $content = menu_maker( $menu_page );
 
-	debug 'menu page: ' . $menu_page;
 
-	my $data;
-	# make sure it's a valid page
-	if ( IMG::Views::Links::get_link_data( $menu_page ) ) {
 
+	template "pages/menu_page", { content => $content };
+};
+
+sub menu_maker {
+	my $page = shift;
+
+	if ( IMG::Views::Links::get_link_data( $page ) ) {
 		# find the link in the menus
 		my $m_struct = IMG::Views::Menu::make_menus( config );
-		my $tree = IMG::Views::Menu::search_menu( $menu_page );
-		if ( $tree ) {
-			# found it!
-			$data = $tree;
-		}
+		return IMG::Views::Menu::search_menu( $page );
 	}
-
-	template "pages/menu_page", { content => $data };
-
-};
+	return;
+}
 
 1;

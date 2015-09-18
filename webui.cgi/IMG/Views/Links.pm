@@ -23,13 +23,13 @@ my $link_library  = {
       section => 'np'
     }
   },
-  ANI => {
-    label => 'Average Nucleotide Identity',
-    title => 'ANI',
-    url => {
-      section => 'ANI'
-    }
-  },
+#   ANI => {
+#     label => 'Average Nucleotide Identity',
+#     title => 'ANI',
+#     url => {
+#       section => 'ANI'
+#     }
+#   },
   'ANI/doSameSpeciesPlot' => {
     label => 'Same Species Plot',
     url => {
@@ -38,15 +38,14 @@ my $link_library  = {
     }
   },
   'ANI/overview' => {
-    label => 'ANI Cliques',
+    label => '<abbr title="Average Nucleotide Identity">ANI</abbr> Cliques',
     url => {
       page => 'overview',
       section => 'ANI'
     }
   },
   'ANI/pairwise' => {
-    label => 'Pairwise ANI',
-    title => 'Pairwise',
+    label => 'Pairwise <abbr title="Average Nucleotide Identity">ANI</abbr>',
     url => {
       page => 'pairwise',
       section => 'ANI'

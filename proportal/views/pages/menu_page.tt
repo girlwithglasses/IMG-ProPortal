@@ -1,10 +1,6 @@
 [%
 	WRAPPER layouts/default.html.tt;
 #	title = content.title || content.label;
-%]
-<div class="cf">
-[%	PROCESS inc/tool_descriptions.tt;
-
 
 	VIEW app_list;
 		BLOCK list %]
@@ -24,10 +20,19 @@
 [%		END; # end block
 	END; # end view
 
-	IF content && content.id; %]
+%]
+<div class="cf">
+[%	PROCESS inc/tool_descriptions.tt;
+
+	IF content;
+		IF content.tmpl_includes && content.tmpl_includes.content_tmpl;
+			tmpl_name = content.tmpl_includes.content_tmpl;
+			PROCESS $tmpl_name;
+		ELSIF content.id; %]
 <h2>[%	content.title || content.label %]</h2>
-[%		IF description.${content.id};
-			description.${content.id};
+[%			IF description.${content.id};
+				description.${content.id};
+			END;
 		END;
 		IF content.submenu;
 			app_list.print(content.submenu);

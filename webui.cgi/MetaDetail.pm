@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 34245 2015-09-14 17:25:50Z klchu $
+# $Id: MetaDetail.pm 34267 2015-09-16 20:47:08Z jinghuahuang $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -3811,6 +3811,7 @@ sub printScaffoldSearchResults {
     $it->addColSpec( "GC Content",               "desc", "right" );
     $it->addColSpec( "Read Depth",               "desc", "right" );
     my $trunc = 0;
+    my $select_id_name = "scaffold_oid"; 
 
     for my $oid ( keys %data1 ) {
         my $scaffold_oid  = $oid;
@@ -3835,7 +3836,7 @@ sub printScaffoldSearchResults {
 
             # 3300000547 assembled PR_CR_10_Liq_2_inCRDRAFT_1000001
             my $workspace_id = "$taxon_oid $dataType $scaffold_oid";
-            $row .= $sd . "<input type='checkbox' name='scaffold_oid' value='$workspace_id' />\t";
+            $row .= $sd . "<input type='checkbox' name='$select_id_name' value='$workspace_id' />\t";
         }
 
 # main.cgi?section=MetaDetail&page=metaScaffoldDetail&taxon_oid=3300000547&scaffold_oid=PR_CR_10_Liq_2_inCRDRAFT_1000001&data_type=$dataType
@@ -3859,6 +3860,10 @@ sub printScaffoldSearchResults {
         print hiddenVar( "page",    "userScaffoldGraph" );
         print hiddenVar( "section", "ScaffoldGraph" );
         printScaffoldCartButtons($itID);
+    }
+    print "<br>\n";
+    if ( $count > 0 && $scaffold_cart ) {
+        WorkspaceUtil::printSaveScaffoldToWorkspace($select_id_name);
     }
 
     printStatusLine( "$count scaffold(s) retrieved.", 2 );

@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MetagPhyloDist.pm 34258 2015-09-15 01:59:20Z jinghuahuang $
+# $Id: MetagPhyloDist.pm 34263 2015-09-16 05:34:01Z jinghuahuang $
 ############################################################################
 package MetagPhyloDist;
 
@@ -220,6 +220,12 @@ sub printJS {
         function mySubmit3(page) {
             document.mainForm.page.value = page;
             document.mainForm.submit();
+        }
+
+        function mySubmit4(page) {
+            selectAllCheckBoxes(0);
+            document.mainForm.nofilter.value = 1;
+            mySubmit3(page);
         }
 
         </script>
@@ -845,11 +851,11 @@ sub printNextPhyla {
     print hiddenVar( "metag_oid",  "" );
     print hiddenVar( "data_type",  $data_type );
 
-    my $rowcnt =
-      printTable( \@taxon_array, $taxon_name_href, 
-                  $gene_count_href, $genome_count_href, 
-		  $homolog_count_href, 0, "",
-                  $total_gene_count_href, $total_est_copy_count_href );
+    my $rowcnt = printTable( 0,
+        \@taxon_array, $taxon_name_href, 
+        $gene_count_href, $genome_count_href, 
+	    $homolog_count_href, 0, "",
+        $total_gene_count_href, $total_est_copy_count_href );
 
     print end_form();
     printStatusLine( "$rowcnt Loaded.", 2 );
@@ -884,27 +890,34 @@ sub printResults {
     my $show_hist          = param("show_hist");
     my $data_type          = param("data_type");     # assembled or unassembled or both
 
-    my @filters = param("filter");                   # filter on selected phyla
-    my %filters_hash;                                # list of phyla to show
+    my $nofilter = param("nofilter");
+    my @filters;
+    if ( !$nofilter ) {
+        @filters = param("filter");  # filter on selected phyla        
+    }
+    #print "printResults() nofilter=$nofilter, filters: @filters<br/>\n";
+    my %filters_hash;  # list of phyla to show
     foreach my $x (@filters) {
         $filters_hash{$x} = $x;
     }
 
     my @find_toi = param('genomeFilterSelections');
-    if ( scalar(@find_toi) < 0 ) {
+    if ( scalar(@find_toi) <= 0 ) {
         # filter does not have taxon oids
         @find_toi = param("taxon_oid");
     }
-    if ( scalar(@find_toi) < 0 ) {
+    #print "printResults() find_toi: @find_toi<br/>\n";
+    if ( scalar(@find_toi) <= 0 ) {
         webError("Please select at least 1 genome.<br/>\n");
     }
     my @find_toi_sorted = sort(@find_toi);
     my $find_toi_ref =  \@find_toi_sorted; 
     my $taxon_oids_str = join( ",", @find_toi_sorted );
+    #print "printResults() taxon_oids_str=$taxon_oids_str<br/>\n";
 
     printMainForm();
     printStatusLine( "Loading ...", 1 );
-    
+
     print "<h1>Phylogenetic Distribution of Metagenomes</h1>\n";
     my ($text, $xcopyText) = printParamHeader($percentage, $xcopy, $data_type);
 
@@ -912,7 +925,7 @@ sub printResults {
 
     my $sid        = getContactOid();
     my $start_time = time();
-    if ( $sid == 312 ) {
+    if ( $sid == 312 || $sid == 100546 ) {
         print "<p>*** time1: " . currDateTime() . "\n";
     }
 
@@ -1068,7 +1081,7 @@ sub printResults {
 
     printJS();
     print hiddenVar( "section",            $section );
-    print hiddenVar( "page",               "phyla" );
+    print hiddenVar( "page",               "" );
     print hiddenVar( "taxon_oids",         $taxon_oids_str );
     print hiddenVar( "percentage",         $percentage );
     print hiddenVar( "xcopy",              $xcopy );
@@ -1080,6 +1093,7 @@ sub printResults {
     print hiddenVar( "genome_count_file",  $genome_count_file );
     print hiddenVar( "show_percentage",    $show_percentage );
     print hiddenVar( "show_hist",          $show_hist );
+    print hiddenVar( "nofilter",           "" );
 
     foreach my $x (@$find_toi_ref) {
         # for filter
@@ -1088,18 +1102,6 @@ sub printResults {
 
     printHint("Hit gene count is shown in brackets ( ).");
     print "<br/>";
-
-    print qq{
-        <input class='smdefbutton' type='button' value='View Selected'
-        onClick="javascript:mySubmit3('process')" />
-        &nbsp;
-        <input class='smbutton' type='button' value='Select All'
-        onClick="javascript:selectAllCheckBoxes(1)" />
-        &nbsp;
-        <input class='smbutton' type='button' value='Clear All'
-        onClick="javascript:selectAllCheckBoxes(0)" />
-        <br/>
-    };
 
     # x-axis labels
     my @chartcategories;
@@ -1112,23 +1114,12 @@ sub printResults {
         push( @chartdata, \@tmp );
     }
 
-    my $rowcnt = printTable(
+    my $rowcnt = printTable( 1,
          $find_toi_ref, $taxon_name_href, $gene_count_href, $genome_count_href,
          $homolog_count_href, 1, \%filters_hash,   
          $total_gene_count_href, $total_est_copy_count_href,
          \@chartcategories,   \@chartdata
     );
-
-    print qq{
-        <input class='smdefbutton' type='button' value='View Selected'
-        onClick="javascript:mySubmit3('process')" />
-        &nbsp;
-        <input class='smbutton' type='button' value='Select All'
-        onClick="javascript:selectAllCheckBoxes(1)" />
-        &nbsp;
-        <input class='smbutton' type='button' value='Clear All'
-        onClick="javascript:selectAllCheckBoxes(0)" />
-    };
 
     print end_form();
 
@@ -1213,6 +1204,41 @@ sub printResults {
     printStatusLine( "$rowcnt Loaded.", 2 );
 }
 
+sub printTableButtons {
+    my ( $allcnt, $filterCount ) = @_;
+
+    #print "printTableButtons() allcnt: $allcnt; filter count: $filtercnt<br/>\n";
+
+    print qq{
+        <input class='smbutton' type='button' value='Select All'
+        onClick="javascript:selectAllCheckBoxes(1)" />
+        &nbsp;
+        <input class='smbutton' type='button' value='Clear All'
+        onClick="javascript:selectAllCheckBoxes(0)" />
+        &nbsp;
+    };
+
+    if ( $filterCount == 0 || $filterCount > 1 ) {
+        print qq{
+            <input class='smdefbutton' type='button' value='Filter'
+            onClick="javascript:mySubmit3('process')" />
+            &nbsp;
+        };
+    }
+    if ( $filterCount > 0 && $filterCount < $allcnt ) {
+        print qq{
+            <input class='smbutton' type='button' value='Show All Phyla'
+            onClick="javascript:mySubmit4('process');" />
+        };
+    }
+
+    print qq{
+        <br/>
+    };
+
+}
+
+
 sub cacheHash {
     my ( $href, $text ) = @_;
     my $id        = getSessionId();
@@ -1283,7 +1309,7 @@ sub readHashHash {
 
 # $selectCol - string boolean flag to print a select column
 sub printTable {
-    my (
+    my ( $yesTableButton,
          $find_toi_ref, $taxon_name_href, $gene_count_href, $genome_count_href,
          $homolog_count_href, $selectCol, $filters_href,    
          $total_gene_count_href,$total_est_copy_count_href,
@@ -1385,6 +1411,7 @@ sub printTable {
     # end of column headers
 
     # start of data rows
+    my $allcnt = 0;
     my $rowcnt = 0;
     foreach my $name ( sort keys %$gene_count_href ) {
         my $r;
@@ -1400,7 +1427,8 @@ sub printTable {
         $name2 =~ s/\t/ /g;
 
         # filter
-        if ( $filters_href ne "" ) {
+        $allcnt++;
+        if ( $filters_href ) {
             my $cnt = keys %$filters_href;
             if ( $cnt > 0 && !exists $filters_href->{$name2} ) {
                 next;
@@ -1485,9 +1513,13 @@ sub printTable {
         $it->addRow($r);
         $rowcnt++;
     }
-
-    $it->printOuterTable("nopage");
     close $res;
+
+    my $filterCount;
+    $filterCount = scalar(keys %$filters_href) if ($filters_href);
+    printTableButtons( $allcnt, $filterCount ) if ($rowcnt > 0 && $yesTableButton);
+    $it->printOuterTable("nopage");
+    printTableButtons( $allcnt, $filterCount ) if ($rowcnt > 0 && $yesTableButton);
 
     return $rowcnt;
 
@@ -3195,11 +3227,11 @@ sub printBodySiteResults {
     }
 
     my @find_toi = param('genomeFilterSelections');
-    if ( scalar(@find_toi) < 0 ) {
+    if ( scalar(@find_toi) <= 0 ) {
         # filter does not have taxon oids
         @find_toi = param("taxon_oid");
     }
-    if ( scalar(@find_toi) < 0 ) {
+    if ( scalar(@find_toi) <= 0 ) {
         webError("Please select at least 1 genome.<br/>\n");
     }
     my @find_toi_sorted = sort(@find_toi);
@@ -3356,7 +3388,8 @@ sub printBodySiteResults {
 
     printJS();
     print hiddenVar( "section",            $section );
-    print hiddenVar( "page",               "phyla" );
+    #print hiddenVar( "page",               "phyla" );
+    print hiddenVar( "page",               "" );
     print hiddenVar( "taxon_oids",         $taxon_oids_str );
     print hiddenVar( "percentage",         $percentage );
     print hiddenVar( "xcopy",              $xcopy );
@@ -3368,25 +3401,12 @@ sub printBodySiteResults {
     print hiddenVar( "genome_count_file",  $genome_count_file );
     print hiddenVar( "show_percentage",    $show_percentage );
     print hiddenVar( "show_hist",          $show_hist );
+    print hiddenVar( "nofilter",           "" );
 
     foreach my $x (@$find_toi_ref) {
-
         # for filter
         print hiddenVar( "taxon_oid", $x );
     }
-
-    print qq{
-        <br/>
-        <input class='smdefbutton' type='button' value='View Selected'
-        onClick="javascript:mySubmit3('process')" />
-        &nbsp;
-        <input class='smbutton' type='button' value='Select All'
-        onClick="javascript:selectAllCheckBoxes(1)" />
-        &nbsp;
-        <input class='smbutton' type='button' value='Clear All'
-        onClick="javascript:selectAllCheckBoxes(0)" />
-        <br/>
-    };
 
     # x-axis labels
     my @chartcategories;
@@ -3399,29 +3419,14 @@ sub printBodySiteResults {
         push( @chartdata, \@tmp );
     }
 
-    my $rowcnt = printTable_BodySite(
-	$find_toi_ref, $taxon_name_href, $gene_count_href, $genome_count_href,
-	$homolog_count_href, 1, \%filters_hash,   
-	$total_gene_count_href, $total_est_copy_count_href,
-	\@chartcategories,   \@chartdata
+    my $rowcnt = printTable_BodySite( 1,
+    	$find_toi_ref, $taxon_name_href, $gene_count_href, $genome_count_href,
+    	$homolog_count_href, 1, \%filters_hash,   
+    	$total_gene_count_href, $total_est_copy_count_href,
+    	\@chartcategories,   \@chartdata
     );
 
-    #    print qq{
-    #        <br/>
-    #        <input class='smdefbutton' type='button' value='View Selected'
-    #        onClick="javascript:mySubmit3('process')" />
-    #        &nbsp;
-    #        <input class='smbutton' type='button' value='Select All'
-    #        onClick="javascript:selectAllCheckBoxes(1)" />
-    #        &nbsp;
-    #        <input class='smbutton' type='button' value='Clear All'
-    #        onClick="javascript:selectAllCheckBoxes(0)" />
-    #        <br/>
-    #    };
-
     print end_form();
-
-    #$dbh->disconnect();
 
     return;
 
@@ -3508,10 +3513,10 @@ sub printBodySiteResults {
 # printTable_BodySite
 ##############################################################################
 sub printTable_BodySite {
-    my (
+    my ( $yesTableButton,
          $find_toi_ref, $taxon_name_href, $gene_count_href, $genome_count_href,
          $homolog_count_href, $selectCol, $filters_href,    
-         $total_gene_count_href,$total_est_copy_count_href,
+         $total_gene_count_href, $total_est_copy_count_href,
          $chartcategories_aref, $chartdata_aref
       )
       = @_;
@@ -3611,6 +3616,7 @@ sub printTable_BodySite {
 
     # start of data rows
     my $rowcnt = 0;
+    my $allcnt = 0;
     foreach my $name ( sort keys %$gene_count_href ) {
         if ( !$name ) {
             next;
@@ -3627,6 +3633,8 @@ sub printTable_BodySite {
         my $name2 = $name;
         $name2 =~ s/\t/ /g;
 
+        $allcnt++;
+        
         # filter
         if ( $filters_href ne "" ) {
             my $cnt = keys %$filters_href;
@@ -3700,9 +3708,13 @@ sub printTable_BodySite {
         $it->addRow($r);
         $rowcnt++;
     }
-
-    $it->printOuterTable("nopage");
     close $res;
+
+    my $filterCount;
+    $filterCount = scalar(keys %$filters_href) if ($filters_href);
+    printTableButtons( $allcnt, $filterCount ) if ($rowcnt > 0);
+    $it->printOuterTable("nopage");
+    printTableButtons( $allcnt, $filterCount ) if ($rowcnt > 0);
 
     return $rowcnt;
 }

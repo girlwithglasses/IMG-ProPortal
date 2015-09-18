@@ -419,8 +419,6 @@ sub compare_genomes {
 			{	id => '/menu/ani',
 				submenu =>
 				[
-'ANI', #==> this page has content
-
 					'ANI/pairwise',
 					'ANI/doSameSpeciesPlot',
 					'ANI/overview',

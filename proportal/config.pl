@@ -23,8 +23,8 @@
 	engines => {
 		template => {
 			template_toolkit => {
-				INCLUDE_PATH => 'views:views/pages:views/layouts:views/inc:public',
-				RELATIVE => 1,
+				INCLUDE_PATH => 'views:views/pages:views/layouts:views/inc:views/htd_pages:public',
+			#	RELATIVE => 1,
 			}
 		},
 	},
@@ -48,7 +48,7 @@
 	base_url => 'https://img-proportal-dev.jgi-psf.org/',
 
 	# cookie name: jgi_return, value: url, domain: sso_domain
-	sso_enabled => 1,
+#	sso_enabled => 1,
 	sso_url_prefix => 'https://signon.',
 	sso_domain => 'jgi-psf.org',
 	sso_api_url => 'https://signon.jgi-psf.org/api/sessions/',

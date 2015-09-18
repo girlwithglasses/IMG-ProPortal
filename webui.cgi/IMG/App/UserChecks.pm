@@ -26,6 +26,8 @@ sub run_user_checks {
 	# ping the server
 	my $user_data = $self->get_jgi_user_json( $u_id );
 
+	say 'got user data... continuing with my work!';
+
 	my $db_data = $self->get_db_contact_data( $user_data->{user}{id} );
 
 	# this will die if all is not well

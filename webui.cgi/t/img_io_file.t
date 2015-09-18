@@ -127,7 +127,7 @@ for my $f ( qw( file_exists is_readable is_writable is_dir is_rw ) ) {
 
 subtest 'directory checks' => sub {
 
-	my $d = tempdir();
+	my $d = File::Temp->newdir();
 
 	ok( 1 == IMG::IO::File::is_dir( $d ), 'is directory' );
 	chmod 0400, $d;

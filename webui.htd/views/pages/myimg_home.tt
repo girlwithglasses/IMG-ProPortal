@@ -1,37 +1,96 @@
-<h2>
-	Average Nucleotide Identity
-</h2>
-<p>
-	Average Nucleotide Identity (<abbr title="Average Nucleotide Identity">ANI</abbr>) is a measure of nucleotide-level genomic similarity between the coding regions of two genomes. <abbr title="Bidirectional best hits">BBH</abbr>s between a genome pair are computed as pairwise bidirectional best nSimScan hits of genes having 70% or more identity and at least 70% coverage of the shorter gene.
-</p>
-<div class="bordered">
-	<div class="half">
-		<p>The Alignment Fraction (AF) is computed as:</p>
-		<img width="300" src="[% cfg.base_url %]/images/AFformula.png" alt="Alignment fraction formula">
-	</div>
-	<div class="half">
-		<p>Average Nucleotide Identity is computed as:</p>
-		<img width="300" src="[% cfg.base_url %]/images/ANIformula.png" alt="Average nucleotide identity formula">
-	</div>
-</div>
-[%	IF print_stats %]
-<h3>
-	Statistics
-</h3>
-<p>
-	The alignment fraction (AF) and average nucleotide identity (ANI) have been computed for <strong>[% xcount %]</strong> genomes and <strong>[% ycount %]</strong> genome pairs.</p>
-	<p><strong>[% zcount %]</strong> pairs of these are between genomes assigned to the same taxonomics species.
+<h2>My IMG</h2>
+[%	IF user %]
+
+[%
+
+    my $url                 = "$main_cgi?section=TaxonList&page=taxonListAlpha";
+    my $genome_browser_link = WebUtil::alink( $url, "Genome Browser" );
+
+    my $url = "$main_cgi?section=CompareGenomes&page=taxonBreakdownStats";
+    $url .= "&statTableName=taxon_stats&initial=1";
+    my $genome_statistics_link = WebUtil::alink( $url, "Genome Statistics" );
+%]
+
+
+<p>IMG provides support for exporting genome information from the [% link.genome_browser %] and [% link.genome_stats %], via genome breakdown and comparative statistics.</p>
+
+
 </p>
 <p>
-	Maximal clique enumeration generates <strong>[% acount %]</strong> clusters, including <strong>[% bcount %]</strong> genomes from <strong>[% ccount %]</strong> taxonomic species.</p>
-<p><strong>[% dcount %]</strong> genomes from <strong>[% ecount %]</strong> species are singletons.
-</p>
-[%	END %]
-<div class="C smdefbutton">
-	<a href="[% main.cgi?section=ANI&amp;page=pairwise %]" class="smdefbutton">Pairwise <abbr title="Average Nucleotide Identity">ANI</abbr></a>
-	<a href="[% main.cgi?section=ANI&amp;page=doSameSpeciesPlot %]" class="smdefbutton">Same Species Plot</a>
-	<a href="[% main.cgi?section=ANI&amp;page=overview %]" class="smdefbutton"><abbr title="Average Nucleotide Identity">ANI</abbr> Cliques</a>
-</div>
-[%	IF print_stats %]
-<p class="updated">Last updated [% date %]</p>
-[%	END %]
+
+<ul>
+	<li>view and set your preferences throughout IMG</li>
+	<li>upload genome selections</li>
+</ul>
+
+[%	IF cfg.public_nologin_site %]
+<p>You are currently logged in as a <em>public</em> user.</p>
+
+
+############################################################################
+# printLoggedInPage
+############################################################################
+sub printLoggedInPage {
+    my $contact_oid = WebUtil::getContactOid();
+    if ( !$contact_oid || $public_nologin_site ) {
+        printAboutPage();
+        return;
+    }
+
+    ### SQL
+    my $dbh = WebUtil::dbLogin();
+    my $sql = qq{
+        select username
+        from contact
+        where contact_oid = ?
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
+    my $username = $cur->fetchrow();
+    $cur->finish();
+
+    # print html form
+    WebUtil::printMainForm();
+    print "<h1>MyIMG</h1>\n";
+    print "<h3>Logged in as <b>$username</b>.</h3>\n";
+
+    my $super_user_flag = "";
+    if ( $contact_oid > 0 ) {
+        $super_user_flag = WebUtil::getSuperUser();
+    }
+
+    my $html_text_fragment;
+    if ( DataEntryUtil::db_isPublicUser($contact_oid) ) {
+        $html_text_fragment = "<li>to upload your Genome selections</li>\n";
+    } else {
+        my $x;
+        my $y;
+        $x = "<li>to view and edit your annotations</li>\n"
+          if ($show_myimg_login);
+        $y = "<li>to view annotations by other users</li>\n"
+          if ( $show_myimg_login && $super_user_flag eq 'Yes' );
+        $html_text_fragment = qq{
+            <li>to annotate your genome</li>\n
+            <li>to upload your genome selections</li>\n
+            $x$y
+        };
+    }
+
+    print qq{
+        <p>Welcome to the curation version of IMG.</p>
+        <p>
+        You can use MyIMG for:
+        <ul>
+        <li>saving your preferences throughout IMG</li>
+        $html_text_fragment
+        </ul>
+        </p>\n
+    };
+
+    #$dbh->disconnect();
+
+    ImgGroup::showAllGroups();
+
+    printLogout();
+    print end_form();
+
+}

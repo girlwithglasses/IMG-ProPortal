@@ -24,7 +24,9 @@
 
 	debug => 1,
 
-# print the banner
+	traces => 1,
+
+	# print the banner
 	startup_info => 1,
 
 	# home of css, js, images folders. Should end with "/"
@@ -39,12 +41,12 @@
 	session => 'CGISession',
 
 	engines => {
-		logger => {
-			File => {
-				log_dir => "log/",
-				file_name => "dancer.log",
-			},
-		},
+#		logger => {
+#			File => {
+#				log_dir => "log/",
+#				file_name => "proportal.log",
+#			},
+#		},
 		session => {
 			CGISession => {
 #				name => 'CGISESSID_proportal',
@@ -72,7 +74,7 @@
 	dbi_module => 'datamodel',
 
 	db => {
-		# config details
+		# schema and db connection required
 		imgsqlite => {
 			driver => 'SQLite',
 			database => 'share/dbschema-img_core.db',

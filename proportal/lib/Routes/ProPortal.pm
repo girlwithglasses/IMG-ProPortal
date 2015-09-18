@@ -6,7 +6,7 @@ use ProPortal::Util::Factory;
 
 our $VERSION = '0.1';
 
-our @active_components = qw( home data_type location clade );
+our @active_components = qw( home data_type location clade phylo_heat );
 
 get '/test' => sub {
 

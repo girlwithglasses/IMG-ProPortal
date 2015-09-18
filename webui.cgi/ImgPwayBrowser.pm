@@ -2,7 +2,7 @@
 # ImgPwayBrowser.pm - IMG Pathway Browser module.
 #   Includes IMG pathway details.
 #
-# $Id: ImgPwayBrowser.pm 32248 2014-11-05 21:33:44Z klchu $
+# $Id: ImgPwayBrowser.pm 34265 2015-09-16 17:58:07Z klchu $
 ############################################################################
 package ImgPwayBrowser;
 my $section = "ImgPwayBrowser";
@@ -2922,7 +2922,7 @@ sub printPhenoRules {
 	alink("http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0054859", "PLoS ONE 8(2): e54859. doi:10.1371/journal.pone.0054859");
 
     if ( !$img_pheno_rule ) {
-        print "<p>No predicated phenotypes have been defined.</p>\n";
+        print "<p>No predicted phenotypes have been defined.</p>\n";
         return;
     }
 
@@ -2950,7 +2950,7 @@ sub printPhenoRules {
     my $dbh = dbLogin();
     if ( !WebUtil::tableExists( $dbh, 'phenotype_rule' ) ) {
         #$dbh->disconnect();
-        print "<p>No predicated phenotypes have been defined.</p>\n";
+        print "<p>No predicted phenotypes have been defined.</p>\n";
         print end_form();
         return;
     }

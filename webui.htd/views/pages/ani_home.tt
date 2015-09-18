@@ -14,24 +14,22 @@
 		<img width="300" src="[% cfg.base_url %]/images/ANIformula.png" alt="Average nucleotide identity formula">
 	</div>
 </div>
-[%	IF print_stats %]
+[%	IF data.print_stats == 1 %]
 <h3>
 	Statistics
 </h3>
 <p>
-	The alignment fraction (AF) and average nucleotide identity (ANI) have been computed for <strong>[% xcount %]</strong> genomes and <strong>[% ycount %]</strong> genome pairs.</p>
-	<p><strong>[% zcount %]</strong> pairs of these are between genomes assigned to the same taxonomics species.
+	The alignment fraction (AF) and average nucleotide identity (ANI) have been computed for <strong>[% data.xcount %]</strong> genomes and <strong>[% data.ycount %]</strong> genome pairs.</p>
+	<p><strong>[% data.zcount %]</strong> pairs of these are between genomes assigned to the same taxonomics species.
 </p>
 <p>
-	Maximal clique enumeration generates <strong>[% acount %]</strong> clusters, including <strong>[% bcount %]</strong> genomes from <strong>[% ccount %]</strong> taxonomic species.</p>
-<p><strong>[% dcount %]</strong> genomes from <strong>[% ecount %]</strong> species are singletons.
+	Maximal clique enumeration generates <strong>[% data.acount %]</strong> clusters, including <strong>[% data.bcount %]</strong> genomes from <strong>[% data.ccount %]</strong> taxonomic species.</p>
+<p><strong>[% data.dcount %]</strong> genomes from <strong>[% data.ecount %]</strong> species are singletons.
 </p>
+<p class="updated">Updated [% data.date %]</p>
 [%	END %]
 <div class="C smdefbutton">
-	<a href="[% main.cgi?section=ANI&amp;page=pairwise %]" class="smdefbutton">Pairwise <abbr title="Average Nucleotide Identity">ANI</abbr></a>
-	<a href="[% main.cgi?section=ANI&amp;page=doSameSpeciesPlot %]" class="smdefbutton">Same Species Plot</a>
-	<a href="[% main.cgi?section=ANI&amp;page=overview %]" class="smdefbutton"><abbr title="Average Nucleotide Identity">ANI</abbr> Cliques</a>
+	<a href="main.cgi?section=ANI&amp;page=pairwise">Pairwise <abbr title="Average Nucleotide Identity">ANI</abbr></a>
+	<a href="main.cgi?section=ANI&amp;page=doSameSpeciesPlot">Same Species Plot</a>
+	<a href="main.cgi?section=ANI&amp;page=overview"><abbr title="Average Nucleotide Identity">ANI</abbr> Cliques</a>
 </div>
-[%	IF print_stats %]
-<p class="updated">Last updated [% date %]</p>
-[%	END %]

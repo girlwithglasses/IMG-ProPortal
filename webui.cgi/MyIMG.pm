@@ -5578,7 +5578,7 @@ sub printLogout {
 
 ############################################################################
 # Remember cgi cache uses session params for caching see HtmlUtil.pm - ken
-# gets hash of session param: sesison param => value,
+# gets hash of session param: session param => value,
 ############################################################################
 sub getSessionParamHash {
     my $hideViruses               = getSessionParam("hideViruses");
@@ -11380,7 +11380,7 @@ sub dbAddScaffoldGene {
 # printMyJobForm
 ############################################################################
 sub printMyJobForm {
-    
+
     print "<h1>IMG User Computation Jobs</h1>\n";
 
     my $contact_oid = WebUtil::getContactOid();

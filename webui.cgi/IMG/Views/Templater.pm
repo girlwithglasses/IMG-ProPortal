@@ -51,6 +51,8 @@ sub render_template {
 
 	init_env() unless defined $env;
 
+	say 'Base dir: ' . $env->{base_dir};
+
 	my $tt = Template->new({
 		INCLUDE_PATH =>  [
 			$env->{base_dir} . "/views",
@@ -61,7 +63,9 @@ sub render_template {
 	}) || die "Template error: $Template::ERROR\n";
 
 	$data->{cfg} = $env;
-	return $tt->process($tmpl_name, $data) || die $tt->error() . "\n";
+	my $out;
+	$tt->process($tmpl_name, $data, \$out) || die $tt->error() . "\n";
+	return $out;
 }
 
 

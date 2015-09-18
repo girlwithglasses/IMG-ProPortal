@@ -22,6 +22,8 @@ any '/login' => sub {
 
 	delete cookies->{jgi_return} if cookies && exists cookies->{jgi_return};
 
+	debug 'uri_for ' . $path . ' = ' . uri_for( $path );
+
 	my $c = Dancer2::Core::Cookie->new(
 		name => 'jgi_return',
 		value => uri_for( $path ),
@@ -94,10 +96,24 @@ hook before => sub {
 		if ( cookies && cookies->{jgi_session} ) {
 			if ( session('jgi_session_id') ) {
 				# make sure that the session is still valid
-				my $ok = $core->check_jgi_session( session('jgi_session_id') );
+				local $@;
+				my $ok = eval { $core->check_jgi_session( session('jgi_session_id') ) };
 
+				if ( $@ ) {
+					debug 'Got an error';
+
+					if ( ref $@  && 'HASH' eq ref $@ && $@->{status} && 404 == ref $@->{status} ) {
+						debug 'found a 404 error';
+						do_login();
+					}
+				}
+				else {
+					debug 'No local error found!';
+				}
 				# we need to log back in again
-				forward '/login', { post_login => request->dispatch_path } if ! $ok;
+#				forward '/login', { post_login => request->dispatch_path } if ! $ok;
+				debug 'Not OK!';
+				do_login() if ! $ok;
 
 				# load the user data and create a new user object
 				my $user_h = $core->run_user_checks( cookies->{jgi_session}->value );
@@ -110,7 +126,21 @@ hook before => sub {
 				info "found a JGI session cookie!";
 
 				# reinstantiate user object if it doesn't exist
-				my $user_h = $core->run_user_checks( cookies->{jgi_session}->value );
+				local $@;
+				my $user_h = eval { $core->run_user_checks( cookies->{jgi_session}->value ) };
+				if ( $@ ) {
+					debug 'Got an error: ' . Dumper $@;
+					my $err = $@;
+
+
+					if ( ref $err && 'HASH' eq ref $err && defined $err->{status} && 404 == $err->{status} ) {
+						debug 'found a 404 error';
+						do_login();
+					}
+				}
+				else {
+					debug 'No local error found!';
+				}
 
 				$core->set_up_session( $user_h );
 
@@ -129,5 +159,12 @@ hook before => sub {
 	return;
 
 };
+
+sub do_login {
+
+	debug 'running do_login';
+	forward '/login', { post_login => request->dispatch_path };
+
+}
 
 1;

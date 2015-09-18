@@ -8,21 +8,11 @@ use lib (
 use local::lib;
 use IMG::Util::Base;
 use File::Basename;
-#$Carp::Verbose = 1;
-
-#use Plack::Middleware::Session;
-#use Plack::Middleware::Conditional;
-
 my $base = dirname($Bin);
 
 use Plack::Builder;
 #use Log::Contextual qw(:log);
 $ENV{PLACK_URLMAP_DEBUG} = 1;
-
-#use Plack::App::CGIBin;
-#my $old_img = sub {
-#	Plack::App::CGIBin->new(root => "$Bin/../../webui.cgi")->to_app;
-#};
 
 # Mojolicious pod renderer
 use Mojo::Server::PSGI;

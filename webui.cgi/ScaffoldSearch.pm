@@ -1,7 +1,7 @@
 #
 #
 #
-# $Id: ScaffoldSearch.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: ScaffoldSearch.pm 34267 2015-09-16 20:47:08Z jinghuahuang $
 
 package ScaffoldSearch;
 use POSIX qw(ceil floor); 
@@ -564,6 +564,7 @@ sub processScaffoldMetagenome {
             where scaffold_oid is not null
             $lineagePerClause
         };
+        #print "processScaffoldMetagenome() lineagePerClause=$lineagePerClause, sql3=$sql3<br/>\n";
 
         if ( $oids_ref && scalar(@$oids_ref) > 0 ) {
             my $cnt1     = 0;
@@ -612,6 +613,9 @@ sub processScaffoldMetagenome {
         ## cannot eval this condition
         next;
     }
+    #print "processScaffoldMetagenome() scaf_lineage_h:<br/>\n";
+    #print Dumper(\%scaf_lineage_h);
+    #print "<br/>\n";
 
     print "checking scaffold stats information ...<br/>\n";
     if ( ( ( $merfs_timeout_mins * 60 ) - ( time() - $start_time ) )  < 200 ) { 
@@ -672,7 +676,8 @@ sub processScaffoldMetagenome {
                             }
                             if ( $has_lineage_cond ) {
                                 my $lin_res = 1;
-                                my @lin = split(/\;/, $scaf_lineage_h{$scaffold_oid});
+                                my ( $lineage, $lineage_perc, @junk ) = split( /\t/, $scaf_lineage_h{$scaffold_oid} );
+                                my @lin = split(/\;/, $lineage);
                                 my $j = 0;
                                 for my $x ($domain, $phylum, $class, $order, 
                                        $family, $genus, $species) {
@@ -726,7 +731,9 @@ sub processScaffoldMetagenome {
         else {
             my (%scaffoldStats) = MetaUtil::fetchScaffoldStatsForTaxonFromSqlite( 
                 $taxon_oid, $data_type, $singleScaffoldStatsFile, $sql3 );
+            #print "processScaffoldMetagenome() scaffoldStats:<br/>\n";
             #print Dumper(\%scaffoldStats);
+            #print "<br/>\n";
             if ( scalar( keys %scaffoldStats ) > 0 ) {
                 foreach my $scaffold_oid ( keys %scaffoldStats ) {
                     my ( $length, $gc, $n_genes ) = split( /\t/, $scaffoldStats{$scaffold_oid} );
@@ -754,7 +761,8 @@ sub processScaffoldMetagenome {
                     }
                     if ( $has_lineage_cond ) {
                         my $lin_res = 1;
-                        my @lin = split(/\;/, $scaf_lineage_h{$scaffold_oid});
+                        my ( $lineage, $lineage_perc, @junk ) = split( /\t/, $scaf_lineage_h{$scaffold_oid} );
+                        my @lin = split(/\;/, $lineage);
                         my $j = 0;
                         for my $x ($domain, $phylum, $class, $order, 
                                $family, $genus, $species) {
@@ -764,6 +772,7 @@ sub processScaffoldMetagenome {
                                     $y = $lin[$j];
                                 }
                                 if ( lc($y) ne lc($x) ) {
+                                    #print "processScaffoldMetagenome() x=$x, y=$y, lineage=@lin, scaffold_oid=$scaffold_oid dropped<br/>\n";
                                     $lin_res = 0;
                                     last;
                                 }
@@ -1418,7 +1427,8 @@ sub findScaffoldOracleMeta {
     	} 
     	if ( $has_lineage_cond ) {
     	    my $lin_res = 1;
-    	    my @lin = split(/\;/, $scaf_lineage_h{$scaffold_oid});
+            my ( $lineage, $lineage_perc, @junk ) = split( /\t/, $scaf_lineage_h{$scaffold_oid} );
+            my @lin = split(/\;/, $lineage);
     	    my $j = 0;
     	    for my $x ($domain, $phylum, $class, $order, $family, $genus, $species) {
         		if ( $x && $x ne 'none' ) {

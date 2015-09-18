@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: EgtCluster.pm 34275 2015-09-17 21:53:21Z aratner $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -298,7 +298,7 @@ sub getInputFile {
 
         my $s;
         for my $i( @funcIds ) {
-            my $cnt = $profile_ref->{ $i };
+            my $cnt = sprintf("%.3f", $profile_ref->{ $i });
             $s .= "$cnt\t";
         }
         chop $s;
@@ -2017,6 +2017,7 @@ sub getCogVectors {
 	    my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, '', 'cog');
 	    my %profile = %tpl;
 	    foreach my $id (keys %funcs) {
+		next if ( !defined($tpl{ $id }) );
 		$profile{ $id } = $funcs{$id};
 	    }
 	    $taxonProfiles_ref->{ $taxon_oid } = \%profile;

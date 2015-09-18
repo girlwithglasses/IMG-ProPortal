@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MeshTree.pm 34218 2015-09-09 23:07:54Z klchu $
+# $Id: MeshTree.pm 34265 2015-09-16 17:58:07Z klchu $
 ############################################################################
 package MeshTree;
 
@@ -1146,7 +1146,7 @@ sub printTreeEcDiv {
     #Parent node counts may show because some BC are within the parent node.
     #<br>e.g. D10 node count shows more than the sum of its children, because there are BCs at the D10 level.
 
-    # TOD print a selector for both, experimental and predicated
+    # TOD print a selector for both, experimental and predicted
     # default is both
     #if ($img_ken) {
     print qq{
@@ -1154,7 +1154,7 @@ sub printTreeEcDiv {
  <select id='ecMeshTreeSelect' onchange="ecMeshTreeSelector('$xml_cgi', '$base_url/images/yui_progressbar.gif')">
   <option value="both" selected>Both</option>
   <option value="Experimental">Experimental</option>
-  <option value="Predicted">Predicated</option>
+  <option value="Predicted">Predicted</option>
 </select>             
         };
 
@@ -1308,7 +1308,7 @@ from enzyme
 sub printTreeAllJsonEc {
     my $dbh     = dbLogin();
     my $ec_href = getAllEc($dbh);
-    my $type    = param('type');    # both, experimental or predicated default is both
+    my $type    = param('type');    # both, experimental or predicted default is both
 
     my %ecNames = %$ec_href;
 

@@ -110,6 +110,9 @@ sub parse_params {
 		  elsif ($page eq 'overview') {
 			  $tmpl_args{'yui_js'} = 'meshTreeHeader';
 		  }
+		  elsif ($page eq 'home') {
+				$module = 'ANI::Home';
+			}
 	  },
 	  About => sub {
 		  %tmpl_args = ( title => 'About', current => 'about');

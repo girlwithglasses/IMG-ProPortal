@@ -55,7 +55,7 @@ function initTreeAct(xmlCgiUrl, imgCompoundId) {
 }
 
 /*
- * type: both, experimental or predicated default is both
+ * type: both, experimental or predicted default is both
  */
 function initTreeEc(xmlCgiUrl, type) {
     var url = xmlCgiUrl + "?section=MeshTree&page=jsonEcAll&type=" + type;
