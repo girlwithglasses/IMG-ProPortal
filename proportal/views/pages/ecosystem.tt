@@ -1,0 +1,35 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: Ecosystem Browser';
+%]
+<h2>Sample Distribution by Ecosystem</h2>
+<p>
+	Browse the distribution of samples by the ecosystem in which they are found.
+</p>
+<section>
+<p>Filter by subset:</p>
+[%	IF data_filters && data_filters.all %]
+<ul>
+[%	# filter domain
+		FOR fd IN data_filters.all.keys.sort;
+			FOR f IN data_filters.all.$fd.values; %]
+<li><a href="[% link('proportal/ecosystem') %]/[% f.id %]">[% f.label %]</a>[%
+				IF data_filters.active && data_filters.active.$fd == f.id;
+		%] (currently displayed)[%
+				END; %]
+</li>
+[%			END; %]
+<li><a href="[% link('proportal/ecosystem') %]">no filter</a>[%
+			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
+			END; %]</li>
+[%		END; %]
+</ul>
+[% END %]
+<div id="partition">
+</div>
+
+<div id="ecosystem">
+</div>
+</section>
+</article>
+[%	END; %]

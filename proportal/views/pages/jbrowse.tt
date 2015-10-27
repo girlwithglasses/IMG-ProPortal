@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>JBrowse</title>
+    <link rel="stylesheet" type="text/css" href="[% settings.jbrowse_assets %]css/genome.css">
+	<link href="http://jgi.doe.gov/favicon.ico" rel="shortcut icon">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+#loadingOverlay {
+    background:  #fff;
+    top: 0;
+    left: 0;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    z-index: 1001;
+    display: block;
+}
+
+#loadingOverlay h1 {
+    text-align: center;
+    padding-top: 200px;
+    color: #666;
+}
+</style>
+  </head>
+
+  <body>
+    <div id="loadingOverlay">
+        <h1>Loading...</h1>
+    </div>
+    <div id="GenomeBrowser" style="height: 100%; width: 100%; padding: 0; border: 0;">
+    </div>
+    <div style="display: none">JBrowseDefaultMainPage</div>
+    <script type="text/javascript" src="[% settings.jbrowse_assets %]src/dojo/dojo.js" data-dojo-config="async: 1, baseUrl: '[% settings.jbrowse_assets %]src'"></script>
+    <script type="text/javascript">/* src="[% settings.jbrowse_assets %]src/JBrowse/init.js" */
+require( {
+       packages: [
+           'dbind',
+           'dgrid',
+           'dojo',
+           'dijit',
+           'dojox',
+           'json-schema',
+           'jszlib',
+           { name: 'lazyload', main: 'lazyload' },
+           'xstyle',
+           'put-selector',
+           { name: 'jDataView', location: 'jDataView/src', main: 'jdataview' },
+           'FileSaver',
+           'JBrowse'
+       ]
+     }
+);
+
+
+    </script>
+    <script type="text/javascript">
+
+        window.onerror=function(msg){
+            if( document.body )
+                document.body.setAttribute("JSError",msg);
+        }
+
+        // demo is the object used to control the loading effects
+        var demo,
+        // puts the main Browser object in this for convenience.  feel
+        // free to move it into function scope if you want to keep it
+        // out of the global namespace
+        JBrowse;
+
+        require(["dojo/dom-style", "dojo/_base/fx", "dojo/_base/declare", "dojo/dom"],
+            function(domStyle, fx, declare, dom){
+                var Demo = declare(null,{
+                    overlayNode:null,
+                    constructor:function(){
+                        this.overlayNode = dom.byId('loadingOverlay');
+                    },
+                    endLoading: function(){
+                        fx.fadeOut({
+                            node: this.overlayNode,
+                            onEnd: function(node){
+                                domStyle.set(node, 'display', 'none');
+                            }
+                        }).play();
+                    }
+                });
+                demo = new Demo();
+            });
+
+        require(['JBrowse/Browser', 'dojo/io-query', 'dojo/json' ],
+            function (Browser,ioQuery,JSON) {
+                // the initial configuration of this JBrowse
+                // instance
+                // NOTE: this initial config is the same as any
+                // other JBrowse config in any other file.  this
+                // one just sets defaults from URL query params.
+                // If you are embedding JBrowse in some other app,
+                // you might as well just set this initial config
+                // to something like { include: '../my/dynamic/conf.json' },
+                // or you could put the entire
+                // dynamically-generated JBrowse config here.
+
+                // parse the query vars in the page URL
+                var queryParams = ioQuery.queryToObject( window.location.search.slice(1) );
+
+                var config = {
+                    containerID: "GenomeBrowser",
+                    baseUrl: "[% settings.jbrowse_assets %]",
+                    dataRoot: "[% data_dir %]",
+                 //   css: "[% settings.jbrowse_assets %]css/genome.css",
+                    queryParams: queryParams,
+                    location: queryParams.loc,
+                    forceTracks: queryParams.tracks,
+                    initialHighlight: queryParams.highlight,
+                    show_nav: queryParams.nav,
+                    show_tracklist: queryParams.tracklist,
+                    show_overview: queryParams.overview,
+                    show_menu: queryParams.menu,
+                    stores: { url: { type: "JBrowse/Store/SeqFeature/FromConfig", features: [] } },
+                    makeFullViewURL: function( browser ) {
+                        // the URL for the 'Full view' link
+                        // in embedded mode should be the current
+                        // view URL, except with 'nav', 'tracklist',
+                        // and 'overview' parameters forced to 1.
+                        return browser.makeCurrentViewURL({ nav: 1, tracklist: 1, overview: 1 });
+                            },
+                        updateBrowserURL: true
+                    };
+
+                   //if there is ?addFeatures in the query params,
+                   //define a store for data from the URL
+                   if( queryParams.addFeatures ) {
+                       config.stores.url.features = JSON.parse( queryParams.addFeatures );
+                   }
+
+                   // if there is ?addTracks in the query params, add
+                   // those track configurations to our initial
+                   // configuration
+                   if( queryParams.addTracks ) {
+                       config.tracks = JSON.parse( queryParams.addTracks );
+                   }
+
+                   // if there is ?addStores in the query params, add
+                   // those store configurations to our initial
+                   // configuration
+                   if( queryParams.addStores ) {
+                       config.stores = JSON.parse( queryParams.addStores );
+                   }
+
+
+
+                   // create a JBrowse global variable holding the JBrowse instance
+                    JBrowse = new Browser( config );
+                    JBrowse.afterMilestone('loadRefSeqs', function() {
+                        demo.endLoading();
+                    });
+
+// require(["dojo/request", "dojo/dom", "dojo/dom-construct", "dojo/json", "dojo/on", "dojo/domReady!"],
+// function(request, dom, domConst, JSON, on){
+//   on(dom.byId("startButton"), "click", function(){
+//     domConst.place("<p>Requesting...</p>", "output");
+//     request("[% cfg.something_or_other.json").then(function(text){
+//       domConst.place("<p>response: <code>" + text + "</code>", "output");
+//     });
+//   });
+// });
+//
+//
+// require(["dojo/Deferred", "dojo/dom", "dojo/on", "dojo/domReady!"],
+// function(Deferred, dom, on){
+//   function asyncProcess(){
+//     var deferred = new Deferred();
+//
+//     dom.byId("output").innerHTML = "I'm running...";
+//
+//     setTimeout(function(){
+//       deferred.resolve("success");
+//     }, 1000);
+//
+//     return deferred.promise;
+//   }
+//
+//   on(dom.byId("startButton"), "click", function(){
+//     var process = asyncProcess();
+//     process.then(function(results){
+//       dom.byId("output").innerHTML = "I'm finished, and the result was: " + results;
+//     });
+//   });
+//
+// });
+
+        });
+    </script>
+
+
+  </body>
+</html>

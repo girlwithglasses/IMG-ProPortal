@@ -1,0 +1,14 @@
+/* partials/nav */
+
+.breadcrumbs {
+	li {
+	    display: inline;
+	}
+	li+li {
+	    margin-left: $gutter;
+	}
+    li+li:before {
+        content: '>>';
+        padding-right: $gutter;
+    }
+}
