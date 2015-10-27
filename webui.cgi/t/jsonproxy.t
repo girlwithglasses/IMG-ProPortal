@@ -1,8 +1,18 @@
 #!/usr/bin/env perl
 
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	my $dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib webui.cgi/t/lib );
+}
+use lib @dir_arr;
 use FindBin qw/ $Bin /;
-use lib "$Bin/../";
 use IMG::Util::Base 'Test';
+
 use File::Temp;
 use JSONProxy;
 use WebUtil qw();

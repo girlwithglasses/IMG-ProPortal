@@ -2,12 +2,14 @@
 # NEW for 3.4  - Common WebConfig param between all sites
 # Params can be overridden in the site's Webconfig.pm
 #
-# $Id: WebConfigCommon.pm 34185 2015-09-03 21:43:49Z aireland $
+# $Id: WebConfigCommon.pm 34319 2015-09-21 16:30:21Z aireland $
 #
 #
 package WebConfigCommon;
 
 use strict;
+use warnings;
+
 use MIME::Base64;
 use CGI qw( :standard );
 
@@ -38,18 +40,18 @@ sub common {
     # pages are created via nightly cronjobs
     $e->{webfs_data_dir} = "/webfs/projectdirs/microbial/img/web_data/";
 
+    # BC/NP stats directory (for ANI, etc.)
+    $e->{bcnp_stats_dir} = '/webfs/scratch/img/bcNp/';
+
     # Common tmp directory between Web UI and service.
     # For passing report files rather than funneling them
     # through http, which can be very slow.
     $e->{common_tmp_dir} = "/global/projectb/scratch/img/www-data/service/tmp";
-    # Queue directory for BLAST jobs.
-    $e->{blast_q_dir} = "/global/projectb/scratch/img/www-data/blast.q";
-
 
     # version
-    $e->{img_version}    = "4.3";
-    $e->{copyright_year} = "2014";
-    $e->{version_year}   = "Version " . $e->{img_version} . " January " . $e->{copyright_year};
+    $e->{img_version}    = "4.530";
+    $e->{copyright_year} = "2015";
+    $e->{version_year}   = "Version " . $e->{img_version} . " June " . $e->{copyright_year};
 
     # --------------------------------------------------------------------------------------------
     #
@@ -82,15 +84,18 @@ sub common {
     $e->{clustalw_bin}    = "/usr/common/jgi/aligners/clustalw/2.1/bin/clustalw2";
     $e->{clustalo_bin}    = "/usr/common/jgi/aligners/clustal-omega/1.1.0/bin/clustalo";
     $e->{sendmail}        = "/usr/sbin/sendmail";
-    $e->{psu_diagram_dir} = $e->{img_tools_dir} . "psu_diagram";                        # Circular chromosome viewer package.
-    $e->{pepstats_bin}    = $e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/pepstats';
-    $e->{sixpack_bin}     = $e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/sixpack';
-    $e->{seqret_bin}      = $e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/seqret';
+    $e->{psu_diagram_dir} = $e->{img_tools_dir} . "psu_diagram"; # Circular chromosome viewer package
+    $e->{pepstats_bin}    =
+      '/usr/common/jgi/frameworks/EMBOSS/6.4.0/bin/pepstats';    #$e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/pepstats';
+    $e->{sixpack_bin} =
+      '/usr/common/jgi/frameworks/EMBOSS/6.4.0/bin/sixpack';     #$e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/sixpack';
+    $e->{seqret_bin} =
+      '/usr/common/jgi/frameworks/EMBOSS/6.4.0/bin/seqret';      #$e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/seqret';
 
     $e->{usearch_bin}  = "/global/dna/projectdirs/microbial/img/webui/bin/x86_64-linux/usearch64";
     $e->{blastall_bin} = $e->{img_tools_dir} . "BLAST/ncbi-blast-2.2.26+";
 
-    $e->{newick_all} = $e->{ web_data_dir } . "/newick/newick-all";
+    $e->{newick_all} = $e->{ web_data_dir } . "/newick/newick_all"; # distance tree
 
     # --------------------------------------------------------------------------------------------
     #
@@ -158,31 +163,11 @@ sub common {
     # Robot patterns to block.
     #
     # --------------------------------------------------------------------------------------------
-    $e->{bot_patterns} = [ qw(
-accelobot
-AI-Agent
-Axel
-BecomeBot
-bot
-crawler
-curl
-Darwin
-FirstGov
-Java
-Jeeves
-libwww
-lwp
-LWP
-Mechanize
-NimbleCrawler
-Python
-slurp
-Slurp
-Sphider
-wget
-Wget
-ysearch
-) ];
+    $e->{bot_patterns} =
+       [ "FirstGov", "Jeeves",    "BecomeBot",     "AI-Agent",  "ysearch", "crawler",
+        "Slurp",    "accelobot", "NimbleCrawler", "Java",      "bot",     "slurp",
+        "libwww",   "lwp",       "LWP",           "Mechanize", "Sphider", "Wget",
+        "wget",     "Axel",      "Python",        "Darwin",    'curl' ];
 
     $e->{block_ip_address_file} = $e->{dbLock_dir} . "blockIps.txt";
 
@@ -192,54 +177,54 @@ ysearch
     #
     # --------------------------------------------------------------------------------------------
     $e->{env_blast_defaults} = {
-		sludgePhrap      => 'us_sludge',
-		sludgeOz         => 'oz_sludge',
-		sludgeJazz       => 'us_sludge',
-		amd              => 'amd',
-		soil             => 'soil',
-		wf1              => 'wf1',
-		wf2              => 'wf2',
-		wf3              => 'wf3',
-		tgut             => 'tgut',
-		tgut2b           => 'tgut2b',
-		tgut3            => 'tgut3',
-		saf1             => 'saf1',
-		saf2             => 'saf2',
-		lwm1             => 'lwm1',
-		tm7c32           => 'tm7c32',
-		tm7c33           => 'tm7c33',
-		mgutPt2          => 'mgutPt2',
-		mgutPt3          => 'mgutPt3',
-		mgutPt4          => 'mgutPt4',
-		mgutPt6          => 'mgutPt6',
-		mgutPt8          => 'mgutPt8',
-		hsmat01          => 'hsmat01',
-		hsmat02          => 'hsmat02',
-		hsmat03          => 'hsmat03',
-		hsmat04          => 'hsmat04',
-		hsmat05          => 'hsmat05',
-		hsmat06          => 'hsmat06',
-		hsmat07          => 'hsmat07',
-		hsmat08          => 'hsmat08',
-		hsmat09          => 'hsmat09',
-		hsmat10          => 'hsmat10',
-		biz              => 'biz',
-		saani            => 'saani',
-		ucgw2            => 'ucgw2',
-		lwComb           => 'lwComb',
-		lwMethane        => 'lwMethane',
-		lwMethanol       => 'lwMethanol',
-		lwMethylamine    => 'lwMethylamine',
-		lwFormaldehyde   => 'lwFormaldehyde',
-		lwFormate        => 'lwFormate',
-		taComm           => 'taComm',
-		taComm3          => 'taComm3',
-		taCommComb       => 'taCommComb',
-		taCommFgenes     => 'taCommFgenes',
-		orpgwFw301       => 'orpgw',
-		apWin            => 'apWin',
-		apSum            => 'apSum',
-		bisonPool14jan08 => 'bisonPool14jan08'
+        sludgePhrap      => 'us_sludge',
+        sludgeOz         => 'oz_sludge',
+        sludgeJazz       => 'us_sludge',
+        amd              => 'amd',
+        soil             => 'soil',
+        wf1              => 'wf1',
+        wf2              => 'wf2',
+        wf3              => 'wf3',
+        tgut             => 'tgut',
+        tgut2b           => 'tgut2b',
+        tgut3            => 'tgut3',
+        saf1             => 'saf1',
+        saf2             => 'saf2',
+        lwm1             => 'lwm1',
+        tm7c32           => 'tm7c32',
+        tm7c33           => 'tm7c33',
+        mgutPt2          => 'mgutPt2',
+        mgutPt3          => 'mgutPt3',
+        mgutPt4          => 'mgutPt4',
+        mgutPt6          => 'mgutPt6',
+        mgutPt8          => 'mgutPt8',
+        hsmat01          => 'hsmat01',
+        hsmat02          => 'hsmat02',
+        hsmat03          => 'hsmat03',
+        hsmat04          => 'hsmat04',
+        hsmat05          => 'hsmat05',
+        hsmat06          => 'hsmat06',
+        hsmat07          => 'hsmat07',
+        hsmat08          => 'hsmat08',
+        hsmat09          => 'hsmat09',
+        hsmat10          => 'hsmat10',
+        biz              => 'biz',
+        saani            => 'saani',
+        ucgw2            => 'ucgw2',
+        lwComb           => 'lwComb',
+        lwMethane        => 'lwMethane',
+        lwMethanol       => 'lwMethanol',
+        lwMethylamine    => 'lwMethylamine',
+        lwFormaldehyde   => 'lwFormaldehyde',
+        lwFormate        => 'lwFormate',
+        taComm           => 'taComm',
+        taComm3          => 'taComm3',
+        taCommComb       => 'taCommComb',
+        taCommFgenes     => 'taCommFgenes',
+        orpgwFw301       => 'orpgw',
+        apWin            => 'apWin',
+        apSum            => 'apSum',
+        bisonPool14jan08 => 'bisonPool14jan08'
     };
 
     # --------------------------------------------------------------------------------------------
@@ -248,35 +233,37 @@ ysearch
     #
     # --------------------------------------------------------------------------------------------
     ## Google Map Keys
+    # deleted 'hmpdacc-resources.org' => 'ABQIAAAAoyF356P0_F8RJgEsRg73bBSvpfy4IrTf2S0Jpw1e1K8i8S6yrxSlI4YBFXgRBnDNPn81Jl5m4_Ki5w'
     $e->{google_map_keys} = {
-          'jgi-psf.org' => 'ABQIAAAAYxJnF8y-nhPss9h0Mp_SmBRudsuYU0E-IvTrpz0eeItbCuKkEBQYbqxO7d1kC-KDKb1JTl78SHX6Cg',
-          'jgi.doe.gov' => 'ABQIAAAAYxJnF8y-nhPss9h0Mp_SmBTg30WwySNRyLvcO7oFZfs2Agm6xRTuB05OZiGo4MATGpJmYVYP4vxVHQ',
-          'hmpdacc-resources.org' => 'ABQIAAAAoyF356P0_F8RJgEsRg73bBSvpfy4IrTf2S0Jpw1e1K8i8S6yrxSlI4YBFXgRBnDNPn81Jl5m4_Ki5w'
+        'jgi-psf.org'           => 'ABQIAAAAYxJnF8y-nhPss9h0Mp_SmBRudsuYU0E-IvTrpz0eeItbCuKkEBQYbqxO7d1kC-KDKb1JTl78SHX6Cg',
+        'jgi.doe.gov'           => 'ABQIAAAAYxJnF8y-nhPss9h0Mp_SmBTg30WwySNRyLvcO7oFZfs2Agm6xRTuB05OZiGo4MATGpJmYVYP4vxVHQ',
+
     };
 
     # Google Analytics
-    #
+    # key deleted -'hmpdacc-resources.org' => 'UA-15689341-5', - ken Jun 3 2015
     $e->{enable_google_analytics} = 1;
     $e->{google_analytics_keys} = {
-                                'jgi-psf.org'           => 'UA-15689341-3',
-                                'jgi.doe.gov'           => 'UA-15689341-4',
-                                'hmpdacc-resources.org' => 'UA-15689341-5',
+        'jgi-psf.org'           => 'UA-15689341-3',
+        'jgi.doe.gov'           => 'UA-15689341-4',
     };
 
     # Google Recaptcha
     #
     # http://www.google.com/recaptcha
     # http://code.google.com/apis/recaptcha/intro.html
-	$e->{google_recaptcha_private_key} = {
-                                  'jgi-psf.org'           => '6LfPjr4SAAAAAG6P8xA9VK0RTKgmAGrfk9A2c4i5',
-                                  'jgi.doe.gov'           => '6LfQjr4SAAAAAI18Ydpv5Xb9Z-QOPl9x1MUc14Yl',
-                                  'hmpdacc-resources.org' => '6LfRjr4SAAAAACHJ9oF3IAzpsQI69AJxbwJXiiyz',
+    # deleted 'hmpdacc-resources.org' => '6LfRjr4SAAAAACHJ9oF3IAzpsQI69AJxbwJXiiyz',
+    $e->{google_recaptcha_private_key} = {
+        'jgi-psf.org'           => '6LfPjr4SAAAAAG6P8xA9VK0RTKgmAGrfk9A2c4i5',
+        'jgi.doe.gov'           => '6LfQjr4SAAAAAI18Ydpv5Xb9Z-QOPl9x1MUc14Yl',
+
     };
 
-	$e->{google_recaptcha_public_key} = {
-                                 'jgi-psf.org'           => '6LfPjr4SAAAAAEcnSNPTE-GtiPYTdUqkYK07BzYC',
-                                 'jgi.doe.gov'           => '6LfQjr4SAAAAAHKn-Yd-QR55idf73Pnnxt6avsBh',
-                                 'hmpdacc-resources.org' => '6LfRjr4SAAAAAD1o2hZI5nbSPydG00pb1b7Mb92S',
+    #   'hmpdacc-resources.org' => '6LfRjr4SAAAAAD1o2hZI5nbSPydG00pb1b7Mb92S',
+    $e->{google_recaptcha_public_key} = {
+        'jgi-psf.org'           => '6LfPjr4SAAAAAEcnSNPTE-GtiPYTdUqkYK07BzYC',
+        'jgi.doe.gov'           => '6LfQjr4SAAAAAHKn-Yd-QR55idf73Pnnxt6avsBh',
+
     };
 
     # --------------------------------------------------------------------------------------------
@@ -308,7 +295,7 @@ ysearch
     $e->{img_support_email} = 'imgsupp@lists.jgi-psf.org';
 
     # the new cloud jira email
-    $e->{jira_email}  = 'imgsupp@lists.jgi-psf.org';
+    $e->{jira_email}  = 'jgi-jira+imgsupp@lbl.gov';
     $e->{jira_email2} = 'imgsupp@lists.jgi-psf.org';
 
     # --------------------------------------------------------------------------------------------
@@ -350,13 +337,32 @@ ysearch
     $e->{enzyme_base_url}         = "http://www.genome.jp/dbget-bin/www_bget?";
     $e->{pfam_base_url}           = "http://pfam.sanger.ac.uk/family?acc=";
     $e->{pfam_clan_base_url}      = "http://pfam.sanger.ac.uk/clan?acc=";
-    $e->{ipr_base_url}            = "http://www.ebi.ac.uk/interpro/entry/";
-    $e->{ncbi_blast_url}          =
+
+    # interpro urls
+    # IPR: http://www.ebi.ac.uk/interpro/entry/IPR006683
+    # PANTHER: ???
+    # SUPERFAMILY:   http://supfam.cs.bris.ac.uk/SUPERFAMILY/cgi-bin/scop.cgi?ipid=SSF51690
+    # ProSiteProfiles:  http://prosite.expasy.org/PS50931
+    # SMART:  http://smart.embl-heidelberg.de/smart/do_annotation.pl?ACC=SM00382
+    #
+    $e->{ipr_base_url}  = "http://www.ebi.ac.uk/interpro/entry/";
+    $e->{ipr_base_url2} = "http://supfam.cs.bris.ac.uk/SUPERFAMILY/cgi-bin/scop.cgi?ipid=";
+    $e->{ipr_base_url3} = "http://prosite.expasy.org/";
+    $e->{ipr_base_url4} = "http://smart.embl-heidelberg.de/smart/do_annotation.pl?ACC=";
+
+    $e->{ncbi_blast_url} =
         "http://www.ncbi.nlm.nih.gov/blast/Blast.cgi?"
       . "PAGE=Proteins&PROGRAM=blastp&BLAST_PROGRAMS=blastp"
       . "&PAGE_TYPE=BlastSearch&SHOW_DEFAULTS=on";
     $e->{taxonomy_base_url}    = "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=";
-    $e->{gold_base_url}        = "http://genomesonline.org/cgi-bin/GOLD/bin/GOLDCards.cgi?goldstamp=";
+
+    $e->{gold_base_url}        = "http://genomesonline.org/"; # old url to be replace by the next 3 gold urls
+
+    # new gold Nov 2014
+    $e->{gold_base_url_analysis} = "https://gold.jgi.doe.gov/analysis_projects?id=";
+    $e->{gold_base_url_project}  = "https://gold.jgi.doe.gov/projects?id="; # Gp...
+    $e->{gold_base_url_study}    = "https://gold.jgi.doe.gov/study?id=";    # Gs...
+
     $e->{aclame_base_url}      = "http://aclame.ulb.ac.be/perl/Aclame/Genomes/" . "prot_view.cgi?mode=genome&id=";
     $e->{artemis_url}          = "http://www.sanger.ac.uk/Software/Artemis/";
     $e->{pirsf_base_url}       = "http://pir.georgetown.edu/cgi-bin/ipcSF?id=";
@@ -376,8 +382,8 @@ ysearch
     $e->{gcat_base_url}        = "http://darwin.nox.ac.uk/gsc/gcat/report/";
     $e->{pdb_blast_url}        = "http://www.rcsb.org/pdb/search/" . "searchSequence.do";
     $e->{pdb_base_url}         = "http://www.rcsb.org/pdb/explore.do?structureId=";
-    $e->{cog_base_url} = "#";                                           #= "http://www.ncbi.nlm.nih.gov/COG/grace/wiew.cgi?";
-    $e->{kog_base_url} = "#";                                           #"http://www.ncbi.nlm.nih.gov/COG/grace/shokog.cgi?";
+    $e->{cog_base_url} = "#";  #= "http://www.ncbi.nlm.nih.gov/COG/grace/wiew.cgi?";
+    $e->{kog_base_url} = "#";  #"http://www.ncbi.nlm.nih.gov/COG/grace/shokog.cgi?";
     $e->{go_base_url}  = "http://www.ebi.ac.uk/ego/DisplayGoTerm?id=";
     $e->{go_evidence_url}         = "http://www.geneontology.org/GO.evidence.shtml";
     $e->{metacyc_url}             = "http://biocyc.org/META/NEW-IMAGE?object=";
@@ -499,11 +505,14 @@ ysearch
     #
     # optional precomputed homologs server with -m 0 output
     $e->{worker_base_url}       = 'https://img-worker.jgi-psf.org';
+
     #$e->{blastallm0_server_url} = $e->{worker_base_url} . "/cgi-bin/blast/generic/blastallServer2.cgi";
     $e->{blastallm0_server_url} = $e->{worker_base_url} . "/cgi-bin/blast/generic/blastQueue.cgi";
     $e->{blast_server_url}      = $e->{worker_base_url} . "/cgi-bin/usearch/generic/hopsServer.cgi";
     $e->{rna_server_url}        = $e->{worker_base_url} . "/cgi-bin/blast/generic/rnaServer.cgi";
 
+    # Queue directory for BLAST jobs.
+    $e->{blast_q_dir} = "/global/projectb/scratch/img/www-data/blast.q";
 
     # min genome selection to do blast all instead of individual blasts
     $e->{blast_max_genome} = 100;
@@ -511,8 +520,8 @@ ysearch
     # all common BLAST DB
     #
     # mblast tmp and reports directory
-    $e->{mblast_reports_dir}       = $e->{web_data_dir} . "/mblast/reports";             #new
-    $e->{mblast_tmp_dir}           = $e->{web_data_dir} . "/mblast/tmp";                 #new
+    $e->{mblast_reports_dir}       = $e->{web_data_dir} . "/mblast/reports";
+    $e->{mblast_tmp_dir}           = $e->{web_data_dir} . "/mblast/tmp";
     $e->{genes_dir}                = $e->{web_data_dir} . "/tab.files/genes";
     $e->{snp_blast_data_dir}       = $e->{web_data_dir} . "/snp.blast.data";
     $e->{blast_data_dir}           = $e->{web_data_dir} . "/blast.data";
@@ -579,7 +588,8 @@ ysearch
     # KEGG for IMG 4.0
     #
     # --------------------------------------------------------------------------------------------
-    $e->{kegg_root_dir}        = $e->{web_data_dir} . "/kegg.maps.4.1";
+    # /global/dna/projectdirs/microbial/img_web_data
+    $e->{kegg_root_dir}        = $e->{web_data_dir}  . "/kegg.maps.7.5";
     $e->{kegg_data_dir}        = $e->{kegg_root_dir} . "/png.files";
     $e->{kegg_tree_file}       = $e->{kegg_root_dir} . "/kegg_tree.txt";
     $e->{kegg_brite_tree_file} = $e->{kegg_root_dir} . "/kegg_brite_tree.txt";
@@ -610,9 +620,11 @@ ysearch
         #  - ken
     $e->{enable_genomelistJson} = 1;
 
-    $e->{enable_interpro} = 0;
+    $e->{enable_interpro} = 1;
 
     $e->{enable_biocluster} = 1;
+
+    $e->{enable_ani} = 1;
 
     # yui export table tracker log file
     $e->{yui_export_tracker_log} = "/webfs/scratch/img/yuiExportLog.log";
@@ -625,6 +637,8 @@ ysearch
     # GOLD AP metadata saved as perl array objects
     $e->{isolateApDataFile}    = '/webfs/scratch/img/gold/isolateAp.bin';
     $e->{metagenomeApDataFile} = '/webfs/scratch/img/gold/metagenomeAp.bin';
+
+    $e->{merfs_timeout_mins} = 40;    # 40 mins
 
     return $e;
 }

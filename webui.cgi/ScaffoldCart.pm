@@ -1,6 +1,6 @@
 ############################################################################
 # ScaffoldCart.pm - Cart for Scaffolds
-# $Id: ScaffoldCart.pm 34181 2015-09-03 21:12:48Z aireland $
+# $Id: ScaffoldCart.pm 34451 2015-10-08 03:40:43Z aratner $
 ############################################################################
 package ScaffoldCart;
 
@@ -83,7 +83,13 @@ sub dispatch {
     {
         my $type = addToScaffoldCart();
         $page = 'index';
-	    $page = '' if $type eq "sets";
+	$page = '' if $type eq "sets";
+    }
+    elsif ( $page eq "viralScaffolds" ) {
+	my $taxon_oid = param("taxon_oid");
+	my $viral_scaffolds_aref = getViralScaffoldsForGenome($taxon_oid);
+	addToScaffoldCart($viral_scaffolds_aref, 'virus');
+	$page = 'index';
     }
     elsif ( $page eq "scaffoldCart" ) {
         $page = 'index';
@@ -198,6 +204,32 @@ sub dispatch {
     }
 }
 
+sub getViralScaffoldsForGenome {
+    my ($taxon_oid) = @_;
+    my $rclause   = WebUtil::urClause('t');
+    my $imgClause = WebUtil::imgClause('t');
+    my $sql = qq{                                                                                         
+        select v.scaffold_id
+        from taxon t, dt_virals_from_metag\@core_v400_musk v
+        where t.taxon_oid = v.taxon_oid
+        and t.obsolete_flag = 'No'
+        and t.taxon_oid = ?
+        $rclause
+        $imgClause
+    };
+    
+    my $dbh = dbLogin();
+    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
+    my @scaffolds;
+    for ( ;; ) {
+	my ( $scaffold_id ) = $cur->fetchrow();
+	last if !$scaffold_id;
+	push( @scaffolds, "$taxon_oid assembled $scaffold_id" );
+    }
+    $cur->finish();
+    return \@scaffolds;
+}
+
 ############################################################################
 # printIndex - Show index entry to this section.
 ############################################################################
@@ -251,9 +283,9 @@ CSS
     my $it = new InnerTable( 0, "$itID$$", $itID, 1 );
     my $sd = $it->getSdDelim();
     $it->addColSpec( "Select" );
-    $it->addColSpec( "Scaffold ID",           "asc", "left" );
-    $it->addColSpec( "Scaffold Name",          "asc", "left" );
-    $it->addColSpec( "Genome",                 "asc", "left" );
+    $it->addColSpec( "Scaffold ID", "asc", "left" );
+    $it->addColSpec( "Scaffold Name", "asc", "left" );
+    $it->addColSpec( "Genome", "asc", "left" );
     $it->addColSpec( "Gene Count", "asc", "right" );
     $it->addColSpec( "Sequence Length<br/>(bp)", "asc", "right" );
     $it->addColSpec( "GC Content", "asc", "right" );
@@ -1029,9 +1061,8 @@ sub addToScaffoldCart {
 
     my $records_aref = readCartFile();
     my $recsNum = scalar(@$records_aref);
-    #print "addToScaffoldCart() recsNum=$recsNum<br/>\n";
-    if ( !$recsNum || $recsNum < CartUtil::getMaxDisplayNum() ) {
 
+    if ( !$recsNum || $recsNum < CartUtil::getMaxDisplayNum() ) {
         my ( $dbOids_ref, $metaOids_ref ) =
     	MerFsUtil::splitDbAndMetaOids(@scaffold_oids);
         my @dbOids   = @$dbOids_ref;
@@ -1050,6 +1081,7 @@ sub addToScaffoldCart {
     	    MerFsUtil::fetchValidMetaTaxonOidHash( $dbh, @metaOids );
             for my $oid (@metaOids) {
                 my ( $taxon_oid, $data_type, $scaffold_oid ) = split( / /, $oid );
+
                 #if ( !($data_type eq 'assembled') ) {
                 #    #only allow assembled into the cart
                 #    next;
@@ -1062,8 +1094,6 @@ sub addToScaffoldCart {
                 push( @scaffold_oids, $oid );
             }
         }
-        #$dbh->disconnect();
-        #print "addToScaffoldCart() scaffold_oids: @scaffold_oids<br/>\n";
 
         # check what's already in the cart
         my %s_carts;
@@ -1079,10 +1109,9 @@ sub addToScaffoldCart {
         my $next_batch = getNextBatchId($records_aref);
 
         my $res = newAppendFileHandle( getStateFile(), "append 1" );
-        for my $scaffold_oid (@scaffold_oids) {
+        foreach my $scaffold_oid (@scaffold_oids) {
             if ( $s_carts{$scaffold_oid} ) {
-                # already there
-                next;
+                next;  # already there
             }
 
             $s_carts{$scaffold_oid} = 1;    # make sure there are no duplicates
@@ -1090,7 +1119,6 @@ sub addToScaffoldCart {
             # add - $virtual_taxon_oid was added
             my $name = $cart_names{$scaffold_oid};
             print { $res } "$scaffold_oid\t$contact_oid\t$next_batch\t$name\n";
-            #print "addToScaffoldCart() added to res: $scaffold_oid\t$contact_oid\t$next_batch\t$name<br/>\n";
 
             $recsNum++;
             if ( $recsNum >= CartUtil::getMaxDisplayNum() ) {
@@ -1098,7 +1126,6 @@ sub addToScaffoldCart {
             }
         }
         close $res;
-
     }
 }
 
@@ -3020,6 +3047,16 @@ sub getStateFile {
     my $sessionFile = "$cartDir/scaffoldCart.$sessionId.stor";
     #print "getStateFile() sessionFile: $sessionFile<br/>\n";
     return $sessionFile;
+}
+
+sub getSize {
+    my $aref = readCartFile();
+    if($aref eq '') {
+        return 0;
+    }
+    
+    my $s = $#$aref + 1;
+    return $s;
 }
 
 #

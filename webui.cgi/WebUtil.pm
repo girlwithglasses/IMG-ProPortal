@@ -510,7 +510,7 @@
 ############################################################################
 #   Misc. web utility functions.
 # 	--es 04/15/2004
-# $Id: WebUtil.pm 34103 2015-08-24 20:33:28Z klchu $
+# $Id: WebUtil.pm 34488 2015-10-11 17:17:45Z jinghuahuang $
 ############################################################################
 package WebUtil;
 
@@ -876,6 +876,7 @@ my $blastall_bin          = $env->{blastall_bin};
 my $img_hmms_serGiDb      = $env->{img_hmms_serGiDb};
 my $img_hmms_singletonsDb = $env->{img_hmms_singletonsDb};
 my $jira_email_error      = $env->{jira_email_error};
+my $img_nr = $env->{img_nr};
 
 my $site_pw_md5              = $env->{site_pw_md5};
 
@@ -4044,6 +4045,7 @@ sub getAllTaxonsHashed {
     if ( -e $filename ) {
         my $href = retrieve("$filename");
         LogStuff::webLog("reading cache data for getAllTaxonsHashed: $filename\n");
+        #print "reading cache data for getAllTaxonsHashed: $filename<br/>\n";
         return %$href;
     }
 
@@ -4066,6 +4068,7 @@ sub getAllTaxonsHashed {
     	$rclause
     	$imgClause
     };
+    #print "getAllTaxonsHashed() sql=$sql<br/>\n";
     my $cur = execSql( $dbh, $sql, $verbose );
     my %h;
     for ( ; ; ) {
@@ -5391,7 +5394,20 @@ sub pwDecode {
 #    for user restricted sites.
 ############################################################################
 sub urClause {
-    my ($aliasOrAttr) = @_;
+    my $aliasOrAttr = shift;
+
+    #LogStuff::webLog("====== user_restricted_site $user_restricted_site  \n");
+    #LogStuff::webLog("====== public_login $public_login  \n");
+
+    return "" if ! $user_restricted_site ;
+    my $contact_oid = getContactOid();
+
+    #LogStuff::webLog("====== contact_oid $contact_oid\n");
+
+    return "" if ! $contact_oid;
+
+    my $super_user = getSuperUser();
+    return "" if $super_user eq "Yes";
 
     my $taxon_oid_attr = "taxon_oid";
     $taxon_oid_attr = "$aliasOrAttr.taxon_oid"
@@ -5402,30 +5418,6 @@ sub urClause {
       if $aliasOrAttr ne ""
       && $aliasOrAttr ne "taxon_oid"
       && $aliasOrAttr =~ /\./;
-
-    #LogStuff::webLog("====== user_restricted_site $user_restricted_site  \n");
-    #LogStuff::webLog("====== public_login $public_login  \n");
-
-    return "" if ( !$user_restricted_site );
-    my $contact_oid = getContactOid();
-
-    #LogStuff::webLog("====== contact_oid $contact_oid\n");
-
-    return "" if !$contact_oid;
-
-    my $super_user = getSuperUser();
-    if ( $super_user eq "Yes" ) {
-
-        #        my $clause = qq{
-        #      and $taxon_oid_attr in(
-        #         select tx.taxon_oid
-        #         from taxon tx
-        #         where tx.obsolete_flag = 'No'
-        #      )
-        #        };
-        #        return $clause;
-        return "";
-    }
 
     my $clause = qq{
       and $taxon_oid_attr in(
@@ -5499,7 +5491,7 @@ sub urClauseBind {
 # $alias - taxon table sql alias - required
 #
 sub imgClause {
-    my ($alias) = @_;
+    my ($alias, $forced_img_nr_no) = @_;
 
     my $clause = "";
 
@@ -5516,6 +5508,30 @@ sub imgClause {
 
     $clause .= " and $alias" . '.' . "obsolete_flag = 'No' ";
 
+    
+    if ($img_nr && !$forced_img_nr_no) {
+        $clause .= " and $alias" . '.' . "is_nr = 'Yes' ";
+        
+#        $clause .= qq{
+#and $alias.taxon_oid  in(
+#    select nr7.taxon_oid
+#    from taxon nr7
+#    where nr7.OBSOLETE_FLAG = 'No'
+#    and nr7.SEQUENCING_GOLD_ID is not null
+#    and nr7.IS_PUBLIC = 'Yes'
+#    and nr7.domain in ('Bacteria', 'Archaea')
+#    and nr7.taxon_oid = 
+#        (select max(nr8.taxon_oid)
+#        from taxon nr8
+#        where nr8.sequencing_gold_id = nr7.sequencing_gold_id
+#        and nr8.OBSOLETE_FLAG = 'No'
+#        and nr8.SEQUENCING_GOLD_ID is not null
+#        and nr8.IS_PUBLIC = 'Yes'
+#        and nr8.domain in ('Bacteria', 'Archaea'))
+#     )
+#        };   
+    }
+
     return $clause;
 }
 
@@ -5528,7 +5544,7 @@ sub imgClause {
 #   1 - restrict to - genome_type 'isolate'
 #   2 - restrict to - genome type 'metagenome'
 sub imgClauseNoTaxon {
-    my ( $aliasOrAttr, $domainType ) = @_;
+    my ( $aliasOrAttr, $domainType, $forced_img_nr_no ) = @_;
 
     my $taxon_oid_attr = "taxon_oid";
     $taxon_oid_attr = "$aliasOrAttr.taxon_oid"
@@ -5572,6 +5588,30 @@ sub imgClauseNoTaxon {
          $type
       )
     };
+    
+    my $img_nr = $env->{img_nr};
+    if ( $img_nr && !$forced_img_nr_no) {
+        $clause .= qq{
+    and $taxon_oid_attr  in(
+    select nr7.taxon_oid
+    from taxon nr7
+    where nr7.OBSOLETE_FLAG = 'No'
+    and nr7.SEQUENCING_GOLD_ID is not null
+    and nr7.IS_PUBLIC = 'Yes'
+    and nr7.domain in ('Bacteria', 'Archaea')
+    and nr7.taxon_oid = 
+        (select max(nr8.taxon_oid)
+        from taxon nr8
+        where nr8.sequencing_gold_id = nr7.sequencing_gold_id
+        and nr8.OBSOLETE_FLAG = 'No'
+        and nr8.SEQUENCING_GOLD_ID is not null
+        and nr8.IS_PUBLIC = 'Yes'
+        and nr8.domain in ('Bacteria', 'Archaea'))
+     )
+        };   
+    }    
+    
+    
     return $clause;
 }
 

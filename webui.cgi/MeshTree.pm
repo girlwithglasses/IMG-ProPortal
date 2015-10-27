@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MeshTree.pm 34265 2015-09-16 17:58:07Z klchu $
+# $Id: MeshTree.pm 34535 2015-10-19 22:53:03Z aratner $
 ############################################################################
 package MeshTree;
 
@@ -2536,8 +2536,8 @@ sub getTreePhylo {
     my @array;
 
     foreach my $inner_aref (@$aref) {
-        my ( $domain, $phylum, $ir_class, $ir_order, $family, $genus, $species, $seq_status, $taxon_oid, $cnt ) =
-          @$inner_aref;
+        my ( $domain, $phylum, $ir_class, $ir_order, $family, $genus, $species, # this is ani_species for ani
+	     $seq_status, $taxon_oid, $cnt ) = @$inner_aref;
         my @suba;
 
         my $key = $domain;
@@ -2596,12 +2596,7 @@ sub getTreePhylo {
 
         my $anikey;
         if ( $treeType eq "ani" ) {
-            $species = $Unassigned if ( !$species );
-            my @a = split( /\s+/, $species );
-            if ( $#a >= 1 ) {
-                $species = $a[1];
-            }
-            $anikey = "$genus $species";
+            $anikey = $species; # it is ani_species here!
         }
 
         my %subhash;
@@ -2668,7 +2663,7 @@ sub getTreeANIPhyloSql {
     #TODO Anna -what exactly do we need here?
     my $sql = qq{
         select t.domain, t.phylum, t.ir_class, t.ir_order, 
-               t.family, t.genus, t.species,
+               t.family, t.genus, t.ani_species,
                t.seq_status, '', count(distinct acm.clique_id)
         from ani_clique_members acm, taxon t
         where acm.members = t.taxon_oid
@@ -2677,9 +2672,9 @@ sub getTreeANIPhyloSql {
         $rclause
         $imgClause
         group by t.domain, t.phylum, t.ir_class, t.ir_order,
-                 t.family, t.genus, t.species, t.seq_status
+                 t.family, t.genus, t.ani_species, t.seq_status
         order by t.domain, t.phylum, t.ir_class, t.ir_order, 
-                 t.family, t.genus, t.species, t.seq_status
+                 t.family, t.genus, t.ani_species, t.seq_status
     };
 
     return ( $sql, @binds );

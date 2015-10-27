@@ -1,6 +1,6 @@
 ############################################################################
 # BiosyntheticDetail - detail page for biosynthetic clusters
-# $Id: BiosyntheticDetail.pm 34260 2015-09-15 02:28:55Z aratner $
+# $Id: BiosyntheticDetail.pm 34539 2015-10-20 18:18:53Z aratner $
 ############################################################################
 package BiosyntheticDetail;
 my $section = "BiosyntheticDetail";
@@ -26,6 +26,7 @@ use MetaGeneTable;
 use WorkspaceUtil;
 use TaxonDetailUtil;
 use BcUtil;
+use KeggPathwayDetail;
 
 my $env             = getEnv();
 my $main_cgi        = $env->{main_cgi};
@@ -183,6 +184,10 @@ sub dispatch {
         || paramMatch("bcGeneList") ne "" )
     {
         printBioClusterGeneList( "", "", "", 1 );
+    } elsif ( $page eq "komodule_bcgene"
+        || paramMatch("komodule_bcgene") ne "" )
+    {
+        printKoModuleBCGenes( "", "", "");
     } elsif ( $page eq "pfamGeneList"
         || paramMatch("pfamGeneList") ne "" )
     {
@@ -279,7 +284,7 @@ sub printBioClusterDetail {
     }
 
     print "<p style='width: 650px;'>";
-    my $url1 = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url1 = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     print "Genome: " . alink( $url1, $taxon_name );
     print " (assembled)" if $in_file eq "Yes";
     my $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
@@ -311,7 +316,7 @@ sub printBioClusterDetail {
         "IMG Pathways",
         "Metacyc",
         "KEGG",
-        "Pairwise Similarity"
+        "Similar Clusters"
     );
 
     TabHTML::printTabDiv( "bioDetailTab", \@tabIndex, \@tabNames );
@@ -359,7 +364,7 @@ sub printBioClusterDetail {
     use GeneDetail;
     GeneDetail::printAttrRowRaw( "Cluster ID", $cluster_id );
 
-    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     my $link = alink( $url, $taxon_display_name );
     GeneDetail::printAttrRowRaw( "Genome", $link );
 
@@ -370,10 +375,12 @@ sub printBioClusterDetail {
     }
     GeneDetail::printAttrRowRaw( "GOLD ID", $gold_link );
 
-    my $s_url = "$main_cgi?section=ScaffoldCart" . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
+    my $s_url = "$main_cgi?section=ScaffoldCart"
+	      . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
     if ( $in_file eq 'Yes' ) {
-        $s_url =
-          "$main_cgi?section=MetaDetail" . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid" . "&scaffold_oid=$scaffold_oid";
+        $s_url = "$main_cgi?section=MetaDetail"
+	       . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid"
+	       . "&scaffold_oid=$scaffold_oid";
     }
     GeneDetail::printAttrRowRaw( "Scaffold", alink( $s_url, $scaffold_name ) );
 
@@ -432,7 +439,7 @@ sub printBioClusterDetail {
     }
     $cur->finish();
 
-    GeneDetail::printAttrRowRaw( 'EVIDENCE',    $evid_type );
+    GeneDetail::printAttrRowRaw( 'EVIDENCE', $evid_type );
     GeneDetail::printAttrRowRaw( 'PROBABILITY', $prob );
     if ($bctype) {
         my $disp_type = translateBcType( $dbh, $bctype );
@@ -442,15 +449,14 @@ sub printBioClusterDetail {
         GeneDetail::printAttrRowRaw( 'IS_CURATED?', $is_curated );
     }
     GeneDetail::printAttrRowRaw( 'START_ON_CHROMOSOME', $start );
-    GeneDetail::printAttrRowRaw( 'END_ON_CHROMOSOME',   $end );
-    GeneDetail::printAttrRowRaw( 'GENBANK_ACC',         join( ", ", @genbank_ids ) );
+    GeneDetail::printAttrRowRaw( 'END_ON_CHROMOSOME', $end );
+    GeneDetail::printAttrRowRaw( 'GENBANK_ACC', join( ", ", @genbank_ids ) );
 
     my $pfam_count = getBioClusterPfamCount( $cluster_id, $taxon_oid, $in_file );
     if ($pfam_count) {
-        my $url3 =
-            "$main_cgi?section=BiosyntheticDetail"
-          . "&page=bioClusterPfamList&taxon_oid=$taxon_oid"
-          . "&type=bio&cluster_id=$cluster_id";
+        my $url3 = "$main_cgi?section=BiosyntheticDetail"
+	    . "&page=bioClusterPfamList&taxon_oid=$taxon_oid"
+	    . "&type=bio&cluster_id=$cluster_id";
         GeneDetail::printAttrRowRaw( "PFAM_COUNT", alink( $url3, $pfam_count ) );
     } else {
         GeneDetail::printAttrRowRaw( "PFAM_COUNT", 0 );
@@ -462,17 +468,19 @@ sub printBioClusterDetail {
     GeneDetail::printAttrRowRaw( "LENGTH", $len . " bps" );
 
     # add Export links:
-    my $export_url = $section_cgi . "&page=geneExport" . "&taxon_oid=$taxon_oid&cluster_id=$cluster_id";
+    my $export_url = $section_cgi . "&page=geneExport"
+	. "&taxon_oid=$taxon_oid&cluster_id=$cluster_id";
     print "<tr class='highlight'>\n";
     print "<th class='subhead' align='center'>";
     print "<td class='img'>" . nbsp(1) . "</td>\n";
     print "</tr>\n";
 
-    my $sid          = getContactOid();
-    my $track        = "_gaq.push(['_trackEvent', 'Export', '$sid', 'img link ExportGenes']);";
-    my $fna_url      = $export_url . "&fasta=fna";
-    my $fna_link     = "<a href=javascript:setRange('$fna_url') " . "onclick='$track'>fna</a>";
-    my $faa_link     = alink( $export_url . "&fasta=faa", "faa", "", "", "", $track );
+    my $sid = getContactOid();
+    my $track = "_gaq.push(['_trackEvent', 'Export', '$sid', 'img link ExportGenes']);";
+    my $fna_url = $export_url . "&fasta=fna";
+    my $fna_link = "<a href=javascript:setRange('$fna_url') "
+	. "onclick='$track'>fna</a>";
+    my $faa_link = alink( $export_url . "&fasta=faa", "faa", "", "", "", $track );
     my $genbank_link = alink( $export_url . "&fasta=genbank", "genbank", "", "", "", $track );
 
     my $bps = nbsp(2);
@@ -502,7 +510,8 @@ sub printBioClusterDetail {
         </script>
     };
 
-    GeneDetail::printAttrRowRaw( "Export", "$fna_link $bps" . "$faa_link" . "<br/>$genbank_link" );
+    GeneDetail::printAttrRowRaw
+	( "Export", "$fna_link $bps" . "$faa_link" . "<br/>$genbank_link" );
 
     print "</table>\n";
     print end_form();
@@ -552,8 +561,10 @@ sub printBioClusterDetail {
     print "<div id='biodetailtab7'>";
     if ( $in_file eq 'Yes' ) {
         printClusterKEGGList_meta( $taxon_oid, $cluster_id );
+	printClusterKoModuleList_meta ($taxon_oid, $cluster_id);
     } else {
         printClusterKEGGList( $taxon_oid, $cluster_id );
+	printClusterKoModuleList ($taxon_oid, $cluster_id);
     }
     print "</div>";    # end biodetailtab7
 
@@ -567,15 +578,24 @@ sub printBioClusterDetail {
 sub printPairwiseTab {
     my ( $clusterId, $taxon_oid ) = @_;
 
-    # <b>Warning:</b> This process can take over 5 minutes to run!
+    print "<h2>Find Similar Clusters</h2>";
+
+    my $pairwise_url = "main.cgi?section=WorkspaceBcSet"
+	. "&page=findPairwiseSimilarity&clusterId=$clusterId&taxon_oid=$taxon_oid";
+
+    my $doc = '/webfs/projectdirs/microbial/img/public-web/vhosts/img-stage.jgi-psf.org/htdocs/docs/BC/pairwiseSimilarity.html';
+    my $str = WebUtil::file2Str($doc, 1);
+
     print qq{
-      <h2>Pairwise Similarity</h2>
-      <p>
-      Data will open in a new Window or Tab.
-      </p>
-     <input type="button" class="meddefbutton" 
-     value="Find Pairwise Similarity" name="_section_WorkspaceBcSet_findPairwiseSimilarity"
-     onclick=window.open('main.cgi?section=WorkspaceBcSet&page=findPairwiseSimilarity&clusterId=$clusterId&taxon_oid=$taxon_oid')>
+    <p> 
+    $str
+    <br/>
+    <br/>
+    <input type="button" class="meddefbutton" 
+           value="Find Similar Clusters" 
+           name="_section_WorkspaceBcSet_findPairwiseSimilarity"
+           onclick=window.open('$pairwise_url') />
+    <br/>[Data will open in a new Window or Tab]</p>
     };
 }
 
@@ -1017,9 +1037,9 @@ sub printBioClusterGeneList {
             $workspce_id = "$taxon_oid assembled $gene_oid";
         }
 
-        my $r = $sd . "<input type='checkbox' name='gene_oid' " . "value='$workspce_id' /> \t";
+        my $r = $sd . "<input type='checkbox' name='gene_oid' value='$workspce_id' /> \t";
 
-        my $url = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene_oid";
+        my $url = "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=$gene_oid";
         if ($isTaxonInFile) {
             $url =
                 "$main_cgi?section=MetaGeneDetail"
@@ -1100,7 +1120,7 @@ sub printBioClusterGeneList {
 
         if ( $bbh_gene{$gene_oid} ) {
             my $gene2 = $bbh_gene{$gene_oid};
-            my $url2  = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene2";
+            my $url2  = "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=$gene2";
             $r .= $gene2 . $sd . alink( $url2, $gene2 ) . "\t";
         } else {
             $r .= "-" . $sd . "-" . "\t";
@@ -1108,7 +1128,7 @@ sub printBioClusterGeneList {
 
         if ( $bbh_taxon{$gene_oid} ) {
             my $taxon2 = $bbh_taxon{$gene_oid};
-            my $url2   = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon2";
+            my $url2   = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon2";
             $r .= $taxon_name_h{$taxon2} . $sd . alink( $url2, $taxon_name_h{$taxon2} ) . "\t";
         } else {
             $r .= "-" . $sd . "-" . "\t";
@@ -1229,15 +1249,15 @@ sub printBioClusterNPList {
     if ( $super_user eq 'Yes' ) {
         $it->addColSpec("Select");
     }
-    $it->addColSpec( "Compound ID",                    "asc",        "right" );
-    $it->addColSpec( "Secondary Metabolite (SM) Name", "asc",        "left" );
-    $it->addColSpec( "SM Class",                       "asc",        "left" );
-    $it->addColSpec( "SM Subclass",                    "asc",        "left" );
-    $it->addColSpec( "NCBI Accession",                 "asc",        "left" );
-    $it->addColSpec( "NCBI Taxon ID",                  "number asc", "right" );
-    $it->addColSpec( "Is Partial",                     "asc",        "left" );
-    $it->addColSpec( "Modified By",                    "asc",        "left" );
-    $it->addColSpec( "Mod Date",                       "asc",        "left" );
+    $it->addColSpec( "Compound ID",                    "asc", "right" );
+    $it->addColSpec( "Secondary Metabolite (SM) Name", "asc", "left" );
+    $it->addColSpec( "SM Class",                       "asc", "left" );
+    $it->addColSpec( "SM Subclass",                    "asc", "left" );
+    $it->addColSpec( "NCBI Accession",                 "asc", "left" );
+    $it->addColSpec( "NCBI Taxon ID",                  "asc", "right" );
+    $it->addColSpec( "Is Partial",                     "asc",  "left" );
+    $it->addColSpec( "Modified By",                    "asc",  "left" );
+    $it->addColSpec( "Mod Date",                       "asc",  "left" );
     my $sd = $it->getSdDelim();
 
     my $row = 0;
@@ -1251,10 +1271,12 @@ sub printBioClusterNPList {
 
         my $r = "";
         if ( $super_user eq 'Yes' ) {
-            $r .= $sd . "<input type='radio' id='compound_oid' " . "name='compound_oid' " . "value='$compound_oid' /> \t";
+            $r .= $sd . "<input type='radio' id='compound_oid' "
+		. "name='compound_oid' value='$compound_oid' /> \t";
         }
 
-        my $url = "$main_cgi?section=ImgCompound" . "&page=imgCpdDetail&compound_oid=$compound_oid";
+        my $url = "$main_cgi?section=ImgCompound"
+	    . "&page=imgCpdDetail&compound_oid=$compound_oid";
         $r .= $compound_oid . $sd . alink( $url, $compound_oid ) . "\t";
         $r .= $compound_name . $sd . $compound_name . "\t";
         $r .= $np_class . $sd . $np_class . "\t";
@@ -1374,17 +1396,17 @@ sub printMyIMGBioClusterNPList {
     #my $it = new InnerTable( 1, "myimgBcNpList$$", "myimgBcNpList", 1 );
     my $it = new StaticInnerTable();
     $it->addColSpec("Select");
-    $it->addColSpec( "Compound ID",                    "asc",        "right" );
-    $it->addColSpec( "Secondary Metabolite (SM) Name", "asc",        "left" );
-    $it->addColSpec( "SM Class",                       "asc",        "left" );
-    $it->addColSpec( "SM Subclass",                    "asc",        "left" );
-    $it->addColSpec( "NCBI Accession",                 "asc",        "left" );
-    $it->addColSpec( "NCBI Taxon ID",                  "number asc", "right" );
-    $it->addColSpec( "Is Partial",                     "asc",        "left" );
-    $it->addColSpec( "Is Public",                      "asc",        "left" );
-    $it->addColSpec( "Comments",                       "asc",        "left" );
-    $it->addColSpec( "Modified By",                    "asc",        "left" );
-    $it->addColSpec( "Mod Date",                       "asc",        "left" );
+    $it->addColSpec( "Compound ID",                    "asc", "right" );
+    $it->addColSpec( "Secondary Metabolite (SM) Name", "asc", "left" );
+    $it->addColSpec( "SM Class",                       "asc", "left" );
+    $it->addColSpec( "SM Subclass",                    "asc", "left" );
+    $it->addColSpec( "NCBI Accession",                 "asc", "left" );
+    $it->addColSpec( "NCBI Taxon ID",                  "asc", "right" );
+    $it->addColSpec( "Is Partial",                     "asc", "left" );
+    $it->addColSpec( "Is Public",                      "asc", "left" );
+    $it->addColSpec( "Comments",                       "asc", "left" );
+    $it->addColSpec( "Modified By",                    "asc", "left" );
+    $it->addColSpec( "Mod Date",                       "asc", "left" );
     my $sd = $it->getSdDelim();
 
     my $cnt = 0;
@@ -1400,22 +1422,15 @@ sub printMyIMGBioClusterNPList {
 
         ## check permission
         if ( $super_user eq 'Yes' ) {
-
             # super user
         } elsif ( $is_public eq 'Yes' ) {
-
             # public annotation
         } elsif ( $contact_oid == $modified_by_oid ) {
-
             # my own annotation
-        } elsif ( $my_group
-            && $img_group
-            && ( $my_group == $img_group ) )
-        {
-
+        } elsif ( $my_group && $img_group &&
+		  ( $my_group == $img_group ) ) {
             # group annotation
         } else {
-
             # no privilege
             next;
         }
@@ -1453,11 +1468,8 @@ sub printMyIMGBioClusterNPList {
     $cur->finish();
 
     print "<h2>MyIMG Annotations</h2>\n";
-    printHint(
-"If you know this biosynthetic cluster is associated with any secondary metabolite, you can add a private or a public MyIMG annotation to note the association. Private annotations are available only to the owners, while public annotations are visible to all users."
-    );
+    printHint("If you know this biosynthetic cluster is associated with any secondary metabolite, you can add a private or a public MyIMG annotation to note the association. Private annotations are available only to the owners, while public annotations are visible to all users.");
     if ($row) {
-
         #$it->hideAll() if $row < 10;
         $it->printOuterTable(1);
     } else {
@@ -1585,8 +1597,9 @@ sub getBcBestHit_bbh {
         my $rfh = newUnzipFileHandle( $bbh_file_name, $gene_oid, "getBBHZipFiles" );
         while ( my $s = $rfh->getline() ) {
             chomp $s;
-            my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
-              split( /\t/, $s );
+            my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps,
+		 $qstart, $qend, $sstart, $send, $evalue, $bitScore )
+		= split( /\t/, $s );
             my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
             my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid );
 
@@ -1686,7 +1699,7 @@ sub printBioClusterPfamList {
     print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
     print "</p>";
 
-    my $hint = "Pfam Info is based on <font color='darkgreen'>" . "Pfams associated with genes</font> in this cluster.";
+    my $hint = "Pfam Info is based on <font color='darkgreen'>Pfams associated with genes</font> in this cluster.";
     printHint($hint);
     print "<br/>";
 
@@ -1783,7 +1796,8 @@ sub printBioClusterPfamList {
     }
 
     my $name = "_section_${section}_pfamGeneList";
-    TaxonDetailUtil::print3ColGeneCountTable( 'pfam', \@rows, 'Pfam ID', 'Pfam Name', $section, $name, "List Genes" );
+    TaxonDetailUtil::print3ColGeneCountTable
+	( 'pfam', \@rows, 'Pfam ID', 'Pfam Name', $section, $name, "List Genes" );
 
     printStatusLine( "$count Pfam retrieved.", 2 );
     print end_form();
@@ -1796,7 +1810,8 @@ sub printBCPfamGeneList {
     printStatusLine( "Loading ...", 1 );
 
     my $dbh = dbLogin();
-    my ( $taxon_oid, $isTaxonInFile, $pfam_ids_ref, $funcId2Name_href, $gene_oids_ref ) = getBCPfamGeneList($dbh);
+    my ( $taxon_oid, $isTaxonInFile, $pfam_ids_ref,
+	 $funcId2Name_href, $gene_oids_ref ) = getBCPfamGeneList($dbh);
 
     my $count = scalar(@$gene_oids_ref);
     if ( $count == 1 ) {
@@ -1957,7 +1972,8 @@ sub getBCPfamGeneList {
 ###############################################################################
 sub addBCPfamGeneListToCart {
     my $dbh = dbLogin();
-    my ( $taxon_oid, $isTaxonInFile, $pfam_ids_ref, $funcId2Name_href, $gene_oids_ref ) = getBCPfamGeneList($dbh);
+    my ( $taxon_oid, $isTaxonInFile, $pfam_ids_ref,
+	 $funcId2Name_href, $gene_oids_ref ) = getBCPfamGeneList($dbh);
 
     require CartUtil;
     CartUtil::callGeneCartToAdd($gene_oids_ref);
@@ -2022,7 +2038,7 @@ sub reloadViewer {
 ###############################################################################
 sub printNeighborhoods {
     my ( $taxon_oid, $cluster_id, $in_file, $mygene, $colorBy ) = @_;
-    $colorBy = "cog" if ( $colorBy eq "" );
+    $colorBy = "pfam" if ( $colorBy eq "" );
 
     printMainForm();
 
@@ -2050,12 +2066,10 @@ sub printNeighborhoods {
         print "Color By:&nbsp;&nbsp;";
         print "<input type='radio' onclick=\"$funcall2\" name='colorby' value='cog' $cogchk />";
         print "COG";
-
         #print "<input type='radio' onclick=\"$funcall3\" name='colorby' value='kog' $kogchk />";
         #print "KOG";
         print "<input type='radio' onclick=\"$funcall4\" name='colorby' value='pfam' $pfamchk />";
         print "Pfam";
-
         #print "<input type='radio' onchange=\"$funcall1\" name='colorby' value='bc' $bcchk />";
         #print "BC Association";
         print "</p>";
@@ -2067,7 +2081,7 @@ sub printNeighborhoods {
 
 sub loadNeighborhoods {
     my ( $taxon_oid, $cluster_id, $in_file, $mygene, $colorBy ) = @_;
-    $colorBy = "cog" if ( $colorBy eq "" );
+    $colorBy = "pfam" if ( $colorBy eq "" );
 
     # see: printSimilarBCGF
     my @sim_bcs = param("bc_id");
@@ -2086,16 +2100,20 @@ sub loadNeighborhoods {
     my $g2pfam_ref;
     if ( $in_file eq "Yes" ) {
         if ( @sim_bcs ne "" && scalar(@sim_bcs) > 0 ) {
-            ( $recs_ref, $g2pfam_ref ) = getBiosyntheticPfamHit( $dbh, $taxon_oid, $cluster_id, \@sim_bcs, $gene_list );
+            ( $recs_ref, $g2pfam_ref ) = getBiosyntheticPfamHit
+		( $dbh, $taxon_oid, $cluster_id, \@sim_bcs, $gene_list );
         } else {
-            $recs_ref = getBiosyntheticBestHitMERFS( $dbh, $taxon_oid, $cluster_id, $mygene ) if $mygene ne "";
+            $recs_ref = getBiosyntheticBestHitMERFS
+		( $dbh, $taxon_oid, $cluster_id, $mygene ) if $mygene ne "";
         }
 
     } else {
         if ( @sim_bcs ne "" && scalar(@sim_bcs) > 0 ) {
-            ( $recs_ref, $g2pfam_ref ) = getBiosyntheticPfamHit( $dbh, $taxon_oid, $cluster_id, \@sim_bcs, $gene_list );
+            ( $recs_ref, $g2pfam_ref ) = getBiosyntheticPfamHit
+		( $dbh, $taxon_oid, $cluster_id, \@sim_bcs, $gene_list );
         } else {
-            $recs_ref = getBiosyntheticBestHit( $dbh, $taxon_oid, $cluster_id, $mygene, 1 ) if $mygene ne "";
+            $recs_ref = getBiosyntheticBestHit
+		( $dbh, $taxon_oid, $cluster_id, $mygene, 1 ) if $mygene ne "";
         }
     }
 
@@ -2168,17 +2186,16 @@ sub loadNeighborhoods {
 
     my $hint = "Mouse over a gene to see details (once page has loaded).<br>";
     if ($cluster_id) {
-        $hint .=
-            "Click on the red dashed box <font color='red'><b>- - -</b>"
-          . "</font> for functions associated with this cluster.<br>";
-        $hint .=
-          "Click on the black dashed box <b>- - -</b> for functions " . "associated with a cluster for a best hit gene.<br>";
+        $hint .= "Click on the red dashed box <font color='red'><b>- - -</b>"
+	       . "</font> for functions associated with this cluster.<br>";
+        $hint .= "Click on the black dashed box <b>- - -</b> for functions "
+	       . "associated with a cluster for a best hit gene.<br>";
     }
-    $hint .=
-        "Genes are <font color='darkGreen'>colored</font> "
-      . "by <u>$title</u> association.<br>"
-      . "Light yellow colored genes have <b>no</b> $title association.";
-    $hint .= "<br/>Cluster neighborhood is flanked on each side by at least " . "10,000 additional base pairs.<br/>";
+    $hint .= "Genes are <font color='darkGreen'>colored</font> "
+	   . "by <u>$title</u> association.<br>"
+	   . "Light yellow colored genes have <b>no</b> $title association.";
+    $hint .= "<br/>Cluster neighborhood is flanked on each side by at least "
+	   . "10,000 additional base pairs.<br/>";
 
     my $curl = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
     my $clink = alink( $curl, $cluster_id );
@@ -2192,7 +2209,7 @@ sub loadNeighborhoods {
           . "<br/>Only the genes selected for similarity search are "
           . "colored on the cluster.</p>\n";
     } elsif ( $mygene ne "" ) {
-        my $gurl = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$mygene";
+        my $gurl = "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=$mygene";
         $gurl =
             "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
           . "&taxon_oid=$taxon_oid&data_type=assembled&gene_oid=$mygene"
@@ -2215,9 +2232,9 @@ sub loadNeighborhoods {
     }
     printHint($hint);
 
-    printNeighborhoodPanels(
-        $dbh,        \@clustergenes, \%s2q,        $cluster_h, \%scaffold_info, \%genes_h,
-        $cluster_id, $g2pfam_ref,    \@sortedScfs, $mygene,    $colorBy
+    printNeighborhoodPanels
+	($dbh, \@clustergenes, \%s2q, $cluster_h, \%scaffold_info, \%genes_h,
+	 $cluster_id, $g2pfam_ref, \@sortedScfs, $mygene, $colorBy
     );
     print "</div>";    # colordiv for reloading
 
@@ -2236,24 +2253,23 @@ sub getScaffoldInfo {
         and scf.scaffold_oid = ss.scaffold_oid
     };
     my $cur = execSql( $dbh, $sql, $verbose, $gene_oid );
-    my ( $scaffold_oid, $scaffold_name, $topology, $scf_length, $start_coord, $end_coord, $strand ) = $cur->fetchrow();
+    my ( $scaffold_oid, $scaffold_name, $topology, $scf_length,
+	 $start_coord, $end_coord, $strand ) = $cur->fetchrow();
     $cur->finish();
 
-    return ( $scaffold_oid, $scaffold_name, $topology, $scf_length, $start_coord, $end_coord, $strand );
+    return ( $scaffold_oid, $scaffold_name, $topology, $scf_length,
+	     $start_coord, $end_coord, $strand );
 }
 
 sub printNeighborhoodPanels {
-    my (
-        $dbh,        $all_cluster_genes, $s2q_href,       $cluster_href, $scf_info_href, $genes_href,
-        $cluster_id, $g2pfam_ref,        $sorted_scf_ref, $mygene,       $colorBy
-      )
-      = @_;
+    my ( $dbh, $all_cluster_genes, $s2q_href, $cluster_href, $scf_info_href, $genes_href,
+	 $cluster_id, $g2pfam_ref, $sorted_scf_ref, $mygene, $colorBy ) = @_;
 
     use GD;
     use RNAStudies;
-    my $im               = new GD::Image( 10, 10 );
+    my $im = new GD::Image( 10, 10 );
     my $color_array_file = $env->{large_color_array_file};
-    my @color_array      = RNAStudies::loadMyColorArray( $im, $color_array_file );
+    my @color_array = RNAStudies::loadMyColorArray( $im, $color_array_file );
 
     my $idx = 0;
     my %color_hash;
@@ -2465,18 +2481,18 @@ sub printNeighborhoodPanels {
 }
 
 sub printOneNeighborhood {
-    my ($dbh,          $gene_oid0,     $color_href, $start_coord0,   $end_coord0, $strand0,
-        $scaffold_oid, $scaffold_name, $topology,   $scf_seq_length, $genes_aref, $cluster_id0,
-        $taxon_oid,    $g2pfam_href,   $mygene,     $colorBy) = @_;
+    my ( $dbh, $gene_oid0, $color_href, $start_coord0, $end_coord0, $strand0,
+	 $scaffold_oid, $scaffold_name, $topology, $scf_seq_length, 
+	 $genes_aref, $cluster_id0, $taxon_oid, $g2pfam_href, $mygene,
+	 $colorBy ) = @_;
 
-    my $mid_coord   = int( ( $end_coord0 - $start_coord0 ) / 2 ) + $start_coord0 + 1;
-    my $left_flank  = $mid_coord - $flank_length + 1;
+    my $mid_coord = int(($end_coord0 - $start_coord0) / 2) + $start_coord0 + 1;
+    my $left_flank = $mid_coord - $flank_length + 1;
     my $right_flank = $mid_coord + $flank_length + 1;
 
-    my $min = 0;
-    my $max = 0;
-    if ( $cluster_id0 ne "" ) {
-        ( $min, $max ) = getBioClusterMinMax( $dbh, $cluster_id0 );
+    my $min = 0; my $max = 0;
+    if ($cluster_id0 ne "") {
+	($min, $max) = getBioClusterMinMax($dbh, $cluster_id0);
     }
 
     my $clusterid;
@@ -2486,10 +2502,9 @@ sub printOneNeighborhood {
     my $infile = MerFsUtil::isTaxonInFile( $dbh, $taxon_oid );
 
     if ( $gene_oid0 eq $mygene ) {
-        my $gurl = "$main_cgi?section=GeneDetail&page=geneDetail" . "&gene_oid=$mygene";
-        $gurl =
-            "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
-          . "&taxon_oid=$taxon_oid&data_type=assembled&gene_oid=$mygene"
+        my $gurl = "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=$mygene";
+        $gurl = "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
+	    . "&taxon_oid=$taxon_oid&data_type=assembled&gene_oid=$mygene"
           if $infile eq "Yes";
         my $link = alink( $gurl, $mygene );
         print "<p>You may select cluster gene $link and its best hit(s) into cart:";
@@ -2536,20 +2551,19 @@ sub printOneNeighborhood {
             order by g.start_coord, g.end_coord, bcf.cluster_id $myOrder
             };
         }
-        my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid, $left_flank, $right_flank, $left_flank, $right_flank );
+        my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+			   $left_flank, $right_flank, $left_flank, $right_flank );
 
         my %gene2fn;
         my %gene2info;
         my @genes;
         for ( ;; ) {
-            my (
-                $gene_oid,    $gene_symbol,   $gene_display_name, $locus_type,    $locus_tag,
-                $start_coord, $end_coord,     $strand,            $aa_seq_length, $cluster_id,
-                $scaffold,    $is_pseudogene, $cds_frag_coord,    $func_id
-              )
-              = $cur->fetchrow();
-            last if !$gene_oid;
-
+	    my ($gene_oid, $gene_symbol, $gene_display_name, 
+		$locus_type, $locus_tag, $start_coord, $end_coord, $strand,
+		$aa_seq_length, $cluster_id, $scaffold,
+		$is_pseudogene, $cds_frag_coord, $func_id) = $cur->fetchrow();
+	    last if !$gene_oid;
+	    
             if ( !exists $gene2info{$gene_oid} ) {
                 push @genes, $gene_oid;
             }
@@ -2594,10 +2608,10 @@ sub printOneNeighborhood {
         }
 
         foreach my $line (@genes_on_s) {
-            my ( $gene_oid, $locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $seq_id,
-                $source ) =
-              split( /\t/, $line );
-
+	    my ( $gene_oid, $locus_type, $locus_tag, $gene_display_name,
+		 $start_coord, $end_coord, $strand, $seq_id, $source ) =
+		     split( /\t/, $line );
+	    
             my $fn_str;
             if ( $colorBy eq "pfam" ) {
                 my @pfams = MetaUtil::getGenePfamId( $gene_oid, $taxon_oid, "assembled" );
@@ -2631,8 +2645,7 @@ sub printOneNeighborhood {
             $in_boundry = 1;
 
         } elsif ( $left_flank <= $scf_seq_length
-            && $right_flank >= $scf_seq_length )
-        {
+            && $right_flank >= $scf_seq_length ) {
 
             my $right_flank2 = $right_flank - $scf_seq_length;
             $lf1        = $left_flank;
@@ -2644,20 +2657,22 @@ sub printOneNeighborhood {
     }
 
     # create a plot - one scaffold / taxon per plot
-    my $tag         = "biosynthetic";
+    my $tag = "biosynthetic";
     my $panelStrand = $strand0;
 
     my $gurl = "$main_cgi?section=GeneDetail&page=geneDetail";
-    $gurl = "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail" . "&taxon_oid=$taxon_oid&data_type=assembled" if $infile;
-
+    $gurl = "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
+	  . "&taxon_oid=$taxon_oid&data_type=assembled" if $infile;
     # click on gene in cluster to get hits for that gene only:
-    $gurl = "$section_cgi&page=cluster_viewer&taxon_oid=$taxon_oid" . "&cluster_id=$cluster_id0" if $cluster_id0 ne "";
+    $gurl = "$section_cgi&page=cluster_viewer&taxon_oid=$taxon_oid"
+	  . "&cluster_id=$cluster_id0" if $cluster_id0 ne "";
 
-    my $tx_url  = "$main_cgi?section=TaxonDetail&page=taxonDetail" . "&taxon_oid=$taxon_oid";
-    my $scf_url = "$main_cgi?section=ScaffoldCart&page=scaffoldDetail" . "&scaffold_oid=$scaffold_oid&taxon_oid=$taxon_oid";
-    $scf_url =
-      "$main_cgi?section=MetaDetail" . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid" . "&scaffold_oid=$scaffold_oid"
-      if $infile;
+    my $tx_url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $scf_url = "$main_cgi?section=ScaffoldCart&page=scaffoldDetail"
+	        . "&scaffold_oid=$scaffold_oid&taxon_oid=$taxon_oid";
+    $scf_url = "$main_cgi?section=MetaDetail"
+	     . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid"
+	     . "&scaffold_oid=$scaffold_oid" if $infile;
 
     my $args = {
         id                 => "gn.$tag.$scaffold_oid.$start_coord0.x.$end_coord0.$$",
@@ -2679,16 +2694,14 @@ sub printOneNeighborhood {
         tx_url             => $scf_url
     };
 
-    my $cassette_url =
-        "$section_cgi&page=cassette_box&taxon_oid=$taxon_oid"
-      . "&infile=$infile&scaffold_oid=$scaffold_oid"
-      . "&cluster_id=$cluster_id0";
+    my $cassette_url = "$section_cgi&page=cassette_box&taxon_oid=$taxon_oid"
+	             . "&infile=$infile&scaffold_oid=$scaffold_oid"
+		     . "&cluster_id=$cluster_id0";
     my $clusturl = "$section_cgi&page=cluster_detail&cluster_id=$clusterid";
     $args->{cassette_base_url} = $cassette_url if $cluster_id0 ne "";
-    $args->{cassette_base_url} = $clusturl     if $clusterid   ne "";
+    $args->{cassette_base_url} = $clusturl if $clusterid ne "";
 
     my $sp = new GeneCassettePanel($args);
-
     #$sp->highlightGene($start_coord0, $end_coord0) if $gene_oid0 eq $mygene;
 
     my $color_array = $sp->{color_array};
@@ -2702,15 +2715,12 @@ sub printOneNeighborhood {
     }
 
     foreach my $r (@all_genes) {
-        my (
-            $gene_oid,    $gene_symbol,   $gene_display_name, $locus_type,    $locus_tag,
-            $start_coord, $end_coord,     $strand,            $aa_seq_length, $cluster_id,
-            $scaffold,    $is_pseudogene, $cds_frag_coord,    $func_id
-          )
-          = split( /\t/, $r );
+        my ( $gene_oid,    $gene_symbol,   $gene_display_name, $locus_type,    $locus_tag,
+	     $start_coord, $end_coord,     $strand,            $aa_seq_length, $cluster_id,
+	     $scaffold,    $is_pseudogene, $cds_frag_coord,    $func_id )
+	    = split( /\t/, $r );
         if ( $drawn_genes{"$start_coord-$end_coord"} > 0
-            && !( $start_coord >= $min && $end_coord <= $max ) )
-        {
+            && !( $start_coord >= $min && $end_coord <= $max ) ) {
             next;
         }
 
@@ -2778,22 +2788,18 @@ sub printOneNeighborhood {
         $bracketType2 = "left";
     }
     if ( $left_flank <= 1 ) {
-
-        #        if ( $topology eq "circular" ) {
-        #            $sp->addBracket( 1, "boundry" );
-        #        } else {
+        # if ($topology eq "circular") {
+        #     $sp->addBracket( 1, "boundry" );
+        # } else {
         $sp->addBracket( 1, $bracketType1 );
-
-        #        }
+        # }
     }
     if ( $left_flank <= $scf_seq_length && $scf_seq_length <= $right_flank ) {
-
-        #        if ( $topology eq "circular" ) {
-        #            $sp->addBracket( $scf_seq_length, "boundry" );
-        #        } else {
+        # if ($topology eq "circular") {
+        #     $sp->addBracket( $scf_seq_length, "boundry" );
+        # } else {
         $sp->addBracket( $scf_seq_length, $bracketType2 );
-
-        #        }
+        # }
     }
 
     # draw the dashed red box around the cluster only
@@ -2804,8 +2810,9 @@ sub printOneNeighborhood {
         my $max_cassette_end = $end_coord0;
         $max_cassette_end = $max if $end_coord0 > $max;
 
-        $sp->addCassetteBox( $min_cassette_start, $max_cassette_end, $gene_oid0, "cluster: $cluster_id0 ($min..$max)",
-            'bio' );
+        $sp->addCassetteBox
+	    ( $min_cassette_start, $max_cassette_end, $gene_oid0,
+	      "cluster: $cluster_id0 ($min..$max)", 'bio' );
         $box_done = 1;
     }
 
@@ -2820,8 +2827,9 @@ sub printOneNeighborhood {
 
         my $cbox_color = $sp->{color_black};
         $cbox_color = $sp->{color_red} if $mygene ne "";
-        $sp->addCassetteBox( $min_cassette_start, $max_cassette_end, $gene_oid0, "cluster: $clusterid ($min2..$max2)",
-            'bio', $cbox_color );
+        $sp->addCassetteBox
+	    ( $min_cassette_start, $max_cassette_end, $gene_oid0,
+	      "cluster: $clusterid ($min2..$max2)", 'bio', $cbox_color );
     }
 
     my $s = $sp->getMapHtml("overlib");
@@ -2870,7 +2878,6 @@ sub getBiosyntheticBestHit {
     my $bbh_file_name = $bbh_dir . "/" . $taxon_oid . ".zip";
 
     if ( !blankStr($bbh_file_name) && ( -e $bbh_file_name ) ) {
-
         # yes, we have file
     } else {
         return;
@@ -2912,8 +2919,9 @@ sub getBiosyntheticBestHit {
     if ($bbhlite) {
         my @bbhRows = WebUtil::getBBHLiteRows( $gene_oid, \%validTaxons );
         foreach my $r (@bbhRows) {
-            my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
-              split( /\t/, $r );
+            my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps,
+		 $qstart, $qend, $sstart, $send, $evalue, $bitScore )
+		= split( /\t/, $r );
             my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
             my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid );
             next if $slen > 1.3 * $qlen;
@@ -2943,8 +2951,9 @@ sub getBiosyntheticBestHit {
             chomp $s;
 
             # file should be ordered by desc bit score already
-            my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
-              split( /\t/, $s );
+            my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps,
+		 $qstart, $qend, $sstart, $send, $evalue, $bitScore )
+		= split( /\t/, $s );
             my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
             my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid );
 
@@ -2973,7 +2982,7 @@ sub getBiosyntheticBestHit {
 sub getBiosyntheticBestHitMERFS {
     my ( $dbh, $taxon_oid, $cluster_id, $mygene ) = @_;
     $taxon_oid = sanitizeInt($taxon_oid);
-    $mygene    = MetaUtil::sanitizeGeneId3($mygene);
+    $mygene = MetaUtil::sanitizeGeneId3($mygene);
 
     my %public_taxons;
     my $sql = qq{
@@ -3020,17 +3029,17 @@ sub printBiosyntheticCassette {
 sub printBioClusterViewer {
     my ( $taxon_oid, $cluster_id, $mygene, $colorBy ) = @_;
     if ( $taxon_oid eq "" ) {
-        $taxon_oid  = param("taxon_oid");
+        $taxon_oid = param("taxon_oid");
         $cluster_id = param("cluster_id");
-        $mygene     = param("gene_oid");
-        $colorBy    = param("color");
+        $mygene = param("gene_oid");
+        $colorBy = param("color");
     }
 
     my $dbh = dbLogin();
 
-    my $rclause   = WebUtil::urClause('t');
+    my $rclause = WebUtil::urClause('t');
     my $imgClause = WebUtil::imgClause('t');
-    my $sql       = qq{
+    my $sql = qq{
         select $nvl(t.taxon_name, t.taxon_display_name),
                t.genome_type, t.in_file
         from taxon t
@@ -3056,7 +3065,6 @@ sub printBioClusterViewer {
         $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid, $mygene );
         my ($gid) = $cur->fetchrow();
         if ( !$gid || $gid ne $mygene ) {
-
             # gene not in cluster, redirect to gene page:
             if ( $in_file eq "Yes" ) {
                 use MetaGeneDetail;
@@ -3110,7 +3118,7 @@ sub getBiosyntheticPfamHit {
 
     # get all taxons user can access
     my %public_taxons;
-    my $rclause   = WebUtil::urClause('t');
+    my $rclause = WebUtil::urClause('t');
     my $imgClause = WebUtil::imgClause('t');
 
     my $sql = qq{
@@ -3133,7 +3141,6 @@ sub getBiosyntheticPfamHit {
     my $gene_cond;
     foreach my $g2 (@genes) {
         if ( $g2 =~ /^\'/ ) {
-
             # already quoted
         } else {
             $g2 = "'" . $g2 . "'";
@@ -3145,8 +3152,8 @@ sub getBiosyntheticPfamHit {
         }
     }
 
-    my $sql2      = "select in_file from taxon where taxon_oid = ?";
-    my $cur2      = execSql( $dbh, $sql2, $verbose, $taxon_oid );
+    my $sql2 = "select in_file from taxon where taxon_oid = ?";
+    my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
     my ($in_file) = $cur2->fetchrow();
     $cur2->finish();
 
@@ -3174,8 +3181,8 @@ sub getBiosyntheticPfamHit {
                 and bcg.feature_id in ($gene_cond)
             };
         }
-
         $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid );
+
     } else {
         $sql = qq{
             select g.gene_oid, g.locus_tag, g.gene_display_name
@@ -3226,7 +3233,6 @@ sub getBiosyntheticPfamHit {
         $g2pfam{$gene_oid} = join( ", ", @pfams );
 
         foreach my $sim_bc (@$sim_aref) {
-
             # get taxon of this cluster
             my $sql2     = "select taxon from bio_cluster_new where cluster_id = ?";
             my $cur2     = execSql( $dbh, $sql2, $verbose, $sim_bc );
@@ -3254,7 +3260,6 @@ sub getBiosyntheticPfamHit {
             for ( ;; ) {
                 my ( $sgene_oid, $cnt2 ) = $cur2->fetchrow();
                 last if !$sgene_oid;
-
                 next if $cnt2 < scalar @pfams;
 
                 if ( $staxon && $public_taxons{$staxon} ) {
@@ -3323,7 +3328,6 @@ sub printBioClusterPathwayList {
 ###########################################################################
 sub printClusterPathwayList {
     my ( $dbh, $taxon_oid, $cluster_id, $hideTitle, $keyword ) = @_;
-
     if ( !$taxon_oid && !$cluster_id ) {
         return;
     }
@@ -3332,7 +3336,7 @@ sub printClusterPathwayList {
         print "<h2>IMG Pathways</h2>\n";
     }
 
-    my $rclause   = WebUtil::urClause('gif.taxon');
+    my $rclause = WebUtil::urClause('gif.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('gif.taxon');
 
     my $db_id = $cluster_id;
@@ -3444,11 +3448,13 @@ sub printClusterPathwayList {
         $count++;
 
         my $r;
-        $r .= $sd . "<input type='checkbox' name='func_id' " . "value='IPWAY:$pathway_oid' /> \t";
+        $r .= $sd . "<input type='checkbox' name='func_id' "
+	    . "value='IPWAY:$pathway_oid' /> \t";
 
         # pathway ID and name
         my $pway_oid = FuncUtil::pwayOidPadded($pathway_oid);
-        my $pway_url = "$section_cgi&page=pathwayEvidence" . "&pathway_oid=$pathway_oid" . "&taxon_oid=$taxon_oid";
+        my $pway_url = "$section_cgi&page=pathwayEvidence"
+	    . "&pathway_oid=$pathway_oid&taxon_oid=$taxon_oid";
         if ($cluster_id) {
             $pway_url .= "&cluster_id=$cluster_id";
         }
@@ -3463,7 +3469,8 @@ sub printClusterPathwayList {
         $r .= $pathway_name . $sd . $pathway_name . "\t";
 
         # gene count
-        my $url = "$main_cgi?section=ImgPwayBrowser&page=pwayAssocGeneList" . "&pway_oid=$pathway_oid&taxon_oid=$taxon_oid";
+        my $url = "$main_cgi?section=ImgPwayBrowser&page=pwayAssocGeneList"
+	    . "&pway_oid=$pathway_oid&taxon_oid=$taxon_oid";
         if ($cluster_id) {
             $url .= "&cluster_id=$cluster_id";
         }
@@ -3474,11 +3481,8 @@ sub printClusterPathwayList {
     $cur->finish();
 
     if ($count) {
-
-        #$it->hideAll() if $count < 10;
         $it->printOuterTable(1);
 
-        #my $name = "_section_FuncCartStor_addToFuncCart";
         my $name        = "_section_FuncCartStor_addIpwayToFuncCart";
         my $buttonLabel = "Add Selected to Function Cart";
         my $buttonClass = "meddefbutton";
@@ -3539,7 +3543,7 @@ sub printClusterMetacycList {
     #my $it = new InnerTable( 1, "MetaCycPathways$$", "MetaCycPathways", 0 );
     my $it = new StaticInnerTable();
     my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
+    $it->addColSpec( "Select" );
     $it->addColSpec( "MetaCyc Pathway ID", "asc",  "left" );
     $it->addColSpec( "MetaCyc Pathway",    "asc",  "left" );
     $it->addColSpec( "Gene Count",         "desc", "right" );
@@ -3551,10 +3555,13 @@ sub printClusterMetacycList {
         $count++;
 
         my $row;
-        $row .= $sd . "<input type='checkbox' name='func_id' " . "value='MetaCyc:$uid' /> \t";
+        $row .= $sd . "<input type='checkbox' name='func_id' "
+	    . "value='MetaCyc:$uid' /> \t";
 
-        my $pway_url =
-          "$main_cgi?section=MetaCyc" . "&page=detail&pathway_id=$uid" . "&taxon_oid=$taxon_oid" . "&cluster_id=$cluster_id";
+        my $pway_url = "$main_cgi?section=MetaCyc"
+	    . "&page=detail&pathway_id=$uid"
+	    . "&taxon_oid=$taxon_oid"
+	    . "&cluster_id=$cluster_id";
         $row .= $uid . $sd . alink( $pway_url, $uid ) . "\t";
 
         if ($keyword) {
@@ -3565,11 +3572,10 @@ sub printClusterMetacycList {
         }
         $row .= $category . $sd . $category . "\t";
 
-        my $url =
-            "$main_cgi?section=TaxonDetail"
-          . "&page=metaCycGenes&unique_id=$uid"
-          . "&taxon_oid=$taxon_oid"
-          . "&cluster_id=$cluster_id";
+        my $url = "$main_cgi?section=TaxonDetail"
+	    . "&page=metaCycGenes&unique_id=$uid"
+	    . "&taxon_oid=$taxon_oid"
+	    . "&cluster_id=$cluster_id";
         $row .= $gene_count . $sd . alink( $url, $gene_count );
         $count++;
 
@@ -3578,8 +3584,6 @@ sub printClusterMetacycList {
     $cur->finish();
 
     if ($count) {
-
-        #$it->hideAll() if $count < 10;
         $it->printOuterTable(1);
 
         #my $name = "_section_${section}_metaCycGenes";
@@ -3601,8 +3605,7 @@ sub printClusterMetacycList {
 
 ###########################################################################
 # printClusterMetacycList_meta: list all Metacyc pathways associated with
-#                          genes in this cluster
-# (for MER-FS)
+#                          genes in this cluster (for MER-FS)
 ###########################################################################
 sub printClusterMetacycList_meta {
     my ( $taxon_oid, $cluster_id, $keyword ) = @_;
@@ -3634,13 +3637,9 @@ sub printClusterMetacycList_meta {
     my %metacyc_h;
     my %metacyc_name_h;
     foreach my $gene_oid (@genes) {
-
         # get all enzymes of this gene
         my @enzymes = MetaUtil::getGeneEc( $gene_oid, $taxon_oid, 'assembled' );
-
-        if ( scalar(@enzymes) == 0 ) {
-            next;
-        }
+        next if ( scalar(@enzymes) == 0 );
 
         my $enzyme_list = "";
         foreach my $ec (@enzymes) {
@@ -3696,10 +3695,10 @@ sub printClusterMetacycList_meta {
         $count++;
 
         my $row;
-        $row .= $sd . "<input type='checkbox' name='func_id' " . "value='MetaCyc:$uid' /> \t";
+        $row .= $sd . "<input type='checkbox' name='func_id' value='MetaCyc:$uid' /> \t";
 
-        my $pway_url =
-          "$main_cgi?section=MetaCyc" . "&page=detail&pathway_id=$uid" . "&taxon_oid=$taxon_oid" . "&cluster_id=$cluster_id";
+        my $pway_url = "$main_cgi?section=MetaCyc&page=detail&pathway_id=$uid"
+	             . "&taxon_oid=$taxon_oid&cluster_id=$cluster_id";
         $row .= $uid . $sd . alink( $pway_url, $uid ) . "\t";
 
         if ($keyword) {
@@ -3710,11 +3709,10 @@ sub printClusterMetacycList_meta {
         }
         $row .= $category . $sd . $category . "\t";
 
-        my $url =
-            "$main_cgi?section=MetaDetail"
-          . "&page=metaCycGenes&unique_id=$uid"
-          . "&taxon_oid=$taxon_oid&data_type=assembled"
-          . "&cluster_id=$cluster_id";
+        my $url = "$main_cgi?section=MetaDetail"
+	    . "&page=metaCycGenes&unique_id=$uid"
+	    . "&taxon_oid=$taxon_oid&data_type=assembled"
+	    . "&cluster_id=$cluster_id";
         $row .= $gene_count . $sd . alink( $url, $gene_count );
         $count++;
 
@@ -3723,8 +3721,6 @@ sub printClusterMetacycList_meta {
     $cur->finish();
 
     if ($count) {
-
-        #$it->hideAll() if $count < 10;
         $it->printOuterTable(1);
 
         #my $name = "_section_${section}_metaCycGenes";
@@ -3806,8 +3802,6 @@ sub printClusterKEGGList {
     $cur->finish();
 
     if ($count) {
-
-        #$it->hideAll() if $count < 10;
         $it->printOuterTable(1);
     } else {
         print "<p>No KEGG Pathways.\n";
@@ -3815,9 +3809,278 @@ sub printClusterKEGGList {
 }
 
 ###########################################################################
-# printClusterKEGGList_meta: list all KEGG categories associated with
+# printClusterKoModuleList: list all KEGG Modules linked to
 #                       genes in this cluster
-# (for MER-FS)
+###########################################################################
+sub printClusterKoModuleList {
+    my ( $taxon_oid, $cluster_id ) = @_;
+
+    my $dbh       = dbLogin();
+    my $rclause   = WebUtil::urClause('bc.taxon');
+    my $imgClause = WebUtil::imgClauseNoTaxon('bc.taxon');
+
+    my $sql = qq{
+        select km.module_id, km.module_name, count( distinct bcf.feature_id )
+        from kegg_module km, km_image_roi roi,
+             gene_ko_terms gk, bio_cluster_features_new bcf,
+             bio_cluster_new bc
+        where km.module_id = roi.kegg_module
+        and gk.ko_terms = 'KO:' || roi.roi_label
+        and gk.gene_oid = bcf.gene_oid
+        and bcf.feature_type = 'gene'
+        and bcf.cluster_id = ?
+        and bcf.cluster_id = bc.cluster_id
+        and bc.taxon = ?
+        $rclause
+        $imgClause
+        group by km.module_id, km.module_name
+        order by km.module_id
+    };
+
+    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid );
+
+    print "<h2>KEGG Modules</h2>";
+
+    my $it = new StaticInnerTable();
+    my $sd = $it->getSdDelim();
+    $it->addColSpec( "KEGG Module", "asc",  "left" );
+    $it->addColSpec( "Module Name", "asc",  "left" );
+    $it->addColSpec( "Gene Count",      "desc", "right" );
+
+    my $count = 0;
+    for ( ;; ) {
+        my ( $module_id, $module_name, $gene_count ) = $cur->fetchrow();
+        last if !$module_id;
+        $count++;
+
+        my $row;
+	my $url = "$main_cgi?section=KeggPathwayDetail" .
+	    "&page=komodule&module_id=$module_id";
+	$row .= $module_id . $sd . alink($url, $module_id) . "\t";
+        $row .= escHtml($module_name) . "\t";
+	my $url2 = "$section_cgi&page=komodule_bcgene&module_id=$module_id" .
+	    "&taxon_oid=$taxon_oid&cluster_id=$cluster_id";
+        $row .= $gene_count . $sd . alink( $url2, $gene_count ) . "\t";
+        $it->addRow($row);
+        $count++;
+    }
+
+    $cur->finish();
+
+    if ($count) {
+        $it->printOuterTable(1);
+    } else {
+        print "<p>No KEGG Modules.\n";
+    }
+}
+
+##########################################################################
+# printKoModuleBCGenes
+##########################################################################
+sub printKoModuleBCGenes {
+    my ( $taxon_oid, $cluster_id, $module_id ) = @_;
+    $taxon_oid  = param("taxon_oid")  if $taxon_oid  eq "";
+    $cluster_id = param("cluster_id") if $cluster_id eq "";
+    $module_id = param("module_id") if $module_id eq "";
+
+    my $dbh = dbLogin();
+    my $sql = qq{
+            select bc.cluster_id, t.taxon_oid, t.in_file,
+                   $nvl(t.taxon_name, t.taxon_display_name)
+            from bio_cluster_new bc, taxon t
+            where bc.cluster_id = ?
+            and bc.taxon = t.taxon_oid
+        };
+    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+    my ( $id2, $taxon_oid2, $in_file, $taxon_name ) = $cur->fetchrow();
+    $cur->finish();
+    if ( !$taxon_oid || !isInt($taxon_oid) ) {
+	$taxon_oid = $taxon_oid2;
+    }
+
+    print "<h1>Cluster Genes in KEGG Module</h1>";
+
+    use TabHTML;
+    TabHTML::printTabAPILinks("bioKoModuleTab");
+    my @tabIndex = (
+        "#biokomodtab1", "#biokomodtab2"
+    );
+
+    my @tabNames = (
+        "Cluster Genes in Module",
+        "KEGG Module Map"
+    );
+
+    TabHTML::printTabDiv( "bioKoModuleTab", \@tabIndex, \@tabNames );
+    print "<div id='biokomodtab1'>";
+
+    print "<p style='width: 650px;'>";
+    my $url1 = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    print "Genome: " . alink( $url1, $taxon_name );
+    print " (assembled)" if $in_file eq "Yes";
+    my $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+    print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
+    my $url3 = "$main_cgi?section=KeggPathwayDetail" .
+	"&page=komodule&module_id=$module_id";
+    print "<br/>Module ID: " . alink( $url3, $module_id );
+    print "</p>";
+
+    my $sql = "select genome_type, in_file from taxon where taxon_oid = ?";
+    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
+    my ( $genome_type, $in_file ) = $cur->fetchrow();
+    $cur->finish();
+
+    my $sql = qq{
+        select distinct roi.roi_label
+        from km_image_roi roi
+        where roi.kegg_module = ?
+    };
+
+    my $cur = execSql( $dbh, $sql, $verbose, $module_id );
+    my @kos = ();
+    for (;;) {
+	my ($label) = $cur->fetchrow();
+	last if ! $label;
+
+	if ( $label =~ /K/ ) {
+	    my $ko = 'KO:' . $label;
+	    push @kos, ( $ko );
+	}
+    }
+    $cur->finish();
+
+    $sql = "";
+    my $isTaxonInFile = 0;
+    if ( $in_file eq 'Yes' ) {
+	$isTaxonInFile = 1;
+    }
+    if ( $isTaxonInFile ) {
+        $sql = qq{
+            select distinct bcg.feature_id, bcg.feature_id, bcg.feature_id
+            from bio_cluster_features_new bcg, bio_cluster_new bc
+            where bcg.cluster_id = ?
+            and bc.taxon = ?
+            and bc.cluster_id = bcg.cluster_id
+            and bcg.feature_type = 'gene'
+        };
+    } else {
+        $sql = qq{
+            select distinct bcg.feature_id, g.locus_tag, g.gene_display_name
+            from bio_cluster_features_new bcg, gene g
+            where bcg.cluster_id = ?
+            and g.taxon = ?
+            and bcg.feature_id = g.gene_oid
+            and bcg.feature_type = 'gene'
+        };
+    }
+
+    print start_form(
+        -id     => "bcgenes_frm",
+        -name   => "mainForm",
+        -action => "$main_cgi"
+    );
+
+    print hiddenVar( 'taxon_oid',  $taxon_oid );
+    print hiddenVar( 'cluster_id', $cluster_id );
+    print hiddenVar( 'module_id', $module_id );
+
+    print "<script src='$base_url/checkSelection.js'></script>\n";
+
+    my $it = new InnerTable( 1, "bcgenes$$", "bcgenes", 1 );
+    my $sd = $it->getSdDelim();
+    $it->addColSpec("Select");
+    $it->addColSpec( "Gene ID",           "asc", "right" );
+    $it->addColSpec( "Locus Tag",         "asc", "left" );
+    $it->addColSpec( "Gene Product Name", "asc", "left" );
+
+    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid );
+    my $row = 0;
+    for ( ;; ) {
+        my ( $gene_oid, $locus_tag, $gene_name ) = $cur->fetchrow();
+        last if ( !$gene_oid );
+
+	my $has_ko = 0;
+	for my $ko1 ( @kos ) {
+	    if ( KeggPathwayDetail::geneHasKo($dbh, $taxon_oid, $gene_oid, $ko1, $in_file) ) {
+		$has_ko = 1;
+		last;
+	    }
+	}
+	if ( ! $has_ko ) {
+	    next;
+	}
+
+#        if ($gene_aref) {
+#            push( @$gene_aref, $gene_oid );
+#        }
+
+        my $workspce_id = $gene_oid;
+        if ($isTaxonInFile) {
+            $workspce_id = "$taxon_oid assembled $gene_oid";
+        }
+
+        my $r = $sd . "<input type='checkbox' name='gene_oid' " . "value='$workspce_id' /> \t";
+
+        my $url = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene_oid";
+        if ($isTaxonInFile) {
+            $url =
+                "$main_cgi?section=MetaGeneDetail"
+              . "&page=geneDetail&gene_oid=$gene_oid"
+              . "&taxon_oid=$taxon_oid&data_type=assembled";
+        }
+        $r .= $gene_oid . $sd . alink( $url, $gene_oid ) . "\t";
+        $r .= $locus_tag . $sd . $locus_tag . "\t";
+
+        if ($isTaxonInFile) {
+            my ( $n2, $src2 ) = MetaUtil::getGeneProdNameSource( $gene_oid, $taxon_oid, 'assembled' );
+
+            if ($n2) {
+                $gene_name = $n2;
+            } else {
+                $gene_name = 'hypothetical protein';
+            }
+        }
+
+        $r .= $gene_name . $sd . $gene_name . "\t";
+
+        $it->addRow($r);
+        $row++;
+    }
+    $cur->finish();
+
+    WebUtil::printGeneCartFooter("bcgenes") if $row > 10;
+
+    print "<h2>Cluster Genes in Module</h2>";
+
+    if ( $row ) {
+	$it->printOuterTable(1);
+	WebUtil::printGeneCartFooter("bcgenes");
+    }
+    else {
+	print "<h3>Cannot find any genes.</h3>\n";
+    }
+    print "</div>";    # end biokomodtab1
+
+    print "<div id='biokomodtab2'>";
+    print "<h2>KEGG Module Map</h2>";
+    if ( $row ) {
+	KeggPathwayDetail::printViewModuleImageForm($dbh, $module_id, $taxon_oid, $cluster_id);
+    }
+    else {
+	print "<h3>No map.</h3>\n";
+    }
+    print "</div>";    # end biokomodtab2
+
+    TabHTML::printTabDivEnd();
+
+    print end_form();
+    printStatusLine( "$row genes in module.", 2 );
+}
+
+
+###########################################################################
+# printClusterKEGGList_meta: list all KEGG categories associated with
+#                       genes in this cluster (for MER-FS)
 ###########################################################################
 sub printClusterKEGGList_meta {
     my ( $taxon_oid, $cluster_id ) = @_;
@@ -3847,7 +4110,6 @@ sub printClusterKEGGList_meta {
 
     my %kegg_h;
     foreach my $gene_oid (@genes) {
-
         # get all KOs of this gene
         my @kos = MetaUtil::getGeneKoId( $gene_oid, $taxon_oid, 'assembled' );
         next if ( scalar(@kos) == 0 );
@@ -3911,11 +4173,123 @@ sub printClusterKEGGList_meta {
     $cur->finish();
 
     if ($count) {
-
-        #$it->hideAll() if $count < 10;
         $it->printOuterTable(1);
     } else {
         print "<p>No KEGG Pathways.\n";
+    }
+}
+
+###########################################################################
+# printClusterKoModuleList_meta: list all KEGG modules associated with
+#                       genes in this cluster
+# (for MER-FS)
+# FIXME
+###########################################################################
+sub printClusterKoModuleList_meta {
+    my ( $taxon_oid, $cluster_id ) = @_;
+    my $dbh       = dbLogin();
+    my $rclause   = WebUtil::urClause('bc.taxon');
+    my $imgClause = WebUtil::imgClauseNoTaxon('bc.taxon');
+
+    # get all genes in this cluster
+    my @genes = ();
+    my $sql   = qq{
+        select bcf.feature_id
+        from bio_cluster_features_new bcf, bio_cluster_new bc
+        where bc.cluster_id = ?
+        and bcf.feature_type = 'gene'
+        and bcf.cluster_id = bc.cluster_id
+        and bc.taxon = ?
+        $rclause
+        $imgClause
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid );
+    for ( ;; ) {
+        my ($gene_id) = $cur->fetchrow();
+        last if !$gene_id;
+        push @genes, ($gene_id);
+    }
+    $cur->finish();
+
+    my %kegg_h;
+    my %name_h;
+    foreach my $gene_oid (@genes) {
+
+        # get all KOs of this gene
+        my @kos = MetaUtil::getGeneKoId( $gene_oid, $taxon_oid, 'assembled' );
+        next if ( scalar(@kos) == 0 );
+
+        my $ko_list = "";
+	my $label_list = "";
+        foreach my $ko_id (@kos) {
+	    my ($k1, $label) = split(/\:/, $ko_id);
+            if ($ko_list) {
+                $ko_list .= ", '" . $ko_id . "'";
+            } else {
+                $ko_list = "'" . $ko_id . "'";
+            }
+	    if ( $label_list ) {
+		$label_list .= ", '" . $label . "'";
+	    }
+	    else {
+		$label_list = "'" . $label . "'";
+	    }
+        }
+
+        my $sql = qq{
+            select distinct km.module_id, km.module_name
+            from kegg_module km, km_image_roi roi
+            where km.module_id = roi.kegg_module
+            and roi.roi_label in ( $label_list )
+        };
+        my $cur = execSql( $dbh, $sql, $verbose );
+        for ( ;; ) {
+            my ($module_id, $module_name) = $cur->fetchrow();
+            last if !$module_id;
+
+            if ( $kegg_h{$module_id} ) {
+                $kegg_h{$module_id} += 1;
+            } else {
+                $kegg_h{$module_id} = 1;
+            }
+
+	    $name_h{$module_id} = $module_name;
+        }
+        $cur->finish();
+    }
+
+    print "<h2>KEGG Modules</h2>";
+
+    my $it = new StaticInnerTable();    # 1, "keggcats$$", "keggcats", 0 );
+    my $sd = $it->getSdDelim();
+    $it->addColSpec( "KEGG Module", "asc",  "left" );
+    $it->addColSpec( "Module Name", "asc",  "left" );
+    $it->addColSpec( "Gene Count",      "desc", "right" );
+
+    my $count = 0;
+    foreach my $module_id ( sort keys %kegg_h ) {
+        my $gene_count = $kegg_h{$module_id};
+        $count++;
+
+        my $row;
+        my $url = "$main_cgi?section=KeggPathwayDetail" . 
+            "&page=komodule&module_id=$module_id"; 
+        $row .= $module_id . $sd . alink($url, $module_id) . "\t"; 
+	my $module_name = $name_h{$module_id};
+        $row .= escHtml($module_name) . "\t"; 
+        my $url2 = "$section_cgi&page=komodule_bcgene&module_id=$module_id" . 
+            "&taxon_oid=$taxon_oid&cluster_id=$cluster_id";
+        $row .= $gene_count . $sd . alink( $url2, $gene_count ) . "\t";
+        $it->addRow($row); 
+        $count++;
+    }
+
+    $cur->finish();
+
+    if ($count) {
+        $it->printOuterTable(1);
+    } else {
+        print "<p>No KEGG Modules.\n";
     }
 }
 
@@ -3933,13 +4307,15 @@ sub printClusterPathwayEvidence {
         print "<h1>Genome Pathway</h1>\n";
     }
 
-    my $dbh            = dbLogin();
-    my $sql            = "select pathway_name from img_pathway where pathway_oid = ?";
-    my $cur            = execSql( $dbh, $sql, $verbose, $pway_oid );
+    my $dbh = dbLogin();
+    my $sql = "select pathway_name from img_pathway where pathway_oid = ?";
+    my $cur = execSql( $dbh, $sql, $verbose, $pway_oid );
     my ($pathway_name) = $cur->fetchrow();
     $cur->finish();
 
-    my $p_url = "$main_cgi?section=ImgPwayBrowser" . "&page=imgPwayDetail&pway_oid=$pway_oid" . "&taxon_oid=$taxon_oid";
+    my $p_url = "$main_cgi?section=ImgPwayBrowser"
+	      . "&page=imgPwayDetail&pway_oid=$pway_oid"
+	      . "&taxon_oid=$taxon_oid";
     if ($cluster_id) {
         $p_url .= "&cluster_id=$cluster_id";
     }
@@ -4394,7 +4770,7 @@ sub printBCNPForm {
     use GeneDetail;
     GeneDetail::printAttrRowRaw( "Cluster ID", $cluster_id );
 
-    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     my $link = alink( $url, $taxon_display_name );
     GeneDetail::printAttrRowRaw( "Genome", $link );
 
@@ -4432,13 +4808,14 @@ sub printBCNPForm {
             $cur = execSql( $dbh, $sql, $verbose, $compound_oid, $cluster_id );
         }
         my $cid;
-        ( $cid, $compound_name, $np_class, $np_sub_class, $ncbi_acc, $ncbi_taxon, $is_partial, $modified_by, $mod_date ) =
-          $cur->fetchrow();
+        ( $cid, $compound_name, $np_class, $np_sub_class,
+	  $ncbi_acc, $ncbi_taxon, $is_partial, $modified_by, $mod_date )
+	    = $cur->fetchrow();
         $cur->finish();
     }
 
     if ($compound_oid) {
-        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail" . "&compound_oid=$compound_oid";
+        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail&compound_oid=$compound_oid";
         GeneDetail::printAttrRowRaw( "IMG Compound ID", alink( $url2, $compound_oid ) );
     }
 
@@ -4466,14 +4843,15 @@ sub printBCNPForm {
 
     my $it = new InnerTable( 1, "imgCompound$$", "imgCompound", 1 );
     my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
-    $it->addColSpec( "Compound OID",  "number asc", "right" );
-    $it->addColSpec( "Compound Name", "char asc",   "left" );
-    $it->addColSpec( "DB Source",     "char asc",   "left" );
-    $it->addColSpec( "Ext Accession", "char asc",   "left" );
-    $it->addColSpec( "Formula",       "char asc",   "left" );
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Compound OID",  "asc", "right" );
+    $it->addColSpec( "Compound Name", "asc", "left" );
+    $it->addColSpec( "DB Source",     "asc", "left" );
+    $it->addColSpec( "Ext Accession", "asc", "left" );
+    $it->addColSpec( "Formula",       "asc", "left" );
 
-    my $sql = "select c.compound_oid, c.ext_accession, c.db_source, " . "c.compound_name, c.formula from img_compound c";
+    my $sql = "select c.compound_oid, c.ext_accession, c.db_source, "
+	. "c.compound_name, c.formula from img_compound c";
     my $cur = execSql( $dbh, $sql, $verbose );
 
     my $row = 0;
@@ -4604,7 +4982,7 @@ sub printBCNPForm_old {
     use GeneDetail;
     GeneDetail::printAttrRowRaw( "Cluster ID", $cluster_id );
 
-    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     my $link = alink( $url, $taxon_display_name );
     GeneDetail::printAttrRowRaw( "Genome", $link );
 
@@ -4648,7 +5026,11 @@ sub printBCNPForm_old {
         }
     } else {
         if ($gold_id) {
-            my $sql = "select p.project_oid from project_info\@imgsg_dev p " . "where p.gold_stamp_id = ? ";
+            my $sql = qq{
+                select p.project_oid
+                from project_info\@imgsg_dev p
+		where p.gold_stamp_id = ?
+            };
             my $cur = execSql( $dbh, $sql, $verbose, $gold_id );
             ($project_oid) = $cur->fetchrow();
             $cur->finish();
@@ -4667,7 +5049,8 @@ sub printBCNPForm_old {
 
     if ($np_product_name) {
         if ($np_product_link) {
-            GeneDetail::printAttrRowRaw( "Secondary Metabolite (SM) Name", alink( $np_product_link, $np_product_name ) );
+            GeneDetail::printAttrRowRaw
+		( "Secondary Metabolite (SM) Name", alink( $np_product_link, $np_product_name ) );
         } else {
             GeneDetail::printAttrRowRaw( "Secondary Metabolite (SM) Name", $np_product_name );
         }
@@ -4700,14 +5083,17 @@ sub printBCNPForm_old {
 
     my $it = new InnerTable( 1, "imgCompound$$", "imgCompound", 1 );
     my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
-    $it->addColSpec( "Compound OID",  "number asc", "right" );
-    $it->addColSpec( "Compound Name", "char asc",   "left" );
-    $it->addColSpec( "DB Source",     "char asc",   "left" );
-    $it->addColSpec( "Ext Accession", "char asc",   "left" );
-    $it->addColSpec( "Formula",       "char asc",   "left" );
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Compound OID",  "asc", "right" );
+    $it->addColSpec( "Compound Name", "asc", "left" );
+    $it->addColSpec( "DB Source",     "asc", "left" );
+    $it->addColSpec( "Ext Accession", "asc", "left" );
+    $it->addColSpec( "Formula",       "asc", "left" );
 
-    my $sql = "select c.compound_oid, c.ext_accession, c.db_source, " . "c.compound_name, c.formula from img_compound c";
+    my $sql = qq{
+        select c.compound_oid, c.ext_accession, c.db_source, 
+               c.compound_name, c.formula from img_compound c
+    };
     my $cur = execSql( $dbh, $sql, $verbose );
 
     my $row = 0;
@@ -4761,16 +5147,14 @@ sub printBCNPForm_old {
     }
     print "</select>\n";
 
-    print "<p>Genbank ID: " . nbsp(2) . "<input type='text' name='newGenbankID' value = '$genbank_id' size='40' />\n";
-    print "<p>Secondary Metabolite Link (URL): "
-      . nbsp(2)
-      . "<input type='text' name='newNpLink' value = '$np_product_link' size='60' maxLength='255' />\n";
-    print "<p>Secondary Metabolite Type: "
-      . nbsp(2)
-      . "<input type='text' name='newNpType' value = '$np_type' size='60' maxLength='128' />\n";
-    print "<p>Secondary Metabolite Activity: "
-      . nbsp(2)
-      . "<input type='text' name='newNpAct' value = '$activity' size='60' maxLength='500'/>\n";
+    print "<p>Genbank ID: " . nbsp(2)
+	. "<input type='text' name='newGenbankID' value = '$genbank_id' size='40' />\n";
+    print "<p>Secondary Metabolite Link (URL): " . nbsp(2)
+	. "<input type='text' name='newNpLink' value = '$np_product_link' size='60' maxLength='255' />\n";
+    print "<p>Secondary Metabolite Type: " . nbsp(2)
+	. "<input type='text' name='newNpType' value = '$np_type' size='60' maxLength='128' />\n";
+    print "<p>Secondary Metabolite Activity: " . nbsp(2)
+	. "<input type='text' name='newNpAct' value = '$activity' size='60' maxLength='500'/>\n";
 
     print "<p>\n";
     my $name = "_section_${section}_dbAddNP";
@@ -4843,20 +5227,20 @@ sub printConfirmDeleteBCNPForm {
     use GeneDetail;
     GeneDetail::printAttrRowRaw( "Cluster ID", $cluster_id );
 
-    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     my $link = alink( $url, $taxon_display_name );
     GeneDetail::printAttrRowRaw( "Genome", $link );
 
-    my $ncbi_acc   = "";
+    my $ncbi_acc = "";
     my $ncbi_taxon = "";
 
-    my $np_class      = "";
-    my $np_sub_class  = "";
+    my $np_class = "";
+    my $np_sub_class = "";
     my $compound_name = "";
     my $is_partial;
 
     my $modified_by = "";
-    my $mod_date    = "";
+    my $mod_date = "";
 
     my $sql;
     my $cur;
@@ -4880,26 +5264,24 @@ sub printConfirmDeleteBCNPForm {
         $cur = execSql( $dbh, $sql, $verbose, $compound_oid, $cluster_id );
     }
     my $cid;
-    ( $cid, $compound_name, $np_class, $np_sub_class, $ncbi_acc, $ncbi_taxon, $is_partial, $modified_by, $mod_date ) =
-      $cur->fetchrow();
+    ( $cid, $compound_name, $np_class, $np_sub_class, $ncbi_acc,
+      $ncbi_taxon, $is_partial, $modified_by, $mod_date )
+	= $cur->fetchrow();
     $cur->finish();
 
     if ($compound_oid) {
-        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail" . "&compound_oid=$compound_oid";
+        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail&compound_oid=$compound_oid";
         GeneDetail::printAttrRowRaw( "IMG Compound ID", alink( $url2, $compound_oid ) );
     }
-
     if ($compound_name) {
         GeneDetail::printAttrRowRaw( "Secondary Metabolite (SM) Name", $compound_name );
     }
-
     if ($np_class) {
         GeneDetail::printAttrRowRaw( "SM Class", $np_class );
     }
     if ($np_sub_class) {
         GeneDetail::printAttrRowRaw( "SM Subclass", $np_sub_class );
     }
-
     if ($modified_by) {
         GeneDetail::printAttrRowRaw( "Modified By", $modified_by );
     }
@@ -4928,9 +5310,9 @@ sub printConfirmDeleteBCNPForm {
 # dbAddNP: SQL insertion
 ############################################################################
 sub dbAddNP {
-    my $msg          = "";
-    my $cluster_id   = param('cluster_id');
-    my $taxon_oid    = param('taxon_oid');
+    my $msg = "";
+    my $cluster_id = param('cluster_id');
+    my $taxon_oid = param('taxon_oid');
     my $compound_oid = param('compound_oid');
 
     my $super_user = getSuperUser();
@@ -4938,17 +5320,14 @@ sub dbAddNP {
         $msg = "Error: You do not have privilege to update SM information.";
         return $msg;
     }
-
     if ( !$cluster_id || !$taxon_oid ) {
         $msg = "Error: Incomplete Data. SM info cannot be updated.";
         return $msg;
     }
-
     if ( !isInt($taxon_oid) ) {
         $msg = "Incorrect taxon OID.";
         return $msg;
     }
-
     if ( !$compound_oid ) {
         $msg = "No compound has been selected.";
         return $msg;
@@ -4961,8 +5340,10 @@ sub dbAddNP {
     }
 
     my $dbh  = dbLogin();
-    my $sql1 =
-      "select count(*) from np_biosynthesis_source " . "where cluster_id = ? and taxon_oid = ? and compound_oid = ? ";
+    my $sql1 = qq{
+        select count(*) from np_biosynthesis_source 
+        where cluster_id = ? and taxon_oid = ? and compound_oid = ?
+    };
     my $cur1 = execSql( $dbh, $sql1, $verbose, $cluster_id, $taxon_oid, $compound_oid );
     my ($cnt1) = $cur1->fetchrow();
     $cur1->finish();
@@ -4981,12 +5362,12 @@ sub dbAddNP {
     $cluster_id =~ s/'/''/g;    # replace ' with ''
     $ncbi_acc   =~ s/'/''/g;    # replace ' with ''
 
-    my $sql =
-        "insert into np_biosynthesis_source (cluster_id, "
-      . "taxon_oid, compound_oid, ncbi_acc, ncbi_taxon, "
-      . "is_partial, modified_by, mod_date) values (" . "'"
-      . $cluster_id
-      . "', $taxon_oid, $compound_oid";
+    my $sql = 
+	  "insert into np_biosynthesis_source (cluster_id, "
+	. "taxon_oid, compound_oid, ncbi_acc, ncbi_taxon, "
+	. "is_partial, modified_by, mod_date) values (" . "'"
+	. $cluster_id
+	. "', $taxon_oid, $compound_oid";
     if ($ncbi_acc) {
         $sql .= ", '" . $ncbi_acc . "'";
     } else {
@@ -5080,7 +5461,11 @@ sub dbAddNP_old {
             return $msg;
         }
 
-        my $sql3 = "select compound_name from img_compound where compound_oid = ? ";
+        my $sql3 = qq{
+            select compound_name
+            from img_compound
+            where compound_oid = ?
+        };
         my $cur3 = execSql( $dbh, $sql3, $verbose, $compound_oid );
         ($np_name) = $cur3->fetchrow();
         $cur3->finish();
@@ -5180,8 +5565,10 @@ sub dbUpdateNP {
     my $dbh  = dbLogin();
     my $cnt1 = 0;
     if ( $compound_oid != $db_compound_oid ) {
-        my $sql1 =
-          "select count(*) from np_biosynthesis_source " . "where cluster_id = ? and taxon_oid = ? and compound_oid = ? ";
+        my $sql1 = qq{
+            select count(*) from np_biosynthesis_source 
+            where cluster_id = ? and taxon_oid = ? and compound_oid = ?
+        };
         my $cur1 = execSql( $dbh, $sql1, $verbose, $cluster_id, $taxon_oid, $compound_oid );
         ($cnt1) = $cur1->fetchrow();
         $cur1->finish();
@@ -5223,7 +5610,9 @@ sub dbUpdateNP {
     $db_cluster_id =~ s/'/''/g;    # replace ' with '' if any
     $sql .= ", modified_by = $contact_oid, mod_date = sysdate ";
     $sql .=
-      " where taxon_oid = $taxon_oid " . "and cluster_id = '" . $cluster_id . "'" . "and compound_oid = $db_compound_oid";
+	" where taxon_oid = $taxon_oid "
+      . "and cluster_id = '" . $cluster_id . "'"
+      . "and compound_oid = $db_compound_oid";
 
     # perform database update
     my @sqlList = ($sql);
@@ -5266,7 +5655,11 @@ sub dbUpdateNP_old {
         }
 
         my $dbh  = dbLogin();
-        my $sql3 = "select compound_name from img_compound where compound_oid = ? ";
+        my $sql3 = qq{
+            select compound_name
+            from img_compound
+            where compound_oid = ?
+        };
         my $cur3 = execSql( $dbh, $sql3, $verbose, $compound_oid );
         ($np_name) = $cur3->fetchrow();
         $cur3->finish();
@@ -5371,7 +5764,9 @@ sub dbDeleteNP {
 
     my $sql = "delete from np_biosynthesis_source ";
     $sql .=
-      " where taxon_oid = $taxon_oid " . "and cluster_id = '" . $cluster_id . "'" . "and compound_oid = $db_compound_oid";
+	" where taxon_oid = $taxon_oid "
+      . "and cluster_id = '" . $cluster_id . "'"
+      . "and compound_oid = $db_compound_oid";
 
     # perform database update
     my @sqlList = ($sql);
@@ -5479,30 +5874,25 @@ sub printMyIMGBCNPForm {
             $cur = execSql( $dbh, $sql, $verbose, $compound_oid, $cluster_id, $contact_oid );
         }
         my $cid;
-        (
-            $cid,        $compound_name, $np_class,  $np_sub_class, $ncbi_acc,
-            $ncbi_taxon, $is_partial,    $is_public, $comments,     $mod_date
-          )
-          = $cur->fetchrow();
+        ( $cid, $compound_name, $np_class, $np_sub_class, $ncbi_acc,
+	  $ncbi_taxon, $is_partial, $is_public, $comments, $mod_date )
+	    = $cur->fetchrow();
         $cur->finish();
     }
 
     if ($compound_oid) {
-        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail" . "&compound_oid=$compound_oid";
+        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail&compound_oid=$compound_oid";
         GeneDetail::printAttrRowRaw( "IMG Compound ID", alink( $url2, $compound_oid ) );
     }
-
     if ($compound_name) {
         GeneDetail::printAttrRowRaw( "Secondary Metabolite (SM) Name", $compound_name );
     }
-
     if ($np_class) {
         GeneDetail::printAttrRowRaw( "SM Class", $np_class );
     }
     if ($np_sub_class) {
         GeneDetail::printAttrRowRaw( "SM Subclass", $np_sub_class );
     }
-
     if ($mod_date) {
         GeneDetail::printAttrRowRaw( "Mod Date", $mod_date );
     }
@@ -5513,14 +5903,18 @@ sub printMyIMGBCNPForm {
 
     my $it = new InnerTable( 1, "imgCompound$$", "imgCompound", 1 );
     my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
-    $it->addColSpec( "Compound OID",  "number asc", "right" );
-    $it->addColSpec( "Compound Name", "char asc",   "left" );
-    $it->addColSpec( "DB Source",     "char asc",   "left" );
-    $it->addColSpec( "Ext Accession", "char asc",   "left" );
-    $it->addColSpec( "Formula",       "char asc",   "left" );
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Compound OID",  "asc", "right" );
+    $it->addColSpec( "Compound Name", "asc", "left" );
+    $it->addColSpec( "DB Source",     "asc", "left" );
+    $it->addColSpec( "Ext Accession", "asc", "left" );
+    $it->addColSpec( "Formula",       "asc", "left" );
 
-    my $sql = "select c.compound_oid, c.ext_accession, c.db_source, " . "c.compound_name, c.formula from img_compound c";
+    my $sql = qq{
+        select c.compound_oid, c.ext_accession, c.db_source,
+	       c.compound_name, c.formula
+        from img_compound c
+    };
     my $cur = execSql( $dbh, $sql, $verbose );
 
     my $row = 0;
@@ -5595,7 +5989,8 @@ sub printMyIMGBCNPForm {
     }
     print "</select>\n";
 
-    print "<p>Comments: " . nbsp(2) . "<input type='text' name='comments' value = '$comments' size='60' maxLength='255'/>\n";
+    print "<p>Comments: " . nbsp(2)
+	. "<input type='text' name='comments' value = '$comments' size='60' maxLength='255'/>\n";
 
     print "<p>\n";
     my $name = "_section_${section}_dbAddMyIMGNP";
@@ -5654,11 +6049,9 @@ sub printConfirmDeleteMyIMGBCNPForm {
 
     my $dbh = dbLogin();
     my $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid, $compound_oid, $contact_oid );
-    my (
-        $c_id,         $tx_id,    $taxon_display_name, $cpd_id,   $compound_name, $np_class,
-        $np_sub_class, $ncbi_acc, $ncbi_taxon,         $comments, $mod_date
-      )
-      = $cur->fetchrow();
+    my ( $c_id, $tx_id, $taxon_display_name, $cpd_id, $compound_name, $np_class,
+        $np_sub_class, $ncbi_acc, $ncbi_taxon, $comments, $mod_date )
+	= $cur->fetchrow();
     $cur->finish();
 
     if ( !$c_id || !$tx_id || !$cpd_id ) {
@@ -5678,37 +6071,32 @@ sub printConfirmDeleteMyIMGBCNPForm {
     use GeneDetail;
     GeneDetail::printAttrRowRaw( "Cluster ID", $cluster_id );
 
-    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     my $link = alink( $url, $taxon_display_name );
     GeneDetail::printAttrRowRaw( "Genome", $link );
 
     if ($compound_oid) {
-        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail" . "&compound_oid=$compound_oid";
+        my $url2 = "$main_cgi?section=$section&page=imgCpdDetail&compound_oid=$compound_oid";
         GeneDetail::printAttrRowRaw( "IMG Compound ID", alink( $url2, $compound_oid ) );
     }
-
     if ($compound_name) {
         GeneDetail::printAttrRowRaw( "Secondary Metabolite (SM) Name", $compound_name );
     }
-
     if ($np_class) {
         GeneDetail::printAttrRowRaw( "SM Class", $np_class );
     }
     if ($np_sub_class) {
         GeneDetail::printAttrRowRaw( "SM Subclass", $np_sub_class );
     }
-
     if ($ncbi_acc) {
         GeneDetail::printAttrRowRaw( "NCBI Accession", $ncbi_acc );
     }
     if ($ncbi_taxon) {
         GeneDetail::printAttrRowRaw( "NCBI Taxon ID", $ncbi_taxon );
     }
-
     if ($comments) {
         GeneDetail::printAttrRowRaw( "Comments", $comments );
     }
-
     if ($mod_date) {
         GeneDetail::printAttrRowRaw( "Mod Date", $mod_date );
     }
@@ -5763,10 +6151,12 @@ sub dbAddMyIMGNP {
     my $contact_oid = getContactOid();
 
     my $dbh  = dbLogin();
-    my $sql1 =
-        "select count(*) from myimg_bio_cluster_np "
-      . "where cluster_id = ? and taxon_oid = ? "
-      . "and compound_oid = ? and modified_by = ? ";
+    my $sql1 = qq{
+        select count(*)
+        from myimg_bio_cluster_np
+        where cluster_id = ? and taxon_oid = ?
+        and compound_oid = ? and modified_by = ?
+    };
     my $cur1 = execSql( $dbh, $sql1, $verbose, $cluster_id, $taxon_oid, $compound_oid, $contact_oid );
     my ($cnt1) = $cur1->fetchrow();
     $cur1->finish();
@@ -5875,10 +6265,12 @@ sub dbUpdateMyIMGNP {
     my $dbh  = dbLogin();
     my $cnt1 = 0;
     if ( $compound_oid != $db_compound_oid ) {
-        my $sql1 =
-            "select count(*) from myimg_bio_cluster_np "
-          . "where cluster_id = ? and taxon_oid = ? "
-          . "and compound_oid = ? and modified_by = ? ";
+        my $sql1 = qq{
+            select count(*)
+            from myimg_bio_cluster_np
+            where cluster_id = ? and taxon_oid = ?
+            and compound_oid = ? and modified_by = ?
+        };
         my $cur1 = execSql( $dbh, $sql1, $verbose, $cluster_id, $taxon_oid, $compound_oid, $contact_oid );
         ($cnt1) = $cur1->fetchrow();
         $cur1->finish();
@@ -6010,8 +6402,9 @@ sub printBiosyntheticClusters {
     }
 
     my $taxon_oid = param("taxon_oid");
-    my $dbh       = dbLogin();
-    processBiosyntheticClusters( $dbh, $taxon_oid, '', '', "Biosynthetic Clusters for Genome" );
+    my $dbh = dbLogin();
+    processBiosyntheticClusters
+	( $dbh, $taxon_oid, '', '', "Biosynthetic Clusters for Genome" );
 }
 
 ###########################################################################
@@ -6019,12 +6412,11 @@ sub printBiosyntheticClusters {
 # input either ($taxon_id and/or $cluster_ids_ref) or $clusterId2taxons_href
 ###########################################################################
 sub processBiosyntheticClusters {
-    my ( $dbh, $taxon_id, $cluster_ids_ref, $clusterId2taxons_href, $title, $subTitle ) = @_;
+    my ( $dbh, $taxon_id, $cluster_ids_ref, $clusterId2taxons_href,
+	 $title, $subTitle ) = @_;
 
-    if (   !$taxon_id
-        && $cluster_ids_ref       eq ''
-        && $clusterId2taxons_href eq '' )
-    {
+    if ( !$taxon_id && $cluster_ids_ref eq '' &&
+         $clusterId2taxons_href eq '' ) {
         webError("No Biosynthetic Cluster or Taxon!");
     }
 
@@ -6037,12 +6429,13 @@ sub processBiosyntheticClusters {
     my $taxon_clause;
     my @binds;
     my %validateTaxon2;
+
     if ($taxon_id) {
         $taxon_clause = " and g.taxon = ? ";
         push( @binds, $taxon_id );
         $validateTaxon2{$taxon_id} = $taxon_id;
-    } elsif ($clusterId2taxons_href) {
 
+    } elsif ($clusterId2taxons_href) {
         #print "processBiosyntheticClusters() clusterId2taxons_href=<br/>\n";
         #print Dumper($clusterId2taxons_href) . "<br/>\n";
         my @taxon_ids;
@@ -6066,7 +6459,7 @@ sub processBiosyntheticClusters {
 
     print "<br/>Getting gene count per cluster...<br/>\n";
     my $cacheFile01 = "allGeneCountPerCluster01";
-    my $sql         = qq{
+    my $sql = qq{
         select g.cluster_id, g.taxon, g.scaffold, 
                count(distinct bcf.feature_id)
         from bio_cluster_features_new bcf, bio_cluster_new g
@@ -6080,6 +6473,7 @@ sub processBiosyntheticClusters {
     };
 
     my %validateTaxons = WebUtil::getAllTaxonsHashed($dbh);
+
     my %validateClusters;
     if ( $cluster_ids_ref ne '' ) {
         %validateClusters = WebUtil::array2Hash(@$cluster_ids_ref);
@@ -6095,6 +6489,7 @@ sub processBiosyntheticClusters {
     foreach my $inner_aref (@$aref) {
         my ( $cluster_id, $taxon_oid, $scaffold_oid, $gene_count ) = @$inner_aref;
         last if !$cluster_id;
+
         next if ( $taxon_id ne '' && $taxon_id ne $taxon_oid );
         next if ( $cluster_ids_ref ne ''
             && !exists $validateClusters{$cluster_id} );
@@ -6118,8 +6513,8 @@ sub processBiosyntheticClusters {
     }
 
     my @taxon_oids = keys %taxons_h;
-    my ( $taxon2name_href, $taxon_in_file_href, $taxon_db_href, $taxon_oids_str ) =
-      QueryUtil::fetchTaxonsOidAndNameFile( $dbh, \@taxon_oids );
+    my ( $taxon2name_href, $taxon_in_file_href, $taxon_db_href, $taxon_oids_str )
+	= QueryUtil::fetchTaxonsOidAndNameFile( $dbh, \@taxon_oids );
 
     print "Getting pfam count per cluster (isolate taxons) ...<br/>\n";
     ## count experimental
@@ -6226,7 +6621,7 @@ sub processBiosyntheticClusters {
     #  \@binds, $rclause, $imgClause );
 
     OracleUtil::truncTable( $dbh, "gtt_func_id" )
-      if ( $cluster_ids_clause =~ /gtt_func_id/i );
+	if ( $cluster_ids_clause =~ /gtt_func_id/i );
 
     printEndWorkingDiv();
 
@@ -6271,7 +6666,7 @@ sub processBiosyntheticClusters {
     if ( scalar( keys %$taxon_in_file_href ) > 0 ) {
         $disp = "left";
     }
-    $it->addColSpec("Select");
+    $it->addColSpec( "Select" );
     $it->addColSpec( "Cluster ID", "asc",  $disp );
     $it->addColSpec( "Gene Count", "desc", "right" );
     if ( !$hideTaxonCol ) {
@@ -6348,7 +6743,8 @@ sub processBiosyntheticClusters {
             if ( !$hideTaxonCol ) {
                 $t_url = "$main_cgi?section=TaxonDetail&taxon_oid=$taxon_oid";
             }
-            $s_url = "$main_cgi?section=ScaffoldCart" . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
+            $s_url = "$main_cgi?section=ScaffoldCart"
+		   . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
         }
         if ( !$hideTaxonCol ) {
             $r .= $taxon_name . $sd . alink( $t_url, $taxon_name ) . "\t";
@@ -6392,7 +6788,7 @@ sub processBiosyntheticClusters {
                 $np_links .= '<br/>';
             }
             $np_ids .= $np;
-            my $nplink = "$main_cgi?section=ImgCompound" . "&page=imgCpdDetail&compound_oid=$np";
+            my $nplink = "$main_cgi?section=ImgCompound&page=imgCpdDetail&compound_oid=$np";
             $np_links .= alink( $nplink, $np );
             my $np_name = $npId2name{$np};
             $np_links .= "  $np_name";
@@ -6402,7 +6798,8 @@ sub processBiosyntheticClusters {
 
         my $pfam_count = $bcid2pfamCnt{$cluster_id};
         if ( $pfam_count > 0 ) {
-            my $url3 = "$section_cgi&page=bioClusterPfamList&taxon_oid=$taxon_oid" . "&type=bio&cluster_id=$cluster_id";
+            my $url3 = "$section_cgi&page=bioClusterPfamList&taxon_oid=$taxon_oid"
+		     . "&type=bio&cluster_id=$cluster_id";
             $r .= $pfam_count . $sd . alink( $url3, $pfam_count ) . "\t";
         } else {
             $r .= $sd . "\t";
@@ -6600,7 +6997,7 @@ sub printBiosyntheticMetaGenes {
     my $taxon_name = WebUtil::taxonOid2Name( $dbh, $taxon_oid, 1 );
     $taxon_name = HtmlUtil::printMetaTaxonName( $taxon_oid, $taxon_name, $data_type );
 
-    my $cluster_url_base = "main.cgi?section=BiosyntheticDetail" . "&page=cluster_detail&cluster_id=";
+    my $cluster_url_base = "main.cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=";
     if ( scalar(@bc_ids) == 1 ) {
         print "<p>";
         foreach my $bc_id (@bc_ids) {
@@ -6652,31 +7049,32 @@ sub printBiosyntheticMetaGenes {
           if ( $idClause =~ /gtt_func_id/i );
 
         if ( scalar(@meta_gene_oids) > 0 ) {
-            %gene2name_h = MetaUtil::getGeneProdNamesForTaxonGenes( $taxon_oid, $data_type, \@meta_gene_oids );
+            %gene2name_h = MetaUtil::getGeneProdNamesForTaxonGenes
+		( $taxon_oid, $data_type, \@meta_gene_oids );
         }
 
     }
 
     my $it = new InnerTable( 1, "genelist$$", "genelist", 1 );
     my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
-    $it->addColSpec( "Gene ID",           "asc", "left" );
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Gene ID", "asc", "left" );
     $it->addColSpec( "Gene Product Name", "asc", "left" );
     if ( scalar(@bc_ids) != 1 ) {
         $it->addColSpec( "Cluster ID", "asc", "left" );
     }
 
     my $select_id_name = "gene_oid";
-    my $gene_count     = 0;
-    my $trunc          = 0;
+    my $gene_count = 0;
+    my $trunc = 0;
 
     foreach my $workspace_id ( keys %genes_h ) {
         my ( $t2, $d2, $gene_oid ) = split( / /, $workspace_id );
 
         my $r;
         $r .= $sd . "<input type='checkbox' name='$select_id_name' value='$workspace_id' />" . "\t";
-        my $url =
-          "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail" . "&gene_oid=$gene_oid" . "&taxon_oid=$t2&data_type=$d2";
+        my $url = "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
+	    . "&gene_oid=$gene_oid" . "&taxon_oid=$t2&data_type=$d2";
         $r .= $workspace_id . $sd . alink( $url, $gene_oid ) . "\t";
 
         my $gene_name = $gene2name_h{$gene_oid};
@@ -6698,7 +7096,9 @@ sub printBiosyntheticMetaGenes {
     }
 
     if ( $gene_count == 0 ) {
-        print "<p><font color='red'>" . "Could not find genes for Biosynthetic Cluster @bc_ids " . "</font></p>";
+        print "<p><font color='red'>"
+	    . "Could not find genes for Biosynthetic Cluster @bc_ids "
+	    . "</font></p>";
         print end_form();
         return;
     }
@@ -6716,7 +7116,8 @@ sub printBiosyntheticMetaGenes {
     my $s;
     if ($trunc) {
         $s = "Results limited to $maxGeneListResults genes.\n";
-        $s .= "( Go to " . alink( $preferences_url, "Preferences" ) . " to change \"Max. Gene List Results\". )\n";
+        $s .= "( Go to " . alink( $preferences_url, "Preferences" )
+	    . " to change \"Max. Gene List Results\". )\n";
     } else {
         $s = "$gene_count gene(s) loaded";
     }
@@ -6732,9 +7133,11 @@ sub printBiosyntheticIsolateGenes {
     my $taxon_oid = param("taxon_oid");
 
     my ( $sql, $extrasql ) = QueryUtil::getSingleTaxonBiosyntheticGenesSqls($taxon_oid);
-    my $url = "$main_cgi?section=BiosyntheticDetail" . "&page=cluster_detail&cluster_id=";
-    TaxonDetailUtil::printGeneListSectionSorting2( $taxon_oid, $sql, "Biosynthetic Cluster Genes",
-        1, "Cluster ID", $extrasql, $url );
+    my $url = "$main_cgi?section=BiosyntheticDetail"
+	. "&page=cluster_detail&cluster_id=";
+    TaxonDetailUtil::printGeneListSectionSorting2
+	( $taxon_oid, $sql, "Biosynthetic Cluster Genes",
+	  1, "Cluster ID", $extrasql, $url );
 }
 
 ###########################################################################
@@ -6788,7 +7191,7 @@ sub printSimilarBCGF {
     print hiddenVar( 'gene_list',  $glist );
 
     my ($taxon_name) = QueryUtil::fetchSingleTaxonNvlName( $dbh, $taxon_oid );
-    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     print "<p>Genome: " . alink( $url, $taxon_name );
     my $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
     print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
@@ -6910,7 +7313,7 @@ sub printSimilarBCGF {
     }
 
     my $clusterClause = " where bcd.cluster_id $cluster_str ";
-    my $sql           = qq{
+    my $sql = qq{
         select bcd.cluster_id, bcd.attribute_type, bcd.attribute_value
         from bio_cluster_data_new bcd
         $clusterClause
@@ -6990,11 +7393,7 @@ sub printSimilarBCGF {
 
     my $count = 0;
     foreach my $bc_id (@clusters) {
-        if ( $bc_id eq $cluster_id ) {
-
-            # the same one
-            next;
-        }
+        next if ( $bc_id eq $cluster_id );
 
         my $cur2 = execSql( $dbh, $bc_taxon_sql, $verbose, $bc_id );
         my ( $t_id, $t_name, $in_file ) = $cur2->fetchrow();
@@ -7004,7 +7403,7 @@ sub printSimilarBCGF {
             next;
         }
 
-        my $cluster_url = "$section_cgi&page=cluster_detail" . "&cluster_id=$bc_id";
+        my $cluster_url = "$section_cgi&page=cluster_detail&cluster_id=$bc_id";
 
         my $r .= $sd . "<input type='checkbox' name='bc_id' value='$bc_id' />" . "\t";
 
@@ -7058,7 +7457,8 @@ sub printSimilarBCGF {
         my $gene_count = getGeneCountForCluster( $dbh, $t_id, $in_file, $bc_id );
         my $link = $gene_count;
         if ($gene_count) {
-            my $bcgenes_url = "$section_cgi&page=bcGeneList" . "&taxon_oid=$t_id&cluster_id=$bc_id";
+            my $bcgenes_url = "$section_cgi&page=bcGeneList"
+                            . "&taxon_oid=$t_id&cluster_id=$bc_id";
             $link = alink( $bcgenes_url, $gene_count );
         }
         $r .= $gene_count . $sd . $link . "\t";
@@ -7191,9 +7591,9 @@ sub addBCGenesToCart {
 }
 
 sub addBCScaffoldsToCart {
-    my $taxon_oid  = param("taxon_oid");
+    my $taxon_oid = param("taxon_oid");
     my $cluster_id = param("cluster_id");
-    my @bc         = param("bc_id");
+    my @bc = param("bc_id");
     if ( scalar(@bc) == 0 ) {
         WebUtil::webError("No clusters have been selected.");
     }
@@ -7245,7 +7645,7 @@ sub viewNeighborhoodsForSelectedClusters {
 	"10,000 additional base pairs.<br/>";
     printHint($hint);
 
-    my $dbh    = dbLogin();
+    my $dbh = dbLogin();
     my $bc_str = OracleUtil::getNumberIdsInClause( $dbh, @bc );
     #my $bc_str = WebUtil::joinSqlQuoted( ",", @bc );
     my $bc_cnt = scalar @bc;
@@ -7259,14 +7659,14 @@ sub viewNeighborhoodsForSelectedClusters {
     };
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ;; ) {
-        my ( $cluster_id, $taxon_oid, $in_file ) = $cur->fetchrow();
+        my ($cluster_id, $taxon_oid, $in_file) = $cur->fetchrow();
         last if !$cluster_id;
-        my ( $clustergenes, $cluster_h, $scaffold_info )
-	    = getAllInfoForCluster( $dbh, $cluster_id, $taxon_oid, $in_file );
+        my ($clustergenes, $cluster_h, $scaffold_info)
+	    = getAllInfoForCluster($dbh, $cluster_id, $taxon_oid, $in_file);
 
-        printNeighborhoodPanels( $dbh, $clustergenes, "", $cluster_h,
-				 $scaffold_info, "", $cluster_id, "", "", "", "cog",
-				 "nolink" );
+        printNeighborhoodPanels
+	    ($dbh, $clustergenes, "", $cluster_h, $scaffold_info,
+	     "", $cluster_id, "", "", "", "cog", "nolink");
     }
     $cur->finish();
     OracleUtil::truncTable( $dbh, "gtt_num_id" )
@@ -7310,20 +7710,19 @@ sub getAllInfoForCluster {
         foreach my $scf (@metascaffolds) {
             my $scf_gene_str = $scf2genes{$scf};
             my @scfgenes = split( /\t/, $scf_gene_str );
-            my ( $scf_length, $gc, $n_genes ) = getScaffoldStats( $taxon_oid, "assembled", $scf );
+            my ( $scf_length, $gc, $n_genes )
+		= getScaffoldStats( $taxon_oid, "assembled", $scf );
 
             my @genes_on_s = MetaUtil::getScaffoldGenes( $taxon_oid, "assembled", $scf );
             my $topology   = "linear";
 
             foreach my $line (@genes_on_s) {
-                my (
-                    $gene_oid,  $locus_type, $locus_tag, $gene_display_name, $start_coord,
-                    $end_coord, $strand,     $seq_id,    $source
-                  )
-                  = split( /\t/, $line );
+                my ( $gene_oid, $locus_type, $locus_tag, $gene_display_name,
+                     $start_coord, $end_coord, $strand, $seq_id, $source )
+		    = split( /\t/, $line );
 
                 my $found = 0;
-              CLUSTER: foreach my $g (@scfgenes) {
+                CLUSTER: foreach my $g (@scfgenes) {
                     if ( $g eq $gene_oid ) {
                         $found = 1;
                         last CLUSTER;
@@ -7362,13 +7761,13 @@ sub getAllInfoForCluster {
             last if !$gene_oid;
 
             my ( $scaffold_oid, $scaffold_name, $topology, $scf_length, 
-		 $start_coord, $end_coord, $strand ) =
-		     getScaffoldInfo( $dbh, $gene_oid );
+		 $start_coord, $end_coord, $strand )
+		= getScaffoldInfo( $dbh, $gene_oid );
             next if !$scaffold_oid;
 
             my $item = "$gene_oid\t$start_coord\t$end_coord\t+";
-            $scaffold_info{$scaffold_oid} = 
-		$scaffold_name . "\t" . $taxon_oid . "\t" . $topology . "\t" . $scf_length;
+            $scaffold_info{$scaffold_oid}
+	    = $scaffold_name . "\t" . $taxon_oid . "\t" . $topology . "\t" . $scf_length;
             push @{ $cluster_h{$scaffold} }, $item;
             $cluster_genes{$gene_oid} = 1;
         }

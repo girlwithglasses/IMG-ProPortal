@@ -5,7 +5,7 @@ use feature ':5.16';
 use Data::Dumper::Concise;
 use WebConfig ();
 use Storable;
-use IMG::Views::Templater;
+use IMG::App;
 use Utils::Cache;
 use Date::Format;
 use Number::Format;
@@ -21,8 +21,7 @@ my $metadata = {
 
 };
 
-
-my $section = 'ANI';
+my $env;
 
 sub getPageTitle {
     return $metadata->{title};
@@ -34,21 +33,21 @@ sub getAppHeaderData {
 
 sub get_stats_file {
 
-#	my $cacheDir = '/webfs/scratch/img/bcNp/';
-	my $cacheDir = '/Users/gwg/webUI/webui.cgi/t/files/bcNp/';
-	return $cacheDir . 'anistats.stor';
+	die 'No bcnp cache dir specified!' unless defined $env->{bcnp_stats_dir};
+
+	return $env->{bcnp_stats_dir} . 'anistats.stor';
 
 }
 
 sub dispatch {
 
-#	CacheUtil::cgiCacheInitialize( $section );
-#	CacheUtil::cgiCacheStart() or return;
-	Utils::Cache::cache_init( $section );
+	$env = WebConfig::getEnv();
+	Utils::Cache::cache_init( $metadata->{section} );
 	Utils::Cache::set_key( 'ani_home' );
 	Utils::Cache::start_caching() or return;
 
-	my $output = IMG::Views::Templater::render_template( 'ani_home.tt', { data => get_ani_stats() } );
+    my $tmpl_app = IMG::App->new( config => $env );
+	my $output = $tmpl_app->render_template( 'ani_home.tt', { data => get_ani_stats() } );
 	print $output;
 	Utils::Cache::stop_caching();
 	return;

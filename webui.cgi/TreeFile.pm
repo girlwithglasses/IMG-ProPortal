@@ -1,6 +1,5 @@
 ############################################################################
-#
-# $Id: TreeFile.pm 34184 2015-09-03 21:41:29Z klchu $
+# $Id: TreeFile.pm 34506 2015-10-15 19:12:27Z aratner $
 ############################################################################
 package TreeFile;
 my $section = "TreeFile";
@@ -26,7 +25,7 @@ my $base_dir            = $env->{base_dir};
 my $img_internal        = $env->{img_internal};
 my $tmp_dir             = $env->{tmp_dir};
 my $web_data_dir        = $env->{web_data_dir};
-my $img_hmp              = $env->{img_hmp};
+my $img_hmp             = $env->{img_hmp};
 my $include_metagenomes = $env->{include_metagenomes};
 my $rdbms               = getRdbms();
 my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
@@ -678,7 +677,7 @@ sub printDomainTree {
 
     if ( $domain ne 'all' && $sunburst) {
         print "&nbsp;";
-        print buttonUrl( $url2, "Group by Phyla", "medbutton" );
+        print buttonUrl( $url2, "Group by Phylogenetic Category", "medbutton" );
     }        
     
     print hiddenVar( "page",    "message" );
@@ -907,7 +906,7 @@ sub drawSunburst {
     #$div_id = $chart_div_name if $chart_div_name && $chart_div_name ne "";
 
     my $levels = "[\"phylum\", \"ir_class\", \"ir_order\", \"family\", \"genus\", \"species\"]";
-    my $levels_url = "$main_cgi?section=TaxonList&page=lineageMicrobes";
+    my $levels_url = "$main_cgi?section=TaxonList&page=lineageMicrobes&domain=".ucfirst($domain);
 
     print qq{
       <link rel="stylesheet" type="text/css"
@@ -957,7 +956,7 @@ sub createTreeFromFile {
 
     # all list either open or close all nodes
     #my @allids;
-#my $f= 0;
+    #my $f= 0;
 
     while ( my $line = $fh->getline() ) {
         chomp $line;
@@ -1185,13 +1184,10 @@ sub printTree {
                   . $close_url . "</a>";
 
                 if ( $level == 1 ) {
-
                     # bold text for level 1
                     #print $image_button . "<b>$text</b> $button";
                     print $image_button . "<b> " . escapeHTML($text) . "</b>";
                 } else {
-
-                    #print $image_button . $text . $button;
                     print $image_button . escapeHTML($text);
                 }
             }

@@ -103,13 +103,13 @@ sub printCogDetail {
         where c.${og}_id = ?
     };
     my $cur = execSql( $dbh, $sql, $verbose, $func_id );
-    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length) 
+    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length)
 	= $cur->fetchrow();
     $cur->finish();
 
     print "<h3>$cog_id: " . WebUtil::escHtml($cog_name) . "</h3>\n";
 
-    print "<table class='img' border='1'>\n"; 
+    print "<table class='img' border='1'>\n";
     printAttrRowRaw( "DB Source", WebUtil::escHtml($db_source) );
     printAttrRowRaw( "Add Date", $add_date );
     printAttrRowRaw( "Seq Length", $seq_length );
@@ -143,10 +143,10 @@ sub printCogDetail {
 
     my @bind = ( $func_id );
     my $level = 0;
-    my @phylo_label = ( 'Domain', 'Phylum', 'Class', 'Order', 
+    my @phylo_label = ( 'Domain', 'Phylum', 'Class', 'Order',
 			'Family', 'Genus', 'Species');
-    my @eco_label = ( 'Domain', 'Ecosystem', 'Ecosystem Category', 
-		      'Ecosystem Type', 'Ecosystem Subtype', 
+    my @eco_label = ( 'Domain', 'Ecosystem', 'Ecosystem Category',
+		      'Ecosystem Type', 'Ecosystem Subtype',
 		      'Specific Ecosystem', 'Species');
     my @phylo_level = ( 'domain', 'phylum', 'ir_class', 'ir_order', 'family', 'genus', 'species');
 
@@ -202,10 +202,10 @@ sub printCogDetail {
     my $imgClause = WebUtil::imgClauseNoTaxon( "t.taxon_oid", 1 );
     $sql = qq{
         select nvl(t.$next_level, 'unclassified'),
-               count(distinct t.taxon_oid), 
-               sum(g.gene_count)
-        from taxon t, 
-             mv_taxon_${og}_stat g
+            count(distinct t.taxon_oid),
+            sum(g.gene_count)
+        from taxon t,
+            mv_taxon_${og}_stat g
         where g.${og} = ?
         and t.taxon_oid = g.taxon_oid
         $additional_cond
@@ -216,7 +216,7 @@ sub printCogDetail {
     };
     $cur = execSql( $dbh, $sql, $verbose, @bind );
     for ( ; ; ) {
-        my ( $t_domain, $t_cnt, $g_cnt ) = 
+        my ( $t_domain, $t_cnt, $g_cnt ) =
 	    $cur->fetchrow();
         last if ! $t_domain;
         $taxon_cnts{$t_domain} = $t_cnt;
@@ -232,7 +232,7 @@ sub printCogDetail {
             select nvl(t.$next_level, 'unclassified'),
                    count(distinct t.taxon_oid),
                    sum(g.gene_count)
-            from taxon t, 
+            from taxon t,
                  mv_taxon_${og}_stat g
             where g.${og} = ?
             and t.taxon_oid = g.taxon_oid
@@ -245,9 +245,9 @@ sub printCogDetail {
 
         $cur = execSql( $dbh, $sql, $verbose, @bind );
         for ( ; ; ) {
-            my ( $t_domain, $t_cnt, $g_cnt ) = 
+            my ( $t_domain, $t_cnt, $g_cnt ) =
 		$cur->fetchrow();
-            last if !$t_domain; 
+            last if !$t_domain;
 	    if ( $taxon_cnts{$t_domain} ) {
 		$taxon_cnts{$t_domain} += $t_cnt;
 	    }
@@ -266,10 +266,10 @@ sub printCogDetail {
         if ( $og eq 'cog' ) {
             print "<p>Counting metagenome genes ...\n";
 
-	    my $rclause2 = WebUtil::urClause('f.taxon_oid'); 
-	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2); 
+	    my $rclause2 = WebUtil::urClause('f.taxon_oid');
+	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2);
 	    my $taxonClause2 = WebUtil::txsClause( "f.taxon_oid", $dbh );
- 
+
 	    $sql = qq{
                         select nvl(t.$next_level, 'unclassified'),
                                count(distinct t.taxon_oid),
@@ -283,11 +283,11 @@ sub printCogDetail {
                         $imgClause2
                         $taxonClause2
                         group by nvl(t.$next_level, 'unclassified')
-                    }; 
- 
-	    $cur = execSql( $dbh, $sql, $verbose, @bind ); 
+                    };
+
+	    $cur = execSql( $dbh, $sql, $verbose, @bind );
 	    for (;;) {
-		my ( $t_domain, $t_cnt, $g_cnt ) = 
+		my ( $t_domain, $t_cnt, $g_cnt ) =
 		    $cur->fetchrow();
 		last if ! $t_domain;
 
@@ -304,33 +304,33 @@ sub printCogDetail {
 		    $gene_cnts{$t_domain} = $g_cnt;
 		}
 	    }
-	    $cur->finish(); 
-	    print "<br/>\n"; 
+	    $cur->finish();
+	    print "<br/>\n";
 	}
     }
 
     printEndWorkingDiv();
 
-    my $tbl_img_link = "<img src=$base_url/images/application-table.png width=11 height=11 border=0 alt=table</img>"; 
- 
+    my $tbl_img_link = "<img src=$base_url/images/application-table.png width=11 height=11 border=0 alt=table</img>";
+
     my $text2 = "";
     if ( $next_label_lc && $next_label_lc ne 'species' &&
 	$next_label_lc ne 'specific ecosystem' ) {
 	$text2 = "Click on $next_label_lc to see function distribution of selected $next_label_lc. ";
     }
-    $text2 .= "Follow the link provided by <b>Genome Count</b> to genomes having genes associated with this function. Click on the number to view the results in phylo tree display, or click on the rectangular table symbol to view the results in table display. (Note: Phylo Tree display option is limited to certain domains only.)"; 
+    $text2 .= "Follow the link provided by <b>Genome Count</b> to genomes having genes associated with this function. Click on the number to view the results in phylo tree display, or click on the rectangular table symbol to view the results in table display. (Note: Phylo Tree display option is limited to certain domains only.)";
 #    print "<p>$text2\n";
     printHint($text2);
 
     my $baseUrl = "$section_cgi&page=cogDetail";
     $baseUrl .= "&func_id=$func_id";
 
-    printMainForm(); 
+    printMainForm();
     my $it = new InnerTable( 1, "cogdomaincount$$", "cogdomaincount", 0 );
-    my $sd = $it->getSdDelim(); 
+    my $sd = $it->getSdDelim();
     $it->addColSpec( $next_label,           "asc", "left" );
     $it->addColSpec( "Genome Count",    "asc", "right" );
-    $it->addColSpec( "Gene Count", "asc", "right" ); 
+    $it->addColSpec( "Gene Count", "asc", "right" );
 
     my @keys = keys(%taxon_cnts);
     for my $key ( @keys ) {
@@ -340,7 +340,7 @@ sub printCogDetail {
 	my $url2 = $key;
 	if ( $next_level ne 'species' &&
 	     $next_label_lc ne 'specific ecosystem' ) {
-	    $url2 = 
+	    $url2 =
 		"$main_cgi?section=CogDetail"
 		. "&page=cogDetail"
 		. "&cog_id=$func_id"
@@ -351,7 +351,7 @@ sub printCogDetail {
         my $r = $key . $sd . $url2 . "\t";
 	if ( $t_cnt ) {
 	    ## count and phylo tree link
-	    my $url3 = 
+	    my $url3 =
 		"$main_cgi?section=CogDetail"
 		. "&page=showCogTaxonTree"
 		. "&cog_id=$func_id"
@@ -381,7 +381,7 @@ sub printCogDetail {
 		"' >";
 	    $tbl_link .= "<img src='$base_url/images/application-table.png' width='11' height='11' border='0' alt='table' /> ";
 	    $tbl_link .= "</a>";
-	    $r .= " " . $tbl_link; 
+	    $r .= " " . $tbl_link;
 	    $r .= "\t";
 	}
 	else {
@@ -389,14 +389,14 @@ sub printCogDetail {
 	}
 	$r .= $g_cnt . $sd . "$g_cnt\t";
 
-#        $url = "$main_cgi?section=CogCategoryDetail" 
+#        $url = "$main_cgi?section=CogCategoryDetail"
 #            . "&page=ccdCOGGenomeGeneList&cog_id=$func_id&taxon_oid=$taxon_oid";
 #	$r .= $cnt . $sdDelim . alink( $url, $cnt ) . "\t";
 
         $it->addRow($r);
     }
     $cur->finish();
-    
+
     $it->printTable();
 
     print end_form();
@@ -431,13 +431,13 @@ sub printCogDetail_old {
         where c.${og}_id = ?
     };
     my $cur = execSql( $dbh, $sql, $verbose, $func_id );
-    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length) 
+    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length)
 	= $cur->fetchrow();
     $cur->finish();
 
     print "<h3>$cog_id: " . WebUtil::escHtml($cog_name) . "</h3>\n";
 
-    print "<table class='img' border='1'>\n"; 
+    print "<table class='img' border='1'>\n";
     printAttrRowRaw( "DB Source", WebUtil::escHtml($db_source) );
     printAttrRowRaw( "Add Date", $add_date );
     printAttrRowRaw( "Seq Length", $seq_length );
@@ -483,7 +483,7 @@ sub printCogDetail_old {
     $sql = qq{
         select t.taxon_oid, t.domain, t.seq_status,
                t.taxon_display_name, g.gene_count
-        from taxon t, 
+        from taxon t,
              mv_taxon_${og}_stat g
         where g.${og} = ?
         and t.taxon_oid = g.taxon_oid
@@ -493,7 +493,7 @@ sub printCogDetail_old {
     };
     $cur = execSql( $dbh, $sql, $verbose, $func_id );
     for ( ; ; ) {
-        my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) = 
+        my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) =
 	    $cur->fetchrow();
         last if ! $t_id;
         $cog_cnts{$t_id} = $cnt;
@@ -508,7 +508,7 @@ sub printCogDetail_old {
         $sql = qq{
             select t.taxon_oid, t.domain, t.seq_status,
                    t.taxon_display_name, g.gene_count
-            from taxon t, 
+            from taxon t,
                  mv_taxon_${og}_stat g
             where g.${og} = ?
             and t.taxon_oid = g.taxon_oid
@@ -519,7 +519,7 @@ sub printCogDetail_old {
 
         $cur = execSql( $dbh, $sql, $verbose, $func_id );
         for ( ; ; ) {
-            my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) = 
+            my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) =
 		$cur->fetchrow();
             last if !$t_id;
             $m_cog_cnts{$cog_id} = $cnt;
@@ -530,39 +530,39 @@ sub printCogDetail_old {
         if ( $og eq 'cog' ) {
             print "<p>Counting metagenome genes ...\n";
 
-	    my $rclause2 = WebUtil::urClause('f.taxon_oid'); 
-	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2); 
+	    my $rclause2 = WebUtil::urClause('f.taxon_oid');
+	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2);
 	    my $taxonClause2 = WebUtil::txsClause( "f.taxon_oid", $dbh );
- 
+
 	    $sql = qq{
-                        select t.taxon_oid, t.domain, t.seq_status,
-                               t.taxon_display_name,
-                               f.data_type, f.gene_count
-                        from taxon t, taxon_cog_count f
-                        where f.gene_count > 0
-                        and f.func_id = ?
-                        and t.taxon_oid = f.taxon_oid
-                        $rclause2
-                        $imgClause2
-                        $taxonClause2
-                    }; 
- 
-	    $cur = execSql( $dbh, $sql, $verbose, $cog_id ); 
+select t.taxon_oid, t.domain, t.seq_status,
+    t.taxon_display_name,
+    f.data_type, f.gene_count
+from taxon t, taxon_cog_count f
+where f.gene_count > 0
+and f.func_id = ?
+and t.taxon_oid = f.taxon_oid
+$rclause2
+$imgClause2
+$taxonClause2
+                    };
+
+	    $cur = execSql( $dbh, $sql, $verbose, $cog_id );
 	    for (;;) {
-		my ( $t_id, $t_domain, $seq_status, $t_name, $d_type, $cnt ) = 
+		my ( $t_id, $t_domain, $seq_status, $t_name, $d_type, $cnt ) =
 		    $cur->fetchrow();
 		last if ! $t_id;
 
 		if ( $m_cog_cnts{$t_id} ) {
-		    $m_cog_cnts{$t_id} += $cnt; 
-		} 
-		else { 
+		    $m_cog_cnts{$t_id} += $cnt;
+		}
+		else {
 		    $m_cog_cnts{$t_id} = $cnt;
-		} 
+		}
 		$taxon_name_h{$t_id} = $t_domain . "\t" . $seq_status . "\t" . $t_name;
 	    }
-	    $cur->finish(); 
-	    print "<br/>\n"; 
+	    $cur->finish();
+	    print "<br/>\n";
 	}
     }
 
@@ -595,7 +595,7 @@ sub printCogDetail_old {
 	    next;
 	}
 
-        my ($domain, $seq_status, $taxon_name) = 
+        my ($domain, $seq_status, $taxon_name) =
 	    split (/\t/, $taxon_name_h{$taxon_oid});
 	$domain = substr($domain, 0, 1);
 	$seq_status = substr($seq_status, 0, 1);
@@ -603,7 +603,7 @@ sub printCogDetail_old {
 
         my $r = $sdDelim
 	. "<input type='checkbox' name='$select_id_name' value='$taxon_oid' />\t";
-        my $url = "$main_cgi?section=TaxonDetail" 
+        my $url = "$main_cgi?section=TaxonDetail"
             . "&page=taxonDetail&taxon_oid=$taxon_oid";
 
         $r .= "$domain\t";
@@ -611,14 +611,14 @@ sub printCogDetail_old {
         $r .= "$taxon_name" . $sdDelim . alink( $url, $taxon_name ) . "\t";
 
 
-        $url = "$main_cgi?section=CogCategoryDetail" 
+        $url = "$main_cgi?section=CogCategoryDetail"
             . "&page=ccdCOGGenomeGeneList&cog_id=$func_id&taxon_oid=$taxon_oid";
 	$r .= $cnt . $sdDelim . alink( $url, $cnt ) . "\t";
 
         $cachedTable->addRow($r);
     }
     $cur->finish();
-    
+
     if ( $count == 0 ) {
         #$dbh->disconnect();
         print "<div id='message'>\n";
@@ -635,22 +635,22 @@ sub printCogDetail_old {
     print "<p>\n";
     print domainLetterNote() . "<br/>\n";
     print completionLetterNote() . "<br/>\n";
-    print "</p>\n"; 
+    print "</p>\n";
 
-    TabHTML::printTabAPILinks("cogDetailTab"); 
+    TabHTML::printTabAPILinks("cogDetailTab");
     my @tabIndex = ( "#cogtab1", "#cogtab2" );
     my @tabNames = ( "Genomes", "Phylo Tree" );
- 
+
     TabHTML::printTabDiv("cogDetailTab", \@tabIndex, \@tabNames);
- 
-    for my $t ( @tabIndex ) { 
-        my $tab = substr($t, 1, length($t) - 1); 
-        print "<div id='$tab'>"; 
+
+    for my $t ( @tabIndex ) {
+        my $tab = substr($t, 1, length($t) - 1);
+        print "<div id='$tab'>";
         if ( $tab eq 'cogtab1' ) {
 	    WebUtil::printGenomeCartFooter() if $count > 10;
 	    $cachedTable->printTable();
 	    WebUtil::printGenomeCartFooter();
-        } 
+        }
         else {
 	    my $mgr = new PhyloTreeMgr();
 	    my %taxon_filter;
@@ -667,19 +667,19 @@ sub printCogDetail_old {
 		$taxon_filter_cnt++;
 	    }
 
-	    my $url3 = "$main_cgi?section=CogCategoryDetail" 
+	    my $url3 = "$main_cgi?section=CogCategoryDetail"
 		. "&page=ccdCOGGenomeGeneList&cog_id=";
 
 	    $mgr->loadFuncTree( $dbh, \%taxon_filter, 0 );
 	    WebUtil::printTaxonButtons ();
 	    $mgr->printFuncTree( \%taxon_filter, $taxon_filter_cnt, $url3, 0);
 
-	    if ($taxon_filter_cnt > 0) { 
+	    if ($taxon_filter_cnt > 0) {
 		WebUtil::printTaxonButtons ();
-	    } 
+	    }
 	}
-        print "</div>\n"; 
-    } 
+        print "</div>\n";
+    }
 
 ##    printHint("The function cart allows for phylogenetic profile comparisons.");
 
@@ -720,13 +720,13 @@ sub printCogTaxonTable {
         where c.${og}_id = ?
     };
     my $cur = execSql( $dbh, $sql, $verbose, $func_id );
-    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length) 
+    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length)
 	= $cur->fetchrow();
     $cur->finish();
 
     print "<h3>$cog_id: " . WebUtil::escHtml($cog_name) . "</h3>\n";
 
-    print "<table class='img' border='1'>\n"; 
+    print "<table class='img' border='1'>\n";
     printAttrRowRaw( "DB Source", WebUtil::escHtml($db_source) );
     printAttrRowRaw( "Add Date", $add_date );
     printAttrRowRaw( "Seq Length", $seq_length );
@@ -761,7 +761,7 @@ sub printCogTaxonTable {
     my $domain = param('domain');
     my $phylo_cond = "and t.domain = ?";
     my @bind = ($func_id, $domain);
-    my @phylo_flds = ('phylum', 'ir_class', 'ir_order', 
+    my @phylo_flds = ('phylum', 'ir_class', 'ir_order',
 		      'family', 'genus', 'species');
     my $phylo_str = $domain;
     for my $x  ( @phylo_flds ) {
@@ -794,7 +794,7 @@ sub printCogTaxonTable {
 	$sql = qq{
             select t.taxon_oid, t.domain, t.seq_status,
                    t.taxon_display_name, g.gene_count
-            from taxon t, 
+            from taxon t,
                  mv_taxon_${og}_stat g
             where g.${og} = ?
             and t.taxon_oid = g.taxon_oid
@@ -805,7 +805,7 @@ sub printCogTaxonTable {
         };
 	$cur = execSql( $dbh, $sql, $verbose, @bind );
 	for ( ; ; ) {
-	    my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) = 
+	    my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) =
 		$cur->fetchrow();
 	    last if ! $t_id;
 	    $cog_cnts{$t_id} = $cnt;
@@ -821,7 +821,7 @@ sub printCogTaxonTable {
         $sql = qq{
             select t.taxon_oid, t.domain, t.seq_status,
                    t.taxon_display_name, g.gene_count
-            from taxon t, 
+            from taxon t,
                  mv_taxon_${og}_stat g
             where g.${og} = ?
             and t.taxon_oid = g.taxon_oid
@@ -833,7 +833,7 @@ sub printCogTaxonTable {
         $cur = execSql( $dbh, $sql, $verbose, @bind );
 
         for ( ; ; ) {
-            my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) = 
+            my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) =
 		$cur->fetchrow();
             last if !$t_id;
             $cog_cnts{$t_id} = $cnt;
@@ -844,10 +844,10 @@ sub printCogTaxonTable {
         if ( $og eq 'cog' ) {
             print "<p>Counting metagenome genes ...\n";
 
-	    my $rclause2 = WebUtil::urClause('f.taxon_oid'); 
-	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2); 
+	    my $rclause2 = WebUtil::urClause('f.taxon_oid');
+	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2);
 	    my $taxonClause2 = WebUtil::txsClause( "f.taxon_oid", $dbh );
- 
+
 	    $sql = qq{
                         select t.taxon_oid, t.domain, t.seq_status,
                                t.taxon_display_name,
@@ -860,24 +860,24 @@ sub printCogTaxonTable {
                         $rclause2
                         $imgClause2
                         $taxonClause2
-                    }; 
-	    $cur = execSql( $dbh, $sql, $verbose, @bind ); 
+                    };
+	    $cur = execSql( $dbh, $sql, $verbose, @bind );
 	    for (;;) {
-		my ( $t_id, $t_domain, $seq_status, $t_name, 
-		     $d_type, $cnt ) = 
+		my ( $t_id, $t_domain, $seq_status, $t_name,
+		     $d_type, $cnt ) =
 			 $cur->fetchrow();
 		last if ! $t_id;
 
 		if ( $cog_cnts{$t_id} ) {
-		    $cog_cnts{$t_id} += $cnt; 
-		} 
-		else { 
+		    $cog_cnts{$t_id} += $cnt;
+		}
+		else {
 		    $cog_cnts{$t_id} = $cnt;
-		} 
+		}
 		$taxon_name_h{$t_id} = $t_domain . "\t" . $seq_status . "\t" . $t_name;
 	    }
-	    $cur->finish(); 
-	    print "<br/>\n"; 
+	    $cur->finish();
+	    print "<br/>\n";
 	}
     }
 
@@ -903,7 +903,7 @@ sub printCogTaxonTable {
 	    next;
 	}
 
-        my ($t_domain, $seq_status, $taxon_name) = 
+        my ($t_domain, $seq_status, $taxon_name) =
 	    split (/\t/, $taxon_name_h{$taxon_oid});
 	$t_domain = substr($t_domain, 0, 1);
 	$seq_status = substr($seq_status, 0, 1);
@@ -911,7 +911,7 @@ sub printCogTaxonTable {
 
         my $r = $sdDelim
 	. "<input type='checkbox' name='$select_id_name' value='$taxon_oid' />\t";
-        my $url = "$main_cgi?section=TaxonDetail" 
+        my $url = "$main_cgi?section=TaxonDetail"
             . "&page=taxonDetail&taxon_oid=$taxon_oid";
 
         $r .= "$t_domain\t";
@@ -919,14 +919,14 @@ sub printCogTaxonTable {
         $r .= "$taxon_name" . $sdDelim . alink( $url, $taxon_name ) . "\t";
 
 
-        $url = "$main_cgi?section=CogCategoryDetail" 
+        $url = "$main_cgi?section=CogCategoryDetail"
             . "&page=ccdCOGGenomeGeneList&cog_id=$func_id&taxon_oid=$taxon_oid";
 	$r .= $cnt . $sdDelim . alink( $url, $cnt ) . "\t";
 
         $cachedTable->addRow($r);
     }
     $cur->finish();
-    
+
     if ( $count == 0 ) {
         #$dbh->disconnect();
         print "<div id='message'>\n";
@@ -943,7 +943,7 @@ sub printCogTaxonTable {
     print "<p>\n";
     print domainLetterNote() . "<br/>\n";
     print completionLetterNote() . "<br/>\n";
-    print "</p>\n"; 
+    print "</p>\n";
 
     WebUtil::printGenomeCartFooter() if $count > 10;
     $cachedTable->printTable();
@@ -982,13 +982,13 @@ sub printCogTaxonTree {
         where c.${og}_id = ?
     };
     my $cur = execSql( $dbh, $sql, $verbose, $func_id );
-    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length) 
+    my ($cog_id, $cog_name, $desc, $db_source, $add_date, $seq_length)
 	= $cur->fetchrow();
     $cur->finish();
 
     print "<h3>$cog_id: " . WebUtil::escHtml($cog_name) . "</h3>\n";
 
-    print "<table class='img' border='1'>\n"; 
+    print "<table class='img' border='1'>\n";
     printAttrRowRaw( "DB Source", WebUtil::escHtml($db_source) );
     printAttrRowRaw( "Add Date", $add_date );
     printAttrRowRaw( "Seq Length", $seq_length );
@@ -1023,7 +1023,7 @@ sub printCogTaxonTree {
     my $domain = param('domain');
     my $phylo_cond = "and t.domain = ?";
     my @bind = ($func_id, $domain);
-    my @phylo_flds = ('phylum', 'ir_class', 'ir_order', 
+    my @phylo_flds = ('phylum', 'ir_class', 'ir_order',
 		      'family', 'genus', 'species');
     my $phylo_str = $domain;
     for my $x  ( @phylo_flds ) {
@@ -1056,7 +1056,7 @@ sub printCogTaxonTree {
 	$sql = qq{
             select t.taxon_oid, t.domain, t.seq_status,
                    t.taxon_display_name, g.gene_count
-            from taxon t, 
+            from taxon t,
                  mv_taxon_${og}_stat g
             where g.${og} = ?
             and t.taxon_oid = g.taxon_oid
@@ -1067,7 +1067,7 @@ sub printCogTaxonTree {
         };
 	$cur = execSql( $dbh, $sql, $verbose, @bind );
 	for ( ; ; ) {
-	    my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) = 
+	    my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) =
 		$cur->fetchrow();
 	    last if ! $t_id;
 	    $cog_cnts{$t_id} = $cnt;
@@ -1083,7 +1083,7 @@ sub printCogTaxonTree {
         $sql = qq{
             select t.taxon_oid, t.domain, t.seq_status,
                    t.taxon_display_name, g.gene_count
-            from taxon t, 
+            from taxon t,
                  mv_taxon_${og}_stat g
             where g.${og} = ?
             and t.taxon_oid = g.taxon_oid
@@ -1096,7 +1096,7 @@ sub printCogTaxonTree {
         $cur = execSql( $dbh, $sql, $verbose, @bind );
 
         for ( ; ; ) {
-            my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) = 
+            my ( $t_id, $t_domain, $seq_status, $t_name, $cnt ) =
 		$cur->fetchrow();
             last if !$t_id;
             $cog_cnts{$t_id} = $cnt;
@@ -1107,10 +1107,10 @@ sub printCogTaxonTree {
         if ( $og eq 'cog' ) {
             print "<p>Counting metagenome genes ...\n";
 
-	    my $rclause2 = WebUtil::urClause('f.taxon_oid'); 
-	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2); 
+	    my $rclause2 = WebUtil::urClause('f.taxon_oid');
+	    my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2);
 	    my $taxonClause2 = WebUtil::txsClause( "f.taxon_oid", $dbh );
- 
+
 	    $sql = qq{
                         select t.taxon_oid, t.domain, t.seq_status,
                                t.taxon_display_name,
@@ -1124,25 +1124,25 @@ sub printCogTaxonTree {
                         $rclause2
                         $imgClause2
                         $taxonClause2
-                    }; 
- 
-	    $cur = execSql( $dbh, $sql, $verbose, @bind ); 
+                    };
+
+	    $cur = execSql( $dbh, $sql, $verbose, @bind );
 	    for (;;) {
-		my ( $t_id, $t_domain, $seq_status, $t_name, 
-		     $d_type, $cnt ) = 
+		my ( $t_id, $t_domain, $seq_status, $t_name,
+		     $d_type, $cnt ) =
 			 $cur->fetchrow();
 		last if ! $t_id;
 
 		if ( $cog_cnts{$t_id} ) {
-		    $cog_cnts{$t_id} += $cnt; 
-		} 
-		else { 
+		    $cog_cnts{$t_id} += $cnt;
+		}
+		else {
 		    $cog_cnts{$t_id} = $cnt;
-		} 
+		}
 		$taxon_name_h{$t_id} = $t_domain . "\t" . $seq_status . "\t" . $t_name;
 	    }
-	    $cur->finish(); 
-	    print "<br/>\n"; 
+	    $cur->finish();
+	    print "<br/>\n";
 	}
     }
 
@@ -1165,7 +1165,7 @@ sub printCogTaxonTree {
 	$taxon_filter_cnt++;
     }
 
-    my $url3 = "$main_cgi?section=CogCategoryDetail" 
+    my $url3 = "$main_cgi?section=CogCategoryDetail"
 	. "&page=ccdCOGGenomeGeneList&cog_id=";
 
     $mgr->loadFuncTree( $dbh, \%taxon_filter, 0 );
@@ -1173,7 +1173,7 @@ sub printCogTaxonTree {
     $mgr->printFuncTree( \%taxon_filter, $taxon_filter_cnt, $url3, 0,
 	\%taxon_gene_cnt);
 
-    if ($taxon_filter_cnt > 0) { 
+    if ($taxon_filter_cnt > 0) {
 	WebUtil::printTaxonButtons ();
     }
 
@@ -1209,7 +1209,7 @@ sub printCcdCogGenomeGeneList {
     my $rclause   = WebUtil::urClause("t");
     my $imgClause = WebUtil::imgClause("t");
 
-    my $sql = 
+    my $sql =
         "select t.taxon_oid, t.taxon_display_name, t.in_file "
       . "from taxon t where taxon_oid = ? $rclause $imgClause";
 
@@ -1375,7 +1375,7 @@ sub printCcdCogGenomeGeneList {
     }
     $it->printOuterTable(1);
     printGeneCartFooter();
-    
+
     if ( !$show_gene_name ) {
         printHint($msg);
     }

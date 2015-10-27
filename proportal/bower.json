@@ -22,5 +22,9 @@
     "d3": "~3.5.5",
     "normalize.css": "~3.0.3",
     "d3-tip": "~0.6.7"
+  },
+  "devDependencies": {
+    "leaflet.markercluster": "~0.4.0",
+    "d3kit": "~1.0.9"
   }
 }

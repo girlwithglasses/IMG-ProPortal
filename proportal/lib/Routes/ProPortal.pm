@@ -1,50 +1,40 @@
 package Routes::ProPortal;
 use IMG::Util::Base;
-use parent 'CoreStuff';
 use Dancer2 appname => 'ProPortal';
+use parent 'CoreStuff';
 use ProPortal::Util::Factory;
 
 our $VERSION = '0.1';
 
-our @active_components = qw( home data_type location clade phylo_heat );
+our @active_components = qw( home data_type location clade phylo_heat phylogram );
 
-get '/test' => sub {
-
-	template 'pages/test', {};
-
-};
-
-prefix '/proportal'; # => sub {
+prefix '/proportal' => sub {
 
 	# filterable queries
 	get qr{
-		/ (?<page> location | clade | data_type | phylo_heat )
-		/? (?<ecosystem_subtype> neritic | pelagic | marginal )?
+		/ (?<page> location | clade | data_type | phylo_heat | phylogram | ecosystem )
+		/? (?<subset> prochlor | synech | prochlor_phage | synech_phage | metagenome | isolate )?
 		}x => sub {
 
 		my $c = captures;
 		my $p = delete $c->{page};
 
-		var current => 'proportal';
-		var page => 'proportal/' . $p;
+		var menu_grp => 'proportal';
+		var page_id => 'proportal/' . $p;
 
-		my $pp = bootstrap( $p, config );
+		my $pp = CoreStuff::bootstrap( $p, config );
 
 		my $results;
-		if ($c->{ecosystem_subtype}) {
+		if ($c->{subset}) {
 			$pp->set_filters($c);
 		}
-		template "pages/" . $p, $pp->render();
+		else {
+			'phylogram' eq $p
+			? $pp->set_filters({ subset => 'isolate' })
+			: $pp->set_filters({ subset => 'datamart' });
+		}
 
-	};
-
-	get '/taxon/:taxon_oid' => sub {
-
-		my $pp = bootstrap( 'Details' );
-
-		$pp->set_filters({ taxon_oid => params->{taxon_oid} });
-
-		template "pages/genome_details", $pp->render();
+		return template "pages/" . $p, $pp->render();
 
 	};
 
@@ -52,44 +42,25 @@ prefix '/proportal'; # => sub {
 		( / ( home | index ) )?
 		}x => sub {
 
-		var current => 'proportal';
-		var page => '/proportal';
+		var menu_grp => 'proportal';
+		var page_id => 'proportal';
 
-		my $pp = bootstrap( undef, config );
+		my $pp = CoreStuff::bootstrap( 'Home', config );
 
-		template "pages/home", $pp->render();
+		return template "pages/home", $pp->render();
 
 	};
 
-#};
+# 	get '/taxon/:taxon_oid' => sub {
+#
+# 		my $pp = CoreStuff::bootstrap( 'Details' );
+#
+# 		$pp->set_filters({ taxon_oid => params->{taxon_oid} });
+#
+# 		template "pages/genome_details", $pp->render();
+#
+# 	};
 
-
-=head3 bootstrap
-
-Initialise a Controller and run a query.
-
-=cut
-
-sub bootstrap {
-	my ($c_type, $cfg) = @_;
-	$c_type ||= 'Home';
-	$cfg ||= config;
-
-#	if ($cfg->{sessions_enabled}) {
-#		$cfg->{ session } = session;
-#	}
-#	my $core = setting('_core') || create_core();
-	$cfg->{_core} = setting("_core") || create_core();
-
-	debug "Running bootstrap...";
-
-	# temporary hack!
-	$cfg->{active_components} = [ @active_components ];
-
-	my $c = ProPortal::Util::Factory::create_pp_component( 'Controller', $c_type, $cfg );
-#	debug "component: " . Dumper $c;
-	return $c;
-
-}
+};
 
 1;

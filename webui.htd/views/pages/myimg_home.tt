@@ -1,96 +1,24 @@
 <h2>My IMG</h2>
-[%	IF user %]
-
-[%
-
-    my $url                 = "$main_cgi?section=TaxonList&page=taxonListAlpha";
-    my $genome_browser_link = WebUtil::alink( $url, "Genome Browser" );
-
-    my $url = "$main_cgi?section=CompareGenomes&page=taxonBreakdownStats";
-    $url .= "&statTableName=taxon_stats&initial=1";
-    my $genome_statistics_link = WebUtil::alink( $url, "Genome Statistics" );
-%]
-
-
-<p>IMG provides support for exporting genome information from the [% link.genome_browser %] and [% link.genome_stats %], via genome breakdown and comparative statistics.</p>
-
-
-</p>
-<p>
-
-<ul>
-	<li>view and set your preferences throughout IMG</li>
-	<li>upload genome selections</li>
-</ul>
-
 [%	IF cfg.public_nologin_site %]
-<p>You are currently logged in as a <em>public</em> user.</p>
-
-
-############################################################################
-# printLoggedInPage
-############################################################################
-sub printLoggedInPage {
-    my $contact_oid = WebUtil::getContactOid();
-    if ( !$contact_oid || $public_nologin_site ) {
-        printAboutPage();
-        return;
-    }
-
-    ### SQL
-    my $dbh = WebUtil::dbLogin();
-    my $sql = qq{
-        select username
-        from contact
-        where contact_oid = ?
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
-    my $username = $cur->fetchrow();
-    $cur->finish();
-
-    # print html form
-    WebUtil::printMainForm();
-    print "<h1>MyIMG</h1>\n";
-    print "<h3>Logged in as <b>$username</b>.</h3>\n";
-
-    my $super_user_flag = "";
-    if ( $contact_oid > 0 ) {
-        $super_user_flag = WebUtil::getSuperUser();
-    }
-
-    my $html_text_fragment;
-    if ( DataEntryUtil::db_isPublicUser($contact_oid) ) {
-        $html_text_fragment = "<li>to upload your Genome selections</li>\n";
-    } else {
-        my $x;
-        my $y;
-        $x = "<li>to view and edit your annotations</li>\n"
-          if ($show_myimg_login);
-        $y = "<li>to view annotations by other users</li>\n"
-          if ( $show_myimg_login && $super_user_flag eq 'Yes' );
-        $html_text_fragment = qq{
-            <li>to annotate your genome</li>\n
-            <li>to upload your genome selections</li>\n
-            $x$y
-        };
-    }
-
-    print qq{
-        <p>Welcome to the curation version of IMG.</p>
-        <p>
-        You can use MyIMG for:
-        <ul>
-        <li>saving your preferences throughout IMG</li>
-        $html_text_fragment
-        </ul>
-        </p>\n
-    };
-
-    #$dbh->disconnect();
-
-    ImgGroup::showAllGroups();
-
-    printLogout();
-    print end_form();
-
-}
+	<p>You are currently logged in as a <em>public</em> user.</p>
+[%	ELSIF user && user.name %]
+	<p>You are currently logged in as <strong>[% user.name %]</strong>
+[%	END %]
+	<p>You can use MyIMG to:</p>
+	<ul>
+		<li>view and set your preferences throughout IMG</li>
+[%	IF cfg.is_public_user %]
+		<li>upload your genome selections</li>
+[%	END;
+	IF cfg.show_myimg_login %]
+		<li>to view and edit your annotations</li>
+[%		IF user && user.is_superuser %]
+		<li>to view annotations by other users</li>
+[%		END;
+	END; %]
+	</ul>
+[%	IF user.has_groups %]
+	<h3>My Groups</h3>
+[%	FOREACH g IN user.groups %]
+<p>Awesome group name: [% g %]</p>
+[%	END; %]

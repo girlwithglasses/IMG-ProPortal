@@ -27,6 +27,7 @@ doc.src-metag-mw/
 doc.src-metag/
 doc.src/
 install/
+jbrowse/
 load/
 messageSystem/
 preComputedData/
@@ -43,14 +44,14 @@ webui.htd-proportal/
 worker.cgi/
 MANIFEST*
 cover_db/
+proportal/lib/DBIC/
 
 # proportal specific stuff:
 MANIFEST
 MANIFEST.SKIP
 Makefile.PL
 
-environments/core.json
-environments/sg_dev.json
+environments/img_*.json
 
 docs/
 log/

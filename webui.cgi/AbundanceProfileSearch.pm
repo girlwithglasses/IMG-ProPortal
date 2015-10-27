@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: AbundanceProfileSearch.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: AbundanceProfileSearch.pm 34538 2015-10-20 17:43:00Z klchu $
 # Abundance Profile search / Conditional Function Profile
 ############################################################################
 package AbundanceProfileSearch;
@@ -18,6 +18,7 @@ use QueryUtil;
 use WorkspaceUtil;
 use AbundanceToolkit;
 use GenomeListJSON;
+use HTML::Template;
 
 $| = 1;
 

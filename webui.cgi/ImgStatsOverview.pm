@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: ImgStatsOverview.pm 34180 2015-09-03 21:12:12Z aireland $
+# $Id: ImgStatsOverview.pm 34504 2015-10-14 19:28:14Z klchu $
 ############################################################################
 package ImgStatsOverview;
 
@@ -11,12 +11,14 @@ use Data::Dumper;
 use WebConfig;
 use WebUtil;
 use InnerTable;
+use StaticInnerTable;
 use GeneCassette;
 use DataEntryUtil;
 use HtmlUtil;
 use OracleUtil;
 use TabViewFrame;
 use Date::Format;
+use Scalar::Util qw(looks_like_number);
 
 my $env             = getEnv();
 my $main_cgi        = $env->{main_cgi};
@@ -31,7 +33,7 @@ my $cgi_tmp_dir     = $env->{cgi_tmp_dir};
 
 my $img_er                = $env->{img_er};
 my $img_hmp               = $env->{img_hmp};
-my $img_edu                = $env->{img_edu};
+my $img_edu               = $env->{img_edu};
 my $img_internal          = $env->{img_internal};
 my $img_lite              = $env->{img_lite};
 my $include_metagenomes   = $env->{include_metagenomes};
@@ -55,6 +57,7 @@ my @globalDomain = ( "Bacteria", "Archaea", "Eukaryota", "Plasmids", "Viruses", 
 push( @globalDomain, "*Microbiome" ) if $include_metagenomes;
 
 my $microbiomeLabel = "Metagenome";    # column heading for *Microbiome
+
 #$microbiomeLabel = "Samples" if $img_hmp;
 
 ############################################################################
@@ -85,7 +88,7 @@ sub dispatch {
     my $oidsInCart_ref = GenomeCart::getAllGenomeOids();
 
     if ( $oidsInCart_ref < 0 ) {
-        my $time = 3600 * 24;          # 24 hour cache
+        my $time = 3600 * 24;         # 24 hour cache
         my $sid  = getContactOid();
         HtmlUtil::cgiCacheInitialize($section);
         HtmlUtil::cgiCacheStart() or return;
@@ -162,6 +165,8 @@ sub dispatch {
         printTreeStats();
     } elsif ( $page eq 'treeStatsList' ) {
         printTreeStatsList();
+    } elsif ( $page eq 'NR' ) {
+        printNRGenomeList();
     } else {
         my $dbh = dbLogin();
         printAllStats($dbh);
@@ -192,21 +197,22 @@ sub printAllStats {
 
     TabViewFrame::printTabViewMarkup();
     my @tabNames = ( "Genome Statistics", "Gene/Cluster Statistics", "Function/Pathway Statistics" );
-    if(!$img_edu) {
-        push(@tabNames, "OMICS");
+    if ( !$img_edu ) {
+        push( @tabNames, "OMICS" );
     }
 
     my $super_user = getSuperUser();
-    if($super_user eq 'Yes') {
-        push(@tabNames, 'Admin Stats');
+    if ( $super_user eq 'Yes' ) {
+        push( @tabNames, 'Admin Stats' );
     }
 
-    my @tabIds   = TabViewFrame::printTabViewWidgetStart(@tabNames);
+    my @tabIds = TabViewFrame::printTabViewWidgetStart(@tabNames);
 
 ### Tab 1 ###
     TabViewFrame::printTabIdDivStart( $tabIds[0] );
     printGenomeStats($dbh);
     printDNAStats($dbh);
+    printNRStats($dbh);
     TabViewFrame::printTabIdDivEnd();
 
 ### Tab 2 ###
@@ -222,19 +228,18 @@ sub printAllStats {
     TabViewFrame::printTabIdDivEnd();
 
 ### Tab 4 ###
-    if(!$img_edu) {
-    TabViewFrame::printTabIdDivStart( $tabIds[3], "class='yui-hidden'" );
-    printExperiments($dbh);
-    TabViewFrame::printTabIdDivEnd();
+    if ( !$img_edu ) {
+        TabViewFrame::printTabIdDivStart( $tabIds[3], "class='yui-hidden'" );
+        printExperiments($dbh);
+        TabViewFrame::printTabIdDivEnd();
     }
 
-    if($super_user eq 'Yes') {
+    if ( $super_user eq 'Yes' ) {
 ### Tab 5 ###
         TabViewFrame::printTabIdDivStart( $tabIds[4], "class='yui-hidden'" );
         printAdminStats();
         TabViewFrame::printTabIdDivEnd();
     }
-
 
     TabViewFrame::printTabViewWidgetEnd();
 ### End tabs ###
@@ -248,16 +253,16 @@ sub printAdminStats {
     };
 
     print qq{
-        <h2>Isolates Study Viewer</h2>
+        <h2>Isolates GOLD Project Viewer</h2>
 
    <input class="smbutton" type="button" name="table"
-    value="Study Table Viewer" onclick="window.open('main.cgi?section=StudyViewer&page=tableviewisolate', '_self')">
+    value="GOLD Project Table Viewer" onclick="window.open('main.cgi?section=StudyViewer&page=tableviewisolate', '_self')">
 
     };
 
-    if($include_metagenomes) {
+    if ($include_metagenomes) {
 
-    print qq{
+        print qq{
         <h2>Samples Study Tree Viewer</h2>
         <p>
 
@@ -274,7 +279,7 @@ sub printAdminStats {
     };
     }
 
-        # phylum breakdown counts
+# phylum breakdown counts
 #        print qq{
 #        <h2>Phylum Count Statistics</h2>
 #
@@ -304,7 +309,80 @@ sub printAdminStats {
 #        };
 #        }
 
+}
 
+# public data non redundant
+sub printNRGenomeList {
+    my $domain = param('domain');
+    my $dbh    = dbLogin();
+
+    my $sql = qq{
+select t.taxon_oid, t.sequencing_gold_id
+from taxon t
+where t.OBSOLETE_FLAG = 'No'
+and t.IS_PUBLIC = 'Yes'
+and t.is_nr = 'Yes'
+and t.domain = ?      
+    };
+
+    my @taxonOids;
+
+    #my %distinctGp;
+    my $cur = execSql( $dbh, $sql, $verbose, $domain );
+    for ( ; ; ) {
+        my ( $taxonOid, $sequencing_gold_id ) = $cur->fetchrow();
+        last if ( !$taxonOid );
+        push( @taxonOids, $taxonOid );
+
+        #$distinctGp{$sequencing_gold_id} = $sequencing_gold_id;
+    }
+
+    my @selectedCol = ('t.sequencing_gold_id');
+    require GenomeList;
+    GenomeList::printGenomesViaList( \@taxonOids, \@selectedCol, "$domain Genomes" );
+
+    #    my $size1 = @taxonOids;
+    #    my $size2 = keys %distinctGp;
+    #    WebUtil::printStatusLine( "$size1 Genomes $size2 GP", 2 );
+}
+
+sub printNRStats {
+    my ($dbh) = @_;
+
+    print qq{
+        <h2>Distinct NR Genome Statistics</h2>
+        <p>
+        Distinct public NR genomes
+        </p>
+    };
+
+    my $sql = qq{
+select t.domain, count(*)
+from taxon t
+where t.OBSOLETE_FLAG = 'No'
+and t.IS_PUBLIC = 'Yes'
+and t.is_nr = 'Yes'
+group by t.domain        
+    };
+
+    my $it = new StaticInnerTable();
+    my $sd = $it->getSdDelim();
+
+    $it->addColSpec( "Domain",       "asc", "left" );
+    $it->addColSpec( "Genome Count", "asc", " right" );
+
+    my $cur = execSql( $dbh, $sql, $verbose );
+    for ( ; ; ) {
+        my ( $domain, $count ) = $cur->fetchrow();
+        last if ( !$domain );
+
+        my $url = "$section_cgi&page=NR&domain=$domain";
+        my $r   = "";
+        $r .= $domain . $sd . $domain . "\t";
+        $r .= $count . $sd . alink( $url, $count ) . "\t";
+        $it->addRow($r);
+    }
+    $it->printOuterTable(1);
 }
 
 ############################################################################
@@ -312,7 +390,7 @@ sub printAdminStats {
 ############################################################################
 sub printGenomeStats {
     require MainPageStats;
-    my %stats  = MainPageStats::mainPageStats();
+    my %stats = MainPageStats::mainPageStats();
     my @status = ( "Finished", "Draft", "Permanent Draft", "Total" );
 
     # @globalDomain defined globally
@@ -521,8 +599,6 @@ YUI_HEAD
             $domCnt++;
         }
 
-
-
         $idx++;
         print "</tr>\n";
     }
@@ -542,24 +618,24 @@ sub printGeneStats() {
     my $delim        = "###";
 
     my @rowTitleField = (
-                          "Total Genes" . $delim . "total_gene_count",
-                          "Protein-coding genes total" . $delim . "cds_genes",
-                          $indent . "horizontally transferred genes" . $delim . "genes_hor_transfer",
-                          $indent . "fused genes" . $delim . "fused_genes",
-                          $indent . "genes as fusion components" . $delim . "fusion_components",
-                          $indent . "genes with signal peptides" . $delim . "genes_signalp",
-                          $indent . "genes with transmembrane segments" . $delim . "genes_transmembrane",
-                          "RNA-coding genes total" . $delim . "rna_genes",
-                          $indent . "rRNA genes" . $delim . "rrna_genes",
-                          $doubleIndent . "5S" . $delim . "rrna5s_genes",
-                          $doubleIndent . "16S" . $delim . "rrna16s_genes",
-                          $doubleIndent . "18S" . $delim . "rrna18s_genes",
-                          $doubleIndent . "23S" . $delim . "rrna23s_genes",
-                          $indent . "tRNA genes" . $delim . "trna_genes",
-                          $indent . "other RNA genes" . $delim . "other_rna_genes",
-                          "Pseudogenes" . $delim . "pseudo_genes",
-                          "Obsolete genes" . $delim . "genes_obsolete",
-                          "Revised genes" . $delim . "genes_revised"
+        "Total Genes" . $delim . "total_gene_count",
+        "Protein-coding genes total" . $delim . "cds_genes",
+        $indent . "horizontally transferred genes" . $delim . "genes_hor_transfer",
+        $indent . "fused genes" . $delim . "fused_genes",
+        $indent . "genes as fusion components" . $delim . "fusion_components",
+        $indent . "genes with signal peptides" . $delim . "genes_signalp",
+        $indent . "genes with transmembrane segments" . $delim . "genes_transmembrane",
+        "RNA-coding genes total" . $delim . "rna_genes",
+        $indent . "rRNA genes" . $delim . "rrna_genes",
+        $doubleIndent . "5S" . $delim . "rrna5s_genes",
+        $doubleIndent . "16S" . $delim . "rrna16s_genes",
+        $doubleIndent . "18S" . $delim . "rrna18s_genes",
+        $doubleIndent . "23S" . $delim . "rrna23s_genes",
+        $indent . "tRNA genes" . $delim . "trna_genes",
+        $indent . "other RNA genes" . $delim . "other_rna_genes",
+        "Pseudogenes" . $delim . "pseudo_genes",
+        "Obsolete genes" . $delim . "genes_obsolete",
+        "Revised genes" . $delim . "genes_revised"
     );
 
     my @domain;
@@ -723,14 +799,13 @@ sub printClusterStats() {
     my $synthetic = "IMG Biosynthetic Pathways total"
       if ($enable_synthetic);
 
-    my $interproText = 'InterPRO total' if($enable_interpro);
+    my $interproText = 'InterPRO total' if ($enable_interpro);
     my @rowTitleField = (
-                          "COG total", "KOG total", "Pfam total", "TIGRfam total",
-                          $eggNogText,
-                          $interproText,
-                          "IMG Ortholog Clusters total",
-                          "IMG Paralog Clusters total",
-                          $cassettes, $synthetic,
+        "COG total", "KOG total", "Pfam total", "TIGRfam total",
+        $eggNogText, $interproText,
+        "IMG Ortholog Clusters total",
+        "IMG Paralog Clusters total",
+        $cassettes, $synthetic,
     );
 
     commonStats( $header, \@rowTitleField );
@@ -743,17 +818,16 @@ sub printFunctionStats() {
     my $header = "Function";
 
     my @rowTitleField = (
-                          "Product Names total",
-                          "No Product Names total",
-                          "Enzyme total",
-                          "IMG Terms total",
-                          "GO-Molecular Functions total",
-                          "KO Terms total",
-#                          "SEED total",
-                          "Swiss-Prot total"
+        "Product Names total",
+        "No Product Names total",
+        "Enzyme total",
+        "IMG Terms total",
+        "GO-Molecular Functions total",
+        "KO Terms total",
+
+        #                          "SEED total",
+        "Swiss-Prot total"
     );
-
-
 
     commonStats( $header, \@rowTitleField );
 }
@@ -775,7 +849,8 @@ sub printPathwayStats() {
         "IMG Parts List total",
         "MetaCyc total",
         "GO-Biological Process total",
- #       "SEED Subsystems total"
+
+        #       "SEED Subsystems total"
     );
 
     commonStats( $header, \@rowTitleField );
@@ -787,13 +862,12 @@ sub printPathwayStats() {
 sub commonStats {
     my ( $header, $rowTitle_ref ) = @_;
 
-
     my @rowTitleField = @$rowTitle_ref;
     my @domain;
     push( @domain, @globalDomain );    # @globalDomain defined globally
 
     # Get time stamp of domain stats file
-    if(!-e $domain_stats_file) {
+    if ( !-e $domain_stats_file ) {
         print qq{
             <p>
             Statistics file $domain_stats_file was not found.
@@ -1017,7 +1091,7 @@ sub printExperiments {
         $rnaseqcount = 1;
     }
 
-    my $proteincount = 0;
+    my $proteincount    = 0;
     my $proteomics_data = $env->{proteomics};
     if ($proteomics_data) {
         $proteincount = 1;
@@ -1031,14 +1105,13 @@ sub printExperiments {
         push @rowTitles, "RNASeq Studies";
     }
     if ( $methylomicscount > 0 ) {
-	push @rowTitles, "Methylation Experiments";
+        push @rowTitles, "Methylation Experiments";
     }
 
     push @rowTitles, "Essential Gene Experiments";
     push @rowTitles, "Total";
 
-    my @domains = ( "Bacteria", "Archaea", "Eukaryota", "Plasmids",
-		    "Viruses", "Genome Fragments" );
+    my @domains = ( "Bacteria", "Archaea", "Eukaryota", "Plasmids", "Viruses", "Genome Fragments" );
     push( @domains, "*Microbiome" ) if $include_metagenomes;
     push( @domains, "Total" );
 
@@ -1059,7 +1132,7 @@ sub printExperiments {
     };
     my $cur = execSql( $dbh, $sql, $verbose );
     my %essential_exps;
-    for ( ;; ) {
+    for ( ; ; ) {
         my ( $cnt, $domain ) = $cur->fetchrow();
         last if !$cnt;
         $essential_exps{ getDomainHeader($domain) } = $cnt;
@@ -1081,7 +1154,7 @@ sub printExperiments {
             order by tx.domain
         };
         $cur = execSql( $dbh, $sql, $verbose );
-        for ( ;; ) {
+        for ( ; ; ) {
             my ( $cnt, $domain ) = $cur->fetchrow();
             last if !$cnt;
             $protein_exps{ getDomainHeader($domain) } = $cnt;
@@ -1091,12 +1164,12 @@ sub printExperiments {
     my %rnaseq_exps;
     if ( $rnaseqcount > 0 ) {
         require RNAStudies;
-        my $rclause    = WebUtil::urClause('tx');
-        my $imgClause  = WebUtil::imgClause('tx');
-	my $datasetClause = RNAStudies::datasetClause('dts');
+        my $rclause       = WebUtil::urClause('tx');
+        my $imgClause     = WebUtil::imgClause('tx');
+        my $datasetClause = RNAStudies::datasetClause('dts');
 
-	# metagenomes only:
-	my $rnaseq_sql = qq{
+        # metagenomes only:
+        my $rnaseq_sql = qq{
             select tx.domain, count(distinct gs.study_name)
             from rnaseq_dataset dts, gold_study\@imgsg_dev gs,
                  gold_sp_study_gold_id\@imgsg_dev gssg, taxon tx
@@ -1110,7 +1183,7 @@ sub printExperiments {
             order by tx.domain
         };
         $cur = execSql( $dbh, $rnaseq_sql, $verbose );
-        for ( ;; ) {
+        for ( ; ; ) {
             my ( $domain, $cnt ) = $cur->fetchrow();
             last if !$cnt;
             $rnaseq_exps{ getDomainHeader($domain) } = $cnt;
@@ -1134,7 +1207,7 @@ sub printExperiments {
             order by tx.domain
         };
         $cur = execSql( $dbh, $sql, $verbose );
-        for ( ;; ) {
+        for ( ; ; ) {
             my ( $cnt, $domain ) = $cur->fetchrow();
             last if !$cnt;
             $methylomics_exps{ getDomainHeader($domain) } = $cnt;
@@ -1181,8 +1254,8 @@ YUI_HEAD
     if ( $rnaseqcount > 0 ) {
         push @urls, $url2;
     }
-    if ($methylomicscount > 0) {
-	push @urls, $url4;
+    if ( $methylomicscount > 0 ) {
+        push @urls, $url4;
     }
     push @urls, $url3;
 
@@ -1218,10 +1291,10 @@ YUI_HEAD
                 $count = $rnaseq_exps{$curDom}
                   if $title eq "RNASeq Studies";
             }
-	    if ( $methylomicscount > 0 ) {
-		$count = $methylomics_exps{$curDom}
-		if $title eq "Methylation Experiments";
-	    }
+            if ( $methylomicscount > 0 ) {
+                $count = $methylomics_exps{$curDom}
+                  if $title eq "Methylation Experiments";
+            }
             $count = $essential_exps{$curDom}
               if $title eq "Essential Gene Experiments";
 
@@ -1690,103 +1763,183 @@ sub readCacheData {
 }
 
 sub getEnvSample_v20 {
-    my ($dbh, $type) = @_;
+    my ( $dbh, $type ) = @_;
     $type = 'metagenome' if $type eq '';
+
     my $sql;
-    my $totalGenome = 0;
+    my $total     = 0;
     my $rclause   = WebUtil::urClause('t');
     my $imgClause = WebUtil::imgClause('t');
 
-    if ($type eq 'metagenome') {
+    if ( $type eq 'metagenome' ) {
 
         # total metagenome count
         $sql = qq{
-select count(*)
-from taxon t
-where t.genome_type = 'metagenome'
-and t.obsolete_flag = 'No'
-$rclause
-$imgClause
+        select count(*)
+        from taxon t
+        where t.genome_type = 'metagenome'
+        and t.obsolete_flag = 'No'
+        $rclause
+        $imgClause
         };
-     } elsif ($type eq 'genome') {
+    } elsif ( $type eq 'genome' ) {
         $sql = qq{
-select count(*)
-from taxon t
-where t.genome_type = 'isolate'
-and t.obsolete_flag = 'No'
-and t.domain in ('Bacteria', 'Archaea' ,'Eukaryota')
-$rclause
-$imgClause
+        select count(*)
+        from taxon t
+        where t.genome_type = 'isolate'
+        and t.obsolete_flag = 'No'
+        and t.domain in ('Bacteria', 'Archaea' ,'Eukaryota')
+        $rclause
+        $imgClause
+        };
+    } elsif ( $type eq 'virus' ) {
+        $sql = qq{
+        select count(v.scaffold_id)
+        from taxon t, dt_virals_from_metag\@core_v400_musk v
+        where t.taxon_oid = v.taxon_oid
+        and t.obsolete_flag = 'No'
+        $rclause
+        $imgClause
         };
     }
 
-    if($type eq 'genome' || $type eq 'metagenome') {
+    if ( $type eq 'genome' || $type eq 'metagenome' || $type eq 'virus' ) {
         my $cur = execSql( $dbh, $sql, $verbose );
-        ($totalGenome) = $cur->fetchrow();
-    } elsif ($type eq 'cart') {
+        ($total) = $cur->fetchrow();
+    } elsif ( $type eq 'cart' ) {
         my $oidsInCart_ref = GenomeCart::getAllGenomeOids();
-        $totalGenome = $#$oidsInCart_ref + 1;
+        $total = $#$oidsInCart_ref + 1;
     }
 
-    if ($type eq 'metagenome') {
+    my %taxon2scaffoldcnt;    # for viruses only
+    if ( $type eq 'metagenome' ) {
         $sql = qq{
-select distinct t.taxon_oid, t.taxon_display_name,
-p.geo_location, p.latitude, p.longitude, p.altitude
-from taxon t, GOLD_SEQUENCING_PROJECT p
-where p.GOLD_ID = t.SEQUENCING_GOLD_ID
-and t.genome_type = 'metagenome'
-and t.obsolete_flag = 'No'
-and p.longitude is not null
-and p.latitude is not null
-$rclause
-$imgClause
-order by 4, 5, 3, 2
-      };
+        select distinct t.taxon_oid, t.taxon_display_name,
+        p.geo_location, p.latitude, p.longitude, p.altitude
+        from taxon t, GOLD_SEQUENCING_PROJECT p
+        where p.GOLD_ID = t.SEQUENCING_GOLD_ID
+        and t.genome_type = 'metagenome'
+        and t.obsolete_flag = 'No'
+        and p.longitude is not null
+        and p.latitude is not null
+        $rclause
+        $imgClause
+        order by 4, 5, 3, 2
+        };
 
-    } elsif ($type eq 'genome') {
+    } elsif ( $type eq 'genome' ) {
         $sql = qq{
-select distinct t.taxon_oid, t.taxon_display_name,
-p.geo_location, p.latitude, p.longitude, p.altitude
-from taxon t, GOLD_SEQUENCING_PROJECT p
-where p.GOLD_ID = t.SEQUENCING_GOLD_ID
+        select distinct t.taxon_oid, t.taxon_display_name,
+        p.geo_location, p.latitude, p.longitude, p.altitude
+        from taxon t, GOLD_SEQUENCING_PROJECT p
+        where p.GOLD_ID = t.SEQUENCING_GOLD_ID
         and t.genome_type = 'isolate'
         and t.domain in ('Bacteria', 'Archaea' ,'Eukaryota')
         and t.obsolete_flag = 'No'
         and p.longitude is not null
         and p.latitude is not null
         order by 4, 5, 3, 2
-      };
-    } elsif($type eq 'cart') {
+        };
+
+    } elsif ( $type eq 'cart' ) {
         $sql = qq{
-select distinct t.taxon_oid, t.taxon_display_name,
-p.geo_location, p.latitude, p.longitude, p.altitude
-from taxon t, GOLD_SEQUENCING_PROJECT p
-where p.GOLD_ID = t.SEQUENCING_GOLD_ID
+        select distinct t.taxon_oid, t.taxon_display_name,
+        p.geo_location, p.latitude, p.longitude, p.altitude
+        from taxon t, GOLD_SEQUENCING_PROJECT p
+        where p.GOLD_ID = t.SEQUENCING_GOLD_ID
         and t.obsolete_flag = 'No'
         and p.longitude is not null
         and p.latitude is not null
         order by 4, 5, 3, 2
-      };
+        };
+
+    } elsif ( $type eq 'virus' ) {
+        $sql = qq{
+        select distinct t.taxon_oid, t.taxon_display_name,
+        p.geo_location, p.latitude, p.longitude, p.altitude
+        from taxon t, GOLD_SEQUENCING_PROJECT p,
+             dt_virals_from_metag\@core_v400_musk v
+        where p.GOLD_ID = t.SEQUENCING_GOLD_ID
+        and t.obsolete_flag = 'No'
+        and t.taxon_oid = v.taxon_oid
+        and p.longitude is not null
+        and p.latitude is not null
+        order by 4, 5, 3, 2
+        };
+
+        my $sql2 = qq{
+            select t.taxon_oid, count(distinct v.scaffold_id)
+            from taxon t, dt_virals_from_metag\@core_v400_musk v
+            where t.taxon_oid = v.taxon_oid
+            and t.obsolete_flag = 'No'
+            group by t.taxon_oid
+        };
+        my $cur2 = execSql( $dbh, $sql2, $verbose );
+        for ( ; ; ) {
+            my ( $taxon_oid, $cnt ) = $cur2->fetchrow();
+            last if !$taxon_oid;
+            $taxon2scaffoldcnt{$taxon_oid} = $cnt;
+        }
+        $cur2->finish();
     }
 
-    my @recs;
-
+    # fix for more than one pin at same location
+    # data 18.1120 18.112 and 18.11200000 but for 180 is ok its not 18
+    # all different  remove any trailing zeros are eh decimal point
+    # NB some data are not numbers 10 N 123 E etc ...
+    # so this ad hoc is for numbers only
     my $cur = execSql( $dbh, $sql, $verbose );
+    my @matrix; # array of arrays
     for ( ; ; ) {
         my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = $cur->fetchrow();
         last if !$taxon_oid;
-        $latitude  = strTrim($latitude);
-        $longitude = strTrim($longitude);
-        if ( $latitude eq '' || $longitude eq '' ) {
-            next;
+        $latitude  = WebUtil::strTrim($latitude);
+        $longitude = WebUtil::strTrim($longitude);       
+        
+        next if ( $latitude eq '' || $longitude eq '' );
+        
+        if(looks_like_number($latitude)) {
+            $latitude = $latitude * 1; # hack to convert -010.05000 to -10.05
         }
-        push( @recs, "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude" );
+        if(looks_like_number($longitude)) {
+            $longitude = $longitude * 1;
+        }
+
+        my @row = ($taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude);
+        push(@matrix, \@row);
     }
-    $cur->finish();
+    
+    # now sort by col  3, 4, 2, 1
+    my @sorted = sort{
+        $a->[3] cmp$b->[3] || 
+        $a->[4] cmp $b->[4] ||
+        $a->[4] cmp $b->[2] ||
+        $a->[4] cmp $b->[1]      
+        
+    } @matrix;
+    
+    my @recs;
+    foreach my $row_aref (@sorted) {
+        my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = @$row_aref;
+        push( @recs, "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude" );        
+    }
 
-    return ( \@recs, ( $totalGenome - ( $#recs + 1 ) ) );
+#    my $cur = execSql( $dbh, $sql, $verbose );
+#     my @recs;
+#    for ( ; ; ) {
+#        my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = $cur->fetchrow();
+#        last if !$taxon_oid;
+#        $latitude  = strTrim($latitude);
+#        $longitude = strTrim($longitude);
+#        if ( $latitude eq '' || $longitude eq '' ) {
+#            next;
+#        }
+#        push( @recs, "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude" );
+#    }
+#    $cur->finish();
+
+    return ( \@recs, ( $total - ( $#recs + 1 ) ), $total, \%taxon2scaffoldcnt );
 }
-
 
 # api v3
 # gold metagenome query
@@ -1815,16 +1968,18 @@ sub googleMap_new {
     # flag=1 -> show only those genomes in the cart
     # flag=0 or missing -> show all genomes
     my $flag_mapCart = param('mapcart');
-    my $type = param('type');
+    my $type         = param('type');
     $type = 'metagenome' if $type eq '';
 
     my $hmpMetagenomeCnt = 748;    # no metadata
-    if ($type eq 'metagenome') {
+    if ( $type eq 'metagenome' ) {
         print "<h1>Metagenome Projects Map</h1>";
-    } elsif($type eq 'genome') {
+    } elsif ( $type eq 'genome' ) {
         print "<h1>Projects Map</h1>";
-    } elsif($type eq 'cart') {
+    } elsif ( $type eq 'cart' ) {
         print "<h1>Genome Cart Map</h1>";
+    } elsif ( $type eq 'virus' ) {
+        print "<h1>Virus Projects Map</h1>";
     }
 
     # get Oids for genomes in cart
@@ -1833,7 +1988,7 @@ sub googleMap_new {
     # number of oids in cart
     my $count_cart = $#$oidsInCart_ref + 1;
 
-    if (  !$flag_mapCart   &&  $count_cart  ) {
+    if ( !$flag_mapCart && $count_cart ) {
         print qq{
             <p>
             <a href="$main_cgi?section=ImgStatsOverview&page=googlemap&mapcart=1&type=cart">Map genomes in cart</a>
@@ -1849,64 +2004,23 @@ sub googleMap_new {
         };
     }
 
-
-#    print qq{
-#          <p>
-#          Only public projects that have longitude/latitude coordinates in
-#          GOLD are displayed on this map.
-#          </p>
-#    };
-
     printStatusLine("Loading ...");
     my $dbh = dbLogin();
 
-    my $gmapkey = getGoogleMapsKey();
-
     # should be: order by e.latitude, e.longitude, t.taxon_display_name
-    # recs of
-    # "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude"
+    # recs of: "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude"
     # only public genomes
-    my ( $recs_aref, $count_rejected_getEnvSample ) = getEnvSample_v20($dbh, $type);
+    my ( $recs_aref, $count_rejected_getEnvSample, $total, $taxon2scaffoldcnt_href ) = getEnvSample_v20( $dbh, $type );
+    my %taxon2scaffoldcnt = %$taxon2scaffoldcnt_href;
 
     # count_rejected_getEnvSample returned by getEnvSample contains the
     # number of genomes out of the whole database with missing coords data.
-
-    #$dbh->disconnect();
-
-    my $tmp = $#$recs_aref + 1;
-    if ($type eq 'metagenome') {
-        print qq{
-        <p>
-        $tmp samples. <br/>
-        Some samples maybe rejected via Google Maps because of bad location coordinates.
-        See rejected count above. <br/>
-        Note: rejected count includes $hmpMetagenomeCnt HMP metagenomes that have no location data.
-        <br/>
-        Map pins represent location counts. Some pins may have multiple samples.
-        };
-    } elsif($type eq 'genome') {
-        print qq{
-        <p>
-        $tmp projects. <br/>
-        Some projects maybe rejected via Google Maps because of bad location coordinates.
-        See rejected count above. <br/>
-        Map pins represent location counts. Some pins may have multiple genomes.
-        </p>
-        };
-    } elsif($type eq 'cart') {
-        print qq{
-        <p>
-        Some projects maybe rejected via Google Maps because of bad location coordinates.
-        See rejected count above. <br/>
-        Map pins represent location counts. Some pins may have multiple genomes.
-        </p>
-        };
-    }
 
     ### prepare data to be mapped
     my $recsToDisplay_aref;
     my $count_display = 0;
 
+    my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude );
     if ( $flag_mapCart eq 1 ) {    # put on map only those genomes in the cart
                                    # turn array into hash for easy lookup
         my %oidsInCart_hash = map { $_ => "1" } @$oidsInCart_ref;
@@ -1916,8 +2030,7 @@ sub googleMap_new {
         my @recsToDisplay = ();
         $recsToDisplay_aref = \@recsToDisplay;
         foreach my $line (@$recs_aref) {
-            my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
-
+            ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
             if ( exists $oidsInCart_hash{$taxon_oid} ) {
                 push( @recsToDisplay, $line );
             }
@@ -1926,96 +2039,178 @@ sub googleMap_new {
         $recsToDisplay_aref = $recs_aref;
     }
 
+    my $okcount = 0;
+    if ( $type eq 'virus' ) {
+        foreach my $line (@$recsToDisplay_aref) {
+            ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
+            my $t2scount = $taxon2scaffoldcnt{$taxon_oid};
+            $okcount = $okcount + $t2scount;
+        }
+        $count_rejected_getEnvSample = $total - $okcount;
+    }
+
+    my $tmp = $#$recs_aref + 1;
+    if ( $type eq 'metagenome' ) {
+        print qq{
+        <p>
+        $tmp samples <br/>
+        Some samples maybe rejected via Google Maps because of bad location coordinates.
+        See rejected count above. <br/>
+        Note: rejected count includes $hmpMetagenomeCnt HMP metagenomes that have no location data.
+        <br/>
+        Map pins represent location counts. Some pins may have multiple samples.
+        };
+    } elsif ( $type eq 'genome' ) {
+        print qq{
+        <p>
+        $tmp projects <br/>
+        Some projects maybe rejected via Google Maps because of bad location coordinates.
+        See rejected count above. <br/>
+        Map pins represent location counts. Some pins may have multiple genomes.
+        </p>
+        };
+    } elsif ( $type eq 'cart' ) {
+        print qq{
+        <p>
+        Some projects maybe rejected via Google Maps because of bad location coordinates.
+        See rejected count above. <br/>
+        Map pins represent location counts. Some pins may have multiple genomes.
+        </p>
+        };
+    } elsif ( $type eq 'virus' ) {
+        print qq{
+        <p style='width: 950px;'>
+        $okcount viral scaffolds <br/>
+        Some projects maybe rejected via Google Maps because of bad location coordinates.
+        <br/>Map pins represent location counts. Some pins may have multiple genomes.
+        </p>
+        };
+
+        my $hint =
+"For any given genome at a location on the map, you may access the <u>list of scaffolds</u> that belong to a virus by clicking on a map pin and selecting the <u>count</u> next to the genome of interest for that location. The <u>total count</u> of viral scaffolds for a location is displayed in the label and tooltip of a map pin e.g. Arctic Ocean [3].";
+        printHint($hint);
+        print "<br/>";
+    }
+
     my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
 
+    #my $gmapkey = getGoogleMapsKey();
     # $gmapkey - for v2 api not v3
-    # <script type="text/javascript"
-    #      src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&sensor=SET_TO_TRUE_OR_FALSE">
-    #    </script>
-
-    # <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
+    #<script type="text/javascript"
+    #src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&sensor=SET_TO_TRUE_OR_FALSE">
+    #</script>
+    #<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
     #<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=$gmapkey&sensor=false"></script>
 
-    print <<EOF;
-<link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-<script type="text/javascript" src="$base_url/googlemap.js"></script>
-<script type="text/javascript" src="$base_url/markerclusterer.js"></script>
+    print qq{
+    <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript" src="$base_url/googlemap.js"></script>
+    <script type="text/javascript" src="$base_url/markerclusterer.js"></script>
+    <script type="text/javascript" src="$base_url/markerwithlabel.js"></script>
+    <link rel="stylesheet" type="text/css" href="$base_url/markerwithlabel.css" />
 
     <div id="map_canvas" style="width: 1000px; height: 700px; position: relative;"></div>
 
     <script type="text/javascript">
         var map = createMap(2, 0, 0);
-EOF
+    };
 
-    my $last_lat  = "";
-    my $last_lon  = "";
-    my $last_name = "";
-    my $info      = "";
+    my $last_lat    = "";
+    my $last_lon    = "";
+    my $genome_info = "";
+    my $info        = "";
 
     my $count_mappedSuccessfully = 0;
     my $count_rejected           = 0;
+    my $total_scf_cnt            = 0;    # viral scaffold count for taxon
+    my $scf_url = "$main_cgi?section=ScaffoldCart&page=viralScaffolds&taxon_oid=";
 
-    foreach my $line (@$recsToDisplay_aref) {
-        my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) =
-          split( /\t/, $line );
+    foreach my $line (@$recsToDisplay_aref) {    # these are already sorted
+        ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
+
         $name = escapeHTML($name);
         my $tmp_geo_location = escHtml($geo_location);
         my $tmp_altitude     = escHtml($altitude);
-
-        #webLog( "taxon oid = $taxon_oid  === $name\n");
+        my $scf_cnt          = $taxon2scaffoldcnt{$taxon_oid} if $type eq 'virus';
 
         # add geo location check too ? maybe not
+        # I have to check the array and add the taxon to the tooltip
         if ( ( $last_lat ne $latitude ) || ( $last_lon ne $longitude ) ) {
             if ( $info ne "" ) {
 
                 # clean lat and long remove " ' , etc
                 my $clat  = convertLatLong($last_lat);
                 my $clong = convertLatLong($last_lon);
-                print qq{
+                $genome_info .= " [$total_scf_cnt]" if $type eq 'virus';    # for this location
+
+                if ( $type eq 'virus' ) {
+                    print qq{
                     var contentString = "$info </div>";
-                    addMarker(map, $clat, $clong, '$last_name', contentString);
-                };
+                    addMarkerWithLabel(map, $clat, $clong, '$genome_info', contentString, '$total_scf_cnt');
+                    };
+                } else {
+                    print qq{
+                    var contentString = "$info </div>";
+                    addMarker(map, $clat, $clong, '$genome_info', contentString);
+                    };
+                }
                 $count_mappedSuccessfully++;
             }
 
             # new point
-            $info = "";
+            $info          = "";
+            $total_scf_cnt = 0;
 
             # clean lat and long remove " ' , etc
             my $clat  = convertLatLong($latitude);
             my $clong = convertLatLong($longitude);
+            $genome_info = $tmp_geo_location;
 
             # some data is a space not a null
             if ( $clat eq "" || $clong eq "" ) {
-
                 next;
             }
 
-            $info = "<h1>$tmp_geo_location</h1> <div><p>$latitude, $longitude<br/>$tmp_altitude";
-            $info .= "<br/><a href='$url$taxon_oid'>$name</a>";
+            # TODO: add link to viral scaffolds -Anna
+            my $link = "<a href='$scf_url$taxon_oid' target='_blank'>$scf_cnt</a>";
+            $info = "<h1>$tmp_geo_location</h1>";
+            $info .= "<div><p>$latitude, $longitude<br/>$tmp_altitude";
+            $info .= "<br/><a href='$url$taxon_oid' target='_blank'>$name</a>";
+            $info .= "&nbsp;&nbsp; " . $link if $type eq 'virus';
 
         } else {
-            $info .= "<br/><a href='$url$taxon_oid'>$name</a>";
+            my $link = "<a href='$scf_url$taxon_oid' target='_blank'>$scf_cnt</a>";
+            $info .= "<br/><a href='$url$taxon_oid' target='_blank'>$name</a>";
+            $info .= "&nbsp;&nbsp; " . $link if $type eq 'virus';
         }
         $last_lat = $latitude;
         $last_lon = $longitude;
 
-        # $last_name = CGI::escape($name);
-        $last_name = $name;
+        # $genome_info = CGI::escape($name);
+        #$genome_info = $name; # location can have many genomes
+        $total_scf_cnt += $scf_cnt;
     }
 
-    # last recrod
+    # last record
     if ( $#$recsToDisplay_aref > -1 && $info ne "" ) {
         my $clat  = convertLatLong($last_lat);
         my $clong = convertLatLong($last_lon);
-        if ( $clat eq "" || $clong eq "" ) {
+        $genome_info .= " [$total_scf_cnt]" if $type eq 'virus';    # for this location
 
+        if ( $clat eq "" || $clong eq "" ) {
         } else {
-            print qq{
-                var contentString = "$info";
-                addMarker(map, $clat, $clong, '$last_name', contentString);
-            };
+            if ( $type eq 'virus' ) {
+                print qq{
+                    var contentString = "$info";
+                    addMarkerWithLabel(map, $clat, $clong, '$genome_info', contentString, '$total_scf_cnt');
+                };
+            } else {
+                print qq{
+                    var contentString = "$info";
+                    addMarker(map, $clat, $clong, '$genome_info', contentString);
+                };
+            }
             $count_mappedSuccessfully++;
         }
     }
@@ -2038,7 +2233,6 @@ EOF
     } else {
         printStatusLine( "$count_mappedSuccessfully Locations, $count_rejected rejected", 2 );
     }
-
 }
 
 # gets all gold data
@@ -2225,7 +2419,7 @@ sub printGoMolecular {
 
     # 0 sort col
     my $it = new InnerTable( 1, "gomod$$", "gomod", 0 );
-    my $sd = $it->getSdDelim();                            # sort delimiter
+    my $sd = $it->getSdDelim();    # sort delimiter
 
     $it->addColSpec( "GO ID",      "char asc", "left" );
     $it->addColSpec( "GO Term",    "char asc", "left" );
@@ -2536,7 +2730,7 @@ sub printSeedTaxonGeneList {
     my $product_name = param("product_name");
     my $taxon_oid    = param("taxon_oid");
 
-    my $dbh        = dbLogin();
+    my $dbh = dbLogin();
     my $genomename = genomeName( $dbh, $taxon_oid );
 
     my $rclause   = WebUtil::urClause('g.taxon');
@@ -2809,7 +3003,7 @@ sub printCogTaxonGeneList {
     my $cog_id    = param("cog_id");
     my $taxon_oid = param("taxon_oid");
 
-    my $dbh        = dbLogin();
+    my $dbh = dbLogin();
     my $genomename = genomeName( $dbh, $taxon_oid );
 
     #my %cognames;
@@ -2910,7 +3104,7 @@ sub printGeneListAllFunc {
     $it->addColSpec( "Gene ID",           "number asc", "right" );
     $it->addColSpec( "Locus Tag",         "char asc",   "left" );
     $it->addColSpec( "Gene Product Name", "char asc",   "left" );
-    $it->addColSpec( "Genome ID",           "number asc", "right" );
+    $it->addColSpec( "Genome ID",         "number asc", "right" );
     $it->addColSpec( "Genome Name",       "char asc",   "left" );
 
     for ( ; ; ) {
@@ -3154,7 +3348,7 @@ sub printPfamTaxonGeneList {
     my $pfam_id   = param("pfam_id");
     my $taxon_oid = param("taxon_oid");
 
-    my $dbh        = dbLogin();
+    my $dbh = dbLogin();
     my $genomename = genomeName( $dbh, $taxon_oid );
 
     #my %cognames;
@@ -3404,7 +3598,7 @@ sub printTigrfamTaxonGeneList {
     my $tigrfam_id = param("tigrfam_id");
     my $taxon_oid  = param("taxon_oid");
 
-    my $dbh        = dbLogin();
+    my $dbh = dbLogin();
     my $genomename = genomeName( $dbh, $taxon_oid );
 
     #my %cognames;
@@ -3654,7 +3848,7 @@ sub printEnzymeTaxonGeneList {
     my $enzyme_id = param("enzyme_id");
     my $taxon_oid = param("taxon_oid");
 
-    my $dbh        = dbLogin();
+    my $dbh = dbLogin();
     my $genomename = genomeName( $dbh, $taxon_oid );
 
     #my %cognames;
@@ -3755,7 +3949,7 @@ sub printEssential {
 
     # 0 sort col
     my $it = new InnerTable( 1, "essential$$", "essential", 1 );
-    my $sd = $it->getSdDelim();                                    # sort delimiter
+    my $sd = $it->getSdDelim();    # sort delimiter
 
     $it->addColSpec("Select");
     $it->addColSpec( "Gene ID",           "number asc", "right" );
@@ -3979,7 +4173,7 @@ order by t.domain, t.phylum, t.ir_class, t.ir_order,  t.family, t.genus, t.speci
                 my @a = split( /\t/, $a02[$i] );
                 my $url = "main.cgi?section=ImgStatsOverview&page=treeStatsList&key=" . WebUtil::massageToUrl2( $a02[$i] );
                 $col2_name = $a[1] . $sd . alink( $url, $a[1] );
-                $col2_cnt = $a[$#a] . $sd . $a[$#a]
+                $col2_cnt = $a[$#a] . $sd . $a[$#a];
             } else {
                 $col2_name = 'zzz' . $sd . '_';
                 $col2_cnt  = 'zzz' . $sd . '_';
@@ -3988,7 +4182,7 @@ order by t.domain, t.phylum, t.ir_class, t.ir_order,  t.family, t.genus, t.speci
                 my @a = split( /\t/, $a03[$i] );
                 my $url = "main.cgi?section=ImgStatsOverview&page=treeStatsList&key=" . WebUtil::massageToUrl2( $a03[$i] );
                 $col3_name = $a[2] . $sd . alink( $url, $a[2] );
-                $col3_cnt = $a[$#a] . $sd . $a[$#a]
+                $col3_cnt = $a[$#a] . $sd . $a[$#a];
             } else {
                 $col3_name = 'zzz' . $sd . '_';
                 $col3_cnt  = 'zzz' . $sd . '_';
@@ -3997,7 +4191,7 @@ order by t.domain, t.phylum, t.ir_class, t.ir_order,  t.family, t.genus, t.speci
                 my @a = split( /\t/, $a04[$i] );
                 my $url = "main.cgi?section=ImgStatsOverview&page=treeStatsList&key=" . WebUtil::massageToUrl2( $a04[$i] );
                 $col4_name = $a[3] . $sd . alink( $url, $a[3] );
-                $col4_cnt = $a[$#a] . $sd . $a[$#a]
+                $col4_cnt = $a[$#a] . $sd . $a[$#a];
             } else {
                 $col4_name = 'zzz' . $sd . '_';
                 $col4_cnt  = 'zzz' . $sd . '_';
@@ -4006,7 +4200,7 @@ order by t.domain, t.phylum, t.ir_class, t.ir_order,  t.family, t.genus, t.speci
                 my @a = split( /\t/, $a05[$i] );
                 my $url = "main.cgi?section=ImgStatsOverview&page=treeStatsList&key=" . WebUtil::massageToUrl2( $a05[$i] );
                 $col5_name = $a[4] . $sd . alink( $url, $a[4] );
-                $col5_cnt = $a[$#a] . $sd . $a[$#a]
+                $col5_cnt = $a[$#a] . $sd . $a[$#a];
             } else {
                 $col5_name = 'zzz' . $sd . '_';
                 $col5_cnt  = 'zzz' . $sd . '_';
@@ -4015,7 +4209,7 @@ order by t.domain, t.phylum, t.ir_class, t.ir_order,  t.family, t.genus, t.speci
                 my @a = split( /\t/, $a06[$i] );
                 my $url = "main.cgi?section=ImgStatsOverview&page=treeStatsList&key=" . WebUtil::massageToUrl2( $a06[$i] );
                 $col6_name = $a[5] . $sd . alink( $url, $a[5] );
-                $col6_cnt = $a[$#a] . $sd . $a[$#a]
+                $col6_cnt = $a[$#a] . $sd . $a[$#a];
             } else {
                 $col6_name = 'zzz' . $sd . '_';
                 $col6_cnt  = 'zzz' . $sd . '_';
@@ -4024,7 +4218,7 @@ order by t.domain, t.phylum, t.ir_class, t.ir_order,  t.family, t.genus, t.speci
                 my @a = split( /\t/, $a07[$i] );
                 my $url = "main.cgi?section=ImgStatsOverview&page=treeStatsList&key=" . WebUtil::massageToUrl2( $a07[$i] );
                 $col7_name = $a[6] . $sd . alink( $url, $a[6] );
-                $col7_cnt = $a[$#a] . $sd . $a[$#a]
+                $col7_cnt = $a[$#a] . $sd . $a[$#a];
             } else {
                 $col7_name = 'zzz' . $sd . '_';
                 $col7_cnt  = 'zzz' . $sd . '_';
@@ -4047,7 +4241,7 @@ order by t.domain, t.phylum, t.ir_class, t.ir_order,  t.family, t.genus, t.speci
 
 sub printTreeStatsList {
     my $key = param('key');
-    my @a   = split( /\t/, $key );
+    my @a = split( /\t/, $key );
 
     #    foreach my $x (@a) {
     #        print "$x<br/>\n";
@@ -4073,42 +4267,42 @@ sub printTreeStatsList {
             push( @bind, $domain );
         } elsif ( $i == 1 ) {
             $phylumClause = "and t.phylum = ?";
-            if($a[$i] eq 'unknown') {
+            if ( $a[$i] eq 'unknown' ) {
                 $phylumClause = "and t.phylum is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 2 ) {
             $classClause = "and t.ir_class = ?";
-            if($a[$i] eq 'unknown') {
+            if ( $a[$i] eq 'unknown' ) {
                 $classClause = "and t.ir_class is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 3 ) {
             $orderClause = "and t.ir_order = ?";
-            if($a[$i] eq 'unknown') {
+            if ( $a[$i] eq 'unknown' ) {
                 $orderClause = "and t.ir_order is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 4 ) {
             $familyClause = "and t.family = ?";
-            if($a[$i] eq 'unknown') {
+            if ( $a[$i] eq 'unknown' ) {
                 $familyClause = "and t.family is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 5 ) {
             $genusClause = "and t.genus = ?";
-            if($a[$i] eq 'unknown') {
+            if ( $a[$i] eq 'unknown' ) {
                 $genusClause = "and t.genus is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 6 ) {
             $speciesClause = "and t.species = ?";
-            if($a[$i] eq 'unknown') {
+            if ( $a[$i] eq 'unknown' ) {
                 $speciesClause = "and t.species is null";
             } else {
                 push( @bind, $a[$i] );
@@ -4129,7 +4323,7 @@ $speciesClause
     };
 
     my $title = "Genome List";
-    my $note  = '<p> ' . join( ', ', @a ) . ' </p>';
+    my $note = '<p> ' . join( ', ', @a ) . ' </p>';
 
     require GenomeList;
     GenomeList::printGenomesViaSql( '', $sql, $title, \@bind, '', $note );

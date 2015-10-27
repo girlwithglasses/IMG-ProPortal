@@ -9,19 +9,19 @@
 </p>
 <section class="clade" id="primary">
 <h3>Species distribution by Clade</h3>
-<p>Filter by ecosystem type:</p>
+<p>Filter by subset:</p>
 [%	IF data_filters && data_filters.all %]
 <ul>
 [%	# filter domain
 		FOR fd IN data_filters.all.keys.sort;
 			FOR f IN data_filters.all.$fd.values; %]
-<li><a href="[% links.clade %][% f.id %]">[% f.label %]</a>[%
+<li><a href="[% link('proportal/clade') %]/[% f.id %]">[% f.label %]</a>[%
 				IF data_filters.active && data_filters.active.$fd == f.id;
 		%] (currently displayed)[%
 				END; %]
 </li>
 [%			END; %]
-<li><a href="[% links.clade %]">no filter</a>[%
+<li><a href="[% link('proportal/clade') %]">no filter</a>[%
 			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
 			END; %]</li>
 [%		END; %]
@@ -43,10 +43,10 @@
 <li data-clade-id="[% c.id %]" id="[% c.id %]" class="clade_details">
 	<h4>Genus [% c.genus %]</h4>
 	<h5>Clade [% c.label %], [% c.count %] species</h5>
-	<p><a href="[% links.genome_list_clade %][% c.label %]">View species in table browser</a></p>
+	<p><a href="[% link('genome_list_clade', { clade => c.label } ) %]">View species in table browser</a></p>
 	<ul>
 	[%		FOREACH g IN c.genomes %]
-		<li><a href="[% links.taxon %][% g.taxon_oid %]">[% g.taxon_display_name %]</a> ([% g.ecosystem_subtype %])</li>
+		<li><a href="[% link('taxon', { taxon_oid => g.taxon_oid }) %]">[% g.taxon_display_name %]</a> ([% g.ecosystem_subtype %])</li>
 	[%		END %]
 	</ul>
 </li>

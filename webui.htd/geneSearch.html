@@ -59,7 +59,9 @@ function unfoldDiv(divId, buttonId, showHideStatus) {
     }
     document.getElementById(divId).style.display = newDisplay;
     document.getElementById(buttonId).value = newValue;
-    document.getElementById(buttonId).onclick = function () { unfoldDiv('examples_text', 'showHideButton', newStatus) };
+    document.getElementById(buttonId).onclick = function () { 
+    	unfoldDiv(divId, buttonId, newStatus) 
+    };
 }
 </script>
 

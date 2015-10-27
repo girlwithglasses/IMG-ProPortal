@@ -23,8 +23,38 @@ function createMap(zoomlevel, lat, lon) {
     return map;
 }
 
-function addMarker(map, lat, lon, tooltip, contentString) {
+function addMarkerWithLabel(map, lat, lon, tooltip, contentString, label) {
+    var myLatlng = new google.maps.LatLng(lat,lon);
 
+    var infowindow = new google.maps.InfoWindow({
+        content: contentString
+    });
+
+    tooltip = unescape(tooltip);
+    label = unescape(label);
+
+    var marker = new MarkerWithLabel({
+	position: myLatlng,
+	map: map,
+	title: tooltip,
+	labelContent: label,
+	labelAnchor: new google.maps.Point(16, 0), // half the width + 1
+	labelClass: "maplabel", // the CSS class for the label
+	labelStyle: {opacity: 1.0}
+    });
+
+    markers.push(marker);
+
+    google.maps.event.addListener(marker, 'click', function() {
+	if (openInfoWindow != null) {
+	    openInfoWindow.close();
+	}
+	infowindow.open(map, marker);
+	openInfoWindow = infowindow;
+    });
+}
+
+function addMarker(map, lat, lon, tooltip, contentString) {
     var myLatlng = new google.maps.LatLng(lat,lon);
        
     var infowindow = new google.maps.InfoWindow({
@@ -41,10 +71,10 @@ function addMarker(map, lat, lon, tooltip, contentString) {
     markers.push(marker);
     
     google.maps.event.addListener(marker, 'click', function() {
-      if(openInfoWindow != null) {
-        openInfoWindow.close();
+      if (openInfoWindow != null) {
+          openInfoWindow.close();
       }
-      infowindow.open(map,marker);
+      infowindow.open(map, marker);
       openInfoWindow = infowindow;
     });
 }

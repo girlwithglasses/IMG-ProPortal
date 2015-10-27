@@ -3,7 +3,7 @@
 #  Module to handle the "Find Genes" menu tab option.
 #    --es 07/07/2005
 #
-# $Id: FindGenes.pm 34217 2015-09-09 20:28:14Z klchu $
+# $Id: FindGenes.pm 34488 2015-10-11 17:17:45Z jinghuahuang $
 ############################################################################
 package FindGenes;
 my $section = "FindGenes";
@@ -54,6 +54,7 @@ my $max_metagenome_selection = 50;
 my $grep_bin              = $env->{grep_bin};
 my $rdbms                 = getRdbms();
 my $in_file               = $env->{in_file};
+my $img_nr                = $env->{ img_nr };
 my $http_solr_url         = $env->{ http_solr_url };
 
 ### optional genome field columns to configuration and display
@@ -528,6 +529,7 @@ sub printFindGeneResults {
       ( $dbh, "tx.taxon_oid", \@genomeFilterSelections );
     my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("tx");
     my $imgClause = WebUtil::imgClause('tx');
+    my $imgClause_img_nr_no_forced = WebUtil::imgClause('tx', 1);
 
     my $outputColStr = param("outputCol");
     if ( $searchFilter eq "gene_symbol_list" ) {
@@ -595,14 +597,9 @@ sub printFindGeneResults {
           if $searchFilter eq "gene_symbol_list";
 
         ( $sql, @bindList ) =
-          getLocusTagListSql( $term_str, $rclause, $imgClause,
+          getLocusTagListSql( $term_str, $rclause, $imgClause, $imgClause_img_nr_no_forced,
             $outColClause, $keggJoinClause, \@bindList_ur )
-          if $searchFilter eq "locus_tag_list";
-
-        ( $sql, @bindList ) =
-          getLocusTagListSql( $term_str, $rclause, $imgClause,
-            $outColClause, $keggJoinClause, \@bindList_ur )
-          if $searchFilter eq "locus_tag_merfs";
+          if ( $searchFilter eq "locus_tag_list" || $searchFilter eq "locus_tag_merfs" );
 
         ( $sql, @bindList ) =
           getGeneBankListSql( $term_str, $rclause, $imgClause,
@@ -615,14 +612,9 @@ sub printFindGeneResults {
           if $searchFilter eq "giNo_list";
 
         ( $sql, @bindList ) =
-          getGeneOidListSql( $dbh, $term_str, $rclause, $imgClause, 
+          getGeneOidListSql( $dbh, $term_str, $rclause, $imgClause, $imgClause_img_nr_no_forced, 
             $outColClause, $keggJoinClause, \@bindList_ur )
-          if ( $searchFilter eq "gene_oid_list" && !blankStr($term_str) );
-
-        ( $sql, @bindList ) =
-          getGeneOidListSql( $dbh, $db_term_str, $rclause, $imgClause, 
-            $outColClause, $keggJoinClause, \@bindList_ur )
-          if ( $searchFilter eq "gene_oid_merfs" && !blankStr($db_term_str) );
+          if ( ($searchFilter eq "gene_oid_list" || $searchFilter eq "gene_oid_merfs") && !blankStr($term_str) );
 
         ( $sql, @bindList ) = getImgSynonymsInexactSql(
             $searchTermLc, $taxonClause,    $rclause,       $imgClause,
@@ -662,7 +654,9 @@ sub printFindGeneResults {
 
     my $count = 0;
     my $trunc = 0;
+    my %oldGenes_h;
     my @recs;
+    my %nrGeneMap;
     my $last_gene_oid;
     my $termsLength = 0;
     my %termFoundHash;
@@ -723,12 +717,23 @@ sub printFindGeneResults {
         if ( !$useSolr ) {
             my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
     
+            my @old_genes;
+            my @old_taxons;
             for ( ; ; ) {
                 my ( $gene_oid, $locus_tag, $gene_display_name, $taxon_oid,
                     $taxon_display_name, @terms )
                   = $cur->fetchrow();
                 last if !$gene_oid;
-                next if !$validTaxons{$taxon_oid};
+                if ( !$validTaxons{$taxon_oid} ) {
+                    #print "printFindGeneResults() befoe taxon valid gene_oid=$gene_oid, locus_tag=$locus_tag, taxon_oid=$taxon_oid<br/>\n";
+                    if ( $img_nr ) {
+                        $oldGenes_h{$gene_oid} = $locus_tag;
+                        push( @old_genes, $gene_oid );
+                        push( @old_taxons, $taxon_oid );
+                    }
+                    next;                    
+                }
+
                 $termsLength = scalar(@terms);
     
                 #if ( $gene_oid == $last_gene_oid ) {
@@ -792,8 +797,34 @@ sub printFindGeneResults {
                     $trunc = 1;
                     last;
                 }
-        }
-            $cur->finish();            
+            }
+            $cur->finish();
+
+            if ( $img_nr ) {
+                if ( $searchFilter eq "locus_tag_list" 
+                    || $searchFilter eq "locus_tag_merfs" 
+                    || $searchFilter eq "gene_oid_list" 
+                    || $searchFilter eq "gene_oid_merfs" ) {
+                    %nrGeneMap = fetchNrGeneRecs( $dbh, \@old_genes, \@old_taxons, 
+                            $rclause, $imgClause, $outColClause,
+                            $keggJoinClause, \@bindList_ur );
+                    #print "FindGenes::printFindGeneResults() nrGeneMap:<br/>\n";
+                    #print Dumper(\%nrGeneMap)."<br/>\n";
+                    foreach my $old_gene_oid (keys %nrGeneMap) {
+                        my $rec = $nrGeneMap{$old_gene_oid};
+                        push( @recs, $rec );
+
+                        my ( $gene_oid, @junk ) = split( /\t/, $rec );
+                        $last_gene_oid = $gene_oid;
+            
+                        $count++;
+                        if ( $count >= $max_rows ) {
+                            $trunc = 1;
+                            last;
+                        }
+                    }
+                }
+            }
         }
     }
     if ( $contact_oid == 100546 ) {
@@ -1014,6 +1045,7 @@ sub printFindGeneResults {
     }
 
     if ( $metagFoundCnt == 0 && $count == 1 && scalar(@outputCol) == 0 ) {
+        printOld2New( \%nrGeneMap,  \%oldGenes_h, 1 );
         require GeneDetail;
         GeneDetail::printGeneDetail($last_gene_oid);
         return;
@@ -1029,6 +1061,7 @@ sub printFindGeneResults {
         && ($searchFilter eq "gene_display_name_iex" || $searchFilter eq "locus_tag_merfs" || $searchFilter eq "gene_oid_merf") ) {
         HtmlUtil::printMetaDataTypeSelection($data_type, 1);
     }
+    printOld2New( \%nrGeneMap,  \%oldGenes_h );
     print "</p>\n";
 
     if ( $count == 0 ) {
@@ -1342,6 +1375,21 @@ sub getValidTaxons {
     $cur->finish();            
 
     return %validTaxons;
+}
+
+sub printOld2New {
+    my ( $nrGeneMap_href,  $oldGenes_href, $noBreak ) = @_;
+
+    if ( scalar(keys %$nrGeneMap_href) > 0 && scalar(keys %$oldGenes_href) > 0 ) {
+        print "<br/><br/>\n" if ( !$noBreak );
+        foreach my $old_gene_oid (keys %$nrGeneMap_href) {
+            my $rec = $nrGeneMap_href->{$old_gene_oid};
+            my ( $gene_oid, $locus_tag, @junk ) = split( /\t/, $rec );
+            my $old_locus_tag = $oldGenes_href->{$old_gene_oid};
+            print "Old gene $old_gene_oid ($old_locus_tag) mapped to new gene $gene_oid ($locus_tag)<br/>\n";
+        }
+    }
+
 }
 
 sub searchWebserviceSolr {
@@ -1763,9 +1811,14 @@ sub getGeneSymbolListSql {
 }
 
 sub getLocusTagListSql {
-    my ( $term_str, $rclause, $imgClause, $outColClause,
-        $keggJoinClause, $bindList_ur_ref )
+    my ( $term_str, $rclause, $imgClause, $imgClause_img_nr_no_forced,
+        $outColClause, $keggJoinClause, $bindList_ur_ref )
       = @_;
+
+    my $imgClause0 = $imgClause;
+    if ( $img_nr ) {
+       $imgClause0 = $imgClause_img_nr_no_forced; 
+    }
 
     my $sql = qq{
        select distinct g.gene_oid, g.locus_tag, g.gene_display_name,
@@ -1777,7 +1830,7 @@ sub getLocusTagListSql {
        $keggJoinClause
        where lower(g.locus_tag) in ($term_str)
        $rclause
-       $imgClause
+       $imgClause0
     };
 
     my @bindList = ();
@@ -1838,11 +1891,16 @@ sub getGINumberSql {
 }
 
 sub getGeneOidListSql {
-    my ( $dbh, $term_str, $rclause, $imgClause, $outColClause, $keggJoinClause,
-        $bindList_ur_ref )
+    my ( $dbh, $term_str, $rclause, $imgClause, $imgClause_img_nr_no_forced, 
+        $outColClause, $keggJoinClause, $bindList_ur_ref )
       = @_;
 
     $term_str = validateGeneOids( $dbh, $term_str );
+
+    my $imgClause0 = $imgClause;
+    if ( $img_nr ) {
+       $imgClause0 = $imgClause_img_nr_no_forced; 
+    }
 
     my $sql = qq{
        select distinct g.gene_oid, g.locus_tag, g.gene_display_name,
@@ -1854,7 +1912,7 @@ sub getGeneOidListSql {
        $keggJoinClause
        where g.gene_oid in ( $term_str )
        $rclause
-       $imgClause
+       $imgClause0
     };
 
     my @bindList = ();
@@ -2032,6 +2090,79 @@ sub getPseudogeneExactSql {
     my @bindList     = ();
     processBindList( \@bindList, \@bindList_sql, $bindList_txs_ref,
         $bindList_ur_ref );
+
+    return ( $sql, @bindList );
+}
+
+sub fetchNrGeneRecs {
+    my ( $dbh, $old_genes_ref, $old_taxons_ref, 
+        $rclause, $imgClause, $outColClause,
+        $keggJoinClause, $bindList_ur_ref )
+      = @_;
+   
+    my %nrGeneMap;
+    
+    if ( $old_genes_ref && scalar(@$old_genes_ref) > 0 
+        && $old_taxons_ref && scalar(@$old_taxons_ref) > 0 ) {
+        my $old_genes_str = OracleUtil::getNumberIdsInClause( $dbh, @$old_genes_ref );
+        my $old_taxons_str = OracleUtil::getNumberIdsInClause1( $dbh, @$old_taxons_ref );
+    
+        my ( $sql, @bindList ) = getNrGeneSql( $old_genes_str, $old_taxons_str, 
+            $rclause, $imgClause, $outColClause, $keggJoinClause, $bindList_ur_ref );
+        #print "fetchNrGeneRecs() sql=$sql<br/>\n";
+        #print "fetchNrGeneRecs() bindList=@bindList<br/>\n";
+    
+        my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
+    
+        for ( ; ; ) {
+            my ( $old_gene_oid, $gene_oid, $locus_tag, $gene_display_name, $taxon_oid,
+                $taxon_display_name, @terms )
+              = $cur->fetchrow();
+            last if !$old_gene_oid;
+            last if !$gene_oid;
+    
+            my $rec = "$gene_oid\t";
+            $rec .= "$locus_tag\t";
+            $rec .= "$gene_display_name\t";
+            $rec .= "$taxon_oid\t";
+            $rec .= "$taxon_display_name\t";
+            $rec .= join( "\t", @terms );
+            #print "fetchNrGeneRecs() rec=$rec<br/>\n";
+            
+            $nrGeneMap{$old_gene_oid} = $rec;
+        }
+        $cur->finish();
+        OracleUtil::truncTable( $dbh, "gtt_num_id" ) 
+            if ( $old_genes_str =~ /gtt_num_id/i );        
+        OracleUtil::truncTable( $dbh, "gtt_num_id1" ) 
+            if ( $old_taxons_str =~ /gtt_num_id1/i );        
+    }   
+   
+    return %nrGeneMap;
+}
+
+sub getNrGeneSql {
+    my ( $old_genes_str, $old_taxons_str, 
+        $rclause, $imgClause, $outColClause,
+        $keggJoinClause, $bindList_ur_ref )
+      = @_;
+
+    my $sql = qq{
+       select distinct gm.old_gene, g.gene_oid, g.locus_tag, g.gene_display_name,
+           tx.taxon_oid, tx.taxon_display_name
+           $outColClause
+       from gene g, gene_mapping gm, taxon tx
+       where gm.old_gene in ( $old_genes_str )
+       and gm.old_taxon in ( $old_taxons_str )
+       and gm.gene_oid = g.gene_oid
+       and gm.taxon = g.taxon
+       and g.taxon = tx.taxon_oid
+       $rclause
+       $imgClause
+    };
+
+    my @bindList = ();
+    processBindList( \@bindList, undef, undef, $bindList_ur_ref );
 
     return ( $sql, @bindList );
 }

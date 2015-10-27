@@ -1,4 +1,4 @@
-# $Id: ANI.pm 34246 2015-09-14 17:37:34Z aratner $
+# $Id: ANI.pm 34424 2015-10-05 18:27:01Z aratner $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -33,6 +33,7 @@ my $top_base_url             = $env->{top_base_url};
 my $domain_name              = $env->{domain_name};
 my $img_submit_url           = $env->{img_submit_url};
 my $base_dir                 = $env->{base_dir};
+my $ani_stats_dir            = $env->{bcnp_stats_dir};
 my $cgi_url                  = $env->{cgi_url};
 my $xml_cgi                  = $cgi_url . '/xml.cgi';
 my $cgi_dir                  = $env->{cgi_dir};
@@ -50,9 +51,8 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my ($self) = @_;
-    my $page   = param('page');
-    my $js     = '';
-    my @a      = ();
+    my $page = param('page');
+    my $js = '';
 
     if ($page eq "pairwise") {
         require GenomeListJSON;
@@ -67,6 +67,7 @@ sub getAppHeaderData {
         $js = $template->output;
     }
 
+    my @a = ();
     push(@a, "CompareGenomes", '', '', $js);
     return @a;
 }
@@ -119,6 +120,8 @@ sub dispatch {
 	     paramMatch("selectFiles") ne "") {
         selectFiles();
     } else {
+# 		require ANI::Home;
+# 		ANI::Home::dispatch();
         printLandingPage();
     }
 }
@@ -127,15 +130,13 @@ sub printLandingPage {
     HtmlUtil::cgiCacheInitialize($section);
     HtmlUtil::cgiCacheStart() or return;
 
-    my $cacheDir = "/webfs/scratch/img/bcNp/";
     if ($env->{img_ken_localhost}) {
-        $cacheDir = "/tmp/";
+        $ani_stats_dir = "/tmp/";
     }
-    my $filename      = $cacheDir . 'anistats.stor';
-    my $href          = retrieve($filename);
+    my $filename = $ani_stats_dir . 'anistats-2.stor';
+    my $href = retrieve($filename);
     my $touchFileTime = fileAtime($filename);
     $touchFileTime = Date::Format::time2str("%a %b %e %Y", $touchFileTime);
-    # $bcp_cnt = Number::Format::format_number($bcp_cnt);
 
     my $template = HTML::Template->new(filename => "$base_dir/aniLanding.html");
     $template->param(xcount => Number::Format::format_number($href->{xcount}));
@@ -229,7 +230,11 @@ sub drawCliqueGroups {
             from taxon_ani_matrix tam
             where tam.genome1 in ($tx_str)
             and tam.genome2 in ($tx_str)
+            and tam.ani1 >= 96.5
+            and tam.ani2 >= 96.5
             and tam.final_ani >= 96.5
+            and tam.fraction1 >= 0.6
+            and tam.fraction2 >= 0.6
             and tam.final_fraction >= 0.6
         };
         my $cur = execSql($dbh, $sql, $verbose);
@@ -242,7 +247,7 @@ sub drawCliqueGroups {
         $cur->finish();
 
         my $imageUrl = getImage($clq, $count, \@oids, \%pairs, $zoom, $isdetail);
-        my $cliqueUrl = "$section_cgi&page=cliqueDetails" . "&clique_id=$clq";
+        my $cliqueUrl = "$section_cgi&page=cliqueDetails&clique_id=$clq";
         print "<a href='$cliqueUrl' target='_blank'>" if !$isdetail;
         print "<image src='$imageUrl' title='$clq' border='0' />";
         print "</a>" if !$isdetail;
@@ -330,19 +335,11 @@ sub printCliqueInfoForGenome {
 
     print "<b>Average Nucleotide Identity (ANI)</b>" if !$show_title;
 
-    my ($domain, $phylum, $genus, $species) = getGenusSpecies4Taxon($dbh, $taxon_oid);
+    my ($domain, $phylum, $genus, $species, $ani_species) 
+	= getGenusSpecies4Taxon($dbh, $taxon_oid);
     my $speciesCnt = getGenomesInSpeciesCnt($dbh, $taxon_oid);
-    my $key;
-    if ($genus eq "unclassified") {
-        $key = "unclassified $phylum";
-    } else {
-        my @a = split(/\s+/, $species);
-        if ($#a >= 1) {
-            $species = $a[1];
-        }
-        $key = "$genus $species";
-    }
 
+    my $key = "$ani_species";
     my $dm = substr($domain, 0, 1);
     my $url1 = "$section_cgi&page=genomesForGenusSpecies&genus_species=$key&domain=$dm";
     my $link1 = alink($url1, $speciesCnt);
@@ -355,35 +352,31 @@ sub printCliqueInfoForGenome {
     printHint($hint);
     print "</p>";
 
-    #my $it = new InnerTable(1, "anicontrib$$", "anicontrib", 0);
-    #$it->{pageSize} = 25 if $anicnt > 50;
     my $it = new StaticInnerTable();
-
     my $sd = $it->getSdDelim();
     $it->addColSpec("Clique ID",            "asc", "right");
     $it->addColSpec("Clique Type",          "asc", "center");
     $it->addColSpec("Contributing Species", "asc", "left", '', '', '', (200));
-    $it->addColSpec("Count",                "asc", "right");
+    $it->addColSpec("Genome Count",         "asc", "right");
 
     foreach my $clique_id (sort { $a <=> $b } keys %$cliqueIdTaxonCnt_href) {
-        my $clique_type = $cliqueId2Type_href->{$clique_id};
-        my $cnt         = $cliqueIdTaxonCnt_href->{$clique_id};
-
-        # use the img genus species for display
         my $species_href = $cliqueId2GenusSpecies_href->{$clique_id};
-        my @tmp          = sort keys %$species_href;
-        my $species      = join(", ", @tmp);
+        my @tmp = sort keys %$species_href;
+        my $species = join(", ", @tmp);
 
         my $row;
         my $cliqueUrl = "$section_cgi&page=cliqueDetails"
 	    . "&clique_id=$clique_id";
         my $link = alink($cliqueUrl, $clique_id);
         $row .= $clique_id . $sd . $link . "\t";
+
+        my $clique_type = $cliqueId2Type_href->{$clique_id};
         $row .= $clique_type . "\t";
         $row .= "$species" . "\t";
 
         my $contSpeciesUrl = "$section_cgi&page=speciesForGenomeForClique"
 	    . "&taxon_oid=$taxon_oid&clique_id=$clique_id";
+        my $cnt = $cliqueIdTaxonCnt_href->{$clique_id};
         my $urllink = alink($contSpeciesUrl, $cnt);
         $row .= $cnt . $sd . $urllink . "\t";
 
@@ -450,7 +443,7 @@ sub printQuickSearch {
 		     -name    => "mainForm",
 		     -action  => "$main_cgi",
 		     -enctype => "application/x-www-form-urlencoded",
-		     -method => "post");
+		     -method  => "post");
 
     print "<p><font color='#003366'>"
 	. "Please select 2 genomes:"
@@ -665,8 +658,9 @@ sub printAdvancedSearchForm {
     my $template = getSearchTemplate("$base_dir/genomeJsonTwoDiv.html");
     $template->param(form_id              => 'advanced_frm');
     $template->param(autocomplete         => 1);
-    $template->param(workspace            => 1);                # to allow selection of genome sets
-    $template->param(localfile1           => 1);                # to allow selection of local file
+    $template->param(allow_same_item      => 1);
+    $template->param(workspace            => 1); # to allow selection of genome sets
+    $template->param(localfile1           => 1); # to allow selection of local file
     $template->param(maxSelected1         => $max_pairwise);
     $template->param(maxSelected2         => $max_pairwise);
     $template->param(selectedGenome1Title => 'Pairwise 1:');
@@ -697,13 +691,11 @@ sub printAdvancedSearchForm {
 
 sub loadFiles {
     my ($filenames_aref, $max) = @_;
-
-    my $sid    = getContactOid();
+    my $sid = getContactOid();
     my $folder = "genome";
-
     #checkFolder($folder);
 
-    my $dbh            = dbLogin();
+    my $dbh = dbLogin();
     my %taxons_in_file = MerFsUtil::getTaxonsInFile($dbh);
 
     my @oids;
@@ -835,7 +827,7 @@ sub doPairwise {
         $genomeLabel = "genomes";
     }
     webError("Please select 2 valid $genomeLabel.")
-      if ($nTaxons1 < 1 && (scalar @localfiles1 < 1)) || $nTaxons2 < 1;
+	if ($nTaxons1 < 1 && (scalar @localfiles1 < 1)) || $nTaxons2 < 1;
 
     printStatusLine("Loading ...", 1);
 
@@ -855,7 +847,7 @@ sub doPairwise {
     }
     $cur->finish();
     OracleUtil::truncTable($dbh, "gtt_num_id")
-      if ($tx_str =~ /gtt_num_id/i);
+	if ($tx_str =~ /gtt_num_id/i);
 
     my $hasGenome2Genome = 0;
     if ($nTaxons1 > 0 && $nTaxons2 > 0) {
@@ -951,7 +943,7 @@ sub printPairwiseTable {
     $it->addColSpec("Total BBH",     "asc", "right");
     $it->addColSpec("Precomputed ?", "asc", "left");
 
-    my $taxon_url = "main.cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=";
+    my $taxon_url = "main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
 
     my $cnt = 0;
     foreach my $rec (@$dataRecs_aref) {
@@ -980,7 +972,7 @@ sub printPairwiseTable {
 
         my $precomputed = "No";
         $precomputed = "Yes"
-          if exists $precomputed_href->{ $genome1 . "," . $genome2 };
+	    if exists $precomputed_href->{ $genome1 . "," . $genome2 };
         $row .= $precomputed . "\t";
 
         $it->addRow($row);
@@ -1008,7 +1000,7 @@ sub computePairwiseANI {
     # for both tx1->tx2 and tx2->tx1, so need to run
     # same query flipping genome1 and genome2
     my $tx_str2 = OracleUtil::getNumberIdsInClause($dbh, @oids2);
-    my $sql     = qq{
+    my $sql = qq{
         select distinct tam.genome1, tam.genome2,
                tam.ani1, tam.ani2, tam.fraction1, tam.fraction2,
                tam.total_bbh
@@ -1040,11 +1032,11 @@ sub computePairwiseANI {
         $cur->finish();
     }
     OracleUtil::truncTable($dbh, "gtt_num_id")
-      if ($tx_str2 =~ /gtt_num_id/i);
+	if ($tx_str2 =~ /gtt_num_id/i);
 
     # now flip genome1 and genome2:
     my $tx_str1 = OracleUtil::getNumberIdsInClause($dbh, @oids1);
-    my $sql     = qq{
+    my $sql = qq{
         select distinct tam.genome1, tam.genome2,
                tam.ani1, tam.ani2, tam.fraction1, tam.fraction2,
                tam.total_bbh
@@ -1071,7 +1063,7 @@ sub computePairwiseANI {
         $cur->finish();
     }
     OracleUtil::truncTable($dbh, "gtt_num_id")
-      if ($tx_str1 =~ /gtt_num_id/i);
+	if ($tx_str1 =~ /gtt_num_id/i);
 
     foreach my $tx1 (@oids1) {
         foreach my $tx2 (@oids2) {
@@ -1288,7 +1280,7 @@ sub printPairwiseWithUploadTable {
     $it->addColSpec("AF2->1",       "asc", "right");
     $it->addColSpec("Total BBH",    "asc", "right");
 
-    my $taxon_url = "main.cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=";
+    my $taxon_url = "main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
 
     my $cnt = 0;
     foreach my $rec (@$dataRecs_aref) {
@@ -1323,11 +1315,11 @@ sub printPairwiseWithUploadTable {
 sub uploadLocalFile {
     my ($localfile) = @_;
 
-    my @fhs            = upload($localfile);
-    my @myfhs          = ();
+    my @fhs = upload($localfile);
+    my @myfhs = ();
     my @myupload_files = ();
 
-    my $idx   = 0;
+    my $idx = 0;
     my $error = "";
     foreach my $fh (@fhs) {
         my $tmp_upload_file = "$tmp_dir/ANI_upload_" . $idx . "_$$.fna";
@@ -1423,7 +1415,7 @@ sub printSameSpeciesPairwiseForm {
 }
 
 sub plotSameSpeciesPairwise {
-    my $pt_type       = param("samespecies");     # type of points: af-ani or final
+    my $pt_type = param("samespecies");     # type of points: af-ani or final
     my @genus_species = param("genus_species");
 
     my $dbh = dbLogin();
@@ -1435,7 +1427,7 @@ sub plotSameSpeciesPairwise {
     foreach my $genus_species (@genus_species) {
         my ($lineage_href, $taxons_aref) = getLineage($genus_species);
         my @taxonids = sort @$taxons_aref;
-        my $nTaxons  = scalar @taxonids;
+        my $nTaxons = scalar @taxonids;
         next if $nTaxons < 2;
 
         my $taxonClause1;
@@ -1487,11 +1479,9 @@ sub plotSameSpeciesPairwise {
         push(@array, \%myhash);
 
         OracleUtil::truncTable($dbh, "gtt_num_id")
-          if ($taxonClause1 =~ /gtt_num_id/i);
+	    if ($taxonClause1 =~ /gtt_num_id/i);
         OracleUtil::truncTable($dbh, "gtt_num_id")
-          if ($taxonClause2 =~ /gtt_num_id/i);
-
-        #	last if $nTaxons > 500;
+	    if ($taxonClause2 =~ /gtt_num_id/i);
     }
 
     print encode_json(\@array);
@@ -1545,14 +1535,9 @@ sub printAllCliques {
         $row .= $intra_af . "\t";
 
         my $species_href = $clique2GenusSpecies_href->{$clique_id};
-        my @tmp          = sort keys %$species_href;
-        my $species      = join(", ", @tmp);
+        my @tmp = sort keys %$species_href;
+        my $species = join(", ", @tmp);
         $row .= $species . "\t";
-
-        #my $contSpeciesUrl = "$section_cgi"
-        #    . "&page=speciesForGenomeForClique"
-        #    . "&taxon_oid=$taxon_oid&clique_id=$clique_id";
-        #my $url = alink($contSpeciesUrl, $cnt);
         $row .= $genome_cnt . "\t";
 
         if ($clique_type eq "clique-group") {
@@ -1570,7 +1555,7 @@ sub printAllCliques {
 sub printAllSpeciesInfo {
     my ($show_title, $show_cb) = @_;
     $show_title = 0 if $show_title eq "";
-    $show_cb    = 0 if $show_cb    eq "";
+    $show_cb = 0 if $show_cb eq "";
     print "<h1>Species Browser</h1>" if $show_title;
 
     my $precomputed = 1;
@@ -1579,9 +1564,8 @@ sub printAllSpeciesInfo {
     my %genus_species2clqcnt;
     my %genus_species2types;
 
-    my $cacheDir = "/webfs/scratch/img/bcNp/";
-    my $filename = "aniStats_allSpeciesInfo.stor";
-    my $file     = $cacheDir . $filename;
+    my $filename = "aniStats_allSpeciesInfo-2.stor";
+    my $file = $ani_stats_dir . $filename;
 
     if (-e $file) {
         my $state = retrieve($file);
@@ -1591,10 +1575,12 @@ sub printAllSpeciesInfo {
         my $genus_species2domain_href = $state->{genus_species2domain};
         my $genus_species2clqcnt_href = $state->{genus_species2clqcnt};
         my $genus_species2types_href  = $state->{genus_species2types};
+
         %genus_species2txs    = %$genus_species2txs_href;
         %genus_species2domain = %$genus_species2domain_href;
         %genus_species2clqcnt = %$genus_species2clqcnt_href;
         %genus_species2types  = %$genus_species2types_href;
+
     } else {
         $precomputed = 0;
     }
@@ -1604,7 +1590,7 @@ sub printAllSpeciesInfo {
 
         my $sql = qq{
             select distinct tx.taxon_oid, tx.domain, 
-                   tx.phylum, tx.genus, tx.species
+                   tx.phylum, tx.genus, tx.species, tx.ani_species
             from taxon tx, ANI_CLIQUE_MEMBERS acm
             where tx.obsolete_flag = 'No'
             and tx.taxon_oid = acm.MEMBERS
@@ -1612,20 +1598,11 @@ sub printAllSpeciesInfo {
         my $cur = execSql($dbh, $sql, $verbose);
 
         for ( ;; ) {
-            my ($taxon_oid, $domain, $phylum, $genus, $species) = $cur->fetchrow();
+            my ($taxon_oid, $domain, $phylum, $genus,
+		$species, $ani_species) = $cur->fetchrow();
             last if (!$taxon_oid);
 
-            my $key;
-            if ($genus eq "unclassified") {
-                $key = "unclassified $phylum";
-            } else {
-                my @a = split(/\s+/, $species);
-                if ($#a >= 1) {
-                    $species = $a[1];
-                }
-                $key = "$genus $species";
-            }
-
+	    my $key = "$ani_species";
             my $dm = substr($domain, 0, 1);
             if (!(exists $genus_species2txs{$key})) {
                 $genus_species2txs{$key} = $taxon_oid;
@@ -1636,7 +1613,7 @@ sub printAllSpeciesInfo {
         }
     }
 
-    my $cnt   = 0;
+    my $cnt = 0;
     my $txurl = "$section_cgi&page=genomesForGenusSpecies&genus_species=";
     my $cqurl = "$section_cgi&page=cliquesForGenusSpecies&genus_species=";
 
@@ -1656,9 +1633,9 @@ sub printAllSpeciesInfo {
 
         my $domain = $genus_species2domain{$item};
         $row .= $domain . "\t";
-        $row .= $item . "\t";
+	$row .= $item . "\t";
 
-        my @txs    = split(",", $genus_species2txs{$item});
+        my @txs = split(",", $genus_species2txs{$item});
         my $tx_cnt = scalar @txs;
 
         my $link = alink($txurl . WebUtil::massageToUrl2($item) . "&domain=$domain", $tx_cnt);
@@ -1675,7 +1652,7 @@ sub printAllSpeciesInfo {
             $types_str = join(", ", @types);
         } else {
             $clique_cnt = $genus_species2clqcnt{$item};
-            $types_str  = $genus_species2types{$item};
+            $types_str = $genus_species2types{$item};
         }
 
         my $link = alink($cqurl . $item, $clique_cnt);
@@ -1717,7 +1694,7 @@ sub cliquesForGenomes {
     }
 
     OracleUtil::truncTable($dbh, "gtt_num_id")
-      if ($taxonClause =~ /gtt_num_id/i);
+	if ($taxonClause =~ /gtt_num_id/i);
     return (\%clique2type, \%types);
 }
 
@@ -1771,7 +1748,6 @@ sub printTaxonomyInfo {
         }
         </script>
     };
-
 }
 
 sub printPhylogeneticTree {
@@ -1803,7 +1779,7 @@ sub printGenomesForGenusSpecies {
 
     my $status_str = $seqstatus;
     $status_str = "All Finished, Permanent Draft and Draft"
-      if $seqstatus && $seqstatus eq "both";
+	if $seqstatus && $seqstatus eq "both";
 
     my $dbh = dbLogin();
 
@@ -1814,29 +1790,17 @@ sub printGenomesForGenusSpecies {
         push @binds, $seqstatus;
     }
 
-    # genus can be multi-word, but species is one word
-    my @words  = split(" ", $genus_species);
-    my $nwords = scalar @words;
-
-    my ($genus0, $species0);
-    if ($nwords > 2) {
-        $species0 = pop @words;
-        $genus0 = join(" ", @words);
-    } else {
-        ($genus0, $species0) = split(" ", $genus_species);
-    }
-
     my $sql = qq{
         select distinct tx.taxon_oid, tx.taxon_display_name,
-               tx.species, tx.domain, tx.phylum, tx.ir_class,
-               tx.ir_order, tx.family, acm.CLIQUE_ID
+               tx.species, tx.ani_species, tx.domain, tx.phylum,
+               tx.ir_class, tx.ir_order, tx.family, tx.genus, acm.CLIQUE_ID
         from taxon tx, ANI_CLIQUE_MEMBERS acm
         where tx.obsolete_flag = 'No'
         and tx.taxon_oid = acm.MEMBERS
         $statusClause
-        and tx.genus = ?
+        and tx.ani_species = ?
     };
-    push @binds, $genus0;
+    push @binds, $genus_species;
     my $cur = execSql($dbh, $sql, $verbose, @binds);
 
     my %taxon2name;
@@ -1845,8 +1809,8 @@ sub printGenomesForGenusSpecies {
     my %lineage_h;
 
     for ( ;; ) {
-        my ($taxon_oid, $taxon_name, $species, $domain, $phylum,
-	    $class, $order, $family, $clique_id) = $cur->fetchrow();
+        my ($taxon_oid, $taxon_name, $species, $ani_species, $domain, $phylum,
+	    $class, $order, $family, $genus, $clique_id) = $cur->fetchrow();
         last if (!$taxon_oid);
 
         if ($dm0 && $dm0 ne "") {
@@ -1854,26 +1818,13 @@ sub printGenomesForGenusSpecies {
             next if $dm ne $dm0;
         }
 
-        if ($genus0 eq "unclassified") {
-
-            # $species0 is then actually phylum
-            next if $phylum ne $species0;
-
-        } else {
-            my @a = split(/\s+/, $species);
-            if ($#a >= 1) {
-                $species = $a[1];
-            }
-            next if $species ne $species0;
-        }
-
         push @{ $tx2cliques{$taxon_oid} }, $clique_id;
         $taxon2name{$taxon_oid} = $taxon_name;
 
         my $lineage = $domain . "\t" . $phylum . "\t" . $class . "\t"
-	    . $order . "\t" . $family . "\t" . $genus0;
+	    . $order . "\t" . $family . "\t" . $genus;
         $taxon2lineage{$taxon_oid} = $lineage;
-        $lineage_h{$lineage}       = 1;
+        $lineage_h{$lineage} = 1;
     }
 
     if (!$table_only) {
@@ -1891,7 +1842,7 @@ sub printGenomesForGenusSpecies {
             $lineage .= TaxonDetail::lineageLink("ir_class", $class) . "; ";
             $lineage .= TaxonDetail::lineageLink("ir_order", $order) . "; ";
             $lineage .= TaxonDetail::lineageLink("family",   $family) . "; ";
-            $lineage .= TaxonDetail::lineageLink("genus",    $genus0) . "; ";
+            $lineage .= TaxonDetail::lineageLink("genus",    $genus) . "; ";
             chop $lineage;
             chop $lineage;
 
@@ -1924,7 +1875,7 @@ sub printGenomesForGenusSpecies {
         my $clique_str = join(", ", @cliques);
         my $taxon_name = $taxon2name{$tx};
 
-        my $taxon_url  = "main.cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$tx";
+        my $taxon_url  = "main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$tx";
         my $taxon_link = alink($taxon_url, $taxon_name);
 
         my $row;
@@ -1935,7 +1886,7 @@ sub printGenomesForGenusSpecies {
         my $cnt = 0;
         foreach my $clique_id (@cliques) {
             print ", " if ($cnt > 0);
-            my $cliqueUrl = "$section_cgi&page=cliqueDetails" . "&clique_id=$clique_id";
+            my $cliqueUrl = "$section_cgi&page=cliqueDetails&clique_id=$clique_id";
             my $link = alink($cliqueUrl, $clique_id);
             $row .= $clique_id . $sd . $link;
             $cnt++;
@@ -1971,7 +1922,7 @@ sub printGenomesForGenusSpecies {
 sub printCliquesForGenusSpecies {
     my ($genus_species, $seqstatus, $table_only) = @_;
     my $genus_species0 = param("genus_species");
-    my $seqstatus0     = param("seqstatus");
+    my $seqstatus0 = param("seqstatus");
 
     $table_only    = 0               if $table_only    eq "";
     $genus_species = $genus_species0 if $genus_species eq "";
@@ -1979,7 +1930,7 @@ sub printCliquesForGenusSpecies {
 
     my $status_str = $seqstatus;
     $status_str = "All Finished, Permanent Draft and Draft"
-      if $seqstatus && $seqstatus eq "both";
+	if $seqstatus && $seqstatus eq "both";
 
     my $dbh = dbLogin();
 
@@ -1990,56 +1941,31 @@ sub printCliquesForGenusSpecies {
         push @binds, $seqstatus;
     }
 
-    # genus can be multi-word, but species is one word
-    my @words  = split(" ", $genus_species);
-    my $nwords = scalar @words;
-
-    my ($genus0, $species0);
-    if ($nwords > 2) {
-        $species0 = pop @words;
-        $genus0 = join(" ", @words);
-    } else {
-        ($genus0, $species0) = split(" ", $genus_species);
-    }
-
     my $sql = qq{
         select distinct tx.taxon_oid, tx.taxon_display_name,
-               tx.species, tx.domain, tx.phylum, tx.ir_class, 
-               tx.ir_order, tx.family, acm.CLIQUE_ID
+               tx.species, tx.ani_species, tx.domain, tx.phylum,
+               tx.ir_class, tx.ir_order, tx.family, tx.genus, acm.CLIQUE_ID
         from taxon tx, ANI_CLIQUE_MEMBERS acm
         where tx.obsolete_flag = 'No'
         and tx.taxon_oid = acm.MEMBERS
         $statusClause
-        and tx.genus = ?
+        and tx.ani_species = ?
     };
-    push @binds, $genus0;
+    push @binds, $genus_species;
     my $cur = execSql($dbh, $sql, $verbose, @binds);
 
     my %clique2txs;
     my %lineage_h;
 
     for ( ;; ) {
-        my ($taxon_oid, $taxon_name, $species, $domain, $phylum,
-	    $class, $order, $family, $clique_id) = $cur->fetchrow();
+        my ($taxon_oid, $taxon_name, $species, $ani_species, $domain, $phylum,
+	    $class, $order, $family, $genus, $clique_id) = $cur->fetchrow();
         last if (!$taxon_oid);
-
-        if ($genus0 eq "unclassified") {
-
-            # $species0 is then actually phylum
-            next if $phylum ne $species0;
-
-        } else {
-            my @a = split(/\s+/, $species);
-            if ($#a >= 1) {
-                $species = $a[1];
-            }
-            next if $species ne $species0;
-        }
 
         $clique2txs{$clique_id}++;
 
         my $lineage = $domain . "\t" . $phylum . "\t" . $class . "\t"
-	    . $order . "\t" . $family . "\t" . $genus0;
+	    . $order . "\t" . $family . "\t" . $genus;
         $lineage_h{$lineage} = 1;
     }
 
@@ -2056,7 +1982,7 @@ sub printCliquesForGenusSpecies {
             $lineage .= TaxonDetail::lineageLink("ir_class", $class) . "; ";
             $lineage .= TaxonDetail::lineageLink("ir_order", $order) . "; ";
             $lineage .= TaxonDetail::lineageLink("family",   $family) . "; ";
-            $lineage .= TaxonDetail::lineageLink("genus",    $genus0) . "; ";
+            $lineage .= TaxonDetail::lineageLink("genus",    $genus) . "; ";
             chop $lineage;
             chop $lineage;
 
@@ -2071,7 +1997,7 @@ sub printCliquesForGenusSpecies {
     webError("Cannot find cliques for $genus_species") if scalar @cliques < 1;
 
     my $clique_str = join(",", @cliques);
-    my $sql        = qq{
+    my $sql = qq{
         select distinct acm.CLIQUE_ID, ac.clique_type
         from ANI_CLIQUE_MEMBERS acm, ANI_CLIQUE ac
         where acm.CLIQUE_ID = ac.CLIQUE_ID
@@ -2086,7 +2012,7 @@ sub printCliquesForGenusSpecies {
     $it->addColSpec("Genome Count<br/><i>$genus_species</i> <u>only</u>", "asc", "right");
 
     my $clique_url = "$section_cgi&page=cliqueDetails&clique_id=";
-    my $cnt        = 0;
+    my $cnt = 0;
     for ( ;; ) {
         my ($clique_id, $clique_type) = $cur->fetchrow();
         last if (!$clique_id);
@@ -2107,18 +2033,6 @@ sub printCliquesForGenusSpecies {
 sub getLineage {
     my ($genus_species, $seqstatus) = @_;
 
-    # genus can be multi-word, but species is one word
-    my @words  = split(" ", $genus_species);
-    my $nwords = scalar @words;
-
-    my ($genus0, $species0);
-    if ($nwords > 2) {
-        $species0 = pop @words;
-        $genus0 = join(" ", @words);
-    } else {
-        ($genus0, $species0) = split(" ", $genus_species);
-    }
-
     my $dbh = dbLogin();
 
     my @binds;
@@ -2130,37 +2044,26 @@ sub getLineage {
 
     my $sql = qq{
         select distinct tx.taxon_oid, tx.taxon_display_name,
-               tx.species, tx.domain, tx.phylum, tx.ir_class,
-               tx.ir_order, tx.family
+               tx.species, tx.ani_species, tx.domain, tx.phylum,
+               tx.ir_class, tx.ir_order, tx.family, tx.genus
         from taxon tx, ANI_CLIQUE_MEMBERS acm
         where tx.obsolete_flag = 'No'
         and tx.taxon_oid = acm.MEMBERS
         $statusClause
-        and tx.genus = ?
+        and tx.ani_species = ?
     };
-    push @binds, $genus0;
+    push @binds, $genus_species;
     my $cur = execSql($dbh, $sql, $verbose, @binds);
 
     my %lineage_h;
     my @taxons;
     for ( ;; ) {
-        my ($taxon_oid, $taxon_name, $species, $domain, $phylum,
-	    $class, $order, $family) = $cur->fetchrow();
+        my ($taxon_oid, $taxon_name, $species, $ani_species, $domain, $phylum,
+	    $class, $order, $family, $genus) = $cur->fetchrow();
         last if (!$taxon_oid);
 
-        if ($genus0 eq "unclassified") {
-            $species = $phylum;
-        } else {
-            my @a = split(/\s+/, $species);
-            if ($#a >= 1) {
-                $species = $a[1];
-            }
-        }
-
-        next if $species ne $species0;
-
         my $lineage = $domain . "\t" . $phylum . "\t" . $class . "\t"
-	    . $order . "\t" . $family . "\t" . $genus0;
+	    . $order . "\t" . $family . "\t" . $genus;
         $lineage_h{$lineage} = 1;
 
         push @taxons, $taxon_oid;
@@ -2175,7 +2078,7 @@ sub printInfoForGenusSpecies {
 
     my $status_str = $seqstatus;
     $status_str = "All Finished, Permanent Draft and Draft"
-      if $seqstatus && $seqstatus eq "both";
+	if $seqstatus && $seqstatus eq "both";
 
     my ($lineage_href, $taxons_aref) = getLineage($genus_species, $seqstatus);
 
@@ -2221,7 +2124,7 @@ sub printInfoForGenusSpecies {
 
 sub printCliqueDetails {
     my $clique_id = param("clique_id");
-    my $dbh       = dbLogin();
+    my $dbh = dbLogin();
 
     my $sql = qq{
         select ac.clique_type, ac.intra_clique_ani, ac.intra_clique_af
@@ -2233,8 +2136,9 @@ sub printCliqueDetails {
     $intra_af = sprintf("%.3f", $intra_af) if $intra_af ne "";
 
     my $sql = qq{
-        select tx.taxon_oid, tx.taxon_display_name, 
-               tx.domain, tx.phylum, tx.genus, tx.species
+        select tx.taxon_oid, tx.taxon_display_name,
+               tx.domain, tx.phylum, tx.genus,
+               tx.species, tx.ani_species
         from taxon tx, ANI_CLIQUE_MEMBERS acm
         where tx.obsolete_flag = 'No'
         and tx.taxon_oid = acm.MEMBERS
@@ -2246,28 +2150,18 @@ sub printCliqueDetails {
     my %taxon2info;
 
     for ( ;; ) {
-        my ($taxon_oid, $taxon_name, $domain, $phylum, $genus, $species) = $cur->fetchrow();
+        my ($taxon_oid, $taxon_name, $domain, $phylum,
+	    $genus, $species, $ani_species) = $cur->fetchrow();
         last if (!$taxon_oid);
 
-        my $key;
-        if ($genus eq "unclassified") {
-            $key = "unclassified $phylum";
-        } else {
-            my @a = split(/\s+/, $species);
-            if ($#a >= 1) {
-                $species = $a[1];
-            }
-            $key = "$genus $species";
-        }
-
+        my $key = "$ani_species";
         my $dm = substr($domain, 0, 1);
         $taxon2info{$taxon_oid} = $dm . "\t" . $taxon_name . "\t" . $key;
         $nGenomes++;
     }
 
     print "<h1>Clique Details</h1>";
-    print "<p><u>Clique ID</u>: $clique_id";
-    print "</p>";
+    print "<p><u>Clique ID</u>: $clique_id </p>";
 
     require TabHTML;
     TabHTML::printTabAPILinks("cliqueDetailsTab");
@@ -2398,8 +2292,8 @@ sub printCliqueDetails {
         $row .= $inter_af . "\t";
 
         my $species_href = $clique2GenusSpecies_href->{$clique_id2};
-        my @tmp          = sort keys %$species_href;
-        my $species      = join(", ", @tmp);
+        my @tmp = sort keys %$species_href;
+        my $species = join(", ", @tmp);
         $row .= $species . "\t";
 
         $it->addRow($row);
@@ -2428,7 +2322,7 @@ sub printCliqueDetails {
 
 sub printGenomesForClique {
     my $cliqueId = param("clique_id");
-    my $dbh      = dbLogin();
+    my $dbh = dbLogin();
 
     my $sql = qq{
         select t.taxon_oid
@@ -2455,7 +2349,7 @@ sub printSpeciesForGenomeForClique {
     my $dbh = dbLogin();
 
     my $sql = qq{
-        select t.taxon_oid, t.genus, t.species
+        select t.taxon_oid, t.genus, t.species, t.ani_species
         from ani_clique_members acm, taxon t
         where acm.members = t.taxon_oid
         and t.OBSOLETE_FLAG = 'No'
@@ -2466,46 +2360,33 @@ sub printSpeciesForGenomeForClique {
     };
 
     my %distinctSpecies;
-    my %distinctGenus;
     my $cur = execSql($dbh, $sql, $verbose, $taxon_oid);
     for ( ;; ) {
-        my ($taxon_oid, $genus, $species) = $cur->fetchrow();
+        my ($taxon_oid, $genus, $species, $ani_species) = $cur->fetchrow();
         last if (!$taxon_oid);
 
-        my @a = split(/\s+/, $species);
-        if ($#a >= 1) {
-            $species = $a[1];
-        }
-        my $key = "$species";
+        my $key = "$ani_species";
         $distinctSpecies{$key} = 1;
-        $distinctGenus{$genus} = 1;
     }
 
-    my @genusKeys = keys %distinctGenus;
-    my $genusStr  = OracleUtil::getFuncIdsInClause($dbh, @genusKeys);
+    my @genusKeys = keys %distinctSpecies;
+    my $genusStr = OracleUtil::getFuncIdsInClause($dbh, @genusKeys);
 
     my $sql = qq{
-        select t.taxon_oid, t.species, t.genus
+        select t.taxon_oid
         from taxon t, ANI_CLIQUE_MEMBERS acm
         where t.obsolete_flag = 'No'
         and t.taxon_oid = acm.MEMBERS
         and acm.CLIQUE_ID = ?
-        and t.genus in ($genusStr)
+        and t.ani_species in ($genusStr)
     };
 
     my @taxonIds;
     my $cur = execSql($dbh, $sql, $verbose, $cliqueId);
     for ( ;; ) {
-        my ($id, $sp, $g) = $cur->fetchrow();
+        my ($id) = $cur->fetchrow();
         last if (!$id);
-        my @a = split(/\s+/, $sp);
-        if ($#a >= 1) {
-            $sp = $a[1];
-        }
-
-        if (exists $distinctSpecies{$sp} && exists $distinctGenus{$g}) {
-            push(@taxonIds, $id);
-        }
+	push(@taxonIds, $id);
     }
 
     my $taxon_name = WebUtil::taxonOid2Name($dbh, $taxon_oid, 1);
@@ -2521,13 +2402,12 @@ sub printSpeciesForGenomeForClique {
 sub getGenusSpecies4Taxon {
     my ($dbh, $taxon_oid) = @_;
     my $sql = qq{
-        select domain, phylum, genus, species 
+        select domain, phylum, genus, species, ani_species
         from taxon where taxon_oid = ?
     };
     my $cur = execSql($dbh, $sql, $verbose, $taxon_oid);
-    my ($domain, $phylum, $genus, $species) = $cur->fetchrow();
-
-    return ($domain, $phylum, $genus, $species);
+    my ($domain, $phylum, $genus, $species, $ani_species) = $cur->fetchrow();
+    return ($domain, $phylum, $genus, $species, $ani_species);
 }
 
 #
@@ -2539,22 +2419,23 @@ sub printGenomesInSpecies {
     printStatusLine("Loading...", 1);
 
     my $dbh = dbLogin();
-    my ($domain, $phylum, $genus, $species) = getGenusSpecies4Taxon($dbh, $taxon_oid);
+    my ($domain, $phylum, $genus, $species, $ani_species)
+	= getGenusSpecies4Taxon($dbh, $taxon_oid);
 
-    my @a = split(/\s+/, $species);
-    if ($#a >= 1) {
-        $species = $a[1];    # like search?
-    }
+    my $key = "$ani_species";
 
-    print "<h1>Genomes of Species: $genus $species</h1>";
+    print "<h1>Genomes of Species</h1>";
+    print "<p><u>Species</u>: $key </p>";
 
     my $sql = qq{
-        select t.taxon_oid, t.species, t.taxon_display_name, acm.CLIQUE_ID
+        select t.taxon_oid, t.taxon_display_name, acm.CLIQUE_ID
         from taxon t, ANI_CLIQUE_MEMBERS acm
         where t.obsolete_flag = 'No'
         and t.taxon_oid = acm.MEMBERS
-        and t.genus = ? 
+        and t.domain = ?
+        and t.ani_species = ?
     };
+    my $cur = execSql($dbh, $sql, $verbose, $domain, $ani_species);
 
     my $it = new InnerTable(1, "ani$$", "ani", 1);
     my $sd = $it->getSdDelim();
@@ -2563,22 +2444,21 @@ sub printGenomesInSpecies {
     $it->addColSpec("Genome Name",        "asc", "left");
     $it->addColSpec("Present in Cliques", "asc", "right");
 
-    my $cur = execSql($dbh, $sql, $verbose, $genus);
     my $url = "main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
     my $cnt = 0;
     for ( ;; ) {
-        my ($taxon_oid, $sp, $taxon_display_name, $count) = $cur->fetchrow();
+        my ($taxon_oid, $taxon_display_name, $clq)
+	    = $cur->fetchrow();
         last if !$taxon_oid;
 
-        if ($sp =~ /$species/) {
-            my $row = $sd . "<input type='checkbox' name='taxon_filter_oid' " . " value='$taxon_oid' />\t";
-            $row .= $taxon_oid . $sd . $taxon_oid . "\t";
-            my $tmp = alink($url . $taxon_oid, $taxon_display_name);
-            $row .= $tmp . $sd . $tmp . "\t";
-            $row .= $count . $sd . $count . "\t";
-            $it->addRow($row);
-            $cnt++;
-        }
+	my $row = $sd . "<input type='checkbox' name='taxon_filter_oid' "
+	    . " value='$taxon_oid' />\t";
+	$row .= $taxon_oid . $sd . $taxon_oid . "\t";
+	my $tmp = alink($url . $taxon_oid, $taxon_display_name);
+	$row .= $tmp . $sd . $tmp . "\t";
+	$row .= $clq . $sd . $clq . "\t";
+	$it->addRow($row);
+	$cnt++;
     }
 
     printMainForm();
@@ -2593,55 +2473,48 @@ sub printGenomesInSpecies {
 sub getGenomesInSpeciesCnt {
     my ($dbh, $taxon_oid) = @_;
 
-    my ($domain, $phylum, $genus, $species) = getGenusSpecies4Taxon($dbh, $taxon_oid);
-    my @a = split(/\s+/, $species);
-    if ($#a >= 1) {
-        $species = $a[1];    # like search?
-    }
+    my ($domain, $phylum, $genus, $species, $ani_species)
+	= getGenusSpecies4Taxon($dbh, $taxon_oid);
 
     my $sql = qq{
-        select t.taxon_oid, t.species 
+        select count(distinct t.taxon_oid)
         from taxon t, ani_clique_members acm
         where t.obsolete_flag = 'No'
         and t.taxon_oid = acm.members
-        and t.genus = ? 
+        and t.domain = ?
+        and t.ani_species = ?
     };
-    my $cur = execSql($dbh, $sql, $verbose, $genus);
-    my $cnt = 0;
-    for ( ;; ) {
-        my ($id, $sp) = $cur->fetchrow();
-        last if (!$id);
-        if ($sp =~ /$species/) {
-            $cnt++;
-        }
-    }
+    my $cur = execSql($dbh, $sql, $verbose, $domain, $ani_species);
+    my ($cnt) = $cur->fetchrow();
+    $cur->finish();
     return $cnt;
 }
 
 sub getAllClique2GenusSpecies {
-    my ($dbh) = @_;
+    my ($dbh, $cliques) = @_;
+
+    my $cliqClause = "";
+    if ($cliques) {
+	my $clique_str = join(",", @$cliques);
+	$cliqClause = "and acm.CLIQUE_ID in ($clique_str)";
+    }
+
     my $sql = qq{
-        select acm.clique_id, t.taxon_oid, t.phylum, t.genus, t.species
+        select acm.clique_id, t.taxon_oid, t.phylum,
+               t.genus, t.species, t.ani_species
         from ani_clique_members acm, taxon t
         where acm.members = t.taxon_oid
         and t.OBSOLETE_FLAG = 'No'
+        $cliqClause
     };
     my $cur = execSql($dbh, $sql, $verbose);
-    my %clique2GenusSpecies;    # clique Id => hash of img $genus $species
+    my %clique2GenusSpecies;
     for ( ;; ) {
-        my ($clique_id, $taxon_oid, $phylum, $genus, $species) = $cur->fetchrow();
+        my ($clique_id, $taxon_oid, $phylum, $genus,
+	    $species, $ani_species) = $cur->fetchrow();
         last if (!$taxon_oid);
 
-        my $key;
-        if ($genus eq "unclassified") {
-            $key = "unclassified $phylum";
-        } else {
-            my @a = split(/\s+/, $species);
-            if ($#a >= 1) {
-                $species = $a[1];
-            }
-            $key = "$genus $species";
-        }
+        my $key = "$ani_species";
 
         if (exists $clique2GenusSpecies{$clique_id}) {
             my $href = $clique2GenusSpecies{$clique_id};
@@ -2658,110 +2531,49 @@ sub getAllClique2GenusSpecies {
 sub getInfoForGenome {
     my ($dbh, $taxon_oid) = @_;
 
+    # first get the clique ids (and type) for the genome:
     my $sql = qq{
-        select t.phylum, t.genus, t.species
-        from ani_clique_members acm, taxon t
+        select acm.CLIQUE_ID, ac.clique_type
+        from ani_clique ac, ani_clique_members acm, taxon t
         where acm.members = t.taxon_oid
+        and ac.CLIQUE_ID = acm.CLIQUE_ID
         and t.OBSOLETE_FLAG = 'No'
         and t.taxon_oid = ?
     };
-
-    my %distinctSpecies;
-    my %distinctGenus;
     my $cur = execSql($dbh, $sql, $verbose, $taxon_oid);
+
+    my %cliqueId2Type;
+    my @cliques;
     for ( ;; ) {
-        my ($phylum, $genus, $species) = $cur->fetchrow();
-        last if (!$phylum);
+	my ($clique_id, $clique_type, $phylum) = $cur->fetchrow();
+        last if (!$clique_id);
 
-        my $key;
-        if ($genus eq "unclassified") {
-            $key = "unclassified\t$phylum";
-        } else {
-            my @a = split(/\s+/, $species);
-            if ($#a >= 1) {
-                $species = $a[1];
-            }
-            $key = "$genus\t$species";
-        }
-
-        $distinctGenus{$genus} = 1;    # img genus type
-        $distinctSpecies{$key} = 1;
+	push @cliques, $clique_id;
+	$cliqueId2Type{$clique_id} = $clique_type;
     }
-
-    my @genusKeys = keys %distinctGenus;
-    my $genusStr  = OracleUtil::getFuncIdsInClause($dbh, @genusKeys);
-
-    if ($#genusKeys < 0 || $genusStr eq '') {
-        return (-1, '', '', '');
-    }
-
-    my $cur;
-    if ($genusStr eq "\'unclassified\'") {
-        my $sql = qq{
-        select acm.CLIQUE_ID, ac.clique_type, 
-               t.taxon_oid, t.phylum, t.genus, t.species
-        from ani_clique ac, ani_clique_members acm, taxon t
-        where acm.members = t.taxon_oid
-        and ac.CLIQUE_ID = acm.CLIQUE_ID
-        and t.OBSOLETE_FLAG = 'No'
-        and t.taxon_oid = ?
-        };
-        $cur = execSql($dbh, $sql, $verbose, $taxon_oid);
-    } else {
-        my $sql = qq{
-        select acm.CLIQUE_ID, ac.clique_type, 
-               t.taxon_oid, t.phylum, t.genus, t.species
-        from ani_clique ac, ani_clique_members acm, taxon t
-        where acm.members = t.taxon_oid
-        and ac.CLIQUE_ID = acm.CLIQUE_ID
-        and t.OBSOLETE_FLAG = 'No'
-        and t.genus in ($genusStr)
-        };
-        $cur = execSql($dbh, $sql, $verbose);
-    }
-    my %cliqueId2GenusSpecies;    # clique Id => hash of img $genus $species
-    my %cliqueIdTaxonCnt;         # clique Id => taxon count
-    my %cliqueId2Type;            # clique id => type
-
-    for ( ;; ) {
-        my ($clique_id, $clique_type, $taxon_oid, $phylum, $genus, $species) = $cur->fetchrow();
-        last if (!$taxon_oid);
-
-        my $key;
-        my $key2;
-        if ($genus eq "unclassified") {
-            $key  = "unclassified $phylum";
-            $key2 = "unclassified\t$phylum";
-        } else {
-            my @a = split(/\s+/, $species);
-            if ($#a >= 1) {
-                $species = $a[1];
-            }
-            $key  = "$genus $species";
-            $key2 = "$genus\t$species";
-        }
-
-        next if (!exists $distinctSpecies{$key2});
-
-        $cliqueId2Type{$clique_id} = $clique_type;
-
-        if (exists $cliqueId2GenusSpecies{$clique_id}) {
-            my $href = $cliqueId2GenusSpecies{$clique_id};
-            $href->{$key} = 1;
-        } else {
-            my %h = ($key => 1);
-            $cliqueId2GenusSpecies{$clique_id} = \%h;
-        }
-
-        if (exists $cliqueIdTaxonCnt{$clique_id}) {
-            $cliqueIdTaxonCnt{$clique_id} = $cliqueIdTaxonCnt{$clique_id} + 1;
-        } else {
-            $cliqueIdTaxonCnt{$clique_id} = 1;
-        }
-    }
-
     my $total = scalar keys %cliqueId2Type;
-    return ($total, \%cliqueIdTaxonCnt, \%cliqueId2Type, \%cliqueId2GenusSpecies);
+    return 0 if !$total;
+
+    my $clique_str = join(",", @cliques);
+    my $sql = qq{
+        select distinct acm.CLIQUE_ID, count(distinct tx.taxon_oid)
+        from taxon tx, ANI_CLIQUE_MEMBERS acm
+        where tx.obsolete_flag = 'No'
+        and tx.taxon_oid = acm.MEMBERS
+        and acm.CLIQUE_ID in ($clique_str)
+        group by acm.CLIQUE_ID
+    };
+    my $cur = execSql($dbh, $sql, $verbose);
+
+    my %cliqueId2TaxonCnt;
+    for ( ;; ) {
+        my ($clique_id, $genome_cnt) = $cur->fetchrow();
+        last if (!$clique_id);
+	$cliqueId2TaxonCnt{ $clique_id } = $genome_cnt;
+    }
+
+    my $clique2GenusSpecies_href = getAllClique2GenusSpecies($dbh, \@cliques);
+    return ($total, \%cliqueId2TaxonCnt, \%cliqueId2Type, $clique2GenusSpecies_href);
 }
 
 sub getMaxPairwise {

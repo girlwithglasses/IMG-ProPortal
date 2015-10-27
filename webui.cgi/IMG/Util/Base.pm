@@ -3,8 +3,12 @@ package IMG::Util::Base;
 use base 'Import::Base';
 
 our @IMPORT_MODULES = (
-	'strict',
-	'warnings',
+#	'warnings',
+   'strict',
+	'strictures' => [ 'version', '2' ],
+    '>-indirect' => [ 'fatal' ],
+    '>-multidimensional',
+    '>-bareword::filehandles',
 	'feature' => [ qw( :5.16 ) ],
 	'Data::Dumper::Concise',
 	'Carp',

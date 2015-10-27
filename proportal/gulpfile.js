@@ -77,6 +77,7 @@ gulp.task("libsass", function () {
 		.pipe( p.sass({ "errLogToConsole": true }) )
 		.pipe( p.autoprefixer( "last 2 version" ) )
 //		.pipe( p.pixrem( 16, { atrules: true } ) )
+        .pipe( p.chmod(666))
 		.pipe( gulp.dest( target + 'css/') );
 });
 
@@ -99,6 +100,7 @@ gulp.task( "styles", [ "libsass" ], function() {
 	return stream.on( "error", function( e ) {
 		console.error( e );
 	})
+	.pipe( p.chmod(666))
 	.pipe( gulp.dest( target + 'css/' ) );
 });
 

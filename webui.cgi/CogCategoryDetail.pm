@@ -55,6 +55,22 @@ if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
+sub getPageTitle {
+    my $page = param('page');
+    if($page =~ /kog/i) {
+       return 'KOG'; 
+    } else {
+        return 'COG';
+    }
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ("FindFunctions");
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################

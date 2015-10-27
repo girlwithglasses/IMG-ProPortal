@@ -30,9 +30,9 @@
 	    <TMPL_IF NAME=img_internal>
               <li class="sub3"> <a href="<TMPL_VAR NAME=main_cgi_url>?section=PhyloClusterProfiler&page=phyloProfileForm"> IMG Clusters </a></li>
 	    </TMPL_IF>
-	    <TMPL_IF NAME=find_gene_1>
+
               <li class="sub3"> <a href="<TMPL_VAR NAME=main_cgi_url>?section=GeneCassetteProfiler&page=geneContextPhyloProfiler2"> Gene Cassettes </a> </li>
-	    </TMPL_IF>
+
           </ul>
         </li>
       </ul>
@@ -92,6 +92,10 @@
         </li>
         <li class="sub2"><a href="<TMPL_VAR NAME=main_cgi_url>?section=FindFunctions&page=ffoAllKeggPathways&view=brite"><img class="menuimg" src="<TMPL_VAR NAME=base_url>/images/kegg.png"/>&nbsp;KEGG<img class="subarrow" src="<TMPL_VAR NAME=base_url>/images/ArrowNav.gif"/></a>
           <ul>
+            <li class="sub3"><a href="<TMPL_VAR NAME=main_cgi_url>?section=KeggPathwayDetail&page=koList">KO List</a> </li>
+            <li class="sub3"><a href="<TMPL_VAR NAME=main_cgi_url>?section=KeggPathwayDetail&page=koList&stats=1">KO List w/ Stats</a> </li>
+            <li class="sub3"><a href="<TMPL_VAR NAME=main_cgi_url>?section=KeggPathwayDetail&page=keggmodulelist">KEGG Module List</a> </li>
+            <li class="sub3"><a href="<TMPL_VAR NAME=main_cgi_url>?section=KeggPathwayDetail&page=keggmodulelist&stats=1">KEGG Module List w/ Stats</a> </li>
             <li class="sub3"><a href="<TMPL_VAR NAME=main_cgi_url>?section=FindFunctions&page=ffoAllKeggPathways&view=brite"> Orthology KO Terms </a> </li>
             <li class="sub3"><a href="<TMPL_VAR NAME=main_cgi_url>?section=FindFunctions&page=ffoAllKeggPathways&view=ko"> Pathways via KO Terms </a> </li>
           </ul>

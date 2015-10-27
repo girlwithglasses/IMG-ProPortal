@@ -1,8 +1,17 @@
 #!/usr/bin/env perl
 
-use FindBin qw/ $Bin /;
-use lib ( "$Bin/../lib", "$Bin/../t/lib", "$Bin/../../webui.cgi" );
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	my $dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib webui.cgi/t/lib );
+}
+use lib @dir_arr;
 use IMG::Util::Base 'Test';
+use FindBin qw/ $Bin /;
 use Test::MockModule;
 
 use_ok( 'ANI::Home' );
@@ -36,12 +45,22 @@ subtest 'get ani stats' => sub {
 
 };
 
+{   package TemplateApp;
+    use IMG::Util::Base 'Class';
+    has 'config' => ( is => 'ro' );
+    with 'IMG::App::Role::LinkManager', 'IMG::App::Role::Templater';
+    1;
+}
+
 subtest 'template rendering' => sub {
 
 	my $dir = $Bin;
 	$dir =~ s!webUI/.*!webUI/proportal/!;
-	IMG::Views::Templater::init_env( { base_dir => $dir } );
-	my $output = IMG::Views::Templater::render_template( 'pages/ani_home.tt', ANI::Home::get_ani_stats() );
+
+#    TODO: test template with or without stats
+
+    my $tmpl_app = TemplateApp->new( { base_dir => $dir } );
+	my $output = $tmpl_app->render_template( 'pages/ani_home.tt', ANI::Home::get_ani_stats() );
 
 	ok( $output =~ m!<strong>$stats->{acount}</strong>! && $output =~ m!Updated $stats->{date}!, 'Checking content' );
 

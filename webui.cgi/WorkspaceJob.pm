@@ -141,6 +141,10 @@ sub dispatch {
         || paramMatch("deleteResult") )
     {
         deleteResult();
+    } elsif ( $page eq "downloadResult"
+        || paramMatch("downloadResult") )
+    {
+        downloadResult();
     } elsif ( $page eq "saveSelectedJobFunctions"
         || paramMatch("saveSelectedJobFunctions") )
     {
@@ -198,6 +202,7 @@ sub printJobMainForm {
     $it->addColSpec( "Type",       "char asc", "left" );
     $it->addColSpec( "Start Time", "char asc", "left" );
     $it->addColSpec( "Parameters", "char asc", "left" );
+    $it->addColSpec( "File Size",  "char asc", "left" );
     $it->addColSpec( "End Time",   "char asc", "left" );
     $it->addColSpec( "Status",     "char asc", "left" );
     my $sd = $it->getSdDelim();
@@ -205,6 +210,7 @@ sub printJobMainForm {
     opendir( DIR, $job_dir )
       or webDie("failed to read files");
     my @files = readdir(DIR);
+    closedir(DIR);
 
     my $count = 0;
     foreach my $x ( sort @files ) {
@@ -236,6 +242,10 @@ sub printJobMainForm {
             $it->addRow($r);
             next;
         }
+
+        my $size = Workspace::getDirSize($job_file_dir);
+        my $display_size = WorkspaceUtil::getDisplaySize($size);
+        $r .= $display_size . $sd . $display_size . "\t";
 
         # error?
         $fname = "$job_file_dir/error.txt";
@@ -273,7 +283,6 @@ sub printJobMainForm {
         $it->addRow($r);
         $count++;
     }
-    closedir(DIR);
 
     $it->printOuterTable(1);
 
@@ -281,6 +290,12 @@ sub printJobMainForm {
     print submit(
         -name  => "_section_WorkspaceJob_confirmDelete",
         -value => "Delete",
+        -class => "smdefbutton"
+    );
+    print nbsp(1);
+    print submit(
+        -name  => "_section_WorkspaceJob_downloadResult",
+        -value => "Download",
         -class => "smdefbutton"
     );
 
@@ -310,6 +325,8 @@ sub showJobDetail {
     my @set_names;
     my $datatype;
     my $dtype;
+    my $functype;
+    my $share_func_set_name;
     while ( my $line = $res->getline() ) {
         chomp $line;
         if ( $lineno == 0 ) {
@@ -324,7 +341,14 @@ sub showJobDetail {
             } elsif ( $tag eq "--scaffold" ) {
                 @set_names = split( /\,/, $val );
             } elsif ( $tag eq "--function" ) {
-                @set_names = split( /\,/, $val );
+                if (   $job_type eq 'Genome Function Profile' ) {
+                    $share_func_set_name = $val;
+                }
+                else {
+                    @set_names = split( /\,/, $val );                
+                }           
+            } elsif ( $tag eq "--functype" ) {
+                $functype = $val;
             } elsif ( $tag eq "--datatype" ) {
                 $datatype = $val;
             } elsif ( $tag eq "--dtype" ) {
@@ -360,8 +384,10 @@ sub showJobDetail {
         print "<p><font color='orange'>Status: Processing (Note: Only partial result is displayed.)</font><br/>\n";
     }
 
-    if (   $job_type eq 'Genome Function Profile' 
-        || $job_type eq 'Gene Function Profile'
+    if ( $job_type eq 'Genome Function Profile' )
+    {
+        showGenomeFuncProfileJobDetail( $sid, $job_name, $job_type, $functype, $share_func_set_name, \@set_names, $datatype );
+    } elsif ( $job_type eq 'Gene Function Profile'
         || $job_type eq 'Scaffold Function Profile' )
     {
         showFuncProfileJobDetail( $sid, $job_name, $job_type, \@set_names, $datatype );
@@ -385,6 +411,103 @@ sub showJobDetail {
 
     print end_form();
 }
+
+###############################################################################
+# showGenomeFuncProfileJobDetail
+###############################################################################
+sub showGenomeFuncProfileJobDetail {
+    my ( $sid, $job_name, $job_type, $functype, $share_func_set_name, $set_names_ref, $data_type ) = @_;
+
+    my $dbh = dbLogin();
+
+    my $hide_zero = 1;
+    my $setTxtExist = 0;
+    my %ownerSetName2shareSetName;
+    my %set2taxons_h;
+    my %dbTaxons;
+    my %fileTaxons;
+
+    my $job_file_dir = "$workspace_dir/$sid/job/$job_name";
+    
+    if ( -e "$job_file_dir/set.txt" ) {
+        $setTxtExist = 1;
+        my $res0 = newReadFileHandle("$job_file_dir/set.txt");
+        while ( my $line = $res0->getline() ) {
+            chomp $line;
+            if ( $line =~ /\-\-set/ ) {
+                my ( $tag, $set_name, @oids ) = split( /\t/, $line );
+                if ( $tag && $tag eq '--set' ) {
+                    my ( $owner, $x ) = WorkspaceUtil::splitOwnerFileset( $sid, $set_name, $ownerFilesetDelim_message );
+                    my $fileset_name = WorkspaceUtil::getOwnerFilesetName( $owner, $x, $ownerFilesetDelim, $sid );
+                    my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
+                    $ownerSetName2shareSetName{$fileset_name} = $share_set_name;
+                    $set2taxons_h{$fileset_name} = \@oids; 
+                }
+            }
+            elsif ( $line =~ /\-\-db_taxons/ ) {
+                my ( $tag, @oids ) = split( /\t/, $line );
+                if ( $tag && $tag eq '--db_taxons' ) {
+                    WebUtil::arrayRef2HashRef( \@oids, \%dbTaxons, 1 );
+                }
+            }
+            elsif ( $line =~ /\-\-file_taxons/ ) {
+                my ( $tag, @oids ) = split( /\t/, $line );
+                if ( $tag && $tag eq '--file_taxons' ) {
+                    WebUtil::arrayRef2HashRef( \@oids, \%fileTaxons, 1 );
+                }
+            }
+        }
+        close $res0;
+        #print "showGenomeFuncProfileJobDetail() set2taxons_h: <br/>\n";
+        #print Dumper(\%set2taxons_h);
+        #print "<br/>\n";
+    }
+
+    my %funcId2taxonOrset2cnt_h;
+    my $total_cnt = 0;
+
+    my $res = newReadFileHandle("$job_file_dir/profile.txt");
+    while ( my $line = $res->getline() ) {
+        chomp $line;
+        my ( $setOrtaxon_name, $func_id, $cnt ) = split( /\t/, $line );
+        my ( $owner, $x ) = WorkspaceUtil::splitOwnerFileset( $sid, $setOrtaxon_name, $ownerFilesetDelim_message );
+        my $fileset_name = WorkspaceUtil::getOwnerFilesetName( $owner, $x, $ownerFilesetDelim, $sid );
+        if ( !$setTxtExist ) {
+            my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
+            $ownerSetName2shareSetName{$fileset_name} = $share_set_name;            
+        }
+
+        if ( $funcId2taxonOrset2cnt_h{$func_id} ) {
+            my $h2_ref = $funcId2taxonOrset2cnt_h{$func_id};
+            $h2_ref->{$fileset_name} = $cnt;
+        } else {
+            my %h2;
+            $h2{$fileset_name} = $cnt;
+            $funcId2taxonOrset2cnt_h{$func_id} = \%h2;
+        }
+        $total_cnt += $cnt;
+    }
+    close $res;
+
+    my $folder = $GENOME_FOLDER;
+    my $isSet = 1;
+
+    my $dbh = dbLogin();
+    my @func_ids = keys %funcId2taxonOrset2cnt_h;
+    my %func_names = QueryUtil::fetchFuncIdAndName( $dbh, \@func_ids );
+    my @all_files = keys %ownerSetName2shareSetName;
+    my $cntLinkBase = $section_cgi 
+        . "&page=showJobResultList&job_name=$job_name&job_type=$job_type";
+
+    require WorkspaceGenomeSet;
+    WorkspaceGenomeSet::printGenomeFuncProfileTable($dbh, $sid, $isSet, $folder, 
+        $functype, $share_func_set_name, \@func_ids, \%func_names,
+        \@all_files, '', '', $data_type, \%ownerSetName2shareSetName,
+        \%set2taxons_h, \%dbTaxons, \%fileTaxons, \%funcId2taxonOrset2cnt_h, 
+        $total_cnt, $cntLinkBase);
+
+}
+
 
 ###############################################################################
 # showFuncProfileJobDetail
@@ -491,13 +614,14 @@ sub showFuncProfileJobDetail {
                 my $url = $section_cgi . "&page=showJobResultList&job_name=$job_name" 
                   . "&job_type=$job_type&func_id=$func_id";
                 my $fileset_name = $shareSetName2ownerSetName{$set_name};
-                if ( $job_type =~ /Genome/ ) {
-                    $url .= "&genome_set=$fileset_name";
-                } elsif ( $job_type =~ /Gene/ ) {
-                    $url .= "&gene_set=$fileset_name";
-                } else {
-                    $url .= "&scaffold_set=$fileset_name";
-                }
+                $url .= "&input_file=$fileset_name";
+#                if ( $job_type =~ /Genome/ ) {
+#                    $url .= "&genome_set=$fileset_name";
+#                } elsif ( $job_type =~ /Gene/ ) {
+#                    $url .= "&gene_set=$fileset_name";
+#                } else {
+#                    $url .= "&scaffold_set=$fileset_name";
+#                }
                 $url .= "&data_type=$datatype" if ($datatype);
                 $r .= $cnt . $sd . alink( $url, $cnt ) . "\t";
                 $total += $cnt;
@@ -641,6 +765,7 @@ sub showKmerJobDetail {
     opendir( DIR, $job_file_dir )
       or webDie("failed to read $job_file_dir files");
     my @files = readdir(DIR);
+    closedir(DIR);
 
     for my $x (@files) {
         #print "showKmerJobDetail() x=$x<br/>\n";
@@ -1129,7 +1254,7 @@ sub showSaveFuncGeneDetail {
     my $text = qq{
         <p>
         $total_saved genes saved to file <b>$fname</b><br/>
-        <font color=red>If you don't see the saved file, please have patience wait for the system update.</font>
+        <font color=red>If you don't see the saved file, please wait for the system update.</font>
         </p>
     };
 
@@ -1341,35 +1466,35 @@ sub showJobResultList {
     my $job_name = param('job_name');
     my $func_id  = param('func_id');
     my $job_type = param('job_type');
-    my $genome_set = param('genome_set');
-    my $gene_set = param('gene_set');
-    my $scaf_set = param('scaffold_set');
+    my $input_file = param('input_file');
     my $data_type = param('data_type');
+
+    my $set_name_title;
+    my $taxon_oid;
+    if ( $job_type =~ /Genome/ ) {
+        $set_name_title = 'Genome';
+        $taxon_oid = param('taxon_oid');
+    } elsif ( $job_type =~ /Gene/ ) {
+        $set_name_title = 'Gene';
+    } else {
+        $set_name_title = 'Scaffold';
+    }
 
     my $dbh = dbLogin();
     my $sid = getContactOid();
-    my $set_name;
-    my $set_name_message;
-    my $set_name_title;
 
     print "<h1>$job_type: $job_name</h1>\n";
 
     print "<p>";
-    if ( $job_type =~ /Genome/ ) {
-        $set_name = $genome_set;
-        $set_name_title = 'Genome';
-    } elsif ( $job_type =~ /Gene/ ) {
-        $set_name = $gene_set;
-        $set_name_title = 'Gene';
-    } else {
-        $set_name = $scaf_set;
-        $set_name_title = 'Scaffold';
-    }
-    my ( $owner, $x ) = WorkspaceUtil::splitOwnerFileset( $sid, $set_name, $ownerFilesetDelim );
-    $set_name_message = WorkspaceUtil::getOwnerFilesetName( $owner, $x, $ownerFilesetDelim_message, $sid );
+    my ( $owner, $x ) = WorkspaceUtil::splitOwnerFileset( $sid, $input_file, $ownerFilesetDelim );
+    my $set_name_message = WorkspaceUtil::getOwnerFilesetName( $owner, $x, $ownerFilesetDelim_message, $sid );
     my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
     print "$set_name_title Set: $share_set_name<br/>\n";
-    print hiddenVar( 'input_file', $set_name );
+    print hiddenVar( 'input_file', $input_file );
+    if ( $taxon_oid ) {
+        print "Genome: $taxon_oid<br/>\n";
+        print hiddenVar( 'taxon_oid', $taxon_oid );        
+    }
 
     HtmlUtil::printMetaDataTypeSelection( $data_type, 2 );
     print hiddenVar( 'data_type', $data_type ) if ($data_type);
@@ -1405,10 +1530,13 @@ sub showJobResultList {
         my ( $set2, $func_id2, $gene_id, $gene_name, $t_oid, $data_type, @junk ) 
             = split( /\t/, $line );
 
-        if ( $set2 ne $set_name_message ) {
+        if ( $set_name_message && $set_name_message ne $set2 ) {
             next;
         }
-        if ( $func_id2 ne $func_id ) {
+        if ( $taxon_oid && $taxon_oid ne $t_oid ) {
+            next;
+        }
+        if ( $func_id && $func_id ne $func_id2 ) {
             next;
         }
         if ( $done{$line} ) {
@@ -1468,9 +1596,10 @@ sub showJobResultList {
     WebUtil::printGeneCartFooter();
 
     if ( $gene_count > 0 ) {
-        MetaGeneTable::printMetaGeneTableSelect();
-
-        WorkspaceUtil::printSaveGeneToWorkspace_withAllGeneCart($select_id_name);
+        print "<br/>\n";
+        #MetaGeneTable::printMetaGeneTableSelect();
+        #WorkspaceUtil::printSaveGeneToWorkspace_withAllGeneCart($select_id_name);
+        WorkspaceUtil::printSaveAndExpandTabsForGenes( $select_id_name );
     }
 
     printStatusLine( "$gene_count gene(s) loaded", 2 );
@@ -1521,6 +1650,7 @@ sub printConfirmDelete {
 # deleteResult
 ###############################################################################
 sub deleteResult {
+    
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
         webError("Your login has expired.");
@@ -1530,7 +1660,6 @@ sub deleteResult {
     $sid = sanitizeInt($sid);
 
     my @job_ids = param('job_id');
-
     for my $job_id (@job_ids) {
         if ( !$job_id ) {
             next;
@@ -1538,12 +1667,15 @@ sub deleteResult {
 
         $job_id = MetaUtil::sanitizeGeneId3($job_id);
         my $job_file_dir = "$workspace_dir/$sid/job/$job_id";
+        #print "deleteResult() job_file_dir=$job_file_dir<br/>\n";
         my $job_sandbox_file_dir = "$workspace_sandbox_dir/$sid/job/$job_id";
         
         if ( -e $job_file_dir ) {    
             opendir( DIR, "$job_file_dir" )
               or webDie("failed to read files");
             my @files = readdir(DIR);
+            closedir(DIR);
+            #print "deleteResult() job files=@files<br/>\n";
 
             for my $x (@files) {
                 next if ( $x eq "." || $x eq ".." );
@@ -1568,6 +1700,109 @@ sub deleteResult {
     printJobMainForm();
 }
 
+###############################################################################
+# downloadResult
+###############################################################################
+sub downloadResult {
+    
+    my $sid = getContactOid();
+    if ( blankStr($sid) ) {
+        webError("Your login has expired.");
+        return;
+    }
+
+    $sid = sanitizeInt($sid);
+    my $user = getUserName();
+    $user = 'public' if ( $user eq "" );
+    my $userjob = "$user/job";
+
+    printMainForm();
+    print "<h1>Download Job</h1>\n";
+    print "<p>Please click the link to download the compressed file.</p>";
+
+    require GenerateArtemisFile;
+
+    my @job_ids = param('job_id');
+    for my $job_id (@job_ids) {
+        if ( !$job_id ) {
+            next;
+        }
+
+        $job_id = MetaUtil::sanitizeGeneId3($job_id);
+        my $job_file_dir = "$workspace_dir/$sid/job/$job_id";
+        #print "downloadResult() job_file_dir=$job_file_dir<br/>\n";
+        if ( -e $job_file_dir ) {    
+            opendir( DIR, "$job_file_dir" )
+              or webDie("failed to read files");
+            my @files = readdir(DIR);
+            closedir(DIR);
+            #print "downloadResult() job files=@files<br/>\n";
+
+            my $exFileName .= "\L${job_id}_" . lc( getSysDate() ) . ".zip";
+            my ( $zippedFilePath, $zippedFileUrl ) = GenerateArtemisFile::compressFiles( $userjob, $exFileName, $job_file_dir, \@files );
+            #print "downloadResult() zippedFilePath=$zippedFilePath<br/>\n";
+            #print "downloadResult() zippedFileUrl=$zippedFileUrl<br/>\n";
+            print "job: " . alink( $zippedFileUrl, $job_id );
+            print "<br/><br/>\n";
+        }
+
+    }    # end for job_id
+
+    print end_form();
+
+}
+
+sub downloadResult2 {
+    
+    my $sid = getContactOid();
+    if ( blankStr($sid) ) {
+        webError("Your login has expired.");
+        return;
+    }
+
+    $sid = sanitizeInt($sid);
+    my $user = getUserName();
+    $user = 'public' if ( $user eq "" );
+    my $userjob = "$user/job";
+
+    require GenerateArtemisFile;
+
+    my @job_ids = param('job_id');
+    for my $job_id (@job_ids) {
+        if ( !$job_id ) {
+            next;
+        }
+
+        $job_id = MetaUtil::sanitizeGeneId3($job_id);
+        my $job_file_dir = "$workspace_dir/$sid/job/$job_id";
+        print "downloadResult() job_file_dir=$job_file_dir<br/>\n";
+
+        if ( -e $job_file_dir ) {
+            my $exFileName .= "\L${job_id}_" . lc( getSysDate() ) . ".zip";
+            #print "Content-type: application/octet-stream\n";
+            #print "Content-Disposition: attachment;filename=$exFileName\n";
+            #print "\n";
+
+            opendir( DIR, $job_file_dir )
+              or webDie("failed to read files");
+            my @files = grep(!/^\.\.?/, readdir(Dir));
+            print "downloadResult() job 0 files=@files<br/>\n";
+            closedir(DIR);
+            print "downloadResult() job 1 files=@files<br/>\n";
+
+            my ( $zippedFilePath, $zippedFileUrl ) = GenerateArtemisFile::compressFiles( $userjob, $job_file_dir, \@files, $exFileName );
+            print "downloadResult() zippedFilePath=$zippedFilePath<br/>\n";
+            print "downloadResult() zippedFileUrl=$zippedFileUrl<br/>\n";
+        }
+    }    # end for job_id
+
+    #printJobMainForm();
+}
+
+
+###############################################################################
+# getExistingJobSets
+###############################################################################
 sub getExistingJobSets {
 
     my @genomeFuncJobs;
@@ -1635,5 +1870,6 @@ sub getExistingJobSets {
         \@scafFuncJobs, \@scafHistJobs, \@scafKmerJobs, \@scafPhyloJobs, \@funcScafSearchJobs,
         \@genomeSaveFuncGeneJobs, \@geneSaveFuncGeneJobs, \@scafSaveFuncGeneJobs);
 }
+
 
 1;

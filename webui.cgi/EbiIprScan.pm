@@ -24,6 +24,17 @@ my $section_cgi = "$main_cgi?section=$section";
 my $verbose = $env->{ verbose };
 my $ebi_iprscan_url = $env->{ ebi_iprscan_url };
 
+sub getPageTitle {
+    return 'EBI InterPro Scan';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenomes');
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################

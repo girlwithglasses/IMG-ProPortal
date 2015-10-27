@@ -26,7 +26,7 @@
 
 	IF content;
 		IF content.tmpl_includes && content.tmpl_includes.content_tmpl;
-			tmpl_name = content.tmpl_includes.content_tmpl;
+			tmpl_name = 'pages/' _ content.tmpl_includes.content_tmpl _ '.tt';
 			PROCESS $tmpl_name;
 		ELSIF content.id; %]
 <h2>[%	content.title || content.label %]</h2>

@@ -1,7 +1,7 @@
 ############################################################################
 # Utility functions to support to generate GenBank/EMBL file.
 #
-# $Id: GenerateArtemisFile.pm 34103 2015-08-24 20:33:28Z klchu $
+# $Id: GenerateArtemisFile.pm 34345 2015-09-23 06:22:39Z jinghuahuang $
 ############################################################################
 package GenerateArtemisFile;
 
@@ -784,6 +784,34 @@ sub compressArtemisFile {
     }
 
     return ( $zippedFilePath, $zippedFileName, $zippedFileUrl );
+}
+
+sub compressFiles {
+    my ( $userjob, $zippedFileName, $outDir, $outFileNames_ref ) = @_;
+
+    my $userjobDir = "$public_artemis_dir/$userjob";
+    my $zippedFilePath = "$public_artemis_dir/$userjob/$zippedFileName";
+    my $zippedFileUrl  = "$public_artemis_url/$userjob/$zippedFileName";
+
+    unless ( -d $userjobDir ) {
+        File::Path::mkpath($userjobDir) || die("Cannot make directory '$userjobDir'\n");
+        chmod( 0777, $userjobDir );
+    }
+    if ( -d $userjobDir ) {
+        my $ae = Archive::Zip->new();
+        
+        foreach my $outFileName (@$outFileNames_ref) {
+            #next if ( $outFileName eq "." || $outFileName eq ".." );
+            next if ($outFileName =~ /^\.\.?/);
+            my $outFilePath = "$outDir/$outFileName";
+            #print "compressFiles() outFilePath=$outFilePath<br/>\n";
+            $ae->addFile( $outFilePath, $outFileName );            
+        }
+        $ae->writeToFileNamed($zippedFilePath) == AZ_OK or die "Can't compress file in directory: $outDir";
+        chmod( 0777, $zippedFilePath );
+    }
+
+    return ( $zippedFilePath, $zippedFileUrl );
 }
 
 sub sendMail {

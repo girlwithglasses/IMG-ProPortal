@@ -24,6 +24,7 @@ use Data::Dumper;
 use FuncUtil;
 use WorkspaceUtil;
 use GenomeListJSON;
+use HTML::Template;
 
 my $env                   = getEnv();
 my $main_cgi              = $env->{main_cgi};
@@ -55,7 +56,7 @@ my $mer_data_dir          = $env->{mer_data_dir};
 my $in_file               = $env->{in_file};
 my $new_func_count        = $env->{new_func_count};
 my $enable_biocluster     = $env->{enable_biocluster};
-
+my $YUI = $env->{yui_dir_28};
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 my $maxGeneListResults = 1000;
 if ( getSessionParam("maxGeneListResults") ne "" ) {
@@ -69,11 +70,21 @@ my %function2Name = (
 
 $| = 1;
 
+sub getPageTitle {  
+    return 'Biosynthetic Cluster / Secondary Metabolite Search by ID';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    my @a = ( "getsme");
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-
     my $page = param("page");
 
     if ( $page eq "findFunctions" ) {
@@ -97,24 +108,38 @@ sub dispatch {
 #   Read from template file and replace some template components.
 ############################################################################
 sub printFunctionSearchForm {
-
     my $session = getSession();
     $session->clear( [ "getSearchTaxonFilter", "genomeFilterSelections" ] );
 
     my $templateFile = "$base_dir/bcNpIDSearch.html";
     my $rfh = newReadFileHandle( $templateFile, "printBcNpIDSearchForm" );
 
+    my $option = param("option");
+    my $hint = "Please enter comma-separated list of IDs.";
     while ( my $s = $rfh->getline() ) {
         chomp $s;
         $s =~ s/__main_cgi__/$section_cgi/g;
-        if ( $s =~ /__searchFilterOptions__/ ) {
-            printSearchFilterOptions();
+	if ( $s =~ /__searchTitle__/ ) {
+	    if ( $option eq 'bc' ) {
+		print "Biosynthetic Cluster Search by ID";
+	    } elsif ( $option eq 'np' ) {
+		print "Secondary Metabolite Search by ID";
+	    }
+        } elsif ( $s =~ /__searchFilter__/ ) {
+	    if ( $option eq 'bc' ) {
+		print "value='bc'";
+	    } elsif ( $option eq 'np' ) {
+		print "value='np'";
+	    }
+        } elsif ( $s =~ /__searchFilterText__/ ) {
+            printSearchFilterText();
         } elsif ( $img_internal && $s =~ /keggGenomes/ ) {
             print "$s\n";
-        } elsif ( $s =~ /__mer_fs_note__/ ) {
+        } elsif ( $s =~ /__note__/ ) {
             if ($include_metagenomes) {
-		printHint("Search term marked by <b>*</b> indicates that it supports metagenomes");
+		$hint .= "<br/>Search term marked by <b>*</b> indicates that it supports metagenomes.";
             }
+	    printHint($hint);
         } else {
             print "$s\n";
         }
@@ -125,28 +150,19 @@ sub printFunctionSearchForm {
 ############################################################################
 # printSearchFilterOptions - Print options for search filter.
 ############################################################################
-sub printSearchFilterOptions {    
-
+sub printSearchFilterText {    
     if ( $enable_biocluster )  {
-        my $option = param("option");
-        my ( $bcSelect, $npSelect );
-        if ( $option eq 'bc' ) {
-            $bcSelect = 'selected';
-        }
-        elsif ( $option eq 'np' ) {
-            $npSelect = 'selected';            
-        }
-        
         my $super;
         if ($include_metagenomes) {
             $super = '*';
         }
-        print qq{
-           <option value='bc' $bcSelect>Biosynthetic Cluster (list) $super </option>
-           <option value='np' $npSelect>Secondary Metabolite (list) </option>
-        };
+        my $option = param("option");
+        if ( $option eq 'bc' ) {
+	    print "value='Biosynthetic Cluster (list) $super'";
+        } elsif ( $option eq 'np' ) {
+	    print "value='Secondary Metabolite (list)'";
+        }
     }    
-    
 }
 
 ############################################################################

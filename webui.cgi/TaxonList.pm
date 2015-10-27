@@ -2,7 +2,7 @@
 # TaxonList - Show list of taxons in alphabetical or phylogenetic order.
 # --es 09/17/2004
 #
-# $Id: TaxonList.pm 34241 2015-09-14 16:29:26Z aratner $
+# $Id: TaxonList.pm 34362 2015-09-25 18:53:01Z aratner $
 ############################################################################
 package TaxonList;
 my $section = "TaxonList";
@@ -196,7 +196,6 @@ $imgclause
 sub printTaxonTable {
     my ( $geba, $selected ) = @_;
 
-    my $phylum     = param('phylum');
     my $seq_center = param('seq_center');    # JGI vs Non-JGI
     my $seq_center_clause;
     if ( $seq_center eq "JGI" ) {
@@ -916,14 +915,17 @@ sub getParamRestrictionClause {
         push( @bindList, $release_date );
     }
 
+    my $note = "";
     if ( $domain ne "" && $domain ne "all") {
+        $note .= "<br/>" if $note ne "";
+        $note .= "<u>Domain</u>: $domain";
         if ( $domain =~ /Plasmid/ ) {
             $restrictClause .= "and tx.domain like ? ";
             push( @bindList, 'Plasmid%' );
         } elsif ( $domain =~ /^GFragment/ ) {
             $restrictClause .= "and tx.domain like ? ";
             push( @bindList, 'GFragment%' );
-        } elsif ( $domain =~ /^Vir/ ) {
+        } elsif ( $domain =~ /^Vir/ || $domain eq 'viruses') {
             $restrictClause .= "and tx.domain like ? ";
             push( @bindList, 'Vir%' );
         } else {
@@ -951,7 +953,6 @@ sub getParamRestrictionClause {
         }
     }
 
-    my $note = "";
     if ( $phylum ne "" ) {
         $restrictClause .= "and tx.phylum = ? ";
         push( @bindList, "$phylum" );

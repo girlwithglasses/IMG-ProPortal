@@ -6,7 +6,7 @@
 #  from the statistics page.
 #      --es 09/17/2004
 #
-# $Id: TaxonDetail.pm 34186 2015-09-03 22:01:29Z klchu $
+# $Id: TaxonDetail.pm 34360 2015-09-25 18:49:46Z aratner $
 ############################################################################
 package TaxonDetail;
 my $section = "TaxonDetail";
@@ -1379,15 +1379,15 @@ sub printTaxonDetail_ImgGold {
 
     my $lineage;
     $lineage .= lineageLink( "domain",   $domain ) . "; ";
-    $lineage .= lineageLink( "phylum",   $phylum ) . "; ";
-    $lineage .= lineageLink( "ir_class", $ir_class ) . "; ";
-    $lineage .= lineageLink( "ir_order", $ir_order ) . "; ";
-    $lineage .= lineageLink( "family",   $family ) . "; ";
-    $lineage .= lineageLink( "genus",    $genus ) . "; ";
+    $lineage .= lineageLink( "phylum",   $phylum, $domain ) . "; ";
+    $lineage .= lineageLink( "ir_class", $ir_class, $domain ) . "; ";
+    $lineage .= lineageLink( "ir_order", $ir_order, $domain ) . "; ";
+    $lineage .= lineageLink( "family",   $family, $domain ) . "; ";
+    $lineage .= lineageLink( "genus",    $genus, $domain ) . "; ";
 
     #$lineage .= "$species; " if !blankStr( $species );
     if ( !blankStr($species) ) {
-        $lineage .= lineageLink( "species", $species ) . "; ";
+        $lineage .= lineageLink( "species", $species, $domain ) . "; ";
     }
 
     chop $lineage;
@@ -1940,7 +1940,7 @@ END_MAP
             require ANI;
             print qq{
             </div>
-            <div id='ani_right'>
+            <div id='ani_right'style='max-width: 600px'>
             };
 	    ANI::printCliqueInfoForGenome($taxon_oid);
             print qq{
@@ -2407,15 +2407,16 @@ sub printScaffoldSearchForm {
 }
 
 ############################################################################
-# lineageLink - Gererate linearge link for getting other microbes
-#   with same lineage.
+# lineageLink - link for getting other microbes with same lineage.
 ############################################################################
 sub lineageLink {
-    my ( $field, $value ) = @_;
+    my ( $field, $value, $domain ) = @_;
     if ( blankStr($value) || $value eq "unclassified" ) {
         return $value;
     }
-    my $url = "$main_cgi?section=TaxonList&page=lineageMicrobes&$field=" . massageToUrl($value);
+    my $url = "$main_cgi?section=TaxonList&page=lineageMicrobes";
+    $url .= "&domain=$domain" if $domain && $domain ne "";
+    $url .= "&$field=" . massageToUrl($value);
     return alink( $url, $value );
 }
 

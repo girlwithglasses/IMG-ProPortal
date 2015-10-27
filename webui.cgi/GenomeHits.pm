@@ -1,7 +1,7 @@
 ###########################################################################
 # New Phylogenetic Distribution of Genes from taxon detail page
 #
-# $Id: GenomeHits.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: GenomeHits.pm 34359 2015-09-25 18:31:02Z jinghuahuang $
 ###########################################################################
 package GenomeHits;
 
@@ -1067,7 +1067,7 @@ sub printHits {
         my $urclause  = urClause("t.taxon_oid");
         my $imgClause = WebUtil::imgClause('t');
         my $sql2      = qq{
-            select dt.taxon_oid, t.taxon_display_name,
+            select distinct dt.taxon_oid, t.taxon_display_name,
                   dt.gene_count_30, dt.gene_count_60, dt.gene_count_90
             from taxon t, dt_phylo_taxon_stats dt
             where dt.homolog_taxon = ?
@@ -1076,7 +1076,7 @@ sub printHits {
             $imgClause
             $metagenomeClause
         };
-        print "GenomeHits::printHits() $sql2<br/>\n";
+        #print "GenomeHits::printHits() $sql2<br/>\n";
 
         my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
         my %taxon_h;
@@ -1992,7 +1992,7 @@ sub printIsolateGenomeDistribution_groups {
 
     ## metagenome oids
     my $metag_filename_full;
-    if ( @metag_oids ne 0 ) {                            # primary, write metag_oids to file
+    if ( scalar(@metag_oids) > 0 ) {                            # primary, write metag_oids to file
         $metag_filename      = "metag_oids_$sessionId";
         $metag_filename_full = "$genomeHitsDir/$metag_filename";
         my $wfh = newWriteFileHandle($metag_filename_full);
@@ -2047,8 +2047,8 @@ sub printIsolateGenomeDistribution_groups {
         $imgClause
         group by dt.taxon_oid, t.phylum, t.ir_class, t.ir_order, t.family, t.genus, t.species
     };
-
     #print "printIsolateGenomeDistribution_groups() sql: $sql<br/>\n";
+    #print "printIsolateGenomeDistribution_groups() sql: isolate_taxon_oid=$isolate_taxon_oid, binds_datatype=@binds_datatype<br/>\n";
 
     # NOTE: dt.gene_count_30 is the count of hit genes in the metagenome,
     # not the count of hit genes in the homolog (isolate) genome

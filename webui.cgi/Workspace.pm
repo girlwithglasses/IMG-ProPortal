@@ -7,7 +7,7 @@
 # filenames with white spaces     $filename =~ s/\s/_/g;
 # - ken
 #
-# $Id: Workspace.pm 34231 2015-09-11 06:29:27Z jinghuahuang $
+# $Id: Workspace.pm 34534 2015-10-19 16:04:48Z jinghuahuang $
 #
 ############################################################################
 package Workspace;
@@ -415,8 +415,10 @@ sub loadUserPreferences {
 # main page
 # list summary of how many files saved - each cart
 sub printMainPage {
+
     my $sid = getContactOid();
     my %file_counts;
+    my %file_sizes;
 
     # for super users only
     my $super_user = getSuperUser();
@@ -428,31 +430,36 @@ sub printMainPage {
     print "<h1>My Workspace</h1>\n";
 
     foreach my $subdir (@subfolders) {
-	## count my own
-        opendir( DIR, "$workspace_dir/$sid/$subdir" )
+    	## count my own
+        my $wksSubdir = "$workspace_dir/$sid/$subdir";
+
+        opendir( DIR, $wksSubdir )
           or webDie("failed to read files");
         my @files = readdir(DIR);
+        closedir(DIR);
 
         my $count = 0;
         foreach my $x ( sort @files ) {
-
             # remove files "."  ".." "~$"
             next if ( $x eq "." || $x eq ".." || $x =~ /~$/ );
             $count++;
         }
 
         $file_counts{$subdir} = $count;
-        closedir(DIR);
 
-	## count share datasets
-	my %share_h = WorkspaceUtil::getShareFromGroups($subdir);
-	my @keys = (keys %share_h);
-	$file_counts{$subdir} += scalar(@keys);
+    	## count share datasets
+    	my %share_h = WorkspaceUtil::getShareFromGroups($subdir);
+    	my @keys = (keys %share_h);
+    	$file_counts{$subdir} += scalar(@keys);
+
+        my $size = getDirSize($wksSubdir);
+        $file_sizes{$subdir} = $size;
     }
 
     my $sit = new StaticInnerTable();
     $sit->addColSpec("Data Category");
     $sit->addColSpec( "Number of Sets<br>(click the link to each data category)", "", "right" );
+    $sit->addColSpec( "File Size", "", "right" );
 
     my $grTotal;
     foreach my $x ( sort keys %file_counts ) {
@@ -467,6 +474,10 @@ sub printMainPage {
         }
         my $row = "\u$name Sets\t";
         $row .= "$count\t";
+
+        my $size = $file_sizes{$x};
+        my $display_size = WorkspaceUtil::getDisplaySize($size);
+        $row .= "$display_size\t";
         $sit->addRow($row);
     }
     $sit->printTable();
@@ -491,16 +502,20 @@ sub printMainPage {
         my $cnt = 0;
         opendir( DIR, $job_dir ) or webDie("failed to read files");
         my @files = readdir(DIR);
-        foreach my $x ( sort @files ) {
+        closedir(DIR);
 
+        foreach my $x ( sort @files ) {
             # remove files "."  ".." "~$"
             next if ( $x eq "." || $x eq ".." || $x =~ /~$/ );
             $cnt++;
         }
-        closedir(DIR);
 
         my $url = "$main_cgi?section=WorkspaceJob" . "&page=workspaceJobMain";
         print "<td class='img'>" . alink( $url, $cnt ) . "</td>\n";
+
+        my $size = getDirSize($job_dir);
+        my $display_size = WorkspaceUtil::getDisplaySize($size);
+        print "<td class='img'>" . $display_size . "</td>\n";
     } else {
         print "<td class='img'>No Jobs</td>\n";
     }
@@ -2614,8 +2629,7 @@ sub inspectWorkspaceUsage {
     }
 
     my $wksDir = "$workspace_dir/$sid";
-    my $size;
-    $size += getDirSize($wksDir, $size);
+    my $size = getDirSize($wksDir);
 
     #print "workspace $wksDir size: $size<br/>\n";
     if ( $size >= 5*1024*1024*1024 ) {
@@ -2634,32 +2648,35 @@ sub inspectWorkspaceUsage {
 }
 
 sub getDirSize {
-    my ($dir, $size) = @_;
+    my ($dir) = @_;
 
     opendir( Dir, $dir ) or die("dirList: cannot read '$dir'\n");
     my @paths = grep(!/^\.\.?/, readdir(Dir));
     closedir(Dir);
 
+    my $size = 0;
     foreach my $path (@paths) {
+        next if ($path =~ /^\.\.?/);
         #print "workspace path=$path<br/>\n";
-        #next if ($path =~ /^\.\.?/);
 
         my $fullPath = "$dir/$path";
         if (-f $fullPath) {
             $size += WebUtil::fileSize($fullPath);
-            #print "workspace $fullPath size: $size<br/>\n";
+            #print "getDirSize() file fullPath=$fullPath size=$size<br/>\n";
         }
         elsif (-d $fullPath) {
-            $size += getDirSize($fullPath, $size);
-            #print "workspace $fullPath size: $size<br/>\n";
+            $size += getDirSize($fullPath);
+            #print "getDirSize() dir fullPath=$fullPath size=$size<br/>\n";
         }
         else {
-            print "workspace none $fullPath<br/>\n";            
+            #print "getDirSize() none $fullPath<br/>\n";            
         }
     }
+    #print "getDirSize() dir=$dir, size=$size<br/><br/>\n";            
     
     return $size;
 }
+
 
 ###############################################################################
 # inspectSaveToWorkspace
@@ -6634,6 +6651,7 @@ sub exportAll {
         opendir( DIR, "$workspace_dir/$sid/$setType" )
           or webDie("failed to read files");
         my @files = readdir(DIR);
+        closedir(DIR);
 
         my @setFile;
         for my $x ( sort @files ) {
@@ -6643,7 +6661,6 @@ sub exportAll {
             push @setFile, $x;
         }
         exportFile( $setType, \@setFile, $sid );
-        closedir(DIR);
     }
     WebUtil::webExit(0);
 }
@@ -7486,6 +7503,7 @@ sub cleanOldFiles {
         opendir( DIR, $job_file_dir )
           or webDie("failed to read files");
         my @files = readdir(DIR);
+        closedir(DIR);
 
         for my $x (@files) {
             next if ( $x eq "." || $x eq ".." );

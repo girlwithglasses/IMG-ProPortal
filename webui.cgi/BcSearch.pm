@@ -1,6 +1,6 @@
 #
 #
-# $Id: BcSearch.pm 33018 2015-03-18 21:53:32Z aratner $
+# $Id: BcSearch.pm 34538 2015-10-20 17:43:00Z klchu $
 #
 package BcSearch;
 my $section = "BcSearch";
@@ -31,6 +31,26 @@ my $img_ken         = $env->{img_ken};
 my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
 my $YUI             = $env->{yui_dir_28};
 my $nvl             = getNvl();
+
+
+sub getPageTitle {
+    my $page = param('page');
+    my $pageTitle = "Biosynthetic Cluster Search" if $page eq "bcSearch"   || $page eq "bcSearchResult";
+    $pageTitle = "Secondary Metabolite Search" if $page eq "npSearches" || $page eq "npSearchResult";
+    
+    return $pageTitle;
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
+    my @a =     ( "getsme", '', '', $js );
+    return @a;
+}
 
 sub dispatch {
     my $page = param('page');

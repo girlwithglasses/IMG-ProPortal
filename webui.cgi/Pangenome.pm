@@ -1,6 +1,6 @@
 ############################################################################
 # Pangenome.pm - displays a pangenome and its composing genomes
-# $Id: Pangenome.pm 31333 2014-07-03 17:32:34Z jinghuahuang $
+# $Id: Pangenome.pm 34538 2015-10-20 17:43:00Z klchu $
 ############################################################################
 package Pangenome;
 my $section = "Pangenome";
@@ -33,6 +33,24 @@ my $max_genes        = 40;
 my $nullcount = -1;
 my $nvl = getNvl();
 my $YUI = $env->{yui_dir_28};
+
+
+sub getPageTitle {
+    return 'Pangenome';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    if ( WebUtil::paramMatch("_excel") ) {
+        WebUtil::printExcelHeader("stats_export$$.xls");
+    } else {
+        @a = ("Pangenome");
+    }
+    
+    return @a;
+}
 
 ############################################################################
 # dispatch - Dispatch loop.

@@ -2,7 +2,7 @@
 #
 # Compare Gene Model Neighborhoods
 #
-# $Id: CompareGeneModelNeighborhood.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: CompareGeneModelNeighborhood.pm 34538 2015-10-20 17:43:00Z klchu $
 ############################################################################
 package CompareGeneModelNeighborhood;
 use strict;
@@ -54,6 +54,18 @@ struct Gene => {
     color   => '$',
     label   => '$',
 };
+
+sub getPageTitle {
+    return 'Compare Gene Models';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('CompareGenomes');
+    return @a;
+}
+
 
 ############################################################################
 # dispatch - Dispatch loop.

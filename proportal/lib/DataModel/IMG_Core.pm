@@ -11,6 +11,55 @@ DBIx::DataModel  # no semicolon (intentional)
 #---------------------------------------------------------------------#
 ->Schema('DataModel::IMG_Core');
 
+
+DataModel::IMG_Core->metadm->define_type(
+	name     => 'Distance',
+	handlers => {
+		from_DB  => sub {
+			my ($col_val, $obj, $col_name, $handler) = @_;
+			if ($col_val) {
+				my $nor_m = IMG::Model::UnitConverter::distance_in_m( $col_val );
+				if ($nor_m) {
+					$_[0] = $nor_m;
+				}
+				else {
+					$obj->{ $col_name ."_string"} = $col_val;
+					$_[0] = undef;
+				}
+			}
+		},
+#    to_DB    => sub { },
+#    validate => sub {$_[0] =~ /1?\d?\d/}),
+  });
+
+DataModel::IMG_Core->metadm->define_type(
+	name  => 'GenericClade',
+	handlers => {
+		from_DB => sub {
+			my ($col_val, $obj, $col_name, $handler) = @_;
+			if ($col_val) {
+#				say "args: col value: $col_val, col name: $col_name, handler: $handler, obj: " . Dumper $obj;
+				if ($col_name eq 'generic_clade') {
+					$col_val = coerce_clade( $col_val );
+				}
+				$_[0] = $col_val;
+			}
+		},
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'LatLng',
+	handlers => {
+		from_DB => sub { $_[0] = IMG::Model::UnitConverter::convertLatLong( $_[0] ) if $_[0]; },
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'EcoNorm',
+	handlers => {
+		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
+	});
+
+
 #---------------------------------------------------------------------#
 #                         TABLE DECLARATIONS                          #
 #---------------------------------------------------------------------#
@@ -142,6 +191,18 @@ DataModel::IMG_Core->metadm->define_table(
 #  primary_key => '',
 );
 
+DataModel::IMG_Core->metadm->define_table(
+  class       => 'GoldTaxonVw',
+  db_name     => 'VW_GOLD_TAXON',
+  primary_key => 'gold_id',
+	column_types => {
+		GenericClade => [ qw( clade ) ],
+		Distance     => [ qw( altitude depth ) ],
+		LatLng       => [ qw( latitude longitude )],
+		EcoNorm      => [ qw( ecosystem_subtype )],
+	},
+);
+
 DataModel::IMG_Core
 #---------------------------------------------------------------------#
 #                      ASSOCIATION DECLARATIONS                       #
@@ -239,52 +300,6 @@ DataModel::IMG_Core
 # normalize case
 #	fromDB => sub {  },
 
-DataModel::IMG_Core->metadm->define_type(
-	name     => 'Distance',
-	handlers => {
-		from_DB  => sub {
-			my ($col_val, $obj, $col_name, $handler) = @_;
-			if ($col_val) {
-				my $nor_m = IMG::Model::UnitConverter::distance_in_m( $col_val );
-				if ($nor_m) {
-					$_[0] = $nor_m;
-				}
-				else {
-					$obj->{ $col_name ."_string"} = $col_val;
-					$_[0] = undef;
-				}
-			}
-		},
-#    to_DB    => sub { },
-#    validate => sub {$_[0] =~ /1?\d?\d/}),
-  });
-
-DataModel::IMG_Core->metadm->define_type(
-	name  => 'GenericClade',
-	handlers => {
-		from_DB => sub {
-			my ($col_val, $obj, $col_name, $handler) = @_;
-			if ($col_val) {
-#				say "args: col value: $col_val, col name: $col_name, handler: $handler, obj: " . Dumper $obj;
-				if ($col_name eq 'generic_clade') {
-					$col_val = coerce_clade( $col_val );
-				}
-				$_[0] = $col_val;
-			}
-		},
-	});
-
-DataModel::IMG_Core->metadm->define_type(
-	name => 'LatLng',
-	handlers => {
-		from_DB => sub { $_[0] = IMG::Model::UnitConverter::convertLatLong( $_[0] ) if $_[0]; },
-	});
-
-DataModel::IMG_Core->metadm->define_type(
-	name => 'EcoNorm',
-	handlers => {
-		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
-	});
 
 
 my $sql = 'GOLD_SEQUENCING_PROJECT INNER JOIN TAXON ON GOLD_SEQUENCING_PROJECT.gold_id = TAXON.sequencing_gold_id';
@@ -295,7 +310,7 @@ DataModel::IMG_Core->metadm->define_table(
 	where => {
 		obsolete_flag => 'No',
 		is_public => 'Yes',
-		ecosystem_type => 'Marine',
+#		ecosystem_type => 'Marine',
 	},
 	column_types => {
 		GenericClade => [ qw( clade ) ],
@@ -304,9 +319,6 @@ DataModel::IMG_Core->metadm->define_table(
 		EcoNorm      => [ qw( ecosystem_subtype )],
 	},
 );
-
-#my $meta_gt = DataModel::IMG_Core->table('GoldTaxon')->metadm;
-#$meta_gt->define_column_type(GenericClade => qw# clade generic_clade #);
 
 =cut
 

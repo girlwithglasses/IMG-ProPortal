@@ -1,18 +1,25 @@
 #!/usr/bin/env perl
 
-use FindBin qw/ $Bin /;
-use lib (
-	"$Bin/../lib",
-	"$Bin/../../webui.cgi"
-);
-use local::lib;
-use IMG::Util::Base;
-use File::Basename;
-my $base = dirname($Bin);
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	my $dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib );
+}
+use lib @dir_arr;
 
+use IMG::Util::Base;
+use FindBin qw/ $Bin /;
+my $base = dirname($Bin);
+my $home = $base;
+$home =~ s!webUI/.*!webUI!;
 use Plack::Builder;
 #use Log::Contextual qw(:log);
 $ENV{PLACK_URLMAP_DEBUG} = 1;
+$ENV{TWIGGY_DEBUG} = 1;
 
 # Mojolicious pod renderer
 use Mojo::Server::PSGI;
@@ -27,9 +34,8 @@ my $pp = sub {
 };
 
 use TestApp;
-
-my $test = sub {
-  TestApp->to_app;
+my $testapp = sub {
+    TestApp->to_app;
 };
 
 
@@ -43,7 +49,15 @@ builder {
 #	enable "Session", store => "File";
 	mount "/pod" => sub { $server->run(@_) };
 
+	enable 'Static',
+		path => sub { s!^/jbrowse_assets!! },
+		root => $home . '/jbrowse';
+
+	enable 'Static',
+		path => sub { s!^/data_dir!! },
+		root => '/tmp/jbrowse';
+
+#    mount "/" => $testapp->();
 	mount "/" => $pp->();
-	mount '/test' => $test->();
 
 };

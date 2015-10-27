@@ -1,7 +1,16 @@
 #!/usr/bin/env perl
 
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	my $dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib webui.cgi/t/lib );
+}
+use lib @dir_arr;
 use FindBin qw/ $Bin /;
-use lib ( "$Bin/..", "$Bin/../../proportal/lib", "$Bin/lib" );
 use IMG::Util::Base 'Test';
 use IMG::Util::Untaint;
 use File::Spec::Functions qw( splitpath catdir catfile );
@@ -158,7 +167,7 @@ subtest 'unset environment' => sub {
 
 	IMG::Util::Untaint::unset_env();
 
-	delete $ENV{qw( BASH_ENV CDPATH ENV IFS PATH )};
+	delete @ENV{qw( BASH_ENV CDPATH ENV IFS PATH )};
 
 	for my $e ( qw( BASH_ENV CDPATH ENV IFS PATH ) ) {
 		is( $ENV{$e}, undef, "$e is not defined" );

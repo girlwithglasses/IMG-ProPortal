@@ -4,22 +4,17 @@
 #    --es 07/07/2005
 ############################################################################
 package Vista;
-my $section = "Vista";
-require Exporter;
-@ISA = qw( Exporter );
-@EXPORT = qw(
-    printVistaStartPage
-    loadSets
-);
 use strict;
+use warnings;
+use feature ':5.16';
 use CGI qw( :standard );
-use DBI;
-use Time::localtime;
-use ScaffoldPanel;
+#use DBI;
+#use Time::localtime;
 use WebConfig;
-use WebUtil;
+use WebUtil ();
 
-my $env = getEnv( );
+my $section = "Vista";
+my $env = WebConfig::getEnv( );
 my $main_cgi = $env->{ main_cgi };
 my $section_cgi = "$main_cgi?section=$section";
 my $verbose = $env->{ verbose };
@@ -31,6 +26,16 @@ my $include_metagenomes = $env->{include_metagenomes};
 # Used for YUI CSS
 my $YUI = $env->{yui_dir_28};
 my $yui_tables = $env->{yui_tables};
+
+sub init_env {
+	my $temp_env = shift;
+	if ( not defined $temp_env ) {
+		$temp_env = WebConfig::getEnv();
+	}
+	die 'environment should be a hash!' unless ref $temp_env && 'HASH' eq ref $temp_env;
+	$env = $temp_env;
+}
+
 
 ############################################################################
 # dispatch - Dispatch loop.
@@ -121,7 +126,7 @@ YUI
     print "<tr class='$classStr' >\n";
     print "<td class='$classStr' >\n";
     print "<div class='yui-dt-liner'>" if $yui_tables;
-    my $url = "$main_cgi?section=DotPlot&page=plot";
+    $url = "$main_cgi?section=DotPlot&page=plot";
     $url = alink( $url, "Dotplot" );
     print $url;
     print "</div>\n" if $yui_tables;
@@ -144,7 +149,7 @@ YUI
     print "<tr class='$classStr' >\n";
     print "<td class='$classStr' >\n";
     print "<div class='yui-dt-liner'>" if $yui_tables;
-    my $url = "$main_cgi?section=Artemis&page=ACTForm";
+    $url = "$main_cgi?section=Artemis&page=ACTForm";
     $url = alink( $url, "Artemis ACT" );
     print $url;
     print "</div>\n" if $yui_tables;
@@ -152,9 +157,9 @@ YUI
     print "<td class='$classStr' >\n";
     print "<div class='yui-dt-liner'>" if $yui_tables;
     print qq{
-    ACT (Artemis Comparison Tool) is a viewer based on Artemis for pair-wise 
+    ACT (Artemis Comparison Tool) is a viewer based on Artemis for pair-wise
     genome DNA sequence comparisons, whereby comparisons are usually the result
-    of running Mega BLAST search.        
+    of running Mega BLAST search.
     };
     print "</div>\n" if $yui_tables;
     print "</td>\n";
@@ -175,46 +180,43 @@ sub printVistaStartPage {
     my $link2 = "<a href=$vista_home>VISTA</a>";
     my $link3 = "<a href=mailto:vista\@lbl.gov>VISTA Questions/Comments</a>";
 
-    my $text = 
+    my $text =
 	"VISTA allows you to do full scaffold alignments between genomes. "
       . "The current sets of alignments are precomputed for select genomes "
       . "listed here.";
-    my $description = 
+    my $description =
         "$text Clicking on any of these genomes launches VISTA directly.<br/>"
       . "For updated genomes, go to $link2. "
       . "For more information, consult with $link1 or contact $link3.";
 
     if ($include_metagenomes) {
-	WebUtil::printHeaderWithInfo 
+	WebUtil::printHeaderWithInfo
 	    ("Vista", $description,
 	     "show description for this tool", "Vista Info", 1);
-    } else { 
+    } else {
 	WebUtil::printHeaderWithInfo
 	    ("Vista", $description,
 	     "show description for this tool", "Vista Info");
-    } 
+    }
 
     print "<p>$text</p>\n";
-    printMainForm( );
-
-    my %sets = loadSets( );
-    my $dbh = dbLogin( );
+    my %sets = loadSets( $env );
+    my $dbh = WebUtil::dbLogin( );
 
     my %taxonOid2Url;
-    my $rfh = newReadFileHandle( $vista_url_map_file, "printVistaStartPage" );
-    while( my $s = $rfh->getline( ) ) {
-       chomp $s;
-       my( $taxon_oid, $url ) = split( /\t/, $s );
-       $taxonOid2Url{ $taxon_oid } = $url;
-    }
+    my $rfh = WebUtil::newReadFileHandle( $env->{vista_url_map_file}, "printVistaStartPage" );
+	while( my $s = $rfh->getline( ) ) {
+		chomp $s;
+		my( $taxon_oid, $url ) = split( /\t/, $s );
+		$taxonOid2Url{ $taxon_oid } = $url;
+	}
     close $rfh;
-    my @setNames = sort( keys( %sets ) );
-    for my $setName( @setNames ) {
-	my $taxon_oid_str = $sets{ $setName };
-	chop $taxon_oid_str;
-        my $rclause = urClause( "tx" );
-        my $imgclause = WebUtil::imgClause('tx');
-        my $sql = qq{
+	for my $setName( sort keys %sets ) {
+		my $taxon_oid_str = $sets{ $setName };
+		chop $taxon_oid_str;
+		my $rclause = WebUtil::urClause( 'tx' );
+		my $imgclause = WebUtil::imgClause('tx');
+		my $sql = qq{
            select tx.taxon_oid, tx.taxon_display_name
            from taxon tx
            where tx.taxon_oid in( $taxon_oid_str )
@@ -222,56 +224,89 @@ sub printVistaStartPage {
            $imgclause
            order by tx.taxon_display_name
         };
-        my $cur = execSql( $dbh, $sql, $verbose );
-        print "<p>\n";
-        for( ;; ) {
-           my( $taxon_oid, $taxon_display_name ) = $cur->fetchrow( );
-           last if !$taxon_oid;
-           my $url = $taxonOid2Url{ $taxon_oid };
-	   if( $url eq "" ) {
-	       webLog( "printVistaPage: cannot find URL for '$taxon_oid'\n" );
-	       next;
-	   }
-           print alink( $url, $taxon_display_name ) . "<br/>\n";
-        }
-        $cur->finish( );
-        print "</p>\n";
-    }
+		my $cur = WebUtil::execSql( $dbh, $sql, $verbose );
+		print "<p>\n";
+		for ( my @arr = $cur->fetchrow_array ) {
+
+		#	my( $taxon_oid, $taxon_display_name ) = $cur->fetchrow();
+		#	last if ! $taxon_oid;
+			if ( ! $taxonOid2Url{ $arr[0] } ) {
+				webLog( "printVistaPage: cannot find URL for '$arr[0]'\n" );
+				next;
+			}
+#			my $url = $taxonOid2Url{ $arr[0] };
+#			print alink( $url, $arr[1] ) . "<br/>\n";
+			print '<a href="' . $taxonOid2Url{ $arr[0] } . '">' . $arr[1] . '</a><br>';
+		}
+		$cur->finish( );
+		print "</p>\n";
+	}
+	printHint( "You may search for a coordinate position by entering the gene ID." );
     #$dbh->disconnect();
-    print end_form( );
-    printHint( "You may search for a coordinate position by entering " .
-	       "the gene_oid (Gene ID)." );
 }
 
 ############################################################################
-# loadSets - Load comparision sets of genomes.
+# loadSets - Load comparison sets of genomes.
 ############################################################################
 sub loadSets {
-    my %sets;
-    my $rfh = newReadFileHandle( $vista_sets_file, "loadSets" );
-    my $curr_set;
-    while( my $s = $rfh->getline( ) ) {
-       chomp $s;
-       $s =~ s/^\s+//;
-       $s =~ s/\s+$//;
-       next if $s =~ /^#/;
-       next if blankStr( $s );
+	my $env = shift;
+	my %sets;
+#	open( my $rfh, "<", $env->{vista_sets_file} ) or die 'Could not load ' . $env->{vista_sets_files} . ': ' . $!;
+
+	my $rfh = WebUtil::newReadFileHandle( $env->{vista_sets_file}, "loadSets" );
+	my $curr_set;
+#	while ( my $s = <$rfh> ) {
+	while( my $s = $rfh->getline( ) ) {
+		next unless $s =~ /\S+/;
+		chomp $s;
+		$s =~ s/^\s+//;
+		$s =~ s/\s+$//;
+		next if $s =~ /^#/;
+
        if( $s =~ /^\.set / ) {
-          my( $tag, $val ) = split( / /, $s );
-	  $curr_set = $val;
-       }
-       elsif( $s =~ /^\.setEnd/ ) {
-          $curr_set = "";
-       }
-       elsif( $curr_set ne "" ) {
-	  $s =~ s/^\s+//;
-	  my( $tok0, undef ) = split( /\s+/, $s );
-          $sets{ $curr_set } .= "$tok0,";
-       }
-    }
-    close $rfh;
-    return %sets;
+			my( $tag, $val ) = split( / /, $s );
+			$curr_set = $val;
+		}
+		elsif( $s =~ /^\.setEnd/ ) {
+			$curr_set = "";
+		}
+		elsif( $curr_set ne "" ) {
+			$s =~ s/^\s+//;
+			my( $tok0, undef ) = split( /\s+/, $s );
+			$sets{ $curr_set } .= "$tok0,";
+		}
+	}
+	close $rfh;
+	return %sets;
 }
+
+=head3 load_sets
+
+Parse and load the Vista taxon sets file
+
+=cut
+
+sub load_sets {
+	my $env = shift;
+	open( my $rfh, "<", $env->{vista_sets_file} ) or die 'Could not load ' . $env->{vista_sets_files} . ': ' . $!;
+
+	my $sets;
+	my $temp;
+	while ( <$rfh> ) {
+		if ( /^.set .*?/ .. /^.setEnd/ ) {
+			if ( /^.set (.*?)$/ ) {
+				$temp = $1;
+				next;
+			}
+			next unless /^\d+/;
+			$sets->{$temp} .= ( split /\s+/ )[0] . ",";
+		}
+	}
+
+	return $sets;
+}
+
+
 
 1;
 

@@ -3,7 +3,7 @@
 #   cumulative statistics.  Formerly taxonStatsRdbms.pl
 #      --es 07/07/2005
 #
-# $Id: CompareGenomes.pm 34208 2015-09-08 17:52:43Z imachen $
+# $Id: CompareGenomes.pm 34538 2015-10-20 17:43:00Z klchu $
 ############################################################################
 package CompareGenomes;
 my $section = "CompareGenomes";
@@ -63,6 +63,23 @@ $hideZeroStats = "Yes" if (!defined($hideZeroStats) || $hideZeroStats eq  "");
 
 my $maxDbGenomeSelectionAllowed = 80;
 my $maxMetagenomeSelectionAllowed = 15;
+
+sub getPageTitle {
+    return 'Compare Genomes';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    if ( WebUtil::paramMatch("_excel") ) {
+        WebUtil::printExcelHeader("stats_export$$.xls");
+    } else {
+        @a = ("CompareGenomes");
+    }
+    
+    return @a;
+}
 
 ############################################################################
 # dispatch - Dispatch loop.

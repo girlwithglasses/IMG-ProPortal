@@ -1,7 +1,15 @@
 #!/usr/bin/env perl
 
-use FindBin qw/ $Bin /;
-use lib ( "$Bin/../lib", "$Bin/../t/lib", "$Bin/../../webui.cgi" );
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	my $dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib webui.cgi/t/lib );
+}
+use lib @dir_arr;
 use IMG::Util::Base 'Test';
 
 $ENV{TESTING} = 1;
@@ -35,7 +43,7 @@ subtest 'Model building' => sub {
 	package TestApp;
 	use IMG::Util::Base 'Class';
 	extends 'IMG::App::Core';
-	with qw( IMG::IO::DbConnection IMG::Schema );
+	with qw( IMG::App::Role::DbConnection IMG::App::Role::Schema );
 }
 
 

@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: StudyViewer.pm 34110 2015-08-25 20:13:36Z klchu $
+# $Id: StudyViewer.pm 34452 2015-10-08 19:48:55Z klchu $
 ############################################################################
 package StudyViewer;
 use strict;
@@ -579,7 +579,7 @@ $imgClause
 }
 
 sub printIsolatelist {
-    my $project_oid = param('projectid');    # can be blank - null
+    my $gold_id = param('projectid');    # can be blank - null
     my $projectName = param('projecName');
     my $title       = qq{
         <h1> Isolate List for </h1>
@@ -589,14 +589,21 @@ sub printIsolatelist {
     my $urClause  = WebUtil::urClause('t');
     my $imgClause = WebUtil::imgClause('t');
 
-    my @bind = ( $project_oid, $project_oid );
+    my @bind = ( $gold_id );
     my $nullClause;
-    my $projectClause = 'and p.project_oid = ?';
-    if ( $project_oid eq '' || $projectName eq 'n/a' ) {
-        $projectClause = 'and p.project_oid is null';
+
+    my $sql = qq{
+select t.taxon_oid
+from taxon t
+where t.SEQUENCING_GOLD_ID is not null
+and t.SEQUENCING_GOLD_ID = ?
+$imgClause
+$urClause
+    };
+
+    if ( $gold_id eq '' || $gold_id eq 'n/a' ) {
         @bind          = ();
-        $nullClause    = qq{
-union
+        $sql   = qq{
 select t.taxon_oid
 from taxon t 
 where t.submission_id is null 
@@ -607,25 +614,6 @@ $urClause
         };
     }
 
-    my $sql = qq{
-select t.taxon_oid
-from taxon t, project_info\@imgsg_dev p
-where t.genome_type = 'isolate'
-and t.gold_id = p.gold_stamp_id
-$projectClause
-$imgClause
-$urClause
-union 
-select t.taxon_oid
-from taxon t, project_info\@imgsg_dev p, submission s
-where t.genome_type = 'isolate'
-and t.submission_id = s.submission_id
-and s.project_info = p.project_oid
-$projectClause
-$imgClause
-$urClause
-$nullClause
-    };
 
     my $dbh = dbLogin();
     require GenomeList;
@@ -639,7 +627,7 @@ sub printIsolateTableViewer {
     $all = 0 if($all eq '');
     
     print qq{
-        <h1> Isolate Study Table Viewer </h1>
+        <h1> Isolate GOLD Project Table Viewer </h1>
     };
 
     if($all) {
@@ -660,44 +648,44 @@ sub printIsolateTableViewer {
     my $urClause  = WebUtil::urClause('t');
     my $imgClause = WebUtil::imgClause('t');
 
+    my $publicClause = '';
+    if(!$all) {
+        # only public
+       #$publicClause = "and t.is_public = 'Yes' "; 
+    }
+
     my $sql = qq{
-select t.taxon_oid,  nvl(t.gold_id, 'n/a'), t.submission_id, p.project_oid,  nvl(p.display_name, 'n/a')
-from taxon t, project_info\@imgsg_dev p
-where t.genome_type = 'isolate'
-and t.gold_id = p.gold_stamp_id
-$imgClause
-$urClause
-union 
-select t.taxon_oid,  nvl(t.gold_id, 'n/a'), t.submission_id, p.project_oid,  nvl(p.display_name, 'n/a')
-from taxon t, project_info\@imgsg_dev p, submission s
-where t.genome_type = 'isolate'
-and t.submission_id = s.submission_id
-and s.project_info = p.project_oid
-$imgClause
-$urClause
-union
-select t.taxon_oid, 'n/a', null, null,  'n/a'
-from taxon t 
-where t.submission_id is null 
-and t.gold_id is null
+select t.taxon_oid, t.SEQUENCING_GOLD_ID, t.SUBMISSION_ID, p.display_name
+from taxon t, GOLD_SEQUENCING_PROJECT\@imgsg_dev p
+where t.gold_id is not null
+and t.SEQUENCING_GOLD_ID = p.gold_id
 and t.genome_type = 'isolate'
 $imgClause
 $urClause
+$publicClause
+union
+select t.taxon_oid, 'n/a', null,  'n/a'
+from taxon t 
+where t.submission_id is null 
+and t.SEQUENCING_GOLD_ID is null
+and t.genome_type = 'isolate'
+$imgClause
+$urClause
+$publicClause
     };
 
     my %projectId2Name;
-    my %projectId2GoldId;
     my %projectDataSetCnt;
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ; ; ) {
-        my ( $taxon_oid, $gold_id, $submission_id, $project_oid, $display_name ) = $cur->fetchrow();
+        my ( $taxon_oid, $gold_id, $submission_id, $display_name ) = $cur->fetchrow();
         last if !$taxon_oid;
-        $projectId2Name{$project_oid}   = $display_name;
-        $projectId2GoldId{$project_oid} = $gold_id;
-        if ( exists $projectDataSetCnt{$project_oid} ) {
-            $projectDataSetCnt{$project_oid} = $projectDataSetCnt{$project_oid} + 1;
+        $projectId2Name{$gold_id}   = $display_name;
+
+        if ( exists $projectDataSetCnt{$gold_id} ) {
+            $projectDataSetCnt{$gold_id} = $projectDataSetCnt{$gold_id} + 1;
         } else {
-            $projectDataSetCnt{$project_oid} = 1;
+            $projectDataSetCnt{$gold_id} = 1;
         }
     }
 
@@ -707,17 +695,15 @@ $urClause
     my $it          = new InnerTable( 1, "$txTableName$$", $txTableName, 0 );
     my $sd          = $it->getSdDelim();
 
-    $it->addColSpec( 'Study Name',     "char asc", "left" );
-    $it->addColSpec( 'Study GOLD ID',  "char asc", "left" );
-    $it->addColSpec( "Project ID",     "num asc",  "right" );
+    $it->addColSpec( 'GOLD Project Name',     "char asc", "left" );
+    $it->addColSpec( 'GOLD Project ID',  "char asc", "left" );
     $it->addColSpec( "Data Set Count", "num asc",  "right" );
 
     my $count = 0;
 
-    foreach my $project_oid ( keys %projectDataSetCnt ) {
-        my $dataSetCnt   = $projectDataSetCnt{$project_oid};
-        my $gold_id      = $projectId2GoldId{$project_oid};
-        my $display_name = $projectId2Name{$project_oid};
+    foreach my $gold_id ( keys %projectDataSetCnt ) {
+        my $dataSetCnt   = $projectDataSetCnt{$gold_id};
+        my $display_name = $projectId2Name{$gold_id};
 
         next if(!$all && $dataSetCnt < 2);
         next if(!$all && $display_name eq 'n/a');
@@ -735,16 +721,9 @@ $urClause
             $r .= $gold_id . $sd . "$url\t";
         }
 
-        if($project_oid ne '') {
-            my $url = "https://img.jgi.doe.gov/cgi-bin/submit/main.cgi?section=ProjectInfo&page=displayProject&project_oid=$project_oid";
-            $url = alink($url,  $project_oid);
-            $r .= $project_oid . $sd . "$url\t";
-        } else {
-            $r .= $project_oid . $sd . "$project_oid\t";
-        }
         
         my $tmp = WebUtil::massageToUrl2($display_name);
-        my $url = alink("main.cgi?section=StudyViewer&page=isolatelist&projecName=$tmp&projectid=$project_oid", $dataSetCnt);
+        my $url = alink("main.cgi?section=StudyViewer&page=isolatelist&projecName=$tmp&projectid=$gold_id", $dataSetCnt);
         $r .= $dataSetCnt . $sd . "$url\t";
         $it->addRow($r);
         $count++;

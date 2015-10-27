@@ -21,7 +21,7 @@ use Data::Dumper;
 #use perl5lib;
 use WebConfig;
 use WebUtil qw();
-use IMG::IO::File;
+use IMG::Util::File;
 use Selection;
 use File::Copy qw( cp );
 use Scalar::Util qw( looks_like_number );
@@ -342,7 +342,7 @@ sub returnData {
 sub initArray {
 	my $file = shift;
 	local $@;
-	my $arrayStr = eval { IMG::IO::File::slurp($file) };
+	my $arrayStr = eval { IMG::Util::File::slurp($file) };
 	die $@ if $@;
 	# Prevent file from being purged by cgi purge timeout +BSJ 01/25/12
 	WebUtil::fileTouch( $file );

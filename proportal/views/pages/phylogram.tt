@@ -3,11 +3,24 @@
 	title = 'IMG ProPortal: Phylogram';
 %]
 	<h2>Phylogram</h2>
-  <p>The following trees use phylogenetic data from NCBI with taxon data from IMG, if available. Trees were generated using <a rel="external" href="http://phylot.biobyte.de/index.html">phyloT's common tree generator</a> with all IMG species with an NCBI taxon ID and the genus <em>Prochloro-</em> or <em>Synechococcus</em> as input.
-</p>
-	<div id='phylogram'></div>
-	<h2>Radial version</h2>
-	<div id='radialtree'></div>
-	<h2>Collapsible</h2>
-	<div id="collapse"></div>
+  <p>Click on the nodes in the tree below to explore the phylogenetic tree for the <i>Prochlorococcus</i>, <i>Synechococcus</i>, and cyanophage species.</p>
+<p>Filter by genome type:</p>
+[%	IF data_filters && data_filters.all %]
+<ul>
+[%	# filter domain
+		FOR fd IN data_filters.all.keys.sort;
+			FOR f IN data_filters.all.$fd.values; %]
+<li><a class='filter' data-f_type='[% f.id %]' href="[% link( 'proportal/phylogram' ) %]/[% f.id %]">[% f.label %]</a>[%
+				IF data_filters.active && data_filters.active.$fd == f.id;
+		%] (currently displayed)[%
+				END; %]
+</li>
+[%			END; %]
+<!-- li><a href="[% link( 'proportal/phylogram' ) %]">no filter</a>[%
+			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
+			END; %]</li-->
+[%		END; %]
+</ul>
+[% END %]
+<div id="collapse" class="svg-container"></div>
 [%	END; %]

@@ -4,7 +4,7 @@
 %]
 <p>Please sign in with your <a href='[% ext_links.sso_url %]'>JGI Single Sign-On</a> account to use the IMG ProPortal.</p>
 
-<!-- form id="home" action="[% cfg.pp_app %]login" method="post" -->
+<!-- form id="home" action="[% link('login') %]" method="post" -->
 <form id="home" action="[% ext_links.sso_url %]/signon/create" method="post">
 	<fieldset>
 		<legend>JGI Single Sign-On (<abbr title="JGI Single Sign On">JGI SSO</abbr>)</legend>

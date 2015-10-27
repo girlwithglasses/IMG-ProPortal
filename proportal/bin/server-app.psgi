@@ -3,20 +3,48 @@
 use strict;
 use warnings;
 use feature ':5.16';
-use Data::Dumper;
+use Data::Dumper::Concise;
 use local::lib;
 
 use FindBin qw/ $Bin /;
-use lib ( "$Bin/../../webui.cgi", "$Bin/../lib" );
+use lib ( "$Bin/../../webui.cgi", "$Bin/../lib", "$Bin/../../../WebAPI-DBIC/lib", "$Bin/../../jbrowse/src/perl5", "$Bin/../../jbrowse/extlib/lib/perl5");
 use CGI::Compile;
 use CGI::Emulate::PSGI;
 use File::Basename;
 use ProPortalPackage;
 use Plack::Builder;
 use Log::Contextual qw(:log);
+use Config::Any;
 my $base = dirname($Bin);
 
-$ENV{PLACK_URLMAP_DEBUG} = 1;
+my $home = '/global/u1/a/aireland/';
+
+sub make_config {
+
+	my $env_dir = $base . '/environments';
+	opendir(my $dh, $env_dir) || die "can't opendir $env_dir: $!";
+	my @files = map { "$env_dir/$_" } grep { /^[^\.]/ && -f "$env_dir/$_" } readdir($dh);
+	closedir $dh;
+	push @files, $base . '/config.pl';
+
+
+	my $cfg = Config::Any->load_files({ files => [ @files ], use_ext => 1, flatten_to_hash => 1 });
+	my @keys = keys %$cfg;
+	for ( @keys ) {
+		if ( m!.+/(\w+)\.\w+$!x ) {
+			$cfg->{ $1 } = delete $cfg->{ $_ };
+		}
+	}
+
+	say 'config: ' . Dumper $cfg;
+
+
+
+	return $cfg;
+
+}
+
+# $ENV{PLACK_URLMAP_DEBUG} = 1;
 
 my $pp = sub {
 	ProPortalPackage->to_app;
@@ -25,38 +53,50 @@ my $pp = sub {
 # CGI server
 use Plack::App::CGIBin;
 
-my %apps = (
-	'main' => undef,
-	'json_proxy' => undef,
-	'xml' => undef );
-
-#for my $a ( keys %apps ) {
-#	my $sub = CGI::Compile->compile("/global/u1/a/aireland/pristine/webUI/webui.cgi/$a.pl");
-#	$apps{ $a } = CGI::Emulate::PSGI->handler($sub);
-#}
-
 my $old_img = sub {
-	Plack::App::CGIBin->new(root => "/global/u1/a/aireland/pristine/webUI/webui.cgi")->to_app;
+	Plack::App::CGIBin->new(root => $home . "pristine/webUI/webui.cgi")->to_app;
 };
 
-# static file server
-use Plack::App::Cascade;
-use Plack::App::File;
-my $casc = Plack::App::Cascade->new;
-my @paths = (
-	"/global/u1/a/aireland/pristine/webUI/webui.htd-proportal",
-	"/global/u1/a/aireland/pristine/webUI/webui.htd",
-	"/webfs/projectdirs/microbial/img/public-web/vhosts/img-stage.jgi-psf.org/htdocs/",
-);
-for (@paths) {
-	$casc->add( Plack::App::File->new( root => $_ )->to_app );
-}
-my $s_app = $casc->to_app;
+my $schema_h = {
+	img_gold => 'DBIC::IMG_Gold',
+	img_core => 'DBIC::IMG_Core',
+};
 
-my $assets = Plack::App::File->new( root => '/global/u1/a/aireland/pristine/webUI/webui.htd' )->to_app();
+=comment HAL+JSON WebAPI
+
+use WebAPI::DBIC::WebApp;
+use Alien::Web::HalBrowser;
+
+my $apps;
+for my $db ( qw( img_gold img_core ) ) {
+	next unless defined $cfg->{$db};
+
+	my $hal_app = Plack::App::File->new(
+	  root => Alien::Web::HalBrowser->dir
+	)->to_app;
+
+	my $schema_class = $schema_h->{$db};
+	eval "require $schema_class" or die "Error loading $schema_class: $@";
+
+	my $schema = $schema_class->connect(
+		$cfg->{$db}{dsn} || 'dbi:Oracle:' . $cfg->{$db}{database},
+		$cfg->{$db}{username} || $cfg->{$db}{user},
+		$cfg->{$db}{password}
+	); # uses DBI_DSN, DBI_USER, DBI_PASS env vars
+
+	my $app = WebAPI::DBIC::WebApp->new({
+		routes => [ map( $schema->source($_), $schema->sources) ]
+	})->to_psgi_app;
+
+	$apps->{$db} = { main => $app, hal => $hal_app };;
+
+}
+
+=cut
 
 builder {
 	enable "Deflater";
+
 #	enable "Static", path => qr#^/(images|css|js)
 #	.*?
 #	(\.(css|jpg|jpeg|png|gif|js))#x, root => $base . "/public";
@@ -75,13 +115,35 @@ builder {
 # 			exclude  => [qw( .*\.css .*\.png .*\.ico .*\.js .*\.jpg .*\.gif )],
 # 		]
 # 	];
-	mount "/" => $pp->();
 	enable 'Static',
 		path => sub { s!^/pristine_assets!! },
-		root => '/global/u1/a/aireland/pristine/webUI/webui.htd';
+		root => $home . 'pristine/webUI/webui.htd';
+
+	enable 'Static',
+		path => sub { s!^/jbrowse_assets!! },
+		root => $home . 'webUI/jbrowse';
+
+	# jbrowse data directory
+#	scratch_dir => '/global/homes/a/aireland/tmp/jbrowse/',
+
+	enable 'Static',
+		path => sub { s!^/data_dir!! },
+		root => $home . 'tmp/jbrowse';
+
 	enable "Static",
 		path => qr#^/yui282#x,
 		root => "/webfs/projectdirs/microbial/img/public-web/vhosts/img-stage.jgi-psf.org/htdocs/";
-	enable 'Static', path => qr[/pristine_assets], root => '/global/u1/a/aireland/pristine/webUI/webui.htd';
+
+	mount "/" => $pp->();
+
 	mount '/pristine' => $old_img->();
+
+# 	mount "/img_core" => builder {
+# 		mount "/browser" => $apps->{img_core}{hal};
+# 		mount "/" => $apps->{img_core}{main};
+# 	};
+#      mount "/img_gold" => builder {
+#          mount "/browser" => $apps->{img_gold}{hal};
+#          mount "/" => $apps->{img_gold}{main};
+#      };
 };

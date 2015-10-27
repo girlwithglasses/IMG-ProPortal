@@ -34,6 +34,18 @@ my $img_version = "2.0";
 $img_version = $env->{ img_version }
   if $env->{ img_version } ne "";
 
+sub getPageTitle {
+    return 'Data Evolution';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('news');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch
 ############################################################################

@@ -11,6 +11,7 @@ use feature ':5.16';
 use WebConfig ();
 use WebUtil ();
 use CGI::Cache;
+use Data::Dumper::Concise;
 
 # Force flush
 $| = 1;
@@ -102,8 +103,14 @@ sub _create_cache_options {
 	return unless cache_enabled();
 	my ( $namespace, $override_cache_size, $override_expires_time ) = @_;
 	# make sure the cache directory is configured and that it exists
-	die 'No CGI cache dir configured' unless defined $env->{cgi_cache_dir};
-	die 'CGI cache dir ' . $env->{cgi_cache_dir} . ' must be a writable directory' unless -d -r -w $env->{cgi_cache_dir};
+	die 'No CGI cache dir configured' unless exists $env->{cgi_cache_dir} && defined $env->{cgi_cache_dir};
+
+    if ( ! -e $env->{cgi_cache_dir} || ! -d _ ) {
+        die 'CGI cache dir ' . $env->{cgi_cache_dir} . ' does not exist';
+    }
+    elsif ( ! -r _ || ! -w _ ) {
+    	die 'CGI cache dir ' . $env->{cgi_cache_dir} . ' must be a writable directory';
+    }
 
 	my $opt_h = {
 		directory_umask => 002, # same as 755

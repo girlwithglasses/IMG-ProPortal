@@ -4,7 +4,7 @@
 #	Core IMG application to run pre-flight checks, check the user, initiate
 #	the session, parse params, and dispatch the appropriate app.
 #
-#	$Id: App.pm 34191 2015-09-03 22:34:25Z aireland $
+#	$Id: App.pm 34542 2015-10-20 20:56:35Z aireland $
 ############################################################################
 package IMG::App;
 
@@ -12,26 +12,27 @@ use IMG::Util::Base 'Class';
 
 our $VERSION = 0.01;
 
-extends 'IMG::App::Core';
+extends 'IMG::App::Core';       # config
+                                # http_params, cgi, psgi_env (to be deprecated)
 
 with
-	'IMG::IO::HttpClient',
-	'IMG::App::Session',
-	'IMG::App::PreFlight',
-	'IMG::IO::DbConnection',
-	'IMG::App::JGISessionClient',
-#	'IMG::App::Logger',
-	'IMG::App::User',
-	'IMG::App::UserChecks',
-	'IMG::App::FileManager',
-	'IMG::Schema';
+	'IMG::App::Role::HttpClient',     # http_ua
+	'IMG::App::Role::Session',        # session
+	'IMG::App::Role::PreFlight',      # remote_addr, user_agent (both to be deprecated)
+	'IMG::App::Role::DbConnection',    # db_connection_h
+	'IMG::App::Role::JGISessionClient',
+#   'IMG::App::Cache',          # to write!
+#	'IMG::App::Logger',         # to write!
+	'IMG::App::Role::User',           # user
+	'IMG::App::Role::UserChecks',
+	'IMG::App::Role::FileManager',
+    'IMG::App::Role::LinkManager',
+    'IMG::App::Role::MenuManager',
+	'IMG::App::Role::Schema';              # schema_h
 
 sub BUILDARGS {
 	my $class = shift;
 	my $args = ( @_ && scalar( @_ ) > 1 ) ? { @_ } : shift || {};
-
-
-
 	return $args;
 }
 

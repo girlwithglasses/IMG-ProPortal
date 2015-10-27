@@ -104,7 +104,7 @@
 		  multiple="multiple" size='10' style="width: 300px;">
           </select>
 	  <br/>
-          <input type='button' value='Add' onclick="addOption('selectedGenome1', '<TMPL_VAR NAME=maxSelected1>', '<TMPL_VAR NAME=domainType1>', '<TMPL_VAR NAME=form_id>', '<TMPL_VAR NAME=autocomplete>')" style='margin-top:1px; margin-bottom:1px; cursor:pointer;' /> 
+          <input type='button' value='Add' title='You can Add genomes either by using Quick Search or by selecting from the genomes on the left' onclick="addOption('selectedGenome1', '<TMPL_VAR NAME=maxSelected1>', '<TMPL_VAR NAME=domainType1>', '<TMPL_VAR NAME=form_id>', '<TMPL_VAR NAME=autocomplete>', '<TMPL_VAR NAME=allow_same_item>')" style='margin-top:1px; margin-bottom:1px; cursor:pointer;' /> 
 
 	  <TMPL_IF NAME=workspace>
 	  <input type='button' value='Upload Sets' title='You may select genome set(s) from your workspace' onclick="uploadOption('<TMPL_VAR NAME=xml_cgi>', 'selectedGenome1', '<TMPL_VAR NAME=form_id>')" style='cursor:pointer;' />
@@ -116,7 +116,7 @@
 		  multiple="multiple" size='1' style="width: 300px;">
           </select>
 	  <br/> 
-          <input type='button' value='Add' onclick="addOption('selectedGenome1', 1, '<TMPL_VAR NAME=domainType1>', '<TMPL_VAR NAME=form_id>', '<TMPL_VAR NAME=autocomplete>')" style='margin-top:1px; margin-bottom:1px; cursor:pointer;' /> 
+          <input type='button' value='Add' title='You can Add genomes either by using Quick Search or by selecting from the genomes on the left' onclick="addOption('selectedGenome1', 1, '<TMPL_VAR NAME=domainType1>', '<TMPL_VAR NAME=form_id>', '<TMPL_VAR NAME=autocomplete>', '<TMPL_VAR NAME=allow_same_item>')" style='margin-top:1px; margin-bottom:1px; cursor:pointer;' /> 
       </TMPL_IF> 
 	  
       <input type='button' value='Remove' title='Please select genome(s) to be removed' 
@@ -182,7 +182,7 @@
 		multiple="multiple" size='10' style="width: 300px;">
         </select>
 	<br/>
-        <input type='button' value='Add' onclick="addOption('selectedGenome2', <TMPL_VAR NAME=maxSelected2>, '<TMPL_VAR NAME=domainType2>', '<TMPL_VAR NAME=form_id>', '<TMPL_VAR NAME=autocomplete>')" style='margin-top:1px; margin-bottom:1px; cursor:pointer;' /> 
+        <input type='button' value='Add' title='You can Add genomes either by using Quick Search or by selecting from the genomes on the left' onclick="addOption('selectedGenome2', <TMPL_VAR NAME=maxSelected2>, '<TMPL_VAR NAME=domainType2>', '<TMPL_VAR NAME=form_id>', '<TMPL_VAR NAME=autocomplete>', '<TMPL_VAR NAME=allow_same_item>')" style='margin-top:1px; margin-bottom:1px; cursor:pointer;' /> 
 
 	<TMPL_IF NAME=workspace>
         <input type='button' value='Upload Sets' title='You may select genome set(s) from your workspace' onclick="uploadOption('<TMPL_VAR NAME=xml_cgi>', 'selectedGenome2', '<TMPL_VAR NAME=form_id>')" style='cursor:pointer;'>

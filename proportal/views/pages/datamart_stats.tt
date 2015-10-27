@@ -15,7 +15,7 @@
 	<tbody>
 [%	FOREACH t IN type.keys.sort; %]
 	<tr>
-		<td><a href="[% cfg.pp_app %][% links.genome %][% t %]">[% labels.$t %]</td><td>[% type.$t.size %]</td>
+		<td><a href="[% link( 'genome' %][% t %]">[% labels.$t %]</td><td>[% type.$t.size %]</td>
 	</tr>
 [%	END %]
 	</tbody>

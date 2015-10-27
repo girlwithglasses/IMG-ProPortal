@@ -8,6 +8,7 @@ package Routes::Ajax;
 
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
+use parent 'CoreStuff';
 use Dancer2::Plugin::Ajax;
 
 use XMLProxy;

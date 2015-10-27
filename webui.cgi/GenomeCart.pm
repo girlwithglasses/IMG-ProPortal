@@ -1,6 +1,6 @@
 ###########################################################################
 # GenomeCart.pm
-# $Id: GenomeCart.pm 34180 2015-09-03 21:12:12Z aireland $
+# $Id: GenomeCart.pm 34421 2015-10-05 18:08:05Z klchu $
 ############################################################################
 package GenomeCart;
 
@@ -167,9 +167,9 @@ sub printTaxonUploadForm {
     }
     printTaxonUploadFormContent();
 
-    print qq {
+    print qq{
         <script type="text/javascript">
-        updCnt("ALL")
+        updCnt("0")
         </script>
     };
     print end_form();
@@ -660,7 +660,7 @@ sub printGenomeCart {
     printTaxonUploadFormContent('Yes');
 
     # Run JS for updating number of genomes in cart. See below.
-    print qq {
+    print qq{
         <script type="text/javascript">
         updCnt($count)
         </script>
@@ -738,7 +738,7 @@ sub printCartJS {
     print qq{
         <script type="text/javascript">
         function updCnt(cnt) {
-            var objCnt = document.getElementById("genome_cart").children[0];
+            var objCnt = document.getElementById("genome_cart");
             if (objCnt) {
                 objCnt.innerHTML = cnt;
             }

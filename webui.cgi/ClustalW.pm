@@ -3,7 +3,7 @@
 #   using secondary tools.  This is the perl wrapper for handling
 #   the display forms pertaining to CLUSTAL W alignments.
 #    --es 10/22/2004
-#  $Id: ClustalW.pm 33981 2015-08-13 01:12:00Z aireland $
+#  $Id: ClustalW.pm 34538 2015-10-20 17:43:00Z klchu $
 ############################################################################
 package ClustalW;
 
@@ -52,6 +52,16 @@ my $verbose = $env->{ verbose };
 my $use_clustal_omega = 1;
 my $YUI = $env->{yui_dir_28};
 
+sub getPageTitle {
+    return 'Clustal - Multiple Sequence Alignment';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ("AnaCart", '', '', '', '', "DistanceTree.pdf#page=6");
+    return @a;
+}
 
 ############################################################################
 # dispatch - Dispatch loop.

@@ -37,6 +37,23 @@ my $max_func_batch = 250;
 my $max_taxon_batch = 900;
 my $maxProfileOccurIds = 300;
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "curaCart" );
+    return 'Curation Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    if ( WebUtil::paramMatch("noHeader") ne "" ) {
+        return @a;
+    } else {
+        @a = ('AnaCart');
+    }
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################

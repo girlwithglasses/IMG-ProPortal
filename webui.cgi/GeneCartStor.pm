@@ -16,7 +16,7 @@
 #    12: scaffold read depth
 #    --es 03/22/2007
 #
-# $Id: GeneCartStor.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: GeneCartStor.pm 34421 2015-10-05 18:08:05Z klchu $
 ############################################################################
 package GeneCartStor;
 my $section = "GeneCartStor";
@@ -2782,6 +2782,16 @@ sub getStateFile {
 
 sub readCartFile {
     return readFromFile( getStateFile() );
+}
+
+sub getSize {
+    my $href = getGeneOids();
+    if($href eq '') {
+        return 0;
+    }
+    
+    my $s = keys %$href;
+    return $s;
 }
 
 sub writeCartFile {

@@ -1,7 +1,7 @@
 ###########################################################################
 # MissingGenes - Module for searching for missing genes.
 #
-# $Id: MissingGenes.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: MissingGenes.pm 34457 2015-10-08 22:15:47Z imachen $
 ############################################################################
 package MissingGenes;
 my $section = "MissingGenes";
@@ -6085,7 +6085,8 @@ sub printKoEcRecords {
 
         $r .= "Yes\t";
         my $ko_url =
-          "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id";
+          "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id" .
+	  "&gene_oid=$gene_oid1";
         $r .= $ko_id . $sd . alink( $ko_url, $ko_id ) . "\t";
         $r .= "$ko_def\t";
 

@@ -6,7 +6,7 @@
 #     1: func_name
 #     2: batch_id
 #    --es 01/06/2007
-# $Id: FuncCartStor.pm 34180 2015-09-03 21:12:12Z aireland $
+# $Id: FuncCartStor.pm 34421 2015-10-05 18:08:05Z klchu $
 ############################################################################
 package FuncCartStor;
 my $section = "FuncCartStor";
@@ -566,6 +566,17 @@ sub getStateFile {
     my ( $cartDir, $sessionId ) = WebUtil::getCartDir();
     my $sessionFile = "$cartDir/funcCart.$sessionId.stor";
     return $sessionFile;
+}
+
+sub getSize {
+    my ($self) = @_;
+    my $href = $self->{recs};
+    if($href eq '') {
+        return 0;
+    }
+    
+    my $s = keys %$href;
+    return $s;
 }
 
 ############################################################################

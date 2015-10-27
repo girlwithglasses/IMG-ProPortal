@@ -6,7 +6,7 @@
 #
 # for workspace the temp cart file is teh unsaved buffer file
 #
-# $Id: WorkspaceBcSet.pm 34198 2015-09-04 19:45:40Z klchu $
+# $Id: WorkspaceBcSet.pm 34490 2015-10-12 22:44:35Z aratner $
 ########################################################################
 package WorkspaceBcSet;
 
@@ -461,19 +461,19 @@ sub findPairwiseSimilarity {
     $totalLine =~ s/^#//;
     chomp $totalLine;
 
-    print "$totalLine <br>\n";
+    print "<p>$totalLine</p>";
 
     my $it = new InnerTable( 1, "processbc$$", "processbc", 2 );
-    my $sd = $it->getSdDelim();                                    # sort delimiter
+    my $sd = $it->getSdDelim(); # sort delimiter
 
     # columns headers
-    $it->addColSpec("Select");
-    $it->addColSpec( "BC Id",            'num asc', 'right' );
-    $it->addColSpec( "Adjusted Jaccard", 'num desc', 'right' );
-    $it->addColSpec( "Jaccard Score",    'num asc', 'right' );
-    $it->addColSpec( "Common PFAMs",     'num asc', 'right' );
-    $it->addColSpec( "Pfam Count", "asc", "right" );
-    $it->addColSpec( "Gene Count", "desc", "right" );
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Cluster ID",       "asc",  "right" );
+    $it->addColSpec( "Adjusted Jaccard", "desc", "right" );
+    $it->addColSpec( "Jaccard Score",    "asc",  "right" );
+    $it->addColSpec( "Common PFAMs",     "asc",  "right" );
+    $it->addColSpec( "Pfam Count",       "asc",  "right" );
+    $it->addColSpec( "Gene Count",       "desc", "right" );
 
     $it->addColSpec( "BC Length",                 "asc",  "right" );
     $it->addColSpec( "Evidence Type",             "asc",  "left" );
@@ -485,7 +485,7 @@ sub findPairwiseSimilarity {
     $it->addColSpec( "Phylum", "asc", "left" );
     $it->addColSpec( "Habitat", "asc", "left" );
 
-    $it->addColSpec( "Scaffold",    "asc", 'right' );
+    $it->addColSpec( "Scaffold",    "asc", "right" );
     $it->addColSpec( "Start Coord", "asc", "right" );
     $it->addColSpec( "End Coord",   "asc", "right" );
     $it->addColSpec( "Genbank ID",  "asc", "left" );
@@ -500,10 +500,10 @@ sub findPairwiseSimilarity {
         my $taxon_oid = $bcid2taxon{$bcId};
         
         # select
-        my $row       = $sd . "<input type='checkbox' name='bc_id' value='$bcId' />\t";
+        my $row = $sd . "<input type='checkbox' name='bc_id' value='$bcId' />\t";
         
         # bc id
-        my $tmp       = alink( $url . $bcId, $bcId );
+        my $tmp = alink( $url . $bcId, $bcId );
         $row .= $bcId . $sd . $tmp . "\t";
 
         # Adjusted Jaccard
@@ -621,12 +621,6 @@ sub findPairwiseSimilarity {
             $row .= ''. $sd . '' . "\t";
         }
 
-
-
-
-
-
-
         $it->addRow($row);
         $count++;
     }
@@ -642,10 +636,10 @@ sub findPairwiseSimilarity {
     action="main.cgi" method="post" 
     onsubmit="removeDups ('processbc_frm', 'processbc'); " 
     onreset="handleReset ('processbc_frm', 'processbc'); ">
-};
+    };
 
-    BcUtil::printTableFooter("processbc");
-    $it->printOuterTable(1);
+    BcUtil::printTableFooter("processbc") if $count > 0;
+    $it->printOuterTable(1) if $count > 0;
 
     print end_form();
     printStatusLine( "$count rows", 2 ) if $count > 0;
@@ -709,11 +703,11 @@ sub printWorkspaceSets {
 
     my $txTableName = "bctable";
     my $it          = new InnerTable( 1, "$txTableName$$", $txTableName, 1 );
-    my $sd          = $it->getSdDelim();                                        # sort delimiter
+    my $sd          = $it->getSdDelim(); # sort delimiter
 
     # columns headers
     $it->addColSpec("Select");
-    $it->addColSpec( "File Name",        'num asc', 'right' );
+    $it->addColSpec( "File Name",        'num asc', "right" );
     $it->addColSpec( "Number of BC Ids", "desc",    "right" );
 
     my $count = 0;
@@ -820,11 +814,11 @@ sub printBuffer {
 
     my $txTableName = "bctable";
     my $it          = new InnerTable( 1, "$txTableName$$", $txTableName, 1 );
-    my $sd          = $it->getSdDelim();                                        # sort delimiter
+    my $sd          = $it->getSdDelim(); # sort delimiter
 
     # columns headers
     $it->addColSpec("Select");
-    $it->addColSpec( "BC Id", 'num asc', 'right' );
+    $it->addColSpec( "BC Id", 'num asc', "right" );
 
     my $url = 'main.cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=';
 
@@ -934,11 +928,11 @@ sub printSetList {
 
     my $txTableName = "bctable";
     my $it          = new InnerTable( 1, "$txTableName$$", $txTableName, 1 );
-    my $sd          = $it->getSdDelim();                                        # sort delimiter
+    my $sd          = $it->getSdDelim(); # sort delimiter
 
     # columns headers
-    $it->addColSpec("Select");
-    $it->addColSpec( "BC Id", 'num asc', 'right' );
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Cluster ID", "asc", "right" );
 
     my $count = 0;
     my $url   = 'main.cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=';

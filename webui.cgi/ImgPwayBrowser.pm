@@ -2,7 +2,7 @@
 # ImgPwayBrowser.pm - IMG Pathway Browser module.
 #   Includes IMG pathway details.
 #
-# $Id: ImgPwayBrowser.pm 34265 2015-09-16 17:58:07Z klchu $
+# $Id: ImgPwayBrowser.pm 34481 2015-10-09 21:17:28Z imachen $
 ############################################################################
 package ImgPwayBrowser;
 my $section = "ImgPwayBrowser";
@@ -1725,18 +1725,21 @@ sub printAssocGenomes {
     }
 
     my %assert;
+    my %date_h;
     my $sql = qq{ 
-        select ipa.taxon, ipa.status, ipa.evidence 
+        select ipa.taxon, ipa.status, ipa.evidence, 
+            to_char(ipa.mod_date, 'yyyy-mm-dd') 
             from img_pathway_assertions ipa
             where ipa.pathway_oid = ? 
         };
     my $cur = execSql( $dbh, $sql, $verbose, $pway_oid );
     for ( ; ; ) {
-        my ( $t_oid, $status, $evid ) = $cur->fetchrow();
+        my ( $t_oid, $status, $evid, $mod_date ) = $cur->fetchrow();
         last if !$t_oid;
 
         #       $assert{$t_oid} = $status . " (" . $evid . ")";
         $assert{$t_oid} = $status;
+	$date_h{$t_oid} = $mod_date;
     }
     $cur->finish();
 
@@ -1762,6 +1765,7 @@ sub printAssocGenomes {
     $ct->addColSpec( "Genome",                "char asc",    "left" );
     $ct->addColSpec( "Pathway<br/>Assertion", "char asc",    "left" );
     $ct->addColSpec( "Gene<br/>Count",        "number desc", "right" );
+    $ct->addColSpec( "Mod Date",        "char desc", "left" );
     my $sdDelim = InnerTable::getSdDelim();
 
     for my $r (@taxonRecs) {
@@ -1797,6 +1801,10 @@ sub printAssocGenomes {
 
         # gene count
         $r .= $gene_count . $sdDelim . alink( $url, $gene_count ) . "\t";
+
+	# mod_date
+	my $mod_date = $date_h{$taxon_oid};
+	$r .= $mod_date . $sdDelim . $mod_date . "\t";
 
         $ct->addRow($r);
     }

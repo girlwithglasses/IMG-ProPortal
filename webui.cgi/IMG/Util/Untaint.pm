@@ -132,7 +132,7 @@ unset the usual tainted path suspects
 
 sub unset_env {
 
-	delete $ENV{qw( BASH_ENV CDPATH ENV IFS PATH )};
+	delete @ENV{qw( BASH_ENV CDPATH ENV IFS PATH )};
 
 }
 

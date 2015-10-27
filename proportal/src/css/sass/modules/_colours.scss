@@ -8,7 +8,7 @@ $primary: rgb(100,140,170);
 // secondary colour
 $secondary: rgb(211,105,27);
 
-/** JGI colours:
+/** JGI colours: */
 
 $black:   rgb(52,52,52);
 $dkgrey:  rgb(90,90,90);
@@ -18,7 +18,6 @@ $dk_blue: rgb(100,140,170);
 $green:   rgb(153,189,60);
 $lite_or: rgb(253,186,87);
 
-*/
 
 $nav-link: #000;
 $nav-link-bg: #9ce;
@@ -29,6 +28,10 @@ $nav-link-bg: #9ce;
 
 @mixin l-border( $w, $col ) {
 	border-left: $w solid $col;
+}
+
+@mixin borders( $w, $col ) {
+    border: $w solid $col;
 }
 
 @mixin nav-link {

@@ -26,6 +26,17 @@ my $artemis_url       = $env->{artemis_url};
 my $artemis_link      = alink( $artemis_url, "Artemis" );
 my $verbose           = $env->{verbose};
 
+sub getPageTitle {
+    return 'EMBL File Export';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ('FindGenomes');
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################

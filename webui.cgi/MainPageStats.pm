@@ -2,7 +2,7 @@
 # MainPageStats - Statistics for genomes in main/home page.
 #    --es 02/01/2005
 #
-# $Id: MainPageStats.pm 33935 2015-08-07 18:26:22Z klchu $
+# $Id: MainPageStats.pm 34471 2015-10-09 19:47:35Z klchu $
 ############################################################################
 package MainPageStats;
 my $section = "MainPageStats";
@@ -41,6 +41,7 @@ my $base_url             = $env->{base_url};
 my $use_img_gold         = $env->{use_img_gold};
 my $img_hmp              = $env->{img_hmp};
 my $img_ken              = $env->{img_ken};
+my $img_nr = $env->{img_nr};
 my $nvl                  = getNvl();
 
 # what names I found in gold to be human

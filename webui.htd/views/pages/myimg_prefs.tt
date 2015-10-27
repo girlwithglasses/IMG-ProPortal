@@ -1,6 +1,56 @@
 [%	%]
 
-
+<p>
+	Your preferences will be saved in your workspace and will used next time you log in.
+</p>
 <p>
 	For faster processing, adjust to lower numbers. For more complete result lists, adjust to higher numbers. The default settings should work well for most users.
 </p>
+
+
+    my $maxOrthologGroups         = getSessionParam("maxOrthologGroups");
+    my $maxParalogGroups          = getSessionParam("maxParalogGroups") // 500;
+
+    my $maxProfileCandidateTaxons = getSessionParam("maxProfileCandidateTaxons");
+    my $genePageDefaultHomologs   = getSessionParam("genePageDefaultHomologs");
+
+    my $maxGeneListResults        = getSessionParam("maxGeneListResults") // 1000;
+    my $maxHomologResults         = getSessionParam("maxHomologResults") // 200;
+    my $maxNeighborhoods          = getSessionParam("maxNeighborhoods") // 5;
+    my $maxProfileRows            = getSessionParam("maxProfileRows") // 1000;
+    my $minHomologPercentIdentity = getSessionParam("minHomologPercentIdentity") // 30;
+    my $minHomologAlignPercent    = getSessionParam("minHomologAlignPercent") // 10;
+
+
+
+
+    my $hideViruses               = getSessionParam("hideViruses") // 'Yes';
+    my $hidePlasmids              = getSessionParam("hidePlasmids") // 'Yes';
+    my $hideGFragment             = getSessionParam("hideGFragment") // 'Yes';
+    my $newGenePageDefault        = getSessionParam("newGenePageDefault") // 'No';
+
+    # for taxon editor
+    my $hideObsoleteTaxon = getSessionParam("hideObsoleteTaxon") // 'Yes';
+
+    # Hide rows with zeroes in Genome browser > Genome Statistics
+    my $hideZeroStats = getSessionParam("hideZeroStats") // 'Yes';
+
+    # cgi cache a preferenc to turn off iff on
+    # users cannot turn it on if off in config - ken
+    my $userCacheEnable;
+    if ($cgi_cache_enable) {
+        $userCacheEnable = getSessionParam("userCacheEnable") // 'Yes';
+        $userCacheEnable = "Yes" if ( $userCacheEnable eq "" );    # it was never set
+    }
+
+    my $genomeListColPrefs;
+    if ($user_restricted_site) {
+        $genomeListColPrefs = getSessionParam("genomeListColPrefs") // 'No';
+        $genomeListColPrefs = "No" if ( $genomeListColPrefs eq "" );
+    }
+
+    my $topHomologHideMetag;
+    if ( $include_metagenomes && $img_internal ) {
+        $topHomologHideMetag = getSessionParam("topHomologHideMetag") // 'No';
+        $topHomologHideMetag = "No" if ( $topHomologHideMetag eq "" );    # it was never set
+    }

@@ -50,29 +50,32 @@ div#jgi_logo {
     display: inline-block;
 }
 
-div#genome_cart {
+div#cart {
     font-size: 12px;
-    height: 30px;
-    width: 100px;
+    text-align: right;
+    width: 900px;
+    /*
     float: left;
     background: white;
     margin: 20px 0 0 10px;
     padding: 5px 0 5px 5px;
     border-radius: 4px;
+    height: 30px;
+    width: 100px; */
 }
 
 div#quicksearch {
     width: 200px;
     float: left;
     font-size: 10px;
-    margin: 15px 0 0 10px;
+    margin: 10px 0 0 20px;
 }
 
 /*
  * logout div for er and mer systems
  */
 div#login {
-    margin-top: 15px;
+    margin-top: 10px;
     float: left;
     max-width: 200px;
     font-size: 12px;
@@ -202,7 +205,7 @@ div#training p {
  * ----------------------------------------------------------- 
  */
 div#content {
-    width: 550px;
+    width: 600px;
     background: white;
     display: block;
     border: 2px solid #6699CC;

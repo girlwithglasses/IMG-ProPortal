@@ -1,7 +1,7 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 34232 2015-09-11 17:59:09Z klchu $
+# $Id: Help.pm 34369 2015-09-25 21:57:59Z klchu $
 ############################################################################
 package Help;
 use strict;
@@ -82,9 +82,17 @@ sub printNews {
     if ( -e $file ) {
         my $line;
         my $rfh = newReadFileHandle($file);
+        my $count = 1;
         while ( $line = $rfh->getline() ) {
             if($line =~ /^<b id='subject'>/) {
-                print '<h2>' . $line . "</h2>";
+                
+                $line =~ s/<br>//;
+                $line =~ s/<\/br>//;
+                
+                print "<h2>" . $line . "<a name='$count' href='#'><font size='1'>top</font></a></h2> ";
+                
+                $count++;
+                
 #            } elsif ($line =~ /^<p>/) {
 #                $line =~ s/^<p>/<p style='font-size: 14px;'>/;
 #                print $line;
@@ -97,6 +105,7 @@ sub printNews {
     
     print "</div>\n";
 }
+
 
 sub printDocs {
     print qq{

@@ -29,9 +29,10 @@ $r-menu-diff: $r-menu-w - $r-sub-w;
 //		background: $h-menu-bg;
 		color: $h-menu;
 		display: block;
-		padding: $gutter $gutter*.5;
-		@include r-border($gutter*.5, transparent);
-		@include l-border($gutter*.5, transparent);
+		padding: $gutter*.5;
+		@include borders( $gutter*.5, transparent );
+//		@include r-border($gutter*.5, transparent);
+//		@include l-border($gutter*.5, transparent);
 		&:hover {
 			color: darken($h-menu, 5%);
 		}
@@ -43,6 +44,12 @@ $r-menu-diff: $r-menu-w - $r-sub-w;
 //			left: auto;
 //		}
 	}
+
+    > ul > .parent {
+    //    background-color: saturate($h-menu-bg, 25%);
+        border-bottom-color: $secondary;
+        background-color: darken( $h-menu-bg, 5% );
+    }
 
 	.sub-menu {
 		left: -9999px;

@@ -5470,19 +5470,22 @@ sub exportMyAnnotations {
     WebUtil::printExcelHeader("myimg_export$$.xls");
 
     # print attribute names
-    print "Gene ID\t";
-    print "Genome\t";
-    print "Original Product Name\t";
-    print "Annotated Product Name\t";
-    print "Annotated Prot Desc\t";
-    print "Annotated EC Number\t";
-    print "Annotated PUBMED ID\t";
-    print "Inference\t";
-    print "Is Pseudo Gene?\t";
-    print "Notes\t";
-    print "Annotated Gene Symbol\t";
-    print "Remove Gene from Genome?\t";
-    print "Last Modified Date\n";
+
+    print join ( "\t",
+    "Gene ID",
+    "Genome",
+    "Original Product Name",
+    "Annotated Product Name",
+    "Annotated Prot Desc",
+    "Annotated EC Number",
+    "Annotated PUBMED ID",
+    "Inference",
+    "Is Pseudo Gene?",
+    "Notes",
+    "Annotated Gene Symbol",
+    "Remove Gene from Genome?",
+    "Last Modified Date" )
+    . "\n";
 
     # export data
     my $dbh = WebUtil::dbLogin();

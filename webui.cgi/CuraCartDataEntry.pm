@@ -37,6 +37,23 @@ my $max_upload_line_count = 10000;
 my $max_cond_count = 5;
 my $max_set_cond_count = 3;
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "curaCart" );
+    return 'Curation Cart Data Entry';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    if ( WebUtil::paramMatch("noHeader") ne "" ) {
+        return @a;
+    } else {
+        @a = ('AnaCart');
+    }
+    return @a;
+}
+
 
 ############################################################################
 # dispatch - Dispatch to pages for this section.

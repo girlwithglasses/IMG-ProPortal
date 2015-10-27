@@ -1,6 +1,6 @@
 ############################################################################
 # WorkspaceQueryUtil.pm
-# $Id: WorkspaceQueryUtil.pm 33910 2015-08-06 05:10:03Z jinghuahuang $
+# $Id: WorkspaceQueryUtil.pm 34406 2015-10-02 21:00:21Z jinghuahuang $
 ############################################################################
 package WorkspaceQueryUtil;
 
@@ -1027,186 +1027,186 @@ sub getDbTaxonFuncsGeneCountSql {
 
     if ( $func_id =~ /COG/i ) {
         #$sql = qq{
-        #    select g.cog, count(distinct g.gene_oid)
+        #    select g.cog, g.taxon, count(distinct g.gene_oid)
         #    from gene_cog_groups g
         #    where g.cog in ( $func_ids_str )
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by g.cog
+        #    group by g.cog, g.taxon
         #};
 
         $rclause = WebUtil::urClause('g.taxon_oid');
         $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');        
     
         $sql = qq{
-            select g.cog, sum(g.gene_count)
+            select g.cog, g.taxon_oid, sum(g.gene_count)
             from mv_taxon_cog_stat g
             where g.cog in ( $func_ids_str )
             and g.taxon_oid in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.cog
+            group by g.cog, g.taxon_oid
         };
     }
     elsif ( $func_id =~ /KOG/i ) {
         #$sql = qq{
-        #    select g.kog, count(distinct g.gene_oid)
+        #    select g.kog, g.taxon, count(distinct g.gene_oid)
         #    from gene_kog_groups g
         #    where g.kog in ( $func_ids_str )
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by g.kog
+        #    group by g.kog, g.taxon
         #};
 
         $rclause = WebUtil::urClause('g.taxon_oid');
         $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');        
     
         $sql = qq{
-            select g.kog, sum(g.gene_count)
+            select g.kog, g.taxon_oid, sum(g.gene_count)
             from mv_taxon_kog_stat g
             where g.kog in ( $func_ids_str )
             and g.taxon_oid in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.kog
+            group by g.kog, g.taxon_oid
         };
     }
     elsif ( $func_id =~ /pfam/i ) {
         #$sql = qq{
-        #    select g.pfam_family, count(distinct g.gene_oid)
+        #    select g.pfam_family, g.taxon, count(distinct g.gene_oid)
         #    from gene_pfam_families g
         #    where g.pfam_family in ( $func_ids_str )
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by g.pfam_family
+        #    group by g.pfam_family, g.taxon
         #};
 
         $rclause = WebUtil::urClause('g.taxon_oid');
         $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');        
     
         $sql = qq{
-            select g.pfam_family, sum(g.gene_count)
+            select g.pfam_family, g.taxon_oid, sum(g.gene_count)
             from mv_taxon_pfam_stat g
             where g.pfam_family in ( $func_ids_str )
             and g.taxon_oid in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.pfam_family
+            group by g.pfam_family, g.taxon_oid
         };
     }
     elsif ( $func_id =~ /TIGR/i ) {
         #$sql = qq{
-        #    select g.ext_accession, count(distinct g.gene_oid)
+        #    select g.ext_accession, g.taxon, count(distinct g.gene_oid)
         #    from gene_tigrfams g
         #    where g.ext_accession in ( $func_ids_str )
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by g.ext_accession
+        #    group by g.ext_accession, g.taxon
         #};
 
         $rclause = WebUtil::urClause('g.taxon_oid');
         $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');        
     
         $sql = qq{
-            select g.ext_accession, sum(g.gene_count)
+            select g.ext_accession, g.taxon_oid, sum(g.gene_count)
             from mv_taxon_tfam_stat g
             where g.ext_accession in ( $func_ids_str )
             and g.taxon_oid in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.ext_accession
+            group by g.ext_accession, g.taxon_oid
         };
     }
     elsif ( $func_id =~ /KO/i ) {
         #$sql = qq{
-        #    select g.ko_terms, count(distinct g.gene_oid)
+        #    select g.ko_terms, g.taxon, count(distinct g.gene_oid)
         #    from gene_ko_terms g
         #    where g.ko_terms in ( $func_ids_str )
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by g.ko_terms
+        #    group by g.ko_terms, g.taxon
         #};
 
         $rclause = WebUtil::urClause('g.taxon_oid');
         $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');        
     
         $sql = qq{
-            select g.ko_term, sum(g.gene_count)
+            select g.ko_term, g.taxon_oid, sum(g.gene_count)
             from mv_taxon_ko_stat g
             where g.ko_term in ( $func_ids_str )
             and g.taxon_oid in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.ko_term
+            group by g.ko_term, g.taxon_oid
         };
     }
     elsif ( $func_id =~ /EC/i ) {
         #$sql = qq{
-        #    select g.enzymes, count(distinct g.gene_oid)
+        #    select g.enzymes, g.taxon, count(distinct g.gene_oid)
         #    from gene_ko_enzymes g
         #    where g.enzymes in ( $func_ids_str )
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by g.enzymes
+        #    group by g.enzymes, g.taxon
         #};
 
         $rclause = WebUtil::urClause('g.taxon_oid');
         $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');        
     
         $sql = qq{
-            select g.enzyme, sum(g.gene_count)
+            select g.enzyme, g.taxon_oid, sum(g.gene_count)
             from mv_taxon_ec_stat g
             where g.enzyme in ( $func_ids_str )
             and g.taxon_oid in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.enzyme
+            group by g.enzyme, g.taxon_oid
         };
     }
     elsif ( $func_id =~ /^MetaCyc/i ) {
         $sql = qq{
-            select brp.in_pwys, count(distinct g.gene_oid)
+            select brp.in_pwys, g.taxon, count(distinct g.gene_oid)
             from gene_biocyc_rxns g, biocyc_reaction_in_pwys brp
             where g.biocyc_rxn = brp.unique_id
             and brp.in_pwys in ( $func_ids_str )
             and g.taxon in ( $taxon_str )
             $rclause
             $imgClause
-            group by brp.in_pwys
+            group by brp.in_pwys, g.taxon
         };
     }
     elsif ( $func_id =~ /^IPR/i ) {
         $sql = qq{
-            select g.id, count(distinct g.gene_oid)
+            select g.id, g.taxon, count(distinct g.gene_oid)
             from gene_xref_families g
             where g.db_name = 'InterPro'
             and g.id in ( $func_ids_str )
             and g.taxon in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.id
+            group by g.id, g.taxon
         };
     }
     elsif ( $func_id =~ /^TC/i ) {
         $sql = qq{
-            select g.tc_family, count(distinct g.gene_oid)
+            select g.tc_family, g.taxon, count(distinct g.gene_oid)
             from gene_tc_families g
             where g.tc_family in ( $func_ids_str )
             and g.taxon in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.tc_family
+            group by g.tc_family, g.taxon
         };
     }
     elsif ( $func_id =~ /^ITERM/i ) {
         #$sql = qq{
-        #    select it.term_oid, count(distinct g.gene_oid)
+        #    select g.taxon, it.term_oid, count(distinct g.gene_oid)
         #    from img_term it, dt_img_term_path dtp, gene_img_functions g
         #    where it.term_oid in ( $func_ids_str )
         #    and it.term_oid = dtp.term_oid
@@ -1214,23 +1214,23 @@ sub getDbTaxonFuncsGeneCountSql {
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by it.term_oid
+        #    group by g.taxon, it.term_oid
         #};
         $sql = qq{
-            select g.function, count(distinct g.gene_oid)
+            select g.function, g.taxon, count(distinct g.gene_oid)
             from gene_img_functions g
             where g.function in ( $func_ids_str )
             and g.taxon in ( $taxon_str )
             $rclause
             $imgClause
-            group by g.function
+            group by g.function, g.taxon
         };
     }
     elsif ( $func_id =~ /^IPWAY/i ) {
         #$sql = qq{
-        #    select new.pathway_oid, count(distinct new.gene_oid) 
+        #    select new.pathway_oid, new.taxon, count(distinct new.gene_oid) 
         #    from (
-        #        select ipr.pathway_oid pathway_oid, g.gene_oid gene_oid
+        #        select ipr.pathway_oid pathway_oid, g.taxon taxon, g.gene_oid gene_oid
         #        from img_pathway_reactions ipr,
         #            img_reaction_catalysts irc,
         #            dt_img_term_path dtp, gene_img_functions g
@@ -1242,7 +1242,7 @@ sub getDbTaxonFuncsGeneCountSql {
         #        $rclause
         #        $imgClause
         #        union
-        #        select ipr.pathway_oid pathway_oid, g.gene_oid gene_oid
+        #        select ipr.pathway_oid pathway_oid, g.taxon taxon, g.gene_oid gene_oid
         #        from img_pathway_reactions ipr,
         #            img_reaction_t_components irtc,
         #            dt_img_term_path dtp, gene_img_functions g
@@ -1254,12 +1254,12 @@ sub getDbTaxonFuncsGeneCountSql {
         #        $rclause
         #        $imgClause
         #    ) new
-        #    group by new.pathway_oid
+        #    group by new.pathway_oid, new.taxon
         #};
         $sql = qq{
-            select new.pathway_oid, count(distinct new.gene_oid) 
+            select new.pathway_oid, new.taxon, count(distinct new.gene_oid) 
             from (
-                select ipr.pathway_oid pathway_oid, g.gene_oid gene_oid
+                select ipr.pathway_oid pathway_oid, g.taxon taxon, g.gene_oid gene_oid
                 from img_pathway_reactions ipr,
                     img_reaction_catalysts irc,
                     gene_img_functions g
@@ -1270,7 +1270,7 @@ sub getDbTaxonFuncsGeneCountSql {
                 $rclause
                 $imgClause
                 union
-                select ipr.pathway_oid pathway_oid, g.gene_oid gene_oid
+                select ipr.pathway_oid pathway_oid, g.taxon taxon, g.gene_oid gene_oid
                 from img_pathway_reactions ipr,
                     img_reaction_t_components irtc,
                     gene_img_functions g
@@ -1281,12 +1281,12 @@ sub getDbTaxonFuncsGeneCountSql {
                 $rclause
                 $imgClause
             ) new
-            group by new.pathway_oid
+            group by new.pathway_oid, new.taxon
         };
     }
     elsif ( $func_id =~ /^PLIST/i ) {
         #$sql = qq{
-        #    select pt.parts_list_oid, count(distinct g.gene_oid)
+        #    select pt.parts_list_oid, g.taxon, count(distinct g.gene_oid)
         #    from img_parts_list_img_terms pt, dt_img_term_path dtp, gene_img_functions g
         #    where pt.parts_list_oid in ( $func_ids_str )
         #    and pt.term = dtp.term_oid
@@ -1294,17 +1294,17 @@ sub getDbTaxonFuncsGeneCountSql {
         #    and g.taxon in ( $taxon_str )
         #    $rclause
         #    $imgClause
-        #    group by pt.parts_list_oid
+        #    group by pt.parts_list_oid, g.taxon
         #};
         $sql = qq{
-            select pt.parts_list_oid, count(distinct g.gene_oid)
+            select pt.parts_list_oid, g.taxon, count(distinct g.gene_oid)
             from img_parts_list_img_terms pt, gene_img_functions g
             where pt.parts_list_oid in ( $func_ids_str )
             and pt.term = g.function
             and g.taxon in ( $taxon_str )
             $rclause
             $imgClause
-            group by pt.parts_list_oid
+            group by pt.parts_list_oid, g.taxon
         };
     }
 

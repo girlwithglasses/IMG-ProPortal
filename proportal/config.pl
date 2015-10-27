@@ -23,8 +23,8 @@
 	engines => {
 		template => {
 			template_toolkit => {
-				INCLUDE_PATH => 'views:views/pages:views/layouts:views/inc:views/htd_pages:public',
-			#	RELATIVE => 1,
+				INCLUDE_PATH => 'views:views/pages:views/layouts:views/inc:public:../../webui.htd/views/pages',
+				RELATIVE => 1,
 			}
 		},
 	},
@@ -38,14 +38,20 @@
 	},
 
 
-	# home of css, js, images folders. Should end with "/"
-	pp_assets => "https://img-proportal-dev.jgi-psf.org/proportal/",
 	# URL of the ProPortal app
-	pp_app => "https://img-proportal-dev.jgi-psf.org/proportal/",
+	pp_app => "https://img-proportal-dev.jgi-psf.org/",
+
+	# home of css, js, images folders. Should end with "/"
+	pp_assets => "https://img-proportal-dev.jgi-psf.org/",
+
+	jbrowse_assets => 'https://img-proportal-dev.jgi-psf.org/jbrowse_assets/',
+
+	scratch_dir => '/global/homes/a/aireland/tmp/jbrowse/',
+	rsrc_dir => '/global/projectb/sandbox/IMG_web/img_web_data_secondary/',
 
 	# main.cgi location
 	main_cgi_url => 'https://img-proportal-dev.jgi-psf.org/cgi-bin/main.cgi',
-	base_url => 'https://img-proportal-dev.jgi-psf.org/',
+	base_url => 'https://img-proportal-dev.jgi-psf.org/pristine_assets',
 
 	# cookie name: jgi_return, value: url, domain: sso_domain
 #	sso_enabled => 1,

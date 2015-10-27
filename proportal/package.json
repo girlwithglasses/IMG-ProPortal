@@ -8,7 +8,9 @@
     "url": "https://bitbucket.org/berkeleylab/gn-img-proportal-mojo"
   },
   "author": "i alarmed alien",
-  "dependencies": {},
+  "dependencies": {
+    "gulp-chmod": "^1.2.0"
+  },
   "devDependencies": {
     "del": "^0.1.2",
     "gulp": "^3.8.11",

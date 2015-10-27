@@ -6,7 +6,7 @@
 #  These were used in the days before this code was placed in Perl modules.
 #    --es 07/07/2005
 #
-# $Id: FindFunctions.pm 34261 2015-09-15 18:14:42Z jinghuahuang $
+# $Id: FindFunctions.pm 34538 2015-10-20 17:43:00Z klchu $
 ############################################################################
 package FindFunctions;
 my $section = "FindFunctions";
@@ -29,6 +29,7 @@ use Data::Dumper;
 use FuncUtil;
 use WorkspaceUtil;
 use GenomeListJSON;
+use HTML::Template;
 
 my $env                   = getEnv();
 my $main_cgi              = $env->{main_cgi};
@@ -70,7 +71,7 @@ my $in_file               = $env->{in_file};
 my $new_func_count        = $env->{new_func_count};
 my $enable_biocluster     = $env->{enable_biocluster};
 my $enable_interpro       = $env->{enable_interpro};
-
+my $YUI = $env->{yui_dir_28};
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 my $maxGeneListResults = 1000;
 if ( getSessionParam("maxGeneListResults") ne "" ) {
@@ -113,6 +114,35 @@ my %function2Name = (
 );
 
 $| = 1;
+
+sub getPageTitle {
+    return 'Find Functions';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+    my $page = param('page');
+        if ( $page eq 'findFunctions' ) {
+            @a = ( "FindFunctions", '', '', $js, '', 'FunctionSearch.pdf' );
+        } elsif ( $page eq 'ffoAllSeed' ) {
+            @a = ( "FindFunctions", '', '', $js, '', 'SEED.pdf' );
+        } elsif ( $page eq 'ffoAllTc' ) {
+            @a = ( "FindFunctions", '', '', $js, '', 'TransporterClassification.pdf' );
+        } else {
+            @a = ( "FindFunctions", '', '', $js );
+        }
+
+    return @a;
+}
+
 
 ############################################################################
 # dispatch - Dispatch loop.
@@ -366,6 +396,14 @@ sub printFunctionSearchForm {
             if ($include_metagenomes) {
                 printHint("Search term marked by <b>*</b> indicates that it supports metagenomes. <br/>You must add your selections into <b>Selected Genomes</b>.");
             }
+        } elsif ( $s =~ /__mer_fs_bc_note__/ ) {
+            if ($include_metagenomes) {
+                print " (applicable to isolates and assembled metagenomes)";
+            }
+        } elsif ( $s =~ /__mer_fs_cassette_note__/ ) {
+            if ($include_metagenomes) {
+                print " (applicable to isolates only)";
+            }
         } elsif ( $s =~ /__javascript__/ ) {
             printJavaScript();
         } else {
@@ -566,11 +604,11 @@ sub printFfgFunctionList {
     # allow searching by selected domain or by all isolates:
     my $selectionType = param("selectType");
     if ($selectionType eq "selDomain") {
-	$seq_status = param("seqstatus0");
-	$domainfilter = param("domainfilter0");
+    	$seq_status = param("seqstatus0");
+    	$domainfilter = param("domainfilter0");
     } elsif ($selectionType eq "allIsolates") {
-	$seq_status = param("seqstatus0");
-	$domainfilter = "isolates";
+    	$seq_status = param("seqstatus0");
+    	$domainfilter = "isolates";
     }
 
     # get the genomes in the selected box:
@@ -598,15 +636,15 @@ sub printFfgFunctionList {
 
     } elsif ($selectionType eq "selDomain" || 
 	     $selectionType eq "allIsolates") {
-	# no need to get taxons
+    	# no need to get taxons
     } else {
         if ( $include_metagenomes && isMetaSupported($searchFilter) ) {
             my ( $taxonClause, @bindList_txs ) 
                 = OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "t.taxon_oid", \@genomeFilterSelections );
+            		( $dbh, "t.taxon_oid", \@genomeFilterSelections );
             my %taxon_in_file = MerFsUtil::getTaxonsInFile
-		( $dbh, $taxonClause, \@bindList_txs );
-            @metaTaxons = keys %taxon_in_file;
+        		( $dbh, $taxonClause, \@bindList_txs );
+                    @metaTaxons = keys %taxon_in_file;
         }
     }
 
@@ -657,9 +695,14 @@ sub printFfgFunctionList {
                 my @bindList = ();
 
                 my ( $taxonClause, @bindList_txs ) =
+                  OracleUtil::getTaxonSelectionClauseBind( $dbh, "g.taxon", \@metaTaxons );
+                my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
+                my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
+
+                my ( $taxonClause1, @bindList_txs1 ) =
                   OracleUtil::getTaxonSelectionClauseBind( $dbh, "g.taxon_oid", \@metaTaxons );
-                my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon_oid");
-                my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');
+                my ( $rclause1, @bindList_ur1 ) = WebUtil::urClauseBind("g.taxon_oid");
+                my $imgClause1 = WebUtil::imgClauseNoTaxon('g.taxon_oid');
 
                 if ( $new_func_count ) {
                     my $datatypeClause;
@@ -668,60 +711,101 @@ sub printFfgFunctionList {
                     }              
 
                     ( $sql, @bindList ) =
-                      getCogSql_merfs( $searchTermLc, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                      getCogSql_merfs( $searchTermLc, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1, $restrictType )
                       if $searchFilter eq "cog";
     
                     ( $sql, @bindList ) =
-                      getPfamSql_merfs( $searchTermLc, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                      getPfamSql_merfs( $searchTermLc, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1, $restrictType, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
                       if $searchFilter eq "pfam";
     
                     ( $sql, @bindList ) =
-                      getTigrfamSql_merfs( $searchTermLc, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                      getTigrfamSql_merfs( $searchTermLc, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1, $restrictType )
                       if $searchFilter eq "tigrfam";
     
                     ( $sql, @bindList ) =
-                      getEnzymeSql_merfs( $searchTermLc, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                      getEnzymeSql_merfs( $searchTermLc, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1 )
                       if $searchFilter eq "ec";
                 
                 }
                     
                 if ( $enable_biocluster && $data_type ne 'unassembled' )  {
-                    my ( $taxonClause2, @bindList_txs2 ) =
-                      OracleUtil::getTaxonSelectionClauseBind
-		      ( $dbh, "g.taxon", \@metaTaxons );
-                    my ( $rclause2, @bindList_ur2 ) = 
-			WebUtil::urClauseBind("g.taxon");
-                    my $imgClause2 = WebUtil::imgClauseNoTaxon('g.taxon');
-
                     ( $sql, @bindList ) =
-                      getBcSql_merfs( $searchTermLc, $taxonClause2, $rclause2, $imgClause2, \@bindList_txs2, \@bindList_ur2 )
+                      getBcSql_merfs( $searchTermLc, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
                       if $searchFilter eq "bc";
     
                     #( $sql, @bindList ) =
-                    #  getNpSql_merfs( $searchTermLc, $taxonClause2, $rclause2, $imgClause2, \@bindList_txs2, \@bindList_ur2 )
+                    #  getNpSql_merfs( $searchTermLc, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
                     #  if $searchFilter eq "np";                    
                 }
 
                 #print "printFfgFunctionList() merfs sql: $sql<br/>";
                 #print "printFfgFunctionList() merfs bindList: @bindList<br/>";
 
-                if ( blankStr($sql) && $searchFilter ne "bc" ) {
+                if ( blankStr($sql) 
+                    && $searchFilter ne "cog" 
+                    && $searchFilter ne "pfam" 
+                    && $searchFilter ne "tigrfam"
+                    && $searchFilter ne "ec"
+                    && $searchFilter ne "bc" ) {
                     webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
                 }
 
                 if ( $sql ) {
                     my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
+
+                    my @func_ids;
                     for ( ; ; ) {
                         my ( $id, $name, $gcnt, $tcnt ) = $cur->fetchrow();
                         last if ( !$id );
     
-                        $func_id2Name_href->{$id}    = $name;
-                        $merfs_genecnt_href->{$id}   = $gcnt;
-                        $merfs_genomecnt_href->{$id} = $tcnt;
-    
+                        if ( $restrictType eq 'bio_cluster' && $data_type ne 'unassembled'  
+                        && ( $searchFilter eq "cog" || $searchFilter eq "tigrfam") ) {
+                            $func_id2Name_href->{$id}    = $name;
+                            push(@func_ids, $id);
+                        }
+                        else {
+                            $func_id2Name_href->{$id}    = $name;
+                            $merfs_genecnt_href->{$id}   = $gcnt;
+                            $merfs_genomecnt_href->{$id} = $tcnt;                            
+                        }    
                         #print "printFfgFunctionList() merfs added id: $id<br/>";
                     }
                     $cur->finish();
+
+                    if ( $restrictType eq 'bio_cluster' && $data_type ne 'unassembled'  
+                    && ( $searchFilter eq "cog" || $searchFilter eq "tigrfam") ) {
+                        my %taxon_genes_bc = MetaUtil::getTaxonsBcGenes( $dbh, \@metaTaxons );
+                        #print "printFfgFunctionList() taxon_genes_bc:<br/>\n";
+                        #print Dumper(\%taxon_genes_bc);
+                        #print "<br/>\n";
+
+                        foreach my $toid (@metaTaxons) {
+                            my $genes_bc_href = $taxon_genes_bc{$toid};
+                            
+                            my @type_list = MetaUtil::getDataTypeList( $data_type );
+                            for my $t2 (@type_list) {
+                                my %h = MetaUtil::getTaxonFuncsGenes( $toid, $t2, $searchFilter, \@func_ids );
+                                #print "printFfgFunctionList() h:<br/>\n";
+                                #print Dumper(\%h);
+                                #print "<br/>\n";
+                                if ( scalar( keys %h ) > 0 ) {
+                                    for my $key ( keys %h ) {
+                                        my $genomecnt_added = 0;
+                                        my @gene_list = split( /\t/, $h{$key} );
+                                        foreach my $goid (@gene_list) {
+                                            if ( $genes_bc_href->{$goid} ) {
+                                                $merfs_genecnt_href->{$key}   += 1;
+                                                if ( !$genomecnt_added ) {
+                                                    $merfs_genomecnt_href->{$key} += 1;
+                                                    $genomecnt_added = 1;
+                                                }
+                                            }          
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 OracleUtil::truncTable( $dbh, "gtt_num_id" )
@@ -746,33 +830,33 @@ sub printFfgFunctionList {
             my ( $taxonClause, @bindList_txs );
             if ( scalar(@dbTaxons) > 0 ) {
                 ( $taxonClause, @bindList_txs ) = 
-		    OracleUtil::getTaxonSelectionClauseBind
-		    ( $dbh, "g.taxon", \@dbTaxons );
-	    } elsif ($selectionType eq "selDomain" || 
-		     $selectionType eq "allIsolates") { 
-		# no need to get taxons
+        		    OracleUtil::getTaxonSelectionClauseBind
+        		    ( $dbh, "g.taxon", \@dbTaxons );
+    	    } elsif ($selectionType eq "selDomain" || 
+    		     $selectionType eq "allIsolates") { 
+            		# no need to get taxons
             } else {
                 ( $taxonClause, @bindList_txs ) =
-		    OracleUtil::getTaxonSelectionClauseBind
-		    ( $dbh, "g.taxon", \@genomeFilterSelections );
+        		    OracleUtil::getTaxonSelectionClauseBind
+        		    ( $dbh, "g.taxon", \@genomeFilterSelections );
             }
             my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
             my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
 
             my ( $taxonClause1, @bindList_txs1 );
-	    my $bydomain = 0;
+    	    my $bydomain = 0;
             if ( scalar(@dbTaxons) > 0 ) {
                 ( $taxonClause1, @bindList_txs1 ) =
-		    OracleUtil::getTaxonSelectionClauseBind
-		    ( $dbh, "g.taxon_oid", \@dbTaxons );
-	    } elsif ($selectionType eq "selDomain") {
-		$bydomain = $domainfilter;
+        		    OracleUtil::getTaxonSelectionClauseBind
+        		    ( $dbh, "g.taxon_oid", \@dbTaxons );
+    	    } elsif ($selectionType eq "selDomain") {
+        		$bydomain = $domainfilter;
             } elsif ($selectionType eq "allIsolates") {
                 $bydomain = $domainfilter;
             } else {
                 ( $taxonClause1, @bindList_txs1 ) =
-		    OracleUtil::getTaxonSelectionClauseBind
-		    ( $dbh, "g.taxon_oid", \@genomeFilterSelections );
+        		    OracleUtil::getTaxonSelectionClauseBind
+        		    ( $dbh, "g.taxon_oid", \@genomeFilterSelections );
             }
 
             my ( $rclause1, @bindList_ur1 ) = WebUtil::urClauseBind("g.taxon_oid");
@@ -863,7 +947,7 @@ sub printFfgFunctionList {
                 #print "printFfgFunctionList rec: $rec $gcnt $tcnt <br/>\n";
 
                 if ( $include_metagenomes && scalar(@metaTaxons) > 0 
-		     && isMetaSupported($searchFilter) ) {
+    		     && isMetaSupported($searchFilter) ) {
                     if ( exists $merfs_genecnt_href->{$id} ) {
                         my $gcnt2 = $merfs_genecnt_href->{$id};
                         my $tcnt2 = $merfs_genomecnt_href->{$id};
@@ -937,6 +1021,8 @@ sub printFfgFunctionList {
  #print "<br/>printFfgFunctionList: $count results retrieved from data, $cnt produced from table<br/>\n" if ($count != $cnt);
 
 }
+
+
 
 sub getSeedSql { # no longer in IMG
     my ( $searchTermLc, $taxonClause, $rclause, $imgClause, 
@@ -1024,13 +1110,13 @@ sub getCogSql {
     $seq_status = "" if $seq_status eq "both";
 
     if ($bydomain) { 
-	$addfrom = ", taxon tx ";
-	$dmClause = " and tx.domain = '$bydomain' ";
-	$dmClause = " and tx.genome_type = 'isolate' "
-	    if $bydomain eq "isolates";
-	$dmClause .= " and tx.seq_status = '$seq_status'" if $seq_status ne "";
-	$taxonClause1 = " and tx.taxon_oid = g.taxon ";
-	$taxonClause = " and tx.taxon_oid = g.taxon_oid ";
+    	$addfrom = ", taxon tx ";
+    	$dmClause = " and tx.domain = '$bydomain' ";
+    	$dmClause = " and tx.genome_type = 'isolate' "
+    	    if $bydomain eq "isolates";
+    	$dmClause .= " and tx.seq_status = '$seq_status'" if $seq_status ne "";
+    	$taxonClause1 = " and tx.taxon_oid = g.taxon ";
+    	$taxonClause = " and tx.taxon_oid = g.taxon_oid ";
     }
 
     my $attr1  = "cog.cog_id";
@@ -1103,7 +1189,7 @@ sub getCogSql {
 
 sub getCogSql_merfs {
     my ( $searchTermLc, $taxonClause, $datatypeClause, $rclause, $imgClause,
-	 $bindList_txs_ref, $bindList_ur_ref ) = @_;
+	 $bindList_txs_ref, $bindList_ur_ref, $restrictType ) = @_;
 
     my $attr1  = "cog.cog_id";
     my $lattr2 = "cog.cog_name";
@@ -1116,18 +1202,25 @@ sub getCogSql_merfs {
     #      OracleUtil::addMoreWhereClause( 'cog', 1, $searchTermLc, $lattr1,
     #        $lattr2, '', 0 );
 
-    my $sql = qq{
-        select cog.cog_id, cog.cog_name, sum(g.gene_count),
-               count(distinct g.taxon_oid)
-        from cog cog, TAXON_COG_COUNT g
-        where ( $containWhereClause )
-        and cog.cog_id = g.func_id
-        $taxonClause
-        $datatypeClause
-        $rclause
-        $imgClause
-        group by cog.cog_id, cog.cog_name
-    };
+    my $sql;
+    if ( $restrictType eq 'bio_cluster' && $datatypeClause =~ /unassembled/i ) {
+    }
+    elsif ( $restrictType eq 'chrom_cassette' ) {
+    }
+    else {
+        $sql = qq{
+            select cog.cog_id, cog.cog_name, sum(g.gene_count),
+                   count(distinct g.taxon_oid)
+            from cog cog, TAXON_COG_COUNT g
+            where ( $containWhereClause )
+            and cog.cog_id = g.func_id
+            $taxonClause
+            $datatypeClause
+            $rclause
+            $imgClause
+            group by cog.cog_id, cog.cog_name
+        };        
+    }
 
     my @bindList = ();
     processBindList( \@bindList, \@bindList_sql, 
@@ -1229,9 +1322,6 @@ sub getPfamSql {
 	 $restrictType, $taxonClause1, $rclause1, $imgClause1,
 	 $bindList_txs_ref1, $bindList_ur_ref1, $bydomain, $seq_status ) = @_;
 
-
-
-
     my $addfrom = "";
     my $dmClause = "";
     $bydomain = 0 if $bydomain eq "";
@@ -1324,7 +1414,8 @@ sub getPfamSql {
 
 sub getPfamSql_merfs {
     my ( $searchTermLc, $taxonClause, $datatypeClause, $rclause, $imgClause,
-	 $bindList_txs_ref, $bindList_ur_ref ) = @_;
+	 $bindList_txs_ref, $bindList_ur_ref,  $restrictType, 
+	 $taxonClause1, $rclause1, $imgClause1, $bindList_txs_ref1, $bindList_ur_ref1 ) = @_;
 
     my $attr1  = "pf.ext_accession";
     my $lattr2 = "pf.name";
@@ -1332,21 +1423,46 @@ sub getPfamSql_merfs {
     my ( $containWhereClause, @bindList_sql ) =
       OracleUtil::addContainWhereClause( 'pfam', 1, $searchTermLc, $attr1, $lattr2, $lattr3 );
 
-    my $sql = qq{
-        select pf.ext_accession, pf.name||' - '||pf.description, 
-            sum(g.gene_count), count(distinct g.taxon_oid )
-        from pfam_family pf, TAXON_PFAM_COUNT g
-        where ( $containWhereClause )
-        and pf.ext_accession = g.func_id
-        $taxonClause
-        $datatypeClause
-        $rclause
-        $imgClause
-        group by pf.ext_accession, pf.name, pf.description
-    };
-
     my @bindList = ();
-    processBindList( \@bindList, \@bindList_sql, $bindList_txs_ref, $bindList_ur_ref );
+
+    my $sql;
+    if ( $restrictType eq 'bio_cluster' ) {        
+        if ( $datatypeClause =~ /unassembled/i ) {
+        }
+        else {
+            $sql = qq{
+                select pf.ext_accession, pf.name||' - '||pf.description,
+                     count(distinct bcg.feature_id ), count(distinct g.taxon )
+                from pfam_family pf, bio_cluster_features_new bcg, 
+                     bio_cluster_new g
+                where ( $containWhereClause )
+                and pf.ext_accession = bcg.pfam_id
+                and bcg.cluster_id = g.cluster_id
+                $taxonClause1
+                $rclause1
+                $imgClause1
+                group by pf.ext_accession, pf.name, pf.description
+            };
+            processBindList( \@bindList, \@bindList_sql, $bindList_txs_ref1, $bindList_ur_ref1 );
+        }
+    }
+    elsif ( $restrictType eq 'chrom_cassette' ) {
+    }
+    else {
+        $sql = qq{
+            select pf.ext_accession, pf.name||' - '||pf.description, 
+                sum(g.gene_count), count(distinct g.taxon_oid )
+            from pfam_family pf, TAXON_PFAM_COUNT g
+            where ( $containWhereClause )
+            and pf.ext_accession = g.func_id
+            $taxonClause
+            $datatypeClause
+            $rclause
+            $imgClause
+            group by pf.ext_accession, pf.name, pf.description
+        };        
+        processBindList( \@bindList, \@bindList_sql, $bindList_txs_ref, $bindList_ur_ref );
+    }
 
     return ( $sql, @bindList );
 }
@@ -1474,7 +1590,7 @@ sub getTigrfamSql {
 
 sub getTigrfamSql_merfs {
     my ( $searchTermLc, $taxonClause, $datatypeClause, $rclause, $imgClause,
-	 $bindList_txs_ref, $bindList_ur_ref ) = @_;
+	 $bindList_txs_ref, $bindList_ur_ref,  $restrictType ) = @_;
 
     my $attr1  = "tf.ext_accession";
     my $lattr2 = "tf.expanded_name";
@@ -1484,18 +1600,25 @@ sub getTigrfamSql_merfs {
 	OracleUtil::addContainWhereClause
 	( 'TIGR', 1, $searchTermLc, $attr1, $lattr2, '', 1 );
 
-    my $sql = qq{
-        select tf.ext_accession, tf.expanded_name,
-               sum(g.gene_count), count(distinct g.taxon_oid)
-        from tigrfam tf, TAXON_TIGR_COUNT g
-        where ( $containWhereClause )
-        and tf.ext_accession = g.func_id
-        $taxonClause
-        $datatypeClause
-        $rclause
-        $imgClause
-        group by tf.ext_accession, tf.expanded_name
-    };
+    my $sql;
+    if ( $restrictType eq 'bio_cluster' && $datatypeClause =~ /unassembled/i ) {
+    }
+    elsif ( $restrictType eq 'chrom_cassette' ) {
+    }
+    else {
+        $sql = qq{
+            select tf.ext_accession, tf.expanded_name,
+                   sum(g.gene_count), count(distinct g.taxon_oid)
+            from tigrfam tf, TAXON_TIGR_COUNT g
+            where ( $containWhereClause )
+            and tf.ext_accession = g.func_id
+            $taxonClause
+            $datatypeClause
+            $rclause
+            $imgClause
+            group by tf.ext_accession, tf.expanded_name
+        };        
+    }
 
     my @bindList = ();
     processBindList( \@bindList, \@bindList_sql, 
@@ -2358,6 +2481,7 @@ sub printFfgFindFunctionsGeneList {
     if ($ignoreFilter) {
         @genomeFilterSelections = ();
     }
+    #print "printFfgFindFunctionsGeneList() searchFilter=$searchFilter<br/>\n";
 
     my $dbh = dbLogin();
 
@@ -2366,7 +2490,7 @@ sub printFfgFindFunctionsGeneList {
     if ( scalar(@genomeFilterSelections) > 0 ) {
         if ($include_metagenomes) {
             my ( $dbTaxons_ref, $metaTaxons_ref ) = 
-		MerFsUtil::findTaxonsInFile( $dbh, @genomeFilterSelections );
+        		MerFsUtil::findTaxonsInFile( $dbh, @genomeFilterSelections );
             @dbTaxons   = @$dbTaxons_ref;
             @metaTaxons = @$metaTaxons_ref;
         } else {
@@ -2377,10 +2501,10 @@ sub printFfgFindFunctionsGeneList {
         if ($include_metagenomes) {
             my ( $taxonClause, @bindList_txs ) =
               OracleUtil::getTaxonSelectionClauseBind
-	      ( $dbh, "t.taxon_oid", \@genomeFilterSelections );
+        	      ( $dbh, "t.taxon_oid", \@genomeFilterSelections );
             my %taxon_in_file = MerFsUtil::getTaxonsInFile
-		( $dbh, $taxonClause, \@bindList_txs );
-            @metaTaxons = keys %taxon_in_file;
+        		( $dbh, $taxonClause, \@bindList_txs );
+                    @metaTaxons = keys %taxon_in_file;
         }
     }
 
@@ -2396,13 +2520,13 @@ sub printFfgFindFunctionsGeneList {
         if ( scalar(@dbTaxons) > 0 ) {
             ( $taxonClause, @bindList_txs ) =
                 OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "g.taxon", \@dbTaxons );
+            		( $dbh, "g.taxon", \@dbTaxons );
 	} elsif ($domainfilter ne "" || $domainfilter eq "isolates") {
             $bydomain = $domainfilter;
         } else {
             ( $taxonClause, @bindList_txs ) =
-		OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "g.taxon", \@genomeFilterSelections );
+        		OracleUtil::getTaxonSelectionClauseBind
+        		( $dbh, "g.taxon", \@genomeFilterSelections );
         }
 
         my ( $rclause, @bindList_ur ) = urClauseBind("g.taxon");
@@ -2458,7 +2582,7 @@ sub printFfgFindFunctionsGeneList {
                 $id = $term_oid if ( $term_oid ne '' );
             }
             ( $sql, @bindList ) =
-		getImgTermGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status );
+        		getImgTermGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status );
         }
 
         ( $sql, @bindList ) =
@@ -2468,12 +2592,12 @@ sub printFfgFindFunctionsGeneList {
 	    if $searchFilter =~ /^img_plist/;
 
         if ( $enable_biocluster )  {
-            ( $sql, @bindList ) = getBcGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status )
-		if $searchFilter eq "bc";
-            ( $sql, @bindList ) = getNpGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status )
-		if $searchFilter eq "np";
-            ( $sql, @bindList ) = getImgCompoundGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status )
-		if $searchFilter eq "img_cpd";
+                ( $sql, @bindList ) = getBcGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status )
+    		if $searchFilter eq "bc";
+                ( $sql, @bindList ) = getNpGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status )
+    		if $searchFilter eq "np";
+                ( $sql, @bindList ) = getImgCompoundGeneListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status )
+    		if $searchFilter eq "img_cpd";
         }
 
         #print "printFfgFindFunctionsGeneList() sql: $sql<br/>";
@@ -2499,9 +2623,11 @@ sub printFfgFindFunctionsGeneList {
         if ( $searchFilter eq "bc" ) {            
             if ( $enable_biocluster )  {
                 my @func_ids = ( $id );
-                my %workspaceIds_href = MetaUtil::getMetaTaxonsBcFuncGenes
-		    ( $dbh, \@metaTaxons, '', \@func_ids );
-                my @workspaceIds = keys %workspaceIds_href;
+                my %workspaceIds_h = MetaUtil::getMetaTaxonsBcFuncGenes( $dbh, \@metaTaxons, '', \@func_ids );
+                my @workspaceIds = keys %workspaceIds_h;
+                #print "getMetaTaxonsBcFuncGenes:<br/>\n";
+                #print Dumper(\%workspaceIds_h);
+                #print "<br/>\n";
                 if ( scalar(@workspaceIds) > 0 ) {
                     push( @meta_genes, @workspaceIds );                    
     
@@ -2515,6 +2641,15 @@ sub printFfgFindFunctionsGeneList {
 
         }
         else {
+            my %taxon_genes_bc;
+            if ( $restrictType eq 'bio_cluster' 
+                && ($searchFilter eq "cog" 
+                || $searchFilter eq "kog" 
+                || $searchFilter eq "pfam" 
+                || $searchFilter eq "tigrfam" ) ) {
+                %taxon_genes_bc = MetaUtil::getTaxonsBcGenes( $dbh, \@metaTaxons );
+            }
+
             foreach my $toid (@metaTaxons) {
                 if ( $searchFilter eq "keggEnzymes" ) {
                     my $pathway_oid = param("pathway_oid");
@@ -2537,15 +2672,33 @@ sub printFfgFindFunctionsGeneList {
                         }
                     }
     
-                } else {
+                } 
+                else {
+                    my $genes_bc_href = $taxon_genes_bc{$toid};
+
                     my @type_list = MetaUtil::getDataTypeList( $data_type );
                     for my $t2 (@type_list) {
                         my %genes = MetaUtil::getTaxonFuncGenes( $toid, $t2, $id );
                         my @worksapceIds = values %genes;
                         if ( scalar(@worksapceIds) > 0 ) {
-                            push( @meta_genes, @worksapceIds );
-        
-                            $gene_cnt += scalar(@worksapceIds);
+                            if ( $restrictType eq 'bio_cluster' 
+                                && ($searchFilter eq "cog" 
+                                || $searchFilter eq "kog" 
+                                || $searchFilter eq "pfam" 
+                                || $searchFilter eq "tigrfam" ) ) {
+                                foreach my $workspaceId (@worksapceIds) {
+                                    my ($txoid, $ty2, $goid)  = split( / /, $workspaceId );
+                                    if ( $genes_bc_href->{$goid} ) {
+                                        push( @meta_genes, $workspaceId );
+                                        $gene_cnt++;
+                                    }
+                                }
+                            }
+                            else {
+                                push( @meta_genes, @worksapceIds );
+                                $gene_cnt += scalar(@worksapceIds);
+                            }
+                            
                             if ( $gene_cnt >= $maxGeneListResults ) {
                                 $trunc = 1;
                                 last;
@@ -2563,8 +2716,8 @@ sub printFfgFindFunctionsGeneList {
         GeneDetail::printGeneDetail( $gene_oids[0] );
         return;
     }
-
-    #print "\@gene_oids: @gene_oids<br/>\n";
+    #print "printFfgFindFunctionsGeneList() gene_oids: @gene_oids<br/>\n";
+    #print "printFfgFindFunctionsGeneList() meta_genes: @meta_genes<br/>\n";
 
     my $restrictText;
     if ( $searchFilter eq "cog" || $searchFilter eq "kog" || 
@@ -2637,8 +2790,7 @@ sub printFfgFindFunctionsGeneList {
         }
 
         if ( $restrictType eq 'bio_cluster' ) {
-            my ($extracolumn_href, $extracollink_href) = 
-		fetchGene2BiosyntheticClusterMapping( $dbh, \@gene_oids );
+            my ($extracolumn_href, $extracollink_href) = fetchGene2BiosyntheticClusterMapping( $dbh, \@gene_oids, \@meta_genes );
             #print Dumper($extracolumn_href);
             #print "<br/>\n";
             #print Dumper($extracollink_href);
@@ -3432,47 +3584,98 @@ sub getImgPartsListGeneListSql {
 }
 
 sub fetchGene2BiosyntheticClusterMapping {
-    my ( $dbh, $gene_oids_ref ) = @_;
-
-    my $geneInnerClause = 
-	OracleUtil::getNumberIdsInClause( $dbh, @$gene_oids_ref );
-    my $rclause = WebUtil::urClause("g.taxon");
-    my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
-
-    my $sql = qq{
-        select distinct g.gene_oid, g.taxon, bcg.cluster_id
-        from gene g, bio_cluster_features_new bcg
-        where g.gene_oid in ( $geneInnerClause )
-        and g.gene_oid = bcg.gene_oid
-        $rclause
-        $imgClause
-    };
-    my $cur = execSql($dbh, $sql, $verbose);
-
-    my $extraurl_base = "$main_cgi?section=BiosyntheticDetail&page=cluster_detail";
+    my ( $dbh, $gene_oids_ref, $meta_genes_ref ) = @_;
 
     my %extracolumn;
     my %extracollink;
-    for ( ;; ) {
-        my ($gene_oid, $taxon, $cluster_id) = $cur->fetchrow();
-        last if(!$gene_oid);
 
-        my $extraurl = $extraurl_base . "&taxon_oid=$taxon&cluster_id=$cluster_id";
-        my $link = alink($extraurl, $cluster_id);
-        if ( exists $extracollink{$gene_oid} ) {
-            $link = $extracollink{$gene_oid} . "<br/>" . $link;
+    if ( scalar(@$gene_oids_ref) > 0 ) {
+        my $geneInnerClause = 
+        	OracleUtil::getNumberIdsInClause( $dbh, @$gene_oids_ref );
+        my $rclause = WebUtil::urClause("g.taxon");
+        my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
+    
+        my $sql = qq{
+            select distinct g.gene_oid, g.taxon, bcg.cluster_id
+            from gene g, bio_cluster_features_new bcg
+            where g.gene_oid in ( $geneInnerClause )
+            and g.gene_oid = bcg.gene_oid
+            $rclause
+            $imgClause
+        };
+        my $cur = execSql($dbh, $sql, $verbose);
+    
+        my $extraurl_base = "$main_cgi?section=BiosyntheticDetail&page=cluster_detail";
+    
+        for ( ;; ) {
+            my ($gene_oid, $taxon, $cluster_id) = $cur->fetchrow();
+            last if(!$gene_oid);
+    
+            my $extraurl = $extraurl_base . "&taxon_oid=$taxon&cluster_id=$cluster_id";
+            my $link = alink($extraurl, $cluster_id);
+            if ( exists $extracollink{$gene_oid} ) {
+                $link = $extracollink{$gene_oid} . "<br/>" . $link;
+            }
+            $extracollink{$gene_oid} = $link;
+    
+            if ( exists $extracolumn{$gene_oid} ) {
+                $cluster_id = $extracolumn{$gene_oid} . " <br/> " . $cluster_id;
+            }
+            $extracolumn{$gene_oid} = $cluster_id;
         }
-        $extracollink{$gene_oid} = $link;
-
-        if ( exists $extracolumn{$gene_oid} ) {
-            $cluster_id = $extracolumn{$gene_oid} . " <br/> " . $cluster_id;
-        }
-        $extracolumn{$gene_oid} = $cluster_id;
+        $cur->finish();
+    
+        OracleUtil::truncTable( $dbh, "gtt_num_id" )
+          if ( $geneInnerClause =~ /gtt_num_id/i );
     }
-    $cur->finish();
 
-    OracleUtil::truncTable( $dbh, "gtt_num_id" )
-      if ( $geneInnerClause =~ /gtt_num_id/i );
+    if ( scalar(@$meta_genes_ref) > 0 ) {
+        my %goid2workspaceId;
+        foreach my $workspaceId (@$meta_genes_ref) {
+            my ( $toid, $d2, $goid ) = split( / /, $workspaceId );
+            $goid2workspaceId{$goid} = $workspaceId;
+        }
+        my @meta_goids = keys %goid2workspaceId;
+        
+        my $geneInnerClause = 
+            OracleUtil::getFuncIdsInClause( $dbh, @meta_goids );
+        my $rclause = WebUtil::urClause("g.taxon");
+        my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
+    
+        my $sql = qq{
+            select distinct bcg.feature_id, g.taxon, bcg.cluster_id
+            from bio_cluster_features_new bcg, bio_cluster_new g
+            where bcg.feature_id in ( $geneInnerClause )
+            and bcg.cluster_id = g.cluster_id
+            $rclause
+            $imgClause
+        };
+        my $cur = execSql($dbh, $sql, $verbose);
+    
+        my $extraurl_base = "$main_cgi?section=BiosyntheticDetail&page=cluster_detail";
+    
+        for ( ;; ) {
+            my ($goid, $taxon, $cluster_id) = $cur->fetchrow();
+            last if(!$goid);
+            my $workspaceId = $goid2workspaceId{$goid};
+
+            my $extraurl = $extraurl_base . "&taxon_oid=$taxon&cluster_id=$cluster_id";
+            my $link = alink($extraurl, $cluster_id);
+            if ( exists $extracollink{$workspaceId} ) {
+                $link = $extracollink{$workspaceId} . "<br/>" . $link;
+            }
+            $extracollink{$workspaceId} = $link;
+    
+            if ( exists $extracolumn{$workspaceId} ) {
+                $cluster_id = $extracolumn{$workspaceId} . " <br/> " . $cluster_id;
+            }
+            $extracolumn{$workspaceId} = $cluster_id;
+        }
+        $cur->finish();
+    
+        OracleUtil::truncTable( $dbh, "gtt_func_id" )
+          if ( $geneInnerClause =~ /gtt_func_id/i );
+    }
 
     return (\%extracolumn, \%extracollink);
 }
@@ -3592,14 +3795,14 @@ sub printFfgFindFunctionsGenomeList {
         my $bydomain = 0;
         if ( scalar(@dbTaxons) > 0 ) {
             ( $taxonClause, @bindList_txs ) = 
-		OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "g.taxon", \@dbTaxons );
+        		OracleUtil::getTaxonSelectionClauseBind
+        		( $dbh, "g.taxon", \@dbTaxons );
         } elsif ($domainfilter ne "" || $domainfilter eq "isolates") {
             $bydomain = $domainfilter;
         } else {
             ( $taxonClause, @bindList_txs ) =
-		OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "g.taxon", \@genomeFilterSelections );
+        		OracleUtil::getTaxonSelectionClauseBind
+        		( $dbh, "g.taxon", \@genomeFilterSelections );
         }
         my ( $rclause, @bindList_ur ) = urClauseBind("g.taxon");
         my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
@@ -3607,13 +3810,13 @@ sub printFfgFindFunctionsGenomeList {
         my ( $taxonClause1, @bindList_txs1 );
         if ( scalar(@dbTaxons) > 0 ) {
             ( $taxonClause1, @bindList_txs1 ) = 
-		OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "g.taxon_oid", \@dbTaxons );
+        		OracleUtil::getTaxonSelectionClauseBind
+        		( $dbh, "g.taxon_oid", \@dbTaxons );
         } elsif ($domainfilter ne "" || $domainfilter eq "isolates") {
         } else {
             ( $taxonClause1, @bindList_txs1 ) =
-		OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "g.taxon_oid", \@genomeFilterSelections );
+        		OracleUtil::getTaxonSelectionClauseBind
+        		( $dbh, "g.taxon_oid", \@genomeFilterSelections );
         }
         my ( $rclause1, @bindList_ur1 ) = WebUtil::urClauseBind("g.taxon_oid");
         my $imgClause1 = WebUtil::imgClauseNoTaxon('g.taxon_oid');
@@ -3680,7 +3883,7 @@ sub printFfgFindFunctionsGenomeList {
                 $id = $term_oid if ( $term_oid ne '' );
             }
             ( $sql, @bindList ) =
-		getImgTermGenomeListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status );
+        		getImgTermGenomeListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status );
         }
         ( $sql, @bindList ) =
 	    getImgPathwayGenomeListSql( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur, $bydomain, $seq_status )
@@ -3720,10 +3923,16 @@ sub printFfgFindFunctionsGenomeList {
 	 isMetaSupported($searchFilter) ) {
         if ( $new_func_count || $enable_biocluster ) {
             my ( $taxonClause, @bindList_txs ) =
-		OracleUtil::getTaxonSelectionClauseBind
-		( $dbh, "g.taxon_oid", \@metaTaxons );
-            my ($rclause, @bindList_ur) = WebUtil::urClauseBind("g.taxon_oid");
-            my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon_oid');
+                OracleUtil::getTaxonSelectionClauseBind
+                ( $dbh, "g.taxon", \@metaTaxons );
+            my ($rclause, @bindList_ur) = WebUtil::urClauseBind("g.taxon");
+            my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
+
+            my ( $taxonClause1, @bindList_txs1 ) =
+        		OracleUtil::getTaxonSelectionClauseBind
+        		( $dbh, "g.taxon_oid", \@metaTaxons );
+            my ($rclause1, @bindList_ur1) = WebUtil::urClauseBind("g.taxon_oid");
+            my $imgClause1 = WebUtil::imgClauseNoTaxon('g.taxon_oid');
 
             my $sql;
             my @bindList = ();
@@ -3735,19 +3944,19 @@ sub printFfgFindFunctionsGenomeList {
                 }              
 
                 ( $sql, @bindList ) =
-                  getCogGenomeListSql_merfs( $id, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                  getCogGenomeListSql_merfs( $id, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1, $restrictType )
                   if $searchFilter eq "cog";
     
                 ( $sql, @bindList ) =
-                  getPfamGenomeListSql_merfs( $id, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                  getPfamGenomeListSql_merfs( $id, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1, $restrictType, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
                   if $searchFilter eq "pfam";
     
                 ( $sql, @bindList ) =
-                  getTigrfamGenomeListSql_merfs( $id, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                  getTigrfamGenomeListSql_merfs( $id, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1, $restrictType )
                   if $searchFilter eq "tigrfam";
     
                 ( $sql, @bindList ) =
-                  getEnzymeGenomeListSql_merfs( $id, $taxonClause, $datatypeClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
+                  getEnzymeGenomeListSql_merfs( $id, $taxonClause1, $datatypeClause, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1 )
                   if $searchFilter eq "ec_iex" || $searchFilter eq "ec_ex" || $searchFilter eq "ec";
     
                 if ( $searchFilter eq "keggEnzymes" ) {
@@ -3760,28 +3969,65 @@ sub printFfgFindFunctionsGenomeList {
 
 
             if ( $enable_biocluster )  {
-                my ( $taxonClause2, @bindList_txs2 ) = OracleUtil::getTaxonSelectionClauseBind( $dbh, "g.taxon", \@metaTaxons );
-                my ( $rclause2, @bindList_ur2 ) = urClauseBind("g.taxon");
-                my $imgClause2 = WebUtil::imgClauseNoTaxon('g.taxon');
-
                 ( $sql, @bindList ) =
-                  getBcGenomeListSql_merfs( $id, $taxonClause2, $rclause2, $imgClause2, \@bindList_txs2, \@bindList_ur2 )
+                  getBcGenomeListSql_merfs( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
                   if $searchFilter eq "bc";
                 ( $sql, @bindList ) =
-                  getNpGenomeListSql_merfs( $id, $taxonClause2, $rclause2, $imgClause2, \@bindList_txs2, \@bindList_ur2 )
+                  getNpGenomeListSql_merfs( $id, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur )
                   if $searchFilter eq "np";
             }
 
             #print "printFfgFunctionGenomeList() merfs sql: $sql<br/>";
             #print "printFfgFunctionGenomeList() merfs bindList: @bindList<br/>";
 
-            if ( blankStr($sql) ) {
+            if ( blankStr($sql) 
+                && $searchFilter ne "cog" 
+                && $searchFilter ne "pfam" 
+                && $searchFilter ne "tigrfam"
+                && $searchFilter ne "ec"
+                && $searchFilter ne "bc" ) {
                 webDie( "printFfgFindFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
             }
 
-            my @meta_taxons = HtmlUtil::fetchGenomeList
-		( $dbh, $sql, $verbose, @bindList );
-            push( @taxon_oids, @meta_taxons );
+            if ( $sql ) {
+                my @meta_taxons = HtmlUtil::fetchGenomeList
+            		( $dbh, $sql, $verbose, @bindList );
+    
+                if ( $restrictType eq 'bio_cluster' && $data_type ne 'unassembled'  
+                && ( $searchFilter eq "cog" || $searchFilter eq "tigrfam") ) {
+                    my %taxon_genes_bc = MetaUtil::getTaxonsBcGenes( $dbh, \@meta_taxons );
+                    #print "printFfgFindFunctionsGenomeListt() taxon_genes_bc:<br/>\n";
+                    #print Dumper(\%taxon_genes_bc);
+                    #print "<br/>\n";
+    
+                    my @func_ids = ($id);
+                    OUTER: foreach my $toid (@meta_taxons) {
+                        my $genes_bc_href = $taxon_genes_bc{$toid};
+                        
+                        my @type_list = MetaUtil::getDataTypeList( $data_type );
+                        for my $t2 (@type_list) {
+                            my %h = MetaUtil::getTaxonFuncsGenes( $toid, $t2, $searchFilter, \@func_ids );
+                            #print "printFfgFindFunctionsGenomeList() h:<br/>\n";
+                            #print Dumper(\%h);
+                            #print "<br/>\n";
+                            if ( scalar( keys %h ) > 0 ) {
+                                for my $key ( keys %h ) {
+                                    my @gene_list = split( /\t/, $h{$key} );
+                                    foreach my $goid (@gene_list) {
+                                        if ( $genes_bc_href->{$goid} ) {
+                                            push( @taxon_oids, $toid );
+                                            next OUTER;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    push( @taxon_oids, @meta_taxons );                        
+                }                
+            } 
 
             OracleUtil::truncTable( $dbh, "gtt_num_id" )
               if ( $taxonClause =~ /gtt_num_id/i );
@@ -3902,14 +4148,14 @@ sub printFfgFindFunctionsGenomeList {
                 #print "<br/>\n";
                 #print Dumper($extracollink_href);
                 #print "<br/>\n";
-                HtmlUtil::printGenomeListHtmlTable
-		    ( '', '', $dbh, \@taxon_oids, '', 1, 
-		      'Biosynthetic Cluster', $extracolumn_href,
-		      $extracollink_href );
+            HtmlUtil::printGenomeListHtmlTable
+    		    ( '', '', $dbh, \@taxon_oids, '', 1, 
+    		      'Biosynthetic Cluster', $extracolumn_href,
+    		      $extracollink_href );
             }
             else {
                 HtmlUtil::printGenomeListHtmlTable
-		    ( '', '', $dbh, \@taxon_oids, '', 1 );
+    		    ( '', '', $dbh, \@taxon_oids, '', 1 );
             }
                 
             print hiddenVar( "cog_id",  $id ) if ( $searchFilter eq "cog" );
@@ -4093,17 +4339,24 @@ sub getCogGenomeListSql {
 
 sub getCogGenomeListSql_merfs {
     my ( $id, $taxonClause, $datatypeClause, $rclause, $imgClause, 
-	 $bindList_txs_ref, $bindList_ur_ref ) = @_;
+	 $bindList_txs_ref, $bindList_ur_ref, $restrictType ) = @_;
 
-    my $sql = qq{
-        select distinct g.taxon_oid
-        from TAXON_COG_COUNT g
-        where g.func_id = ?
-        $taxonClause
-        $datatypeClause
-        $rclause
-        $imgClause
-    };
+    my $sql;
+    if ( $restrictType eq 'bio_cluster' && $datatypeClause =~ /unassembled/i ) {
+    }
+    elsif ( $restrictType eq 'chrom_cassette' ) {
+    }
+    else {
+        $sql = qq{
+            select distinct g.taxon_oid
+            from TAXON_COG_COUNT g
+            where g.func_id = ?
+            $taxonClause
+            $datatypeClause
+            $rclause
+            $imgClause
+        };
+    }
 
     my @bindList_sql = ("$id");
     my @bindList     = ();
@@ -4258,17 +4511,38 @@ sub getPfamGenomeListSql {
 
 sub getPfamGenomeListSql_merfs {
     my ( $id, $taxonClause, $datatypeClause, $rclause, $imgClause, 
-	 $bindList_txs_ref, $bindList_ur_ref ) = @_;
+	 $bindList_txs_ref, $bindList_ur_ref, $restrictType, $taxonClause1, $rclause1,
+     $imgClause1, $bindList_txs_ref1, $bindList_ur_ref1 ) = @_;
 
-    my $sql = qq{
-        select distinct g.taxon_oid
-        from TAXON_PFAM_COUNT g
-        where g.func_id = ?
-        $taxonClause
-        $datatypeClause
-        $rclause
-        $imgClause
-    };
+    my $sql;
+    if ( $restrictType eq 'bio_cluster' ) {
+        if ( $datatypeClause =~ /unassembled/i ) {
+        }
+        else {
+            $sql = qq{
+                select distinct g.taxon
+                from bio_cluster_features_new bcg, bio_cluster_new g
+                where bcg.pfam_id = ?
+                and bcg.cluster_id = g.cluster_id
+                $taxonClause1
+                $rclause1
+                $imgClause1
+            };
+        }
+    }
+    elsif ( $restrictType eq 'chrom_cassette' ) {
+    }
+    else {
+        $sql = qq{
+            select distinct g.taxon_oid
+            from TAXON_PFAM_COUNT g
+            where g.func_id = ?
+            $taxonClause
+            $datatypeClause
+            $rclause
+            $imgClause
+        };
+    }
 
     my @bindList_sql = ("$id");
     my @bindList     = ();
@@ -4378,17 +4652,24 @@ sub getTigrfamGenomeListSql {
 
 sub getTigrfamGenomeListSql_merfs {
     my ( $id, $taxonClause, $datatypeClause, $rclause, $imgClause,
-	 $bindList_txs_ref, $bindList_ur_ref, $bydomain, $seq_status ) = @_;
+	 $bindList_txs_ref, $bindList_ur_ref, $restrictType, $bydomain, $seq_status ) = @_;
 
-    my $sql = qq{
-       select distinct g.taxon_oid
-       from TAXON_TIGR_COUNT g
-       where g.func_id = ? 
-       $taxonClause
-       $datatypeClause
-       $rclause
-       $imgClause
-    };
+    my $sql;
+    if ( $restrictType eq 'bio_cluster' && $datatypeClause =~ /unassembled/i ) {
+    }
+    elsif ( $restrictType eq 'chrom_cassette' ) {
+    }
+    else {
+        $sql = qq{
+           select distinct g.taxon_oid
+           from TAXON_TIGR_COUNT g
+           where g.func_id = ? 
+           $taxonClause
+           $datatypeClause
+           $rclause
+           $imgClause
+        };
+    }
 
     my @bindList_sql = ("$id");
     my @bindList     = ();

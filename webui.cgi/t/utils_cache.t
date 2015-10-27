@@ -1,14 +1,24 @@
 #!/usr/bin/env perl
 
-use FindBin qw/ $Bin /;
-use lib ( "$Bin/..", "$Bin/../../proportal/lib", "$Bin/lib" );
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	my $dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib webui.cgi/t/lib );
+}
+use lib @dir_arr;
 use IMG::Util::Base 'Test';
+
 use File::Temp qw/tempfile tempdir/;
 use WebConfig ();
 use Test::MockModule;
 use Test::Output;
 use WebUtil ();
 use_ok('Utils::Cache');
+use Carp::Always;
 
 # create a fake WebConfig
 my $webconfig = Test::MockModule->new('WebConfig');
@@ -46,29 +56,8 @@ my $session = {
 
 my $fake_cgi = FakeCgi->new( data => { cat => 'mat', dog => 'bog' } );
 my $faker_cgi = FakeCgi->new( data => { frog => 'bog' } );
-# 	cgi_cache_enable
-# 	user_restricted_site
-# 	cgi_cache_dir
-# 	cgi_cache_default_expires_in
-# 	cgi_cache_size
-
-# my $cgi_cache_dir                = $env->{cgi_cache_dir};
-# my $cgi_cache_default_expires_in = $env->{cgi_cache_default_expires_in} // 3600;
-# my $cgi_cache_size               = $env->{cgi_cache_size} // 20 * 1024 * 1024;
-
-
-
-#Module::Name::subroutine(@args); # mocked
-
-
-
 
 # test various different combinations of environment and user configs
-
-
-
-
-
 
 subtest 'cache_enabled' => sub {
 
@@ -124,6 +113,11 @@ subtest 'create cache options' => sub {
 
 	throws_ok { Utils::Cache::_create_cache_options() } qr[No CGI cache dir configured];
 
+	Utils::Cache::module_reset();
+	$env = { cgi_cache_dir => 'my_made_up_dir' };
+    throws_ok { Utils::Cache::_create_cache_options() } qr[CGI cache dir my_made_up_dir does not exist], 'cache dir does not exist';
+
+
 	# test R/W of cache dir
 	Utils::Cache::module_reset();
 	$env = { cgi_cache_dir => $d };
@@ -135,8 +129,8 @@ subtest 'create cache options' => sub {
 	chmod 0200, $d;
 	throws_ok { Utils::Cache::_create_cache_options() } qr[CGI cache dir .*? must be a writable directory], 'cache dir permissions: 0200';
 
-	chmod 0755, $d;
-	is_deeply( Utils::Cache::_create_cache_options(), $default, 'chmod 755, checking options with no arguments' );
+	chmod 0766, $d;
+	is_deeply( Utils::Cache::_create_cache_options(), $default, 'chmod 766, checking options with no arguments' );
 
 	$default->{namespace} = 'blob_0';
 	is_deeply( Utils::Cache::_create_cache_options('blob'), $default, 'Adding a namespace' );

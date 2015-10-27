@@ -2,22 +2,14 @@ package ProPortal::Controller::DataType;
 
 use IMG::Util::Base 'Class';
 
-extends 'ProPortal::Controller::Base';
+extends 'ProPortal::Controller::Filtered';
 
-has '+valid_filters' => (
+use Template::Plugin::JSON::Escape;
+
+has '+tmpl_includes' => (
 	default => sub {
 		return {
-			ecosystem_subtype => {
-				id => 'ecosystem_subtype',
-				label => 'ecosystem subtype',
-				type => 'checkbox',
-				is_active => 0,
-				values => [
-					{ id => 'marginal', label => 'Marginal sea' },
-					{ id => 'neritic',  label => 'Neritic zone' },
-					{ id => 'pelagic',  label => 'Pelagic' }
-				]
-			}
+			tt_scripts => qw( data_type ),
 		};
 	},
 );
@@ -44,7 +36,7 @@ sub render {
 		push @{$data->{ $_->{genome_type} }{ $_->{ecosystem_subtype} || 'Unclassified' }}, $_;
 	}
 
-	return $self->add_defaults_and_render( $data );
+	return $self->add_defaults_and_render({ sorted_data => $data, array => $res });
 
 }
 

@@ -1,5 +1,5 @@
 #
-# $Id: GenomeGeneOrtholog.pm 29917 2014-01-24 21:01:43Z klchu $
+# $Id: GenomeGeneOrtholog.pm 34538 2015-10-20 17:43:00Z klchu $
 #
 package GenomeGeneOrtholog;
 
@@ -16,6 +16,7 @@ use OracleUtil;
 use HtmlUtil;
 use TaxonTarDir;
 use GenomeListJSON;
+use HTML::Template;
 
 my $section               = "GenomeGeneOrtholog";
 my $env                   = getEnv();
@@ -38,8 +39,24 @@ my $bbh_zfiles_dir        = $env->{bbh_zfiles_dir};
 my $base_dir              = $env->{base_dir};
 my $base_url              = $env->{base_url};
 my $cgi_url              = $env->{cgi_url};
-
+my $YUI = $env->{yui_dir_28};
 my $max_subject = 50;
+
+sub getPageTitle {
+    return 'Genome Gene Ortholog';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    require GenomeListJSON;
+    my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
+
+    my @a = ("CompareGenomes", '', '', $js);
+    return @a;
+}
 
 sub dispatch {
     my ($numTaxon) = @_;

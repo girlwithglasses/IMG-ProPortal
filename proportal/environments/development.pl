@@ -15,7 +15,7 @@
 # should Dancer2 consider warnings as critical errors?
 	warnings => 1,
 
-	trace => 1,
+	traces => 1,
 
 # should Dancer2 show a stacktrace when an error is caught?
 # if set to yes, public/500.html will be ignored and either
@@ -24,19 +24,28 @@
 
 	debug => 1,
 
-	traces => 1,
-
 	# print the banner
 	startup_info => 1,
 
-	# home of css, js, images folders. Should end with "/"
-	pp_assets => "http://localhost:5000/",
 	# URL of the ProPortal app
-	pp_app => "http://localhost:5000/proportal/",
+#	pp_app => "http://localhost:5000/",
+	pp_app => 'http://img-proportal.dev/',
+	base_url => 'http://img-proportal.dev/',
+
+	# home of css, js, images folders. Should end with "/"
+	pp_assets => 'http://img-proportal.dev/',
 
 	# main.cgi location
-	main_cgi_url => 'http://localhost:5000/cgi-bin/main.cgi',
-	base_url => 'http://localhost:5000/',
+#	main_cgi_url => 'http://localhost:5000/cgi-bin/main.cgi',
+	main_cgi_url => 'http://img-proportal.dev/cgi-bin/main.cgi',
+
+	assets => 'http://img-proportal.dev/pristine_assets/',
+
+#	jbrowse_assets => 'http://localhost:5000/jbrowse_assets/',
+	jbrowse_assets => 'http://img-proportal.dev/jbrowse_assets/',
+
+	scratch_dir => '/tmp/jbrowse/',
+	rsrc_dir => '/Users/gwg/webUI/webui.cgi/t/files/rsrc_dir/',
 
 	session => 'CGISession',
 
@@ -63,11 +72,13 @@
 	schema => {
 		img_core => {
 			module => 'DataModel::IMG_Core',
-			db => 'imgsqlite',
+#			db => 'imgsqlite',
+			db => 'img_core',
 		},
 		img_gold => {
 			module => 'DataModel::IMG_Gold',
-			db => 'imgsqlite',
+#			db => 'imgsqlite',
+			db => 'img_gold',
 		},
 	},
 
@@ -86,22 +97,26 @@
 		},
 		img_gold => { # this is GOLD
 			driver => 'Oracle',
-			database => 'imgiprd',
+#			database => 'imgiprd',
+			database => '//gpodb08.nersc:1521/imgiprd',
 			user => 'imgsg_dev',
 			password => 'Tuesday',
 			dbi_params => {
 				RaiseError => 1,
 				FetchHashKeyName => 'NAME_lc',
+				ora_drcp => 1,
 			},
 		},
 		img_core => {
 			driver => 'Oracle',
-			database => 'gemini1_shared',
+			database => '//gpodb11.nersc.gov:1521/gemini1',
+#			database => 'gemini1_shared',
 			username => 'img_core_v400',
 			password => 'imgCoreC0sM0s1',
 			dbi_params => {
 				RaiseError => 1,
 				FetchHashKeyName => 'NAME_lc',
+				ora_drcp => 1,
 			},
 		},
 	},

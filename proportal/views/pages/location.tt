@@ -9,19 +9,19 @@
 <p>
 	Map pins represent location counts; some pins may have multiple genomes.
 </p>
-<p>Filter by ecosystem type:</p>
+<p>Filter by genome type:</p>
 [%	IF data_filters && data_filters.all %]
 <ul>
 [%	# filter domain
 		FOR fd IN data_filters.all.keys.sort;
 			FOR f IN data_filters.all.$fd.values; %]
-<li><a href="[% links.location %][% f.id %]">[% f.label %]</a>[%
+<li><a href="[% link( 'proportal/location' ) %]/[% f.id %]">[% f.label %]</a>[%
 				IF data_filters.active && data_filters.active.$fd == f.id;
 		%] (currently displayed)[%
 				END; %]
 </li>
 [%			END; %]
-<li><a href="[% links.location %]">no filter</a>[%
+<li><a href="[% link( 'proportal/location' ) %]">no filter</a>[%
 			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
 			END; %]</li>
 [%		END; %]

@@ -1,7 +1,7 @@
 package IMG::Util::DB;
 
 use IMG::Util::Base;
-use JSON::PP;
+use JSON;
 use MIME::Base64;
 
 use IMG::Util::DBIxConnector;

@@ -1,6 +1,6 @@
 ############################################################################
 # WorkspaceUtil.pm
-# $Id: WorkspaceUtil.pm 33944 2015-08-09 02:19:24Z jinghuahuang $
+# $Id: WorkspaceUtil.pm 34534 2015-10-19 16:04:48Z jinghuahuang $
 ############################################################################
 package WorkspaceUtil;
 
@@ -69,6 +69,7 @@ sub printSetMainTableNoFooter {
         $it->addColSpec( "File Name", "asc",  "left",  "", "", "wrap" );
         $it->addColSpec( "Number of $whats<br>(click the link to each individual set)",
 			 "desc", "right", "", "", "wrap" );
+        $it->addColSpec( "File Size", "", "right", "", "", "wrap" );
 
         foreach my $x ( sort @files ) {
             next if ( $x eq "." || $x eq ".." || $x =~ /~$/ );
@@ -76,7 +77,8 @@ sub printSetMainTableNoFooter {
 
             # get number of lines in file
             my $cnt = 0;
-            open( FH, "$workspace_dir/$sid/$folder/$x" )
+            my $filePath = "$workspace_dir/$sid/$folder/$x";
+            open( FH, $filePath )
               or webError("File size - file error $x");
             while (<FH>) {
                 $cnt++ if ( !/^\s+?$/ && /[a-zA-Z0-9]+/ );
@@ -99,6 +101,10 @@ sub printSetMainTableNoFooter {
               $sd . "<input type='checkbox' name='filename' value='$escX'/>\t";
             $row .= $x . "\t";
             $row .= $cnt2 . "\t";
+
+            my $size = WebUtil::fileSize($filePath);
+            my $display_size = getDisplaySize($size);
+            $row .= $display_size . "\t";
 
             $it->addRow($row);
         }
@@ -146,6 +152,7 @@ sub printShareMainTableNoFooter {
     $it->addColSpec( "File Name", "asc",  "left",  "", "", "wrap" );
     $it->addColSpec( "Number of $whats<br>(click the link to each individual set)",
 			 "desc", "right", "", "", "wrap" );
+    $it->addColSpec( "File Size", "", "right", "", "", "wrap" );
     $it->addColSpec( "Owner", "asc",  "left",  "", "", "wrap" );
     $it->addColSpec( "Shared with Group", "asc",  "left",  "", "", "wrap" );
 
@@ -159,7 +166,8 @@ sub printShareMainTableNoFooter {
     
     	# get number of lines in file
     	my $cnt = 0;
-    	open( FH, "$workspace_dir/$sid/$folder/$x" )
+    	my $filePath = "$workspace_dir/$sid/$folder/$x";
+    	open( FH, $filePath )
     	    or webError("File size - file error $x");
     	while (<FH>) {
     	    $cnt++ if ( !/^\s+?$/ && /[a-zA-Z0-9]+/ );
@@ -182,6 +190,11 @@ sub printShareMainTableNoFooter {
     	    $sd . "<input type='checkbox' name='filename' value='$escX'/>\t";
     	$row .= $x . "\t";
     	$row .= $cnt2 . "\t";
+
+        my $size = WebUtil::fileSize($filePath);
+        my $display_size = getDisplaySize($size);
+        $row .= $display_size . "\t";
+
     	$row .= "me" . "\t";
     
     	my $grp_str = "";
@@ -224,7 +237,8 @@ sub printShareMainTableNoFooter {
     
     	# get number of lines in file
     	my $cnt = 0;
-    	open( FH, "$workspace_dir/$c_oid/$folder/$data_set_name" )
+    	my $filePath = "$workspace_dir/$c_oid/$folder/$data_set_name";
+    	open( FH, $filePath )
     	    or webError("File size - file error $data_set_name");
     	while (<FH>) {
     	    $cnt++ if ( !/^\s+?$/ && /[a-zA-Z0-9]+/ );
@@ -239,6 +253,11 @@ sub printShareMainTableNoFooter {
     		. "&filename=$escX&folder=$folder'>$cnt2</a>";
     	}
     	$row .= $cnt2 . "\t";
+
+        my $size = WebUtil::fileSize($filePath);
+        my $display_size = getDisplaySize($size);
+        $row .= $display_size . "\t";
+
     	$row .= $c_name . "\t";
     
     	my $g_url = "$main_cgi?section=ImgGroup" .
@@ -523,6 +542,32 @@ sub fetchShareSetName {
     }
 
     return $new_str;
+}
+
+#############################################################################
+# getShareSetNames
+#############################################################################
+sub getShareSetNames {
+    my ( $dbh, $sid, $isSet, $all_files_ref, $fileFullname ) = @_;
+
+    my %ownerSetName2shareSetName;
+    if ($isSet) {
+        # genome sets
+        for my $x2 (@$all_files_ref) { 
+            my ($owner, $x) = WorkspaceUtil::splitOwnerFileset( $sid, $x2 ); 
+            my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
+            $ownerSetName2shareSetName{$x2} = $share_set_name;
+        }
+    }
+    else {
+        if ( $fileFullname ) {
+            my ($owner, $x) = WorkspaceUtil::splitOwnerFileset( $sid, $fileFullname ); 
+            my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
+            $ownerSetName2shareSetName{$fileFullname} = $share_set_name;            
+        }
+    }
+
+    return (\%ownerSetName2shareSetName);
 }
 
 ############################################################
@@ -2030,6 +2075,40 @@ sub printGenomeListForm {
     print $template->output;
 
     GenomeListJSON::showGenomeCart($numTaxon);
+}
+
+sub getDisplaySize {
+    my ( $size ) = @_;
+
+    my ($quot, $rem);
+    my $cnt = 0;
+    while ( $size >= 1024 ) {
+        $cnt++;
+        ($quot, $rem) = getQuotRem( $size );
+        $size = $quot;
+        
+        if ( $cnt >= 8 ) {
+            last;
+        }
+    }
+
+    my $remainder;
+    $remainder = '.' . $rem if ( $rem );
+    
+    my @units = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+    my $unit = $units[$cnt];
+    my $display_size = $size . $remainder . ' ' . $unit;
+    
+    return $display_size;
+}
+
+sub getQuotRem {
+    my ( $size ) = @_;
+
+    my $rem = $size % 1024;
+    my $quot = ($size - $rem) / 1024;
+    
+    return ($quot, $rem);
 }
 
 

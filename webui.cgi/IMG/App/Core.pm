@@ -3,7 +3,7 @@
 #
 #	Core attributes, etc.
 #
-#	$Id: Core.pm 34173 2015-09-03 19:38:35Z aireland $
+#	$Id: Core.pm 34542 2015-10-20 20:56:35Z aireland $
 ############################################################################
 package IMG::App::Core;
 
@@ -12,10 +12,8 @@ use IMG::Util::Base 'Class';
 has 'config' => (
 	is => 'ro',
 	isa => HashRef,
+    lazy => 1,
 	predicate => 1,
-#	default => sub { return {} },
-#	required => 1,
-	writer => 'set_config',
 );
 
 has 'http_params' => (
@@ -38,7 +36,6 @@ has 'psgi_req' => (
 sub BUILDARGS {
 	my $class = shift;
 	my $args = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift;
-
 	return $args || {};
 }
 

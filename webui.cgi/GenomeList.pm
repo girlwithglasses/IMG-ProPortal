@@ -1,6 +1,5 @@
 ############################################################################
-#
-# $Id: GenomeList.pm 34100 2015-08-24 17:14:16Z klchu $
+# $Id: GenomeList.pm 34497 2015-10-13 20:33:17Z klchu $
 ############################################################################
 package GenomeList;
 
@@ -68,8 +67,6 @@ my $database = $cacheDir . "projectInfo2.db"; # see ../preComputedData/ProjectMe
 #if ( !( -e "$dir" ) ) {
 #    mkdir "$dir" or webError("Can not make $dir!");
 #}
-
-# dir = $cgi_tmp_dir . "/" . GenomeList
 $cgi_tmp_dir = $dir;
 
 # get the subdirectory of the file
@@ -167,6 +164,7 @@ if ($user_restricted_site) {
 if ( getSuperUser() eq 'Yes' ) {
     push( @genomeColumnsOrder, 'c.submittername' );
     push( @genomeColumnsOrder, 't.in_file' );
+    push( @genomeColumnsOrder, 't.is_nr' );
 }
 
 # genome file db column names and ui display label
@@ -220,6 +218,7 @@ if ($user_restricted_site) {
 if ( getSuperUser() eq 'Yes' ) {
     $genomeColumns{'c.submittername'} = 'Submitter Name*';
     $genomeColumns{'t.in_file'}       = 'In File*';
+    $genomeColumns{'t.is_nr'}       = 'Is NR*';
 }
 
 # how to align data in the display table
@@ -252,6 +251,7 @@ my %genomeColumnsAlign = (
     'c.username'                               => 'char asc left',
     'c.submittername'                          => 'char asc left',
     't.in_file'                                => 'char asc left',
+    't.is_nr'                                => 'char asc left',
     't.combined_sample_flag'                   => 'char asc left',
     't.jgi_project_id'                         => 'num asc right',
     't.comments'                               => 'char asc left',
@@ -263,7 +263,7 @@ my %genomeColumnsAlign = (
     'gap.is_gene_primp'                      => 'char asc left',
     'gap.assembly_method'                      => 'char asc left',
     't.genome_completion' => 'char asc left',
-
+    
 );
 
 # ------------------------------------------------------------------------------------------------------
@@ -283,43 +283,43 @@ my %genomeColumnsAlign = (
 # t.release_date
 
 my %projectMetadataColumns = (
-'p.MOTILITY' => 'Motility',
-'p.TEMP_RANGE' => 'Temperature Range',
-'p.SALINITY' => 'Salinity',
-'p.SEQ_STATUS' => 'Seq Status',
-'p.ISO_COUNTRY' => 'Isolation Country',
-'p.DATE_COLLECTED' => 'Sample Collection Date ',
-'p.GEO_LOCATION' => 'Geographic Location',
-'p.LATITUDE' => 'Latitude',
-'p.LONGITUDE' => 'Longitude',
-'p.ALTITUDE' => 'Altitude',
-'p.GRAM_STAIN' => 'Gram Staining',
-'p.HOST_NAME' => 'Host Name',
-'p.HOST_GENDER' => 'Host Gender',
-'p.BIOTIC_REL' => 'Biotic Relationships',
-'p.HMP_ID' => 'HMP ID',
-'p.FUNDING_PROGRAM' => 'Funding Program',
-'p.TYPE_STRAIN' => 'Type Strain',
-'p.ECOSYSTEM' => 'Ecosystem',
-'p.ECOSYSTEM_CATEGORY' => 'Ecosystem Category',
-'p.ECOSYSTEM_TYPE' => 'Ecosystem Type',
-'p.ECOSYSTEM_SUBTYPE' => 'Ecosystem Subtype',
-'p.SPECIFIC_ECOSYSTEM' => 'Specific Ecosystem',
-'p.SAMPLE_BODY_SITE' => 'Sample Body Site',
-'p.SAMPLE_BODY_SUBSITE' => 'Sample Body Subsite',
-'p.MRN' => 'Medical Record Number',
-'p.VISIT_NUM' => 'Visits',
-'p.REPLICATE_NUM' => 'Replicate',
-'p.PMO_PROJECT_ID' => 'PMO ID',
-'p.CULTURED' => 'Cultured',
-'p.UNCULTURED_TYPE' => 'Uncultured Type',
-'p.CULTURE_TYPE' => 'Culture Type',
-'p.BIOPROJECT_ACCESSION' => 'Bioproject Accession',
-'p.BIOSAMPLE_ACCESSION' => 'Biosample Accession',
-'p.ITS_SPID' => 'ITS PID',
-'p.PI_EMAIL' => 'Contact Email',
+'p.MOTILITY' => 'Motility',  
+'p.TEMP_RANGE' => 'Temperature Range',  
+'p.SALINITY' => 'Salinity',  
+'p.SEQ_STATUS' => 'Seq Status',  
+'p.ISO_COUNTRY' => 'Isolation Country',  
+'p.DATE_COLLECTED' => 'Sample Collection Date ',  
+'p.GEO_LOCATION' => 'Geographic Location', 
+'p.LATITUDE' => 'Latitude',  
+'p.LONGITUDE' => 'Longitude',  
+'p.ALTITUDE' => 'Altitude',  
+'p.GRAM_STAIN' => 'Gram Staining',  
+'p.HOST_NAME' => 'Host Name',  
+'p.HOST_GENDER' => 'Host Gender',      
+'p.BIOTIC_REL' => 'Biotic Relationships',  
+'p.HMP_ID' => 'HMP ID',     
+'p.FUNDING_PROGRAM' => 'Funding Program',  
+'p.TYPE_STRAIN' => 'Type Strain',   
+'p.ECOSYSTEM' => 'Ecosystem',  
+'p.ECOSYSTEM_CATEGORY' => 'Ecosystem Category',  
+'p.ECOSYSTEM_TYPE' => 'Ecosystem Type',  
+'p.ECOSYSTEM_SUBTYPE' => 'Ecosystem Subtype',  
+'p.SPECIFIC_ECOSYSTEM' => 'Specific Ecosystem',  
+'p.SAMPLE_BODY_SITE' => 'Sample Body Site',  
+'p.SAMPLE_BODY_SUBSITE' => 'Sample Body Subsite',  
+'p.MRN' => 'Medical Record Number',         
+'p.VISIT_NUM' => 'Visits',         
+'p.REPLICATE_NUM' => 'Replicate',         
+'p.PMO_PROJECT_ID' => 'PMO ID',     
+'p.CULTURED' => 'Cultured',   
+'p.UNCULTURED_TYPE' => 'Uncultured Type',   
+'p.CULTURE_TYPE' => 'Culture Type',   
+'p.BIOPROJECT_ACCESSION' => 'Bioproject Accession',   
+'p.BIOSAMPLE_ACCESSION' => 'Biosample Accession',  
+'p.ITS_SPID' => 'ITS PID',         
+'p.PI_EMAIL' => 'Contact Email',  
 'p.PI_NAME' => 'Contact Name',
-'p.name' => 'Alt. Contact Name',
+'p.name' => 'Alt. Contact Name', 
 'p.email' => 'Alt. Contact Email',
 'p.cell_shape'           => 'Cell Shape',
 'p.ISOLATION'            => 'Isolation',
@@ -750,11 +750,9 @@ my %phylumStatsColumnsMerfs = (
 
 my $select_id_name = 'taxon_filter_oid';
 
-# ======================================================================================================
-#
+# =============================================================================
 # end of configuration
-#
-# ======================================================================================================
+# =============================================================================
 
 sub getPageTitle {
     return 'Genome List';
@@ -772,42 +770,32 @@ sub dispatch {
     my $page = param('page');
 
     if ( $page eq 'genomeList' ) {
-
         # redisplay
         my $from = param('from');
-        param( -name => 'from', -value => 'orgsearch2' ) if ( $from eq 'orgsearch' );
+        param( -name => 'from', -value => 'orgsearch2' ) 
+	    if ( $from eq 'orgsearch' );
         printRedisplay();
-
     } elsif ( $page eq 'phylumList' ) {
         printPhylumList2();
-
     } elsif ( $page eq 'phylumGenomeList' ) {
         printPhylumGenomeList();
-
     } elsif ( $page eq 'phylumCartList' ) {
-
         # genome cart group by phyla
         printCartPhylumList();
-
     } elsif ( $page eq 'phylumCartGenomeList' ) {
-
         # genome cart group by phyla
         printCartPhylumGenomeList();
-
     } else {
-
         #  test
-        #        my $dbh = WebUtil::dbLogin();
-        #        printGenomes( $dbh, 'Genome Browser', "and t.domain = '*Microbiome' and rownum < 25" );
-        #        $dbh->disconnect();
-
+        #  my $dbh = WebUtil::dbLogin();
+        #  printGenomes( $dbh, 'Genome Browser', "and t.domain = '*Microbiome' and rownum < 25" );
+        #  $dbh->disconnect();
     }
 }
 
 # clear any genome cache files
 # - used for "add to genome cart" button we need to remove the filename params:
 # - used for remove from genome cart
-#
 #
 sub clearCache {
     webLog("clearing add to genome cart cache\n");
@@ -853,7 +841,7 @@ sub printRedisplay {
 
             my @taxonColumns           = param('genome_field_col');
             my @projectMetadataColumns = param('metadata_col');
-
+           
             my @statsColumns           = param('stats_col');
 
             #my %allCols;
@@ -1065,7 +1053,7 @@ sub printGenomes {
             $href         = Workspace::loadUserPreferences($myTaxonStatsPrefs);
             @a            = hashKeyToArray($href);
             @statsColumns = @a;
-
+            
         }
     }
 
@@ -1123,7 +1111,7 @@ sub printGenomes {
 print qq{
     <ul style="padding-left:1.2em;list-style-type:circle">
             <li><a href="#Configuration">Table Configuration</a></li>
-
+            
 };
 if($user_restricted_site) {
     print qq{
@@ -1133,8 +1121,8 @@ if($user_restricted_site) {
 
 print qq{
         </ul>
-};
-
+};     
+        
         TaxonSearchUtil::printButtonFooter("taxontable");
         print nbsp(1);
     }
@@ -1207,7 +1195,7 @@ print qq{
         print qq{
             <a href='#' name='Save2Workspace'></a>
         };
-        WorkspaceUtil::printSaveGenomeToWorkspace_withAllBrowserGenomeList($select_id_name);
+        WorkspaceUtil::printSaveGenomeToWorkspace_withAllBrowserGenomeList($select_id_name);            
         print end_form();
     }
 
@@ -1397,7 +1385,7 @@ sub printTaxonList {
             $value = cellValueEscape($value);
             if ( $value eq '' || blankStr($value) ) {
                 my $tmp = $projectMetadataColumnsAlign{$col};
-
+                
                 if ($tmp eq ''  || $tmp =~ /^char/ ) {
                     $row .= 'zzz' . $sd . '_' . "\t";
                 } else {
@@ -1514,7 +1502,7 @@ where ss1.submission_id in (
     from submission_samples ss
     group by ss.submission_id
     having count(*) > 1
-)
+)    
     };
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ; ; ) {
@@ -1631,12 +1619,12 @@ sub getSubmitter {
 sub getGapData {
     my ( $dbh, $taxon_data_href ) = @_;
     my $sql = qq{
-select gap.gold_id,
-t.submission_id,
+select gap.gold_id, 
+t.submission_id, 
 nvl(gap.is_gene_primp, 'No'),
-gap.submission_type,
+gap.submission_type, 
 gap.gold_analysis_project_type,
-gap.assembly_method
+gap.assembly_method 
 from gold_analysis_project gap, taxon t
 where gap.gold_id = t.analysis_project_id
 and gap.gold_id is not null
@@ -1663,7 +1651,7 @@ and t.OBSOLETE_FLAG = 'No'
             $sub_href->{'gap.assembly_method'} = $assembly_method if ( $assembly_method ne '' );
         }
     }
-
+    
 }
 
 #sub getGeneModelQc {
@@ -1761,8 +1749,8 @@ sub dbLoginProject {
     my $dsn      = "DBI:$driver:dbname=$database";
     my $userid   = "";
     my $password = "";
-    my $dbh      = DBI->connect( $dsn, $userid, $password, { RaiseError => 1 } ) or die $DBI::errstr;
-    return $dbh;
+    my $dbh      = DBI->connect( $dsn, $userid, $password, { RaiseError => 1 } ) or die $DBI::errstr;  
+    return $dbh;  
 }
 
 #
@@ -1770,14 +1758,14 @@ sub dbLoginProject {
 #
 sub getProjectMetadata {
     my ( $taxon_data_href, $goldId_href) = @_;
-
+    
     my $gid2projectMetadata_href = getGid2ProjectMetadata( $goldId_href, \@projectMetadataColumnsOrder );
 
     foreach my $taxon_oid (keys %$taxon_data_href) {
         my $href = $taxon_data_href->{$taxon_oid};
         my $gold_id = $href->{gold_id};
-        my $cols_aref = $gid2projectMetadata_href->{$gold_id};
-        #webLog("$gold_id ==== \n");
+        my $cols_aref = $gid2projectMetadata_href->{$gold_id};        
+        #webLog("$gold_id ==== \n");        
         getProjectMetadataHelper( $taxon_data_href, $taxon_oid, \@projectMetadataColumnsOrder, $cols_aref );
     }
 }
@@ -1790,14 +1778,14 @@ sub getGid2ProjectMetadata {
         select gold_id, $columns
         from project_info p
     };
-    #where p.gold_id in ($str)
-
+    #where p.gold_id in ($str)  
+    
     if ( $goldId_href ) {
         my @goldOids = keys %$goldId_href;
         if ( scalar( @goldOids ) > 0 ) {
             my $str = WebUtil::joinSqlQuoted( ',', @goldOids );
             $sql .= qq{
-                where p.gold_id in ($str)
+                where p.gold_id in ($str)                  
             };
         }
     }
@@ -1805,27 +1793,27 @@ sub getGid2ProjectMetadata {
         my $col = $cols_aref->[0];
         if ( ! $goldId_href ) {
             $sql .= qq{
-                where
-            };
+                where 
+            };        
         }
         $sql .= qq{
-            $col is not null
+            $col is not null            
         };
-    }
+    }    
     if ( $col_val && scalar(@$cols_aref) == 1 ) {
         my $col = $cols_aref->[0];
         if ( ! $goldId_href ) {
             $sql .= qq{
-                where
-            };
+                where 
+            };        
         }
         $sql .= qq{
             $col = '$col_val'
         };
-    }
+    }    
     #webLog("$sql\n");
     #print "getGid2ProjectMetadata() sql=$sql<br/>\n";
-
+    
     my $dbh = dbLoginProject();
     my $cur = $dbh->prepare($sql);
     $cur->execute();
@@ -1877,7 +1865,7 @@ sub getTaxonTableData {
         $filename = 'genomeData' . $$ . '_' . $session_id;
     }
     print qq{
-<input type="hidden" name='genomeData' value='$filename' />
+<input type="hidden" name='genomeData' value='$filename' />        
     };
 
     my $rclause   = WebUtil::urClause('t');
@@ -1891,8 +1879,8 @@ sub getTaxonTableData {
           if ( $x ne 'c.username'
             && $x ne 'c.submittername'
             && $x ne 'gap.gold_analysis_project_type'
-            && $x ne 'gap.submission_type'
-            && $x ne 'gap.is_gene_primp'
+            && $x ne 'gap.submission_type' 
+            && $x ne 'gap.is_gene_primp' 
             && $x ne 'gap.assembly_method');
     }
     push( @all_columns, @statsColumnsOrder );
@@ -1974,7 +1962,7 @@ sub getTaxonTableData {
 
             my %hash;
             $hash{gold_id} = $gold_id;
-
+            
             for ( my $i = 0 ; $i <= $#all_columns ; $i++ ) {
                 my $key = $all_columns[$i];
                 my $value = $cols[$i];
@@ -2016,7 +2004,7 @@ sub getTaxonTableData {
             } elsif(!$done && ($x eq 'gap.is_gene_primp' || $x eq 'gap.assembly_method')) {
                 getGapData($dbh, \%taxon_data);
                 $done = 1;
-            }
+            } 
         }
     } else {
         my $done = 0;
@@ -2074,7 +2062,7 @@ sub getMetagenomeStats {
 
     my $sql = qq{
 select t.taxon_oid, $colStr
-from taxon t left join taxon_stats_merfs ts
+from taxon t left join taxon_stats_merfs ts 
 on t.taxon_oid = ts.taxon_oid
 $dataTypeClause
 where t.taxon_oid in ($taxonStr)
@@ -2136,7 +2124,7 @@ sub printConfigDiv {
     $fileTime = Date::Format::time2str( "%b %e %Y", $fileTime );
 
     print qq{
-        <div id='genomeConfiguration'>
+        <div id='genomeConfiguration'>      
           <script type='text/javascript' src='$base_url/genomeConfig.js'></script>
 
           <table border='0'>
@@ -2168,7 +2156,7 @@ sub printConfigDiv {
     print "</tr><tr>";
 
     # "Genome Field Div"
-    print qq{
+    print qq{ 
             <td>
               <div id='genomeField' class='myborder'>
                 <input type="button" value="All"   onclick="selectObject(1, 'genome_field_col')">
@@ -2260,7 +2248,7 @@ sub printConfigDiv {
 };
     }
 
-    print qq{
+    print qq{                
               <br/>
     };
 
@@ -2282,7 +2270,7 @@ sub printConfigDiv {
             $star = '*';
         }
 
-        print qq{
+        print qq{ 
           <input id='$id' type="checkbox" value="$key" name="stats_col" $str />$star $value <br/>
         };
     }
@@ -2344,7 +2332,7 @@ sub printTreeButton {
     } elsif ( $domain eq "GFragment" ) {
         $url .= "&domain=GFragment";
     } elsif ( $domain eq "Viruses" ) {
-        $url .= "&domain=viruses";
+        $url .= "&domain=Viruses";
     } else {
         $url .= "&domain=all";
     }
@@ -2372,7 +2360,7 @@ sub printTreeButton {
             $url2 .= "&domain=Viruses";
         }
         print "&nbsp;";
-        print buttonUrl( $url2, "Group by Phyla", "medbutton" );
+        print buttonUrl( $url2, "Group by Phylogenetic Category", "medbutton" );
     }
 
     print qq{
@@ -2389,11 +2377,9 @@ sub printTreeButton {
 
 }
 
-# -------------------------------------------------------------------------------------
-#
+# -----------------------------------------------------------------------------
 # phylum list
-#
-# -------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 sub printPhylumList2 {
     my $domain       = param("domain");
     my $phylum       = param("phylum");
@@ -2408,10 +2394,8 @@ sub printPhylumList2 {
     $type = 'domain' if ( $type eq '' );
 
     print qq{
-<h1>Genome Phylum List</h1>
-<p>
-$domain group by: $type
-</p>
+    <h1>Genomes grouped by Phylogenetic Category</h1>
+    <p>$domain grouped by: $type</p>
     };
 
     # button back to alpha list
@@ -2464,7 +2448,7 @@ $domain group by: $type
         <p>
         Group by: &nbsp;
         <select id="phylagroup" name="phylagroup" onchange="phylaGroup();">
-        <option selected="selected" value="label">--- Select a Phylum ---</option>
+        <option selected="selected" value="label">--- Select a Category ---</option>
         <option value="reset">Reset</option>
         <option value="phylum">Phylum</option>
         <option value="ir_class">Class</option>
@@ -2496,7 +2480,6 @@ $domain group by: $type
 
 EOF
 
-    #
     my $count     = 0;
     my $dbh       = WebUtil::dbLogin();
     my $data_href = getPhylumData2($dbh);
@@ -2510,9 +2493,9 @@ EOF
     my $sd          = $it->getSdDelim();
 
     if ( $type ne '' ) {
-        $it->addColSpec( $type, 'char asc', 'left' );
+        $it->addColSpec( $type, 'asc', 'left' );
     } else {
-        $it->addColSpec( 'Phyla', 'char asc', 'left' );
+        $it->addColSpec( 'Phyla', 'asc', 'left' );
     }
     $it->addColSpec( 'Genomes Count', 'num asc', 'right' );
     if ( $#statsColumns > -1 ) {
@@ -2616,7 +2599,6 @@ EOF
         $row .= $genomeCnt . $sd . $url2 . "\t";
 
         foreach my $col (@statsColumns) {
-
             #my $displayName = $phylumStatsColumns{$col};
             my $value = $href->{$col};
             $row .= $value . $sd . $value . "\t";
@@ -2728,13 +2710,13 @@ sub getPhylumData2 {
     }
 
     my $sql = qq{
-select $column1, count(*)  $columns
-from taxon t, taxon_stats ts
-where t.TAXON_OID = ts.TAXON_OID
-$phylumClause
-$urclause
-$imgClause
-group by $column1
+    select $column1, count(*)  $columns
+    from taxon t, taxon_stats ts
+    where t.TAXON_OID = ts.TAXON_OID
+    $phylumClause
+    $urclause
+    $imgClause
+    group by $column1
     };
 
     my %phylumData;    # hash of hashes
@@ -2760,15 +2742,15 @@ group by $column1
         my $columns           = join( ',', @all_columns_merfs );
 
         my $sql = qq{
-select $column1, count(*),  $columns
-from taxon t left join taxon_stats_merfs ts
-on t.taxon_oid = ts.taxon_oid
-where t.genome_type = 'metagenome'
-and ts.datatype = '$merfs_data_type'
-$phylumClause
-$urclause
-$imgClause
-group by $column1
+        select $column1, count(*),  $columns
+        from taxon t left join taxon_stats_merfs ts 
+        on t.taxon_oid = ts.taxon_oid
+        where t.genome_type = 'metagenome'
+        and ts.datatype = '$merfs_data_type'
+        $phylumClause
+        $urclause
+        $imgClause
+        group by $column1
         };
 
         my $cur = execSql( $dbh, $sql, $verbose, @bind );
@@ -2799,7 +2781,7 @@ sub printConfigDiv2 {
     my ($statsColumnsChecked_aref) = @_;
 
     print qq{
-        <div id='genomeConfiguration'>
+        <div id='genomeConfiguration'>      
           <script type='text/javascript' src='$base_url/genomeConfig.js'></script>
 
           <table border='0'>
@@ -2866,7 +2848,7 @@ sub printConfigDiv2 {
             $star = '*';
         }
 
-        print qq{
+        print qq{ 
           <input id='$id' type="checkbox" value="$key" name="stats_col" $str />$star $value <br/>
         };
     }
@@ -2955,12 +2937,9 @@ $domain $phylum $ir_class $ir_order $family $genus $species
     printGenomesViaSql( '', $sql, 'Phyla Genome List', \@bind, 'printPhylumGenomeList' );
 }
 
-# -------------------------------------------------------------------------------------
-#
+# ----------------------------------------------------------------------------
 # phylum genome cart list
-#
-# -------------------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------
 # print cart phyla list
 sub printCartPhylumList {
     my $domain       = param("domain");
@@ -2976,10 +2955,8 @@ sub printCartPhylumList {
     $type = 'domain' if ( $type eq '' );
 
     print qq{
-<h1>Genome Cart Phylum List</h1>
-<p>
-Group by: $type
-</p>
+    <h1>Genome Cart by Phylogeny</h1>
+    <p>Group by: $type</p>
     };
 
     require GenomeCart;
@@ -3022,7 +2999,6 @@ Group by: $type
 
 EOF
 
-    #
     my $count     = 0;
     my $dbh       = WebUtil::dbLogin();
     my $data_href = getCartPhylumData($dbh);
@@ -3271,7 +3247,7 @@ group by $column1
 
         my $sql = qq{
 select $column1, count(*),  $columns
-from taxon t left join taxon_stats_merfs ts
+from taxon t left join taxon_stats_merfs ts 
 on t.taxon_oid = ts.taxon_oid
 where t.genome_type = 'metagenome'
 and ts.datatype = '$merfs_data_type'
@@ -3394,8 +3370,8 @@ sub getProjectMetadataColName {
 
 sub getProjectMetadataColAlign {
     my ($col) = @_;
-    my $x = $projectMetadataColumnsAlign{$col};
-
+    my $x = $projectMetadataColumnsAlign{$col}; 
+    
     $x = 'char asc left' if $x eq '';
     return $x;
 }
@@ -3441,7 +3417,7 @@ sub getMetadataCategoryTaxonCount {
     #print "<br/>\n";
 
     my @gids = keys %$gid2projectMetadata_href;
-    my $taxon_gidInfo_href = QueryUtil::getTaxonForGids( $dbh, \@gids, $domain );
+    my $taxon_gidInfo_href = QueryUtil::getTaxonForGids( $dbh, \@gids, $domain );    
 
     foreach my $taxon_oid (keys $taxon_gidInfo_href) {
         my $gold_id = $taxon_gidInfo_href->{$taxon_oid};
@@ -3498,7 +3474,7 @@ sub getMetadataCategoryGids {
     #print "getMetadataCategoryTaxonCount() gid2projectMetadata_href: <br/>\n";
     #print Dumper($gid2projectMetadata_href);
     #print "<br/>\n";
-
+    
     @gids = keys %$gid2projectMetadata_href;
     return @gids;
 }

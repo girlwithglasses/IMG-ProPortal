@@ -7,7 +7,7 @@ use Template;
 use WebConfig;
 use HTML::Template;
 use Role::Tiny;
-use IMG::IO::File;
+use IMG::Util::File;
 
 my $env = WebConfig::getEnv();
 my $self;
@@ -378,7 +378,7 @@ sub generic_home {
 		$templateFile = $env->{base_dir} . "/home-hmpm-v33.html";
 		my $f = $env->{'hmp_home_page_file'};
 #				$hmpGoogleJs = file2Str( $f, 1 );
-		$hmpGoogleJs = eval { IMG::IO::File::slurp( $f ) };
+		$hmpGoogleJs = eval { IMG::Util::File::slurp( $f ) };
 	}
 
 	my ( $sampleCnt, $proposalCnt, $newSampleCnt, $newStudies );
@@ -397,7 +397,7 @@ sub generic_home {
 
 	#	$table_str = file2Str( $file, 1 );
 		local $@;
-		$table_str = eval { IMG::IO::File::slurp( $file ); };
+		$table_str = eval { IMG::Util::File::slurp( $file ); };
 		die $@ if $@;
 		$table_str =~ s/__IMG__/$img_app_term/;
 
@@ -409,7 +409,7 @@ sub generic_home {
 
 #		$table_str = file2Str( $file, 1 );
 		local $@;
-		$table_str = eval { IMG::IO::File::slurp( $file ); };
+		$table_str = eval { IMG::Util::File::slurp( $file ); };
 		die $@ if $@;
 
 	}
@@ -420,7 +420,7 @@ sub generic_home {
 		# w
 		my $file = $env->{webfs_data_dir} . "/hmp/img_w_home_page_v400.txt";
 		local $@;
-		$table_str = eval { IMG::IO::File::slurp( $file ); };
+		$table_str = eval { IMG::Util::File::slurp( $file ); };
 		die $@ if $@;
 
 	}
@@ -929,7 +929,7 @@ sub printMainFooter {
 
 #	my $s = file2Str( $templateFile, 1 );
 	local $@;
-	my $s = eval { IMG::IO::File::slurp( $templateFile ); };
+	my $s = eval { IMG::Util::File::slurp( $templateFile ); };
 	die $@ if $@;
 
 
@@ -1669,7 +1669,7 @@ sub googleAnalyticsJavaScript {
 #	my $str = file2Str( $env->{base_dir} . "/google.js", 1 );
 
 	local $@;
-	my $str = eval { IMG::IO::File::slurp( $env->{base_dir} . "/google.js" ); };
+	my $str = eval { IMG::Util::File::slurp( $env->{base_dir} . "/google.js" ); };
 	die $@ if $@;
 
 	$str =~ s/__google_key__/$google_key/g;
@@ -1683,7 +1683,7 @@ sub googleAnalyticsJavaScript2 {
 	my ( $server, $google_key ) = @_;
 
 	local $@;
-	my $str = eval { IMG::IO::File::slurp( $env->{base_dir} . "/google2.js" ); };
+	my $str = eval { IMG::Util::File::slurp( $env->{base_dir} . "/google2.js" ); };
 	die $@ if $@;
 
 #	my $str = file2Str( $env->{base_dir} . "/google2.js", 1 );
@@ -1808,7 +1808,7 @@ sub webError {
     my $templateFile = $env->{base_dir} . "/footer.html";
 
 	local $@;
-	my $str = eval { IMG::IO::File::slurp( $templateFile ); };
+	my $str = eval { IMG::Util::File::slurp( $templateFile ); };
 	die $@ if $@;
 
 #    my $str            = file2Str($templateFile);

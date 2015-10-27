@@ -2,7 +2,7 @@
 # GeneDetail.pm - 2nd version
 #      --es 01/09/2007
 #
-# $Id: GeneDetail.pm 34209 2015-09-08 17:53:21Z imachen $
+# $Id: GeneDetail.pm 34366 2015-09-25 20:29:18Z klchu $
 ############################################################################
 package GeneDetail;
 my $section = "GeneDetail";
@@ -2416,10 +2416,10 @@ sub printGeneFeatures {
 sub printIdenticalGenes {
     my ( $dbh, $gene_oid ) = @_;
 
-    my $super_user = getSuperUser();
-    if ( $super_user ne 'Yes' ) {
-	return;
-    }
+#    my $super_user = getSuperUser();
+#    if ( $super_user ne 'Yes' ) {
+#	return;
+#    }
 
     my $sql = qq{
        select m1.old_gene, m1.method from gene_mapping m1

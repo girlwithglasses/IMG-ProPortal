@@ -1,6 +1,6 @@
 ############################################################################
 # RNAStudies.pm - displays rna expression data
-# $Id: RNAStudies.pm 34239 2015-09-14 16:26:56Z aratner $
+# $Id: RNAStudies.pm 34436 2015-10-06 18:52:02Z aratner $
 ############################################################################
 package RNAStudies;
 my $section = "RNAStudies";
@@ -524,11 +524,11 @@ sub printSamplesForProposal {
 	print "Getting sample counts for TX:$taxon_oid...<br/>";
 	# use rnaseq_dataset_stats table:
         my $sql = qq{
-            select dts.dataset_oid,
-            dts.gene_count, dts.total_reads_count, dts.avg_reads_count
-            from rnaseq_dataset rd, rnaseq_dataset_stats dts
-            where rd.reference_taxon_oid = ?
-            and dts.dataset_oid = rd.dataset_oid
+            select rds.dataset_oid,
+            rds.gene_count, rds.total_reads_count, rds.avg_reads_count
+            from rnaseq_dataset dts, rnaseq_dataset_stats rds
+            where dts.reference_taxon_oid = ?
+            and dts.dataset_oid = rds.dataset_oid
             $datasetClause
         };
         my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
@@ -1712,7 +1712,6 @@ sub printStudiesForGenome {
     print "<p style='width: 650px;'>";
     print "<u>Ref. Data Set</u>: ".alink($url, $taxon_name)."</p>\n";
 
-
     printStartWorkingDiv();
 
     my %sample2counts;
@@ -1720,11 +1719,11 @@ sub printStudiesForGenome {
     # use rnaseq_dataset_stats table:
     print "<p>Querying for gene counts for datasets from rnaseq_dataset_stats";
     my $sql = qq{
-        select dts.dataset_oid,
-        dts.gene_count, dts.total_reads_count, dts.avg_reads_count
-        from rnaseq_dataset rd, rnaseq_dataset_stats dts
-        where rd.reference_taxon_oid = ?
-        and dts.dataset_oid = rd.dataset_oid
+        select rds.dataset_oid,
+        rds.gene_count, rds.total_reads_count, rds.avg_reads_count
+        from rnaseq_dataset dts, rnaseq_dataset_stats rds
+        where dts.reference_taxon_oid = ?
+        and dts.dataset_oid = rds.dataset_oid
         $datasetClause
     };
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
@@ -6224,9 +6223,6 @@ sub datasetClause {
         && $alias ne "dataset_oid"
         && $alias =~ /\./;
 
-    #my $whichIMGClause = " rdt.dataset_type = 'Metatranscriptome' ";
-    #$whichIMGClause = " rdt.dataset_type = 'Transcriptome' " if $img_er;
-# where $whichIMGClause
     my $clause = qq{
         and $dataset_oid_attr in
             ( select rdt.dataset_oid
@@ -6240,7 +6236,6 @@ sub datasetClause {
     my $contact_oid = getContactOid();
     return $clause if !$contact_oid;
 
-#               and $whichIMGClause
     my $clause = qq{
         and $dataset_oid_attr in
             ( select rdt.dataset_oid
@@ -6256,7 +6251,6 @@ sub datasetClause {
 
     return $clause;
 }
-
 
 sub printDifferentialExpression {
     printMainForm();

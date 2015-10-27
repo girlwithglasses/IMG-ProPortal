@@ -44,8 +44,6 @@ Args validated
 sub __connector {
 	my $arg_h = shift;
 
-	#say "dsn: " . $arg_h->{dsn};
-
 	return DBIx::Connector->new(
 		$arg_h->{dsn},
 		$arg_h->{username} // $arg_h->{user} // undef,

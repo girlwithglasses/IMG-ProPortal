@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. web utility functions for file system
-# $Id: MetaUtil.pm 34103 2015-08-24 20:33:28Z klchu $
+# $Id: MetaUtil.pm 34322 2015-09-21 20:23:11Z jinghuahuang $
 ############################################################################
 package MetaUtil;
 require Exporter;
@@ -3394,6 +3394,81 @@ sub getTaxonFuncGeneCopy {
 }
 
 ############################################################################
+# getTaxonsBcGenes
+############################################################################
+sub getTaxonsBcGenes {
+    my ( $dbh, $taxon_oids_ref ) = @_;
+
+    my %taxon_genes;
+
+    my $idClause;
+    my @bindList_id = ();
+
+    my $oid_str = OracleUtil::getNumberIdsInClause1( $dbh, @$taxon_oids_ref );
+    my $taxonClause = " and g.taxon in ($oid_str) ";
+    my @bindList_txs = ();
+    
+    my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
+    my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
+    my ( $sql, @bindList ) = getBcGeneListSql_merfs( $idClause, $taxonClause, $rclause, $imgClause, 
+        \@bindList_id, \@bindList_txs, \@bindList_ur );
+
+    my $cur = execSql( $dbh, $sql, $verbose, @bindList );
+
+    for ( ; ; ) {
+        my ( $g_oid, $taxon ) = $cur->fetchrow();
+        last if !$g_oid;
+        
+        my $genes_href = $taxon_genes{$taxon};
+        if ( $genes_href && defined($genes_href) ) {
+            $genes_href->{$g_oid} = 1;
+        }
+        else {
+            my %genes;
+            $genes{$g_oid};
+            $taxon_genes{$taxon} = \%genes;
+        }
+    }
+    $cur->finish();
+    OracleUtil::truncTable( $dbh, "gtt_num_id1" ) 
+        if ( $oid_str =~ /gtt_num_id1/i );
+
+    return (%taxon_genes);
+}
+
+
+############################################################################
+# getTaxonBcGenes
+############################################################################
+sub getTaxonBcGenes {
+    my ( $dbh, $taxon_oid ) = @_;
+
+    my %genes;
+
+    my $idClause;
+    my @bindList_id = ();
+
+    my $taxonClause  = " and g.taxon = ? ";
+    my @bindList_txs = ($taxon_oid);
+    my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
+    my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
+    my ( $sql, @bindList ) =
+      getBcGeneListSql_merfs( $idClause, $taxonClause, $rclause, $imgClause, 
+        \@bindList_id, \@bindList_txs, \@bindList_ur );
+
+    my $cur = execSql( $dbh, $sql, $verbose, @bindList );
+
+    for ( ; ; ) {
+        my ( $g_oid, $taxon ) = $cur->fetchrow();
+        last if !$g_oid;
+        $genes{$g_oid} = 1;
+    }
+    $cur->finish();
+
+    return (%genes);
+}
+
+############################################################################
 # getTaxonBcFuncGenes
 ############################################################################
 sub getTaxonBcFuncGenes {
@@ -3403,15 +3478,19 @@ sub getTaxonBcFuncGenes {
     if ( $data_type ne 'unassembled' ) {
         $data_type = 'assembled';
 
-        if ( $func_id =~ /BC\:/i ) {
+        if ( $func_id && $func_id =~ /BC\:/i ) {
             my ( $i1, $i2 ) = split( /\:/, $func_id );
             $func_id = $i2;
         }
-        my $idClause    = " and g.cluster_id = ? ";
-        my @bindList_id = ($func_id);
+        
+        my $idClause;
+        $idClause = " and g.cluster_id = ? " if ( $func_id);
+        my @bindList_id;
+        @bindList_id = ($func_id) if ( $func_id);
 
         my $taxonClause  = " and g.taxon = ? ";
         my @bindList_txs = ($taxon_oid);
+        
         my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
         my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
         my ( $sql, @bindList ) =
@@ -3469,6 +3548,8 @@ sub getMetaTaxonsBcFuncGenes {
         my ( $sql, @bindList ) =
           getBcGeneListSql_merfs( $idClause, $taxonClause, $rclause, $imgClause, \@bindList_id, \@bindList_txs,
             \@bindList_ur );
+        #print "getMetaTaxonsBcFuncGenes() sql: $sql<br/>";
+        #print "getMetaTaxonsBcFuncGenes() bindList: @bindList<br/>";
         my $cur = execSql( $dbh, $sql, $verbose, @bindList );
 
         for ( ; ; ) {

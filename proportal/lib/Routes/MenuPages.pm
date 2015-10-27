@@ -1,47 +1,63 @@
 package Routes::MenuPages;
 use IMG::Util::Base;
-use parent 'CoreStuff';
 use Dancer2 appname => 'ProPortal';
+use parent 'CoreStuff';
 our $VERSION = '0.1';
 
-prefix '/menu';
-
 # render menu pages
+=head3 menu_page_subs
 
-get qr{
-	/ani
-	}xi => sub {
+Subs to generate menu page contents
 
-	# ANI::Home
-	require ANI::Home;
+@return  $anon_hash with keys
+	tmpl -- the name of a template to include in the page
+	page -- any data or other contents for populating the template
 
-	var page => request->dispatch_path;
-	my $content = menu_maker( request->dispatch_path );
-	$content->{tmpl_includes}{content_tmpl} = 'pages/ani_home.tt';
+=cut
 
-	my $data = ANI::Home::render();
+my $menu_page_subs = {
 
-	template "pages/menu_page", { content => $content, data => $data };
+	ani => sub {
+		require ANI::Home;
+		my $page = ANI::Home::render();
+		return { tmpl => 'ani_home', page => $page };
+	},
 
 };
 
-get '/*' => sub {
-	my $menu_page = request->dispatch_path;
-	var page => $menu_page;
-	my $content = menu_maker( $menu_page );
+prefix '/menu' => sub {
 
+	get qr{
+		/(?<page> .*? )
+		/?
+		}xi => sub {
 
+		my $p = captures->{page};
+		var page_id => 'menu/' . $p;
 
-	template "pages/menu_page", { content => $content };
+		my $content = menu_maker( 'menu/' . $p );
+		my $data;
+
+		debug 'p: ' . $p;
+
+		if ( $menu_page_subs->{$p} ) {
+			my $rtn = $menu_page_subs->{$p}->();
+			$content->{tmpl_includes}{content_tmpl} = $rtn->{tmpl};
+			$data = $rtn->{page};
+		}
+
+		template "pages/menu_page", { content => $content, data => $data };
+
+	};
+
 };
 
 sub menu_maker {
 	my $page = shift;
-
-	if ( IMG::Views::Links::get_link_data( $page ) ) {
+	my $core = setting("_core");
+	if ( $core->get_link_data( $page ) ) {
 		# find the link in the menus
-		my $m_struct = IMG::Views::Menu::make_menus( config );
-		return IMG::Views::Menu::search_menu( $page );
+		return $core->search_menu( $page );
 	}
 	return;
 }

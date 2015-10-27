@@ -2,16 +2,16 @@
 	Average Nucleotide Identity
 </h2>
 <p>
-	Average Nucleotide Identity (<abbr title="Average Nucleotide Identity">ANI</abbr>) is a measure of nucleotide-level genomic similarity between the coding regions of two genomes. <abbr title="Bidirectional best hits">BBH</abbr>s between a genome pair are computed as pairwise bidirectional best nSimScan hits of genes having 70% or more identity and at least 70% coverage of the shorter gene.
+	Average Nucleotide Identity (<abbr title="Average Nucleotide Identity">ANI</abbr>) is a measure of nucleotide-level genomic similarity between the coding regions of two genomes. <abbr title="Best BLAST hits">BBH</abbr>s between a genome pair are computed as pairwise bidirectional best nSimScan hits of genes having 70% or more identity and at least 70% coverage of the shorter gene.
 </p>
 <div class="bordered">
 	<div class="half">
 		<p>The Alignment Fraction (AF) is computed as:</p>
-		<img width="300" src="[% cfg.base_url %]/images/AFformula.png" alt="Alignment fraction formula">
+		<img width="300" src="[% settings.base_url %]images/AFformula.png" alt="Alignment fraction formula">
 	</div>
 	<div class="half">
 		<p>Average Nucleotide Identity is computed as:</p>
-		<img width="300" src="[% cfg.base_url %]/images/ANIformula.png" alt="Average nucleotide identity formula">
+		<img width="300" src="[% settings.base_url %]images/ANIformula.png" alt="Average nucleotide identity formula">
 	</div>
 </div>
 [%	IF data.print_stats == 1 %]
@@ -28,8 +28,3 @@
 </p>
 <p class="updated">Updated [% data.date %]</p>
 [%	END %]
-<div class="C smdefbutton">
-	<a href="main.cgi?section=ANI&amp;page=pairwise">Pairwise <abbr title="Average Nucleotide Identity">ANI</abbr></a>
-	<a href="main.cgi?section=ANI&amp;page=doSameSpeciesPlot">Same Species Plot</a>
-	<a href="main.cgi?section=ANI&amp;page=overview"><abbr title="Average Nucleotide Identity">ANI</abbr> Cliques</a>
-</div>

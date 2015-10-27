@@ -7,7 +7,7 @@ use IMG::Model::UnitConverter;
 
 use DBIx::DataModel;
 use DataModel::IMG_Core;
-use DataModel::IMG_Gold;  # for the future!
+use DataModel::IMG_Gold;
 
 requires 'schema', 'user';
 
@@ -80,28 +80,78 @@ sub run_query {
 
 }
 
-=head2 filter_sql
+=head2 subset_filter
 
 Get the filters for the ProPortal-specific species
 
+Filters apply to the 'GoldTaxonVw' table
+
 =cut
 
-sub filter_sql {
+sub subset_filter {
 	my $self = shift;
-	my $f_name = shift // croak "No filter name supplied!";
+	my $f_name = shift // croak "No filters supplied!";
 
 	my $filters = {
-		# all
-#		'datamart' => { ecosystem_type => 'Marine' },
 
-		'marginal' => { ecosystem_subtype => 'Marginal Sea' },
+		prochlor => sub {
+		    return {
+                ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
+                genome_type => 'isolate',
+                genus => 'Prochlorococcus',
+                domain => 'Bacteria',
+            };
+		},
 
-		'neritic'  => { 'lower(ecosystem_subtype)' => 'neritic zone' },
+		synech => sub {
+            return {
+                ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
+                genome_type => 'isolate',
+                genus => 'Synechococcus',
+                domain => 'Bacteria',
+            };
+		},
 
-		'pelagic'  => { ecosystem_subtype => 'Pelagic' }
+		prochlor_phage => sub {
+            return {
+            #	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
+                genome_type => 'isolate',
+                taxon_display_name => { -like => 'Prochlorococcus%' },
+                domain => 'Viruses',
+            };
+		},
+
+		synech_phage => sub {
+            return {
+            #	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
+                genome_type => 'isolate',
+                taxon_display_name => { -like => 'Synechococcus%' },
+                domain => 'Viruses',
+            };
+		},
+
+		metagenome => sub {
+            return {
+                genome_type => 'metagenome',
+                ecosystem_type => 'Marine',
+            };
+		},
 	};
 
-	return { -where => $filters->{$f_name} } || croak "No filter for $f_name";
+    $filters->{isolate} = sub {
+        return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage ) ];
+    };
+
+    $filters->{isolates} = $filters->{isolate};
+    $filters->{metagenomes} = $filters->{metagenome};
+
+	$filters->{datamart} = sub {
+	    return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage metagenome ) ];
+	};
+
+    croak "Filter '$f_name' not found" unless defined $filters->{$f_name};
+
+	return { -where => $filters->{$f_name}->() };
 
 }
 
@@ -114,14 +164,16 @@ sub add_filters {
 
 	my $f;
 
-	if ($filters->{ecosystem_subtype}) {
-		$f = $self->filter_sql( $filters->{ecosystem_subtype} );
+	if ( $filters->{subset} ) {
+		$f = $self->subset_filter( $filters->{subset} );
 	}
 
 	## other filters
 	if ($filters->{taxon_oid}) {
 		$f = { -where => $filters->{taxon_oid} };
 	}
+
+	say 'query now: ' . Dumper $f;
 
 	$stt->refine( %$f );
 
@@ -160,13 +212,13 @@ Search for spp with a clade defined
 sub clade {
 	my $self = shift;
 
-	return $self->schema('img_core')->table('GoldTaxon')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype genus clade clade|generic_clade ) ],
+			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
 			-where    => {
 				clade => { '!=', undef },
 			},
-			-order_by => [ qw( genome_type clade taxon_display_name ) ],
+			-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
 			-result_as => 'statement',
 		);
 
@@ -182,7 +234,7 @@ Search for latitude/longitude
 sub location {
 	my $self = shift;
 
-	return $self->schema('img_core')->table('GoldTaxon')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype ) ],
 			-where    => {
@@ -257,7 +309,22 @@ sub news {
 #            "&group_id=$group_id&news_id=$news_id";
 }
 
+=head3 ecosystem
 
+Query for ecosystem
+
+=cut
+
+sub ecosystem {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+		->select(
+			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain genus ), map { 'nvl(' . $_ . ", 'Unclassified') \"$_\""  } qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ecotype geo_location ) ],
+			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem taxon_display_name ) ],
+			-result_as => 'statement',
+		);
+}
 
 sub taxon_details {
 
@@ -378,13 +445,60 @@ Query from data_type_graph
 sub taxon_oid_display_name {
 	my $self = shift;
 
-	return $self->schema('img_core')->table('GoldTaxon')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid ecosystem_subtype genome_type ) ],
-			-order_by => [ qw( genome_type ecosystem_subtype taxon_display_name ) ],
+			-columns  => [ '*' ],
+#			-order_by => [ qw( genome_type ecosystem_subtype taxon_display_name ) ],
+            -order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
 			-result_as => 'statement',
 		);
 }
+
+=cut
+
+genome_type
+taxon_oid
+taxon_display_name
+ncbi_taxon_id
+domain
+phylum
+ir_class
+ir_order
+family
+clade
+ncbi_kingdom
+ncbi_phylum
+ncbi_class
+ncbi_order
+ncbi_family
+ncbi_genus
+ncbi_species
+isolation
+oxygen_req
+cell_shape
+motility
+sporulation
+temp_range
+salinity
+geo_location
+latitude
+longitude
+altitude
+depth
+culture_type
+gram_stain
+biotic_rel
+ecotype
+longhurst_code
+longhurst_description
+ecosystem
+ecosystem_category
+ecosystem_type
+ecosystem_subtype
+specific_ecosystem
+
+=cut
+
 
 =head3 taxon_marine_metagenome
 

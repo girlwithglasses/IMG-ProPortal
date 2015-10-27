@@ -2,30 +2,43 @@
 
 .sidebar {
 
-//	background: lighten( rgb(145,144,144), 25%);
-
 	li {
-		border-left: .25rem solid transparent;
-	//	border-bottom: 1px solid #fff;
-		padding-left: .5rem;
-		&:hover {
-
-		}
-
 		a {
-			line-height: 2rem;
+			display: block;
+			padding: .5rem;
+			border-left: .25rem solid transparent;
+			border-bottom: 1px dotted lighten( rgb(145,144,144), 25%);
+
 			&:hover, &:focus, &:active {
-				border-bottom-width: 1px;
-			}
-			&:hover, &:focus {
-				border-bottom-style: dotted;
-			}
-			&:active {
+//				background: lighten( rgb(145,144,144), 25%);
 				border-bottom-style: solid;
+                border-left-color: $secondary;
 			}
 		}
 	}
-	.current {
+
+	li a {
+		padding-left: $gutter;
+	}
+	li li a {
+		padding-left: $gutter*2;
+	}
+	li li li a {
+		padding-left: $gutter*3;
+	}
+	li li li li a {
+		padding-left: $gutter*4;
+	}
+    .parent a {
+        border-left-color: lighten( $secondary, 50% );
+    }
+    .parent .parent a {
+        border-left-color: lighten( $secondary, 35% );
+    }
+	.parent > a {
+		border-left-color: lighten( $secondary, 20%);
+	}
+	.parent .current a {
 		border-left-color: $secondary;
 	}
 }

@@ -2,7 +2,7 @@ package ProPortal::Controller::Clade;
 
 use IMG::Util::Base 'Class';
 
-extends 'ProPortal::Controller::Base';
+extends 'ProPortal::Controller::Filtered';
 
 use Template::Plugin::JSON::Escape;
 
@@ -11,24 +11,6 @@ has '+tmpl_includes' => (
 		return {
 			tt_scripts => qw( clade ),
 			tt_styles  => qw( clade ),
-		};
-	},
-);
-
-has '+valid_filters' => (
-	default => sub {
-		return {
-			ecosystem_subtype => {
-				id => 'ecosystem_subtype',
-				label => 'ecosystem subtype',
-				type => 'checkbox',
-				is_active => 0,
-				values => [
-					{ id => 'marginal', label => 'Marginal sea' },
-					{ id => 'neritic',  label => 'Neritic zone' },
-					{ id => 'pelagic',  label => 'Pelagic' }
-				]
-			}
 		};
 	},
 );

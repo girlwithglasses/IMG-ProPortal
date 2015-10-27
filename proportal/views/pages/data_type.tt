@@ -3,21 +3,21 @@
 	title = 'IMG ProPortal: Data Type Inventory';
 %]
 <h2>Data Type Inventory</h2>
-[%	genomes = results.isolate;
-	metagen = results.metagenome; %]
-<p>Filter by ecosystem type:</p>
+[%	genomes = results.sorted_data.isolate;
+	metagen = results.sorted_data.metagenome; %]
+<p>Filter by subset:</p>
 [%	IF data_filters && data_filters.all %]
 <ul>
 [%	# filter domain
 		FOR fd IN data_filters.all.keys.sort;
 			FOR f IN data_filters.all.$fd.values; %]
-<li><a href="[% links.data_type %][% f.id %]">[% f.label %]</a>[%
+<li><a href="[% link( 'proportal/data_type' ) %]/[% f.id %]">[% f.label %]</a>[%
 				IF data_filters.active && data_filters.active.$fd == f.id;
 		%] (currently displayed)[%
 				END; %]
 </li>
 [%			END; %]
-<li><a href="[% links.data_type %]">no filter</a>[%
+<li><a href="[% link( 'proportal/data_type' ) %]">no filter</a>[%
 			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
 			END; %]</li>
 [%		END; %]
@@ -32,7 +32,7 @@
 		<li>[% es %] ([% genomes.$es.size %])
 			<ul>
 [%			FOREACH r IN genomes.$es %]
-				<li><a href="[% links.taxon %][% r.taxon_oid %]">[% r.taxon_display_name %]</a></li>
+				<li><a href="[% link( 'taxon', { taxon_oid => r.taxon_oid } ) %]">[% r.taxon_display_name %]</a> <a href="/jbrowse/[% r.taxon_oid %]">JBrowse</a></li>
 [%			END %]
 			</ul>
 		</li>
@@ -49,7 +49,7 @@
 		<li>[% es %] ([% metagen.$es.size %])
 			<ul>
 [%			FOREACH r IN metagen.$es %]
-				<li><a href="[% links.taxon %][% r.taxon_oid %]">[% r.taxon_display_name %]</a></li>
+				<li><a href="[% link( 'taxon', { taxon_oid => r.taxon_oid } ) %]">[% r.taxon_display_name %]</a></li>
 [%			END %]
 			</ul>
 		</li>
@@ -71,7 +71,7 @@
 	<tbody>
 [%	IF genomes && genomes.keys.size > 0;
 		FOREACH es IN genomes.keys.sort %]
-		<tr><td><a href="[% links.genome_list %][% es %]">[% es %]</a></td>
+		<tr><td><a href="[% link( 'genome_list', { class => es } ) %]">[% es %]</a></td>
 			<td>[% genomes.$es.size %]</td>
 		</tr>
 [%		END;
@@ -84,7 +84,7 @@
 [%	IF metagen && metagen.keys.size > 0;
 		FOREACH es IN metagen.keys.sort %]
 		<tr>
-			<td><a href="[% links.genome_list_ecosystem_subtype %][% es %]">[% es %]</a></td>
+			<td><a href="[% link( 'genome_list_ecosystem', { ecosystem_subtype => es } ) %]">[% es %]</a></td>
 			<td>[% metagen.$es.size %]</td>
 		</tr>
 [%		END;

@@ -34,8 +34,9 @@
 	.content-wrap article { // article
 		width: 80%;
 		float: right;
+		padding: 0 $gutter;
 	}
-	.content-wrap nav { // section navigation
+	.content-wrap .sidebar { // section navigation
 		width: 20%;
 		float: left;
 	}

@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 34275 2015-09-17 21:53:21Z aratner $
+# $Id: EgtCluster.pm 34538 2015-10-20 17:43:00Z klchu $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -19,6 +19,7 @@ use WebConfig;
 use WebUtil;
 use King;
 use GenomeListJSON;
+use HTML::Template;
 
 my $env = getEnv();
 my $base_url = $env->{ base_url };
@@ -58,6 +59,32 @@ my @corrColors = (
    "yellow",
 );
 
+sub getPageTitle {
+    return 'Genome Clustering';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+    if (WebUtil::paramMatch("noHeader") ne "") {
+        return @a;
+    } else {
+        
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+        if ( param("method") eq "hier" ) {
+            @a = ( "CompareGenomes", '', '', $js, '', "DistanceTree.pdf#page=5" );
+        } else {
+            @a = ( "CompareGenomes", '', '', $js );
+        }
+        return @a;
+    }
+}
 
 ############################################################################
 # dispatch - Dispatch loop

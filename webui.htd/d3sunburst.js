@@ -167,7 +167,16 @@ function doSunburst(jsondata, svgid, url, levels) {
 	g.append("rect")
             .attr("width", 20)
             .attr("height", 20)
-            .on("mousemove", function(d) {
+            .on("mouseout", function() {
+		tooltip.html(" ").style("display", "none");
+            })
+            .on("mousemove", function (d) {
+		tooltip.style("display", "none");
+		tooltip.html("Click to display the lineage under: " + d.name)
+                    .style("left", (d3.event.pageX + 12) + "px")
+                    .style("top", (d3.event.pageY - 12) + "px")
+                    .style("opacity", 1)
+                    .style("display", "block");
 		this.style.cursor="pointer";
             })
             .on("click", click)
@@ -177,7 +186,16 @@ function doSunburst(jsondata, svgid, url, levels) {
             .attr('x', 22)
             .attr('y', 9)
             .attr('dy', '.35em')
-            .on("mousemove", function(d) {
+            //.on("mouseout", function() {
+	    //	tooltip.html(" ").style("display", "none");
+            //})
+            .on("mousemove", function (d) {
+		//tooltip.style("display", "none");
+		//tooltip.html("Click to display the lineage under: " + d.name)
+                //    .style("left", (d3.event.pageX + 12) + "px")
+                //    .style("top", (d3.event.pageY - 12) + "px")
+                //    .style("opacity", 1)
+                //    .style("display", "block");
 		this.style.cursor="pointer";
             })
             .on("click", click)

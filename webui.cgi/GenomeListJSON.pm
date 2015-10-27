@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeListJSON.pm 32978 2015-03-10 17:43:42Z aratner $
+# $Id: GenomeListJSON.pm 34471 2015-10-09 19:47:35Z klchu $
 #
 # issues to fix
 # 1. list name is static to genomeFilterSelection, tree view can be dynamic
@@ -34,6 +34,8 @@ my $include_metagenomes  = $env->{include_metagenomes};
 my $cgi_tmp_dir          = $env->{cgi_tmp_dir};
 my $img_ken              = $env->{img_ken};
 my $enable_workspace     = $env->{enable_workspace};
+my $img_nr = $env->{img_nr};
+
 my $dir                  = WebUtil::getSessionDir($section);
 $cgi_tmp_dir = $dir;
 
@@ -139,6 +141,8 @@ sub dispatch {
 # for user login sites
 #
 # see taxonsJavascriptArray.pl on how public data json files are created
+# 
+# depricated - ken
 #
 sub createJSONFiles {
     my $dbh            = WebUtil::dbLogin();
@@ -904,6 +908,8 @@ sub printAutoComplete {
         $autocomplete_url = "$top_base_url" . "api/";
         if ($include_metagenomes) {
             $autocomplete_url .= 'autocompleteAll.php';
+        } elsif($img_nr) {
+            $autocomplete_url .= 'autocompleteNR.php';            
         } else {
             $autocomplete_url .= 'autocompleteIsolate.php';
         }

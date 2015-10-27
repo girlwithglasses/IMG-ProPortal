@@ -12,12 +12,12 @@ var termLengthArray = new Array(1);
 /**
  * Add button action
  * @param id
- * @param maxSelect - max number of genomes that can be added value of -1 it will ignore the max check
- *                    to be used for selection selectedGenome2 and selectedGenome3, selectedGenome1 is always max of 1
+ * @param maxSelect - max number of genomes that can be added; value of -1 it will ignore the max check
+ *                    selectedGenome1 is always max of 1
  * @param domainType - restrict add to domainType: '' (means all domains default), isolate, metagenome
  * @returns {Boolean}
  */
-function addOption(id, maxSelect, domainType, form_id, autocomplete) {
+function addOption(id, maxSelect, domainType, form_id, autocomplete, allow_same_item) {
     var x = document.getElementById(id);
     var select1 = document.getElementById('tax');
     var f = document.getElementById('displayType2').checked;
@@ -76,6 +76,7 @@ function addOption(id, maxSelect, domainType, form_id, autocomplete) {
         if (YAHOO.lang.isNull(hiLit)) {
 	    alert("Please select genome(s) to be added.");
             return true;
+
         } else {
             var cnt = 0;
             for ( var i = 0; i < hiLit.length; i++) {
@@ -83,15 +84,27 @@ function addOption(id, maxSelect, domainType, form_id, autocomplete) {
                     // leaf node
                     var taxonOid = hiLit[i].labelElId
                     var taxonName = hiLit[i].label;
-                    var boo = false;
-                    for (var j=0; j<mySelects.length; j++ ) {
-                        boo = boo || optionExists(mySelects[j], taxonOid);
-                        if (boo == true) {
+                    var found = false;
+
+                    if (allow_same_item !== undefined && allow_same_item != '' &&
+                        allow_same_item != null && allow_same_item == 1) {
+                        // allow selecting same item into different select boxes
+                        found = optionExists(id, taxonOid);
+                        if (found == true) {
                             errorMsg = errorMsg + taxonName + '\n';
-                            break;
-                        }                        
-                    }    
-                    if (boo == false) {
+                        }
+
+		    } else {
+			for (var j=0; j<mySelects.length; j++ ) {
+                            found = found || optionExists(mySelects[j], taxonOid);
+                            if (found == true) {
+				errorMsg = errorMsg + taxonName + '\n';
+				break;
+                            }                        
+			}
+		    }
+ 
+                    if (found == false) {
                         if (maxSelect != undefined && maxSelect != null && 
 			    maxSelect != '' && maxSelect > 0 && 
 			    count >= maxSelect) {
@@ -120,9 +133,9 @@ function addOption(id, maxSelect, domainType, form_id, autocomplete) {
                 }
             }
 	    
-	    if (cnt == 0 && errorMsg != '') {
-		alert("Please select genome(s) to be added.");
-	    }
+	    //if (cnt == 0 && errorMsg != '') {
+	    //	alert("Please select genome(s) to be added.");
+	    //}
         }
 
     } else if (autoselect1 != null && autoselect1 !== undefined && 
@@ -148,20 +161,31 @@ function addOption(id, maxSelect, domainType, form_id, autocomplete) {
 	    for (var i = 0; i < select1.length; i++) {
 		if (select1.options[i].selected) {
 		    var v = select1.options[i].value;
-		    var boo = false;
-		    for (var j=0; j<mySelects.length; j++ ) {
-	                // check if genome already selected
-	                // any trues we'll reject the add
-	                // it will still add those genomes not added already if
-	                // multi-select included previously added genomes
-			boo = boo || optionExists(mySelects[j], v);
-			if (boo == true) {
-			    errorMsg = errorMsg + select1.options[i].text + '\n';
-			    break;
+		    var found = false;
+
+		    if (allow_same_item !== undefined && allow_same_item != '' &&
+			allow_same_item != null && allow_same_item == 1) {
+			// allow selecting same item into different select boxes
+                        found = optionExists(id, v);
+                        if (found == true) {
+                            errorMsg = errorMsg + select1.options[i].text + '\n';
+                        }
+
+		    } else {
+			for (var j=0; j<mySelects.length; j++ ) {
+	                    // check if genome already selected
+	                    // any trues we'll reject the add
+	                    // it will still add those genomes not added already if
+	                    // multi-select included previously added genomes
+			    found = found || optionExists(mySelects[j], v);
+			    if (found == true) {
+				errorMsg = errorMsg + select1.options[i].text + '\n';
+				break;
+			    }
 			}
 		    }
-	            
-		    if (boo == false) {
+
+		    if (found == false) {
 			if (maxSelect != undefined && maxSelect != null && 
 			    maxSelect != '' && maxSelect > 0 && 
 			    count >= maxSelect) {
@@ -191,17 +215,19 @@ function addOption(id, maxSelect, domainType, form_id, autocomplete) {
 		}
 	    }
 	        
-	    if (cnt == 0) {
-		alert("Please select genome(s) to be added.");
-	    }
-        }
-        else {
+	    //if (cnt == 0 && errorMsg == '') {
+	    //	alert("Please select genome(s) to be added.");
+	    //}
+        
+        } else {
             alert("No genome(s) selected. To Add genomes use Quick Search or \nselect from the genomes on the left.");
         }
     }
     
     if (errorMsg != '') {
         alert("Genome(s) already added:\n" + errorMsg);
+    } else if (cnt == 0) {
+	alert("Please select genome(s) to be added.");
     }
     
     // update the count
@@ -315,17 +341,28 @@ function cartSelection(id, maxSelect, domainType) {
         for (var i = 0; i < select1.length; i++) {
 	    var v = select1.options[i].value;
 	    var found = false;
-	    for (var j=0; j<mySelects.length; j++ ) {
-		found = found || optionExists(mySelects[j], v);
-		if (found == true) {
-		    errorMsg = errorMsg + select1.options[i].text + '\n';
-		    break;
+
+            if (allow_same_item !== undefined && allow_same_item != '' &&
+                allow_same_item != null && allow_same_item == 1) {
+                // allow selecting same item into different select boxes
+                found = optionExists(id, v);
+                if (found == true) {
+                    errorMsg = errorMsg + select1.options[i].text + '\n';
+        	}
+
+	    } else {
+		for (var j=0; j<mySelects.length; j++ ) {
+		    found = found || optionExists(mySelects[j], v);
+		    if (found == true) {
+			errorMsg = errorMsg + select1.options[i].text + '\n';
+			break;
+		    }
 		}
 	    }
 
 	    if (found == false) {
 		if (maxSelect != undefined && maxSelect != null &&
-                        maxSelect != '' && maxSelect > 0 &&
+                    maxSelect != '' && maxSelect > 0 &&
 		    count >= maxSelect) {
 		    alert('You can only select ' + maxSelect + ' genomes.');
 		    break;

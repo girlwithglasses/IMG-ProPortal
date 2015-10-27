@@ -70,6 +70,8 @@ attempts to add
 
 =cut
 
+# convert to 'after' ?
+
 sub add_defaults_and_render {
 	my $self = shift;
 	my $data = shift // {};
