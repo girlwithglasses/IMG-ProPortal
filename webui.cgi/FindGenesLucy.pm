@@ -58,11 +58,22 @@ my $rdbms                 = getRdbms();
 my $in_file               = $env->{in_file};
 my $http_solr_url         = $env->{ http_solr_url };
 
+sub getPageTitle {
+    return 'Find Genes by Keyword';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ("FindGenesLucy", '', '', '', '', 'GeneSearch.pdf');
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;    # number of saved genomes
+    my ( $self, $numTaxon ) = @_;
 
     my $page = param( "page" );
     if ( paramMatch("fgFindGenesLucy") ne '' ) {

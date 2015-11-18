@@ -1,7 +1,7 @@
 # CircularMap - Generation of circular and linear maps of chromosomes
 #    --km 10/24/2006
 #
-# $Id: CircularMap.pm 32833 2015-02-19 08:02:25Z jinghuahuang $
+# $Id: CircularMap.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package CircularMap;
 use strict;
@@ -22,7 +22,7 @@ use Bio::Perl;
 use GeneCartChrViewer;
 my $env = getEnv( );
 my $verbose = $env->{ verbose };
-
+my $top_base_url = $env->{top_base_url};
 my $tmp_pix_dir = $env->{ tmp_dir }; #new used for the directory that the picture will be stored
 my $tmp_pix_url = $env->{ tmp_url };  #
 my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
@@ -252,7 +252,7 @@ sub draw_pix {
 
     if ( $img ne "" && $img_edu ) {
         print "</div>";    # end of ACT stuff
-        print "<div id='content'>\n";
+        print "<div id='content' class='content'>\n";
     }
     printStatusLine( "Loading ...", 1 );
 
@@ -526,7 +526,7 @@ sub draw_pix {
     }
     #$dbh->disconnect();
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     printStatusLine( "Loaded.", 2 );
 }
 

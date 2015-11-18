@@ -1,7 +1,7 @@
 ###########################################################################
 # MyImg.pm - Functions supporting MyIMG utilty.
 #    --es 04/16/2005
-# $Id: MyIMG.pm 34235 2015-09-12 08:51:49Z jinghuahuang $
+# $Id: MyIMG.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package MyIMG;
 my $section = "MyIMG";
@@ -50,7 +50,7 @@ my $rdbms                = WebUtil::getRdbms();
 my $imgAppTerm           = "IMG";
 my $oracle_config        = $env->{oracle_config};
 $imgAppTerm = "IMG/M" if $include_metagenomes;
-
+my $top_base_url = $env->{top_base_url};
 my $max_batch_size            = 100;
 my $max_upload_size           = 10000000;
 my $max_annotation_size       = 10000;
@@ -72,10 +72,30 @@ my ( $web0, $ora_db_user, $config0 ) = split( /\./, $config_fname );
 
 my $contact_oid = WebUtil::getContactOid();
 
+sub getPageTitle {
+    return 'My IMG';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my $page = param('page');
+    
+    my @a = ();
+        if ( $page eq "taxonUploadForm" ) {
+            @a =("AnaCart");
+        } elsif (WebUtil::paramMatch("noHeader") eq "") {
+            @a =( "MyIMG", '', '', '', '', 'MyIMG4.pdf' );
+        }    
+    
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page     = param("page");
     my $username = param("username");
     my $password = param("password");
@@ -9809,8 +9829,8 @@ sub printTaxonMissingGeneForm {
       )
       = @_;
 
-    print "<script src='$base_url/chart.js'></script>\n";
-    print "<script src='$base_url/overlib.js'></script>\n";    ## for tooltips
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";    ## for tooltips
     print toolTipCode();
     print qq{
         <link rel="stylesheet" type="text/css"

@@ -1,7 +1,7 @@
 ############################################################################
 # King.pm - 3D applet for PCA, PCoA, NMDR, etc.
 #     -- anna 6/25/2012
-# $Id: King.pm 33155 2015-04-11 04:44:14Z aratner $
+# $Id: King.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package King;
  
@@ -17,6 +17,7 @@ my $cgi_dir = $env->{ cgi_dir };
 my $cgi_url = $env->{ cgi_url }; 
 my $tmp_dir = $env->{ tmp_dir };
 my $tmp_url = $env->{ tmp_url };
+my $top_base_url             = $env->{top_base_url};
  
 # writes the input file for KiNG applet
 sub writeKinInputFile { 
@@ -283,7 +284,7 @@ sub writeKingJnlpFile {
     print $wfh "     <resources>\n"; 
     print $wfh "       <j2se version='1.6+'\n"; 
     print $wfh "        href='http://java.sun.com/products/autodl/j2se' />\n";
-    print $wfh "       <jar href='$base_url/king.jar' />\n";
+    print $wfh "       <jar href='$top_base_url/lib/king.jar' />\n";
     print $wfh "     </resources>\n";
     print $wfh "     <applet-desc\n"; 
     print $wfh "        name='KiNG Applet'\n"; 
@@ -332,8 +333,8 @@ sub writeKingApplet {
     my $jnlpFile = "$tmp_dir/king$$.jnlp";
     writeKingJnlpFile($jnlpFile);
 
-    my $archive = "$base_url/king.jar, "
-	        . "$base_url/itext.jar";
+    my $archive = "$top_base_url/lib/king.jar, "
+	        . "$top_base_url/lib/itext.jar";
     print qq{
        <applet code="king/Kinglet.class" archive="$archive"
                width="1200" height="650"

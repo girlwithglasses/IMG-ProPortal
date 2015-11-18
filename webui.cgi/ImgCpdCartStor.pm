@@ -30,20 +30,24 @@ my $max_compound_batch = 250;
 my $max_upload_line_count = 10000;   # limit the number of lines in file upload
 
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "imgCpdCart" );
+    return 'IMG Compound Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
 
 ############################################################################
-# dispatch - Dispatch pages for this section.
-#   All page links to this same section should be in the form of
-#
-#   my $url = "$main_cgi?section=$section&page=..." 
-#
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
 
-#    my @all_params = $query->param;
-#    for my $p( @all_params ) {
-#	print "<p>param: $p" . " => " . param($p) . "</p>\n";
-#    }
 
     my $page = param( "page" );
 

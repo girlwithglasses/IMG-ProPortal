@@ -1,6 +1,6 @@
 ###########################################################################
 # Interpro.pm
-# $Id: Interpro.pm 30115 2014-02-17 06:15:54Z jinghuahuang $
+# $Id: Interpro.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package Interpro;
 
@@ -26,7 +26,23 @@ my $section      = "Interpro";
 my $section_cgi  = "$main_cgi?section=$section";
 my $include_metagenomes   = $env->{include_metagenomes};
 
+sub getPageTitle {
+    return 'Interpro';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $sid = getContactOid();
 
     HtmlUtil::cgiCacheInitialize( $section);

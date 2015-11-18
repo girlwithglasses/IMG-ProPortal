@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 33949 2015-08-09 07:37:16Z jinghuahuang $
+# $Id: FindGenesBlast.pm 34593 2015-10-30 00:29:59Z jinghuahuang $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -36,6 +36,7 @@ my $main_cgi               = $env->{main_cgi};
 my $section_cgi            = "$main_cgi?section=$section";
 my $verbose                = $env->{verbose};
 my $base_dir               = $env->{base_dir};
+my $base_url               = $env->{base_url};
 my $user_restricted_site   = $env->{user_restricted_site};
 my $no_restricted_message  = $env->{no_restricted_message};
 my $web_data_dir           = $env->{web_data_dir};
@@ -69,22 +70,39 @@ my $blastallm0_server_url  = $env->{blastallm0_server_url};
 my $default_timeout_mins   = $env->{default_timeout_mins};
 my $blast_a_flag           = $env->{blast_a_flag};
 $blast_a_flag = "-a 16" if $blast_a_flag eq "";
-
+my $YUI                    = $env->{yui_dir_28};
 my $cgi_blast_cache_enable = $env->{cgi_blast_cache_enable};
 my $blast_wrapper_script   = $env->{blast_wrapper_script};
 
 my $blast_max_genome = $env->{blast_max_genome};
-my $mer_data_dir = $env->{mer_data_dir};
+my $mer_data_dir     = $env->{mer_data_dir};
 
 my $max_merfs_metagenome_selections = 20;
 
 my $OFFSET = 6000;    # offset range to get list of known genes
 
+sub getPageTitle {
+    return 'Find Genes - BLAST';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    require GenomeListJSON;
+    my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
+
+    my @a = ( "FindGenes", '', '', $js, '', 'Blast.pdf' );
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     timeout( 60 * 40 );
 
     my $page = param("page");
@@ -101,13 +119,13 @@ sub dispatch {
 # validateMerfsTaxonNumber
 ############################################################################
 sub validateMerfsTaxonNumber {
-    my ( @taxon_oids ) = @_;
+    my (@taxon_oids) = @_;
 
     if ($include_metagenomes) {
-        my $dbh = dbLogin();
+        my $dbh           = dbLogin();
         my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile( $dbh, @taxon_oids );
-        my @merfs_taxons = keys %mer_fs_taxons;
-        if (scalar(@merfs_taxons) > $max_merfs_metagenome_selections ) {
+        my @merfs_taxons  = keys %mer_fs_taxons;
+        if ( scalar(@merfs_taxons) > $max_merfs_metagenome_selections ) {
             webError("You have selected more than $max_merfs_metagenome_selections MER-FS metagenomes.");
             return;
         }
@@ -251,9 +269,9 @@ sub getTrueSeqCoords2 {
 
         # subject gene is the hit gene
         print '<p>'
-        . "orig query start $query_orig_start_coord<br>\n"
-        . "orig query end $query_orig_end_coord<br>\n"
-        . "query scaffold start end, subject taxon start end frame gene bit-score evalue<br>\n";
+          . "orig query start $query_orig_start_coord<br>\n"
+          . "orig query end $query_orig_end_coord<br>\n"
+          . "query scaffold start end, subject taxon start end frame gene bit-score evalue<br>\n";
     }
     for ( my $i = 0 ; $i <= $#$que_aref ; $i++ ) {
         my $qline = $que_aref->[$i];
@@ -369,9 +387,9 @@ sub getTrueSeqCoords3 {
 
         # subject gene is the hit gene
         print "<p>\n"
-        . "orig query start $query_orig_start_coord<br>\n"
-        . "orig query end $query_orig_end_coord<br>\n"
-        . "query scaffold, start, end, subject start end frame gene bit-score evalue<br>\n";
+          . "orig query start $query_orig_start_coord<br>\n"
+          . "orig query end $query_orig_end_coord<br>\n"
+          . "query scaffold, start, end, subject start end frame gene bit-score evalue<br>\n";
     }
     for ( my $i = 0 ; $i <= $#$que_aref ; $i++ ) {
         my $qline = $que_aref->[$i];
@@ -423,8 +441,7 @@ sub getTrueSeqCoords3 {
 
         my ( $start, $end, $x ) = getSeq( $qstart, $qend, $file, $knowngenes_href, $contig );
         if ($img_internal) {
-            print "$qline, $sline<br>\n"
-            . "&nbsp;&nbsp; <b>new gene true coords: $start, $end </b><br><br> \n";
+            print "$qline, $sline<br>\n" . "&nbsp;&nbsp; <b>new gene true coords: $start, $end </b><br><br> \n";
         }
         push( @coords, "$qline,$taxon_oid,$sline,$start,$end" );
     }
@@ -785,7 +802,7 @@ sub printGeneSearchBlastForm_old {
         chomp $s;
         $s =~ s/__main_cgi__/$main_cgi/g;
         if ( $s =~ /__genomeSelectionMessage__/ ) {
-            printGenomeSelectionMessage( );
+            printGenomeSelectionMessage();
         } elsif ( $s =~ /__metaChoice__/ ) {
             HtmlUtil::printMetaDataTypeChoice();
         } elsif ( $s =~ /__genomeListFilter__/ ) {
@@ -796,12 +813,14 @@ sub printGeneSearchBlastForm_old {
                     $myBinAllowed = 1;
                 }
             }
+
             #print "myBinAllowed: $myBinAllowed<br>\n";
             GenomeListFilter::appendGenomeListFilter( $dbh, '', 2, 'imgBlastDb', '', '', 1, $myBinAllowed );
         } elsif ( $s =~ /__hint__/ ) {
             printPageHint();
         } elsif ( $s =~ /__userRestrictedBlastMessage__/ ) {
             if ( $user_restricted_site && !$no_restricted_message ) {
+
                 #printUserRestrictedBlastMessage( );
             }
         } elsif ( $s =~ "<h1>BLAST</h1>" ) {
@@ -819,25 +838,25 @@ sub printGeneSearchBlastForm_old {
 sub printGeneSearchBlastForm {
     my ( $numTaxon, $useGenomeSet, $submitNameText, $submitOnClickText ) = @_;
 
-    my $taxon_oid = param('taxon_oid');
-    my $domain = param('domain');
+    my $taxon_oid    = param('taxon_oid');
+    my $domain       = param('domain');
     my $templateFile = "$base_dir/findGenesBlast_new.html";
-    my $rfh = newReadFileHandle( $templateFile, "printGeneSearchBlastForm" );
+    my $rfh          = newReadFileHandle( $templateFile, "printGeneSearchBlastForm" );
 
     while ( my $s = $rfh->getline() ) {
         chomp $s;
         $s =~ s/__main_cgi__/$main_cgi/g;
         if ( $s =~ /__genomeSelectionMessage__/ ) {
-            printGenomeSelectionMessage( $useGenomeSet );
+            printGenomeSelectionMessage($useGenomeSet);
         } elsif ( $s =~ /__metaChoice__/ ) {
-            if ( $useGenomeSet ) {
+            if ($useGenomeSet) {
                 HtmlUtil::printMetaDataTypeChoice('_b');
             } else {
                 HtmlUtil::printMetaDataTypeChoice();
             }
         } elsif ( $s =~ /__genomeListFilter__/ ) {
 
-            if ( $useGenomeSet ) {
+            if ($useGenomeSet) {
                 print submit(
                     -name    => $submitNameText,
                     -value   => "Run Blast",
@@ -876,9 +895,10 @@ sub printGeneSearchBlastForm {
             }
 
         } elsif ( $s =~ /__hint__/ ) {
-            printPageHint( $useGenomeSet );
+            printPageHint($useGenomeSet);
         } elsif ( $s =~ /__userRestrictedBlastMessage__/ ) {
             if ( $user_restricted_site && !$no_restricted_message ) {
+
                 #printUserRestrictedBlastMessage( );
             }
         } elsif ( $s =~ "<h1>BLAST</h1>" ) {
@@ -892,7 +912,7 @@ sub printGeneSearchBlastForm {
 
     if ( !$useGenomeSet ) {
         if ($taxon_oid) {
-            GenomeListJSON::preSelectGenome($taxon_oid, $domain);
+            GenomeListJSON::preSelectGenome( $taxon_oid, $domain );
         } elsif ($numTaxon) {
             GenomeListJSON::showGenomeCart($numTaxon);
         }
@@ -924,8 +944,8 @@ sub printGeneSearchBlastResults {
     my ( $genomes_ref, $msg ) = @_;
 
     my $blast_program = param("blast_program");
-    my $evalue = param("blast_evalue");
-    my $fasta  = param("fasta");
+    my $evalue        = param("blast_evalue");
+    my $fasta         = param("fasta");
     if ( blankStr($fasta) ) {
         webError("Query sequence not specified.");
     }
@@ -936,12 +956,12 @@ sub printGeneSearchBlastResults {
     my @imgBlastDbs;
     if ( $genomes_ref && scalar(@$genomes_ref) > 0 ) {
         @imgBlastDbs = @$genomes_ref;
-    }
-    else {
+    } else {
         @imgBlastDbs = param('genomeFilterSelections');
-        if ($#imgBlastDbs < 0) {
-             @imgBlastDbs = OracleUtil::processTaxonSelectionParam("imgBlastDb");
+        if ( $#imgBlastDbs < 0 ) {
+            @imgBlastDbs = OracleUtil::processTaxonSelectionParam("imgBlastDb");
         }
+
         #if ($img_ken) {
         #    print "<p>\n";
         #    print Dumper \@imgBlastDbs;
@@ -972,33 +992,33 @@ sub printGeneSearchBlastResults {
     if ( $nTaxons <= 0 && $nReadDbs <= 0 && $nMybinDbs <= 0 ) {
         $all = 1;
     }
+
     # if user selected more than 100 genomes use all feature instead
-    if ($#imgBlastDbs > $blast_max_genome) {
+    if ( $#imgBlastDbs > $blast_max_genome ) {
         $all = 1;
     }
+
     #print "printGeneSearchBlastResults() all=$all<br>\n";
 
-    if ( ! $all ) {
+    if ( !$all ) {
         validateMerfsTaxonNumber(@taxon_oids);
     }
 
     print "<h1>Blast Results</h1>\n";
     print "<p>\n";
-    print "Program: " . $blast_program ."<br>\n";
-    print "E-value: " . $evalue ."<br>\n";
-    if ( $all ) {
+    print "Program: " . $blast_program . "<br>\n";
+    print "E-value: " . $evalue . "<br>\n";
+    if ($all) {
         print qq{
             <font color='red'>
                 <u>All isolate genomes</u> in IMG (no selection or over $blast_max_genome genomes selected)
             </font>
             <br>\n
         };
-    }
-    else {
+    } else {
         if ( $genomes_ref && scalar(@$genomes_ref) > 0 && $msg ) {
             print $msg;
-        }
-        else {
+        } else {
             print "Selected Genomes: " . scalar(@taxon_oids) . "<br>\n";
         }
     }
@@ -1024,12 +1044,14 @@ sub printGeneSearchBlastResults {
             }
             printEnvBlastForDbs( \@readDbs );
         } elsif ( $nMybinDbs > 0 ) {
+
             # TODO my bins -ken
             printEnvBlastForDbs( \@mybinDbs );
         }
         HtmlUtil::cgiCacheStop() if ($cgi_blast_cache_enable);
 
     } else {
+
         # blastx uses 1 - all, 2 - select taxons, 3 genome cart
         # from scaffold viewer - missing gene fetaure  number 2
         if ($all) {
@@ -1049,6 +1071,7 @@ sub printGeneSearchBlastResults {
         } elsif ( $nReadDbs > 0 ) {
             webError("Read databases do not suppport proteins.");
         } elsif ( $nMybinDbs > 0 ) {
+
             # TODO my bins -ken
             #webError("My bins databases do not suppport proteins yet.");
             printEnvBlastForDbs( \@mybinDbs, 1 );
@@ -1125,6 +1148,7 @@ sub printGeneSearchProteinBlastForAll {
     # from scaffold graph
     my $from         = param("from");
     my $scaffold_oid = param("scaffold_oid");
+
     #print "printGeneSearchProteinBlastForAll() from: $from, scaffold_oid: $scaffold_oid<br>\n";
 
     ## --es 05/05/2005 Limit no. of BLAST jobs.
@@ -1264,7 +1288,7 @@ sub printGeneSearchProteinBlastForAll {
     }
 
     if ( $reportFile ne "" ) {
-	    my $qFile;
+        my $qFile;
         while ( my $s = $cfh->getline() ) {
             chomp $s;
             if ( $s =~ /^PID=/ ) {    # some genome/gene names might
@@ -1280,20 +1304,18 @@ sub printGeneSearchProteinBlastForAll {
                 webLog("Reading reportFile='$reportFile'\n");
                 close $cfh if ($cfh);
                 last;
+            } elsif ( $s =~ /^\.status / ) {
+                my ( $tag, @toks ) = split( /\s+/, $s );
+                my $tok_str = join( " ", @toks );
+                print "$tok_str<br>\n";
+            } elsif ( $s =~ /^\.qFile / ) {
+                my ( $tag, $val ) = split( /\s+/, $s );
+                $qFile = $val;
             }
-    	    elsif( $s =~ /^\.status / ) {
-    	       my( $tag, @toks ) = split( /\s+/, $s );
-    	       my $tok_str = join( " ", @toks );
-    	       print "$tok_str<br>\n";
-    	    }
-    	    elsif( $s =~ /^\.qFile / ) {
-    	       my( $tag, $val ) = split( /\s+/, $s );
-    	       $qFile = $val;
-    	    }
         }
-    	if ( $qFile ne "" ) {
-    	   waitForResults( $reportFile, $qFile );
-    	}
+        if ( $qFile ne "" ) {
+            waitForResults( $reportFile, $qFile );
+        }
 
         webLog("Reading reportFile='$reportFile'\n");
         $cfh = newReadFileHandle( "$common_tmp_dir/$reportFile", "printGeneSearchProteinBlastForAll" );
@@ -1329,6 +1351,7 @@ sub printGeneSearchProteinBlastForAll {
 
     print "<pre><font color='blue'>\n";
     my ( $query_coords_ref, $subjt_coords_ref ) = processProteinBlastResult( \@lines, '', $scaffold_oid, 0 );
+
     #print "printGeneSearchProteinBlastForAll() que: @$query_coords_ref<br>\n";
     #print "printGeneSearchProteinBlastForAll() sub: @$subjt_coords_ref<br>\n";
     print "</font></pre>\n";
@@ -1359,8 +1382,7 @@ sub printGeneSearchProteinBlastForAll {
         # find true coorrds ???
         my @query_coords = @$query_coords_ref;
         if ( $#query_coords > -1 ) {
-            my $aref =
-              getTrueSeqCoords3( $query_coords_ref, $subjt_coords_ref, $scaffold_oid, $query_orig_start_coord,
+            my $aref = getTrueSeqCoords3( $query_coords_ref, $subjt_coords_ref, $scaffold_oid, $query_orig_start_coord,
                 $query_orig_end_coord );
             foreach my $line (@$aref) {
                 print qq{
@@ -1449,6 +1471,7 @@ sub getPrivateTaxonOids {
         last if !$taxon_oid;
         $s .= "$taxon_oid,";
     }
+
     #print "getPrivateTaxonOids() s=$s<br>\n";
 
     return $s;
@@ -1540,6 +1563,7 @@ sub printGeneSearchDnaBlastForAll {
       . " -p $blast_pgm -d $dbFile $blast_a_flag -e $evalue -m 0 "
       . " -b 2000 -v 2000 -i $tmpFile "
       . " --path $blastall_bin ";
+
     # --path is needed although fullpath of legacy_blast.pl is
     # specified in the beginning of command! ---yjlin 03/12/2013
     #print "printGeneSearchDnaBlastForAll() cmd: $cmd<br>\n";
@@ -1608,7 +1632,7 @@ sub printGeneSearchDnaBlastForAll {
     }
 
     if ( $reportFile ne "" ) {
-    	my $qFile;
+        my $qFile;
         while ( my $s = $cfh->getline() ) {
             chomp $s;
             if ( $s =~ /^PID=/ ) {    # some genome/gene names might
@@ -1624,21 +1648,20 @@ sub printGeneSearchDnaBlastForAll {
                 webLog("Reading reportFile='$reportFile'\n");
                 close $cfh if ($cfh);
                 last;
+            } elsif ( $s =~ /^\.status / ) {
+                my ( $tag, @toks ) = split( /\s+/, $s );
+                my $tok_str = join( " ", @toks );
+                print "$tok_str<br>\n";
+            } elsif ( $s =~ /^\.qFile / ) {
+                my ( $tag, $val ) = split( /\s+/, $s );
+                $qFile = $val;
             }
-    	    elsif( $s =~ /^\.status / ) {
-    	       my( $tag, @toks ) = split( /\s+/, $s );
-    	       my $tok_str = join( " ", @toks );
-    	       print "$tok_str<br>\n";
-    	    }
-    	    elsif( $s =~ /^\.qFile / ) {
-    	       my( $tag, $val ) = split( /\s+/, $s );
-    	       $qFile = $val;
-    	    }
         }
-    	if( $qFile ne "" ) {
-    	   waitForResults( $reportFile, $qFile );
-    	}
+        if ( $qFile ne "" ) {
+            waitForResults( $reportFile, $qFile );
+        }
         webLog("Reading reportFile='$common_tmp_dir/$reportFile'\n");
+
         #print "Reading reportFile=$common_tmp_dir/$reportFile<br>\n";
         $cfh = newReadFileHandle( "$common_tmp_dir/$reportFile", "printGeneSearchDnaBlastForAll" );
     }
@@ -1646,6 +1669,7 @@ sub printGeneSearchDnaBlastForAll {
     my $anyHits = 0;
     my @lines;
     while ( my $s = $cfh->getline() ) {
+
         #print "Reading reportFile s=$s<br>\n";
         chomp $s;
         if ( $s =~ /^PID=/ ) {    # some genome/gene names might
@@ -1672,7 +1696,9 @@ sub printGeneSearchDnaBlastForAll {
     }
 
     print "<pre><font color='blue'>\n";
-    my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( \@lines, '', 0, $evalue );
+    my $dbh = WebUtil::dbLogin();
+    my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( $dbh, \@lines, '', 0, $evalue );
+
     #print "printGeneSearchDnaBlastForAll() que: @$query_coords_ref<br>\n";
     #print "printGeneSearchDnaBlastForAll() sub: @$subjt_coords_ref<br>\n";
     print "</font></pre>\n";
@@ -1713,6 +1739,7 @@ sub writeNalFile {
         print $wfh "$title\n";
         print $wfh "$dblist\n";
         close $wfh;
+
         #print "writeNalFile() contact_oid=$contact_oid; super_user=$super_user; $outFile: $title; $dblist<br>\n";
         webLog("$outFile: $title\n");
         return;
@@ -1735,6 +1762,7 @@ sub writeNalFile {
     print $wfh "$title\n";
     print $wfh "$dblist\n";
     close $wfh;
+
     #print "writeNalFile() contact_oid=$contact_oid; super_user=$super_user; $outFile: $title; $dblist<br>\n";
     webLog("$outFile: $title\n");
 
@@ -1772,13 +1800,14 @@ sub printGeneSearchProteinBlastByTaxon {
     $blast_pgm =~ /([a-z]+)/;
     $blast_pgm = $1;
     my $dbFile = "";
-    if ( $in_file ) {
+    if ($in_file) {
         my $file_name;
         if ( $sandbox_blast_data_dir ne '' && $data_type eq 'assembled' ) {
             $file_name = $sandbox_blast_data_dir . "/" . sanitizeInt($taxon_oid) . "/" . sanitizeInt($taxon_oid) . ".a.faa";
         } elsif ( $sandbox_blast_data_dir ne '' && $data_type eq 'unassembled' ) {
             $file_name = $sandbox_blast_data_dir . "/" . sanitizeInt($taxon_oid) . "/" . sanitizeInt($taxon_oid) . ".u.faa";
         } else {
+
             # both not supported yet
             print
 "<p><font color='red'>Genome $taxon_oid $blast_pgm database does not support blasting both assembled and unassembled at the same time yet.</font></p>\n";
@@ -1787,6 +1816,7 @@ sub printGeneSearchProteinBlastByTaxon {
             return ( \@q, \@s );
         }
         if ( -e $file_name ) {
+
             #print "<p><font color='magenta'>Blast database only has assembled part of genome $taxon_oid.</font>\n";
             print "<p><font color='magenta'>Blast database $data_type part of genome $taxon_oid.</font>\n";
             $dbFile = checkPath($file_name);
@@ -1906,7 +1936,8 @@ sub printGeneSearchDnaBlastByTaxon {
 
     ## db
     my $dbFile;
-    if ( $in_file ) {
+    if ($in_file) {
+
         # metagenome
         if ( $sandbox_blast_data_dir ne '' ) {
             $dbFile = $sandbox_blast_data_dir . "/" . $taxon_oid . "/" . $taxon_oid;
@@ -1928,6 +1959,7 @@ sub printGeneSearchDnaBlastByTaxon {
             $dbFile = "$taxon_fna_dir/" . $taxon_oid . ".fna.blastdb/" . $taxon_oid;
         }
     }
+
     #print "printGeneSearchDnaBlastByTaxon() taxon_fna_dir: $taxon_fna_dir<br>\n";
     #print "printGeneSearchDnaBlastByTaxon() mer_data_dir: $mer_data_dir<br>\n";
     #print "printGeneSearchDnaBlastByTaxon() dbFile: $dbFile<br>\n";
@@ -1935,7 +1967,8 @@ sub printGeneSearchDnaBlastByTaxon {
     ## check if dbFile exists
     my $abortBlast = 0;
     my $errMsg     = "<p><font color='blue'>BLAST data is not available.</font></p>";
-    if ( $in_file ) {
+    if ($in_file) {
+
         # metagenome
         unless ( -e $dbFile ) {
             $abortBlast = 1;
@@ -1995,6 +2028,7 @@ sub printGeneSearchDnaBlastByTaxon {
         printStatusLine( "Error.", 2 );
         WebUtil::webExit(-1);
     }
+
     #print "blast done<br>\n";
     #print "Reading output $stdOutFile<br>\n";
     my $cfh = WebUtil::newReadFileHandle($stdOutFile);
@@ -2034,7 +2068,8 @@ sub printGeneSearchDnaBlastByTaxon {
     wunlink($tmpFile);
 
     print "<pre><font color='blue'>\n";
-    my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( \@lines, $taxon_oid, $in_file, $evalue );
+    my $dbh = WebUtil::dbLogin();
+    my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( $dbh, \@lines, $taxon_oid, $in_file, $evalue );
     print "</font></pre>\n";
 
     #return ( \@query_coords, \@subjt_coords );
@@ -2049,16 +2084,16 @@ sub printGeneSearchDnaBlastByTaxon {
 #      isDna - Is DNA sequence
 ############################################################################
 sub printGeneSearchBlastForTaxons {
-    my ( $taxon_oids_ref ) = @_;
+    my ($taxon_oids_ref) = @_;
 
-    my $isDnaSearch = 0;
+    my $isDnaSearch   = 0;
     my $blast_program = param("blast_program");
     if ( $blast_program eq "tblastn" || $blast_program eq "blastn" ) {
         $isDnaSearch = 1;
     }
 
-    my $fasta         = param("fasta");
-    my $evalue        = param("blast_evalue");
+    my $fasta  = param("fasta");
+    my $evalue = param("blast_evalue");
 
     # this is non null if from the missing gene
     my $gene_oid = param("gene_oid");
@@ -2071,20 +2106,20 @@ sub printGeneSearchBlastForTaxons {
     validateQuerySequenceType( $fasta, $blast_program );
 
     my $dbh = dbLogin();
-    my ($taxon2name_href, $taxon_in_file_href, $taxon_db_href, $taxon_oids_str)
-        = QueryUtil::fetchTaxonsOidAndNameFile($dbh, $taxon_oids_ref);
+    my ( $taxon2name_href, $taxon_in_file_href, $taxon_db_href, $taxon_oids_str ) =
+      QueryUtil::fetchTaxonsOidAndNameFile( $dbh, $taxon_oids_ref );
 
     my @recs;
-    foreach my $taxon_oid (keys %$taxon2name_href) {
+    foreach my $taxon_oid ( keys %$taxon2name_href ) {
         my $taxon_display_name = $taxon2name_href->{$taxon_oid};
-        my $in_file = $taxon_in_file_href->{$taxon_oid};
+        my $in_file            = $taxon_in_file_href->{$taxon_oid};
         if ( $in_file && $blast_program ne "blastp" && $blast_program ne "blastn" ) {
-            print "<p><font color='red'>- Genome '$taxon_display_name' "
-                . "does not have $blast_program database.</font>\n";
+            print "<p><font color='red'>- Genome '$taxon_display_name' " . "does not have $blast_program database.</font>\n";
             next;
         }
         push( @recs, $taxon_oid );
     }
+
     #print "printGeneSearchBlastForTaxons() recs=@recs<br>\n";
 
     my $nRecs = scalar(@recs);
@@ -2095,7 +2130,7 @@ sub printGeneSearchBlastForTaxons {
     printStartingForm();
     printCartButton( $isDnaSearch, $gene_oid );
 
-    if ( $gene_oid ) {
+    if ($gene_oid) {
         print qq{
             <input type="hidden" name='gene_oid' value='$gene_oid' />
             <input type='button'
@@ -2110,16 +2145,17 @@ sub printGeneSearchBlastForTaxons {
     my @que;    # query list of strings
     my @sub;    # subject list of strings
     my $has_mer_fs = 0;
-    my $count = 0;
+    my $count      = 0;
 
     for my $taxon_oid (@recs) {
         my $taxon_display_name = $taxon2name_href->{$taxon_oid};
-        my $in_file = $taxon_in_file_href->{$taxon_oid};
+        my $in_file            = $taxon_in_file_href->{$taxon_oid};
 
-        if ( $isDnaSearch ) {
-            if ( $in_file ) {
+        if ($isDnaSearch) {
+            if ($in_file) {
+
                 # metagenome
-                my $data_type = param("data_type");    # assembled, unassembled, both
+                my $data_type      = param("data_type");                      # assembled, unassembled, both
                 my @data_type_list = MetaUtil::getDataTypeList($data_type);
 
                 for my $a (@data_type_list) {
@@ -2136,8 +2172,7 @@ sub printGeneSearchBlastForTaxons {
                         push( @sub, @$sub_aref );
                     }
                 }
-            }
-            else {
+            } else {
                 $count++;
                 print "<div id='message'>\n<p>\n";
                 print "$count BLAST against <b>" . escHtml($taxon_display_name) . "</b>\n";
@@ -2152,7 +2187,7 @@ sub printGeneSearchBlastForTaxons {
         } else {
 
             # from scaffold viewer
-            if ( $in_file ) {
+            if ($in_file) {
                 $has_mer_fs = 1;
             }
 
@@ -2164,11 +2199,12 @@ sub printGeneSearchBlastForTaxons {
         }
         print "<hr>\n" if $count < $nRecs;
     }
+
     #print "printGeneSearchBlastForTaxon() que: @que<br>\n";
     #print "printGeneSearchBlastForTaxon() sub: @sub<br>\n";
 
     printCartButtonWithWorkspaceSaving( $isDnaSearch, $gene_oid );
-    printEndingForm( $nRecs );
+    printEndingForm($nRecs);
 
     # parse the page for tblast - missing
     if ( $gene_oid ne "" && ( $img_internal || $img_er ) ) {
@@ -2210,6 +2246,7 @@ sub printGeneSearchBlastForTaxons {
     }
 
     if ( $from eq "ScaffoldGraphDNA" && ( $img_internal || $img_er ) ) {
+
         #print "printGeneSearchBlastForTaxons() inside<br>\n";
         my $query_orig_start_coord = param("query_orig_start_coord");
         my $query_orig_end_coord   = param("query_orig_end_coord");
@@ -2287,12 +2324,11 @@ sub printStartingForm {
 }
 
 sub printEndingForm {
-    my ( $nRecs ) = @_;
+    my ($nRecs) = @_;
 
     printStatusLine( "$nRecs Loaded.", 2 );
     print end_form();
 }
-
 
 ############################################################################
 # validateQuerySequenceType
@@ -2330,17 +2366,16 @@ sub validateQuerySequenceType {
 # printGenomeSelectionMessage
 ############################################################################
 sub printGenomeSelectionMessage {
-    my ( $useGenomeSet ) = @_;
+    my ($useGenomeSet) = @_;
 
-    if ( $useGenomeSet ) {
+    if ($useGenomeSet) {
         print qq{
             Find matches in genomes of selected genome sets.
             <br>
             The total selection can not be more than <b>$blast_max_genome</b> genomes (including metagenomes).
             <br>
         };
-    }
-    else {
+    } else {
         print qq{
             Find matches in genomes selected below.
             <br>
@@ -2357,7 +2392,8 @@ sub printGenomeSelectionMessage {
 ############################################################################
 sub printUserRestrictedBlastMessage {
 
-	return '<p><em>"All IMG Genes, one large BLAST database" is restricted to public genomes for users with restricted access to selected genomes. However, users may BLAST against currently selected genomes to find similarities in the genomes to which they have private access.</em></p>';
+    return
+'<p><em>"All IMG Genes, one large BLAST database" is restricted to public genomes for users with restricted access to selected genomes. However, users may BLAST against currently selected genomes to find similarities in the genomes to which they have private access.</em></p>';
 
 }
 
@@ -2365,12 +2401,12 @@ sub printUserRestrictedBlastMessage {
 # printPageHint - Print this page's hint.
 ############################################################################
 sub printPageHint {
-    my ( $useGenomeSet ) = @_;
+    my ($useGenomeSet) = @_;
 
     my $hintMessage = qq{
         -- BLAST may be slow for large protein queries.<br />
     };
-    if ( ! $useGenomeSet ) {
+    if ( !$useGenomeSet ) {
         $hintMessage .= qq{
             -- Hold down contrl key (or command key in the case of the Mac)
                to select or deselect multiple BLAST databases.
@@ -2382,7 +2418,7 @@ sub printPageHint {
                does not include the higher Eukaryotes.<br>
         };
     }
-    printHint( $hintMessage );
+    printHint($hintMessage);
 }
 
 ############################################################################
@@ -2587,77 +2623,85 @@ sub printEnvBlast {
 #   browser given alignments along scaffold.
 ############################################################################
 sub processDnaSearchResult {
-    my ( $lines_ref, $taxon_oid, $in_file, $evalue ) = @_;
+    my ( $dbh, $lines_ref, $taxon_oid, $in_file, $evalue ) = @_;
 
     my %coords;
     my $coord1;
     my $coord2;
-    my $curr_scaf_id;
 
-    my @t_oids         = ();
-    my @ext_accessions = ();
+    my %t_oids_h; 
+    my %ext_accessions_h;
+    my %curr_scaf_id2backup;
 
     # Scan for coordinates in scaffolds
-    for my $s (@$lines_ref) {
-        #webLog("$s\n");
-
-        if ( $s =~ /^>/ ) {
-            if ( $curr_scaf_id ne "" && $coord1 ne "" && $coord2 ne "" ) {
-                my $k = "$curr_scaf_id:$coord1";
-                my $v = "$coord1:$coord2";
-                $coords{$k} = $v;
-                $coord1 = $coord2 = "";
+    if ( scalar(@$lines_ref) > 0 ) {
+        my $curr_scaf_id;
+        my $curr_scaf_id_escaped;
+        my $curr_scaf_id_backup;
+        my $inSummary = 0;
+        
+        for my $s (@$lines_ref) {
+            #webLog("$s\n");
+            #print "$s<br/>\n";
+    
+            if ( $s =~ /^Sequences producing significant alignments/ ) {
+                $inSummary = 1;
+            } 
+            elsif ( $inSummary && !blankStr($s) && $s =~ /^[0-9A-Za-z]+/ ) {
+                #for cases of no subsequent '>line' but there are lines in summary
+                my $s2 = $s;
+                $s2 =~ s/\s+/ /g;
+                findExtAccession( $s2, $taxon_oid, $in_file, \%t_oids_h, \%ext_accessions_h, \%curr_scaf_id2backup );
             }
-            $curr_scaf_id = findID($s);
-            $coord1       = $coord2 = "";
-      		#print "processDnaSearchResult() > line: $s, curr_scaffold_id: $curr_scaf_id, coord1: $coord1, coord2: $coord2<br>\n";
-
-            if ( ! $in_file ) {
-                #isolate
-                if ( $curr_scaf_id =~ /\./ && ! $taxon_oid ) {
-                    # this is only for blast all
-                    my ( $t_oid, undef ) = split( /\./, $curr_scaf_id );
-                    my $s_accession = substr $curr_scaf_id, 1 + length($t_oid);
-                    push( @t_oids,         $t_oid );
-                    push( @ext_accessions, $s_accession );
-                } elsif ( $taxon_oid ) {
-                    push( @t_oids,         $taxon_oid );
-                    push( @ext_accessions, $curr_scaf_id );
-                } else {
-                    push( @ext_accessions, $curr_scaf_id );
+            elsif ( $s =~ /^>/ ) {
+                $inSummary = 0;
+                if ( $curr_scaf_id ne "" && $coord1 ne "" && $coord2 ne "" ) {
+                    my $k = "$curr_scaf_id:$coord1";
+                    my $v = "$coord1:$coord2";
+                    $coords{$k} = $v;
+                    $coord1 = $coord2 = "";
                 }
-            }
-        } elsif ( $s =~ /Score = / ) {
-            if ( $curr_scaf_id ne "" && $coord1 ne "" && $coord2 ne "" ) {
-                my $k = "$curr_scaf_id:$coord1";
-                my $v = "$coord1:$coord2";
-                $coords{$k} = $v;
                 $coord1 = $coord2 = "";
+                ($curr_scaf_id, $curr_scaf_id_escaped, $curr_scaf_id_backup) 
+                    = findExtAccession( $s, $taxon_oid, $in_file, \%t_oids_h, \%ext_accessions_h, \%curr_scaf_id2backup );
+            } elsif ( $s =~ /Score = / ) {
+                if ( $curr_scaf_id ne "" && $coord1 ne "" && $coord2 ne "" ) {
+                    my $k = "$curr_scaf_id:$coord1";
+                    my $v = "$coord1:$coord2";
+                    $coords{$k} = $v;
+                    $coord1 = $coord2 = "";
+                }
+            } elsif ( $curr_scaf_id && $s =~ /^Sbjct/ ) {
+                my $s2 = $s;
+                $s2 =~ s/\s+/ /g;
+                my ( $sbjct, $coord, @toks ) = split( / /, $s2 );
+                $coord1 = $coord if ( $coord1 eq "" );
+                my $nToks   = @toks;
+                my $lastTok = $toks[ $nToks - 1 ];
+                $coord2 = $lastTok;
+                #print "processDnaSearchResult() Sbjct line: $s, sbjct: $sbjct, coord: $coord, toks: @toks, curr_scaffold_id: $curr_scaf_id, coord1: $coord1, coord2: $coord2<br>\n";
             }
-        } elsif ( $curr_scaf_id ne "" && $s =~ /^Sbjct/ ) {
-            my $s2 = $s;
-            $s2 =~ s/\s+/ /g;
-            my ( $sbjct, $coord, @toks ) = split( / /, $s2 );
-            $coord1 = $coord if ( $coord1 eq "" );
-            my $nToks   = @toks;
-            my $lastTok = $toks[ $nToks - 1 ];
-            $coord2 = $lastTok;
-            #print "processDnaSearchResult() Sbjct line: $s, sbjct: $sbjct, coord: $coord, toks: @toks, curr_scaffold_id: $curr_scaf_id, coord1: $coord1, coord2: $coord2<br>\n";
+        }
+        if ( $curr_scaf_id && $coord1 ne "" && $coord2 ne "" ) {
+            my $k = "$curr_scaf_id:$coord1";
+            my $v = "$coord1:$coord2";
+            $coords{$k} = $v;
+            $coord1 = $coord2 = "";
         }
     }
-    if ( $curr_scaf_id ne "" && $coord1 ne "" && $coord2 ne "" ) {
-        my $k = "$curr_scaf_id:$coord1";
-        my $v = "$coord1:$coord2";
-        $coords{$k} = $v;
-        $coord1 = $coord2 = "";
-    }
-    $curr_scaf_id = '';
+    #print "processDnaSearchResult() curr_scaf_id2backup:<br>\n";
+    #print Dumper(\%curr_scaf_id2backup);
+    #print "<br>\n";
 
     my ( $accession2scaf_href, $accession2tax_href );
+    my @t_oids         = keys %t_oids_h;
+    my @ext_accessions = keys %ext_accessions_h;
     if ( !$in_file && scalar(@ext_accessions) > 0 ) {
+
         #print "processDnaSearchResult() t_oids=@t_oids<br>\n";
         #print "processDnaSearchResult() ext_accessions=@ext_accessions<br>\n";
-        ( $accession2scaf_href, $accession2tax_href ) = getScaffoldIds( \@t_oids, \@ext_accessions );
+        ( $accession2scaf_href, $accession2tax_href ) = getScaffoldIds( $dbh, \@t_oids, \@ext_accessions );
+
         #print "processDnaSearchResult() accession2scaf_h=<br>\n";
         #print Dumper $accession2scaf_href;
         #print "<br>\n";
@@ -2677,8 +2721,13 @@ sub processDnaSearchResult {
     my $curr_sstart = -1;
     my $curr_send   = -1;
 
-    my %someId2url;
+    my $curr_scaf_id;
+    my $curr_scaf_id_escaped;
+    my $curr_scaf_id_backup;
+
     my $inSummary = 0;
+    my %someId2url;
+
     for my $s (@$lines_ref) {
         chomp $s;
 
@@ -2688,12 +2737,13 @@ sub processDnaSearchResult {
         } elsif ( $inSummary && !blankStr($s) && $s =~ /^[0-9A-Za-z]+/ ) {
             my $s2 = $s;
             $s2 =~ s/\s+/ /g;
-            $curr_scaf_id = findID($s2);
-            #print "processDnaSearchResult() inSummary curr_scaf_id: $curr_scaf_id<br>\n";
+            ($curr_scaf_id, $curr_scaf_id_escaped, $curr_scaf_id_backup) = findID($s2);
+            #print "processDnaSearchResult() inSummary s2=$s2<br>\n";
+            #print "processDnaSearchResult() inSummary curr_scaf_id: $curr_scaf_id, curr_scaf_id_escaped: $curr_scaf_id_escaped, curr_scaf_id_backup: $curr_scaf_id_backup<br>\n";
 
             my $checkbox;
             my $url;
-            if ( $in_file ) {
+            if ($in_file) {
                 #metagenome
                 my ( $t_oid,     $t_s_oid ) = split( /\./, $curr_scaf_id );
                 my ( $data_type, $s_oid )   = split( /\:/, $t_s_oid );
@@ -2707,34 +2757,44 @@ sub processDnaSearchResult {
                 $data_type = 'unassembled' if ( $data_type eq 'u' );
                 my $workspace_id = "$t_oid $data_type $s_oid";
                 $checkbox = "<input type='checkbox' name='scaffold_oid' value='$workspace_id'/>";
-                $url      =
-                    "$main_cgi?section=MetaDetail&page=metaScaffoldDetail&scaffold_oid=$s_oid"
-                  . "&taxon_oid=$t_oid&data_type=$data_type";
+                $url      = "$main_cgi?section=MetaDetail&page=metaScaffoldDetail&scaffold_oid=$s_oid"
+                    . "&taxon_oid=$t_oid&data_type=$data_type";
                 $someId2url{$curr_scaf_id} = $url;
             } else {
                 my $sbjt_scaf_oid = $accession2scaf_href->{$curr_scaf_id};
-                $checkbox = "<input type='checkbox' " . "name='scaffold_oid' value='$sbjt_scaf_oid'/>";
-                $url      = "main.cgi?section=ScaffoldGraph&page=scaffoldDetail" . "&scaffold_oid=$sbjt_scaf_oid";
+                if ( !$sbjt_scaf_oid ) {
+                    if ( !$curr_scaf_id_backup ) {
+                        $curr_scaf_id_backup = $curr_scaf_id2backup{$curr_scaf_id};
+                    }
+                    if ( $curr_scaf_id_backup ) {
+                        $sbjt_scaf_oid = $accession2scaf_href->{$curr_scaf_id_backup};
+                        #print "processDnaSearchResult() curr_scaf_id_backup: $curr_scaf_id_backup; sbjt_scaf_oid: $sbjt_scaf_oid<br>\n";
+                    }
+                }
+                #print "processDnaSearchResult() curr_scaf_id: $curr_scaf_id; sbjt_scaf_oid: $sbjt_scaf_oid<br>\n";
+                $checkbox = "<input type='checkbox' " 
+                    . "name='scaffold_oid' value='$sbjt_scaf_oid'/>";
+                $url      = "main.cgi?section=ScaffoldGraph&page=scaffoldDetail" 
+                    . "&scaffold_oid=$sbjt_scaf_oid";
                 $someId2url{$curr_scaf_id} = $url;
             }
             my $x1 = "<a href='$url'>";
             my $x2 = "</a>";
-            $s =~ s/$curr_scaf_id/${x1}${curr_scaf_id}${x2}/;
+            $s =~ s/$curr_scaf_id_escaped/${x1}${curr_scaf_id}${x2}/;
             $s = $checkbox . ' ' . $s;
-
             print "$s\n";
-
         } elsif ( $s =~ /^>/ ) {
-            $inSummary    = 0;
-            $curr_scaf_id = findID($s);
+            $inSummary = 0;
+            ($curr_scaf_id, $curr_scaf_id_escaped, $curr_scaf_id_backup) = findID($s);
+            #print "processDnaSearchResult() >line curr_scaf_id: $curr_scaf_id, curr_scaf_id_escaped: $curr_scaf_id_escaped, curr_scaf_id_backup: $curr_scaf_id_backup<br>\n";
             my $url = $someId2url{$curr_scaf_id};
             if ($url) {
                 my $x1 = "<a href='$url'>";
                 my $x2 = "</a>";
-                $s =~ s/${curr_scaf_id}/${x1}${curr_scaf_id}${x2}/;
+                $s =~ s/${curr_scaf_id_escaped}/${x1}${curr_scaf_id}${x2}/;
             }
             print "$s\n";
-        } elsif ( $curr_scaf_id ne "" && $s =~ /^Sbjct/ ) {
+        } elsif ( $curr_scaf_id && $s =~ /^Sbjct/ ) {
             my $s2 = $s;
             $s2 =~ s/\s+/ /g;
             my ( $sbjct, $coord, @toks ) = split( / /, $s2 );
@@ -2743,7 +2803,6 @@ sub processDnaSearchResult {
             if ( $x ne "" ) {
 
                 my ( $t_oid, $t_s_oid, $type, $s_oid );
-
                 my ( $coord1, $coord2 ) = split( /:/, $x );
 
                 my $start_coord = $coord1;
@@ -2764,41 +2823,26 @@ sub processDnaSearchResult {
 
                     # get scaffold length
                     my $len;
-                    if ( $in_file ) {
+                    if ($in_file) {
                         #metagenome
                         ( $t_oid, $t_s_oid ) = split( /\./, $curr_scaf_id );
                         ( $type,  $s_oid )   = split( /\:/, $t_s_oid );
                         ( $len, undef ) = MetaUtil::getScaffoldStats( $t_oid, $type, $s_oid );
-                    } else {
-                        my ( $curr_scaf_taxon, $curr_scaf_ext ) = split( /\./, $curr_scaf_id );
-                        my $rclause   = WebUtil::urClause('ss.taxon');
-                        my $imgClause = WebUtil::imgClauseNoTaxon('ss.taxon');
-                        my $sql       = qq{
-                            select ss.scaffold_oid, ss.seq_length
-                            from scaffold_stats ss, scaffold s
-                            where ss.scaffold_oid = s.scaffold_oid
-                                and s.taxon = ?
-                                and s.ext_accession = ?
-                                $rclause
-                                $imgClause
-                        };
-                        my $dbh = WebUtil::dbLogin();
-
-                        #print "[$curr_scaf_taxon, $curr_scaf_ext]<br>sql1:[$sql]<br>";
-                        my $cur = execSql( $dbh, $sql, $verbose, $curr_scaf_taxon, $curr_scaf_ext );
-                        for ( ; ; ) {
-                            my ( $s_oid, $s_len ) = $cur->fetchrow();
-                            last if !$s_oid;
-                            $len = $s_len;
-                        }
+                    } 
+                    else {
+                        #print "processDnaSearchResult() >line curr_scaf_id: $curr_scaf_id, curr_scaf_id_escaped: $curr_scaf_id_escaped, curr_scaf_id_backup: $curr_scaf_id_backup<br>\n"; 
+                        my ( $curr_scaf_taxon, $curr_scaf_ext, $ext_accessions0_ref )
+                        = findTaxonAndExtAccession( $curr_scaf_id, $curr_scaf_id_backup, \%curr_scaf_id2backup, $accession2tax_href );
+                        $len = getScaffoldLength( $dbh, $curr_scaf_taxon, $ext_accessions0_ref );
                     }
                     $end_coord = $len if ( $end_coord > $len );
-
                     #print "coords: [start $start_coord, end:$end_coord, 1: $coord1, 2: $coord2]<br>";
                 }    # if ( $end_coord - $start_coord < $show_length )
-                     # mark genes overlapping with aligned region as marker genes
+                     
+                # mark genes overlapping with aligned region as marker genes
                 my $marker_gene_oid;
-                if ( $in_file ) {
+                my $url;
+                if ($in_file) {
                     #webLog("here 5 $s\n");
                     #webLog("here 5-1  $curr_scaf_id $t_oid, $type, $s_oid\n");
 
@@ -2812,6 +2856,7 @@ sub processDnaSearchResult {
                     #webLog("here 5-1a $t_oid, $type, $s_oid\n");
 
                     my @genes_on_s = MetaUtil::getScaffoldGenes( $t_oid, $type, $s_oid );
+
                     #webLog("here 5-2\n");
                     for my $g2 (@genes_on_s) {
                         my ( $hit_gene_oid, $hit_gene_locus_type, $hit_gene_locus_tag, $hit_gene_display_name,
@@ -2837,23 +2882,17 @@ sub processDnaSearchResult {
 
                     }
 
-                } else {
-                    my ( $curr_scaf_taxon, $curr_scaf_ext ) = split( /\./, $curr_scaf_id );
-                    my $rclause   = WebUtil::urClause('g.taxon');
-                    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
-                    my $sql       = qq{
-                        select g.gene_oid, g.start_coord, g.end_coord
-                        from gene g, scaffold s
-                        where g.scaffold = s.scaffold_oid
-                            and s.taxon = ?
-                            and s.ext_accession = ?
-                            $rclause
-                            $imgClause
-                    };
-                    my $dbh = WebUtil::dbLogin();
+                    $url = "$main_cgi?section=MetaScaffoldGraph";
+                    $url .= "&page=metaScaffoldGraph&taxon_oid=$t_oid&scaffold_oid=$s_oid";
+                    $url .= "&start_coord=$start_coord&end_coord=$end_coord";
 
-                    #print "[$curr_scaf_taxon, $curr_scaf_ext]<br>sql2:[$sql]<br>";
-                    my $cur = execSql( $dbh, $sql, $verbose, $curr_scaf_taxon, $curr_scaf_ext );
+                } 
+                else {
+                    my ( $curr_scaf_taxon, $curr_scaf_ext, $ext_accessions0_ref )
+                        = findTaxonAndExtAccession( $curr_scaf_id, $curr_scaf_id_backup, \%curr_scaf_id2backup, $accession2tax_href );
+                    my $sql = getScaffoldCoordSql( $dbh, $curr_scaf_taxon, $ext_accessions0_ref );
+                    #print "getScaffoldCoordSql [$curr_scaf_taxon, @$ext_accessions0_ref]<br>sql2:[$sql]<br>";
+                    my $cur = execSql( $dbh, $sql, $verbose, $curr_scaf_taxon );
                     for ( ; ; ) {
                         my ( $hit_gene_oid, $hit_gene_start_coord, $hit_gene_end_coord ) = $cur->fetchrow();
                         last if !$hit_gene_oid;
@@ -2869,7 +2908,6 @@ sub processDnaSearchResult {
                         if (   ( $hit_gene_start_coord > $coord1 && $hit_gene_start_coord > $coord2 )
                             || ( $hit_gene_end_coord < $coord1 && $hit_gene_end_coord < $coord2 ) )
                         {
-
                             # no overlap
                         } else {
                             $marker_gene_oid = $hit_gene_oid;
@@ -2885,36 +2923,12 @@ sub processDnaSearchResult {
                         }
                     }
 
-                }
-
-                my $url;
-                if ( $in_file ) {
-                    $url = "$main_cgi?section=MetaScaffoldGraph";
-                    $url .= "&page=metaScaffoldGraph&taxon_oid=$t_oid&scaffold_oid=$s_oid";
-                    $url .= "&start_coord=$start_coord&end_coord=$end_coord";
-                } else {
-                    # Bug https://issues.jgi-psf.org/browse/IMGSUPP-604 - ken
-                    my $tax;
-                    my $curr_scaf_id2;
-#print "0 - $curr_scaf_id <br>\n";
-                    if($curr_scaf_id =~ /\./) {
-                        my $junk;
-                        my @a = split(/\./, $curr_scaf_id, 2);
-                        $tax = $accession2tax_href->{$curr_scaf_id};
-                        $curr_scaf_id2 = $tax . "," . $a[1]; # we need the ext_acc id not the scaffold oid
-
-#print "1 scaffold oid = $curr_scaf_id2   tax = $tax <br>\n";
-
-                    } else {
-                        $tax = $accession2tax_href->{$curr_scaf_id};
-                        $curr_scaf_id2 = $tax . "," . $curr_scaf_id;
-
-#print "2 scaffold oid = $curr_scaf_id  tax = $tax <br>\n";
-                    }
+                    my $curr_scaf_id2 = $curr_scaf_taxon . "," . $curr_scaf_ext;                    
                     $url = "$main_cgi?section=ScaffoldGraph";
                     $url .= "&page=alignment&scaffold_id=$curr_scaf_id2";
                     $url .= "&coord1=$coord1&coord2=$coord2";
                 }
+
                 $url .= "&marker_gene=$marker_gene_oid"
                   if ( $marker_gene_oid ne "" );
                 my $x1 = "<a href='$url'>";
@@ -3003,16 +3017,81 @@ sub processDnaSearchResult {
     return ( \@query_coords, \@subjt_coords );
 }
 
+sub findExtAccession {
+    my ( $line, $taxon_oid, $in_file, $t_oids_href, $ext_accessions_href, $curr_scaf_id2backup_href ) = @_;
+
+    my ($curr_scaf_id, $curr_scaf_id_escaped, $curr_scaf_id_backup) = findID($line);
+    $curr_scaf_id2backup_href->{$curr_scaf_id} = $curr_scaf_id_backup;
+    #print "findExtAccession() line=$line<br>\n";
+    #print "findExtAccession() curr_scaf_id: $curr_scaf_id, curr_scaf_id_escaped: $curr_scaf_id_escaped, curr_scaf_id_backup: $curr_scaf_id_backup<br>\n";
+    if ( $in_file ) {
+        #metagenome
+    }
+    else {
+        #isolate
+        if ( $curr_scaf_id =~ /\./ && !$taxon_oid ) {
+            # this is only for blast all
+            my ( $t_oid, undef ) = split( /\./, $curr_scaf_id );
+            my $s_accession = substr $curr_scaf_id, 1 + length($t_oid);
+            $t_oids_href->{$t_oid} = 1;
+            $ext_accessions_href->{$s_accession} = 1;
+            $ext_accessions_href->{$curr_scaf_id_backup} = 1 
+                if ($curr_scaf_id_backup && $curr_scaf_id_backup ne $s_accession);
+        } elsif ($taxon_oid) {
+            $t_oids_href->{$taxon_oid} = 1;
+            $ext_accessions_href->{$curr_scaf_id} = 1;
+            $ext_accessions_href->{$curr_scaf_id_backup} = 1 
+                if ($curr_scaf_id_backup);
+        } else {
+            $ext_accessions_href->{$curr_scaf_id} = 1;
+            $ext_accessions_href->{$curr_scaf_id_backup} = 1 
+                if ($curr_scaf_id_backup);
+        }
+    }
+    
+    return ($curr_scaf_id, $curr_scaf_id_escaped, $curr_scaf_id_backup);
+}
+
+sub findTaxonAndExtAccession {
+    my ( $curr_scaf_id, $curr_scaf_id_backup, $curr_scaf_id2backup_href, $accession2tax_href ) = @_;
+
+    my ( $curr_scaf_taxon, $curr_scaf_ext );
+    if ( $curr_scaf_id =~ /\./ ) {
+        my ( $curr_scaf_taxon0, @junks ) = split( /\./, $curr_scaf_id );
+        if ( WebUtil::isInt($curr_scaf_taxon0) ) {
+            $curr_scaf_taxon = $curr_scaf_taxon0;
+            $curr_scaf_ext = substr $curr_scaf_id, 1 + length($curr_scaf_taxon);
+        }
+    }
+    $curr_scaf_ext = $curr_scaf_id 
+        if ( !$curr_scaf_ext );                                
+    $curr_scaf_taxon = $accession2tax_href->{$curr_scaf_id} 
+        if ( !$curr_scaf_taxon );
+
+    if ( !$curr_scaf_id_backup ) {
+        $curr_scaf_id_backup = $curr_scaf_id2backup_href->{$curr_scaf_id};
+    }
+    if ( !$curr_scaf_taxon ) {
+        $curr_scaf_taxon = $accession2tax_href->{$curr_scaf_id_backup};    
+        $curr_scaf_ext = $curr_scaf_id_backup if ( $curr_scaf_taxon );
+    }
+    
+    my @ext_accessions = ( $curr_scaf_ext );
+    push(@ext_accessions, $curr_scaf_id_backup) 
+        if ($curr_scaf_id_backup);
+
+    return ( $curr_scaf_taxon, $curr_scaf_ext, \@ext_accessions );
+}
+
 ############################################################################
 # getScaffoldIds - get scaffold_oid with given taxon_oid and ext_accession,
 ############################################################################
 sub getScaffoldIds {
-    my ( $taxon_oids_ref, $ext_accessions_ref ) = @_;
+    my ( $dbh, $taxon_oids_ref, $ext_accessions_ref ) = @_;
 
     my %accession2scaf_h;
     my %accession2tax_h;
 
-    my $dbh       = WebUtil::dbLogin();
     my $rclause   = WebUtil::urClause('s.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
 
@@ -3044,6 +3123,7 @@ sub getScaffoldIds {
         my $t_accession = $taxon_oid . '.' . $ext_accession;
         $accession2scaf_h{$t_accession} = $scaffold_oid;
         $accession2tax_h{$t_accession}  = $taxon_oid;
+
         #print "getScaffoldIds() added taxon=$taxon_oid scaffold=$scaffold_oid for $t_accession<br>\n";
     }
     $cur->finish();
@@ -3059,6 +3139,62 @@ sub getScaffoldIds {
 
     return ( \%accession2scaf_h, \%accession2tax_h );
 }
+
+############################################################################
+# getScaffoldLength - get scaffold_length with given taxon_oid and ext_accession,
+############################################################################
+sub getScaffoldLength {
+    my ( $dbh, $curr_scaf_taxon, $ext_accessions_ref ) = @_;
+
+    my $rclause   = WebUtil::urClause('ss.taxon');
+    my $imgClause = WebUtil::imgClauseNoTaxon('ss.taxon');
+    my $ext_accessions_str = OracleUtil::getFuncIdsInClause( $dbh, @$ext_accessions_ref );
+
+    my $sql = qq{
+        select ss.scaffold_oid, ss.seq_length
+        from scaffold_stats ss, scaffold s
+        where ss.scaffold_oid = s.scaffold_oid
+        and s.taxon = ?
+        and s.ext_accession in ($ext_accessions_str)
+        $rclause
+        $imgClause
+    };
+    #print "getScaffoldLength() [$curr_scaf_taxon, @$ext_accessions_ref]<br>sql1:[$sql]<br>\n";
+    my $cur = execSql( $dbh, $sql, $verbose, $curr_scaf_taxon );
+
+    my $len;
+    for ( ; ; ) {
+        my ( $s_oid, $s_len ) = $cur->fetchrow();
+        last if !$s_oid;
+        $len = $s_len;
+    }
+
+    return ( $len );
+}
+
+############################################################################
+# getScaffoldLength - get scaffold_length with given taxon_oid and ext_accession,
+############################################################################
+sub getScaffoldCoordSql {
+    my ( $dbh, $curr_scaf_taxon, $ext_accessions_ref ) = @_;
+
+    my $rclause   = WebUtil::urClause('g.taxon');
+    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
+    my $ext_accessions_str = OracleUtil::getFuncIdsInClause( $dbh, @$ext_accessions_ref );
+
+    my $sql = qq{
+        select g.gene_oid, g.start_coord, g.end_coord
+        from gene g, scaffold s
+        where g.scaffold = s.scaffold_oid
+        and s.taxon = ?
+        and s.ext_accession in ($ext_accessions_str)
+        $rclause
+        $imgClause
+    };
+
+    return ( $sql );
+}
+
 
 ############################################################################
 # processProteinBlastResult - Process the result of protein blast
@@ -3090,29 +3226,25 @@ sub processProteinBlastResult {
         } elsif ( $inSummary && !blankStr($s) && $s =~ /^[0-9A-Za-z]+/ ) {
             my $s2 = $s;
             $s2 =~ s/\s+/ /g;
-            my $gene_id = findID($s2);
+            my ($gene_id, $gene_id_escaped, $gene_id_backup) = findID($s2);
 
             #print "processProteinBlastResult() inSummary curr_gene_id: $gene_id<br>\n";
 
             my $checkbox;
             my $url;
-            if ( $in_file ) {
+            if ($in_file) {
                 my ( $t_oid, $t_g_oid ) = split( /\./, $gene_id, 2 );
                 my ( $data_type, $g_oid ) = split( /\:/, $t_g_oid );
                 $data_type = 'assembled'   if ( $data_type eq 'a' );
                 $data_type = 'unassembled' if ( $data_type eq 'u' );
                 my $workspace_id = "$t_oid $data_type $g_oid";
-                $checkbox = "<input type='checkbox' name='gene_oid' "
-                    . "value='$workspace_id'/>";
-                $url      =
-                    "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
+                $checkbox = "<input type='checkbox' name='gene_oid' " . "value='$workspace_id'/>";
+                $url      = "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
                   . "&taxon_oid=$taxon_oid&data_type=$data_type&gene_oid=$g_oid";
                 $someId2url{$gene_id} = $url;
             } else {
-                $checkbox = "<input type='checkbox' name='gene_oid' "
-                    . "value='$gene_id'/>";
-                $url = "$main_cgi?section=GeneDetail"
-                    . "&page=geneDetail&gene_oid=$gene_id";
+                $checkbox             = "<input type='checkbox' name='gene_oid' " . "value='$gene_id'/>";
+                $url                  = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene_id";
                 $someId2url{$gene_id} = $url;
             }
             my $x1 = "<a href='$url'>";
@@ -3138,7 +3270,7 @@ sub processProteinBlastResult {
             $curr_send   = -1;
             $curr_sgene  = -1;
 
-            my $gene_id = findID($s);
+            my ($gene_id, $gene_id_escaped, $gene_id_backup) = findID($s);
             my $url     = $someId2url{$gene_id};
             if ($url) {
                 my $x1 = "<a href='$url'>";
@@ -3216,12 +3348,34 @@ sub processProteinBlastResult {
 ############################################################################
 sub findID {
     my ($line) = @_;
-    my ( $id_str, $junk1 ) = split( / /, $line );
+    
+    my ( $id_str, @junks ) = split( / /, $line );
+    #print "findID() junks=@junks<br/>\n";
     $id_str =~ s/^>//;
     my $id_new_str = removeDatabaseNamePrefix($id_str);
     $id_new_str =~ s/^>//;
 
-    return $id_new_str;
+    my $id_new_str_escaped = $id_new_str;
+    $id_new_str_escaped =~ s/\|/\\\|/g;
+    
+    my $id_str_backup;
+    foreach my $junk1 (reverse @junks) {
+        if ( $junk1 =~ /$id_new_str_escaped/ ) {
+            my @vals = split( /:/, $junk1 );
+            foreach my $val (reverse @vals) {
+                if ( $val =~ /$id_new_str_escaped/ ) {
+                    $id_str_backup = $val;
+                    #print "findID() id_new_str=$id_new_str, id_str_backup=$id_str_backup, junk1=$junk1, vals=@vals<br/>\n";
+                    if ( $id_str_backup eq $id_new_str ) {
+                        $id_str_backup = '';
+                    }
+                    last;                    
+                }                
+            }
+        } 
+    }
+
+    return ($id_new_str, $id_new_str_escaped, $id_str_backup);
 }
 
 ############################################################################
@@ -3231,8 +3385,9 @@ sub removeDatabaseNamePrefix {
     my ($str) = @_;
 
     if ( $str =~ /\|/ ) {
-        my ( $dbName, $newStr ) = split( /\|/, $str );
-        return $newStr;
+        my ( $dbName, @vals ) = split( /\|/, $str );
+        my $new_str = substr $str, 1 + length($dbName);
+        return $new_str;
     }
     return $str;
 }

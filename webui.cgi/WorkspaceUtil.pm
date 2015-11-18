@@ -1,13 +1,8 @@
 ############################################################################
 # WorkspaceUtil.pm
-# $Id: WorkspaceUtil.pm 34534 2015-10-19 16:04:48Z jinghuahuang $
+# $Id: WorkspaceUtil.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package WorkspaceUtil;
-
-require Exporter;
-@ISA    = qw(Exporter);
-@EXPORT = qw(
-);
 
 use strict;
 use CGI qw( :standard );
@@ -36,7 +31,7 @@ my $enable_workspace = $env->{enable_workspace};
 my $workspace_dir        = $env->{workspace_dir};
 my $img_group_share = $env->{img_group_share};
 my $include_metagenomes  = $env->{include_metagenomes};
-
+my $top_base_url = $env->{top_base_url};
 my $GENE_FOLDER   = "gene";
 my $FUNC_FOLDER   = "function";
 my $SCAF_FOLDER   = "scaffold";
@@ -44,11 +39,22 @@ my $GENOME_FOLDER = "genome";
 my $RULE_FOLDER   = "rule";
 my @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER );
 
+my $max_workspace_view = 20000;
+
 my $filename_size      = 25;
 my $filename_len       = 60;
 
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
+
+############################################################################
+# getMaxWorkspaceView
+############################################################################
+sub getMaxWorkspaceView {
+    
+    return $max_workspace_view;
+}
+
 
 ############################################################################
 # printSetMainTable - prints the set table for main form
@@ -1528,7 +1534,7 @@ sub printCartSaveToWorkspace {
         }
 
         print qq{
-            <script type="text/javascript" src="$base_url/Workspace.js" >
+            <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
             </script>
         };
 
@@ -1698,7 +1704,7 @@ sub printFuncGeneSaveToWorkspace {
         print "<br/>";
 
         print qq{
-            <script type="text/javascript" src="$base_url/Workspace.js" >
+            <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
             </script>
         };
 

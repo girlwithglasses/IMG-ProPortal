@@ -1,7 +1,7 @@
 ###########################################################################
 # New Phylogenetic Distribution of Genes from taxon detail page
 #
-# $Id: GenomeHits.pm 34359 2015-09-25 18:31:02Z jinghuahuang $
+# $Id: GenomeHits.pm 34545 2015-10-20 21:36:40Z klchu $
 ###########################################################################
 package GenomeHits;
 
@@ -21,6 +21,7 @@ use MerFsUtil;
 use MetaUtil;
 use QueryUtil;
 use GenomeListJSON;
+use HTML::Template;
 
 $| = 1;
 
@@ -63,8 +64,29 @@ my $nvl        = WebUtil::getNvl();
 # in the metagenome list for Genome vs Metagenome
 my $MAX_METAGENOMES = 5000;
 
+sub getPageTitle {
+    return 'Genome Hits';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    my @a = ( "CompareGenomes", '', '', $js );
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;        # number of saved genomes
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 mins (from main.pl)
     if ( $page eq "plot1" ) {

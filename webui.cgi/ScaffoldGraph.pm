@@ -3,15 +3,11 @@
 #   chromosomal viewers.
 # --es 09/17/2004
 #
-# $Id: ScaffoldGraph.pm 33753 2015-07-15 18:30:30Z aratner $
+# $Id: ScaffoldGraph.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package ScaffoldGraph;
 my $section = "ScaffoldGraph";
 
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 use strict;
 use CGI qw( :standard );
 use DBI;
@@ -45,7 +41,7 @@ my $scaffold_page_size   = $env->{scaffold_page_size};
 my $pageSize             = $scaffold_page_size;
 my $user_restricted_site = $env->{user_restricted_site};
 my $YUI                  = $env->{yui_dir_28};
-
+my $top_base_url = $env->{top_base_url};
 # No. bp's for whole page.
 #my $blockSize = 25000;
 my $blockSize = 30000;
@@ -54,10 +50,19 @@ my $blockSize = 30000;
 
 my %cogFuncFilter;
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Chromosome Viewer';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenomes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( paramMatch("userScaffoldGraph") ne "" ) {
@@ -912,7 +917,7 @@ sub printScaffoldGraph {
 
     if ($sample ne "" && ($color eq "expression" || $color eq "methylation")) {
     	print toolTipCode(); 
-    	print "<script src='$base_url/overlib.js'></script>\n";
+    	print "<script src='$top_base_url/js/overlib.js'></script>\n";
     	printStatusLine( "Loaded.", 2 ); 
     	print end_form(); 
     	#$dbh->disconnect();
@@ -1429,7 +1434,7 @@ sub printScaffoldGraph {
 
     printHint("Saving with no selections defaults to show all colors.");
     print toolTipCode();
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 
     printStatusLine( "Loaded.", 2 );
     print end_form();

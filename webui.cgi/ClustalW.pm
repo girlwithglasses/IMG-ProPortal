@@ -3,7 +3,7 @@
 #   using secondary tools.  This is the perl wrapper for handling
 #   the display forms pertaining to CLUSTAL W alignments.
 #    --es 10/22/2004
-#  $Id: ClustalW.pm 34538 2015-10-20 17:43:00Z klchu $
+#  $Id: ClustalW.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package ClustalW;
 
@@ -41,6 +41,7 @@ my $section_cgi = "$main_cgi?section=$section";
 my $clustalw_bin = $env->{ clustalw_bin };
 my $clustalo_bin = $env->{ clustalo_bin };
 my $base_url = $env->{ base_url };
+my $top_base_url                 = $env->{top_base_url};
 my $tmp_url = $env->{ tmp_url };
 my $tmp_dir = $env->{ tmp_dir };
 my $taxon_lin_fna_dir = $env->{ taxon_lin_fna_dir };
@@ -67,6 +68,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
     timeout( 60 * 40 );    # timeout in 40 minutes (from main.pl)
 
@@ -1110,7 +1112,7 @@ sub printJalView {
 
    print "<div id='showjalview' style='display: none;'>";
    print "<applet code='jalview.bin.JalviewLite'\n";
-   print "  archive='$base_url/jalviewApplet.jar'\n";
+   print "  archive='$top_base_url/lib/jalviewApplet.jar'\n";
    print "  width='100' height='40'>\n";
    print "  <param name='file' value='$alnFileUrl'>\n";
    print "  <param name='label' value='Launch Jalview'>\n";
@@ -1122,7 +1124,7 @@ sub printJalView {
    printColorScheme( $alignment );
 
    print "<applet code='jalview.bin.JalviewLite'\n";
-   print "  archive='$base_url/jalviewApplet.jar'\n";
+   print "  archive='$top_base_url/lib/jalviewApplet.jar'\n";
    print "  width='800' height='$height'>\n";
    print "  <param name='file' value='$alnFileUrl'>\n";
    print "  <param name='embedded' value='true'>\n";

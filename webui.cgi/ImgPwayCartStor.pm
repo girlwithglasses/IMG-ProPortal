@@ -32,10 +32,24 @@ my $max_pway_batch = 250;
 my $max_taxon_batch = 900;
 my $maxProfileOccurIds = 300;
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "imgPwayCart" );
+    return 'IMG Pathway Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param( "page" );
 
     if( $page eq "imgPwayCart" || paramMatch( "addToImgPwayCart" ) ne "" ||

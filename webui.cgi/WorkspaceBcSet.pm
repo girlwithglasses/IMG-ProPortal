@@ -6,7 +6,7 @@
 #
 # for workspace the temp cart file is teh unsaved buffer file
 #
-# $Id: WorkspaceBcSet.pm 34490 2015-10-12 22:44:35Z aratner $
+# $Id: WorkspaceBcSet.pm 34725 2015-11-17 23:02:58Z klchu $
 ########################################################################
 package WorkspaceBcSet;
 
@@ -52,7 +52,7 @@ my $ncbi_base_url        = $env->{ncbi_entrez_base_url};
 my $sid                  = WebUtil::getContactOid();
 my $contact_oid          = $sid;
 my $BC_DIR               = $workspace_dir . '/' . $sid . '/bc/';
-
+my $top_base_url = $env->{top_base_url};
 sub getPageTitle {
     return 'Workspace';
 }
@@ -66,7 +66,7 @@ sub getAppHeaderData {
     } else {
 
         #push(@a, "MyIMG", '', '', '', '', 'IMGWorkspaceUserGuide.pdf');
-        push( @a, "MyIMG" );
+        push( @a, "AnaCart" );
         return @a;
     }
 }
@@ -94,29 +94,15 @@ sub dispatch {
     Workspace::initialize();
 
     if ( $page eq 'addToBcBuffer' || paramMatch("addToBcBuffer") ne "" ) {
-
         addBcIds( \@bcIds, $filenames[0] );
-
     } elsif ( $page eq 'deleteBcIds' || paramMatch("deleteBcIds") ne "" ) {
-
-        #print "deleting<br>\n";
         deleteBcIds( \@bcIds, $filenames[0] );
     } elsif ( $page eq 'delete' || paramMatch("delete") ne "" ) {
         deleteSelectedFiles();
     } elsif ( $page eq 'saveBc' || paramMatch("saveBc") ne "" ) {
         saveToWorkspace();
     } elsif ( $page eq 'findPairwiseSimilarity' || paramMatch('findPairwiseSimilarity') ne '' ) {
-
-        #HtmlUtil::cgiCacheInitialize($section);
-
-        # cgi cache
-        #HtmlUtil::cgiCacheStart() or return;
-
-        # from BiosyntheticDetail page tab 8
-        findPairwiseSimilarity();
-
-        #HtmlUtil::cgiCacheStop();
-
+        findPairwiseSimilarity(); # from BiosyntheticDetail page tab 8
         return;
     }
 
@@ -125,10 +111,8 @@ sub dispatch {
     } elsif ( $page eq 'viewSet' ) {
         printSetList();
     } else {
-
         printWorkspaceSets();
     }
-
 }
 
 #Searching for clusters similar to 160328918 (This should take a couple of minutes)
@@ -160,14 +144,13 @@ sub findPairwiseSimilarity {
     my $clusterId = param('clusterId');
     my $taxon_oid = param('taxon_oid');
 
-    if ( WebUtil::blankStr($clusterId) || !WebUtil::isInt($clusterId) ) {
-        return;
-    }
+    return if ( WebUtil::blankStr($clusterId) || !WebUtil::isInt($clusterId) );
+
     if ( $clusterId =~ /^(.*)$/ ) { $clusterId = $1; }    # untaint
     timeout( 60 * 10 );                                   # 10 minutes
 
     print qq{
-        <h1>Biosynthetic Cluster Pairwise Similarity</h1>
+        <h1>Biosynthetic Cluster - Pairwise Similarity</h1>
     };
 
     my $dbh = dbLogin();
@@ -185,9 +168,8 @@ sub findPairwiseSimilarity {
     <br>
     Cluster ID: <a href="main.cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=$clusterId">$clusterId</a>
     </p>
-};
+    };
 
-    #my $cmd = '/global/dna/projectdirs/microbial/omics-biosynthetic/pairwiseSimilarities/retrieveSimilarBC.py';
     my $cmd = '/global/dna/projectdirs/microbial/omics-biosynthetic/pairwiseSimilarities/retrieveSimilarBC_sqlite.py';
     $cmd .= " $clusterId";
 
@@ -203,7 +185,6 @@ sub findPairwiseSimilarity {
     my $stderrFile = "/webfs/scratch/img/tmp/bcPairwise_${sid}_$$.stderr";
 
     #    if (0) {
-    #
     #        # command way
     #        print "Calling Pairwise api<br/>\n";
     #        my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
@@ -220,7 +201,6 @@ sub findPairwiseSimilarity {
     #        $cfh = WebUtil::newReadFileHandle($stdOutFile);
     #
     #    } elsif(0) {
-    #
     #        # test dump of:
     #        # /global/dna/projectdirs/microbial/omics-biosynthetic/pairwiseSimilarities/retrieveSimilarBC.py 160320026
     #        #
@@ -232,7 +212,6 @@ sub findPairwiseSimilarity {
     #            WebUtil::webExit(-1);
     #        }
     #    } else {
-
     # runs on web servers - slow
     #$cfh = new FileHandle("$cmd 2>\&1 |");
     # http://www.perlmonks.org/?node=How+can+I+capture+STDERR+from+an+external+command?
@@ -292,7 +271,6 @@ sub findPairwiseSimilarity {
     my %golId2Habitat;
 
     if ( $#clusterIds > -1 ) {
-
         my $cluster_ids_str    = OracleUtil::getFuncIdsInClause( $dbh, @clusterIds );
         my $cluster_ids_clause = " and g.cluster_id in ($cluster_ids_str) ";
 
@@ -366,7 +344,6 @@ sub findPairwiseSimilarity {
             $cur->finish();
             $sbh->disconnect();            
         }
-
 
         print "Getting pfam count per cluster ...<br/>\n";
 
@@ -461,7 +438,7 @@ sub findPairwiseSimilarity {
     $totalLine =~ s/^#//;
     chomp $totalLine;
 
-    print "<p>$totalLine</p>";
+#    print "<p>$totalLine</p>";
 
     my $it = new InnerTable( 1, "processbc$$", "processbc", 2 );
     my $sd = $it->getSdDelim(); # sort delimiter
@@ -489,6 +466,15 @@ sub findPairwiseSimilarity {
     $it->addColSpec( "Start Coord", "asc", "right" );
     $it->addColSpec( "End Coord",   "asc", "right" );
     $it->addColSpec( "Genbank ID",  "asc", "left" );
+
+    print qq{
+    <form id="processbc_frm" 
+    name="mainForm" 
+    enctype="multipart/form-data" 
+    action="main.cgi" method="post" 
+    onsubmit="removeDups ('processbc_frm', 'processbc'); " 
+    onreset="handleReset ('processbc_frm', 'processbc'); ">
+    };
 
     my $count = 0;
     my $url   = 'main.cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=';
@@ -563,18 +549,18 @@ sub findPairwiseSimilarity {
         }
         my ( $np_ids, $np_links );
         my $i = 0;
-        for my $np (@$nps_ref) {
+        foreach my $np (@$nps_ref) {
             if ( $i > 0 ) {
                 $np_links .= '<br/>';
             }
             $np_ids .= $np;
-            my $nplink = "$main_cgi?section=ImgCompound" . "&page=imgCpdDetail&compound_oid=$np";
+            my $nplink = "$main_cgi?section=ImgCompound&page=imgCpdDetail&compound_oid=$np";
             $np_links .= alink( $nplink, $np );
             my $np_name = $npId2name{$np};
             $np_links .= "  $np_name";
             $i++;
         }
-        if($np_ids) {
+        if ($np_ids) {
             $row .= $np_ids . $sd . $np_links . "\t";
         } else {
             $row .= ''. $sd . '' . "\t";
@@ -582,7 +568,8 @@ sub findPairwiseSimilarity {
 
         # taxon name
         my $name = $taxonOid2Name{$taxon_oid};
-        $row .= $name . $sd . alink("main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid", $name) . "\t";
+        $row .= $name . $sd . 
+	    alink("main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid", $name) . "\t";
         
         # phylum
         my $phylum = $taxonOid2Phylum{$taxon_oid};
@@ -591,7 +578,7 @@ sub findPairwiseSimilarity {
         # habitat
         my $gid = $taxonOid2GoldId{$taxon_oid};
         my $hab = $golId2Habitat{$gid} if ($gid);
-        if($hab) { 
+        if ($hab) { 
             $row .= $hab . $sd . $hab . "\t";
         } else {
             $row .= '' . $sd . '' . "\t";
@@ -599,7 +586,7 @@ sub findPairwiseSimilarity {
 
         # scaffold oid
         my $scaffold_oid = $bcid2scaffold{$bcId};
-        my $s_url        = "$main_cgi?section=ScaffoldCart" . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
+        my $s_url        = "$main_cgi?section=ScaffoldCart&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
         if ( $taxon_in_file{$taxon_oid} eq 'Yes' ) {
             $s_url =
                 "$main_cgi?section=MetaDetail"
@@ -621,34 +608,36 @@ sub findPairwiseSimilarity {
             $row .= ''. $sd . '' . "\t";
         }
 
+	print hiddenVar("$bcId", " [$evidence: $bcType, Adjusted Jaccard: $score, Jaccard Score: $jaccard]");
         $it->addRow($row);
         $count++;
     }
 
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     require BcUtil;
 
-    #printMainForm();
-    print qq{
-    <form id="processbc_frm" 
-    name="mainForm" 
-    enctype="multipart/form-data" 
-    action="main.cgi" method="post" 
-    onsubmit="removeDups ('processbc_frm', 'processbc'); " 
-    onreset="handleReset ('processbc_frm', 'processbc'); ">
-    };
+    print "<p>\n";
+    print "<input type='checkbox' name='bc_id' value='$clusterId' checked />\n";
+    my $url = "$main_cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=$clusterId";
+    my $link = alink( $url, $clusterId );
+    print "Add query cluster $link to selection";
+    print hiddenVar("$clusterId", " [query cluster]");
+    print hiddenVar("query_cluster", $clusterId);
+    print hiddenVar("from", "pairwise_similarity");
+    print "</p>\n";
 
-    BcUtil::printTableFooter("processbc") if $count > 0;
+    BcUtil::printTableFooter("processbc") if $count > 10;
     $it->printOuterTable(1) if $count > 0;
+    BcUtil::printTableFooter("processbc") if $count > 0;
 
     print end_form();
-    printStatusLine( "$count rows", 2 ) if $count > 0;
+    printStatusLine( "$totalLine", 2 ) if $count > 0;
 }
 
 # print list bc workspace sets
 sub printWorkspaceSets {
     print qq{
-      <h1>Biosynthetic Cluster Workspace List</h1>  
+        <h1>Biosynthetic Cluster Workspace List</h1>  
     };
 
     my %file2Size;    # bc set file names to bc id count
@@ -785,8 +774,6 @@ Save as a new job with name:
 }
 
 sub getAllBcSetFilenames {
-
-    #
     opendir( DIR, "$BC_DIR" ) or webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
@@ -840,7 +827,9 @@ sub printBuffer {
     print "<div id='bccarttab1'>";
 
     printMainForm();
+    printStatusLine( "Loading", 1 );
 
+if($count > 0) {
     WebUtil::printButtonFooterInLineWithToggle();
     print nbsp(1);
 
@@ -850,13 +839,17 @@ sub printBuffer {
         -value => "Remove Selected",
         -class => "meddefbutton"
     );
+}
 
+    if($count > 0) {
     $it->printOuterTable(1);
-
     printSave2BcSet();
+    } else {
+        print "Your BC Cart is empty<br>\n";
+    }
 
     #printCartTab1End($count);
-    printStatusLine( "$count BC(s) in cart.", 2 ) if $count > 0;
+    printStatusLine( "$count BC(s) in cart.", 2 );
     print "</div>";
 
     # end genomecarttab1
@@ -893,6 +886,7 @@ sub printBuffer {
     TabHTML::printTabDivEnd();
 
     print end_form();
+    
 }
 
 sub printSetList {
@@ -952,7 +946,6 @@ sub printSetList {
 # print Save to BC My workpsace section
 #
 sub printSave2BcSet {
-
     my @files  = getAllBcSetFilenames();
     my @sorted = sort @files;
 
@@ -1031,7 +1024,6 @@ sub saveToWorkspace {
         }
         close $wfh;
     }
-
 }
 
 #
@@ -1147,7 +1139,7 @@ sub getAllIds {
         $filename = $BC_DIR . $filename;
     }
 
-    my @records;
+    my @records = ();
     my $res = newReadFileHandle( $filename, "runJob", 1 );
     if ( !$res ) {
         return \@records;
@@ -1155,13 +1147,21 @@ sub getAllIds {
     while ( my $line = $res->getline() ) {
         chomp $line;
         next if ( $line eq "" );
-
+        next if (WebUtil::blankStr($line));
         #my ( $s_oid, $contact_oid, $batch_id, $name ) = split( /\t/, $line );
+        
         push( @records, $line );
     }
     close $res;
     return \@records;
 
+}
+
+# gets cart size
+sub getSize {
+    my $aref = getAllIds();
+    my $size = $#$aref + 1;
+    return $size;
 }
 
 #

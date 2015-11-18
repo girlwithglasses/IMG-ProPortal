@@ -1,6 +1,6 @@
 ############################################################################
 # RNAStudies.pm - displays rna expression data
-# $Id: RNAStudies.pm 34436 2015-10-06 18:52:02Z aratner $
+# $Id: RNAStudies.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package RNAStudies;
 my $section = "RNAStudies";
@@ -37,12 +37,13 @@ my $main_cgi      = $env->{main_cgi};
 my $section_cgi   = "$main_cgi?section=RNAStudies";
 my $verbose       = $env->{verbose};
 my $base_url      = $env->{base_url};
+my $top_base_url      = $env->{top_base_url};
 my $cluster_bin   = $env->{cluster_bin};
 my $r_bin         = $env->{r_bin};
 my $R             = "R"; # $env->{r_bin};
 my $nvl           = getNvl();
 my $img_er        = $env->{img_er};
-
+my $top_base_url = $env->{top_base_url};
 my $user_restricted_site  = $env->{user_restricted_site};
 my $color_array_file = $env->{large_color_array_file};
 my $include_metagenomes = $env->{include_metagenomes};
@@ -57,10 +58,28 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
     $maxGeneListResults = getSessionParam("maxGeneListResults");
 }
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+        my $pageTitle = "RNASeq Expression Studies";
+        if ( WebUtil::paramMatch("samplePathways") ne "" ) {
+            $pageTitle = "RNASeq Studies: Pathways";
+        } elsif ( WebUtil::paramMatch("describeSamples") ne "" ) {
+            $pageTitle = "RNASeq Studies: Describe";
+        }
+        return $pageTitle;
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    if(param("noHeader") eq "") {
+        @a = ( "RNAStudies", '', '', '', '', "RNAStudies.pdf" );
+    }
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 mins (from main.pl)
     if ($page eq "rnastudies" ||
@@ -1148,7 +1167,7 @@ sub printRNASeqJavascript {
     };
 
     ######### for preview graph
-    print "<script src='$base_url/imgCharts.js'></script>\n";
+    print "<script src='$top_base_url/js/imgCharts.js'></script>\n";
     print qq{
         <link rel="stylesheet" type="text/css"
           href="$YUI/build/container/assets/skins/sam/container.css" />
@@ -2496,7 +2515,7 @@ sub doSpearman {
         $st = ChartUtil::generateChart($chart);
 
         if ($st == 0) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "spearman-rnaseq", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2674,7 +2693,7 @@ sub doRegression {
     if ($env->{ chart_exe } ne "") {
         $st = ChartUtil::generateChart($chart);
         if ($st == 0) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "regression-rnaseq", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2741,7 +2760,7 @@ sub printPreviewGraph {
     if ($sample1 eq "" || $sample2 eq "") {
         my $header = "Preview";
         my $body = "Please select 2 samples.";
-	my $script = "$base_url/overlib.js";
+	my $script = "$top_base_url/js/overlib.js";
 
         print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
         print qq {
@@ -2849,7 +2868,7 @@ sub printPreviewGraph {
 	if ($st == 0) {
             my $url = "$tmp_url/".$chart->FILE_PREFIX.".png";
             my $imagemap = "#".$chart->FILE_PREFIX;
-            my $script = "$base_url/overlib.js";
+            my $script = "$top_base_url/js/overlib.js";
 	    my $width = $chart->WIDTH;
             my $height = $chart->HEIGHT;
 
@@ -6059,9 +6078,9 @@ sub printClusterMap {
 
     if ($sortId eq "") {
 	# call the Java TreeView applet:
-	my $archive = "$base_url/TreeViewApplet.jar,"
-	             ."$base_url/nanoxml-2.2.2.jar,"
-	             ."$base_url/Dendrogram.jar";
+	my $archive = "$top_base_url/lib/TreeViewApplet.jar,"
+	             ."$top_base_url/lib/nanoxml-2.2.2.jar,"
+	             ."$top_base_url/lib/Dendrogram.jar";
 	print qq{
 	    <APPLET code="edu/stanford/genetics/treeview/applet/ButtonApplet.class"
 		archive="$archive"

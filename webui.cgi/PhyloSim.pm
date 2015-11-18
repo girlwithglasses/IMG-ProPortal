@@ -32,10 +32,19 @@ $default_timeout_mins = 5 if $default_timeout_mins eq "";
 
 my $maxBatchSize = 100;
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Phylogenetic Similarity Search';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( $page eq "phyloSimResults" ) {

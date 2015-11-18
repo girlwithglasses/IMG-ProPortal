@@ -1,15 +1,9 @@
 ############################################################################
 # TaxonTableConfiguration.pm - share use
 #
-# $Id: TaxonTableConfiguration.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: TaxonTableConfiguration.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package TaxonTableConfiguration;
-#my $section = "TaxonTableConfiguration";
-
-require Exporter;
-@ISA = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use CGI qw( :standard );
@@ -36,7 +30,7 @@ my $yui_tables           = $env->{yui_tables};
 my $include_kog              = $env->{include_kog};
 ### optional genome field columns to configuration and display 
 my @gOptCols = getGenomeFieldAttrs();
-
+my $top_base_url = $env->{top_base_url};
 # TODO
 #push(@gOptCols,'sample_oid');
 #push(@gOptCols,'project_info');
@@ -838,7 +832,7 @@ sub printDisplayAgainButtons {
 sub printTreeViewMarkup {
     printTreeMarkup();
     print qq{
-        <script language='JavaScript' type='text/javascript' src='$base_url/metadataTree.js'>
+        <script language='JavaScript' type='text/javascript' src='$top_base_url/js/metadataTree.js'>
         </script>
     };
 }

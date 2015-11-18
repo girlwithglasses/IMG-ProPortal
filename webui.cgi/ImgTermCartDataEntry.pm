@@ -37,10 +37,24 @@ my $max_upload_line_count = 10000;
 
 
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "imgTermCart" );
+    return 'IMG Term Cart Data Entry';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
 ############################################################################
-# dispatch - Dispatch to pages for this section.
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
 
     ## Should not get here.
     my $section = param( "section" );

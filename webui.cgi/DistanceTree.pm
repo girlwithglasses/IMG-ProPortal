@@ -1,6 +1,6 @@
 ###########################################################################
 # DistanceTree.pm - draws a radial phylogenetic tree
-# $Id: DistanceTree.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: DistanceTree.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package DistanceTree;
 my $section = "DistanceTree";
@@ -14,20 +14,24 @@ use OracleUtil;
 use WebConfig;
 use WebUtil;
 use GenomeListJSON;
+use HTML::Template;
 
 $| = 1;
 
-my $env = getEnv();
-my $main_cgi = $env->{ main_cgi };
-my $cgi_dir  = $env->{ cgi_dir };
-my $cgi_url  = $env->{ cgi_url };
-my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
-my $tmp_url  = $env->{ tmp_url };
-my $tmp_dir  = $env->{ tmp_dir };
+my $env           = getEnv();
+my $main_cgi      = $env->{ main_cgi };
+my $cgi_dir       = $env->{ cgi_dir };
+my $cgi_url       = $env->{ cgi_url };
+my $cgi_tmp_dir   = $env->{ cgi_tmp_dir };
+my $tmp_url       = $env->{ tmp_url };
+my $tmp_dir       = $env->{ tmp_dir };
 my $taxon_fna_dir = $env->{ taxon_fna_dir };
-my $verbose  = $env->{ verbose };
-my $base_url = $env->{ base_url };
-my $base_dir = $env->{ base_dir };
+my $verbose       = $env->{ verbose };
+my $base_url      = $env->{ base_url };
+my $base_dir      = $env->{ base_dir };
+my $top_base_dir      = $env->{ top_base_dir };
+my $top_base_url  = $env->{top_base_url};
+
 my $tool = lastPathTok( $0 );
 my $include_metagenomes = $env->{include_metagenomes};
 
@@ -38,11 +42,27 @@ my $YUI = $env->{yui_dir_28};
 my $ISOLATE_LIMIT = 1500;
 my $META_LIMIT = 500;
 
+sub getPageTitle {
+    return 'Distance Tree';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    require GenomeListJSON;
+    my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;    
+    my @a = ("CompareGenomes", '', '', $js, '', 'DistanceTree.pdf' );
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
     if ($page eq "tree") {
@@ -529,11 +549,6 @@ sub runTree {
     print "Last computed on: <font color='red'>$timestamp</font>";
     print "<br/><br/>";
 
-    my $url = "http://www.phylosoft.org/archaeopteryx/";
-    print "The tree below is generated using the "
-        . alink($url, "Archaeopteryx")." applet";
-    print "</p>\n";
-
     if (!(-e $newickFile)) {
 	print "<p>\n";
 	my $url = "$base_url/tmp/table$$.map";
@@ -548,7 +563,38 @@ sub runTree {
 	print "</p>\n";
 	webError( "Could not create the required phyloXML input file: " );
     }
+
+    require TabHTML;
+    TabHTML::printTabAPILinks("treeTab");
+
+    my @tabIndex = ("#treetab1", "#treetab2");
+    my @tabNames = ("Phylogenetic Tree", "Aptx Tree");
+    TabHTML::printTabDiv("treeTab", \@tabIndex, \@tabNames);
+
+    print "<div id='treetab1'>";
+    my $url = "http://www.jsphylosvg.com/";
+    print "<p>The tree below is generated using ".alink($url, "jsPhyloSVG")."</p>";
+    # this method allows adding extra information to the phyloXML:
+    require DrawTree;
+    my %hash = ();   # placeholder
+    my $newick = WebUtil::file2Str($newickFile);
+    if ( blankStr($newick) ) {
+        webError("Invalid newick '$newick' string.\n");
+    }
+    #my $dt = new DrawTree( $newick, \%hash );
+    #my $xmlFile = "treeXML$$.txt";
+    #$dt->toPhyloXML( $xmlFile );
+    #printTree("treeXML$$.txt");
+    printTree("decorated$$.txt");
+    print "</div>";    # end treetab1
+
+    print "<div id='treetab2'>";
+    my $url = "http://www.phylosoft.org/archaeopteryx/";
+    print "<p>The tree below is generated using the ".alink($url, "Archaeopteryx")." applet</p>";
     printAptxApplet("decorated$$.txt");
+    print "</div>";    # end treetab2
+
+    TabHTML::printTabDivEnd();
     printStatusLine("Done - $nTaxons genomes analyzed.", 2);
 }
 
@@ -834,6 +880,58 @@ sub getNewickFile {
     return $newickFile;
 }
 
+# This is a non-java tree viewer that uses jsPhyloSVG and Raphael -Anna
+sub printTree {
+    my( $treeFileName, $type ) = @_;
+    my $treeFile = $tmp_dir . "/$treeFileName";
+
+    print "<p>";
+    my $url = "$base_url/tmp/$treeFileName";
+    print alink($url, "View phyloXML", "_blank");
+    print "</p>\n";
+
+# loading a file doesn't seem to work:
+#<script src="$YUI/build/js/yui-min.js"></script>
+#YUI().use(['oop', 'json-stringify', 'io-base', 'event', 'event-delegate'], function(Y){
+#phylocanvas = new Smits.PhyloCanvas
+#({ phyloxml: $treeFile, fileSource: true }, 'svgCanvas', 800, 800);
+    my $phylotree;
+    my $rfh = newReadFileHandle( $treeFile, "phyloXML" );
+    while ( my $s = $rfh->getline() ) {
+	chomp $s;
+	$phylotree .= $s;
+    }
+    close $rfh;
+
+    my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
+
+    print qq{
+        <link rel="stylesheet" type="text/css" href="$YUI/build/fonts/fonts-min.css" />
+        <link rel="stylesheet" type="text/css" href="$top_base_url/css/d3tree.css" />
+        <script src="$top_base_url/js/d3.min.js"></script>
+        <script src="$top_base_url/js/d3tree.js"></script>
+
+        <script type="text/javascript" src="$top_base_url/js/raphael-min.js" ></script>
+        <script type="text/javascript" src="$top_base_url/js/jsphylosvg-min.js"></script>                
+        <script src="$YUI/build/yahoo/yahoo-min.js"></script>
+        <div id="svgCanvas"></div>
+        <span id="ruler"></span>
+        <div id="svgtree"></div>
+
+        <script type="text/javascript">
+        window.onload = function() {
+            var phylocanvas = new Smits.PhyloCanvas
+                ({phyloxml: '$phylotree'}, 'svgCanvas', 1000, 1000, 'circular');
+            var svgSource = phylocanvas.getSvgSource();
+            var svgObj = phylocanvas.getSvg().svg;
+            drawSVG(svgSource, svgObj, "svgtree", "$txurl");
+            // hack to remove the original svg:
+            document.getElementById('svgCanvas').innerHTML = '';
+        };
+        </script>
+    };
+}
+
 ############################################################################
 # printAptxApplet - creates the applet with the specified phyloXML file
 ############################################################################
@@ -846,7 +944,7 @@ sub printAptxApplet {
     runCmd( "/bin/cp $cgi_dir/aptx.txt $configFile" );
     runCmd( "/bin/cp $cgi_dir/jnlpE.txt $jnlpEFile" );
     runCmd( "/bin/cp $cgi_dir/jnlpA.txt $jnlpAFile" );
-    runCmd( "/bin/cp $base_dir/forester.jar $tmp_dir/forester.jar" );
+    runCmd( "/bin/cp $top_base_dir/lib/forester.jar $tmp_dir/forester.jar" );
 
     my $url1 = "$cgi_url/$main_cgi?section=TaxonDetail"
 	. "&page=taxonDetail&taxon_oid=";

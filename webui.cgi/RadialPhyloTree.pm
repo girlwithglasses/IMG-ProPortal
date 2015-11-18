@@ -1,6 +1,6 @@
 ###########################################################################
 # RadialPhyloTree.pm - draws a radial phylogenetic tree as seen on MG-RAST
-# $Id: RadialPhyloTree.pm 34181 2015-09-03 21:12:48Z aireland $
+# $Id: RadialPhyloTree.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package RadialPhyloTree;
 my $section = "RadialPhyloTree";
@@ -17,6 +17,7 @@ use MetaUtil;
 use HtmlUtil;
 use JSON;
 use GenomeListJSON;
+use HTML::Template;
 
 $| = 1;
 
@@ -33,6 +34,8 @@ my $base_dir            = $env->{base_dir};
 my $YUI                 = $env->{yui_dir_28};
 my $include_metagenomes = $env->{include_metagenomes};
 my $web_data_dir        = $env->{web_data_dir};
+my $top_base_url = $env->{top_base_url};
+    
 
 my $hideViruses   = getSessionParam("hideViruses");
 my $hidePlasmids  = getSessionParam("hidePlasmids");
@@ -81,11 +84,31 @@ my %treeParam = (
     }
 );
 
+sub getPageTitle {
+    return 'Radial Phylogenetic Tree';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    my @a = ();
+    if( !WebUtil::paramMatch("export")) {
+        @a = ( "CompareGenomes", '', '', $js );
+    }
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     my $sid = getContactOid();
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
 
@@ -179,7 +202,7 @@ sub printForm {
 }
 
 sub printHeader {
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     my $header = "Radial Tree Distribution";
     my $curl   = "http://www.biomedcentral.com/1471-2105/9/386";
     my $text   =
@@ -1170,6 +1193,7 @@ sub printTreeHTML {
 
     # replace markers in HTML template
     $htmlStr =~ s/__base_url__/$base_url/g;
+    $htmlStr =~ s/__top_base_url__/$top_base_url/g;
     $htmlStr =~ s/__main_cgi__/$main_cgi/g;
     $htmlStr =~ s/__section__/$section/g;
     $htmlStr =~ s/__yui_url__/$YUI/g;

@@ -1,14 +1,9 @@
 ############################################################################
 #  Append Genome List Filter into other HTML.
-# $Id: GenomeListFilter.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: GenomeListFilter.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package GenomeListFilter;
 my $section = "GenomeListFilter"; 
-
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use CGI qw( :standard );
@@ -36,7 +31,7 @@ my $snp_blast_data_dir    = $env->{snp_blast_data_dir};
 my $taxon_reads_fna_dir   = $env->{taxon_reads_fna_dir};
 my $in_file               = $env->{in_file};
 my $user_restricted_site = $env->{user_restricted_site};
-
+my $top_base_url = $env->{top_base_url};
 my $tSplitSym = ":::";
 
 sub dispatch {
@@ -198,8 +193,8 @@ sub printHistoryMarkup {
 #    }
 
     print qq{
-        <script type="text/javascript" src='$base_url/chart.js'></script>
-        <script type='text/javascript' src='$base_url/genomeFilter.js'>
+        <script type="text/javascript" src='$top_base_url/js/chart.js'></script>
+        <script type='text/javascript' src='$top_base_url/js/genomeFilter.js'>
         </script>
     };
 
@@ -235,7 +230,7 @@ sub printTreeViewMarkup {
         <script type='text/javascript'>
             setMultipleLevel();
         </script>
-        <script type='text/javascript' src='$base_url/genomeFilterTree.js'>
+        <script type='text/javascript' src='$top_base_url/js/genomeFilterTree.js'>
         </script>
     };
 }

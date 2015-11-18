@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: GraphUtil.pm 31256 2014-06-25 06:27:22Z jinghuahuang $
+# $Id: GraphUtil.pm 34662 2015-11-10 21:03:55Z klchu $
 #
 ###########################################################################
 package GraphUtil;
@@ -43,7 +43,7 @@ my $base_url             = $env->{base_url};
 my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
 my $tmp_dir              = $env->{tmp_dir};
-
+my $top_base_url = $env->{top_base_url};
 my $unknown      = "Unknown";
 
 # frag plot
@@ -895,7 +895,7 @@ sub drawScatterPanel {
     }
     print "$s\n";
     if ( $useOverlib ) {
-        print "<script src='$base_url/overlib.js'></script>\n";
+        print "<script src='$top_base_url/js//overlib.js'></script>\n";
     }
     print "<p>$count points\n";
 }
@@ -977,7 +977,7 @@ sub drawPercentPanel {
     }
     print "$s\n";
     if ( $useOverlib ) {
-        print "<script src='$base_url/overlib.js'></script>\n";
+        print "<script src='$top_base_url/js/overlib.js'></script>\n";
     }
 }
 
@@ -1203,7 +1203,7 @@ sub draw {
     }
     print "$s\n";
     if ( $useOverlib ) {
-        print "<script src='$base_url/overlib.js'></script>\n";
+        print "<script src='$top_base_url/js/overlib.js'></script>\n";
     }
 }
 
@@ -1302,7 +1302,7 @@ sub draw3 {
     }
     print "$s\n";
     if ( $useOverlib ) {
-        print "<script src='$base_url/overlib.js'></script>\n";
+        print "<script src='$top_base_url/js/overlib.js'></script>\n";
     }
     
 }

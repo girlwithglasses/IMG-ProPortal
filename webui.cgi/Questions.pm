@@ -1,7 +1,7 @@
 ##########################################################################
 # Questions and comments form
 #
-# $Id: Questions.pm 31512 2014-07-28 17:51:15Z klchu $
+# $Id: Questions.pm 34662 2015-11-10 21:03:55Z klchu $
 ##########################################################################
 package Questions;
 
@@ -25,7 +25,7 @@ my $main_cgi    = $env->{main_cgi};
 my $img_ken     = $env->{img_ken};
 my $img_version = $env->{img_version};
 my $tmp_dir     = $env->{tmp_dir};
-
+my $top_base_url = $env->{top_base_url};
 # if jira form submit fails display error message with the following email
 my $jira_email_error = $env->{jira_email_error};
 my $jira_email       = $env->{jira_email};
@@ -43,7 +43,22 @@ $toEmail = "klchu\@lbl.gov" if ( $toEmail eq "" );
 
 my $charNumLimit = 2000;                           # max number chars in textarea and other fields
 
+sub getPageTitle {
+    return 'Questions / Comments';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    if(param("noHeader") eq "") {
+        @a = ('about');
+    }
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     if ( $page eq "submit" ) {
 
@@ -74,6 +89,13 @@ sub dispatch {
         #            #printForm();
         #        }
     }
+    
+    
+        if ( param("noHeader") eq "true" ) {
+
+            # form redirect submit to jira - ken
+            WebUtil::webExit(0);
+        }    
 }
 
 
@@ -93,7 +115,7 @@ sub jiraForm {
         <h1>Questions and Comments about IMG</h1>        
     };
 
-    print "<script src='$base_url/questions.js'></script>\n";
+    print "<script src='$top_base_url/js/questions.js'></script>\n";
 
     print qq{
     <form name='mainForm' method="post" action="main.cgi" onsubmit="return validateForm($charNumLimit);">

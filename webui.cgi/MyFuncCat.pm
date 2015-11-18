@@ -5,7 +5,7 @@
 #   associated with the user account.
 #     --es 01/19/08
 #
-# $Id: MyFuncCat.pm 33566 2015-06-11 10:47:36Z jinghuahuang $
+# $Id: MyFuncCat.pm 34545 2015-10-20 21:36:40Z klchu $
 ############################################################################
 package MyFuncCat;
 my $section = "MyFuncCat";
@@ -35,10 +35,22 @@ my $tigrfam_base_url     = $env->{tigrfam_base_url};
 
 my $max_func_batch = 1000;
 
+sub getPageTitle {
+    return 'My Functional Categories';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
 ############################################################################
-# dispatch - Dispatch loop
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( $page eq "otherFuncCats" ) {

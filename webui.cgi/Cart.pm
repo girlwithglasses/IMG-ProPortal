@@ -1,6 +1,6 @@
 ############################################################################
 # img-act web services package, using xml.cgi xml.pl
-# $Id: Cart.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: Cart.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package Cart;
 
@@ -21,7 +21,23 @@ my $verbose  = $env->{verbose};
 my $base_url = $env->{base_url};
 my $YUI      = $env->{yui_dir_28};
 
+sub getPageTitle {
+    return 'My Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     if ( $page eq "addNeighborhood" ) {
         print header( -type => "text/html" );

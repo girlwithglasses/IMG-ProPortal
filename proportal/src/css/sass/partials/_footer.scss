@@ -14,11 +14,61 @@
 	}
 }
 
+// hardcoded...
+$sprite_w: 806px;
+
 .collab {
 	margin: 0;
-	a {
+	&__link {
 		display: block;
 		float: right;
+        margin: 0 .5rem .5rem;
+		background: url(../images/sprites.png) no-repeat;
+		height: 30px;
+		&--text {
+			font-size: .5rem;
+			visibility: hidden;
+		}
+
+
+		&.logo-doe-sc {
+			width: 175px;
+			// this logo is twice the size:
+			background-size: $sprite_w*.5 auto;
+			background-position: 0 0;
+			&:hover, &:focus, &:active {
+		//		background-position: 0 -75px ;
+				background-position: 0 -37.5px;
+			}
+		}
+
+		&.logo-moore-fnd {
+			width: 78px;
+			// this logo is twice the size:
+			background-size: $sprite_w*.5 auto;
+		//	background-position: -570px 0;
+			background-position: -285px 0;
+			&:hover, &:focus, &:active {
+				background-position: -285px -37.5px;
+			}
+		}
+
+		&.logo-mit {
+			width: 56px;
+			background-position: -750px 0;
+			&:hover, &:focus, &:active {
+				background-position: -750px -30px;
+			}
+		}
+
+		&.logo-chisholm-lab {
+			width: 199px;
+			background-position: -360px 0;
+			&:hover, &:focus, &:active {
+				background-position: -360px -75px ;
+			}
+		}
 	}
 }
+
 

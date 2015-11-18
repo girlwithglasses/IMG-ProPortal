@@ -1,23 +1,31 @@
 /* partials/utils */
 
-
 // General utility css classes
-.floatR { float: right; }
-.floatL { float: left; }
+.floatR {
+    float: right;
+    padding: 0 0 $gutter $gutter;
+}
+.floatL {
+    float: left;
+    padding: 0 $gutter $gutter 0;
+}
+
 .L { text-align: left; }
 .C { text-align: center; }
 .R { text-align: right; }
 .clearR { clear: right; }
 .clearL { clear: left; }
 .clear { clear: both; }
-.gutterR { margin-right: $gutter; }
-.nospace { margin: 0; }
+
 .ib { display: inline-block; }
 
-.reset-box {
-  @include reset-box;
+.screen-reader {
+    @include hidden-text;
 }
 
+.hide {
+  display: none;
+}
 
 // clearfix styling
 .cf {

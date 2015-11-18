@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: GeneCassetteProfiler.pm 34122 2015-08-27 19:44:13Z klchu $
+# $Id: GeneCassetteProfiler.pm 34662 2015-11-10 21:03:55Z klchu $
 #
 #
 #
@@ -1615,10 +1615,6 @@ sub printGeneContextPhyloProfiler2 {
 
     #  test js
     printJavaScript2();
-
-    #    print "<script language='JavaScript' type='text/javascript'\n";
-    #    print "src='$base_url/test.js'>\n";
-    #    print "</script>\n";
 
     # radio buttons
     print "<p>\n";

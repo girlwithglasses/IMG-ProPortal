@@ -3,7 +3,7 @@
 #   configuration of the Web UI.
 #    --es 12/15/2005
 #
-# $Id: Metagenome.pm 33689 2015-07-06 07:49:51Z jinghuahuang $
+# $Id: Metagenome.pm 34545 2015-10-20 21:36:40Z klchu $
 ############################################################################
 package Metagenome;
 my $section = "Metagenome";
@@ -41,10 +41,23 @@ my $pageSize           = $scaffold_page_size;
 my $max_scaffold_list  = 1000;
 my $max_scaffold_list2 = 500;
 
+sub getPageTitle {
+    return 'Metagenome';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenomes');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
 
     if ( $page eq "binDetail" ) {

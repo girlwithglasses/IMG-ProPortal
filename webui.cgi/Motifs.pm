@@ -1,6 +1,6 @@
 ###########################################################################
 # Motifs.pm  
-# $Id: Motifs.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: Motifs.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package Motifs; 
 my $section = "Motifs"; 
@@ -22,12 +22,12 @@ my $base_dir    = $env->{base_dir};
 my $base_url    = $env->{base_url}; 
 my $nvl         = getNvl();
 my $pageSize    = 1000;
- 
+my $top_base_url = $env->{top_base_url};
 ############################################################################
 # printMotifs - prints unique motifs for a specified sample and experiment
 ############################################################################
 sub printFindMotifsScript {
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     print qq{ 
         <script language='JavaScript' type='text/javascript'> 
         function findMotif (name) { 

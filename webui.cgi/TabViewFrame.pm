@@ -26,7 +26,7 @@ my $tmp_dir             = $env->{tmp_dir};
 my $web_data_dir        = $env->{web_data_dir};
 my $YUI28               = $env->{yui_dir_28};
 my $include_metagenomes = $env->{include_metagenomes};
-
+my $top_base_url = $env->{top_base_url};
 sub printTabViewMarkup {
     if ( $ENV{HTTP_USER_AGENT} =~ /MSIE/ ) {
         print qq{
@@ -102,9 +102,9 @@ sub printTabViewMarkup {
 	     }
         </style>
 
-        <script src='$base_url/chart.js'></script>
+        <script src='$top_base_url/js/chart.js'></script>
         <script language='JavaScript' type='text/javascript' 
-	        src='$base_url/tabviewFrame.js'>
+	        src='$top_base_url/js/tabviewFrame.js'>
         </script>
     };
 

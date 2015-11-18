@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: ImgStatsOverview.pm 34504 2015-10-14 19:28:14Z klchu $
+# $Id: ImgStatsOverview.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package ImgStatsOverview;
 
@@ -48,7 +48,7 @@ my $web_data_dir          = $env->{web_data_dir};
 my $user_restricted_site  = $env->{user_restricted_site};
 my $domain_stats_file     = $env->{domain_stats_file};
 my $enable_interpro       = $env->{enable_interpro};
-
+my $top_base_url = $env->{top_base_url};
 my $GENE_TOTAL_COL = "Gene Total";
 my $total_gene_count;
 my %domain_gene_count;    # hash with gene total for each domain
@@ -1767,12 +1767,12 @@ sub getEnvSample_v20 {
     $type = 'metagenome' if $type eq '';
 
     my $sql;
-    my $total     = 0;
-    my $rclause   = WebUtil::urClause('t');
+    my $total = 0;
+    my %cnt_per_ecosystem;
+    my $rclause = WebUtil::urClause('t');
     my $imgClause = WebUtil::imgClause('t');
 
     if ( $type eq 'metagenome' ) {
-
         # total metagenome count
         $sql = qq{
         select count(*)
@@ -1801,6 +1801,31 @@ sub getEnvSample_v20 {
         $rclause
         $imgClause
         };
+
+	# count distinct will give different count here:
+        my $sql2 = qq{
+            select p.ecosystem, count(v.scaffold_id)
+            from taxon t, GOLD_SEQUENCING_PROJECT p,
+                 dt_virals_from_metag\@core_v400_musk v
+            where p.GOLD_ID = t.SEQUENCING_GOLD_ID
+            and t.obsolete_flag = 'No'
+            and t.taxon_oid = v.taxon_oid
+            and p.longitude is not null
+            and p.latitude is not null
+            $rclause
+            $imgClause
+            group by p.ecosystem
+        };
+        my $cur2 = execSql( $dbh, $sql2, $verbose );
+	my $total_cnt = 0;
+        for ( ;; ) {
+            my ( $ecosystem, $cnt ) = $cur2->fetchrow();
+            last if !$ecosystem;
+            $cnt_per_ecosystem{$ecosystem} = $cnt;
+	    $total_cnt += $cnt;
+        }
+	$cnt_per_ecosystem{"all"} = $total_cnt;
+        $cur2->finish();
     }
 
     if ( $type eq 'genome' || $type eq 'metagenome' || $type eq 'virus' ) {
@@ -1854,6 +1879,9 @@ sub getEnvSample_v20 {
         };
 
     } elsif ( $type eq 'virus' ) {
+	my $selected_ecosystem = param('ecosystem');
+	my $ecosystem_clause;
+	$ecosystem_clause = " and p.ecosystem = '$selected_ecosystem' " if $selected_ecosystem ne "";
         $sql = qq{
         select distinct t.taxon_oid, t.taxon_display_name,
         p.geo_location, p.latitude, p.longitude, p.altitude
@@ -1864,6 +1892,7 @@ sub getEnvSample_v20 {
         and t.taxon_oid = v.taxon_oid
         and p.longitude is not null
         and p.latitude is not null
+        $ecosystem_clause
         order by 4, 5, 3, 2
         };
 
@@ -1875,7 +1904,7 @@ sub getEnvSample_v20 {
             group by t.taxon_oid
         };
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for ( ; ; ) {
+        for ( ;; ) {
             my ( $taxon_oid, $cnt ) = $cur2->fetchrow();
             last if !$taxon_oid;
             $taxon2scaffoldcnt{$taxon_oid} = $cnt;
@@ -1898,10 +1927,10 @@ sub getEnvSample_v20 {
         
         next if ( $latitude eq '' || $longitude eq '' );
         
-        if(looks_like_number($latitude)) {
+        if (looks_like_number($latitude)) {
             $latitude = $latitude * 1; # hack to convert -010.05000 to -10.05
         }
-        if(looks_like_number($longitude)) {
+        if (looks_like_number($longitude)) {
             $longitude = $longitude * 1;
         }
 
@@ -1924,21 +1953,7 @@ sub getEnvSample_v20 {
         push( @recs, "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude" );        
     }
 
-#    my $cur = execSql( $dbh, $sql, $verbose );
-#     my @recs;
-#    for ( ; ; ) {
-#        my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = $cur->fetchrow();
-#        last if !$taxon_oid;
-#        $latitude  = strTrim($latitude);
-#        $longitude = strTrim($longitude);
-#        if ( $latitude eq '' || $longitude eq '' ) {
-#            next;
-#        }
-#        push( @recs, "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude" );
-#    }
-#    $cur->finish();
-
-    return ( \@recs, ( $total - ( $#recs + 1 ) ), $total, \%taxon2scaffoldcnt );
+    return ( \@recs, ( $total - ( $#recs + 1 ) ), $total, \%taxon2scaffoldcnt, \%cnt_per_ecosystem );
 }
 
 # api v3
@@ -1964,7 +1979,6 @@ sub getEnvSample_v20 {
 #    order by e.latitude, e.longitude, e.geo_location, t.taxon_display_name
 #
 sub googleMap_new {
-
     # flag=1 -> show only those genomes in the cart
     # flag=0 or missing -> show all genomes
     my $flag_mapCart = param('mapcart');
@@ -2010,8 +2024,10 @@ sub googleMap_new {
     # should be: order by e.latitude, e.longitude, t.taxon_display_name
     # recs of: "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude"
     # only public genomes
-    my ( $recs_aref, $count_rejected_getEnvSample, $total, $taxon2scaffoldcnt_href ) = getEnvSample_v20( $dbh, $type );
+    my ( $recs_aref, $count_rejected_getEnvSample, $total,
+	 $taxon2scaffoldcnt_href, $cnt_per_ecosystem_href ) = getEnvSample_v20( $dbh, $type );
     my %taxon2scaffoldcnt = %$taxon2scaffoldcnt_href;
+    my %cnt_per_ecosystem = %$cnt_per_ecosystem_href;
 
     # count_rejected_getEnvSample returned by getEnvSample contains the
     # number of genomes out of the whole database with missing coords data.
@@ -2041,11 +2057,12 @@ sub googleMap_new {
 
     my $okcount = 0;
     if ( $type eq 'virus' ) {
-        foreach my $line (@$recsToDisplay_aref) {
-            ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
-            my $t2scount = $taxon2scaffoldcnt{$taxon_oid};
-            $okcount = $okcount + $t2scount;
-        }
+        #foreach my $line (@$recsToDisplay_aref) {
+        #    ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
+        #    my $t2scount = $taxon2scaffoldcnt{$taxon_oid};
+        #    $okcount = $okcount + $t2scount;
+        #}
+	$okcount = $cnt_per_ecosystem{"all"};
         $count_rejected_getEnvSample = $total - $okcount;
     }
 
@@ -2086,10 +2103,9 @@ sub googleMap_new {
         </p>
         };
 
-        my $hint =
-"For any given genome at a location on the map, you may access the <u>list of scaffolds</u> that belong to a virus by clicking on a map pin and selecting the <u>count</u> next to the genome of interest for that location. The <u>total count</u> of viral scaffolds for a location is displayed in the label and tooltip of a map pin e.g. Arctic Ocean [3].";
+        my $hint = "For any given genome at a location on the map, you may access the <u>list of scaffolds</u> that belong to a virus by clicking on a map pin and selecting the <u>count</u> next to the genome of interest for that location. The <u>total count</u> of viral scaffolds for a location is displayed in the label and tooltip of a map pin e.g. Arctic Ocean [3].";
         printHint($hint);
-        print "<br/>";
+	printSelectViralEcosystem($cnt_per_ecosystem_href);
     }
 
     my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
@@ -2105,12 +2121,12 @@ sub googleMap_new {
     print qq{
     <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-    <script type="text/javascript" src="$base_url/googlemap.js"></script>
-    <script type="text/javascript" src="$base_url/markerclusterer.js"></script>
-    <script type="text/javascript" src="$base_url/markerwithlabel.js"></script>
+    <script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
+    <script type="text/javascript" src="$top_base_url/js/markerclusterer.js"></script>
+    <script type="text/javascript" src="$top_base_url/js/markerwithlabel.js"></script>
     <link rel="stylesheet" type="text/css" href="$base_url/markerwithlabel.css" />
 
-    <div id="map_canvas" style="width: 1000px; height: 700px; position: relative;"></div>
+    <div id="map_canvas" style="width:1000px; height:700px; position:relative;"></div>
 
     <script type="text/javascript">
         var map = createMap(2, 0, 0);
@@ -2131,14 +2147,13 @@ sub googleMap_new {
 
         $name = escapeHTML($name);
         my $tmp_geo_location = escHtml($geo_location);
-        my $tmp_altitude     = escHtml($altitude);
-        my $scf_cnt          = $taxon2scaffoldcnt{$taxon_oid} if $type eq 'virus';
+        my $tmp_altitude = escHtml($altitude);
+        my $scf_cnt = $taxon2scaffoldcnt{$taxon_oid} if $type eq 'virus';
 
         # add geo location check too ? maybe not
         # I have to check the array and add the taxon to the tooltip
         if ( ( $last_lat ne $latitude ) || ( $last_lon ne $longitude ) ) {
             if ( $info ne "" ) {
-
                 # clean lat and long remove " ' , etc
                 my $clat  = convertLatLong($last_lat);
                 my $clong = convertLatLong($last_lon);
@@ -2221,6 +2236,10 @@ sub googleMap_new {
         </script>
     };
 
+    #if ($type eq "virus") {
+    #	printSelectViralEcosystem();
+    #}
+
     if ( $flag_mapCart ne 1 ) {
         $count_rejected = $count_rejected_getEnvSample;
     } else {
@@ -2235,11 +2254,38 @@ sub googleMap_new {
     }
 }
 
+sub printSelectViralEcosystem {
+    my ($cnt_per_ecosystem_href) = @_;
+    my %cnt_per_ecosystem = %$cnt_per_ecosystem_href;
+
+    my @ecosystems = sort keys %cnt_per_ecosystem;
+    my $selected_ecosystem = param('ecosystem');
+
+    print "<p>Ecosystem: ";
+    my $url = "$section_cgi&page=googlemap&type=virus&ecosystem=";
+    print qq{
+        <select id='ecosystem' name='ecosystem'
+                onchange="window.open('$url' + this.value, '_self')";
+                style="width:200px;">
+    };
+    my $total = $cnt_per_ecosystem{"all"};
+    print "<option value=''>All [$total]</option>\n";
+    foreach my $x (@ecosystems) {
+	next if $x eq "all"; # already added
+	my $total = $cnt_per_ecosystem{$x};
+        print "<option value='$x' ";
+        if ( $x eq $selected_ecosystem ) {
+            print " selected ";
+        }
+        print ">" . $x . " [$total]</option>\n";
+    }
+    print "</select></p>";
+}
+
 # gets all gold data
 # returns 2 hashes one keyed on nbci and the another on taxon oid
 #
 sub getImgGoldLatLon_old {
-
     my $sql = qq{
     select p.ncbi_project_id,  p.img_oid,
     p.latitude, p.longitude, p.altitude, p.geo_location
@@ -4025,7 +4071,6 @@ sub printTreeStats {
     if ( $excel ne 'yes' ) {
         print qq{
         <h1>$domain Phylum Count Statistics</h1>
-
 
     <input class="smdefbutton" type="button" name="Export"
     value="Export" onclick="_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link ImgStatsOverview treeStats']); window.open('main.cgi?section=ImgStatsOverview&page=treeStats&excel=yes&domain=$domain', '_self')">

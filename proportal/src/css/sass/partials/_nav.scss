@@ -1,51 +1,145 @@
 /* partials/nav */
 
-.sidebar {
+@mixin mobile_nav ( $h-gap : $gutter * .5 ) {
+	display: block;
+	padding: $gutter $h-gap;
+	border: 0 solid transparent;
+	border-width: 0 $h-gap;
+}
 
-	li {
-		a {
-			display: block;
-			padding: .5rem;
-			border-left: .25rem solid transparent;
-			border-bottom: 1px dotted lighten( rgb(145,144,144), 25%);
+// horizontal bar menu height
+$menu-ht: 2 * $line-ht;
+// horiz bar submenu width
+$l-sub-w: 15rem;
+// navigation toggles
+$toggle-width: 2 * $line-ht;
 
-			&:hover, &:focus, &:active {
-//				background: lighten( rgb(145,144,144), 25%);
-				border-bottom-style: solid;
-                border-left-color: $secondary;
-			}
+
+/** checkbox replacement
+
+p > input[type=checkbox], p > input[type=radio] {
+    position: absolute;
+    left: 0;
+    opacity: 0;
+}
+input[type=checkbox] + label, input[type=radio] + label {
+    padding-left: 20px!important;
+}
+
+p:not(#foo) {
+    > input + label {
+        background: image-url('fancyCheckbox.png') 0 -1px no-repeat;
+        height: 16px;
+    }
+    > input[type=radio] + label {
+        background-position: 0 -161px;
+    }
+    // Checked styles
+    > input[type=radio]:checked {
+        + label {
+            background-position: 0 -241px;
+        }
+        &:hover + label, &:focus + label, + label:hover{
+            background-position: 0 -261px;
+        }
+    }
+    > input[type=checkbox]:checked {
+        + label {
+            background-position: 0 -81px;
+        }
+        &:hover + label, &:focus + label, + label:hover{
+            background-position: 0 -101px;
+        }
+    }
+    // Hover & Focus styles
+    > input[type=checkbox] {
+        &:hover + label, &:focus + label, + label:hover{
+            background-position: 0 -21px;
+        }
+    }
+    > input[type=radio] {
+        &:hover + label, &:focus + label, + label:hover{
+            background-position: 0 -181px;
+        }
+    }
+    // Active styles
+    > input[type=checkbox]{
+        &:active + label, + label:hover:active{
+            background-position: 0 -41px;
+        }
+    }
+    > input[type=radio]{
+        &:active + label, + label:hover:active{
+            background-position: 0 -201px;
+        }
+    }
+    > input[type=checkbox]:checked {
+        &:active + label, + label:hover:active{
+            background-position: 0 -121px;
+        }
+    }
+    > input[type=radio]:checked {
+        &:active + label, + label:hover:active{
+            background-position: 0 -281px;
+        }
+    }
+    // Disabled styles
+    > input[type=checkbox]:disabled{
+        + label, &:hover + label, &:focus + label, + label:hover, + label:hover:active{
+            background-position: 0 -61px;
+        }
+    }
+    > input[type=radio]:disabled{
+        + label, &:hover + label, &:focus + label, + label:hover, + label:hover:active{
+            background-position: 0 -221px;
+        }
+    }
+    > input[type=checkbox]:checked{
+        &:disabled + label, &:hover:disabled + label, &:focus:disabled + label, &:disabled + label:hover, &:disabled + label:hover:active{
+            background-position: 0 -141px;
+        }
+    }
+    > input[type=radio]:checked{
+        &:disabled + label, &:hover:disabled + label, &:focus:disabled + label, &:disabled + label:hover, &:disabled + label:hover:active{
+            background-position: 0 -301px;
+        }
+    }
+}
+*/
+
+.toggle-me, .sidebar {
+	transition: max-height .5s;
+}
+
+.content {
+	transition: width .5s;
+}
+
+// input elements (checkboxes)
+.nav-toggle {
+	display: none;
+
+	~ label {
+		float: right;
+		@include hidden-text;
+		@include icon;
+		@include icon-up-arr;
+	}
+
+	&:checked {
+		~ label {
+			@include icon-down-arr;
 		}
-	}
 
-	li a {
-		padding-left: $gutter;
-	}
-	li li a {
-		padding-left: $gutter*2;
-	}
-	li li li a {
-		padding-left: $gutter*3;
-	}
-	li li li li a {
-		padding-left: $gutter*4;
-	}
-    .parent a {
-        border-left-color: lighten( $secondary, 50% );
-    }
-    .parent .parent a {
-        border-left-color: lighten( $secondary, 35% );
-    }
-	.parent > a {
-		border-left-color: lighten( $secondary, 20%);
-	}
-	.parent .current a {
-		border-left-color: $secondary;
+		~ .toggle-me {
+			@include ht-max;
+		}
 	}
 }
 
+/* navigation layout */
 
-.menu {}
-
-.sub-menu {}
-
-.menu-item {}
+// small screen width: navigation is hidden;
+// - sidebar nav never shown
+// - horiz-bar and jgi-links turn into a single set of links accessed by a toggle
+// styling is identical for these sets of links

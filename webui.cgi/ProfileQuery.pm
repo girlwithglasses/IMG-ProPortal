@@ -44,10 +44,19 @@ my %funcType2Suffix = (
   "TIGRfam" => "tfam",
 );
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Profile Query';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindFunctions');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( $page eq "profileQueryForm" ) {

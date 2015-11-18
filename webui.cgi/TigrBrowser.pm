@@ -2,7 +2,7 @@
 # TigrBrowser.pm - TIGRfam browser.
 #   --es 03/22/2006
 #
-# $Id: TigrBrowser.pm 33689 2015-07-06 07:49:51Z jinghuahuang $
+# $Id: TigrBrowser.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package TigrBrowser;
 my $section = "TigrBrowser";
@@ -44,10 +44,19 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
     $maxGeneListResults = getSessionParam("maxGeneListResults");
 }
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'TIGRfam Browser';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindFunctions');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( $page eq "tigrBrowser" ) {

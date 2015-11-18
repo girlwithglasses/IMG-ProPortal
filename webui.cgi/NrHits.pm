@@ -1,7 +1,7 @@
 ###########################################################################
 # NrHits - Module to handle precomputed NR hits list.
 #
-# $Id: NrHits.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: NrHits.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package NrHits;
 my $section = "NrHits";
@@ -26,10 +26,19 @@ my $fastacmd_bin = $env->{ fastacmd_bin };
 my $ncbi_blast_server_url = $env->{ ncbi_blast_server_url };
 my $verbose = $env->{ verbose };
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Gene Details';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( $page eq "" ) {

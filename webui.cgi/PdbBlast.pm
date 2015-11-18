@@ -2,7 +2,7 @@
 # Run external PDB Blast.
 #    --es 06/20/2007
 #
-# $Id: PdbBlast.pm 31512 2014-07-28 17:51:15Z klchu $
+# $Id: PdbBlast.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package PdbBlast;
 my $section = "PdbBlast";
@@ -31,10 +31,19 @@ my $verbose = $env->{ verbose };
 my $blast_data_dir = $env->{ blast_data_dir };
 my $pdb_blast_url = $env->{ pdb_blast_url };
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Protein Data Bank BLAST';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( paramMatch( "pdbBlast" ) ) {

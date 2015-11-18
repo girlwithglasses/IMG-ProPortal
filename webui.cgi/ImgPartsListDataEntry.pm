@@ -30,11 +30,24 @@ my $max_count = 200;
 my $max_upload_line_count = 10000;
 
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "imgPartsListCart" );
+    return 'IMG Parts List Data Entry';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
 
 ############################################################################
-# dispatch - Dispatch to pages for this section.
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     if( !$contact_oid ) {
         webError( "Please login in." );
     } 

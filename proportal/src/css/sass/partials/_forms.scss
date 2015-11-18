@@ -1,45 +1,68 @@
-input[type="text"], input[type="email"], input[type="url"], input[type="password"], input[type="search"], textarea {
-	color: #ced5d9;
+/* FORMS */
+form {
+	overflow: auto;
 }
 
+form ol, form ul {
+    list-style: none;
+    margin: 0;
+}
+
+legend {
+	padding-bottom: $line-ht;
+}
+
+input[type="select"], select {
+//  from BASELINE.js
+//	display: block;
+	height: $line-ht;
+	border-width: 0;
+	padding: 0;
+}
+
+
+textarea { // mostly from baseline.js
+	vertical-align: baseline;
+	display: block;
+	border: 1px solid $form-element-border;
+//	margin: 0 0 -2px 0;
+}
+
+//
+input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], input[type="url"] {
+// from BASELINE.js
+	font-size: inherit;
+//	border: 1px solid $form-element-border;
+//	line-height: 20px;
+    padding: 0 .25rem;
+//	margin: $line-ht*.5 0 $line-ht;
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], input[type="url"], textarea {
+	color: #ced5d9;
+    &:focus, &:active {
+        color: #666;
+    }
+}
+
+// buttons of all sorts!
 button, html input[type="button"], input[type="reset"], input[type="submit"] {
 	border: none;
 	background: $secondary;
 	color: white;
-//	padding: 4px 6px;
 	text-transform: uppercase;
 	vertical-align: middle;
+    line-height: $line-ht;
 }
 
-.fillable, .fillable .cont {
-	overflow: hidden;
-}
-.fillable .filler {
-	width: 100%;
+// checkboxes for the checkbox hack
+.nav-trigger {
+    display: none;
 }
 
-.formLine {
-    overflow: hidden;
+/* inline form */
+
+.inline-form {
+    display: inline-block;
+    margin: 0;
 }
-.formLine input {
-    width: 100%;
-}
-.formLine label {
-    float: left;
-}
-.formLine span {
-    display: block;
-    overflow: hidden;
-    padding: 0 $gutter*.5;
-}
-.formLine button {
-    float: right;
-	padding: 0 $gutter;
-}
-/*
-.formLine input, .formLine button {
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-}
-*/

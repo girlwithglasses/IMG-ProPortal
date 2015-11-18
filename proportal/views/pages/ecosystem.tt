@@ -4,18 +4,18 @@
 %]
 <h2>Sample Distribution by Ecosystem</h2>
 <p>
-	Browse the distribution of samples by the ecosystem in which they are found.
+	Browse the distribution of samples by the ecosystem in which they are found. From left to right, the environmental classification becomes more granular; the vertical height of each segment represents the proportion of the data set found in that environment.
 </p>
-<section>
-<p>Filter by subset:</p>
 [%	IF data_filters && data_filters.all %]
+<section id="filters">
+<p>Filter by subset:</p>
 <ul>
 [%	# filter domain
 		FOR fd IN data_filters.all.keys.sort;
 			FOR f IN data_filters.all.$fd.values; %]
 <li><a href="[% link('proportal/ecosystem') %]/[% f.id %]">[% f.label %]</a>[%
 				IF data_filters.active && data_filters.active.$fd == f.id;
-		%] (currently displayed)[%
+		%] <span class="current">(currently displayed)</span>[%
 				END; %]
 </li>
 [%			END; %]
@@ -24,12 +24,38 @@
 			END; %]</li>
 [%		END; %]
 </ul>
+</section> <!-- / end section filters -->
 [% END %]
 <div id="partition">
 </div>
 
 <div id="ecosystem">
 </div>
-</section>
+
+<section role="complementary" class="init" id="info">
+<ul class="noDot">
+	<li class="instructions">
+		<h3>Sample details</h3>
+		<p>
+			Hover over a segment to identify it. Click on a blue segment (representing an environment type) to zoom in; click on the left-most segment to zoom out.
+		</p>
+	</li>
+[%	FOREACH s IN results.array; %]
+<li data-sample-id="[% s.taxon_oid %]" id="taxon_oid_[% s.taxon_oid %]" class="sample_details">
+	<h4>[% s.taxon_display_name %]</h4>
+	<p>Ecosystem classification:</p>
+	<dl>
+[%	FOR e IN results.class_types %]
+		<dt>[% e.replace("_", " ") %]</dt>
+		<dl>[% s.$e %]</dl>
+[%	END; %]
+	</dl>
+	<p><a class="sample_details__link" href="[% link('taxon', { taxon_oid => s.taxon_oid }) %]">view taxon details</a></p>
+</li>
+[%	END; %]
+</ul>
+
+</section> <!-- / end complementary -->
+
 </article>
 [%	END; %]

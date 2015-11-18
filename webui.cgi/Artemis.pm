@@ -1,7 +1,7 @@
 ############################################################################
 # Artemis.pm - Handle web artemis start up.
 #     --es 09/13/2007
-# $Id: Artemis.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: Artemis.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package Artemis;
 use strict;
@@ -27,11 +27,12 @@ my $cgi_tmp_dir              = $env->{cgi_tmp_dir};
 my $cgi_url                  = $env->{cgi_url};
 my $cgi_dir                  = $env->{cgi_dir};
 my $base_url                 = $env->{base_url};
+my $top_base_url                 = $env->{top_base_url};
 my $base_dir                 = $env->{base_dir};
 my $artemis_url              = $env->{artemis_url};
 my $img_internal             = $env->{img_internal};
 my $artemis_link             = alink( $artemis_url, "Artemis" );
-
+my $top_base_url = $env->{top_base_url};
 my $verbose                  = $env->{verbose};
 my $max_export_scaffold_list = 1000;
 my $include_img_terms        = 0;
@@ -122,7 +123,7 @@ sub printACTWebStart {
 <?xml version="1.0" encoding="UTF-8"?>
 <jnlp
     spec="1.0+"
-    codebase="$base_url">
+    codebase="$top_base_url/lib">
     <information>
         <title>Artemis Comparison Tool - ACT</title>
         <vendor>Sanger Institute</vendor>
@@ -542,7 +543,7 @@ sub printACTPairwise_yui {
     print "];\n";
     print "</script>\n";
 
-    print "<script src = \"$base_url/actPairwise.js\" ></script>\n";
+    print "<script src = \"$top_base_url/js/actPairwise.js\" ></script>\n";
 
     print hiddenVar( "section", $section );
     print hiddenVar( "page",    "pairwise" );    # updated by javascript
@@ -556,9 +557,6 @@ sub printACTPairwise_yui {
 
 }
 
-# print "<script src = \"$base_url/datatableDragAndDrop.js\" ></script>\n";
-
-# <link rel="stylesheet" type="text/css" href="$YUI/build/fonts/fonts-min.css" />
 sub printYUI {
     print <<EOF;
 
@@ -1813,7 +1811,7 @@ sub processArtemisFile {
     );
     printStatusLine( "Loaded.", 2 );
 
-    my $archive = "$base_url/powmap.jar";
+    my $archive = "$top_base_url/lib/powmap.jar";
     my $dataUrl = "$base_url/tmp/$$.art";
     my $s       = qq{
       <applet code='DianaApplet.class' archive='$archive'

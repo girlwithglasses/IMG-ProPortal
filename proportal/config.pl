@@ -25,6 +25,7 @@
 			template_toolkit => {
 				INCLUDE_PATH => 'views:views/pages:views/layouts:views/inc:public:../../webui.htd/views/pages',
 				RELATIVE => 1,
+				RECURSION => 1
 			}
 		},
 	},
@@ -37,6 +38,7 @@
 		build_date => "Build date",
 	},
 
+	debug => 1,
 
 	# URL of the ProPortal app
 	pp_app => "https://img-proportal-dev.jgi-psf.org/",

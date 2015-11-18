@@ -3,7 +3,7 @@
 #   cumulative statistics.  Formerly taxonStatsRdbms.pl
 #      --es 07/07/2005
 #
-# $Id: CompareGenomes.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: CompareGenomes.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package CompareGenomes;
 my $section = "CompareGenomes";
@@ -55,7 +55,7 @@ my $nvl                  = getNvl();
 my $YUI                  = $env->{yui_dir_28};
 my $enable_interpro = $env->{enable_interpro};
 my $enable_ani    = $env->{enable_ani};
-
+my $top_base_url = $env->{top_base_url};
 # Get user's MyIMG preference to show rows with zero counts
 # -- per Natalia for IMG 3.3 +BSJ 10/15/10
 my $hideZeroStats = getSessionParam("hideZeroStats");
@@ -85,6 +85,8 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param("page");
 
     if ( paramMatch("exportCompStats") ne "" ) {
@@ -1618,7 +1620,7 @@ sub printAllKeggTable {
     my @datas = ($datastr);
     $chart->DATA( \@datas );
 
-    print "<script src='$base_url/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
 
     print qq{
         <link rel="stylesheet" type="text/css"
@@ -1707,7 +1709,7 @@ sub printAllKeggTable {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html", "printKeggs", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2605,7 +2607,7 @@ sub printAllPfamTable {
     my @datas = ($datastr);
     $chart->DATA( \@datas );
 
-    print "<script src='$base_url/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
     print qq{
         <link rel="stylesheet" type="text/css"
           href="$YUI/build/container/assets/skins/sam/container.css" />
@@ -2693,7 +2695,7 @@ sub printAllPfamTable {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printPfams", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2835,7 +2837,7 @@ sub printAllTIGRfamTable {
     my @datas = ($datastr);
     $chart->DATA( \@datas );
 
-    print "<script src='$base_url/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
     print qq{
         <link rel="stylesheet" type="text/css"
           href="$YUI/build/container/assets/skins/sam/container.css" />
@@ -2925,7 +2927,7 @@ sub printAllTIGRfamTable {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html", "printTIGRfams", 1 );
             while ( my $s = $FH->getline() ) {
@@ -3018,7 +3020,7 @@ sub printAllCogTable {
     my @datas = ($datastr);
     $chart->DATA( \@datas );
 
-    print "<script src='$base_url/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
     print qq{
         <link rel="stylesheet" type="text/css"
           href="$YUI/build/container/assets/skins/sam/container.css" />
@@ -3110,7 +3112,7 @@ sub printAllCogTable {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html", "print${OG}s", 1 );
             while ( my $s = $FH->getline() ) {

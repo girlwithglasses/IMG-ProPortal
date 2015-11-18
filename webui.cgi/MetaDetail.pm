@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 34267 2015-09-16 20:47:08Z jinghuahuang $
+# $Id: MetaDetail.pm 34662 2015-11-10 21:03:55Z klchu $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -61,7 +61,7 @@ my $ncbi_entrez_base_url              = $env->{ncbi_entrez_base_url};
 my $pubmed_base_url                   = $env->{pubmed_base_url};
 my $ncbi_project_id_base_url          = $env->{ncbi_project_id_base_url};
 my $cmr_jcvi_ncbi_project_id_base_url = $env->{cmr_jcvi_ncbi_project_id_base_url};
-
+my $top_base_url = $env->{top_base_url};
 my $aclame_base_url       = $env->{aclame_base_url};
 my $gcat_base_url         = $env->{gcat_base_url};
 my $greengenes_base_url   = $env->{greengenes_base_url};
@@ -134,10 +134,26 @@ if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Microbiome Details';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my $page = param('page');
+    my @a = ();
+    
+        if ( $page eq 'taxonArtemisForm' ) {
+            @a = ( "FindGenomes", '', '', '', '', 'GenerateGenBankFile.pdf' );
+        } elsif(WebUtil::paramMatch("noHeader") eq "") {
+            @a = ("FindGenomes");
+        }    
+    
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     timeout( 60 * $merfs_timeout_mins );
 
     my $sid = getContactOid();
@@ -2041,7 +2057,7 @@ sub printTaxonDetail_ImgGold {
                     my $_map = <<END_MAP;
             <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
             <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-            <script type="text/javascript" src="$base_url/googlemap.js"></script>
+            <script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
             <div id="map_canvas" style="width: 500px; height: 300px; position: relative;"></div>
             <script type="text/javascript">
             var map = createMap(10, $clat, $clong);
@@ -2118,7 +2134,7 @@ END_MAP
                     my $_map = <<END_MAP;
             <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
             <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-            <script type="text/javascript" src="$base_url/googlemap.js"></script>
+            <script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
             <div id="map_canvas" style="width: 500px; height: 300px; position: relative;"></div>
             <script type="text/javascript">
             var map = createMap(10, $clat, $clong);
@@ -3399,7 +3415,7 @@ sub printEnvSampleDetails {
         my $_map             = <<END_MAP;
     <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-    <script type="text/javascript" src="$base_url/googlemap.js"></script>
+    <script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
     <div id="map_canvas" style="width: 500px; height: 300px; position: relative;"></div>
     <script type="text/javascript">
     var map = createMap(10, $clat, $clong);
@@ -4047,7 +4063,7 @@ sub printScaffolds {
         if ( ! ($enable_workspace && $user_restricted_site && !$public_nologin_site) )
         {
             print qq{
-                <script type="text/javascript" src="$base_url/Workspace.js" >
+                <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
                 </script>
             };
         }
@@ -4295,7 +4311,7 @@ sub printScaffoldDistribution {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html",
 		  "printScaffoldDistribution", 1 );
@@ -4609,7 +4625,7 @@ sub printScaffoldReadDistribution {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html",
 		  "printScaffoldReadDistribution", 1 );
@@ -4719,7 +4735,7 @@ sub printScaffoldLengthDistribution {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html",
 		  "printScaffoldLengthDistribution", 1 );
@@ -7001,7 +7017,7 @@ sub printCogCategories {
     print "<td valign=top align=left>\n";
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html", "printCogCategories", 1 );
             while ( my $s = $FH->getline() ) {
@@ -9491,7 +9507,7 @@ sub printTaxonPfamCat {
     print "<td valign=top align=left>\n";
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html", "printTaxonPfamCat", 1 );
             while ( my $s = $FH->getline() ) {
@@ -10329,7 +10345,7 @@ sub printTaxonTIGRfamCat {
     print "<td valign=top align=left>\n";
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html", "printTIGRfam", 1 );
             while ( my $s = $FH->getline() ) {
@@ -11603,7 +11619,7 @@ sub printKeggCategories {
     ## print the chart:
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		($chart->FILEPATH_PREFIX . ".html", "printKeggCategories", 1);
             while ( my $s = $FH->getline() ) {

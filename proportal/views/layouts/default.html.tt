@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 	<title>[% title %]</title>
-[%	PROCESS 'inc/page_head.tt';
+[%
+    PROCESS 'inc/page_head.tt';
 	IF tmpl_includes;
 		IF tmpl_includes.tt_styles;
 			FOR s IN tmpl_includes.tt_styles;
@@ -10,7 +11,7 @@
 				PROCESS $f_name;
 			END;
 		END;
-		IF tmpl_includes.styles;
+		IF tmpl_includes.head;
 			# render style content
 		END;
 	END; %]
@@ -18,32 +19,51 @@
 <body[% body_class %]>
 <!-- template: [% template.name %] -->
 <div class="wrapper">
-[%	PROCESS 'inc/header.tt';
-	PROCESS 'inc/menu.tt' %]
-	<div class="content-wrap">
-	<article class="content" role="main">
-[%	IF breadcrumbs;
-		PROCESS 'inc/breadcrumbs.tt';
-	END;
-	IF message;
+[%
+    PROCESS 'inc/header.tt';
+%]
+<div class="nav-holder">
+    <input type="checkbox" id="horiz-bar-toggle" class="nav-toggle horiz-global-toggle" />
+    <!-- this toggle shows / hides the global nav and horiz-menu in mobile view -->
+    <div class="horiz-bar-toggle__container">
+        <label class="horiz-bar-toggle__label" for="horiz-bar-toggle">Menu</label>
+    </div>
+[%
+	PROCESS 'inc/nav_horiz_bar.tt';
+    PROCESS 'inc/nav_jgi_links.tt';
+%]
+</div>
+[%	IF message;
 		PROCESS 'inc/message.tt';
 	END;
-	# the page content
-	content %]
+%]
+
+    <input type="checkbox" id="sidebar-toggle" class="nav-toggle" />
+    <div class="sidebar-toggle__container">
+        <label class="sidebar-toggle__label" for="sidebar-toggle">toggle sidebar</label>
+    </div>
+[%
+    IF breadcrumbs;
+		PROCESS 'inc/nav_breadcrumbs.tt';
+	END;
+%]
+	<article class="content cf" role="main">
+[%	content	    # the page content %]
 	</article>
-[%	PROCESS 'inc/nav.tt'; %]
-	</div>
-[%	PROCESS 'inc/footer.tt' %]
+[%
+    PROCESS 'inc/nav_sidebar.tt';
+    PROCESS 'inc/footer.tt';
+%]
 </div>
-[%	IF cfg.debug;
+[%	IF settings.debug;
 		PROCESS 'inc/debug.tt';
 	END;
 
 	IF tmpl_includes;
-		IF tmpl_includes.scripts;
-			FOR x IN tmpl_includes.tt_scripts; %]
-<script type="text/javascript" src="[% x %]"></script>
-[%			END;
+		IF tmpl_includes.foot;
+			FOR x IN tmpl_includes.foot;
+                x;
+			END;
 		END;
 		IF tmpl_includes.tt_scripts;
 			FOR s IN tmpl_includes.tt_scripts;

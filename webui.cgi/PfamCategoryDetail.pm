@@ -4,7 +4,7 @@
 #     was put into perl modules.
 #    --es 10/06/2007
 #
-# $Id: PfamCategoryDetail.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: PfamCategoryDetail.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package PfamCategoryDetail;
 my $section = "PfamCategoryDetail";
@@ -56,10 +56,19 @@ if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Pfam Category';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindFunctions');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     timeout( 60 * $merfs_timeout_mins );
 
     my $page = param("page");

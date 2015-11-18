@@ -1,6 +1,6 @@
 ###########################################################################
 # Snps.pm  
-# $Id: Snps.pm 30377 2014-03-10 23:39:16Z jinghuahuang $
+# $Id: Snps.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package Snps; 
 my $section = "Snps"; 
@@ -22,7 +22,7 @@ my $verbose      = $env->{verbose};
 my $base_dir     = $env->{base_dir}; 
 my $base_url     = $env->{base_url}; 
 my $snp_enabled  = $env->{snp_enabled};
- 
+my $top_base_url = $env->{top_base_url};
 
 ############################################################################
 # printGeneSnps - prints all snps for a specified gene and experiment
@@ -63,7 +63,7 @@ sub printGeneSnps {
     my ( $gid3, $exp_oid, $exp_name ) = $cur->fetchrow();
     $cur->finish();
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     print qq{ 
         <script language='JavaScript' type='text/javascript'> 
         function findSnp(name) { 

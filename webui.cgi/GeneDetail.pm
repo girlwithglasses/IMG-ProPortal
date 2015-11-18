@@ -2,7 +2,7 @@
 # GeneDetail.pm - 2nd version
 #      --es 01/09/2007
 #
-# $Id: GeneDetail.pm 34366 2015-09-25 20:29:18Z klchu $
+# $Id: GeneDetail.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package GeneDetail;
 my $section = "GeneDetail";
@@ -36,7 +36,7 @@ my $verbose      = $env->{verbose};
 my $base_dir     = $env->{base_dir};
 my $img_internal = $env->{img_internal};
 my $snp_enabled  = $env->{snp_enabled};
-
+my $top_base_url = $env->{top_base_url};
 #my $use_gene_priam = $env->{ use_gene_priam };
 my $tmp_dir               = $env->{tmp_dir};
 my $tmp_url               = $env->{tmp_url};
@@ -140,10 +140,24 @@ $top_annotations_to_show = 100 if $top_annotations_to_show == 0;
 my $nvl = getNvl();
 my $contact_oid;
 
+sub getPageTitle {
+    return 'Gene Details';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenes');
+    return @a;
+}
+
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $sid  = getContactOid();
     $contact_oid = $sid;
     my $page = param("page");
@@ -3016,7 +3030,7 @@ sub printFuncEvidence {
     print "</tr>\n";
     print "</table>\n";
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 }
 
 ############################################################################
@@ -3042,7 +3056,7 @@ sub printRnaNeighborhood {
         print "</tr>\n";
     }
     print "</table>\n";
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 }
 
 ############################################################################

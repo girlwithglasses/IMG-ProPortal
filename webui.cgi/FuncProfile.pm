@@ -10,7 +10,7 @@
 #    2: id
 #    3: gene_count
 #
-# $Id: FuncProfile.pm 31256 2014-06-25 06:27:22Z jinghuahuang $
+# $Id: FuncProfile.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package FuncProfile;
 my $section = "FuncProfile";
@@ -42,10 +42,22 @@ my $max_gene_batch = 250;
 
 my $verbose = $env->{ verbose };
 
+sub getPageTitle {
+    return 'Function Profile';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ( "AnaCart");
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param( "page" );
 
     if( $page eq "funcProfileGenes" ) {

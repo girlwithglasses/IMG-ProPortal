@@ -1,4 +1,4 @@
-# $Id: TaxonDeleted.pm 31234 2014-06-19 03:38:04Z klchu $
+# $Id: TaxonDeleted.pm 34555 2015-10-21 18:22:11Z klchu $
 
 package TaxonDeleted;
 my $section = "TaxonDeleted";
@@ -29,10 +29,19 @@ my $web_data_dir         = $env->{web_data_dir};
 my $img_edu              = $env->{img_edu};
 
 
-#
-#
+sub getPageTitle {
+    return 'Taxon Deleted';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenomes');
+    return @a;
+}
+
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     $numTaxon = 0 if ( $numTaxon eq "" );
 
     printDeletedTaxon();

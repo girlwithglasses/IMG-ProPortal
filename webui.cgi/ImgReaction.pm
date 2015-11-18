@@ -21,14 +21,22 @@ my $verbose = $env->{ verbose };
 my $section = "ImgReaction";
 my $section_cgi = "$main_cgi?section=$section";
 
+sub getPageTitle {
+    return 'IMG Reaction';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
-# dispatch - Dispatch pages for this section.
-#   All page links to this same section should be in the form of
-#
-#   my $url = "$main_cgi?section=$section&page=..." 
-#
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
 
     my $page = param( "page" );
 

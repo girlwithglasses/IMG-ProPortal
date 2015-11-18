@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: ProPortal.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: ProPortal.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package ProPortal;
 
@@ -21,7 +21,7 @@ my $section_cgi = "$main_cgi?section=$section";
 my $verbose     = $env->{verbose};
 my $base_url    = $env->{base_url};
 my $base_dir    = $env->{base_dir};
-
+my $top_base_url = $env->{top_base_url};
 #    } elsif ( $img_internal && $section eq 'ProPortal' ) {
 #
 #        # testing code - ken
@@ -693,8 +693,8 @@ sub googleMap_new {
     print <<EOF;
 <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-<script type="text/javascript" src="$base_url/proportalmap.js"></script>
-<script type="text/javascript" src="$base_url/markerclusterer.js"></script>
+<script type="text/javascript" src="$top_base_url/js/proportalmap.js"></script>
+<script type="text/javascript" src="$top_base_url/js/markerclusterer.js"></script>
 
     <fieldset class='googleMap'>
     <legend class='aboutLegend'>Sample Location</legend>
@@ -1288,7 +1288,7 @@ sub depthEcotypeMap {
     <legend class='aboutLegend'>Depth &amp; Ecotype</legend>
       <div id='chart_div'>
 
-    <script src='$base_url/d3.min.js'></script>
+    <script src='$top_base_url/js/d3.min.js'></script>
     <script>
     };
 
@@ -1529,7 +1529,7 @@ EOF
     #	print "Unclassified: $unclassified\n";
     #    }
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     my $text         = "Examples: 10m, 10 m, 10 meters.";
     my $popup_header = "depth data format";
 
@@ -1987,7 +1987,7 @@ sub depthCladeMap {
     <legend class='aboutLegend'>Depth &amp; Clade</legend>
       <div id='chart_div'>
 
-    <script src='$base_url/d3.min.js'></script>
+    <script src='$top_base_url/js/d3.min.js'></script>
     <script>
     };
 
@@ -2238,7 +2238,7 @@ EOF
     #	print "Unclassified: $unclassified\n";
     #    }
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     my $text         = "Examples: 10m, 10 m, 10 meters.";
     my $popup_header = "depth data format";
 
@@ -2413,7 +2413,7 @@ sub dataTypeGraph {
 <script>var runOnLoad=function(c,o,d,e){function x(){for(e=1;c.length;)c.shift()()}o[d]?(document[d]('DOMContentLoaded',x,0),o[d]('load',x,0)):o.attachEvent('onload',x);return function(t){e?o.setTimeout(t,0):c.push(t)}}([],window,'addEventListener');</script>
 
 <script src="/script/" async></script>
-    <script src='$base_url/CollapsibleLists.js'></script>
+    <script src='$top_base_url/js/CollapsibleLists.js'></script>
     <script>
     };
 
@@ -2424,7 +2424,7 @@ runOnLoad(function(){ CollapsibleLists.apply(); });
 
 </script>
 
-   <div id="content">
+   <div id="content" class='content'>
       <ul class="treeView">
         <li>
           Genomes
@@ -2758,7 +2758,7 @@ sub depthGraph {
 }                
 </style>
 
-    <script src='$base_url/d3.min.js'></script>
+    <script src='$top_base_url/js/d3.min.js'></script>
     <script>
     };
 
@@ -3051,7 +3051,7 @@ EOF
     #	print "Unclassified: $unclassified\n";
     #    }
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     my $text         = "Examples: 10m, 10 m, 10 meters.";
     my $popup_header = "depth data format";
 
@@ -3266,7 +3266,7 @@ sub cladeGraph {
  
     </style>
 
-    <script src='$base_url/d3.min.js'></script>
+    <script src='$top_base_url/js/d3.min.js'></script>
     <script>
     };
 
@@ -3614,7 +3614,7 @@ EOF
     #	print "Unclassified: $unclassified\n";
     #    }
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     my $text         = "Examples: 10m, 10 m, 10 meters.";
     my $popup_header = "depth data format";
 

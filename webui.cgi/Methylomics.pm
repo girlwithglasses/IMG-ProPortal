@@ -1,6 +1,6 @@
 ############################################################################
 # Methylomics.pm - displays DNA methylation data
-# $Id: Methylomics.pm 34197 2015-09-04 18:29:38Z aratner $
+# $Id: Methylomics.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package Methylomics;
 my $section = "Methylomics";
@@ -30,7 +30,7 @@ my $verbose     = $env->{ verbose };
 my $base_url    = $env->{ base_url };
 my $R           = $env->{ r_bin };
 my $nvl         = getNvl();
-
+my $top_base_url = $env->{top_base_url};
 my $user_restricted_site  = $env->{ user_restricted_site };
 my $batch_size = 40;
 my $YUI = $env->{yui_dir_28};
@@ -41,10 +41,19 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
     $maxGeneListResults = getSessionParam("maxGeneListResults");
 }
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Methylomics Experiments';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ( "Methylomics", '', '', '', '', "Methylomics.pdf" );
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     if ($page eq "methylomics" ||
 	paramMatch("methylomics") ne "") {
@@ -1283,7 +1292,7 @@ sub printStatsByChemGraphicalView {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "statsByChemGraphical", 1 );
             while ( my $s = $FH->getline() ) {

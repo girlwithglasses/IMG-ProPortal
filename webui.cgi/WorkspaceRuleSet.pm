@@ -3,12 +3,6 @@
 ###########################################################################
 package WorkspaceRuleSet; 
 
-require Exporter; 
-@ISA    = qw( Exporter ); 
-@EXPORT = qw(
-); 
-
- 
 use strict; 
 use Archive::Zip; 
 use CGI qw( :standard); 
@@ -51,7 +45,7 @@ my $img_ken              = $env->{img_ken};
 my $tmp_dir              = $env->{tmp_dir};
 my $workspace_dir        = $env->{workspace_dir};
 my $public_nologin_site  = $env->{public_nologin_site};
- 
+my $top_base_url = $env->{top_base_url};
 my $cog_base_url       = $env->{cog_base_url};
 my $pfam_base_url      = $env->{pfam_base_url};
 my $tigrfam_base_url   = $env->{tigrfam_base_url};
@@ -88,7 +82,6 @@ my $RULE_FOLDER   = "rule";
 
 my $filename_size      = 25; 
 my $filename_len       = 60; 
-my $max_workspace_view = 10000; 
 my $max_profile_select = 50;
 my $maxProfileOccurIds     = 100;
 
@@ -96,10 +89,26 @@ my $for_super_user_only = 1;
 
 
 
-#########################################################################
-# dispatch
-#########################################################################
-sub dispatch { 
+sub getPageTitle {
+    return 'Workspace';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $header = param("header");
+
+    if ( WebUtil::paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
+        # no header
+    } elsif ( $header eq "" && WebUtil::paramMatch("noHeader") eq "" ) {
+        @a = ("AnaCart", '', '', '', '', 'IMGWorkspaceUserGuide.pdf' );
+    }
+    return @a;
+}
+
+sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     return if ( !$enable_workspace ); 
     return if ( !$user_restricted_site ); 
  
@@ -270,7 +279,7 @@ sub printRuleSetMainForm {
     print "<h2>Rule Sets</h2>\n"; 
 
     print qq{
-        <script type="text/javascript" src="$base_url/Workspace.js" >
+        <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
     }; 
  
@@ -394,7 +403,7 @@ sub printRuleSetDetail {
     while ( my $line = $res->getline() ) {
 	chomp($line);
 	my ($id, $type, $body) = split(/\t/, $line);
-        if ( $row >= $max_workspace_view ) {
+        if ( $row >= WorkspaceUtil::getMaxWorkspaceView() ) {
             $trunc = 1;
             last;
         }

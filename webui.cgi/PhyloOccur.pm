@@ -18,11 +18,20 @@ my $section_cgi = "$main_cgi?section=$section";
 my $verbose = $env->{ verbose };
 my $tmp_dir = $env->{ tmp_dir };
 my $base_url = $env->{ base_url };
+my $top_base_url = $env->{top_base_url};
+sub getPageTitle {
+    return 'Phylogenetic Occurrence Profile';
+}
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('AnaCart');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( $page eq "" ) {
@@ -85,7 +94,7 @@ sub printAlignment {
    print "</pre>\n";
    print "</font>\n";
 
-   print "<script src='$base_url/overlib.js'></script>\n";
+   print "<script src='$top_base_url/js/overlib.js'></script>\n";
    print end_form( );
 }
 

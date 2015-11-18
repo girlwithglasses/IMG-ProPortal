@@ -1,4 +1,4 @@
-# $Id: ANI.pm 34424 2015-10-05 18:27:01Z aratner $
+# $Id: ANI.pm 34662 2015-11-10 21:03:55Z klchu $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -42,7 +42,7 @@ my $tmp_dir                  = $env->{tmp_dir};
 my $tmp_url                  = $env->{tmp_url};
 my $YUI                      = $env->{yui_dir_28};
 my $include_metagenomes      = $env->{include_metagenomes};
-
+my $top_base_url = $env->{top_base_url};
 my $max_pairwise = 100;
 
 sub getPageTitle {
@@ -402,7 +402,7 @@ sub printPairwise {
 	     "Pairwise ANI Info", 0, "ANI.pdf");
     }
     print "<p style='width: 680px;'>$note</p>\n";
-    print "<script type='text/javascript' src='$base_url/checkSelection.js'></script>\n";
+    print "<script type='text/javascript' src='$top_base_url/js/checkSelection.js'></script>\n";
 
     #require TabHTML;
     #TabHTML::printTabAPILinks("pairwiseTab");
@@ -606,7 +606,7 @@ sub selectFiles {
     closedir(DIR);
 
     my $name = "My Workspace - Genome Sets";
-    my $script = "$base_url/Workspace.js";
+    my $script = "$top_base_url/js/Workspace.js";
 
     if (scalar @files == 0) {
         print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
@@ -665,7 +665,7 @@ sub printAdvancedSearchForm {
     $template->param(maxSelected2         => $max_pairwise);
     $template->param(selectedGenome1Title => 'Pairwise 1:');
     $template->param(selectedGenome2Title => 'Pairwise 2:');
-    print "<script src='$base_url/imgDialog.js'></script>\n";
+    print "<script src='$top_base_url/js/imgDialog.js'></script>\n";
 
     my $s = "";
     $template->param(mySubmitButton => $s);
@@ -2225,7 +2225,7 @@ sub printCliqueDetails {
     printMainForm();
 
     print hiddenVar("clique_id", $clique_id);
-    print "<script type='text/javascript' src='$base_url/checkSelection.js'></script>\n";
+    print "<script type='text/javascript' src='$top_base_url/js/checkSelection.js'></script>\n";
     my $name = "_section_ANI_doQuickPairwise";
     if ($cnt > 10) {
         TaxonSearchUtil::printButtonFooter("cliqdetails");

@@ -1,7 +1,7 @@
 ############################################################################
 # Utility functions to support to generate GenBank/EMBL file.
 #
-# $Id: GenerateArtemisFile.pm 34345 2015-09-23 06:22:39Z jinghuahuang $
+# $Id: GenerateArtemisFile.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package GenerateArtemisFile;
 
@@ -37,7 +37,7 @@ my $artemis_link      = alink( $artemis_url, "Artemis" );
 my $include_img_terms = $env->{include_img_terms};
 my $verbose           = $env->{verbose};
 my $img_internal      = $env->{img_internal};
-
+my $top_base_url = $env->{top_base_url};
 my $default_timeout_mins = $env->{default_timeout_mins} // 5;
 #$default_timeout_mins = 5 if $default_timeout_mins eq "";
 
@@ -58,7 +58,19 @@ my $FUNC_FOLDER   = "function";
 my $SCAF_FOLDER   = "scaffold";
 my $GENOME_FOLDER = "genome";
 
+sub getPageTitle {
+    return 'Artemis';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenomes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param('page');
     if ( $page eq 'processArtemisFile2' ) {
         $default_timeout_mins = 120; # 2 hours
@@ -255,7 +267,7 @@ sub printGenerateForm {
     print "</p>\n";
 
     print qq{
-        <script language='JavaScript' type='text/javascript' src='$base_url/validation.js'>
+        <script language='JavaScript' type='text/javascript' src='$top_base_url/js/validation.js'>
         </script>
         <script type="text/javascript">
             //validateOnSubmit for Artemis Form

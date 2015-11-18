@@ -51,14 +51,18 @@ MANIFEST
 MANIFEST.SKIP
 Makefile.PL
 
-environments/img_*.json
+bin/async.psgi
+bin/stream_test.psgi
 
-docs/
+environments/
+proportal/docs/
 log/
 node_modules/
 public/assets/
 public/bower/
-src/bower/
+image-sprite/
+icomoon/
+src/
 share/
 tmp/
 IMG_Core-full/
@@ -87,3 +91,5 @@ nytprof.out
 *.o
 *.bs
 /_eumm/
+*-old.t
+*-old.html

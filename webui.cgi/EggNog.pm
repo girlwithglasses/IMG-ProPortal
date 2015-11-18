@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: EggNog.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: EggNog.pm 34662 2015-11-10 21:03:55Z klchu $
 #
 ############################################################################
 package EggNog;
@@ -29,7 +29,7 @@ my $YUI         = $env->{yui_dir_28};
 my $yui_tables  = $env->{yui_tables};
 my $section     = "EggNog";
 my $section_cgi = "$main_cgi?section=$section";
-
+my $top_base_url = $env->{top_base_url};
 sub dispatch {
     my $page = param("page");
     if ( $page eq "genelist" ) {
@@ -278,7 +278,7 @@ YUI
     ## print the chart:
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH =
               newReadFileHandle( $chart->FILEPATH_PREFIX . ".html", "printEggNogCategories", 1 );
             while ( my $s = $FH->getline() ) {

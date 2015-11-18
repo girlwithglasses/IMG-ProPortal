@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: Caliban.pm 34110 2015-08-25 20:13:36Z klchu $
+# $Id: Caliban.pm 34568 2015-10-23 20:35:43Z klchu $
 #
 ############################################################################
 package Caliban;
@@ -60,6 +60,9 @@ sub getAppHeaderData {
     my ($self) = @_;
 
     my @a = ('');
+    if(param("logout") ne "") {
+        @a = ('logout');
+    }
     return @a;
 }
 
@@ -67,7 +70,26 @@ sub dispatch {
     my ( $self, $numTaxon ) = @_;
     my $page = param('page');
 
-    if ( $page eq 'migrateForm' ) {
+    if(param("logout") ne "") {
+        WebUtil::setSessionParam( "blank_taxon_filter_oid_str", "1" );
+        WebUtil::setSessionParam( "oldLogin",                   0 );
+        WebUtil::setTaxonSelections("");
+        print qq{
+            <div id='message'>
+            <p>Logged out.</p>
+            </div>
+            <p>
+            <a href='main.cgi'>Sign in</a>
+            </p>
+        };
+        my $sso_enabled     = $env->{sso_enabled};
+        my $oldLogin = WebUtil::getSessionParam("oldLogin");
+        if ( !$oldLogin && $sso_enabled ) {
+            logout(1);
+        } else {
+            logout();
+        }
+    } elsif ( $page eq 'migrateForm' ) {
         #printMigrateForm();
     } elsif ( $page eq 'submitMigrate' ) {
         #processMigrateForm();

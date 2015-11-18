@@ -2,7 +2,7 @@
 # ImgPartsListBrowser - Show parts list and detetails.
 #   --imachen 03/17/2007
 #
-# $Id: ImgPartsListBrowser.pm 30115 2014-02-17 06:15:54Z jinghuahuang $
+# $Id: ImgPartsListBrowser.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package ImgPartsListBrowser;
 my $section = "ImgPartsListBrowser";
@@ -28,10 +28,23 @@ my $verbose = $env->{ verbose };
 my $tab_panel = $env->{ tab_panel };
 my $content_list = $env->{ content_list };
 
+sub getPageTitle {
+    return 'IMG Parts List Browser';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
-# dispatch
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page =  param( "page" );
 
     if( $page eq "partsListDetail" ) {

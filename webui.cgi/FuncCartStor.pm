@@ -6,7 +6,7 @@
 #     1: func_name
 #     2: batch_id
 #    --es 01/06/2007
-# $Id: FuncCartStor.pm 34421 2015-10-05 18:08:05Z klchu $
+# $Id: FuncCartStor.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package FuncCartStor;
 my $section = "FuncCartStor";
@@ -29,6 +29,7 @@ use CartUtil;
 use FuncUtil;
 use GenomeListJSON;
 use HtmlUtil;
+use HTML::Template;
 
 my $env                   = getEnv();
 my $main_cgi              = $env->{main_cgi};
@@ -75,11 +76,37 @@ if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "funcCart" );
+        if ( WebUtil::paramMatch("AssertionProfile") ne "" ) {
+            return "Assertion Profile";
+        }
+            
+    return 'Function Cart';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+    my $page = param('page');
+    if ( $page eq 'funcCart' || !WebUtil::paramMatch("noHeader") ) {
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+        @a = ( "AnaCart", '', '', $js, '', 'FunctionCart.pdf' );
+    }
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-
+    my ( $self, $numTaxon ) = @_;
     timeout( 60 * $merfs_timeout_mins );
     my $page = param("page");
 

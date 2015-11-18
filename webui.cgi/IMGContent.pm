@@ -1,7 +1,7 @@
 ############################################################################
 # IMGContent.pm- shows the history of IMG content - i.e. how many genes and 
 #     genomes were in IMG at different version releases
-# $Id: IMGContent.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: IMGContent.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package IMGContent;
 my $section = "CompareGenomes";
@@ -23,11 +23,21 @@ my $main_cgi    = $env->{main_cgi};
 my $section_cgi = "$main_cgi?section=$section";
 my $verbose     = $env->{verbose};
 my $user_restricted_site = $env->{user_restricted_site};
+my $top_base_url = $env->{top_base_url};
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'IMG Content';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('IMGContent');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $sid  = getContactOid();
     my $page = param("page");
 
@@ -164,7 +174,7 @@ sub printIMGContentHistory {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printIMGContentHistory", 1 );
             while ( my $s = $FH->getline() ) {

@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: EgtCluster.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -90,7 +90,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
     timeout( 60 * 30 );    # timeout in 30 minutes (from main.pl)
 

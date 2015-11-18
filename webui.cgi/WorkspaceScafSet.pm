@@ -1,13 +1,8 @@
 ###########################################################################
 # WorkspaceScafSet.pm
-# $Id: WorkspaceScafSet.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: WorkspaceScafSet.pm 34666 2015-11-10 21:32:42Z jinghuahuang $
 ###########################################################################
 package WorkspaceScafSet;
-
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use Archive::Zip;
@@ -50,7 +45,7 @@ my $tmp_dir              = $env->{tmp_dir};
 my $workspace_dir        = $env->{workspace_dir};
 my $public_nologin_site  = $env->{public_nologin_site};
 my $YUI                  = $env->{yui_dir_28};
-
+my $top_base_url = $env->{top_base_url};
 my $cog_base_url       = $env->{cog_base_url};
 my $pfam_base_url      = $env->{pfam_base_url};
 my $tigrfam_base_url   = $env->{tigrfam_base_url};
@@ -82,7 +77,6 @@ my $SCAF_FOLDER = "scaffold";
 
 my $filename_size      = 25;
 my $filename_len       = 60;
-my $max_workspace_view = 10000;
 my $max_profile_select = 50;
 
 my $nvl          = getNvl();
@@ -92,10 +86,26 @@ my $contact_oid;
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
 
-#########################################################################
-# dispatch
-#########################################################################
+sub getPageTitle {
+    return 'Workspace Scaffold Sets';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $header = param("header");
+    my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
+    if ( WebUtil::paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
+        # no header
+    } elsif ( $header eq "" && WebUtil::paramMatch("noHeader") eq "" ) {
+        @a = ( "AnaCart", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
+    }
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     return if ( !$enable_workspace );
     return if ( !$user_restricted_site );
 
@@ -269,6 +279,28 @@ sub dispatch {
     }
 }
 
+sub printCartDiv {
+    print qq{
+        <h2>Scaffold Cart</h2>
+    };
+    
+    require ScaffoldCart;
+    my $ssize = ScaffoldCart::getSize();
+    
+    if ( $ssize > 0 ) {
+        print qq{
+            You have <a href='main.cgi?section=ScaffoldCart&page=index'>$ssize Scaffold(s)</a> in your cart.<br>
+        };
+    } else {
+        print qq{
+            Your <a href='main.cgi?section=ScaffoldCart&page=index'>Scaffold Cart</a> is empty.
+        };
+    }
+    
+    
+}
+
+
 ############################################################################
 # printScafSetMainForm
 ############################################################################
@@ -283,10 +315,13 @@ sub printScafSetMainForm {
     my @files = readdir(DIR);
     closedir(DIR);
 
-    print "<h1>My Workspace - Scaffold Sets</h1>";
+    print "<h1>Scaffold Workspace List</h1>";
 
+    printCartDiv();
+
+    print "<h2>Scaffold Sets List</h2>";
     print qq{
-        <script type="text/javascript" src="$base_url/Workspace.js" >
+        <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
     };
 
@@ -566,27 +601,27 @@ sub printScafSetDetail {
     }
 
     if ( $owner && $owner != $sid ) {
-	## not my own data set
-	## check permission
-	my $can_view = 0;
-	my %share_h = WorkspaceUtil::getShareFromGroups($folder);
-	for my $k (keys %share_h) {
-	    my ($c_oid, $data_set_name) = WorkspaceUtil::splitOwnerFileset( $sid, $k );
-	    my ($g_id, $g_name, $c_name) = split(/\t/, $share_h{$k});
-
-	    if ( $c_oid == $owner && $data_set_name eq $filename ) {
-    		$can_view = 1;
-    		$owner_name = $c_name;
-    		last;
-	    }
-	}
-
-	if ( ! $can_view ) {
-	    print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";
-	    print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
-	    webError("Scaffold set does not exist.");
-	    return;
-	}
+    	## not my own data set
+    	## check permission
+    	my $can_view = 0;
+    	my %share_h = WorkspaceUtil::getShareFromGroups($folder);
+    	for my $k (keys %share_h) {
+    	    my ($c_oid, $data_set_name) = WorkspaceUtil::splitOwnerFileset( $sid, $k );
+    	    my ($g_id, $g_name, $c_name) = split(/\t/, $share_h{$k});
+    
+    	    if ( $c_oid == $owner && $data_set_name eq $filename ) {
+        		$can_view = 1;
+        		$owner_name = $c_name;
+        		last;
+    	    }
+    	}
+    
+    	if ( ! $can_view ) {
+    	    print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";
+    	    print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
+    	    webError("Scaffold set does not exist.");
+    	    return;
+    	}
     }
 
     my %selected_scfs;
@@ -602,16 +637,16 @@ sub printScafSetDetail {
     my $super_user_flag = getSuperUser();
 
     if ($show_title) {
-    print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";
-    print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
+        print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";
+        print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
     } else {
-	my $url0 = "$main_cgi?section=WorkspaceScafSet"
-	    . "&page=showDetail&filename=$filename&folder=scaffold";
-	my $link = alink($url0, $filename, "_blank");
-	print "<p><u>File Name</u>: <i>$link</i></p>";
+    	my $url0 = "$main_cgi?section=WorkspaceScafSet"
+    	    . "&page=showDetail&filename=$filename&folder=scaffold";
+    	my $link = alink($url0, $filename, "_blank");
+    	print "<p><u>File Name</u>: <i>$link</i></p>";
     }
     if ( $owner_name ) {
-	print "<p><u>Owner</u>: <i>$owner_name</i></p>";
+    	print "<p><u>Owner</u>: <i>$owner_name</i></p>";
     }
 
     print hiddenVar( "directory", "$folder" );
@@ -631,79 +666,143 @@ sub printScafSetDetail {
     my $select_id_name = "scaffold_oid";
     my $full_path_name = "$workspace_dir/$sid/$folder/$filename";
     if ( $owner ) {
-	$full_path_name = "$workspace_dir/$owner/$folder/$filename";
+    	$full_path_name = "$workspace_dir/$owner/$folder/$filename";
     }
     if ( ! (-e $full_path_name) ) {
-	webError("Scaffold set does not exist.");
-	return;
+    	webError("Scaffold set does not exist.");
+    	return;
     }
 
     my %names;
     my @db_ids;
+    my @meta_ids;
 
     my $row   = 0;
     my $trunc = 0;
     my $res   = newReadFileHandle($full_path_name);
     if ( ! $res ) {
-	webError("Scaffold set does not exist.");
-	return;
+    	webError("Scaffold set does not exist.");
+    	return;
     }
 
     while ( my $id = $res->getline() ) {
         # set a limit so that it won't crash web browser
-        if ( $row >= $max_workspace_view ) {
+        if ( $row >= WorkspaceUtil::getMaxWorkspaceView() ) {
             $trunc = 1;
             last;
         }
         chomp $id;
-        next if ( $id eq "" );
+        next if ( ! $id );
 
+        $id = WebUtil::strTrim($id);
         $names{$id} = 0;
-        if ( isInt($id) ) {
+        if ( WebUtil::isInt($id) ) {
             push @db_ids, ($id);
+        }
+        else {
+            push @meta_ids, ($id);            
         }
         $row++;
     }
     close $res;
-
     print "<p>\n";
 
-    my $dbh       = dbLogin();
-    my $rclause   = WebUtil::urClause('s.taxon');
-    my $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
+    my $dbh = dbLogin();
 
-    my %taxons_in_file;
-    if ($in_file) {
-        %taxons_in_file = MerFsUtil::getTaxonsInFile($dbh);
-    }
-
+    my %taxon_scaf_h;
     my %taxon_name_h;
-    my %taxon_h;
+    my %taxon_gene_count_h;
+    my %taxon_seq_length_h;
+    my %taxon_gc_percent_h;
+
     if ( scalar(@db_ids) > 0 ) {
         my $db_str = OracleUtil::getNumberIdsInClause( $dbh,@db_ids );
-        my $sql = qq{
-            select s.scaffold_oid, s.scaffold_name, s.taxon 
-            from scaffold s 
-            where s.scaffold_oid in ($db_str) 
-            $rclause
-            $imgClause
-        };
+        my $sql = QueryUtil::getScaffoldDataSql($db_str);
         my $cur = execSql( $dbh, $sql, $verbose );
         for ( ; ; ) {
-            my ( $id2, $name2, $t_oid ) = $cur->fetchrow();
-            last if !$id2;
-            if ( !$name2 ) {
-                $name2 = "hypothetical protein";
+            my (
+                $scaffold_oid,       $scaffold_name, $ext_acc,    $taxon_oid,
+                $seq_length,         $gc_percent,    $read_depth, $gene_count,
+                $taxon_display_name, $genome_type
+
+            ) = $cur->fetchrow();
+            last if !$scaffold_oid;
+
+            if ( !$scaffold_name ) {
+                $scaffold_name = "hypothetical protein";
             }
-            $names{$id2} = $name2;
-            if ($t_oid) {
-                $taxon_h{$id2} = $t_oid;
+            $names{$scaffold_oid} = $scaffold_name;
+            if ($taxon_oid) {
+                $taxon_scaf_h{$scaffold_oid} = $taxon_oid;
+                $taxon_display_name .= " (*)"
+                  if ( $genome_type eq "metagenome" );
+                $taxon_name_h{$taxon_oid} = $taxon_display_name;
             }
+            $taxon_gene_count_h{$scaffold_oid} = $gene_count;
+            $taxon_seq_length_h{$scaffold_oid} = $seq_length;
+            $taxon_gc_percent_h{$scaffold_oid} = $gc_percent;
         }
         $cur->finish();
 
         OracleUtil::truncTable( $dbh, "gtt_num_id" )
           if ( $db_str =~ /gtt_num_id/i );
+    }
+
+    if ( scalar(@meta_ids) > 0 ) {
+        my %scaf_id_h;
+        my %taxon_oid_h;
+        for my $s_oid (@meta_ids) {
+            $scaf_id_h{$s_oid} = 1;
+            my ( $taxon3, $type3, $id3 ) = split( / /, $s_oid );
+            if ( $type3 eq 'assembled' || $type3 eq 'unassembled' ) {
+                $taxon_oid_h{$taxon3} = 1;
+                $taxon_scaf_h{$s_oid} = $taxon3;
+                if ( !$names{$s_oid} ) {
+                    $names{$s_oid} = $id3;
+                    #print "printScafSetDetail() $s_oid: $id3<br/>\n";
+                }
+            }
+        }
+        my @taxonOids = keys(%taxon_oid_h);
+
+        if ( scalar(@taxonOids) > 0 ) {
+            my ( $taxon_name_h0_ref, $genome_type_h0_ref ) =
+              QueryUtil::fetchTaxonOid2NameGenomeTypeHash( $dbh,
+                \@taxonOids );
+            my %taxon_name_h0  = %$taxon_name_h0_ref;
+            my %genome_type_h0 = %$genome_type_h0_ref;
+
+            for my $taxon_oid (@taxonOids) {
+                # taxon
+                my $taxon_display_name = $taxon_name_h0{$taxon_oid};
+                my $genome_type        = $genome_type_h0{$taxon_oid};
+    
+                $taxon_display_name .= " (*)"
+                  if ( $genome_type eq "metagenome" );
+                $taxon_name_h{$taxon_oid} = $taxon_display_name;
+            }
+        }
+
+        my %scaffold_h;
+        my @metaOids = keys %scaf_id_h;
+        MetaUtil::getAllMetaScaffoldInfo( \%scaf_id_h, \@metaOids, \%scaffold_h );
+        
+        for my $s_oid (@metaOids) {
+            my ( $taxon_oid, $data_type, $scaffold_oid ) =
+              split( / /, $s_oid );    #$s_oid is $workspace_id
+            if ( !exists( $taxon_name_h{$taxon_oid} ) ) {
+                #$taxon_oid not in hash, probably due to permission
+                webLog("ScaffoldCart::printIndex() $taxon_oid not retrieved from database, probably due to permission.");
+                next;
+            }
+            
+            my ( $seq_length, $gc_percent, $gene_count, $read_depth, @junks ) 
+                = split( /\t/, $scaffold_h{$s_oid} );
+            #print "printScafSetDetail() $s_oid: $seq_length, $gc_percent, $gene_count, $read_depth, @junks<br/>\n";
+            $taxon_gene_count_h{$s_oid} = $gene_count;
+            $taxon_seq_length_h{$s_oid} = $seq_length;
+            $taxon_gc_percent_h{$s_oid} = $gc_percent;            
+        }        
     }
 
     my $sid = getContactOid();
@@ -718,29 +817,20 @@ sub printScafSetDetail {
     $it->addColSpec( "Scaffold Name", "char asc", "left" );
     $it->addColSpec( "Genome ID",   "number asc", "right" );
     $it->addColSpec( "Genome Name", "char asc", "left" );
+    $it->addColSpec( "Gene Count", "asc", "right" );
+    $it->addColSpec( "Sequence Length<br/>(bp)", "asc", "right" );
+    $it->addColSpec( "GC Content", "asc", "right" );
 
-    my @keys = ( keys %names );
     my $can_select = 0;
-    for my $id (@keys) {
+    for my $id (keys %names) {
         my $r;
         my $url;
 
-        my ( $taxon3, $type3, $id3 ) = split( / /, $id );
-        if ( ( $type3 eq 'assembled' || $type3 eq 'unassembled' )
-            && $taxons_in_file{$taxon3} )
-        {
-            $taxon_h{$id} = $taxon3;
-            if ( !$names{$id} ) {
-                my @val = split( / /, $id );
-                $names{$id} = $val[-1];
-            }
-        }
-
         if ( $names{$id} ) {
             $can_select++;
-	    my $chk = "checked";
-	    $chk = "" if (scalar keys %selected_scfs > 0
-			  && !$selected_scfs{ $id });
+    	    my $chk = "checked";
+    	    $chk = "" if (scalar keys %selected_scfs > 0
+    			  && !$selected_scfs{ $id });
             $r = $sd . "<input type='checkbox' name='$select_id_name' value='$id' $chk /> \t";
 
             # determine URL
@@ -749,11 +839,11 @@ sub printScafSetDetail {
             if ( !$g1 && isInt($t1) ) {
                 $display_id = $id;
                 $url = "$main_cgi?section=ScaffoldCart"
-		     . "&page=scaffoldDetail&scaffold_oid=$t1";
+		          . "&page=scaffoldDetail&scaffold_oid=$t1";
             } else {
                 $display_id = $g1;
                 $url = "$main_cgi?section=MetaDetail&page=metaScaffoldDetail"
-		     . "&taxon_oid=$t1&scaffold_oid=$g1&data_type=$d1";
+		          . "&taxon_oid=$t1&scaffold_oid=$g1&data_type=$d1";
             }
 
             if ($url) {
@@ -763,29 +853,94 @@ sub printScafSetDetail {
             }
             $r .= $names{$id} . $sd . $names{$id} . "\t";
 
-            if ( $taxon_h{$id} ) {
-                my $t_oid     = $taxon_h{$id};
+            my $t_oid;
+            if ( $taxon_scaf_h{$id} ) {
+                $t_oid = $taxon_scaf_h{$id};
                 $r .= $t_oid . $sd . $t_oid . "\t";
 
-                my $taxon_url = "$main_cgi?section=TaxonDetail"
-		    . "&page=taxonDetail&taxon_oid=$t_oid";
-                if ( $taxons_in_file{$t_oid} ) {
+                my $taxon_name = $taxon_name_h{$t_oid};
+                my $taxon_url;
+                if ( !$g1 && isInt($t1) ) {
+                    $taxon_url = "$main_cgi?section=TaxonDetail"
+                        . "&page=taxonDetail&taxon_oid=$t_oid";
+                }
+                else {
+                    $taxon_name = HtmlUtil::appendMetaTaxonNameWithDataType( $taxon_name, $d1 );
                     $taxon_url = "$main_cgi?section=MetaDetail"
-			. "&page=metaDetail&taxon_oid=$t_oid&";
+                        . "&page=metaDetail&taxon_oid=$t_oid&";                    
                 }
-                my $taxon_name;
-                if ( $taxon_name_h{$t_oid} ) {
-                    $taxon_name = $taxon_name_h{$t_oid};
-                } else {
-                    $taxon_name = taxonOid2Name( $dbh, $t_oid );
-                    $taxon_name_h{$t_oid} = $taxon_name;
+                my $exported_taxon_name = $t_oid;
+                if ( $taxon_name ) {
+                    $exported_taxon_name = $taxon_name;                 
                 }
-
-                $r .= $t_oid . $sd
-		    . "<a href=\"$taxon_url\" >" . $taxon_name . "</a> \t";
+                $r .= $exported_taxon_name . $sd
+        		    . "<a href=\"$taxon_url\" >" . $taxon_name . "</a> \t";
             } else {
                 $r .= "-" . $sd . "-" . "\t";
             }
+
+            my $gene_count = $taxon_gene_count_h{$id};
+            if ( $gene_count ) {
+                my $url3;
+                if ( !$g1 && isInt($t1) ) {
+                    $url3 =
+                        "$main_cgi?section=ScaffoldCart"
+                      . "&page=scaffoldGenes"
+                      . "&scaffold_oid=$display_id";
+                }
+                else {
+                    $url3 =
+                        "$main_cgi?section=MetaDetail"
+                      . "&page=metaScaffoldGenes&scaffold_oid=$display_id"
+                      . "&taxon_oid=$t_oid";
+                }                    
+                $r .= $gene_count . $sd . alink( $url3, $gene_count ) . "\t";                    
+            }
+            else {
+                if ( (!$g1 && isInt($t1)) || $d1 eq 'assembled' ) {
+                    $r .= "0" . $sd . "0" . "\t";
+                }
+                else {
+                    $r .= $sd . "\t";
+                }
+            }
+
+            my $seq_length = $taxon_seq_length_h{$id};
+            if ( $seq_length ) {
+                my $scaf_len_url;
+                if ( !$g1 && isInt($t1) ) {
+                    $scaf_len_url =
+                    "$main_cgi?section=ScaffoldGraph" .
+                    "&page=scaffoldGraph&scaffold_oid=$display_id" .
+                    "&taxon_oid=$t_oid" .
+                    "&start_coord=1&end_coord=$seq_length" .
+                    "&seq_length=$seq_length";
+                }
+                else {
+                    $scaf_len_url =
+                    "$main_cgi?section=MetaScaffoldGraph" .
+                    "&page=metaScaffoldGraph&scaffold_oid=$display_id" .
+                    "&taxon_oid=$t_oid" .
+                    "&start_coord=1&end_coord=$seq_length" .
+                    "&seq_length=$seq_length";
+                }                    
+                $r .= $seq_length . $sd . alink( $scaf_len_url, $seq_length ) . "\t";
+            }
+            else {
+                if ( (!$g1 && isInt($t1)) || $d1 eq 'assembled' ) {
+                    $r .= "0" . $sd . "0" . "\t";
+                }
+                else {
+                    $r .= $sd . "\t";
+                }
+            }
+
+            my $gc_percent = $taxon_gc_percent_h{$id};
+            if ( $gc_percent ) {
+                $gc_percent = sprintf( " %.2f", $gc_percent );
+            }
+            $r .= $gc_percent . $sd . $gc_percent . "\t";
+
         } else {
             # not in database
             $r = $sd . " \t" 
@@ -793,6 +948,8 @@ sub printScafSetDetail {
 		        . "(not in this database)" . $sd . "(not in this database)" . "\t";
             $r .= $sd . "\t";
             $r .= "-" . $sd . "-" . "\t";
+            $r .= $sd . "\t";
+            $r .= $sd . "\t";
         }
 
         $it->addRow($r);
@@ -805,19 +962,19 @@ sub printScafSetDetail {
     if ( $row > 10 ) {
         WebUtil::printScaffoldCartFooterInLineWithToggle($tblname);
         #WebUtil::printScaffoldCartFooterInLine($tblname);
-	#print nbsp(1);
+    	#print nbsp(1);
 
-	if ( $owner && $owner != $sid ) {
-	    ## don't allow delete
-	}
-	else {
-	    print submit(
-		-name    => "_section_Workspace_removeAndSaveScaffolds",
-		-value   => "Remove Selected and Resave",
-		-class   => "medbutton",
-		-onclick => "return checkSets('$folder');"
-		);
-	}
+    	if ( $owner && $owner != $sid ) {
+    	    ## don't allow delete
+    	}
+    	else {
+    	    print submit(
+    		-name    => "_section_Workspace_removeAndSaveScaffolds",
+    		-value   => "Remove Selected and Resave",
+    		-class   => "medbutton",
+    		-onclick => "return checkSets('$folder');"
+    		);
+    	}
     }
 
     $it->printOuterTable(1);
@@ -839,7 +996,7 @@ sub printScafSetDetail {
     #WebUtil::printScaffoldCartFooterInLine($tblname);
     #print nbsp(1);
     if ( $owner && $owner != $sid ) {
-	## don't allow delete
+    	## don't allow delete
     }
     else {
 	print submit(
@@ -1358,7 +1515,7 @@ sub showScafFuncSetProfile {
     }
 
     if ( !$total_cnt ) {
-        print "<p><b>No genes are associated with selected function set.</b>\n";
+        print "<p><b>No genes are associated with selected function set or type.</b>\n";
         print end_form();
         return;
     }

@@ -3,14 +3,14 @@
 	title = 'IMG ProPortal: Clade Graph';
 %]
 <h2>Sample Distribution by Clade</h2>
-[%	#INCLUDE inc/show_data_set_selection_section.html.tt %]
 <p>
-	A little bit of blurb about the cladogram here.
+	This visualisation shows the
 </p>
 <section class="clade" id="primary">
 <h3>Species distribution by Clade</h3>
-<p>Filter by subset:</p>
 [%	IF data_filters && data_filters.all %]
+<section id="filters">
+<p>Filter by subset:</p>
 <ul>
 [%	# filter domain
 		FOR fd IN data_filters.all.keys.sort;
@@ -26,6 +26,7 @@
 			END; %]</li>
 [%		END; %]
 </ul>
+</section>
 [% END %]
 <div id="clade">
 </div>
@@ -41,12 +42,12 @@
 [%	FOREACH clade IN results.data.keys.sort;
 		c = results.data.$clade; %]
 <li data-clade-id="[% c.id %]" id="[% c.id %]" class="clade_details">
-	<h4>Genus [% c.genus %]</h4>
-	<h5>Clade [% c.label %], [% c.count %] species</h5>
-	<p><a href="[% link('genome_list_clade', { clade => c.label } ) %]">View species in table browser</a></p>
+	<h4 class="clade-details__genus">Genus [% c.genus %]</h4>
+	<h5 class="clade-details__clade">Clade [% c.label %], [% c.count %] species</h5>
+	<p><a class="clade-details__link--genome_list_clade" href="[% link('genome_list_clade', { clade => c.label } ) %]">View species in table browser</a></p>
 	<ul>
 	[%		FOREACH g IN c.genomes %]
-		<li><a href="[% link('taxon', { taxon_oid => g.taxon_oid }) %]">[% g.taxon_display_name %]</a> ([% g.ecosystem_subtype %])</li>
+		<li><a class="clade-details__link--taxon" href="[% link('taxon', { taxon_oid => g.taxon_oid }) %]">[% g.taxon_display_name %]</a></li>
 	[%		END %]
 	</ul>
 </li>

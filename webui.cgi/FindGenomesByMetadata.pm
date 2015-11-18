@@ -2,7 +2,7 @@
 # FindGenomesByMetadata.pm - split from FindGenomes.pm
 #  Handle the options under the "Find Metadata Genomes" tab menu.
 #
-# $Id: FindGenomesByMetadata.pm 33841 2015-07-29 20:48:56Z klchu $
+# $Id: FindGenomesByMetadata.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package FindGenomesByMetadata;
 my $section = "FindGenomes";
@@ -38,7 +38,7 @@ my $include_metagenomes  = $env->{include_metagenomes};
 my $use_img_gold         = $env->{use_img_gold};
 my $YUI28                = $env->{yui_dir_28};
 my $include_metagenomes  = $env->{include_metagenomes};
-
+my $top_base_url = $env->{top_base_url};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
 
@@ -637,6 +637,7 @@ sub printMetadataCategorySearchResults {
     }
     
     print hiddenVar( "page",    "message" );
+    print hiddenVar( "section",    "Messages" );
     print hiddenVar( "message", "Genome selections saved and enabled." );
 
     printStatusLine( "$count genomes retrieved.", 2 );
@@ -849,6 +850,7 @@ sub printOrgCategoryResults {
         print "<br/>";
     }
     print hiddenVar( "page",    "message" );
+    print hiddenVar( "section",    "Messages" );
     print hiddenVar( "message", "Genome selections saved and enabled." );
     printStatusLine( "$count genomes retrieved.", 2 );
     #$dbh->disconnect();
@@ -1285,6 +1287,7 @@ sub printOrgCategoryResults_ImgGold {
         print "<br/>";
     }
     print hiddenVar( "page",    "message" );
+    print hiddenVar( "section",    "Messages" );
     print hiddenVar( "message", "Genome selections saved and enabled." );
 
     printStatusLine( "$count genomes retrieved.", 2 );
@@ -1325,7 +1328,7 @@ sub intersectHash {
 sub printTreeViewMarkup {
     printTreeMarkup();
     print qq{
-        <script language='JavaScript' type='text/javascript' src='$base_url/metadataTree.js'>
+        <script language='JavaScript' type='text/javascript' src='$top_base_url/js/metadataTree.js'>
         </script>
         <script type="text/javascript">
             setUrl("xml.cgi?section=FindGenomesByMetadata&page=metadataForm");

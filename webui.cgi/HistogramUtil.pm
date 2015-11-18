@@ -41,7 +41,7 @@ my $YUI                 = $env->{yui_dir_28};
 my $yui_tables          = $env->{yui_tables};
 my $img_internal        = $env->{img_internal};
 my $scaffold_page_size  = $env->{scaffold_page_size};
-
+my $top_base_url = $env->{top_base_url};
 ######################################################################
 # computeStats
 ######################################################################
@@ -1417,7 +1417,7 @@ sub drawHistogramChart {
 
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html",
 		  "printScaffoldSetDistribution", 1 );

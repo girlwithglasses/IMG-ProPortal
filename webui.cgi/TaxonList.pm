@@ -2,7 +2,7 @@
 # TaxonList - Show list of taxons in alphabetical or phylogenetic order.
 # --es 09/17/2004
 #
-# $Id: TaxonList.pm 34362 2015-09-25 18:53:01Z aratner $
+# $Id: TaxonList.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package TaxonList;
 my $section = "TaxonList";
@@ -47,11 +47,38 @@ my $include_metagenomes  = $env->{include_metagenomes};
 my $in_file              = $env->{in_file};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
+my $top_base_url = $env->{top_base_url};
+sub getPageTitle {
+    my $page = param('page');
+    my $pageTitle = 'Taxon Browser'; 
+        if ( $page eq 'categoryBrowser' ) {
+            $pageTitle = "Category Browser";
+        }
+    return $pageTitle;
+}
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my $page = param('page');
+    my @a = ();
+
+        if ( WebUtil::paramMatch("_excel") ) {
+            WebUtil::printExcelHeader("genome_export$$.xls");
+        } elsif (   $page eq 'taxonListAlpha'
+                || $page eq 'gebaList'
+                || $page eq 'selected') {
+                    @a = ( "FindGenomes", '', '', '', '', 'GenomeBrowser.pdf' );
+        } else {
+                 @a = ("FindGenomes");
+        }    
+    
+    
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( $page eq "findGenomes" ) {
@@ -658,8 +685,8 @@ sub printPangenomeTable {
         }
         $it->addRow($row);
     }
-
     print hiddenVar( "page",          "message" );
+    print hiddenVar( "section",    "Messages" );
     print hiddenVar( "message",       "Genome selection saved and enabled." );
     print hiddenVar( "menuSelection", "Genomes" );
     print hiddenVar( "mainPageStats", param("mainPageStats") );
@@ -851,6 +878,7 @@ sub printTaxonTree {
 
     #print hiddenVar( "page", "taxonListPhylo" );
     print hiddenVar( "page",          "message" );
+    print hiddenVar( "section",    "Messages" );
     print hiddenVar( "message",       "Genome selection saved and enabled." );
     print hiddenVar( "menuSelection", "Genomes" );
     print submit(
@@ -1063,7 +1091,7 @@ sub getParamRestrictionUrl {
 # uploadTaxonSelections - Upload with loading message.
 ############################################################################
 sub uploadTaxonSelections {
-    use MyIMG;
+    require MyIMG;
     my @taxon_oids;
     my $errmsg;
     if ( !MyIMG::uploadOidsFromFile( "taxon_oid", \@taxon_oids, \$errmsg ) ) {
@@ -1197,7 +1225,7 @@ sub printCategoryBrowser_ImgGold {
 # printGenomeCategories
 ############################################################################
 sub printGenomeCategories {
-    print "<script src='$base_url/overlib.js'></script>\n";    ## for tooltips
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";    ## for tooltips
     print "<h1>Metadata Categories</h1>\n";
 
     print "<h2>Organism Metadata</h2>\n";
@@ -1261,7 +1289,7 @@ sub printGenomeCategories {
         <script src="$YUI/build/connection/connection-min.js"></script>
     };
 
-    print "<script src='$base_url/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
     print qq{ 
         <script language='JavaScript' type='text/javascript'>
         function showChart(divid, url) {
@@ -1466,7 +1494,7 @@ YUI
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html", "printChartForCategory", 1 );
             while ( my $s = $FH->getline() ) {
                 print $s;
@@ -1716,6 +1744,7 @@ sub printCategoryTaxons_ImgGold {
 ############################################################################
 sub printFooterButtons {
     print hiddenVar( "page",    "message" );
+    print hiddenVar( "section",    "Messages" );
     print hiddenVar( "message", "Genome selection saved and enabled." );
     print submit(
                   -name    => 'setTaxonFilter',

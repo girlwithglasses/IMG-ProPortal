@@ -2,7 +2,7 @@
 # ScaffoldHits -- adopted from MetagenomeHits
 # change from taxon_oid to a set of scaffold oids
 #
-# $Id: ScaffoldHits.pm 33704 2015-07-08 04:26:39Z jinghuahuang $
+# $Id: ScaffoldHits.pm 34545 2015-10-20 21:36:40Z klchu $
 ###########################################################################
 package ScaffoldHits;
 
@@ -116,7 +116,25 @@ my $nvl = getNvl();
 # this is the hook into main.pl
 # to get here, then I use section=??? to go the correct page after
 #
+sub getPageTitle {
+    return 'Scaffold Hits';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    if(WebUtil::paramMatch("noHeader") eq "") {
+        @a = ('AnaCart');
+    }
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( $page eq "metagenomeHits" || $page eq "unassigned" ) {

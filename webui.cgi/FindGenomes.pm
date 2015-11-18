@@ -3,7 +3,7 @@
 #  Handle the options under the "Find Genomes" tab menu.
 #    --es 07/07/2005
 #
-# $Id: FindGenomes.pm 33878 2015-08-03 17:14:58Z jinghuahuang $
+# $Id: FindGenomes.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package FindGenomes;
 my $section = "FindGenomes";
@@ -27,13 +27,15 @@ use TabViewFrame;
 use FindGenomesByMetadata;
 use TaxonTableConfiguration;
 use HtmlUtil;
+use HTML::Template;
 
 my $env                  = getEnv();
 my $main_cgi             = $env->{main_cgi};
 my $section_cgi          = "$main_cgi?section=$section";
 my $verbose              = $env->{verbose};
 my $tmp_dir              = $env->{tmp_dir};
-my $base_dir             = $env->{base_dir};
+my $base_dir               = $env->{base_dir};
+my $base_url               = $env->{base_url};
 
 my $taxonomy_base_url    = $env->{taxonomy_base_url};
 my $user_restricted_site = $env->{user_restricted_site};
@@ -45,15 +47,38 @@ my $in_file              = $env->{in_file};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
 
+my $YUI = $env->{yui_dir_28};
 ### optional genome field columns to configuration and display 
 my @optCols = getGenomeFieldAttrs();
 
 my %colName2Label = getColName2Label_g();
 
+
+sub getPageTitle {
+    return 'Find Genomes';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+        my $page = param('page');
+        if ($page eq 'findGenomes' ) {
+            @a = ( "FindGenomes", '', '', '', '', 'GenomeBrowser.pdf' );
+        } elsif ( $page eq 'genomeSearch' ) {
+            @a = ( "FindGenomes", '', '', '', '', 'GenomeSearch.pdf' );
+        } else {
+            @a = ( "FindGenomes");
+        }
+
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     #print "FindGenomes::dispatch() page:$page<br/>\n";
 

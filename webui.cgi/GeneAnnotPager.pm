@@ -4,7 +4,7 @@
 #  is precomputed.
 #      --es 09/27/2005
 #
-# $Id: GeneAnnotPager.pm 30841 2014-05-08 04:32:57Z klchu $
+# $Id: GeneAnnotPager.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package GeneAnnotPager;
 my $section = "GeneAnnotPager";
@@ -35,10 +35,22 @@ my $img_internal = $env->{img_internal};
 
 my $forceNewFile = 1;
 
+sub getPageTitle {
+    return 'Comparative Annotations';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenomes');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( $page eq "viewGeneAnnotations" ) {

@@ -2,7 +2,7 @@
 # Operon - Function prediction based on chromosomal clusters.
 #    --km 07/30/2007
 #
-# $Id: Operon.pm 30400 2014-03-12 19:20:25Z klchu $
+# $Id: Operon.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package Operon;
 my $section = "Operon";
@@ -37,16 +37,26 @@ my $tmp_url     = $env->{tmp_url};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $img_internal         = $env->{img_internal};
 my $base_url             = $env->{base_url};
+my $top_base_url             = $env->{top_base_url};
 my $user_restricted_site = $env->{user_restricted_site};
 
 # file version
 #my $img_ken = $env->{ img_ken };
 my $OPERON_DATA_DIR = $env->{operon_data_dir};
 
-############################################################################
-# dispatch - Dispatch to right page based on page
-############################################################################
+sub getPageTitle {
+    return 'Operons';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $sid  = getContactOid();
     my $page = param("page");
 
@@ -553,7 +563,7 @@ sub DeployGraph {
                . "Fusion correlation score" );
 
  #my $medusa_dir="http://bugmaster.jgi-psf.org/people/kmavromm/cgi-bin/medusa/";
-    my $medusa_dir = $base_url;
+    my $medusa_dir = $top_base_url . '/lib';
 
     #	print qq{<applet
     #		code="medusa.applet.MedusaLite.class"

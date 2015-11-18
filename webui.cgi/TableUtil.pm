@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for tables e.g. phylogenetic table
-# $Id: TableUtil.pm 30097 2014-02-14 20:56:28Z klchu $
+# $Id: TableUtil.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package TableUtil;
 my $section = "TableUtil"; 
@@ -27,7 +27,7 @@ my $verbose = $env->{ verbose };
 my $base_url = $env->{ base_url }; 
 my $YUI = $env->{ yui_dir_28 }; 
 my $in_file = $env->{ in_file }; 
-
+my $top_base_url = $env->{top_base_url};
 my $SHOW_ALL = 0;
 my $HIDE_METAG = 1;
 my $ONLY_METAG = 2;
@@ -71,7 +71,7 @@ sub printGenomeTable {
     $mywrite = 1 if ($mywrite eq "");
     $hide_metag = $SHOW_ALL if ($hide_metag eq "");
 
-    print "<script src='$base_url/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
     print qq{ 
         <link rel="stylesheet" type="text/css" 
             href="$YUI/build/container/assets/skins/sam/container.css" />

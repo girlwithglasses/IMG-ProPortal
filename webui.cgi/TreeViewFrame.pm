@@ -23,7 +23,7 @@ my $verbose             = $env->{verbose};
 my $base_dir            = $env->{base_dir};
 my $base_url            = $env->{base_url};
 my $YUI28               = $env->{yui_dir_28};
-
+my $top_base_url = $env->{top_base_url};
 sub printTreeMarkup {
     print qq{
         <link rel="stylesheet" type="text/css" href="$YUI28/build/treeview/assets/skins/sam/treeview.css" />
@@ -57,7 +57,7 @@ sub printTreeMarkup {
             }
         </style>
 
-        <script language='JavaScript' type='text/javascript' src='$base_url/treeviewFrame.js'>
+        <script language='JavaScript' type='text/javascript' src='$top_base_url/js/treeviewFrame.js'>
         </script>
     };
 }

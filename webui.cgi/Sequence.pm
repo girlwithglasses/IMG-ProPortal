@@ -1,7 +1,7 @@
 ############################################################################
 # Sequence.pm - DNA Sequence Display
 # all calculations are from Ernest's code in SixPack.pm
-# $Id: Sequence.pm 30377 2014-03-10 23:39:16Z jinghuahuang $
+# $Id: Sequence.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package Sequence;
 my $section = "Sequence";
@@ -38,10 +38,19 @@ my $verbose = $env->{ verbose };
 my $chart_exe = $env->{ chart_exe };
 my $YUI = $env->{ yui_dir_28 };
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Six Frame Translation';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
     if ( paramMatch("sequence") ne"" ||
          $page eq "sequence" ) {

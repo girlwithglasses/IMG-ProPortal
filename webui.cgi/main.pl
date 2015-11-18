@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 34538 2015-10-20 17:43:00Z klchu $
+# $Id: main.pl 34725 2015-11-17 23:02:58Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -67,6 +67,7 @@ my $show_private             = $env->{show_private};
 my $show_sql_verbosity_level = $env->{show_sql_verbosity_level};
 my $tmp_dir                  = $env->{tmp_dir};
 my $top_base_url             = $env->{top_base_url};
+my $top_base_dir             = $env->{top_base_dir};
 my $use_img_clusters         = $env->{use_img_clusters};
 my $use_img_gold             = $env->{use_img_gold};
 my $user_restricted_site     = $env->{user_restricted_site};
@@ -74,16 +75,16 @@ my $user_restricted_site_url = $env->{user_restricted_site_url};
 my $verbose                  = $env->{verbose};
 my $web_data_dir             = $env->{web_data_dir};
 my $webfs_data_dir           = $env->{webfs_data_dir};
-my $img_nr = $env->{img_nr};
+my $img_nr                   = $env->{img_nr};
 
 $default_timeout_mins = 5 if $default_timeout_mins eq "";
 my $use_func_cart = 1;
 
 my $imgAppTerm = "IMG";
-$imgAppTerm = "IMG/ER"   if ($img_er);
-$imgAppTerm = "IMG"    if $include_metagenomes;
-$imgAppTerm = "IMG/ER" if ( $include_metagenomes && $user_restricted_site );
-$imgAppTerm = "IMG/ABC"  if ($abc);
+$imgAppTerm = "IMG/ER"  if ($img_er);
+$imgAppTerm = "IMG"     if $include_metagenomes;
+$imgAppTerm = "IMG/ER"  if ( $include_metagenomes && $user_restricted_site );
+$imgAppTerm = "IMG/ABC" if ($abc);
 
 my $YUI = $env->{yui_dir_28};
 my $taxon_filter_oid_str;
@@ -173,8 +174,8 @@ if ( ( $public_login || $user_restricted_site ) && $https eq '' && $env->{ssl_en
         my $url     = $cgi_url . "/" . $main_cgi . redirectform(1);
         print header( -type => "text/html", -status => '497 HTTP to HTTPS (Nginx)' );
         my $template = HTML::Template->new( filename => "$base_dir/Nginx.html" );
-        $template->param( seconds    => $seconds );
-        $template->param( url => $url );
+        $template->param( seconds => $seconds );
+        $template->param( url     => $url );
         print $template->output;
         WebUtil::webExit(0);
     }
@@ -203,7 +204,7 @@ my $contact_oid = getContactOid();
 
 # see WebUtil.pm line CGI::Session->name($cookie_name); is called - ken
 my $cookie_name = WebUtil::getCookieName();
-my $cookie      = cookie( $cookie_name => $session_id );
+my $cookie = cookie( $cookie_name => $session_id );
 
 my $oldLogin = getSessionParam("oldLogin");
 $oldLogin = 0 if param('oldLogin') eq 'false';
@@ -294,8 +295,7 @@ if ( !$oldLogin && $sso_enabled ) {
         setSessionParam( "oldLogin", 1 );
 
         #if($img_ken) {
-            Caliban::migrateImg2JgiSso($redirecturl);
-        #}
+        Caliban::migrateImg2JgiSso($redirecturl);
 
         if ( $sso_enabled && $redirecturl ne "" ) {
             print header( -type => "text/html", -cookie => $cookie );
@@ -318,15 +318,17 @@ if ( param("setTaxonFilter") ne "" ) {
         @taxon_filter_oid = param("taxon_oid");
     }
     my %h = WebUtil::array2Hash(@taxon_filter_oid);    # get unique taxon_oid's
-    @taxon_filter_oid     = sort( keys(%h) );
+    @taxon_filter_oid = sort( keys(%h) );
     $taxon_filter_oid_str = join( ",", @taxon_filter_oid );
 
-    setTaxonSelections($taxon_filter_oid_str);
+    # add genomes to genome cart
+    WebUtil::setTaxonSelections($taxon_filter_oid_str);
     if ( !blankStr($taxon_filter_oid_str) ) {
         setSessionParam( "blank_taxon_filter_oid_str", "0" );
     }
 }
 
+# I believe is this not used anywhere - ken 2015-10-23
 if ( param("deleteAllCartGenes") ne "" ) {
     setSessionParam( "gene_cart_oid_str", "" );
 }
@@ -337,18 +339,13 @@ if ( param("deleteAllCartGenes") ne "" ) {
 touchCartFiles();
 
 # for w and m use the public autocomplete file
+#
+# create a private autocomplete file
 if ( $user_restricted_site && $enable_workspace ) {
-
-    #WebUtil::createTmpIndex();
 
     # php files like the autocompleteAll.php
     require GenomeListJSON;
     my $myGenomesFile = GenomeListJSON::getMyAutoCompleteFile();
-
-    #webLog(GenomeListJSON::getMyAutoCompleteFile());
-    #webLog("\n");
-    #webLog(GenomeListJSON::getMyAutoCompleteUrl());
-    #webLog("\n");
 
     if ( !-e $myGenomesFile ) {
         GenomeListJSON::myAutoCompleteGenomeList($myGenomesFile);
@@ -358,1151 +355,212 @@ if ( $user_restricted_site && $enable_workspace ) {
 # remap the section param if required
 coerce_section();
 
-# dispatch_page({ env => $env, page => param('page'), section => param('section') });
-
 ############################################################
 # main viewer dispatch
 ############################################################
 if ( param() ) {
 
-    my $page = param('page');
+    my $page    = param('page');
     my $section = param('section');
 
-    # TODO - for generic section loading new a section checker to ensure no one 
+    # for generic section loading new a section checker to ensure no one
     # tries to enter a bad section name :) - ken
+    # default is the home page
     my %validSections = (
-        WorkspaceBcSet => 'WorkspaceBcSet',
-        AbundanceProfileSearch => 'AbundanceProfileSearch',
-        GenomeList => 'GenomeList',
-        ImgStatsOverview => 'ImgStatsOverview',
-        BiosyntheticDetail => 'BiosyntheticDetail',
-        GeneCassetteProfiler => 'GeneCassetteProfiler',
-        GenomeCart => 'GenomeCart',
-        Caliban => 'Caliban',
-        StudyViewer => 'StudyViewer',
-        GeneCassette => 'GeneCassette',
-        GeneCassetteSearch => 'GeneCassetteSearch',
-        ANI => 'ANI',
-        ProjectId => 'ProjectId',
-        TreeFile => 'TreeFile',
-        ScaffoldSearch => 'ScaffoldSearch',
-        MeshTree => 'MeshTree',
-        AbundanceProfiles => 'AbundanceProfiles',
-        AbundanceTest => 'AbundanceTest',
-        AbundanceComparisons => 'AbundanceComparisons',
-        AbundanceComparisonsSub => 'AbundanceComparisonsSub',
-        AbundanceToolkit => 'AbundanceToolkit',
-        Artemis => 'Artemis',
-        np => 'NaturalProd',
-        NaturalProd => 'NaturalProd',
-        ClustalW => 'ClustalW',
-        CogCategoryDetail => 'CogCategoryDetail',
-        CompareGenomes => 'CompareGenomes',
-        CompareGenomesTab => 'CompareGenomes',
-        GenomeGeneOrtholog => 'GenomeGeneOrtholog',
-        Pangenome => 'Pangenome',
+        WorkspaceBcSet               => 'WorkspaceBcSet',
+        AbundanceProfileSearch       => 'AbundanceProfileSearch',
+        GenomeList                   => 'GenomeList',
+        ImgStatsOverview             => 'ImgStatsOverview',
+        BiosyntheticDetail           => 'BiosyntheticDetail',
+        GeneCassetteProfiler         => 'GeneCassetteProfiler',
+        GenomeCart                   => 'GenomeCart',
+        Caliban                      => 'Caliban',
+        StudyViewer                  => 'StudyViewer',
+        GeneCassette                 => 'GeneCassette',
+        GeneCassetteSearch           => 'GeneCassetteSearch',
+        ANI                          => 'ANI',
+        ProjectId                    => 'ProjectId',
+        TreeFile                     => 'TreeFile',
+        ScaffoldSearch               => 'ScaffoldSearch',
+        MeshTree                     => 'MeshTree',
+        AbundanceProfiles            => 'AbundanceProfiles',
+        AbundanceTest                => 'AbundanceTest',
+        AbundanceComparisons         => 'AbundanceComparisons',
+        AbundanceComparisonsSub      => 'AbundanceComparisonsSub',
+        AbundanceToolkit             => 'AbundanceToolkit',
+        Artemis                      => 'Artemis',
+        np                           => 'NaturalProd',
+        NaturalProd                  => 'NaturalProd',
+        ClustalW                     => 'ClustalW',
+        CogCategoryDetail            => 'CogCategoryDetail',
+        CompareGenomes               => 'CompareGenomes',
+        CompareGenomesTab            => 'CompareGenomes',
+        GenomeGeneOrtholog           => 'GenomeGeneOrtholog',
+        Pangenome                    => 'Pangenome',
         CompareGeneModelNeighborhood => 'CompareGeneModelNeighborhood',
-        CuraCartStor => 'CuraCartStor',
-        CuraCartDataEntry => 'CuraCartDataEntry',
-        DataEvolution => 'DataEvolution',
-        EbiIprScan => 'EbiIprScan',
-        EgtCluster => 'EgtCluster',
-        EmblFile => 'EmblFile',
-        BcSearch => 'BcSearch',
-        BiosyntheticStats => 'BiosyntheticStats',
-        BcNpIDSearch => 'BcNpIDSearch',
-        FindFunctions => 'FindFunctions',
+        CuraCartStor                 => 'CuraCartStor',
+        CuraCartDataEntry            => 'CuraCartDataEntry',
+        DataEvolution                => 'DataEvolution',
+        EbiIprScan                   => 'EbiIprScan',
+        EgtCluster                   => 'EgtCluster',
+        EmblFile                     => 'EmblFile',
+        BcSearch                     => 'BcSearch',
+        BiosyntheticStats            => 'BiosyntheticStats',
+        BcNpIDSearch                 => 'BcNpIDSearch',
+        FindFunctions                => 'FindFunctions',
+        FindFunctionMERFS            => 'FindFunctionMERFS',
+        FindGenes                    => 'FindGenes',
+        FindGenesLucy                => 'FindGenesLucy',
+        FindGenesBlast               => 'FindGenesBlast',
+        FindGenomes                  => 'FindGenomes',
+        FunctionAlignment            => 'FunctionAlignment',
+        FuncCartStor                 => 'FuncCartStor',
+        FuncCartStorTab              => 'FuncCartStor',
+        FuncProfile                  => 'FuncProfile',
+        FunctionProfiler             => 'FunctionProfiler',
+        DotPlot                      => 'DotPlot',
+        DistanceTree                 => 'DistanceTree',
+        RadialPhyloTree              => 'RadialPhyloTree',
+        Kmer                         => 'Kmer',
+        GenBankFile                  => 'GenBankFile',
+        GeneAnnotPager               => 'GeneAnnotPager',
+        GeneCartChrViewer            => 'GeneCartChrViewer',
+        GeneCartStor                 => 'GeneCartStor',
+        GeneCartStorTab              => 'GeneCartStor',
+        MyGeneDetail                 => 'MyGeneDetail',
+        Help                         => 'Help',
+        GeneDetail                   => 'GeneDetail',
+        geneDetail                   => 'GeneDetail',
+        MetaGeneDetail               => 'MetaGeneDetail',
+        MetaGeneTable                => 'MetaGeneTable',
+        GeneNeighborhood             => 'GeneNeighborhood',
+        FindClosure                  => 'FindClosure',
+        MetagPhyloDist               => 'MetagPhyloDist',
+        Cart                         => 'Cart',
+        HorizontalTransfer           => 'HorizontalTransfer',
+        ImgTermStats                 => 'ImgTermStats',
+        KoTermStats                  => 'KoTermStats',
+        HmpTaxonList                 => 'HmpTaxonList',
+        Interpro                     => 'Interpro',
+        MetaCyc                      => 'MetaCyc',
+        AnalysisProject              => 'AnalysisProject',
+        GenePageEnvBlast             => 'GenePageEnvBlast',
+        GeneProfilerStor             => 'GeneProfilerStor',
+        GenomeProperty               => 'GenomeProperty',
+        GreenGenesBlast              => 'GreenGenesBlast',
+        HomologToolkit               => 'HomologToolkit',
+        ImgCompound                  => 'ImgCompound',
+        ImgCpdCartStor               => 'ImgCpdCartStor',
+        ImgTermAndPathTab            => 'ImgTermAndPathTab',
+        ImgNetworkBrowser            => 'ImgNetworkBrowser',
+        ImgPwayBrowser               => 'ImgPwayBrowser',
+        ImgPartsListBrowser          => 'ImgPartsListBrowser',
+        ImgPartsListCartStor         => 'ImgPartsListCartStor',
+        ImgPartsListDataEntry        => 'ImgPartsListDataEntry',
+        ImgPwayCartDataEntry         => 'ImgPwayCartDataEntry',
+        ImgPwayCartStor              => 'ImgPwayCartStor',
+        ImgReaction                  => 'ImgReaction',
+        ImgRxnCartStor               => 'ImgRxnCartStor',
+        ImgTermBrowser               => 'ImgTermBrowser',
+        ImgTermCartDataEntry         => 'ImgTermCartDataEntry',
+        ImgTermCartStor              => 'ImgTermCartStor',
+        KeggMap                      => 'KeggMap',
+        KeggPathwayDetail            => 'KeggPathwayDetail',
+        PathwayMaps                  => 'PathwayMaps',
+        Metagenome                   => 'Metagenome',
+        AllPwayBrowser               => 'AllPwayBrowser',
+        MpwPwayBrowser               => 'MpwPwayBrowser',
+        GenomeHits                   => 'GenomeHits',
+        ScaffoldHits                 => 'ScaffoldHits',
+        ScaffoldCart                 => 'ScaffoldCart',
+        MetagenomeHits               => 'MetagenomeHits',
+        MetaFileHits                 => 'MetaFileHits',
+        MetagenomeGraph              => 'MetagenomeGraph',
+        MetaFileGraph                => 'MetaFileGraph',
+        MissingGenes                 => 'MissingGenes',
+        MyFuncCat                    => 'MyFuncCat',
+        MyIMG                        => 'MyIMG',
+        ImgGroup                     => 'ImgGroup',
+        Workspace                    => 'Workspace',
+        WorkspaceGeneSet             => 'WorkspaceGeneSet',
+        WorkspaceFuncSet             => 'WorkspaceFuncSet',
+        WorkspaceGenomeSet           => 'WorkspaceGenomeSet',
+        WorkspaceScafSet             => 'WorkspaceScafSet',
+        WorkspaceRuleSet             => 'WorkspaceRuleSet',
+        WorkspaceJob                 => 'WorkspaceJob',
+        MyBins                       => 'MyBins',
+        About                        => 'About',
+        NcbiBlast                    => 'NcbiBlast',
+        NrHits                       => 'NrHits',
+        Operon                       => 'Operon',
+        OtfBlast                     => 'OtfBlast',
+        PepStats                     => 'PepStats',
+        PfamCategoryDetail           => 'PfamCategoryDetail',
+        PhyloCogs                    => 'PhyloCogs',
+        PhyloDist                    => 'PhyloDist',
+        PhyloOccur                   => 'PhyloOccur',
+        PhyloProfile                 => 'PhyloProfile',
+        PhyloSim                     => 'PhyloSim',
+        PhyloClusterProfiler         => 'PhyloClusterProfiler',
+        PhylogenProfiler             => 'PhylogenProfiler',
+        ProteinCluster               => 'ProteinCluster',
+        ProfileQuery                 => 'ProfileQuery',
+        PdbBlast                     => 'PdbBlast',
+        SixPack                      => 'SixPack',
+        Sequence                     => 'Sequence',
+        ScaffoldGraph                => 'ScaffoldGraph',
+        MetaScaffoldGraph            => 'MetaScaffoldGraph',
+        TaxonCircMaps                => 'TaxonCircMaps',
+        GenerateArtemisFile          => 'GenerateArtemisFile',
+        TaxonDetail                  => 'TaxonDetail',
+        TaxonDeleted                 => 'TaxonDeleted',
+        MetaDetail                   => 'MetaDetail',
+        TaxonList                    => 'TaxonList',
+        TaxonSearch                  => 'TaxonSearch',
+        TigrBrowser                  => 'TigrBrowser',
+        TreeQ                        => 'TreeQ',
+        Vista                        => 'Vista',
+        IMGContent                   => 'IMGContent',
+        IMGProteins                  => 'IMGProteins',
+        Methylomics                  => 'Methylomics',
+        RNAStudies                   => 'RNAStudies',
+        Questions                    => 'Questions',
+        Messages                     => 'Messages',
+        znormNote                    => 'Messages',
+        CogDetail                    => 'CogDetail',
+        GeneInfoPager => 'GeneInfoPager',
     );
 
     # testing sections
-    if($img_internal || $img_ken) {
-        $validSections{ProPortal} =  'ProPortal';
-        $validSections{Portal} =  'Portal';
+    if ( $img_internal || $img_ken ) {
+        $validSections{ProPortal} = 'ProPortal';
+        $validSections{Portal}    = 'Portal';
     }
 
-    if ( $section eq "GenomeCart" ) {
-        #
-        # Exception case 1 - Ken
-        #
-        # order here is important for now - ken 
-        $section = $validSections{$section}; # we need to untaint the $section..so get it from valid hash
-        load $section;
-        $pageTitle = $section->getPageTitle();
-        my @appArgs = $section->getAppHeaderData();
-        my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
-        $section->dispatch($numTaxons);        
-
-    } elsif ( param("setTaxonFilter") ne "" && !blankStr($taxon_filter_oid_str) ) {
-        #
-        # Exception case 2 - Ken
-        #
-        # this must before  the "} elsif (exists $validSections{ $section}) { "
-        # s.t. the genome cart is display after the user presses add to genome cart
-        #
-        # add to genome cart - ken
-        require GenomeList;
-        GenomeList::clearCache();
-
-        require GenomeCart;
-        $pageTitle = "Genome Cart";
-        setSessionParam( "lastCart", "genomeCart" );
-        printAppHeader("AnaCart");
-        GenomeCart::dispatch();
-
-    } elsif ( param("setTaxonFilter") ne "" && blankStr($taxon_filter_oid_str) ) {
-        #
-        # Exception case 3 - ken
-        #
-        # I have a feeling this is no longer used - ken
-        #
-        $pageTitle = "Genome Selection Message";
-        printAppHeader("FindGenomes");
-        printMessage( "Saving 'no selections' is the same as selecting " . "all genomes. Genome filtering is disabled.\n" );
-
-
-    } elsif (exists $validSections{ $section}) {  
+    if ( exists $validSections{$section} || param("exportGenes") ne "" || param("setTaxonFilter") ne "") {
 
         # TODO a better section loader  - ken
-        $section = $validSections{$section}; # we need to untaint the $section..so get it from valid hash
+        $section = $validSections{$section};    # we need to untaint the $section..so get it from valid hash
+
+        if ( param("exportGenes") ne "" ) {
+            $section = 'Export';
+        } elsif(param("setTaxonFilter") ne "") {
+            $section = 'GenomeList';
+        }
+
         load $section;
         $pageTitle = $section->getPageTitle();
         my @appArgs = $section->getAppHeaderData();
         my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
         $section->dispatch($numTaxons);
 
-    } elsif ( $section eq "FindFunctionMERFS" ) {
-        require FindFunctionMERFS;
-        $pageTitle = "Find Functions";
-        printAppHeader("FindFunctions");
-        FindFunctionMERFS::dispatch();
-    } elsif ( $section eq "FindGenes" ) {
-        require FindGenes;
-        $pageTitle = "Find Genes";
+    } elsif ( ( $public_login || $user_restricted_site ) && param("redirect") ne "" ) {
+        my $rurl = param("redirect");
+        redirecturl($rurl);
 
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        my $numTaxon;
-        if (   $page eq 'findGenes'
-            || $page eq 'geneSearch'
-            || ( $page ne 'geneSearchForm' && paramMatch("fgFindGenes") eq '' ) )
-        {
-            $numTaxon = printAppHeader( "FindGenes", '', '', $js, '', 'GeneSearch.pdf' );
-        } else {
-            $numTaxon = printAppHeader( "FindGenes", '', '', $js );
-        }
-        FindGenes::dispatch($numTaxon);
-    } elsif ( $section eq "FindGenesLucy" ) {
-        require FindGenesLucy;
-        $pageTitle = "Find Genes by Keyword";
-        printAppHeader( "FindGenesLucy", '', '', '', '', 'GeneSearch.pdf' );
-        FindGenesLucy::dispatch();
-    } elsif ( $section eq "FindGenesBlast" ) {
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        require FindGenesBlast;
-        $pageTitle = "Find Genes - BLAST";
-        my $numTaxon = printAppHeader( "FindGenes", '', '', $js, '', 'Blast.pdf' );
-        FindGenesBlast::dispatch($numTaxon);
-    } elsif ( $section eq "FindGenomes" ) {
-        require FindGenomes;
-        $pageTitle = "Find Genomes";
-        if ( $page eq 'findGenomes' ) {
-            printAppHeader( "FindGenomes", '', '', '', '', 'GenomeBrowser.pdf' );
-        } elsif ( $page eq 'genomeSearch' ) {
-            printAppHeader( "FindGenomes", '', '', '', '', 'GenomeSearch.pdf' );
-        } else {
-            printAppHeader("FindGenomes");
-        }
-        FindGenomes::dispatch();
-    } elsif ( $section eq "FunctionAlignment" ) {
-        require FunctionAlignment;
-        $pageTitle = "Function Alignment";
-        printAppHeader( "FindFunctions", '', '', '', '', 'FunctionAlignment.pdf' );
-        FunctionAlignment::dispatch();
-    } elsif ( $section eq "FuncCartStor" || $section eq "FuncCartStorTab" ) {
-        require FuncCartStor;
-        $pageTitle = "Function Cart";
-        if ( paramMatch("AssertionProfile") ne "" ) {
-            $pageTitle = "Assertion Profile";
-        }
-        setSessionParam( "lastCart", "funcCart" );
-
-        #if ( $page eq 'funcCart' || paramMatch("addFunctionCart") ne "" || paramMatch('addToFuncCart') ne "") {
-        if ( $page eq 'funcCart' || !paramMatch("noHeader") ) {
-            if ($enable_genomelistJson) {
-                my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-                $template->param( base_url => $base_url );
-                $template->param( YUI      => $YUI );
-                my $js = $template->output;
-                printAppHeader( "AnaCart", '', '', $js, '', 'FunctionCart.pdf' );
-            } else {
-                printAppHeader( "AnaCart", '', '', '', '', 'FunctionCart.pdf' );
-            }
-        }
-
-        # else {
-        #    printAppHeader("AnaCart") if !paramMatch("noHeader");
-        #}
-        FuncCartStor::dispatch();
-    } elsif ( $section eq "FuncProfile" ) {
-        require FuncProfile;
-        $pageTitle = "Function Profile";
-        printAppHeader("AnaCart");
-        FuncProfile::dispatch();
-    } elsif ( $section eq "FunctionProfiler" ) {
-        require FunctionProfiler;
-        $pageTitle = "Function Profile";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        my $numTaxon = printAppHeader( "CompareGenomes", "", "", $js );
-        FunctionProfiler::dispatch($numTaxon);
-    } elsif ( $section eq "DotPlot" ) {
-        timeout( 60 * 40 );    # timeout in 40 minutes
-        require DotPlot;
-        $pageTitle = "Dotplot";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-        my $numTaxon = printAppHeader( "CompareGenomes", "Synteny Viewers", '', $js, '', 'Dotplot.pdf' );
-        DotPlot::dispatch($numTaxon);
-    } elsif ( $section eq "DistanceTree" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require DistanceTree;
-        $pageTitle = "Distance Tree";
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-        my $numTaxon = printAppHeader( "CompareGenomes", '', '', $js, '', 'DistanceTree.pdf' );
-        DistanceTree::dispatch($numTaxon);
-    } elsif ( $section eq "RadialPhyloTree" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require RadialPhyloTree;
-        $pageTitle = "Radial Phylogenetic Tree";
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-        my $numTaxon = printAppHeader( "CompareGenomes", '', '', $js )
-          if !paramMatch("export");
-        RadialPhyloTree::dispatch($numTaxon);
-    } elsif ( $section eq "Kmer" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require Kmer;
-        $pageTitle = "Kmer Frequency Analysis";
-        printAppHeader("FindGenomes")
-          if !paramMatch("export");
-        Kmer::dispatch();
-    } elsif ( $section eq "GenBankFile" ) {
-        require GenBankFile;
-        $pageTitle = "GenBank File Export";
-        printAppHeader("FindGenomes");
-        GenBankFile::dispatch();
-    } elsif ( $section eq "GeneAnnotPager" ) {
-        require GeneAnnotPager;
-        $pageTitle = "Comparative Annotations";
-        printAppHeader("FindGenomes");
-        GeneAnnotPager::dispatch();
-    } elsif ( $section eq "GeneInfoPager" ) {
-        timeout( 60 * 60 );    # timeout in 20 minutes
-        require GeneInfoPager;
-        $pageTitle = "Download Gene Information";
-        printAppHeader("FindGenomes");
-        GeneInfoPager::dispatch();
-    } elsif ( $section eq "GeneCartChrViewer" ) {
-        require GeneCartChrViewer;
-        $pageTitle = "Circular Chromosome Viewer";
-        setSessionParam( "lastCart", "geneCart" );
-        printAppHeader("AnaCart");
-        GeneCartChrViewer::dispatch();
-    } elsif ( $section eq "GeneCartDataEntry" ) {
-        require GeneCartDataEntry;
-        $pageTitle = "Gene Cart Data Entry";
-        setSessionParam( "lastCart", "geneCart" );
-        printAppHeader("AnaCart");
-        GeneCartDataEntry::dispatch();
-
-    } elsif ( $section eq 'GenomeListJSON' ) {
-
-        # TODO testing forms
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-        printAppHeader( "AnaCart", '', '', $js );
-
-        GenomeListJSON::test();
-
-    } elsif ( $section eq "GeneCartStor" || $section eq "GeneCartStorTab" ) {
-        require GeneCartStor;
-        $pageTitle = "Gene Cart";
-        if ( paramMatch("addFunctionCart") ne "" ) {
-            setSessionParam( "lastCart", "funcCart" );
-        } else {
-            setSessionParam( "lastCart", "geneCart" );
-        }
-        if ( $page eq 'geneCart' || !paramMatch("noHeader") ) {
-            if ($enable_genomelistJson) {
-                my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-                $template->param( base_url => $base_url );
-                $template->param( YUI      => $YUI );
-                my $js = $template->output;
-
-                printAppHeader( "AnaCart", '', '', $js, '', 'GeneCart.pdf' );
-            } else {
-                printAppHeader( "AnaCart", '', '', '', '', 'GeneCart.pdf' );
-            }
-        } else {
-            printAppHeader("AnaCart");
-        }
-        GeneCartStor::dispatch();
-    } elsif ( $section eq "MyGeneDetail" ) {
-        require MyGeneDetail;
-        $pageTitle = "My Gene Detail";
-        printAppHeader("FindGenes");
-        MyGeneDetail::dispatch();
-    } elsif ( $section eq "Help" ) {
-        $pageTitle = "Help";
-        printAppHeader("about");
-        require Help;
-        Help::dispatch();
-    } elsif ( $section eq "GeneDetail" || $page eq "geneDetail" ) {
-        require GeneDetail;
-        $pageTitle = "Gene Details";
-        printAppHeader("FindGenes");
-        GeneDetail::dispatch();
-    } elsif ( $section eq "MetaGeneDetail" ) {
-        require MetaGeneDetail;
-        $pageTitle = "Metagenome Gene Details";
-        printAppHeader("FindGenes");
-        MetaGeneDetail::dispatch();
-    } elsif ( $section eq "MetaGeneTable" ) {
-        require MetaGeneTable;
-        $pageTitle = "Gene List";
-        printAppHeader("FindGenes");
-        MetaGeneTable::dispatch();
-    } elsif ( $section eq "GeneNeighborhood" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require GeneNeighborhood;
-        $pageTitle = "Gene Neighborhood";
-        printAppHeader("FindGenes");
-        GeneNeighborhood::dispatch();
-    } elsif ( $section eq "FindClosure" ) {
-        require FindClosure;
-        $pageTitle = "Functional Closure";
-        printAppHeader("AnaCart");
-        FindClosure::dispatch();
-    } elsif ( $section eq "MetagPhyloDist" ) {
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        require MetagPhyloDist;
-        $pageTitle = "Phylogenetic Distribution";
-        my $numTaxon = printAppHeader( "CompareGenomes", '', '', $js );
-        MetagPhyloDist::dispatch($numTaxon);
-    } elsif ( $section eq "Cart" ) {
-        require Cart;
-        $pageTitle = "My Cart";
-        printAppHeader("AnaCart");
-        Cart::dispatch();
-
-    } elsif ( $section eq "HorizontalTransfer" ) {
-        require HorizontalTransfer;
-        $pageTitle = "Horizontal Transfer";
-        printAppHeader("FindGenomes");
-        HorizontalTransfer::dispatch();
-    } elsif ( $section eq "ImgTermStats" ) {
-        require ImgTermStats;
-        $pageTitle = "IMG Term";
-        printAppHeader("FindFunctions");
-        ImgTermStats::dispatch();
-    } elsif ( $section eq "KoTermStats" ) {
-        require KoTermStats;
-        $pageTitle = "KO Stats";
-        printAppHeader("FindFunctions");
-        KoTermStats::dispatch();
-    } elsif ( $section eq "HmpTaxonList" ) {
-        require HmpTaxonList;
-        $pageTitle = "Hmp Genome List";
-        if ( paramMatch("_excel") ) {
-            printExcelHeader("genome_export$$.xls");
-        } else {
-            printAppHeader("FindGenomes");
-        }
-        HmpTaxonList::dispatch();
-    } elsif ( $section eq "EggNog" ) {
-        require EggNog;
-        $pageTitle = "EggNOG";
-        printAppHeader("FindFunctions");
-        EggNog::dispatch();
-    } elsif ( $section eq "Interpro" ) {
-        require Interpro;
-        $pageTitle = "Interpro";
-        printAppHeader("FindFunctions");
-        Interpro::dispatch();
-    } elsif ( $section eq "MetaCyc" ) {
-        require MetaCyc;
-        $pageTitle = "MetaCyc";
-        printAppHeader("FindFunctions");
-        MetaCyc::dispatch();
-
-#    } elsif ($img_internal && $section eq "Fastbit" ) {
-#        
-#        # test code - ken
-#        $pageTitle = "Fastbit Test";
-#        require GenomeListJSON;
-#        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-#        $template->param( base_url => $base_url );
-#        $template->param( YUI      => $YUI );
-#        my $js       = $template->output;
-#        my $numTaxon = printAppHeader( "FindFunctions", '', '', $js );
-#        require Fastbit;
-#        Fastbit::dispatch($numTaxon);
-
-    } elsif ( $section eq 'AnalysisProject' ) {
-        $pageTitle = "Analysis Project";
-        printAppHeader("FindGenomes");
-        require AnalysisProject;
-        AnalysisProject::dispatch();
-
-
-    } elsif ( $section eq "TaxonEdit" ) {
-        require TaxonEdit;
-        $pageTitle = "Taxon Edit";
-        printAppHeader("Taxon Edit");
-        TaxonEdit::dispatch();
-    } elsif ( $section eq "GenePageEnvBlast" ) {
-        require GenePageEnvBlast;
-        $pageTitle = "SNP BLAST";
-        printAppHeader("");
-        GenePageEnvBlast::dispatch();
-    } elsif ( $section eq "GeneProfilerStor" ) {
-        require GeneProfilerStor;
-        $pageTitle = "Gene Profiler";
-        setSessionParam( "lastCart", "geneCart" );
-        printAppHeader("AnaCart");
-        GeneProfilerStor::dispatch();
-    } elsif ( $section eq "GenomeProperty" ) {
-
-        # --es 10/17/2007
-        require GenomeProperty;
-        $pageTitle = "GenomeProperty";
-        printAppHeader("");
-        GenomeProperty::dispatch();
-    } elsif ( $section eq "GreenGenesBlast" ) {
-        require GreenGenesBlast;
-        $pageTitle = "Green Genes BLAST";
-        print header( -header => "text/html" );
-        GreenGenesBlast::dispatch();
-    } elsif ( $section eq "HomologToolkit" ) {
-        require HomologToolkit;
-        $pageTitle = "Homolog Toolkit";
-        printAppHeader("FindGenes");
-        HomologToolkit::dispatch();
-    } elsif ( $section eq "ImgCompound" ) {
-        require ImgCompound;
-        $pageTitle = "IMG Compound";
-
-        my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-        printAppHeader( "FindFunctions", '', '', $js );
-
-        ImgCompound::dispatch();
-    } elsif ( $section eq "ImgCpdCartStor" ) {
-        require ImgCpdCartStor;
-        $pageTitle = "IMG Compound Cart";
-        setSessionParam( "lastCart", "imgCpdCart" );
-        printAppHeader("AnaCart");
-        ImgCpdCartStor::dispatch();
-    } elsif ( $section eq "ImgTermAndPathTab" ) {
-        require ImgTermAndPathTab;
-        $pageTitle = "IMG Terms & Pathways";
-        printAppHeader("FindFunctions");
-        ImgTermAndPathTab::dispatch();
-    } elsif ( $section eq "ImgNetworkBrowser" ) {
-        require ImgNetworkBrowser;
-        $pageTitle = "IMG Network Browser";
-        printAppHeader( "FindFunctions", '', '', '', '', 'imgterms.html' );
-        ImgNetworkBrowser::dispatch();
-    } elsif ( $section eq "ImgPwayBrowser" ) {
-        require ImgPwayBrowser;
-        $pageTitle = "IMG Pathway Browser";
-        printAppHeader("FindFunctions");
-        ImgPwayBrowser::dispatch();
-    } elsif ( $section eq "ImgPartsListBrowser" ) {
-        require ImgPartsListBrowser;
-        $pageTitle = "IMG Parts List Browser";
-        printAppHeader("FindFunctions");
-        ImgPartsListBrowser::dispatch();
-    } elsif ( $section eq "ImgPartsListCartStor" ) {
-        require ImgPartsListCartStor;
-        $pageTitle = "IMG Parts List Cart";
-        setSessionParam( "lastCart", "imgPartsListCart" );
-        printAppHeader("AnaCart");
-        ImgPartsListCartStor::dispatch();
-    } elsif ( $section eq "ImgPartsListDataEntry" ) {
-        require ImgPartsListDataEntry;
-        $pageTitle = "IMG Parts List Data Entry";
-        setSessionParam( "lastCart", "imgPartsListCart" );
-        printAppHeader("AnaCart");
-        ImgPartsListDataEntry::dispatch();
-    } elsif ( $section eq "ImgPwayCartDataEntry" ) {
-        require ImgPwayCartDataEntry;
-        $pageTitle = "IMG Pathway Cart Data Entry";
-        setSessionParam( "lastCart", "imgPwayCart" );
-        printAppHeader("AnaCart");
-        ImgPwayCartDataEntry::dispatch();
-    } elsif ( $section eq "ImgPwayCartStor" ) {
-        require ImgPwayCartStor;
-        $pageTitle = "IMG Pathway Cart";
-        setSessionParam( "lastCart", "imgPwayCart" );
-        printAppHeader("AnaCart");
-        ImgPwayCartStor::dispatch();
-    } elsif ( $section eq "ImgReaction" ) {
-        require ImgReaction;
-        $pageTitle = "IMG Reaction";
-        printAppHeader("FindFunctions");
-        ImgReaction::dispatch();
-    } elsif ( $section eq "ImgRxnCartStor" ) {
-        require ImgRxnCartStor;
-        $pageTitle = "IMG Reaction Cart";
-        setSessionParam( "lastCart", "imgRxnCart" );
-        printAppHeader("AnaCart");
-        ImgRxnCartStor::dispatch();
-    } elsif ( $section eq "ImgTermBrowser" ) {
-        require ImgTermBrowser;
-        $pageTitle = "IMG Term Browser";
-        printAppHeader("FindFunctions");
-        ImgTermBrowser::dispatch();
-    } elsif ( $section eq "ImgTermCartDataEntry" ) {
-        require ImgTermCartDataEntry;
-        $pageTitle = "IMG Term Cart Data Entry";
-        setSessionParam( "lastCart", "imgTermCart" );
-        printAppHeader("AnaCart");
-        ImgTermCartDataEntry::dispatch();
-    } elsif ( $section eq "ImgTermCartStor" ) {
-        require ImgTermCartStor;
-        $pageTitle = "IMG Term Cart";
-        setSessionParam( "lastCart", "imgTermCart" );
-        printAppHeader("AnaCart");
-        ImgTermCartStor::dispatch();
-    } elsif ( $section eq "KeggMap" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require KeggMap;
-        $pageTitle = "KEGG Map";
-        printAppHeader("FindFunctions");
-        KeggMap::dispatch();
-    } elsif ( $section eq "KeggPathwayDetail" ) {
-        require KeggPathwayDetail;
-        $pageTitle = "KEGG Pathway Detail";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        my $numTaxon = printAppHeader( "FindFunctions", '', '', $js );
-        KeggPathwayDetail::dispatch($numTaxon);
-    } elsif ( $section eq "PathwayMaps" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require PathwayMaps;
-        $pageTitle = "Pathway Maps";
-        printAppHeader("PathwayMaps");
-        PathwayMaps::dispatch();
-    } elsif ( $section eq "Metagenome" ) {
-        require Metagenome;
-        $pageTitle = "Metagenome";
-        printAppHeader("FindGenomes");
-        Metagenome::dispatch();
-    } elsif ( $section eq "AllPwayBrowser" ) {
-        require AllPwayBrowser;
-        $pageTitle = "All Pathways";
-        printAppHeader("FindFunctions");
-        AllPwayBrowser::dispatch();
-    } elsif ( $section eq "MpwPwayBrowser" ) {
-        require MpwPwayBrowser;
-        $pageTitle = "Mpw Pathway Browser";
-        printAppHeader("FindFunctions");
-        MpwPwayBrowser::dispatch();
-    } elsif ( $section eq "GenomeHits" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require GenomeHits;
-        $pageTitle = "Genome Hits";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js       = $template->output;
-        my $numTaxon = printAppHeader( "CompareGenomes", '', '', $js );
-
-        GenomeHits::dispatch($numTaxon);
-    } elsif ( $section eq "ScaffoldHits" ) {
-        require ScaffoldHits;
-        $pageTitle = "Scaffold Hits";
-
-        # for download add if paramMatch( "noHeader" ) eq "";
-        printAppHeader("AnaCart")
-          if paramMatch("noHeader") eq "";
-        ScaffoldHits::dispatch();
-    } elsif ( $section eq "ScaffoldCart" ) {
-        require ScaffoldCart;
-        $pageTitle = "Scaffold Cart";
-        if (   paramMatch("exportScaffoldCart") ne ""
-            || paramMatch("exportFasta") ne "" )
-        {
-
-            # export excel
-            setSessionParam( "lastCart", "scaffoldCart" );
-        } elsif ( paramMatch("addSelectedToGeneCart") ne "" ) {
-        } else {
-            setSessionParam( "lastCart", "scaffoldCart" );
-            printAppHeader("AnaCart");
-        }
-        ScaffoldCart::dispatch();
-
-
-    } elsif ( $section eq "MetagenomeHits" ) {
-        require MetagenomeHits;
-        $pageTitle = "Genome Hits";
-
-        # for download add if paramMatch( "noHeader" ) eq "";
-        printAppHeader("FindGenomes")
-          if paramMatch("noHeader") eq "";
-        MetagenomeHits::dispatch();
-    } elsif ( $section eq "MetaFileHits" ) {
-        require MetaFileHits;
-        $pageTitle = "Metagenome Hits";
-
-        # for download add if paramMatch( "noHeader" ) eq "";
-        printAppHeader("FindGenomes")
-          if ( param('noHeader') eq '' && paramMatch("noHeader") eq "" );
-        MetaFileHits::dispatch();
-    } elsif ( $section eq "MetagenomeGraph" ) {
-        timeout( 60 * 40 );
-        require MetagenomeGraph;
-        $pageTitle = "Genome Graph";
-
-        # for download add if paramMatch( "noHeader" ) eq "";
-        printAppHeader("FindGenomes")
-          if paramMatch("noHeader") eq "";
-        MetagenomeGraph::dispatch();
-    } elsif ( $section eq "MetaFileGraph" ) {
-        require MetaFileGraph;
-        $pageTitle = "Metagenome Graph";
-
-        # for download add if paramMatch( "noHeader" ) eq "";
-        printAppHeader("FindGenomes")
-          if paramMatch("noHeader") eq "";
-        MetaFileGraph::dispatch();
-    } elsif ( $section eq "MissingGenes" ) {
-        require MissingGenes;
-        $pageTitle = "MissingGenes";
-        printAppHeader("AnaCart");
-        MissingGenes::dispatch();
-    } elsif ( $section eq "MyFuncCat" ) {
-        require MyFuncCat;
-        $pageTitle = "My Functional Categories";
-        printAppHeader("AnaCart");
-        MyFuncCat::dispatch();
-    } elsif ( $section eq "MyIMG" ) {
-        require MyIMG;
-        $pageTitle = "MyIMG";
-        if ( $page eq "taxonUploadForm" ) {
-            printAppHeader("AnaCart");
-        } else {
-            printAppHeader( "MyIMG", '', '', '', '', 'MyIMG4.pdf' ) if paramMatch("noHeader") eq "";
-        }
-        MyIMG::dispatch();
-    } elsif ( $section eq "ImgGroup" ) {
-        require ImgGroup;
-        $pageTitle = "MyIMG";
-        printAppHeader("MyIMG") if paramMatch("noHeader") eq "";
-        ImgGroup::dispatch();
-    } elsif ( $section eq "Workspace" ) {
-        require Workspace;
-        my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
-        $pageTitle = "Workspace";
-        my $header = param("header");
-        if ( paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
-                                                   # no header
-        } elsif ( $header eq "" && paramMatch("noHeader") eq "" ) {
-            printAppHeader( "MyIMG", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
-        }
-        Workspace::dispatch();
-    } elsif ( $section eq "WorkspaceGeneSet" ) {
-        require WorkspaceGeneSet;
-        my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
-        $pageTitle = "Workspace Gene Sets";
-        my $header = param("header");
-        if ( paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
-                                                   # no header
-        } elsif ( $header eq "" && paramMatch("noHeader") eq "" ) {
-            printAppHeader( "MyIMG", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
-        }
-        WorkspaceGeneSet::dispatch();
-    } elsif ( $section eq "WorkspaceFuncSet" ) {
-        require WorkspaceFuncSet;
-        my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
-        $pageTitle = "Workspace Function Sets";
-        my $header = param("header");
-        if ( paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
-                                                   # no header
-        } elsif ( $header eq "" && paramMatch("noHeader") eq "" ) {
-            printAppHeader( "MyIMG", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
-        }
-        WorkspaceFuncSet::dispatch();
-    } elsif ( $section eq "WorkspaceGenomeSet" ) {
-        require WorkspaceGenomeSet;
-        my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
-        $pageTitle = "Workspace Genome Sets";
-        my $header = param("header");
-        if ( paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
-                                                   # no header
-        } elsif ( $header eq "" && paramMatch("noHeader") eq "" ) {
-            printAppHeader( "MyIMG", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
-        }
-        WorkspaceGenomeSet::dispatch();
-    } elsif ( $section eq "WorkspaceScafSet" ) {
-        require WorkspaceScafSet;
-        my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
-        $pageTitle = "Workspace Scaffold Sets";
-        my $header = param("header");
-        if ( paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
-                                                   # no header
-        } elsif ( $header eq "" && paramMatch("noHeader") eq "" ) {
-            printAppHeader( "MyIMG", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
-        }
-        WorkspaceScafSet::dispatch();
-    } elsif ( $section eq "WorkspaceRuleSet" ) {
-        require WorkspaceRuleSet;
-        $pageTitle = "Workspace";
-        my $header = param("header");
-        if ( paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
-                                                   # no header
-        } elsif ( $header eq "" && paramMatch("noHeader") eq "" ) {
-            printAppHeader("MyIMG", '', '', '', '', 'IMGWorkspaceUserGuide.pdf' );
-        }
-        WorkspaceRuleSet::dispatch();
-    } elsif ( $section eq "WorkspaceJob" ) {
-        require WorkspaceJob;
-        $pageTitle = "Workspace";
-        my $header = param("header");
-        if ( paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
-                                                   # no header
-        } elsif ( $header eq "" && paramMatch("noHeader") eq "" ) {
-            printAppHeader("MyIMG", '', '', '', '', 'IMGWorkspaceUserGuide.pdf' );
-        }
-        WorkspaceJob::dispatch();
-        
-    } elsif ( $section eq "MyBins" ) {
-        require MyBins;
-        $pageTitle = "My Bins";
-        printAppHeader("MyIMG");
-        MyBins::dispatch();
-    } elsif ( $section eq "About" ) {
-        require About;
-        $pageTitle = "About";
-        printAppHeader("about");
-        About::dispatch();
-    } elsif ( $section eq "NcbiBlast" ) {
-        require NcbiBlast;
-        $pageTitle = "NCBI BLAST";
-
-        #print header( -header => "text/html" );
-        printAppHeader("FindGenes");
-        NcbiBlast::dispatch();
-    } elsif ( $section eq "NrHits" ) {
-        require NrHits;
-        $pageTitle = "Gene Details";
-        printAppHeader("");
-        NrHits::dispatch();
-    } elsif ( $section eq "Operon" ) {
-        require Operon;
-        $pageTitle = "Operons";
-        printAppHeader("FindGenes");
-        Operon::dispatch();
-    } elsif ( $section eq "OtfBlast" ) {
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-
-        require OtfBlast;
-        $pageTitle = "Gene Details";
-
-        #printAppHeader("FindGenes");
-        my $numTaxon = printAppHeader( "FindGenes", '', '', $js );
-
-        OtfBlast::dispatch($numTaxon);
-    } elsif ( $section eq "PepStats" ) {
-        require PepStats;
-        $pageTitle = "Peptide Stats";
-        printAppHeader("FindGenes");
-        PepStats::dispatch();
-    } elsif ( $section eq "PfamCategoryDetail" ) {
-        require PfamCategoryDetail;
-        $pageTitle = "Pfam Category";
-        printAppHeader("FindFunctions");
-        PfamCategoryDetail::dispatch();
-    } elsif ( $section eq "PhyloCogs" ) {
-        require PhyloCogs;
-        $pageTitle = "Phylogenetic Marker COGs";
-        my $numTaxon = printAppHeader("CompareGenomes");
-        PhyloCogs::dispatch($numTaxon);
-    } elsif ( $section eq "PhyloDist" ) {
-        require PhyloDist;
-        $pageTitle = "Phylogenetic Distribution";
-        printAppHeader("FindGenes");
-        PhyloDist::dispatch();
-    } elsif ( $section eq "PhyloOccur" ) {
-        require PhyloOccur;
-        $pageTitle = "Phylogenetic Occurrence Profile";
-        printAppHeader("AnaCart");
-        PhyloOccur::dispatch();
-    } elsif ( $section eq "PhyloProfile" ) {
-        require PhyloProfile;
-        $pageTitle = "Phylogenetic Profile";
-        printAppHeader("AnaCart");
-        PhyloProfile::dispatch();
-    } elsif ( $section eq "PhyloSim" ) {
-        require PhyloSim;
-        $pageTitle = "Phylogenetic Similarity Search";
-        printAppHeader("FindGenes");
-        PhyloSim::dispatch();
-    } elsif ( $section eq "PhyloClusterProfiler" ) {
-        require PhyloClusterProfiler;
-        $pageTitle = "Phylogenetic Profiler using Clusters";
-        my $numTaxon = printAppHeader("FindGenes");
-        PhyloClusterProfiler::dispatch($numTaxon);
-    } elsif ( $section eq "PhylogenProfiler" ) {
-        require PhylogenProfiler;
-        $pageTitle = "Phylogenetic Profiler";
-
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js       = $template->output;
-        my $numTaxon = printAppHeader( "FindGenes", '', '', $js );
-
-        PhylogenProfiler::dispatch($numTaxon);
-    } elsif ( $section eq "ProteinCluster" ) {
-        require ProteinCluster;
-        $pageTitle = "Protein Cluster";
-        printAppHeader("FindGenes");
-        ProteinCluster::dispatch();
-    } elsif ( $section eq "ProfileQuery" ) {
-        require ProfileQuery;
-        $pageTitle = "Profile Query";
-        printAppHeader("FindFunctions");
-        ProfileQuery::dispatch();
-    } elsif ( $section eq "PdbBlast" ) {
-        ## --es 06/19/2007
-        require PdbBlast;
-        $pageTitle = "Protein Data Bank BLAST";
-        print header( -header => "text/html" );
-        PdbBlast::dispatch();
-    } elsif ( $section eq "Registration" ) {
-        require Registration;
-        $pageTitle = "Registration";
-        printAppHeader("MyIMG");
-        Registration::dispatch();
-    } elsif ( $section eq "SixPack" ) {
-        require SixPack;
-        $pageTitle = "Six Frame Translation";
-        printAppHeader("FindGenes");
-        SixPack::dispatch();
-    } elsif ( $section eq "Sequence" ) {
-        require Sequence;
-        $pageTitle = "Six Frame Translation";
-        printAppHeader("FindGenes");
-        Sequence::dispatch();
-    } elsif ( $section eq "ScaffoldGraph" ) {
-        require ScaffoldGraph;
-        $pageTitle = "Chromosome Viewer";
-        printAppHeader("FindGenomes");
-        ScaffoldGraph::dispatch();
-    } elsif ( $section eq "MetaScaffoldGraph" ) {
-        require MetaScaffoldGraph;
-        $pageTitle = "Chromosome Viewer";
-        printAppHeader("FindGenomes");
-        MetaScaffoldGraph::dispatch();
-    } elsif ( $section eq "TaxonCircMaps" ) {
-        require TaxonCircMaps;
-        $pageTitle = "Circular Map";
-        printAppHeader("FindGenomes");
-        TaxonCircMaps::dispatch();
-    } elsif ( $section eq 'GenerateArtemisFile' ) {
-        require GenerateArtemisFile;
-        printAppHeader("FindGenomes");
-        GenerateArtemisFile::dispatch();
-
-    } elsif ( $section eq "TaxonDetail" || $page eq "taxonDetail" ) {
-        require TaxonDetail;
-        $pageTitle = "Taxon Details";
-        if ( $page eq 'taxonArtemisForm' ) {
-            printAppHeader( "FindGenomes", '', '', '', '', 'GenerateGenBankFile.pdf' );
-        } else {
-            printAppHeader("FindGenomes") if paramMatch("noHeader") eq "";
-        }
-        TaxonDetail::dispatch();
-    } elsif ( $section eq "TaxonDeleted" ) {
-        require TaxonDeleted;
-        $pageTitle = "Taxon Deleted";
-        printAppHeader("FindGenomes");
-        TaxonDeleted::dispatch();
-    } elsif ( paramMatch("taxon_oid") && scalar( param() ) < 2 ) {
-
-        # if only taxon_oid is specified assume taxon detail page
-        setSessionParam( "section", "TaxonDetail" );
-        setSessionParam( "page",    "taxonDetail" );
-        require TaxonDetail;
-        $pageTitle = "Taxon Details";
-        if ( $page eq 'taxonArtemisForm' ) {
-            printAppHeader( "FindGenomes", '', '', '', '', 'GenerateGenBankFile.pdf' );
-        } else {
-            printAppHeader("FindGenomes") if paramMatch("noHeader") eq "";
-        }
-        TaxonDetail::dispatch();
-    } elsif ( $section eq "MetaDetail" || $page eq "metaDetail" ) {
-        require MetaDetail;
-        $pageTitle = "Microbiome Details";
-        if ( $page eq 'taxonArtemisForm' ) {
-            printAppHeader( "FindGenomes", '', '', '', '', 'GenerateGenBankFile.pdf' );
-        } else {
-            printAppHeader("FindGenomes");    # if paramMatch("noHeader") eq "";
-        }
-        MetaDetail::dispatch();
-    } elsif ( $section eq "TaxonList" ) {
-        require TaxonList;
-        $pageTitle = "Taxon Browser";
-        if ( $page eq 'categoryBrowser' ) {
-            $pageTitle = "Category Browser";
-        }
-        if ( paramMatch("_excel") ) {
-            printExcelHeader("genome_export$$.xls");
-        } else {
-            if (   $page eq 'taxonListAlpha'
-                || $page eq 'gebaList'
-                || $page eq 'selected' )
-            {
-                printAppHeader( "FindGenomes", '', '', '', '', 'GenomeBrowser.pdf' );
-            } else {
-                printAppHeader("FindGenomes");
-            }
-        }
-        TaxonList::dispatch();
-    } elsif ( $section eq "TaxonSearch" ) {
-        require TaxonSearch;
-        $pageTitle = "Taxon Search";
-        printAppHeader("FindGenomes");
-        TaxonSearch::dispatch();
-    } elsif ( $section eq "TigrBrowser" ) {
-        require TigrBrowser;
-        $pageTitle = "TIGRfam Browser";
-        printAppHeader("FindFunctions");
-        TigrBrowser::dispatch();
-    } elsif ( $section eq "TreeQ" ) {
-        require TreeQ;
-        $pageTitle = "Dynamic Tree View";
-        printAppHeader("");
-        TreeQ::dispatch();
-    } elsif ( $section eq "Vista" ) {
-        require Vista;
-        $pageTitle = "VISTA";
-        my $page = param("page");
-        if ( $page eq "toppage" ) {
-            $pageTitle = "Synteny Viewers";
-        }
-        printAppHeader("CompareGenomes");
-        Vista::dispatch();
-    } elsif ( $section eq "IMGContent" ) {
-        require IMGContent;
-        $pageTitle = "IMG Content";
-        printAppHeader("IMGContent");
-        IMGContent::dispatch();
-    } elsif ( $section eq "IMGProteins" ) {
-        require IMGProteins;
-        $pageTitle = "Proteomics";
-        printAppHeader( "Proteomics", '', '', '', '', "Proteomics.pdf" );
-        IMGProteins::dispatch();
-    } elsif ( $section eq "Methylomics" ) {
-        require Methylomics;
-        $pageTitle = "Methylomics Experiments";
-        printAppHeader( "Methylomics", '', '', '', '', "Methylomics.pdf" );
-        Methylomics::dispatch();
-    } elsif ( $section eq "RNAStudies" ) {
-        timeout( 60 * 20 );    # timeout in 20 minutes
-        require RNAStudies;
-        $pageTitle = "RNASeq Expression Studies";
-        if ( paramMatch("samplePathways") ne "" ) {
-            $pageTitle = "RNASeq Studies: Pathways";
-        } elsif ( paramMatch("describeSamples") ne "" ) {
-            $pageTitle = "RNASeq Studies: Describe";
-        }
-        printAppHeader( "RNAStudies", '', '', '', '', "RNAStudies.pdf" )
-          if param("noHeader") eq "";
-        RNAStudies::dispatch();
-    } elsif ( $page eq "znormNote" ) {
-        ## Non-section related dispatch
-        $pageTitle = "Z-normalization";
-        printAppHeader("FindGenes");
-        printZnormNote();
-
-    } elsif ( param("exportGenes") ne "" && param("exportType") eq "excel" ) {
-        my @gene_oid = param("gene_oid");
-        if ( scalar(@gene_oid) == 0 ) {
-            printAppHeader();
-            webError("You must select at least one gene to export.");
-        }
-        printExcelHeader("gene_export$$.xls");
-
-        # --es 03/17/08 Use larger version with more columns.
-        #printGenesToExcel( \@gene_oid );
-        require GeneCartStor;
-        GeneCartStor::printGenesToExcelLarge( \@gene_oid );
-        WebUtil::webExit(0);
-    } elsif ( param("exportGenes") ne ""
-        && param("exportType") eq "nucleic" )
-    {
-        require GenerateArtemisFile;
-        $pageTitle = "Gene Export";
-        printAppHeader("");
-        GenerateArtemisFile::prepareProcessGeneFastaFile();
-    } elsif ( param("exportGenes") ne "" && param("exportType") eq "amino" ) {
-        require GenerateArtemisFile;
-        $pageTitle = "Gene Export";
-        printAppHeader("");
-        GenerateArtemisFile::prepareProcessGeneFastaFile(1);
-    } elsif ( param("exportGenes") ne "" && param("exportType") eq "tab" ) {
-        $pageTitle = "Gene Export";
-        printAppHeader("");
-        print "<h1>Gene Export</h1>\n";
-        my @gene_oid = param("gene_oid");
-        my $nGenes   = @gene_oid;
-        if ( $nGenes == 0 ) {
-            print "<p>\n";
-            webErrorNoFooter("Select genes to export first.");
-        }
-        print "</font>\n";
-        print "<p>\n";
-        print "Export in tab-delimited format for copying and pasting.\n";
-        print "</p>\n";
-        print "<pre>\n";
-
-        printGeneTableExport( \@gene_oid );
-        print "</pre>\n";
-    } elsif ( ( $public_login || $user_restricted_site ) && param("logout") ne "" ) {
-
-        #        if ( !$oldLogin && $sso_enabled ) {
-        #
-        #            # do no login log here
-        #        } else {
-        #            WebUtil::loginLog( 'logout main.pl', 'img' );
-        #        }
-
-        setSessionParam( "blank_taxon_filter_oid_str", "1" );
-        setSessionParam( "oldLogin",                   0 );
-        setTaxonSelections("");
-        printAppHeader("logout");
-
-        print "<div id='message'>\n";
-        print "<p>\n";
-        print "Logged out.\n";
-        print "</p>\n";
-        print "</div>\n";
-        print qq{
-            <p>
-            <a href='main.cgi'>Sign in</a>
-            </p>
-        };
-
-        # sso
-        if ( !$oldLogin && $sso_enabled ) {
-            require Caliban;
-            Caliban::logout(1);
-        } else {
-            require Caliban;
-            Caliban::logout();
-
-            #            setSessionParam( "contact_oid", "" );
-            #            my $session = WebUtil::getSession();
-            #            $session->delete();
-            #            $session->flush();    # Recommended practice says use flush() after delete().
-        }
-    } elsif ( $page eq "message" ) {
-        $pageTitle = "Message";
-        my $message       = param("message");
-        my $menuSelection = param("menuSelection");
-        printAppHeader($menuSelection);
-        print "<div id='message'>\n";
-        print "<p>\n";
-        print escapeHTML($message);
-        print "</p>\n";
-        print "</div>\n";
-    } elsif ( $section eq "Questions" || $page eq "questions" ) {
-        $pageTitle = "Questions / Comments";
-        printAppHeader("about") if param("noHeader") eq "";
-        require Questions;
-        Questions::dispatch();
-        if ( param("noHeader") eq "true" ) {
-
-            # form redirect submit to jira - ken
-            WebUtil::webExit(0);
-        }
-    } elsif ( paramMatch("uploadTaxonSelections") ne "" ) {
-        $pageTitle = "Genome Browser";
-        require TaxonList;
-        $taxon_filter_oid_str = TaxonList::uploadTaxonSelections();
-        setTaxonSelections($taxon_filter_oid_str);
-        printAppHeader( "FindGenomes", '', '', '', '', 'GenomeBrowser.pdf' );
-        TaxonList::printTaxonTable();
-    } elsif ( $page eq "Imas" ) {
-        ## Test GWT javascript incorporation.
-        $pageTitle = "Imas";
-        require Imas;
-        printAppHeader( "", "", "Imas" );
-        Imas::printForm();
-    } elsif ( $page eq "Home" ) {
+    } else {
         $homePage = 1;
         printAppHeader("Home");
-    } else {
-        my $rurl = param("redirect");
-
-        # redirect on login
-        if ( ( $public_login || $user_restricted_site ) && $rurl ne "" ) {
-            redirecturl($rurl);
-        } else {
-            $homePage = 1;
-            printAppHeader("Home");
-        }
     }
 } else {
     my $rurl = param("redirect");
@@ -1535,7 +593,7 @@ sub printHTMLHead {
     my ( $current, $title, $gwt, $content_js, $yahoo_js, $numTaxons ) = @_;
 
     my $str = 0;
-    if ( $numTaxons ne '') {
+    if ( $numTaxons ne '' ) {
         my $url = "$main_cgi?section=GenomeCart&page=genomeCart";
         $url = alink( $url, $numTaxons );
         $str = "$url";
@@ -1554,8 +612,10 @@ sub printHTMLHead {
     }
 
     my $template;
+
     #if($img_ken) {
-        $template = HTML::Template->new( filename => "$base_dir/header-v41.html" );
+    $template = HTML::Template->new( filename => "$base_dir/header-v41.html" );
+
     #} else {
     #    $template = HTML::Template->new( filename => "$base_dir/header-v40.html" );
     #}
@@ -1582,9 +642,11 @@ sub printHTMLHead {
         } elsif ( $img_er && $user_restricted_site && !$include_metagenomes ) {
             $logofile = 'logo-JGI-IMG-ER.png';
         } elsif ( $include_metagenomes && $user_restricted_site ) {
+
             #$logofile = 'logo-JGI-IMG-MER.png';
             $logofile = 'logo-JGI-IMG-ER.png';
         } elsif ($include_metagenomes) {
+
             #$logofile = 'logo-JGI-IMG-M.png';
             $logofile = 'logo-JGI-IMG.png';
         } elsif ($img_nr) {
@@ -1623,9 +685,11 @@ sub printHTMLHead {
         } elsif ( $img_er && $user_restricted_site && !$include_metagenomes ) {
             $logofile = 'logo-JGI-IMG-ER.png';
         } elsif ( $include_metagenomes && $user_restricted_site ) {
+
             #$logofile = 'logo-JGI-IMG-MER.png';
             $logofile = 'logo-JGI-IMG-ER.png';
         } elsif ( $img_proportal || $include_metagenomes ) {
+
             #$logofile = 'logo-JGI-IMG-M.png';
             $logofile = 'logo-JGI-IMG.png';
         } elsif ($img_nr) {
@@ -1643,10 +707,10 @@ sub printHTMLHead {
 </div>
 };
 
-       # if ( $current ne "logout" && $current ne "login" ) {
-            my $enable_autocomplete = $env->{enable_autocomplete};
-            if ($enable_autocomplete) {
-                print qq{
+        # if ( $current ne "logout" && $current ne "login" ) {
+        my $enable_autocomplete = $env->{enable_autocomplete};
+        if ($enable_autocomplete) {
+            print qq{
         <div id="quicksearch">
         <form name="taxonSearchForm" enctype="application/x-www-form-urlencoded" action="main.cgi" method="post">
             <input type="hidden" value="orgsearch" name="page">
@@ -1664,20 +728,20 @@ sub printHTMLHead {
         </div>
             };
 
-                # https://localhost/~kchu/preComputedData/autocompleteAll.php
-                my $autocomplete_url = "$top_base_url" . "api/";
+            # https://localhost/~kchu/preComputedData/autocompleteAll.php
+            my $autocomplete_url = "$top_base_url" . "api/";
 
-                #my $autocomplete_url = "https://localhost/~kchu/api/";
+            #my $autocomplete_url = "https://localhost/~kchu/api/";
 
-                if ($include_metagenomes) {
-                    $autocomplete_url .= 'autocompleteAll.php';
-                } elsif($img_nr) {
-                    $autocomplete_url .= 'autocompleteNR.php';
-                } else {
-                    $autocomplete_url .= 'autocompleteIsolate.php';
-                }
+            if ($include_metagenomes) {
+                $autocomplete_url .= 'autocompleteAll.php';
+            } elsif ($img_nr) {
+                $autocomplete_url .= 'autocompleteNR.php';
+            } else {
+                $autocomplete_url .= 'autocompleteIsolate.php';
+            }
 
-                print <<EOF;
+            print <<EOF;
 <script type="text/javascript">
 YAHOO.example.BasicRemote = function() {
     // Use an XHRDataSource
@@ -1703,7 +767,8 @@ YAHOO.example.BasicRemote = function() {
 </script>
 
 EOF
-            }
+        }
+
         #}
 
         if ( $current ne "login" ) {
@@ -1713,46 +778,86 @@ EOF
         if ($img_proportal) {
             print qq{
         <a href="http://proportal.mit.edu/">
-        <img id='mit_logo' src="$base_url/images/MIT_logo.gif" alt="MIT ProPortal logo" title="MIT ProPortal"/>
+        <img id='mit_logo' src="$top_base_url/images/MIT_logo.gif" alt="MIT ProPortal logo" title="MIT ProPortal"/>
         </a>
             };
         } elsif ($img_hmp) {
             print qq{
 <a href="http://www.hmpdacc.org">
-<img id="hmp_logo" src="https://img.jgi.doe.gov/imgm_hmp/images/hmp_logo.png" alt="hmp"/>
+<img id="hmp_logo" src="https://img.jgi.doe.gov/images/hmp_logo.png" alt="hmp"/>
 </a>
             };
         }
 
         require ScaffoldCart;
         my $ssize = ScaffoldCart::getSize();
-        if($ssize > 0) {
-            $ssize = alink('main.cgi?section=ScaffoldCart&page=index', $ssize);
+        if ( $ssize > 0 ) {
+            $ssize = alink( 'main.cgi?section=ScaffoldCart&page=index', $ssize );
         }
 
         require FuncCartStor;
-        my $c    = new FuncCartStor();
+        my $c     = new FuncCartStor();
         my $fsize = $c->getSize();
-        if($fsize > 0) {
-            $fsize = alink('main.cgi?section=FuncCartStor&page=funcCart', $fsize);
+        if ( $fsize > 0 ) {
+            $fsize = alink( 'main.cgi?section=FuncCartStor&page=funcCart', $fsize );
         }
-    
+
         require GeneCartStor;
         my $gsize = GeneCartStor::getSize();
-        if($gsize > 0) {
-            $gsize = alink('main.cgi?section=GeneCartStor&page=geneCart', $gsize);
+        if ( $gsize > 0 ) {
+            $gsize = alink( 'main.cgi?section=GeneCartStor&page=geneCart', $gsize );
+        }
+
+        my $genomeUrl    = alink( 'main.cgi?section=GenomeCart&page=genomeCart', 'Genomes' );
+        my $scaffoldUrl  = alink( 'main.cgi?section=ScaffoldCart&page=index',    'Scaffolds' );
+        my $functionsUrl = alink( 'main.cgi?section=FuncCartStor&page=funcCart', 'Functions' );
+        my $genesUrl     = alink( 'main.cgi?section=GeneCartStor&page=geneCart', 'Genes' );
+
+        my $isEditor = 0;
+        my $cursize  = 0;
+        if ($user_restricted_site) {
+            $isEditor = WebUtil::isImgEditorWrap();
+        }
+        if ($isEditor) {
+            require CuraCartStor;
+            my $c = new CuraCartStor();
+            $cursize = $c->getSize();
+            if ( $cursize > 0 ) {
+                $cursize = alink( 'main.cgi?section=CuraCartStor&page=curaCart', $cursize );
+            }
+        }
+        my $bcCartSize = 0;
+        if($img_ken) {
+            require WorkspaceBcSet;
+            $bcCartSize = WorkspaceBcSet::getSize();
         }
 
         print qq{
 </header>
 <div id="myclear"></div>
 <div id="cart">
- &nbsp;&nbsp; My Carts: &nbsp;&nbsp; <span id='genome_cart'>$str</span> Genomes &nbsp;&nbsp;
-|&nbsp;&nbsp; <span id='scaffold_cart'>$ssize</span> Scaffolds &nbsp;&nbsp;
-|&nbsp;&nbsp; <span id='function_cart'>$fsize</span> Functions &nbsp;&nbsp;
-|&nbsp;&nbsp; <span id='gene_cart'>$gsize</span> Genes 
-</div>
+ &nbsp;&nbsp; My Analysis Carts: 
+ &nbsp;&nbsp; <span id='genome_cart'>$str</span> $genomeUrl &nbsp;&nbsp;
+|&nbsp;&nbsp; <span id='scaffold_cart'>$ssize</span> $scaffoldUrl &nbsp;&nbsp;
+|&nbsp;&nbsp; <span id='function_cart'>$fsize</span> $functionsUrl &nbsp;&nbsp;
+|&nbsp;&nbsp; <span id='gene_cart'>$gsize</span> $genesUrl
         };
+
+        if ($isEditor) {
+            my $curationUrl = alink( 'main.cgi?section=CuraCartStor&page=curaCart', 'Curation' );
+            print qq{
+  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='curation_cart'>$cursize</span> $curationUrl            
+          };
+        }
+        
+        if($img_ken) {
+            my $bcurl = alink('main.cgi?section=WorkspaceBcSet&page=viewCart', 'BC');
+            print qq{
+  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='bc_cart'>$bcCartSize</span> $bcurl            
+          };
+        }
+        
+        print "</div>";
     }
 
     print qq{
@@ -1768,11 +873,7 @@ sub printMenuDiv {
     my ( $current, $dbh ) = @_;
 
     my $template;
-    #if($img_ken) {
-        $template = HTML::Template->new( filename => "$base_dir/menu-template-v40.html" );
-    #} else {
-    #    $template = HTML::Template->new( filename => "$base_dir/menu-template.html" );
-    #}
+    $template = HTML::Template->new( filename => "$base_dir/menu-template-v40.html" );
 
     my $contact_oid = getContactOid();
     my $isEditor    = 0;
@@ -1802,10 +903,11 @@ sub printMenuDiv {
     $template->param( enable_interpro => $enable_interpro );
 
     #$template->param( img_edu           => $img_edu );
-    $template->param( not_img_edu       => !$img_edu );
-    $template->param( scaffold_cart     => $scaffold_cart );
-    $template->param( img_submit_url    => $img_submit_url );
-    $template->param( base_url          => $base_url );
+    $template->param( not_img_edu    => !$img_edu );
+    $template->param( scaffold_cart  => $scaffold_cart );
+    $template->param( img_submit_url => $img_submit_url );
+    $template->param( base_url       => $base_url );
+
     #$template->param( domain_name       => $domain_name );
     $template->param( main_cgi_url      => "$cgi_url/$main_cgi" );
     $template->param( img_er            => $img_er );
@@ -1813,8 +915,10 @@ sub printMenuDiv {
     $template->param( imgAppTerm        => $imgAppTerm );
     $template->param( include_img_terms => $include_img_terms );
     $template->param( img_pheno_rule    => $img_pheno_rule );
+
     #$template->param( enable_biocluster => $enable_biocluster );
-    $template->param( top_base_url      => $top_base_url );
+    $template->param( top_base_url => $top_base_url );
+
     #$template->param( enable_ani        => $enable_ani );
 
     #if ( $super_user eq 'Yes' ) {
@@ -1845,6 +949,7 @@ sub printMenuDiv {
     }
 
     if ($enable_cassette) {
+
         #$template->param( find_gene_1 => '1' );
     }
 
@@ -1868,11 +973,6 @@ sub printMenuDiv {
         $template->param( highlight_9 => 'class="highlight"' );
     }
 
-    # getsme
-#    if ( $current eq "getsme" && !$abc ) {
-#        $template->param( highlight_10 => 'class="highlight"' );
-#    }
-
     # My IMG
     if ( $current eq "MyIMG" ) {
         $template->param( highlight_7 => 'class="highlight"' );
@@ -1889,15 +989,6 @@ sub printMenuDiv {
     if ( ( $public_login || $user_restricted_site ) ) {
         $template->param( my_img_3 => '1' );
     }
-
-    # using img
-#    if(!$img_ken) {
-#    if ( $current eq "about" ) {
-#        $template->param( highlight_8 => 'class="rightmenu righthighlight"' );
-#    } else {
-#        $template->param( highlight_8 => 'class="rightmenu"' );
-#    }
-#    }
 
     print $template->output;
 }
@@ -2078,7 +1169,7 @@ sub printBreadcrumbsDiv {
     print qq{
 	<div id="breadcrumbs_frame">
 	<div id="breadcrumbs"> $str </div>
-	<div id="loading">  <font color='red'> Loading... </font> <img src='$base_url/images/ajax-loader.gif'/> </div>
+	<div id="loading">  <font color='red'> Loading... </font> <img src='$top_base_url/images/ajax-loader.gif'/> </div>
     };
 
     # when to print help icon
@@ -2088,8 +1179,8 @@ sub printBreadcrumbsDiv {
 
     if ( $help ne "" ) {
         print qq{
-	    <a href='$base_url/doc/$help' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'printBreadcrumbsDiv', '$help']);">
-	    <img width="40" height="27" border="0" style="margin-left: 35px;" src="$base_url/images/help.gif"/>
+	    <a href='$top_base_url/docs/$help' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'printBreadcrumbsDiv', '$help']);">
+	    <img width="40" height="27" border="0" style="margin-left: 35px;" src="$top_base_url/images/help.gif"/>
 	    </a>
         };
     } else {
@@ -2157,7 +1248,7 @@ EOF
     if ( $MESSAGE ne "" || $str ne "" ) {
         print qq{
 	    <div id="message_content" class="message_frame shadow" style="display: block" >
-	    <img src='$base_url/images/announcementsIcon.gif'/>
+	    <img src='$top_base_url/images/announcementsIcon.gif'/>
 	    $MESSAGE
 	    $str
 	    </div>
@@ -2193,58 +1284,6 @@ sub printStatsTableDiv {
 		<br/>
 	       };
 
-#    } elsif ($abc) {
-#        my $dbh = dbLogin();
-#        require BiosyntheticStats;
-#        my ( $totalCnt, %domain2cnt ) = BiosyntheticStats::getStatsByDomain($dbh);
-#        print qq{
-#<h2>Biosynthetic Clusters &amp;<br>Secondary Metabolites</h2>
-#    <table cellspacing="0" cellpadding="0">
-#        <th align='left' valign='bottom'>Domain</th>
-#        <th align='right' valign='bottom'>Biosynthetic Clusters</th>
-#            };
-#
-#        foreach my $domain ( sort( keys %domain2cnt ) ) {
-#            my $cluster_cnt = $domain2cnt{$domain};
-#            my $url;
-#            if ( $cluster_cnt > 0 ) {
-#                $url = "main.cgi?section=BiosyntheticStats&page=byGenome&domain=$domain";
-#            }
-#            print "<tr>\n";
-#            my $domain_name = $domain;
-#            if ( $domain eq '*Microbiome' ) {
-#                $domain_name = "Metagenomes";
-#            }
-#            print "<td style='line-height: 1.25em; width: 90px;'>$domain_name</td>\n";
-#            print "<td style='line-height: 1.25em;' align='right'>" . alink( $url, $cluster_cnt ) . "</td>\n";
-#            print "</tr>\n";
-#        }
-#
-#        print qq{
-#    </table>
-#            };
-#
-#        require NaturalProd;
-#        my $href = NaturalProd::getNpPhylum($dbh);
-#        print qq{
-#    <table cellspacing="0" cellpadding="0">
-#        <th align='left' valign='bottom'>Phylum</th>
-#        <th align='right' valign='bottom'>Secondary Metabolites</th>
-#            };
-#        foreach my $name ( sort( keys %$href ) ) {
-#            my $cnt = $href->{$name};
-#            my $tmp = WebUtil::massageToUrl2($name);
-#            my $url = "main.cgi?section=NaturalProd&page=subCategory&stat_type=Phylum&stat_val=" . $tmp;
-#            print "<tr>\n";
-#            print "<td style='line-height: 1.25em; width: 90px;'>$name</td>\n";
-#            print "<td style='line-height: 1.25em;' align='right'>" . alink( $url, $cnt ) . "</td>\n";
-#            print "</tr>\n";
-#        }
-#
-#        print qq{
-#    </table>
-#    <br>
-#            };
     }
 
     if ($img_hmp) {
@@ -2279,7 +1318,7 @@ sub printStatsTableDiv {
     my $tmp = '';
 
     my $img_nr = $env->{img_nr};
-    if(!$img_edu && !$img_nr) {
+    if ( !$img_edu && !$img_nr ) {
         $tmp = qq{
 <table>
 <tr>
@@ -2299,7 +1338,7 @@ sub printStatsTableDiv {
 </table>
        };
     }
-    
+
     print qq{
  $tmp
 	<div id="training" style="padding-top: 2px;">
@@ -2316,9 +1355,9 @@ sub printStatsTableDiv {
     print qq{
      <a href="main.cgi?section=ImgStatsOverview&page=googlemap&type=genome">Project Map</a><br>
      <a href="main.cgi?section=ImgStatsOverview&page=googlemap&type=metagenome">Metagenome Projects Map</a><br>
-     <a href="$base_url/doc/systemreqs.html">System Requirements</a><br>
+     <a href="$top_base_url/systemreqs.html">System Requirements</a><br>
 <p style="width: 175px;">
-        <img width="80" height="50"  style="float:left; padding-right: 5px;" src="$base_url/images/imguser.jpg"/>
+        <img width="80" height="50"  style="float:left; padding-right: 5px;" src="$top_base_url/images/imguser.jpg"/>
             Hands on training available at the
             <p>
             <a href="http://www.jgi.doe.gov/meetings/mgm">Microbial Genomics &amp;
@@ -2326,12 +1365,12 @@ sub printStatsTableDiv {
 
     };
 
-#    if ( $homePage && !$img_hmp && !$img_edu && !$abc && !$img_proportal ) {
-#
-#        # news section on the home for all data marts except hmp, edu and proportal
-#        print "</p>\n";
-#        printNewsDiv();
-#    }
+    #    if ( $homePage && !$img_hmp && !$img_edu && !$abc && !$img_proportal ) {
+    #
+    #        # news section on the home for all data marts except hmp, edu and proportal
+    #        print "</p>\n";
+    #        printNewsDiv();
+    #    }
 
     print "</div>\n";    # end of training
 
@@ -2340,9 +1379,16 @@ sub printStatsTableDiv {
 
 # home page content div
 sub printContentHome {
+    if($abc) {
     print qq{
-	<div id="content">
+    <div id="content" class='content contentABC'>
     };
+        
+    } else {
+    print qq{
+	<div id="content" class='content'>
+    };
+    }
 }
 
 # other pages content div
@@ -2415,6 +1461,7 @@ sub printAppHeader {
     $numTaxons = "" if ( $numTaxons == 0 );
 
     if ( $current eq "Home" && $abc ) {
+
         # new abc home page
         # caching home page
         my $sid  = getContactOid();
@@ -2436,7 +1483,7 @@ sub printAppHeader {
         my $template = HTML::Template->new( filename => $templateFile );
         print $template->output;
 
-print qq{  
+        print qq{  
 <div class='largeWidthDiv'>
 
 <div class="shadow" id='bcHomeDiv'>
@@ -2445,68 +1492,67 @@ Clusters of genes whose expression leads<br/>to the synthesis of Secondary Metab
 <br><br>
     <div style="text-align:left;>
 };
-    
-    require BiosyntheticStats;
-    BiosyntheticStats::printStatsHomePage(0);
 
-print qq{
+        require BiosyntheticStats;
+        BiosyntheticStats::printStatsHomePage(0);
+
+        print qq{
     </div>
 </div>
 };
 
-print qq{
+        print qq{
 <div class="shadow" id='smHomeDiv'>
 <h2>Secondary Metabolites</h2>
 Small organic molecules produced<br/>by living organisms<br/>
 <div style="text-align:left;>
 };
 
-    require MeshTree;
-    MeshTree::printTreeAllDivHomePage();
+        require MeshTree;
+        MeshTree::printTreeAllDivHomePage();
 
-print qq{
+        print qq{
     </div>
 </div>
 </div>     
 };
 
-
         HtmlUtil::cgiCacheStop();
-        
-                
-    } elsif ( $current eq "Home" && $abc ) {
-        # old abc home page
 
-        # caching home page
-        my $sid  = getContactOid();
-        my $time = 3600 * 24;                    # 24 hour cache
-
-        printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-        printMenuDiv( $current, $dbh );
-        printErrorDiv();
-
-        HtmlUtil::cgiCacheInitialize("homepage");
-        HtmlUtil::cgiCacheStart() or return;
-
-        my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
-
-        printAbcNavBar();
-        printContentHome();
-
-        require NaturalProd;
-        my $bcp_cnt = NaturalProd::getPredictedBc($dbh);
-        my $np_cnt  = NaturalProd::getSmStructures($dbh);
-        $bcp_cnt = Number::Format::format_number($bcp_cnt);
-        $np_cnt  = Number::Format::format_number($np_cnt);
-
-        my $templateFile = "$base_dir/home-v33.html";
-        my $template = HTML::Template->new( filename => $templateFile );
-        $template->param( base_url     => $base_url );
-        $template->param( bc_predicted => $bcp_cnt );
-        $template->param( np_items     => $np_cnt );
-        print $template->output;
-
-        HtmlUtil::cgiCacheStop();
+#    } elsif ( $current eq "Home" && $abc ) {
+#
+#        # old abc home page
+#
+#        # caching home page
+#        my $sid  = getContactOid();
+#        my $time = 3600 * 24;         # 24 hour cache
+#
+#        printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
+#        printMenuDiv( $current, $dbh );
+#        printErrorDiv();
+#
+#        HtmlUtil::cgiCacheInitialize("homepage");
+#        HtmlUtil::cgiCacheStart() or return;
+#
+#        my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
+#
+#        printAbcNavBar();
+#        printContentHome();
+#
+#        require NaturalProd;
+#        my $bcp_cnt = NaturalProd::getPredictedBc($dbh);
+#        my $np_cnt  = NaturalProd::getSmStructures($dbh);
+#        $bcp_cnt = Number::Format::format_number($bcp_cnt);
+#        $np_cnt  = Number::Format::format_number($np_cnt);
+#
+#        my $templateFile = "$base_dir/home-v33.html";
+#        my $template = HTML::Template->new( filename => $templateFile );
+#        $template->param( base_url     => $base_url );
+#        $template->param( bc_predicted => $bcp_cnt );
+#        $template->param( np_items     => $np_cnt );
+#        print $template->output;
+#
+#        HtmlUtil::cgiCacheStop();
 
     } elsif ( $img_proportal && $current eq "Home" ) {
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
@@ -2546,7 +1592,7 @@ print qq{
 
         # to stop the inline-block or float left from wrapping
         # to the next line - ken
-       print qq{<div style="width: 1200px;">}; 
+        print qq{<div style="width: 1200px;">};
         printStatsTableDiv( $maxAddDate, $maxErDate );
         printContentHome();
         my $templateFile = "$base_dir/home-v33.html";
@@ -2592,7 +1638,7 @@ print qq{
             } elsif ( $s =~ /__news__/ ) {
                 my $news = qq{
 <p>
-For details, see <a href='$base_url/doc/releaseNotes.pdf' onClick="_gaq.push(['_trackEvent', 'Document', 'main', 'release notes']);">IMG Release Notes</a> (Dec. 12, 2012),
+For details, see <a href='$top_base_url/docs/releaseNotes.pdf' onClick="_gaq.push(['_trackEvent', 'Document', 'main', 'release notes']);">IMG Release Notes</a> (Dec. 12, 2012),
 in particular, the workspace and background computation capabilities  available to IMG registered users.
 </p>
 };
@@ -2645,10 +1691,10 @@ in particular, the workspace and background computation capabilities  available 
         close $rfh;
 
         # news section
-        print "</div>\n"; # end div content on home page
-        
+        print "</div>\n";    # end div content on home page
+
         my $newsStr = getNewsHeaders(10);
-        
+
         print qq{
             
 <fieldset class='newsFieldset'>
@@ -2659,6 +1705,7 @@ $newsStr
 
 
         };
+
         # no need to print end div for width div above, its printed later - ken
 
         HtmlUtil::cgiCacheStop();
@@ -2668,7 +1715,7 @@ $newsStr
         printBreadcrumbsDiv( $current, $help, $dbh );
         printErrorDiv();
 
-        printAbcNavBar() if ($abc && $current ne 'login' && $current ne 'logout');
+        printAbcNavBar() if ( $abc && $current ne 'login' && $current ne 'logout' );
         printContentOther();
     }
 
@@ -2679,7 +1726,7 @@ sub printNewsDiv {
 
     # read news  file
     my $file = '/webfs/scratch/img/news.html';
-    if ( -e $file  ) {
+    if ( -e $file ) {
         print qq{
             <span id='news2'>News</span>
             <div id='news'>
@@ -2696,30 +1743,27 @@ sub printNewsDiv {
 
 sub getNewsHeaders {
     my ($maxLines) = @_;
-    $maxLines = 3 if (!$maxLines);   
-    my $file = '/webfs/scratch/img/news.html';
+    $maxLines = 3 if ( !$maxLines );
+    my $file  = '/webfs/scratch/img/news.html';
     my $lines = '';
- 
-         my $line;
-        my $rfh = newReadFileHandle($file);
-        my $i = 0;
-        while (my $line = $rfh->getline()) {
-            last if ($i > $maxLines);
-            if($line =~ /^<b id='subject'>/) {
-                $line =~ s/<br>//;
-                $line =~ s/<\/br>//;
-                my $tmp = $i + 1;
-                $lines .= "<a href='main.cgi?section=Help&page=news#$tmp'>" . $line . "</a><br>" ;
-                $i++;
-            }
+
+    my $line;
+    my $rfh = newReadFileHandle($file);
+    my $i   = 0;
+    while ( my $line = $rfh->getline() ) {
+        last if ( $i > $maxLines );
+        if ( $line =~ /^<b id='subject'>/ ) {
+            $line =~ s/<br>//;
+            $line =~ s/<\/br>//;
+            my $tmp = $i + 1;
+            $lines .= "<a href='main.cgi?section=Help&page=news#$tmp'>" . $line . "</a><br>";
+            $i++;
         }
-        close $rfh;
-    
-    
+    }
+    close $rfh;
+
     return $lines;
 }
-
-
 
 #
 # gets genome's max add date
@@ -2771,8 +1815,8 @@ sub printLogout {
 
         print qq{
 	    <div id="login">
-            Hi $name &nbsp; | &nbsp; <a href="main.cgi?logout=1"> Logout </a>
-            $tmp
+            Hi $name &nbsp; | &nbsp; <a href="main.cgi?section=Caliban&logout=1"> Logout </a>
+            $tmp <span style='font-size:8px; color:gray;'>$$</span>
 	    </div>
         };
     }
@@ -2801,7 +1845,7 @@ sub printMainFooter {
     my $img            = param("img");
 
     # no exit read
-    my $buildDate    = file2Str( "$base_dir/buildDate", 1 );
+    my $buildDate = file2Str( "$base_dir/buildDate", 1 );
     my $templateFile = "$base_dir/footer-v33.html";
 
     #$templateFile = "$base_dir/footer-v33.html" if ($homeVersion);
@@ -2820,8 +1864,8 @@ sub printMainFooter {
 
 sub googleAnalyticsJavaScript {
     my ( $server, $google_key ) = @_;
-
-    my $str = file2Str( "$base_dir/google.js", 1 );
+    
+    my $str = file2Str( "$top_base_dir/js/google.js", 1 );
     $str =~ s/__google_key__/$google_key/g;
     $str =~ s/__server__/$server/g;
 
@@ -2832,7 +1876,7 @@ sub googleAnalyticsJavaScript {
 sub googleAnalyticsJavaScript2 {
     my ( $server, $google_key ) = @_;
 
-    my $str = file2Str( "$base_dir/google2.js", 1 );
+    my $str = file2Str( "$top_base_dir/js/google2.js", 1 );
     $str =~ s/__google_key__/$google_key/g;
     $str =~ s/__server__/$server/g;
 
@@ -2862,14 +1906,14 @@ sub printTaxonFilterStatus {
 
 sub coerce_section {
 
-	# From submit button naming convention
-	#  section_<sectionName>_<action>, not URL link.
-	my $p = paramMatch("^_section");
-	if ( $p ) {
-		my @arr = split /_/, $p;
-		## Force setting.
-		param("section", $arr[2]);
-	}
+    # From submit button naming convention
+    #  section_<sectionName>_<action>, not URL link.
+    my $p = paramMatch("^_section");
+    if ($p) {
+        my @arr = split /_/, $p;
+        ## Force setting.
+        param( "section", $arr[2] );
+    }
 }
 
 sub redirectform {
@@ -2958,7 +2002,7 @@ sub touchCartFiles {
     require GeneCartStor;
     my $c    = new GeneCartStor();
     my $file = $c->getStateFile();
-	WebUtil::fileTouch($file) if -e $file;
+    WebUtil::fileTouch($file) if -e $file;
 
     require FuncCartStor;
     $c    = new FuncCartStor();
@@ -2998,22 +2042,18 @@ sub printAbcNavBar {
     }
 }
 
-
 sub render_template {
 
-	my $tmpl_name = shift || die "No template name specified!";
-	my $data = shift // {};
+    my $tmpl_name = shift || die "No template name specified!";
+    my $data = shift // {};
 
-	my $tt = Template->new({
-		INCLUDE_PATH =>  [
-			"$base_dir/views",
-			"$base_dir/views/pages",
-			"$base_dir/views/layouts",
-			"$base_dir/views/inc"
-		],
-	}) || die "Template error: $Template::ERROR\n";
-	$data->{env} = getEnv();
+    my $tt = Template->new(
+        {
+            INCLUDE_PATH => [ "$base_dir/views", "$base_dir/views/pages", "$base_dir/views/layouts", "$base_dir/views/inc" ],
+        }
+    ) || die "Template error: $Template::ERROR\n";
+    $data->{env} = getEnv();
 
-	$tt->process($tmpl_name, $data) || die $tt->error() . "\n";
+    $tt->process( $tmpl_name, $data ) || die $tt->error() . "\n";
 
 }

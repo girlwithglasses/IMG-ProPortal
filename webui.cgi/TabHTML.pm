@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: TabHTML.pm 31086 2014-06-03 19:14:00Z klchu $
+# $Id: TabHTML.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package TabHTML;
 
@@ -23,18 +23,6 @@ my $YUI = $env->{yui_dir_28};
 sub printTabAPILinks {
     my ($tabName, $init_flag) =@_;
     
-#    print qq{
-#	<!-- Dependencies -->
-#	    
-#	<link rel="stylesheet" type="text/css" 
-#	 href="$YUI/build/container/assets/skins/sam/container.css" />
-#	<link rel="stylesheet" type="text/css" 
-#	 href="$YUI/build/tabview/assets/skins/sam/tabview.css" />
-#
-#	<script type="text/javascript" 
-#	 src="$YUI/build/yahoo-dom-event/yahoo-dom-event.js"></script> 
-#	<script src="$YUI/build/element/element-min.js"></script>
-#	<script src="$YUI/build/tabview/tabview-min.js"></script>
 	print qq{   
         <style type='text/css'> 
 	    .yui-skin-sam .yui-navset .yui-nav .selected a em { 

@@ -36,7 +36,6 @@ Adds external and internal links, plus navigation data.
 hook before_template_render => sub {
 
 	my $output = shift // {};
-
 	get_tmpl_vars ( $output );
 
 };
@@ -54,7 +53,15 @@ sub get_tmpl_vars {
 
 	my $core = setting('_core') // create_core();
 
-	$output->{navigation} = app->make_menu( $menu_grp, $page_id );
+	for ( @{ app->make_menu( $menu_grp, $page_id ) } ) {
+		if ( $_->{id} && "menu/DataMarts" eq $_->{id} ) {
+			$output->{data_marts} = $_;
+		}
+		else {
+			push @{$output->{navigation}}, $_;
+		}
+	}
+
 	$output->{ext_link} = sub { return app->ext_link( @_ ) };
 	$output->{link} = sub { return app->img_link_tt( @_ ) };
 	$output->{breadcrumbs}++;
@@ -65,7 +72,7 @@ sub get_tmpl_vars {
 
 	$output->{current_page} = $page_id;
 	if ( session->data ) {
-		debug "session data: " . Dumper session->data;
+	#	debug "session data: " . Dumper session->data;
 		if ( session('name') ) {
 			debug "session name: " . Dumper session('name');
 			$output->{name} = session('name');
@@ -141,10 +148,6 @@ any qr{
 	/logout
 	}x => sub {
 
-	# "$sso_url/signon/destroy"
-	if ( cookies->{jgi_return} ) {
-		cookie jgi_return => 'http://google.com';
-	}
 	app->destroy_session;
 
 	redirect 'https://signon.jgi-psf.org/signon/destroy';
@@ -168,14 +171,12 @@ sub bootstrap {
 	$c_type ||= 'Base';
 	$cfg ||= config;
 
-#	if ($cfg->{sessions_enabled}) {
-#		$cfg->{ session } = session;
-#	}
 #	my $core = setting('_core') || create_core();
 	$cfg->{_core} = setting("_core") || create_core();
 
 	debug "Running bootstrap...";
 
+	# TODO: just apply the controller to the existing app?
 	my $c = ProPortal::Util::Factory::create_pp_component( 'Controller', $c_type, $cfg );
 #	debug "component: " . Dumper $c;
 	return $c;

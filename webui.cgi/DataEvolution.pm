@@ -50,6 +50,7 @@ sub getAppHeaderData {
 # dispatch
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
     if( $page eq "dataEvolutionPage" ) {
        printDataEvolutionPage( );

@@ -1,12 +1,8 @@
 ############################################################################
 #   Misc. utility functions to support HTML.
-# $Id: HtmlUtil.pm 33804 2015-07-24 20:07:15Z jinghuahuang $
+# $Id: HtmlUtil.pm 34715 2015-11-16 22:12:57Z klchu $
 ############################################################################
 package HtmlUtil;
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use Time::localtime;

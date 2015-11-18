@@ -31,16 +31,17 @@ use WebConfig;
 use WebUtil;
 use WorkspaceUtil;
 
-my $env         = getEnv();
-my $main_cgi    = $env->{main_cgi};
-my $section_cgi = "$main_cgi?section=$section";
-my $inner_cgi   = $env->{inner_cgi};
-my $tmp_url     = $env->{tmp_url};
-my $tmp_dir     = $env->{tmp_dir};
-my $verbose     = $env->{verbose};
-my $base_dir    = $env->{base_dir};
-my $base_url    = $env->{base_url};
-
+my $env             = getEnv();
+my $main_cgi        = $env->{main_cgi};
+my $section_cgi     = "$main_cgi?section=$section";
+my $inner_cgi       = $env->{inner_cgi};
+my $tmp_url         = $env->{tmp_url};
+my $tmp_dir         = $env->{tmp_dir};
+my $verbose         = $env->{verbose};
+my $base_dir        = $env->{base_dir};
+my $base_url        = $env->{base_url};
+my $bcnp_stats_dir  = $env->{bcnp_stats_dir};
+my $top_base_url    = $env->{top_base_url};
 my $ncbi_base_url   = $env->{ncbi_entrez_base_url};
 my $pfam_base_url   = $env->{pfam_base_url};
 my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
@@ -67,16 +68,16 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my($self) = @_;
-    
-        my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
+    my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
     my @a = ( "getsme", '', '', $js );
     return @a;
 }
 
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $sid  = getContactOid();
     my $page = param("page");
 
@@ -222,10 +223,10 @@ sub printOverview {
 		    "#biostatstab5", "#biostatstab6",
 		    "#biostatstab7", "#biostatstab8",
 		    "#biostatstab9");
-
-    my @tabNames = ("Overview", "by Domain", "by Phylum",
-		    "by BC type", "by SM type",
-		    "by Length", "by Gene Count",
+    
+    my @tabNames = ("Overview", "by Domain", "by Phylum", 
+		    "by BC type", "by SM type", 
+		    "by Length", "by Gene Count", 
 		    "by EC type", "by Pfam");
 
     TabHTML::printTabDiv("bioStatsTab", \@tabIndex, \@tabNames);
@@ -644,7 +645,7 @@ sub printClustersWithGenbankID {
     $cur->finish();
 
     $it->hideAll() if $cnt < 50;
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bcwgenbank_frm") if $cnt > 10;
     $it->printOuterTable(1);
     BiosyntheticDetail::printPfamFooter("bcwgenbank_frm");
@@ -718,14 +719,14 @@ sub getStatsByNp {
     my $sql = qq{
         select np.np_type, np.np_id, np.evidence, count(distinct g.cluster_id)
         from bio_cluster_new g
-        left join
+        left join 
              (select c.np_class np_type, c.compound_oid np_id,
                      npbs.cluster_id cluster_id, bcd.evidence evidence
               from np_biosynthesis_source npbs, img_compound c,
                    bio_cluster_data_new bcd
               where npbs.compound_oid = c.compound_oid
               and npbs.cluster_id = bcd.cluster_id
-              and bcd.evidence is not null) np
+              and bcd.evidence is not null) np 
         on g.cluster_id = np.cluster_id
         where 1 = 1
         $rclause
@@ -791,7 +792,8 @@ sub printStatsByGenome {
     my $phylum = param("phylum");
     my $dbh = dbLogin();
 
-    my ($extracolumn_href, $extracollink_href) = fetchGenome2BioClusterCountMapping($dbh, $domain);
+    my ($extracolumn_href, $extracollink_href)
+	= fetchGenome2BioClusterCountMapping($dbh, $domain);
     my @taxon_oids = keys %$extracolumn_href;
 
     my $title;
@@ -801,8 +803,9 @@ sub printStatsByGenome {
         $title = "Biosynthetic Clusters (BC) by Genome";
     }
 
-    HtmlUtil::printGenomeListHtmlTable($title, '', $dbh, \@taxon_oids, '', '', 'Biosynthetic Clusters',
-        $extracolumn_href, $extracollink_href, "right");
+    HtmlUtil::printGenomeListHtmlTable
+	($title, '', $dbh, \@taxon_oids, '', '', 'Biosynthetic Clusters',
+	 $extracolumn_href, $extracollink_href, "right");
 }
 
 sub fetchGenome2BioClusterCountMapping {
@@ -958,7 +961,7 @@ sub printStatsByBCType {
       if ($clusterClause =~ /gtt_func_id/i);
 
     my $sql = qq{
-        select bcd.bc_type, count (distinct bcd.cluster_id)
+        select bcd.bc_type, count (distinct bcd.cluster_id) 
         from bio_cluster_data_new bcd, bio_cluster_new bc
         where bcd.bc_type is not null
         and bc.cluster_id = bcd.cluster_id
@@ -1017,7 +1020,8 @@ sub printStatsByBCType {
     if ($cnt > 0) {
         $it->printOuterTable(1);
     } else {
-        print "<img src='$base_url/images/error.gif' " . "width='46' height='46' alt='Error' />";
+        print "<img src='$base_url/images/error.gif' "
+	    . "width='46' height='46' alt='Error' />";
         print "<p>Could not find BC Types.";
     }
 
@@ -1200,9 +1204,9 @@ sub printStatsByNp {
         my $r;
 
         if ( $st == 0 ) { # add colored link -anna
-            my $imageref = "<img src='$tmp_url/"
+            my $imageref = "<img src='$tmp_url/" 
 		. $chart->FILE_PREFIX . "-color-" . $cnt . ".png' border=0>";
-            $r = escHtml($np) . $sd
+            $r = escHtml($np) . $sd 
 		. alink("$url&np=$np&evidence=Experimental", $imageref, "", 1);
             $r .= "&nbsp;&nbsp;";
         }
@@ -1258,7 +1262,7 @@ sub printStatsByNp {
     print "<td valign=top align=left>\n";
     if ($env->{chart_exe} ne "" && $chart ne "") {
         if ($st == 0) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle($chart->FILEPATH_PREFIX . ".html", "statsByNpType", 1);
             while (my $s = $FH->getline()) {
                 print $s;
@@ -1314,7 +1318,7 @@ sub getStatsSqlByNp {
     my $sql = qq{
         select $field, np.evidence, count(distinct g.cluster_id)
         from bio_cluster_new g
-        left join
+        left join 
             (select c.np_class np_type, c.compound_oid np_id,
                     npbs.cluster_id cluster_id, bcd.evidence evidence
              from np_biosynthesis_source npbs, img_compound c,
@@ -1419,7 +1423,7 @@ sub getClustersSqlByNp {
     my $sql = qq{
         select g.cluster_id, g.taxon, count(bcf.feature_id)
         from bio_cluster_new g
-        left join
+        left join 
             (select c.np_class np_type, c.compound_oid np_id,
                     npbs.cluster_id cluster_id, bcd.evidence evidence
              from np_biosynthesis_source npbs, img_compound c,
@@ -1428,7 +1432,7 @@ sub getClustersSqlByNp {
              and npbs.cluster_id = bcd.cluster_id
              and bcd.evidence is not null) np
              on g.cluster_id = np.cluster_id
-        left join bio_cluster_features_new bcf on g.cluster_id = bcf.cluster_id
+        left join bio_cluster_features_new bcf on g.cluster_id = bcf.cluster_id 
         where 1 = 1
         $npClause
         $evidenceClause
@@ -1760,7 +1764,7 @@ sub printStatsByGeneCount {
 }
 
 sub printStatsJS {
-    print "<script src='$base_url/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
     print qq {
     <script type="text/javascript">
     function displayStats(url, div, id) {
@@ -1832,7 +1836,7 @@ sub loadStats {
 }
 
 sub printMyChart {
-    my ($items_aref, $data_aref, $title, $yaxis, $url, $series,
+    my ($items_aref, $data_aref, $title, $yaxis, $url, $series, 
 	$name, $param, $use_log, $orientation, $log_scale, $is_table) = @_;
 
     my @items = @$items_aref;
@@ -1905,12 +1909,11 @@ sub printBreakdownBy {
     my $log_scale = 0;
     my $orientation = "VERTICAL";
 
-    my $cacheDir = $env->{bcnp_stats_dir};
     if ($type eq "length" && $precomputed) {
         my $filename = "bcStats_byLength.stor";
         $filename = "bcStats_byLength_m.stor" if $genome_type eq "metagenome";
         $filename = "bcStats_byLength_i.stor" if $genome_type eq "isolate";
-        my $file = $cacheDir . $filename;
+        my $file = $bcnp_stats_dir . $filename;
         last if (!(-e $file));
 
         my $state = retrieve($file);
@@ -1950,7 +1953,7 @@ sub printBreakdownBy {
         my $filename = "bcStats_byGeneCount.stor";
         $filename = "bcStats_byGeneCount_m.stor" if $genome_type eq "metagenome";
         $filename = "bcStats_byGeneCount_i.stor" if $genome_type eq "isolate";
-        my $file = $cacheDir . $filename;
+        my $file = $bcnp_stats_dir . $filename;
         last if (!(-e $file));
 
         my $state = retrieve($file);
@@ -1992,7 +1995,7 @@ sub printBreakdownBy {
 
     } elsif ($type eq "pfam" && $precomputed) {
         my $filename = "bcStats_byPfam.stor";
-        my $file = $cacheDir . $filename;
+        my $file = $bcnp_stats_dir . $filename;
         last if (!(-e $file));
 
         my $state = retrieve($file);
@@ -2106,7 +2109,7 @@ sub printBreakdownBy {
         webLog(dateTimeStr() . " start sql $type\n");
 
         my $sql = qq{
-            select tx.domain, tx.phylum, tx.ir_class,
+            select tx.domain, tx.phylum, tx.ir_class, 
                    count(distinct bc.cluster_id)
             from taxon tx, bio_cluster_new bc
             where bc.taxon = tx.taxon_oid
@@ -2322,7 +2325,7 @@ sub printBreakdownBy {
 				     $log_scale);
 	    print "<br/>";
         }
-
+	
         # Predicted:
         my $mean = ceil($p_sum / $p_idx);
         my $sqsum = 0;
@@ -2367,7 +2370,7 @@ sub printBreakdownBy {
 				     $log_scale);
 	    print "<br/>";
         }
-
+	
         print "</p>";
         return;
 
@@ -2510,18 +2513,18 @@ sub printBreakdownBy {
         my @datas;
         push @datas, $datastr;
 
-        if (@items ne "" && @datas ne "" &&
+        if (@items ne "" && @datas ne "" && 
 	    scalar @items > 0 && scalar @datas > 0) {
 	    print "<td padding=0 valign=top align=left>";
 	    print "Experimentally verified clusters<br/>";
-	    ChartUtil::printBarChart($name, $param, "Number of BCs",
+	    ChartUtil::printBarChart($name, $param, "Number of BCs", 
 				     $url."&attr=Experimental",
 				     \@items, \@items, \@datas,
-				     \@series, $use_log,
+				     \@series, $use_log, 
 				     $orientation, $log_scale);
 	    print "</td>\n";
 	}
-
+	
         my $numbins = 10;
         $numbins = 25 if $p_hi > 25000;
         my ($items_aref, $data_aref)
@@ -2535,14 +2538,14 @@ sub printBreakdownBy {
         my @datas;
         push @datas, $datastr;
 
-	if (@items ne "" && @datas ne "" &&
+	if (@items ne "" && @datas ne "" && 
 	    scalar @items > 0 && scalar @datas > 0) {
 	    print "<td padding=0 valign=top align=left>";
 	    print "Predicted Clusters<br/>";
 	    ChartUtil::printBarChart($name, $param, "Number of BCs",
 				     $url."&attr=Predicted",
-				     \@items, \@items, \@datas,
-				     \@series, $use_log,
+				     \@items, \@items, \@datas, 
+				     \@series, $use_log, 
 				     $orientation, $log_scale);
 	    print "</td>";
 	}
@@ -2597,10 +2600,10 @@ sub printBreakdownBy {
         $cur->finish();
         webLog(dateTimeStr() . " end sql $type\n");
 
-	ChartUtil::printPieChart("Pfam", "func_code",
+	ChartUtil::printPieChart("Pfam", "func_code", 
 				 $url, \@items, \@sections,
 				 \@data, \@series, 1,
-				 $UPPER_LIMIT, "ebc");
+				 $UPPER_LIMIT, "ebc"); 
 
         # This is very slow:
         print "<br/>";
@@ -2661,7 +2664,7 @@ sub printBreakdownBy {
         print "<p><u>Evidence</u>: Experimental</p>";
         $url = "$section_cgi&page=clustersByKEGG";
         my $sql = qq{
-        select $nvl(pw.category, 'Unknown'),
+        select $nvl(pw.category, 'Unknown'), 
                count(distinct bcf.cluster_id)
         from kegg_pathway pw, image_roi roi, image_roi_ko_terms rk,
              gene_ko_terms gk, bio_cluster_features_new bcf,
@@ -2690,17 +2693,17 @@ sub printBreakdownBy {
         }
         $cur->finish();
 
-	ChartUtil::printPieChart("KEGG", "category",
+	ChartUtil::printPieChart("KEGG", "category", 
 				 $url, \@items, \@items,
 				 \@data, \@series, 0,
-				 $UPPER_LIMIT, "bc");
+				 $UPPER_LIMIT, "bc"); 
         return;
     }
 
     return if @items eq "" || @datas eq "";
     return if scalar @items < 1 || scalar @datas < 1;
     ChartUtil::printBarChart($name, $param, "Number of BCs",
-			     $url, \@items, \@sections, \@datas,
+			     $url, \@items, \@sections, \@datas, 
 			     \@series, $use_log, $orientation, $log_scale);
 }
 
@@ -2913,7 +2916,7 @@ sub printStatsByPhylum {
         my $orientation = "VERTICAL";
         my $log_scale = 1;
 	ChartUtil::printBarChart($name, $param, "Number of BCs",
-				 $url_section, \@items, \@sections,
+				 $url_section, \@items, \@sections, 
 				 \@datas, \@series, $use_log,
 				 $orientation, $log_scale);
     }
@@ -3030,7 +3033,7 @@ sub printClustersByBCType {
     OracleUtil::truncTable($dbh, "gtt_func_id")
       if ($clusterClause =~ /gtt_func_id/i);
 
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bybctype_frm") if $cnt > 10;
     $it->printOuterTable(1);
     BiosyntheticDetail::printPfamFooter("bybctype_frm");
@@ -3109,7 +3112,7 @@ sub printClustersByProbability {
     }
 
     my $sql = qq{
-        select distinct bcd.cluster_id,
+        select distinct bcd.cluster_id, 
                tx.taxon_oid, tx.taxon_display_name
         from bio_cluster_data_new bcd, bio_cluster_new bc, taxon tx
         where bcd.probability is not null
@@ -3148,7 +3151,7 @@ sub printClustersByProbability {
         $cnt++;
     }
 
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bcbyprobability_frm") if $cnt > 10;
     $it->hideAll()                                             if $cnt < 50;
     $it->printOuterTable(1);
@@ -3257,7 +3260,7 @@ sub printClustersByPfamIds {
       if ($funcIdsInClause =~ /gtt_func_id/i);
 
     $it->hideAll() if $cnt < 50;
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bcbypfamid_frm") if $cnt > 10;
     $it->printOuterTable(1);
     BiosyntheticDetail::printPfamFooter("bcbypfamid_frm");
@@ -3345,7 +3348,7 @@ sub printClustersByPfam {
     $cur->finish();
 
     $it->hideAll() if $cnt < 50;
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bcbypfam_frm") if $cnt > 10;
     $it->printOuterTable(1);
     BiosyntheticDetail::printPfamFooter("bcbypfam_frm");
@@ -3489,7 +3492,7 @@ sub printClustersByPhylum {
     }
 
     $it->hideAll() if $cnt < 50;
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bcbyphylum_frm") if $cnt > 10;
     $it->printOuterTable(1);
     BiosyntheticDetail::printPfamFooter("bcbyphylum_frm");
@@ -3712,7 +3715,7 @@ sub printClustersByLength {
     my $sql = qq{
         select bc.cluster_id, (bc.end_coord - bc.start_coord + 1) seqlen,
                tx.taxon_oid, tx.taxon_display_name
-        from bio_cluster_new bc,
+        from bio_cluster_new bc, 
              bio_cluster_data_new bcd, taxon tx
         where bc.taxon = tx.taxon_oid
         and bc.start_coord is not null
@@ -3756,7 +3759,7 @@ sub printClustersByLength {
     }
 
     $it->hideAll() if $count < 50;
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bcbylength_frm") if $count > 10;
     $it->printOuterTable(1);
     BiosyntheticDetail::printPfamFooter("bcbylength_frm");
@@ -3875,10 +3878,10 @@ sub printClustersByGeneCount {
     $whereClause = "where my_count = $min" if $max eq "";
     my $sql = qq{
         select cls, tid, t, my_count from (
-            select bc.cluster_id as cls, bc.taxon as tid,
+            select bc.cluster_id as cls, bc.taxon as tid, 
                    tx.taxon_display_name as t,
                    count(distinct bcf.feature_id) as my_count
-            from bio_cluster_new bc, bio_cluster_features_new bcf,
+            from bio_cluster_new bc, bio_cluster_features_new bcf, 
                  bio_cluster_data_new bcd, taxon tx
             where bc.cluster_id = bcf.cluster_id
             and bc.cluster_id = bcd.cluster_id
@@ -3927,7 +3930,7 @@ sub printClustersByGeneCount {
     }
 
     $it->hideAll() if $count < 50;
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     BiosyntheticDetail::printPfamFooter("bcbygcnt_frm") if $count > 10;
     $it->printOuterTable(1);
     BiosyntheticDetail::printPfamFooter("bcbygcnt_frm");
@@ -4081,7 +4084,7 @@ sub printPfamList {
         $imgClause
         group by pf.name, pf.ext_accession, pf.description, pf.db_source
         having count(distinct bcf.cluster_id) > 0
-        order by lower(pf.name), pf.ext_accession,
+        order by lower(pf.name), pf.ext_accession, 
               pf.description, pf.db_source
     };
     my $cur = execSql($dbh, $sql, $verbose, $evidence);

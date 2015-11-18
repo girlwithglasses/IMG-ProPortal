@@ -1,7 +1,7 @@
 ############################################################################
 # GeneNeighborhood - Print gene neighborhoods for multiple orthologs
 #  or for selected genes.
-# $Id: GeneNeighborhood.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: GeneNeighborhood.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package GeneNeighborhood;
 my $section = "GeneNeighborhood";
@@ -29,7 +29,7 @@ my $web_data_dir     = $env->{web_data_dir};
 my $preferences_url  = "$main_cgi?section=MyIMG&page=preferences";
 my $img_lite         = $env->{img_lite};
 my $include_bbh_lite = $env->{include_bbh_lite};
-
+my $top_base_url = $env->{top_base_url};
 my $flank_length     = 25000;
 my $maxNeighborhoods = 5;
 my $maxColors        = 246;
@@ -46,10 +46,23 @@ my $bbh_files_dir = $env->{bbh_files_dir};
 # check box to remove gene from gene cart when selected and update
 my $show_checkbox_remove = 0;
 
+sub getPageTitle {
+    return 'Gene Neighborhood';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenes');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 mins (from main.pl)
 
@@ -1575,7 +1588,7 @@ sub printNeighborhoodPanels {
     my ( $dbh, $tag, $recs_ref, $count, $gene_cart_genes_href ) = @_;
 
     print toolTipCode();
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     print "<table border='0'>" if ( $show_checkbox || $show_checkbox_remove );
 
     ## Get ortholog colors
@@ -2435,7 +2448,7 @@ sub printTrackerDiv {
 
     if ($show_checkbox) {
         print qq{
-        <script src="$base_url/cart.js" ></script>
+        <script src="$top_base_url/js/cart.js" ></script>
         <script type="text/javascript"
           src="$YUI/build/yahoo-dom-event/yahoo-dom-event.js"></script>
         <script src="$YUI/build/yahoo/yahoo-min.js" ></script>

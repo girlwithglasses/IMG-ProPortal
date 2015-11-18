@@ -1,6 +1,6 @@
 ############################################################################
 # ImgNetworkBrowser.pm - Network Browser module.
-# $Id: ImgNetworkBrowser.pm 29998 2014-01-29 23:05:26Z jinghuahuang $
+# $Id: ImgNetworkBrowser.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package ImgNetworkBrowser;
 my $section = "ImgNetworkBrowser";
@@ -34,10 +34,24 @@ my $show_private         = $env->{show_private};
 my $tab_panel            = $env->{tab_panel};
 my $content_list         = $env->{content_list};
 
+
+sub getPageTitle {
+    return 'IMG Network Browser';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ("FindFunctions", '', '', '', '', 'imgterms.html');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
 
     if ( $page eq "imgNetworkBrowser" ) {

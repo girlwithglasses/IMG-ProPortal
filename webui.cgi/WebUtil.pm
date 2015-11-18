@@ -510,7 +510,7 @@
 ############################################################################
 #   Misc. web utility functions.
 # 	--es 04/15/2004
-# $Id: WebUtil.pm 34488 2015-10-11 17:17:45Z jinghuahuang $
+# $Id: WebUtil.pm 34719 2015-11-17 18:52:01Z klchu $
 ############################################################################
 package WebUtil;
 
@@ -848,7 +848,7 @@ my $env                      = getEnv();
 my $main_cgi                 = $env->{main_cgi};
 my $base_url                 = $env->{base_url};
 my $show_sql_verbosity_level = $env->{show_sql_verbosity_level};
-
+my $top_base_url = $env->{top_base_url};
 $env->{dev_site} = 1 if $ENV{TESTING};
 
 #require $mysql_config  if $mysql_config  ne "";
@@ -1710,7 +1710,7 @@ sub webDataTest {
 This is embarrassing. IMG's data files cannot be accessed at this time.
 Please try again later.
 If the problem presist please contact us at:
-<a href="main.cgi?page=questions&subject=Web Data Problems $web_str">IMG Questions/Comments</a> or email us at:
+<a href="main.cgi?section=Questions&subject=Web Data Problems $web_str">IMG Questions/Comments</a> or email us at:
 <a href="mailto:$jira_email_error?Subject=Web Data Problems $web_str"> IMG Support </a>.
         };
     } elsif ( !-e $ifs_tmp_dir ) {
@@ -1719,7 +1719,7 @@ If the problem presist please contact us at:
 This is embarrassing. IMG's web temporary area cannot be accessed at this time.
 This only affects our export tools and emailed results tools. You can still use most of IMG's tools.
 If the problem presist please contact us at:
-<a href="main.cgi?page=questions&subject=Web Data Problems $ifs_str">IMG Questions/Comments</a> or email us at:
+<a href="main.cgi?section=Questions&subject=Web Data Problems $ifs_str">IMG Questions/Comments</a> or email us at:
 <a href="mailto:$jira_email_error?Subject=Web Data Problems $ifs_str"> IMG Support </a>.
         };
     } elsif ( !-e $common_tmp_dir ) {
@@ -1727,7 +1727,7 @@ If the problem presist please contact us at:
 This is embarrassing. IMG's BLAST temporary area cannot be accessed at this time.
 This only affects our BLAST tools. You can still use most of IMG's tools.
 If the problem presist please contact us at:
-<a href="main.cgi?page=questions&subject=Web Data Problems $ifs_str">IMG Questions/Comments</a> or email us at:
+<a href="main.cgi?section=Questions&subject=Web Data Problems $ifs_str">IMG Questions/Comments</a> or email us at:
 <a href="mailto:$jira_email_error?Subject=Web Data Problems $ifs_str"> IMG Support </a>.
         };
 
@@ -2797,7 +2797,7 @@ sub execStmt {
 ############################################################################
 sub toolTipCode {
     my $s = "<script language='JavaScript' type='text/javascript'\n";
-    $s .= "src='$base_url/wz_tooltip.js'></script>\n";
+    $s .= "src='$top_base_url/js/wz_tooltip.js'></script>\n";
     return $s;
 }
 
@@ -5281,19 +5281,18 @@ sub maxCgiProcCheck {
 <html>
 <head>
     <title>503 Service Overloaded</title>
-    <link rel="stylesheet" type="text/css" href="http://img.jgi.doe.gov/css/div-v33.css" />
-    <link rel="stylesheet" type="text/css" href="http://img.jgi.doe.gov/css/img-v33.css" />
-    <link rel="icon" href="http://img.jgi.doe.gov/images/favicon.ico"/>
-    <link rel="SHORTCUT ICON" href="http://img.jgi.doe.gov/images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/landing.css" />
+    <link rel="icon" href="https://img.jgi.doe.gov/images/favicon.ico"/>
+    <link rel="SHORTCUT ICON" href="https://img.jgi.doe.gov/images/favicon.ico" />
 </head>
 <body id="body_frame">
 <div id="jgi_logo2">
-    <img src="http://img.jgi.doe.gov/images/jgi_home_header.gif" alt="IMG: Integrated Microbial Genomes" title="IMG: Integrated Microbial Genomes nameplate">
+    <img src="https://img.jgi.doe.gov/images/jgi_home_header.gif" alt="IMG: Integrated Microbial Genomes" title="IMG: Integrated Microbial Genomes nameplate">
 </div>
 <div id="content_other">
 <h2>503 Service Overloaded</h2>
         <p>
-        <img src="http://img.jgi.doe.gov/images/Warning.png" alt="warning"
+        <img src="https://img.jgi.doe.gov/images/Warning.png" alt="warning"
         style="height:70px; width:70px; float:left; padding-right:10px;" />
         IMG is very busy.<br/>
         Please try again later.
@@ -9573,7 +9572,7 @@ sub printHeaderWithInfo {
 
 sub printCustomHeader {
     my ( $header, $text, $tooltip, $popup_header, $hide_metagenomes, $help, $howto, $java ) = @_;
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 
     my $infolink = "";
     if ( $text ne "" ) {
@@ -9670,7 +9669,11 @@ sub printInfoTipLink {
 
 sub returnInfoTipLink {
     my ( $text, $tooltip, $popup_header, $linktothis ) = @_;
+<<<<<<< .mine
     my $html = "<script src='$base_url/overlib.js'></script>\n";
+=======
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
+>>>>>>> .r34733
     my $info =
         "onclick=\"return overlib('$text', "
       . "RIGHT, STICKY, MOUSEOFF, "
@@ -10092,11 +10095,11 @@ sub sdbLogin {
 # OR
 # {} on no data
 #
-# return url https://prodege.jgi-psf.org/readJob/75
+# return url https://prodege.jgi.doe.gov/readJob/75
 # or blank ''
 sub hasProdege {
     my ($taxonOid) = @_;
-    my $url        = "https://prodege.jgi-psf.org/api/img/" . $taxonOid;
+    my $url        = "https://prodege.jgi.doe.gov/api/img/" . $taxonOid;
     my $content    = urlGet($url);
     if ( !$content ) {
         return '';
@@ -10104,7 +10107,7 @@ sub hasProdege {
     my $href = decode_json($content);
     if ( exists $href->{url} ) {
         my $subUrl = $href->{url};
-        return 'https://prodege.jgi-psf.org' . $subUrl;
+        return 'https://prodege.jgi.doe.gov' . $subUrl;
     }
     return '';
 }

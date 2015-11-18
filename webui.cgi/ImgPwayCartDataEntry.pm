@@ -30,11 +30,24 @@ my $max_item_count = 100;    # limit the number of returned IMG pways
 my $max_upload_line_count = 10000;
 
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "imgPwayCart" );
+    return 'IMG Pathway Cart Data Entry';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
 
 ############################################################################
-# dispatch - Dispatch to pages for this section.
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
 
     if( !$contact_oid ) {
         webError( "Please login in." );

@@ -1,7 +1,7 @@
 ############################################################################
 # TaxonCircMaps.pm - Circular maps for one taxon.
 #
-# $Id: TaxonCircMaps.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: TaxonCircMaps.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package TaxonCircMaps;
 my $section = "TaxonCircMaps";
@@ -31,10 +31,19 @@ my $mer_data_dir   = $env->{mer_data_dir};
 my $max_scf_count = 1000;
 my $maxScaffolds = 10;
 
-############################################################################
-# dispatch - Dispatch to right page.
-############################################################################
+sub getPageTitle {
+    return 'Circular Map';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenomes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( param("mscaffolds") ne "" ) {

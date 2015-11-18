@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGenomeSet.pm
-# $Id: WorkspaceGenomeSet.pm 34534 2015-10-19 16:04:48Z jinghuahuang $
+# $Id: WorkspaceGenomeSet.pm 34666 2015-11-10 21:32:42Z jinghuahuang $
 ############################################################################
 package WorkspaceGenomeSet;
 
@@ -50,7 +50,7 @@ my $public_nologin_site  = $env->{public_nologin_site};
 my $enable_genomelistJson = $env->{enable_genomelistJson};
 my $YUI                   = $env->{yui_dir_28};
 my $new_func_count       = $env->{new_func_count};
-
+my $top_base_url = $env->{top_base_url};
 my $cog_base_url       = $env->{cog_base_url};
 my $pfam_base_url      = $env->{pfam_base_url};
 my $tigrfam_base_url   = $env->{tigrfam_base_url};
@@ -82,16 +82,31 @@ if ( !$merfs_timeout_mins ) {
 my $GENOME_FOLDER = "genome";
 my $FUNC_FOLDER   = "function";
 
-my $max_workspace_view = 10000;
 my $max_profile_select = 50;
 
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
 
-#########################################################################
-# dispatch
-#########################################################################
+sub getPageTitle {
+    return 'Workspace Genome Sets';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $header = param("header");
+    my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
+    if ( WebUtil::paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
+        # no header
+    } elsif ( $header eq "" && WebUtil::paramMatch("noHeader") eq "" ) {
+        @a = ( "AnaCart", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
+    }
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_; 
     return if ( !$enable_workspace );
     return if ( !$user_restricted_site );
 
@@ -187,15 +202,37 @@ sub dispatch {
         Workspace::submitSaveFuncGene($GENOME_FOLDER);
     }
     else {
-        printGenomeSetMainForm();
+        printGenomeSetMainForm('', $numTaxon);
     }
 }
+
+
+sub printCartDiv {
+    my($numTaxon) = @_;
+    
+    print qq{
+        <h2>Genome Cart</h2>
+    };
+    
+    if ( $numTaxon > 0 ) {
+        print qq{
+            You have <a href='main.cgi?section=GenomeCart&page=genomeCart'>$numTaxon Genome(s)</a> in your cart.<br>
+        };
+    } else {
+        print qq{
+            Your <a href='main.cgi?section=GenomeCart&page=genomeCart'>Genome Cart</a> is empty.
+        };
+    }
+    
+    
+}
+
 
 ############################################################################
 # printGenomeSetMainForm
 ############################################################################
 sub printGenomeSetMainForm {
-    my ($text) = @_;
+    my ($text, $numTaxon) = @_;
 
     my $folder = $GENOME_FOLDER;
 
@@ -205,10 +242,14 @@ sub printGenomeSetMainForm {
     my @files = readdir(DIR);
     closedir(DIR);
 
-    print "<h1>My Workspace - Genome Sets</h1>";
+    print "<h1>Genome Workspace List</h1>";
 
+    printCartDiv($numTaxon);
+
+    print "<h2>Genome Sets List</h2>";
+    
     print qq{
-        <script type="text/javascript" src="$base_url/Workspace.js" >
+        <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
     };
 
@@ -366,7 +407,7 @@ sub printGenomeSetDetail {
     while ( my $id = $res->getline() ) {
 
         # set a limit so that it won't crash web browser
-        if ( $row >= $max_workspace_view ) {
+        if ( $row >= WorkspaceUtil::getMaxWorkspaceView() ) {
             $trunc = 1;
             last;
         }
@@ -946,7 +987,7 @@ sub printGenomeFuncProfileTable {
         $ownerSetName2shareSetName_href, $set2taxons_href, $dbTaxons_href, $fileTaxons_href);
 
     if ( !$total_cnt ) {
-        print "<p><b>No genes are associated with selected function set.</b>\n";
+        print "<p><b>No genes are associated with selected function set or type.</b>\n";
         print end_form();
         return;
     }
@@ -958,7 +999,12 @@ sub printGenomeFuncProfileTable {
     my $it =
       new InnerTable( 1, "WSGenomeFuncProfile$$", "WSGenomeFuncProfile", 1 );
     my $sd = $it->getSdDelim();    # sort delimiter
-    $it->addColSpec("Selection");
+    if ( $functype && Workspace::isComplicatedFuncCategory($functype) ) {
+        # no selection allowed
+    }
+    else {
+        $it->addColSpec( "Selection" );        
+    }
     $it->addColSpec( "Function ID",   "char asc", "left" );
     $it->addColSpec( "Function Name", "char asc", "left" );
     if ($isSet) {

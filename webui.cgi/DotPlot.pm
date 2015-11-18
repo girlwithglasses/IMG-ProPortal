@@ -1,6 +1,6 @@
 ###########################################################################
 # DotPlot.pm - Runs mummer for two genomes
-# $Id: DotPlot.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: DotPlot.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package DotPlot;
 my $section = "DotPlot";
@@ -15,6 +15,7 @@ use WebConfig;
 use WebUtil;
 use ChartUtil;
 use GenomeListJSON;
+use HTML::Template;
 
 $| = 1;
 
@@ -33,15 +34,35 @@ my $base_url = $env->{ base_url };
 my $mummer_dir = $env->{ mummer_dir };
 my $include_metagenomes = $env->{ include_metagenomes };
 my $perl = $env->{ perl_bin };
-
+my $top_base_url = $env->{top_base_url};
 my $nvl = getNvl();
 my $YUI = $env->{ yui_dir_28 };
+
+
+sub getPageTitle {
+    return 'Dotplot';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    
+    
+    my @a = (  "CompareGenomes", "Synteny Viewers", '', $js, '', 'Dotplot.pdf' );
+    return @a;
+}
 
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param("page");
     timeout( 60 * 40 );    # timeout in 40 minutes (from main.pl)
     if ($page eq "plot") {
@@ -625,7 +646,7 @@ sub runPlot {
 
     if ($env->{ chart_exe } ne "") {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
                 ($chart->FILEPATH_PREFIX.".html", "runPlot", 1);
 	    if ($FH) {
@@ -847,8 +868,8 @@ sub printScaffolds {
 
 
 sub printScript {
-    print "<script src='$base_url/chart.js'></script>\n";
-    print "<script src='$base_url/overlib.js'></script>\n"; ## for tooltips
+    print "<script src='$top_base_url/js/chart.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n"; ## for tooltips
 
     print qq{
         <link rel="stylesheet" type="text/css"

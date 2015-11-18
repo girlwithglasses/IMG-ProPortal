@@ -2,7 +2,7 @@
 # Similar to gene Ortholog Neighborhood viewer, but instead of coloring via
 # cog's we color genes within the same cassette box
 #
-# $Id: GeneCassette.pm 34122 2015-08-27 19:44:13Z klchu $
+# $Id: GeneCassette.pm 34662 2015-11-10 21:03:55Z klchu $
 #
 # When I say "query gene or query cassette" - I mean the initial gene from
 # gene detail page.
@@ -50,7 +50,7 @@ my $user_restricted_site  = $env->{user_restricted_site};
 my $img_ken               = $env->{img_ken};
 my $img_edu                 = $env->{img_edu};
 my $enable_biocluster       = $env->{enable_biocluster};
-
+my $top_base_url = $env->{top_base_url};
 my $base_dir = $env->{base_dir};
 my $base_url = $env->{base_url};
 
@@ -1040,7 +1040,7 @@ sub printPlotViewer2 {
 
     my $s = $sp->getMapHtml("overlib");
     print "$s\n";
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 }
 
 #
@@ -3432,7 +3432,7 @@ sub printNeighborhoodPanels {
         printStatusLine( "Loaded", 2 );
     }
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 }
 
 ############################################################################

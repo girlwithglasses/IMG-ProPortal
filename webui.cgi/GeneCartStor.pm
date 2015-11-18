@@ -16,7 +16,7 @@
 #    12: scaffold read depth
 #    --es 03/22/2007
 #
-# $Id: GeneCartStor.pm 34421 2015-10-05 18:08:05Z klchu $
+# $Id: GeneCartStor.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package GeneCartStor;
 my $section = "GeneCartStor";
@@ -102,10 +102,38 @@ if ( !$merfs_timeout_mins ) {
 
 my $GENE_FOLDER = "gene";
 
+sub getPageTitle {
+        if ( WebUtil::paramMatch("addFunctionCart") ne "" ) {
+            WebUtil::setSessionParam( "lastCart", "funcCart" );
+        } else {
+            WebUtil::setSessionParam( "lastCart", "geneCart" );
+        }
+
+    
+    return 'Gene Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    my $page = param('page');
+    if ( $page eq 'geneCart' || !WebUtil::paramMatch("noHeader") ) {
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+        @a = ( "AnaCart", '', '', $js, '', 'GeneCart.pdf' );
+    }
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
 
     timeout( 60 * $merfs_timeout_mins );
 

@@ -32,10 +32,24 @@ my $max_term_batch = 250;
 my $max_taxon_batch = 900;
 my $maxProfileOccurIds = 300;
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "imgTermCart" );
+    return 'IMG Term Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param( "page" );
 
     if( $page eq "imgTermCart" || paramMatch( "addToImgTermCart" ) ne "" ||

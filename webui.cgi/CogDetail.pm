@@ -48,6 +48,17 @@ if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
+sub getPageTitle {
+    return 'COG Details';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ("FindFunctions");
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################

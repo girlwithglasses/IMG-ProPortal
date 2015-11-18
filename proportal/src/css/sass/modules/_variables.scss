@@ -6,6 +6,15 @@ $typeface-page-text: "Karla", "Helvetica Neue", Helvetica, Roboto, Arial, sans-s
 $typeface-display: 'Myriad Pro', 'Open Sans', 'Lucida Sans', 'Lucida Grande', sans-serif;
 $typeface-fixed-width: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
 
+.typeface-page-text {
+    font-family: $typeface-page-text;
+}
+.typeface-display {
+    font-family: $typeface-display;
+}
+.typeface-fixed-width {
+    font-family: $typeface-fixed-width;
+}
 
 // $base-font-size: 16px;
 // $base-line-height: 24px;
@@ -25,10 +34,32 @@ $gutter: .75rem;
 $neg-gutter: -.75rem;
 
 // set up page widths
+
 $nar-: 479px;
 $nar: 480px;	// narrow = 30rem
 $med-: 767px;
 $med: 768px;	// medium = 48rem
 
+/*
+60rem: narrower
+80rem: full width nav
+
+
+*/
+// width at which menu starts wrapping
+$menu-wrap-width: 71rem;
+
 // max width
-$wrapper-width: 80rem;
+$wrapper-width: 90rem; // 1440px
+
+// sidebar width
+$sidebar-width: 20%; // of 90rem
+
+// if screen width is more than $wrapper-width + 2 * $sidebar-width, we can show the sidebar menu
+$screen_size: (
+
+    small-menu-txt: 60,
+    menu-wrap: 80,
+    superwide: 126, // $wrapper-width + 2 * $sidebar-width
+
+);

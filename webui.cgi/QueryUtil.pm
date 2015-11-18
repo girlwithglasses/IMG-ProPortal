@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: QueryUtil.pm 34106 2015-08-25 17:24:15Z imachen $
+# $Id: QueryUtil.pm 34666 2015-11-10 21:32:42Z jinghuahuang $
 ############################################################################
 package QueryUtil;
 
@@ -2416,6 +2416,40 @@ sub getSingleScaffoldExtSql {
     return $sql;
 }
 
+#############################################################################
+## getScaffoldDataSql
+#############################################################################
+sub getScaffoldDataSql {
+    my ($db_str, $rclause, $imgClause) = @_;
+
+    my $sql;
+    
+    # check permission
+    if (!$rclause && !$imgClause) {
+        $rclause = WebUtil::urClause('s.taxon');
+        $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
+    }
+    
+    if ( $db_str ) {
+        $sql = qq{
+            select s.scaffold_oid, s.scaffold_name,
+            s.ext_accession, s.taxon, st.seq_length,
+            st.gc_percent, s.read_depth,
+            st.count_total_gene, t.taxon_display_name, t.genome_type
+            from scaffold s, scaffold_stats st, taxon t
+            where s.scaffold_oid in ($db_str)
+            and s.scaffold_oid = st.scaffold_oid
+            and s.taxon = t.taxon_oid
+            $rclause
+            $imgClause
+            order by 1
+        };
+    }
+    
+    return $sql;
+}
+
+
 sub fetchValidTaxonOidHash {
     my ( $dbh, @oids) = @_;
 
@@ -4246,6 +4280,18 @@ sub getFuncTypeNames {
             from cog_pathway 
         };
     } 
+    elsif ( $functype eq 'KO' ) {
+        $sql = qq{
+            select ko_id, ko_name, definition 
+            from ko_term 
+        };
+    } 
+    elsif ( $functype eq 'EC' || $functype eq 'Enzymes' ) {
+        $sql = qq{
+            select ec_number, enzyme_name 
+            from enzyme
+        };
+    }
     elsif ( $functype eq 'KEGG_Category_EC'
         || $functype eq 'KEGG_Category_KO' )
     {
@@ -4295,18 +4341,6 @@ sub getFuncTypeNames {
             where t.main_role is not null and t.sub_role != 'Other' 
         };
     } 
-    elsif ( $functype eq 'KO' ) {
-        $sql = qq{
-            select ko_id, ko_name, definition 
-            from ko_term 
-        };
-    } 
-    elsif ( $functype eq 'Enzymes' ) {
-        $sql = qq{
-            select ec_number, enzyme_name 
-            from enzyme
-        };
-    }
     if ($sql) {
         my $cur2 = execSql( $dbh, $sql, $verbose );
         for ( ; ; ) {

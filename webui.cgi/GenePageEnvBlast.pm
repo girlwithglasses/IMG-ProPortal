@@ -3,7 +3,7 @@
 #   for environmental samples.
 #       --es 06/15/2005
 #
-# $Id: GenePageEnvBlast.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: GenePageEnvBlast.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package GenePageEnvBlast;
 my $section = "GenePageEnvBlast";
@@ -39,6 +39,7 @@ my $tmp_dir      = $env->{tmp_dir};
 my $tmp_url      = $env->{tmp_url};
 my $base_dir     = $env->{base_dir};
 my $base_url     = $env->{base_url};
+my $top_base_url     = $env->{base_url};
 my $img_internal = $env->{img_internal};
 my $snpCount_bin = $env->{snpCount_bin};
 
@@ -52,10 +53,23 @@ my $user_restricted_site   = $env->{user_restricted_site};
 my $cgi_blast_cache_enable = $env->{cgi_blast_cache_enable};
 my $blast_wrapper_script   = $env->{blast_wrapper_script};
 
+sub getPageTitle {
+    return 'SNP BLAST';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     my $sid  = getContactOid();
 
@@ -748,7 +762,7 @@ sub printEcoVista {
     print "<applet name='EcoVista' ";
     print "code='gov.lbl.genome.ecovista.gui.common.Test' ";
     print "width='1000' height='700' ";
-    print "archive='$base_url/EcoVista.jar'>\n";
+    print "archive='$top_base_url/lib/EcoVista.jar'>\n";
     print "<param name='blast' value='$blast_out_url'>\n";
     print "alt='applet is not running'";
     print "</applet>\n";
@@ -785,7 +799,7 @@ sub printEcoVistaWebStart {
       </security>
       <resources>
         <j2se version="1.4+" java-vm-args="-esa -Xnoclassgc"/>
-        <jar href="$base_url/EcoVista.jar"/>
+        <jar href="$top_base_url/lib/EcoVista.jar"/>
       </resources>
       <application-desc main-class=
          "gov.lbl.genome.ecovista.gui.common.EcoVista">

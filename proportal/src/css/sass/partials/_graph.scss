@@ -23,7 +23,7 @@
 
 .node circle {
   fill: #fff;
-  stroke: $dk_blue;
+  stroke: hue( dk_blue );
   stroke-width: 1.5px;
 }
 
@@ -48,7 +48,7 @@
 	}
 	.parent {
 		cursor: pointer;
-		fill: $dk_blue;
+		fill: hue( dk_blue );
 	}
 	text {
 		pointer-events: none;
@@ -64,6 +64,7 @@
   color: #fff;
   border-radius: $gutter/4;
   pointer-events: none;
+  max-width: 40rem;
 }
 
 /* Creates a small triangle extender for the tooltip */

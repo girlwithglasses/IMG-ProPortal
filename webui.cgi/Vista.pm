@@ -27,20 +27,24 @@ my $include_metagenomes = $env->{include_metagenomes};
 my $YUI = $env->{yui_dir_28};
 my $yui_tables = $env->{yui_tables};
 
-sub init_env {
-	my $temp_env = shift;
-	if ( not defined $temp_env ) {
-		$temp_env = WebConfig::getEnv();
-	}
-	die 'environment should be a hash!' unless ref $temp_env && 'HASH' eq ref $temp_env;
-	$env = $temp_env;
+sub getPageTitle {
+        my $pageTitle = "VISTA";
+        my $page = param("page");
+        if ( $page eq "toppage" ) {
+            $pageTitle = "Synteny Viewers";
+        }    
+    return $pageTitle;
 }
 
+sub getAppHeaderData {
+    my ($self) = @_;
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+    my @a = ('CompareGenomes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if($page eq "toppage") {

@@ -3,12 +3,6 @@
 ########################################################################
 package WorkspaceFuncSet; 
 
-require Exporter; 
-@ISA    = qw( Exporter ); 
-@EXPORT = qw(
-); 
-
- 
 use strict; 
 use Archive::Zip; 
 use CGI qw( :standard); 
@@ -51,7 +45,7 @@ my $workspace_dir        = $env->{workspace_dir};
 my $public_nologin_site  = $env->{public_nologin_site};
 my $enable_genomelistJson = $env->{enable_genomelistJson};
 my $YUI                   = $env->{yui_dir_28};
- 
+my $top_base_url = $env->{top_base_url};
 my $cog_base_url       = $env->{cog_base_url};
 my $pfam_base_url      = $env->{pfam_base_url};
 my $tigrfam_base_url   = $env->{tigrfam_base_url};
@@ -85,7 +79,6 @@ my $GENE_FOLDER   = "gene";
 my $FUNC_FOLDER   = "function"; 
 my $GENOME_FOLDER   = "genome"; 
 
-my $max_workspace_view = 10000; 
 my $max_profile_select = 50;
 my $maxProfileOccurIds     = 100;
 
@@ -93,10 +86,26 @@ my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
 
 
-#########################################################################
-# dispatch
-#########################################################################
-sub dispatch { 
+sub getPageTitle {
+    return 'Workspace Function Sets';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $header = param("header");
+    my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
+    if ( WebUtil::paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
+        # no header
+    } elsif ( $header eq "" && WebUtil::paramMatch("noHeader") eq "" ) {
+        @a = ( "AnaCart", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
+    }
+    return @a;
+}
+
+sub dispatch {
+    my ( $self, $numTaxon ) = @_;  
     return if ( !$enable_workspace ); 
     return if ( !$user_restricted_site ); 
  
@@ -181,6 +190,28 @@ sub dispatch {
     }
 }
 
+sub printCartDiv {
+    print qq{
+        <h2>Function Cart</h2>
+    };
+    
+        require FuncCartStor;
+        my $c     = new FuncCartStor();
+        my $fsize = $c->getSize();
+    
+    if ( $fsize > 0 ) {
+        print qq{
+            You have <a href='main.cgi?section=FuncCartStor&page=funcCart'>$fsize Function(s)</a> in your cart.<br>
+        };
+    } else {
+        print qq{
+            Your <a href='main.cgi?section=FuncCartStor&page=funcCart'>Function Cart</a> is empty.
+        };
+    }
+    
+    
+}
+
 
 ############################################################################
 # printFuncSetMainForm
@@ -196,10 +227,14 @@ sub printFuncSetMainForm {
     my @files = readdir(DIR);
     closedir(DIR); 
 
-    print "<h1>My Workspace - Function Sets</h1>"; 
+    print "<h1>Function Workspace List</h1>"; 
+
+    printCartDiv();
+
+    print "<h2>Function Sets List</h2>";
 
     print qq{
-        <script type="text/javascript" src="$base_url/Workspace.js" >
+        <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
     }; 
  
@@ -380,7 +415,7 @@ sub printFuncSetDetail {
     my $res   = newReadFileHandle($full_path_name);
     while ( my $id = $res->getline() ) {
         # set a limit so that it won't crash web browser
-        if ( $row >= $max_workspace_view ) {
+        if ( $row >= WorkspaceUtil::getMaxWorkspaceView() ) {
             $trunc = 1;
             last;
         }

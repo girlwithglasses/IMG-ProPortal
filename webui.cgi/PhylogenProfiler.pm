@@ -3,7 +3,7 @@
 #   of genes based on common homologs or subtraction of homologs.
 #      --es 02/28/2005
 #
-# $Id: PhylogenProfiler.pm 34217 2015-09-09 20:28:14Z klchu $
+# $Id: PhylogenProfiler.pm 34662 2015-11-10 21:03:55Z klchu $
 #
 ############################################################################
 package PhylogenProfiler;
@@ -24,6 +24,7 @@ use InnerTable;
 use HtmlUtil;
 use TaxonTarDir;
 use GenomeListJSON;
+use HTML::Template;
 
 $| = 1;
 
@@ -52,7 +53,7 @@ my $myimg_jobs_dir 	 = $env->{myimg_jobs_dir};
 my $use_img_clusters     = $env->{use_img_clusters};
 my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
-
+my $top_base_url = $env->{top_base_url};
 my $pfam_base_url    = $env->{pfam_base_url};
 my $cog_base_url     = $env->{cog_base_url};
 my $tigrfam_base_url = $env->{tigrfam_base_url};
@@ -89,11 +90,24 @@ my %obsoleteGenes;
 my %pseudoGenes;
 my $nvl = getNvl();
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Phylogenetic Profiler';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js       = $template->output;
+
+    my @a = ( "FindGenes", '', '', $js );
+    return @a;
+}
+
 sub dispatch {
-    my ($numTaxon) = @_;    # number of saved genomes
+    my ( $self, $numTaxon ) = @_;
     $numTaxon = 0 if ( $numTaxon eq "" );
     my $sid  = getContactOid();
     my $page = param("page");
@@ -2715,7 +2729,7 @@ sub printCogs {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printCogs", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2957,7 +2971,7 @@ sub printPfam {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printPfam", 1 );
             while ( my $s = $FH->getline() ) {
@@ -3194,7 +3208,7 @@ sub printTigrfam {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printTigrfam", 1 );
             while ( my $s = $FH->getline() ) {

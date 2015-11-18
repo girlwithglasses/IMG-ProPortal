@@ -1,7 +1,7 @@
 ############################################################################
 #   Charting utility functions
 #       --ac 3/24/2008
-# $Id: ChartUtil.pm 31823 2014-08-30 05:00:25Z aratner $
+# $Id: ChartUtil.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package ChartUtil;
 require Exporter;
@@ -32,7 +32,7 @@ my $env = getEnv( );
 my $tmp_url = $env->{ tmp_url };
 my $tmp_dir = $env->{ tmp_dir };
 my $base_url = $env->{ base_url };
-
+my $top_base_url = $env->{top_base_url};
 # 
 # Chart structure
 #
@@ -469,7 +469,7 @@ sub printChart {
 	my $width = $chart->WIDTH;
 	my $height = $chart->HEIGHT;
 
-	print "<script src='$base_url/overlib.js'></script>\n";
+	print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
                 ($chart->FILEPATH_PREFIX.".html", "breakdownBy",1);
 	while (my $s = $FH->getline()) {

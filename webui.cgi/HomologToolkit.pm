@@ -28,10 +28,23 @@ my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
 my $top_n_homologs = 10000;  # make a very large number
 my $max_batch = 500; 
 
+sub getPageTitle {
+    return 'Homolog Toolkit';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenes');
+    return @a;
+}
+
+
 ############################################################################
-# dispatch - Dispatch events.
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param( "page" );
     
     if( paramMatch( "homologResults" ) ne "" ) {

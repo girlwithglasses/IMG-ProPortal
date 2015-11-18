@@ -30,10 +30,23 @@ my $taxon_lin_fna_dir = $env->{ taxon_lin_fna_dir };
 my $verbose = $env->{ verbose };
 my $greengenes_blast_url = $env->{ greengenes_blast_url };
 
+sub getPageTitle {
+    return 'Green Genes BLAST';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param( "page" );
 
     runGreenGenesBlast( );

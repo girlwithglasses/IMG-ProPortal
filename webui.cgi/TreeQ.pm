@@ -21,10 +21,19 @@ my $servletUrl = "http://hazelton.lbl.gov/servlet/treeq";
 my $archive = "Tree.jar";
 my $jsUrl = "http://hazelton.lbl.gov/treeq/treeq.js";
 
-############################################################################
-# dispatch
-############################################################################
+sub getPageTitle {
+    return 'Dynamic Tree View';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
      my $page = param( "page" );
      if( paramMatch( "applet" ) ne "" ) {
         printApplet( );

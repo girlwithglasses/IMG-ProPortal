@@ -6,7 +6,7 @@
 #  These were used in the days before this code was placed in Perl modules.
 #    --es 07/07/2005
 #
-# $Id: FindFunctions.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: FindFunctions.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package FindFunctions;
 my $section = "FindFunctions";
@@ -148,7 +148,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;    # number of saved genomes
+    my ( $self, $numTaxon ) = @_;
     $numTaxon = 0 if ( $numTaxon eq "" );
 
     my $page = param("page");

@@ -15,10 +15,23 @@ my $main_cgi = $env->{ main_cgi };
 my $section_cgi = "$main_cgi?section=$section";
 my $verbose = $env->{ verbose };
 
+sub getPageTitle {
+    return 'Genome Property';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('');
+    return @a;
+}
+
+
 ############################################################################
-# dispatch
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param( "page" );
 
     if( $page eq "genomePropertyDetails" ) {

@@ -1,6 +1,6 @@
 ############################################################################
 # hmp taxon list data
-# $Id: HmpTaxonList.pm 33841 2015-07-29 20:48:56Z klchu $
+# $Id: HmpTaxonList.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package HmpTaxonList;
 my $section = "HmpTaxonList";
@@ -22,6 +22,7 @@ my $cgi_url              = $env->{cgi_url};
 my $verbose              = $env->{verbose};
 my $base_dir             = $env->{base_dir};
 my $base_url             = $env->{base_url};
+my $top_base_url             = $env->{top_base_url};
 my $img_internal         = $env->{img_internal};
 my $tmp_dir              = $env->{tmp_dir};
 my $tmp_url              = $env->{tmp_url};
@@ -76,10 +77,28 @@ my $HUMAN_STR = "and p.host_name = 'Homo sapiens'";
 my $HOST_NAME = "Homo sapiens";
 my $OTHER     = "zzzOther";
 
+sub getPageTitle {
+    return 'Hmp Genome List';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    if(WebUtil::paramMatch("_excel")) {
+       WebUtil::printExcelHeader("genome_export$$.xls"); 
+    } else {
+        @a = ('FindGenomes');
+    }
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     my $sid  = getContactOid();
 
@@ -144,9 +163,9 @@ sub printPhyloTreeView {
     close $wfh;
 
     # call the Java TreeView applet:
-    my $archive = "$base_url/TreeViewApplet.jar,"
-	        . "$base_url/nanoxml-2.2.2.jar," 
-		. "$base_url/Dendrogram.jar";
+    my $archive = "$top_base_url/lib/TreeViewApplet.jar,"
+	        . "$top_base_url/lib/nanoxml-2.2.2.jar," 
+		. "$top_base_url/lib/Dendrogram.jar";
     print qq{                                                              
         <APPLET code="edu/stanford/genetics/treeview/applet/ButtonApplet.class"
                 archive="$archive" 

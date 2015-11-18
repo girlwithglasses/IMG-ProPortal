@@ -5,7 +5,7 @@
 #   The tree results are precomputed.
 #    --es 12/04/2006
 #
-# $Id: PhyloCogs.pm 32375 2014-12-03 20:49:53Z jinghuahuang $
+# $Id: PhyloCogs.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package PhyloCogs;
 my $section = "PhyloCogs";
@@ -41,11 +41,19 @@ my $mer_data_dir = $env->{mer_data_dir};
 
 my $max_no_cog_genes = 1000;
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Phylogenetic Marker COGs';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('CompareGenomes');
+    return @a;
+}
+
 sub dispatch {
-    my ($numTaxon) = @_;	# number of saved genomes
+    my ( $self, $numTaxon ) = @_;
     $numTaxon = 0 if ( $numTaxon eq "" );
     my $ans = 1;		# do not use cache pages if $ans
 

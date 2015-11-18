@@ -349,7 +349,7 @@ sub using {
 					'about/systemreqs',
 					'about/tutorial',
 					'about/workshop',
-					'about/forum',
+					'about/user_forum',
 				],
 			},
 			{	id => 'menu/Downloads',

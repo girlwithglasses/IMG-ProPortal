@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: AnalysisProject.pm 31855 2014-09-05 03:51:52Z jinghuahuang $
+# $Id: AnalysisProject.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package AnalysisProject;
 
@@ -89,7 +89,23 @@ my %projectKeyToName = (
 );
 my @projectNameOrder = ( 'itsSpid', 'projectOid', 'sampleOid' );
 
+sub getPageTitle {
+    return 'Analysis Project';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenomes');
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param('page');
 
     if ( $page eq 'metadata' ) {

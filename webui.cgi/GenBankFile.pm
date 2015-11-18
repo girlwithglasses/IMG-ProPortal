@@ -2,7 +2,7 @@
 # GenBankFile.pm - Generate GenBank files.
 #     --es 04/13/2006
 #
-# $Id: GenBankFile.pm 30360 2014-03-08 00:12:52Z jinghuahuang $
+# $Id: GenBankFile.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package GenBankFile;
 my $section = "GenBankFile";
@@ -29,10 +29,23 @@ my $artemis_url       = $env->{artemis_url};
 my $artemis_link      = alink( $artemis_url, "Artemis" );
 my $verbose           = $env->{verbose};
 
+sub getPageTitle {
+    return 'GenBank File Export';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenomes');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param("page");
 
     if ( $page eq "" ) {

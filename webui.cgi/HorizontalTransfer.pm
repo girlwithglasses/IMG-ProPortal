@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: HorizontalTransfer.pm 30400 2014-03-12 19:20:25Z klchu $
+# $Id: HorizontalTransfer.pm 34543 2015-10-20 21:04:12Z klchu $
 #
 package HorizontalTransfer;
 
@@ -30,7 +30,23 @@ my $img_internal = $env->{img_internal};
 my $cgi_tmp_dir  = $env->{cgi_tmp_dir};
 my $user_restricted_site = $env->{user_restricted_site};
 
+sub getPageTitle {
+    return 'Horizontal Transfer';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenomes');
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $sid       = getContactOid();
     my $page = param("page");
     my $taxon_oid = param("taxon_oid");    # REQUIRED ------

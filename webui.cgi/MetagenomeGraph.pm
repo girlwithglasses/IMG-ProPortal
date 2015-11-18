@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: MetagenomeGraph.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: MetagenomeGraph.pm 34545 2015-10-20 21:36:40Z klchu $
 #
 # package to draw 2 recur plots and scatter plot
 #
@@ -49,10 +49,27 @@ my $img_ken               = $env->{img_ken};
 
 my $unknown = "Unknown";
 
+sub getPageTitle {
+    return 'Genome Graph';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    if(WebUtil::paramMatch("noHeader") eq "") {
+        @a = ('FindGenomes');
+    }
+    
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     my $dbh  = dbLogin();
 

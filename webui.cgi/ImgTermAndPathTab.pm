@@ -3,7 +3,7 @@
 # tab the img networks, terms, pathways, and part list
 # I'm trying to wrap the 4 pages into tabs
 #
-# $Id: ImgTermAndPathTab.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: ImgTermAndPathTab.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package ImgTermAndPathTab;
 
@@ -29,10 +29,23 @@ my $inner_cgi   = $env->{inner_cgi};
 my $cgi_tmp_dir = $env->{cgi_tmp_dir};
 my $verbose     = $env->{verbose};
 
+sub getPageTitle {
+    return 'IMG Terms & Pathways';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
 
     if ( $page eq "tab1" ) {

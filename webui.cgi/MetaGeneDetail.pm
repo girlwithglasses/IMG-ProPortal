@@ -1,6 +1,6 @@
 ###########################################################################
 # MetaGeneDetail.pm - file version
-# $Id: MetaGeneDetail.pm 34254 2015-09-14 22:12:05Z klchu $
+# $Id: MetaGeneDetail.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package MetaGeneDetail;
 my $section = "MetaGeneDetail";
@@ -61,7 +61,7 @@ my $ipr_base_url            = $env->{ipr_base_url};
 my $ipr_base_url2            = $env->{ipr_base_url2};
 my $ipr_base_url3            = $env->{ipr_base_url3};
 my $ipr_base_url4           = $env->{ipr_base_url4};
-
+my $top_base_url = $env->{top_base_url};
 my $pirsf_base_url          = $env->{pirsf_base_url};
 my $tigrfam_base_url        = $env->{tigrfam_base_url};
 my $unigene_base_url        = $env->{unigene_base_url};
@@ -144,10 +144,22 @@ $top_annotations_to_show = 100 if $top_annotations_to_show == 0;
 
 my $nvl = getNvl();
 
+sub getPageTitle {
+    return 'Metagenome Gene Details';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenes');
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $sid = getContactOid();
 
     my $page = param("page");
@@ -3058,7 +3070,7 @@ sub printMetaFuncEvidence {
     print "</tr>\n";
     print "</table>\n";
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     print toolTipCode();
 }
 
@@ -3093,7 +3105,7 @@ sub printMetaRnaNeighborhood {
         print "</tr>\n";
     }
     print "</table>\n";
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     print toolTipCode();
 }
 
@@ -4499,7 +4511,7 @@ sub printTopHomologs {
         $percent_identity = sprintf( "%.2f", $percent_identity );
         $count++;
 
-        my $gene_url  = "$section_cgi&page=geneDetail&gene_oid=$homolog";
+        my $gene_url  = "main.cgi?section=GeneDetail&page=geneDetail&gene_oid=$homolog";
         my $taxon_url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
         my $evalue2   = sprintf( "%.1e", $evalue );
         my $op;

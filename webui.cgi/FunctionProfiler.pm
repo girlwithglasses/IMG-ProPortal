@@ -2,7 +2,7 @@
 # FunctionProfiler.pm allows to select and view functions e.g. COGs
 # against genomes
 #
-# $Id: FunctionProfiler.pm 29975 2014-01-28 19:30:09Z klchu $
+# $Id: FunctionProfiler.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package FunctionProfiler;
 my $section = "FunctionProfiler";
@@ -14,19 +14,41 @@ use WebUtil;
 use WebConfig;
 use MetaUtil;
 use GenomeListJSON;
+use HTML::Template;
 
 my $env                 = getEnv();
 my $cgi_url             = $env->{cgi_url};
-my $base_dir            = $env->{base_dir};
+my $base_dir               = $env->{base_dir};
+my $base_url               = $env->{base_url};
+my $YUI                    = $env->{yui_dir_28};
 my $include_metagenomes = $env->{include_metagenomes};
 
 $| = 1;
+
+sub getPageTitle {
+    return 'Function Profile';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    
+    
+    my @a = ( "CompareGenomes", "", "", $js);
+    return @a;
+}
 
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param("page");
 
     if ( $page eq "profiler" ) {

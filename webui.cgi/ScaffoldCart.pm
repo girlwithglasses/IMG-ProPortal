@@ -1,6 +1,6 @@
 ############################################################################
 # ScaffoldCart.pm - Cart for Scaffolds
-# $Id: ScaffoldCart.pm 34451 2015-10-08 03:40:43Z aratner $
+# $Id: ScaffoldCart.pm 34643 2015-11-06 21:10:04Z jinghuahuang $
 ############################################################################
 package ScaffoldCart;
 
@@ -68,10 +68,34 @@ my $max_gene_cnt_for_taxon = 200000000;
 
 my $contact_oid;
 
+sub getPageTitle {
+    return 'Scaffold Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+        if (   WebUtil::paramMatch("exportScaffoldCart") ne ""
+            || WebUtil::paramMatch("exportFasta") ne "" )
+        {
+
+            # export excel
+            WebUtil::setSessionParam( "lastCart", "scaffoldCart" );
+        } elsif ( WebUtil::paramMatch("addSelectedToGeneCart") ne "" ) {
+            # 
+        } else {
+            WebUtil::setSessionParam( "lastCart", "scaffoldCart" );
+            @a = ("AnaCart");
+        }
+    return @a;
+}
+
+
 ############################################################################
-# dispatch - Dispatch to pages for this section.
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     #timeout( 60 * $merfs_timeout_mins );
     timeout( 60 * 60 );
 
@@ -285,6 +309,7 @@ CSS
     $it->addColSpec( "Select" );
     $it->addColSpec( "Scaffold ID", "asc", "left" );
     $it->addColSpec( "Scaffold Name", "asc", "left" );
+    $it->addColSpec( "Genome ID", "asc", "right" );
     $it->addColSpec( "Genome", "asc", "left" );
     $it->addColSpec( "Gene Count", "asc", "right" );
     $it->addColSpec( "Sequence Length<br/>(bp)", "asc", "right" );
@@ -307,34 +332,15 @@ CSS
     $cnt = 0;
 
     if ( scalar(@dbOids) > 0 ) {
-        OracleUtil::truncTable( $dbh, "gtt_num_id" );
-        OracleUtil::insertDataArray( $dbh, "gtt_num_id", $dbOids_ref );
-
-        # check permission
-        my $rclause   = WebUtil::urClause("s.taxon");
-        my $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
-
-        # get scaffold cart for display
-        my $sql = qq{
-            select s.scaffold_oid, s.scaffold_name,
-            s.ext_accession, s.taxon, st.seq_length,
-            st.gc_percent, s.read_depth,
-            st.count_total_gene, t.taxon_display_name, t.genome_type, t.domain
-            from scaffold s, gtt_num_id sc, scaffold_stats st, taxon t
-            where s.scaffold_oid = sc.id
-            and s.scaffold_oid = st.scaffold_oid
-            and s.taxon = t.taxon_oid
-            $rclause
-            $imgClause
-            order by 1
-        };
+        my $db_str = OracleUtil::getNumberIdsInClause( $dbh, @dbOids );
+        my $sql = QueryUtil::getScaffoldDataSql($db_str);
         my $cur = execSql( $dbh, $sql, $verbose );
 
         for ( ; ; ) {
             my (
                 $scaffold_oid,       $scaffold_name, $ext_acc,    $taxon_oid,
                 $seq_length,         $gc_percent,    $read_depth, $gene_count,
-                $taxon_display_name, $genome_type,   $domain
+                $taxon_display_name, $genome_type
 
             ) = $cur->fetchrow();
             last if !$scaffold_oid;
@@ -348,6 +354,8 @@ CSS
 		     . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
             $r .= $scaffold_oid . $sd . alink( $url2, $scaffold_oid ) . "\t";
             $r .= $scaffold_name . $sd . "$scaffold_name\t";
+
+            $r .= $taxon_oid . $sd . $taxon_oid . "\t";
 
             $taxon_display_name .= " (*)"
               if ( $genome_type eq "metagenome" );
@@ -380,7 +388,9 @@ CSS
             "&seq_length=$seq_length";
             $r .= $seq_length . $sd . alink( $scaf_len_url, $seq_length ) . "\t";
 
-            $gc_percent = sprintf( " %.2f", $gc_percent );
+            if ( $gc_percent ) {
+                $gc_percent = sprintf( " %.2f", $gc_percent );
+            }
             $r .= $gc_percent . $sd . "$gc_percent\t";
 
             if ($include_metagenomes) {
@@ -399,7 +409,9 @@ CSS
             $cnt++;
         }
         $cur->finish();
-        OracleUtil::truncTable( $dbh, "gtt_num_id" );
+
+        OracleUtil::truncTable( $dbh, "gtt_num_id" )
+          if ( $db_str =~ /gtt_num_id/i );
     }
 
     if ( scalar(@metaOids) > 0 ) {
@@ -436,7 +448,7 @@ CSS
                 next;
             }
 
-            my $batch_id          = $batch_ids{$s_oid};
+            my $batch_id = $batch_ids{$s_oid};
 
             my $r;
             $r .= "$sd<input type='checkbox' name='$select_id_name' value='$s_oid' />\t";
@@ -448,6 +460,8 @@ CSS
             $r .= $s_oid . $sd . alink( $url2, $scaffold_oid ) . "\t";
 
             $r .= '' . $sd . "\t";    #scaffold_name
+
+            $r .= $taxon_oid . $sd . $taxon_oid . "\t";
 
             # taxon
             my $taxon_display_name = $taxon_name_h{$taxon_oid};
@@ -2571,6 +2585,7 @@ sub printScaffoldDataFile {
         # print header
         print $wfh "Scaffold ID\t";
         print $wfh "Scaffold Name\t";
+        print $wfh "Genome ID\t";
         print $wfh "Genome\t";
         print $wfh "Gene Count\t";
         print $wfh "Sequence Length\t";
@@ -2593,6 +2608,7 @@ sub printScaffoldDataFile {
         # print header
         print "Scaffold ID\t";
         print "Scaffold Name\t";
+        print "Genome ID\t";
         print "Genome\t";
         print "Gene Count\t";
         print "Sequence Length\t";
@@ -2625,8 +2641,8 @@ sub printScaffoldDataFile {
         my $imgClause = WebUtil::imgClause('tx');
 
         my $sql = qq{
-            select s.scaffold_oid, s.scaffold_name,
-            s.ext_accession, tx.taxon_name, st.seq_length,
+            select s.scaffold_oid, s.scaffold_name, s.ext_accession, 
+            tx.taxon_oid, tx.taxon_name, st.seq_length,
             st.gc_percent, s.read_depth,
             st.count_total_gene
             from scaffold s, scaffold_stats st, taxon tx
@@ -2639,13 +2655,13 @@ sub printScaffoldDataFile {
         my $cur = prepSql( $dbh, $sql, $verbose );
         for my $scaffold_oid (@dbOids) {
             execStmt( $cur, $scaffold_oid );
-            my ( $s_oid, $scaffold_name, $ext_acc, $taxon, $seq_length,
+            my ( $s_oid, $scaffold_name, $ext_acc, $t_oid, $taxon, $seq_length,
                 $gc_percent, $read_depth, $gene_count )
               = $cur->fetchrow();
             if ($s_oid) {
                 $gc_percent = sprintf( " %.2f", $gc_percent );
                 if ( $wfh ) {
-                    print $wfh "$s_oid\t$scaffold_name\t$taxon\t"
+                    print $wfh "$s_oid\t$scaffold_name\t$t_oid\t$taxon\t"
                       . "$gene_count\t$seq_length\t$gc_percent";
                     if ($include_metagenomes) {
                         print $wfh "\t";
@@ -2655,7 +2671,7 @@ sub printScaffoldDataFile {
                     print $wfh "\r\n";
                 }
                 else {
-                    print "$s_oid\t$scaffold_name\t$taxon\t"
+                    print "$s_oid\t$scaffold_name\t$t_oid\t$taxon\t"
                       . "$gene_count\t$seq_length\t$gc_percent";
                     if ($include_metagenomes) {
                         print "\t";
@@ -2718,6 +2734,7 @@ sub printScaffoldDataFile {
             if ( $wfh ) {
                 print $wfh "$s_oid\t";
                 print $wfh "\t";    #scaffold_name
+                print $wfh "$taxon_oid\t";
                 print $wfh "$taxon_display_name\t";
                 print $wfh "$gene_count\t";
                 print $wfh "$seq_length\t";
@@ -2743,6 +2760,7 @@ sub printScaffoldDataFile {
             else {
                 print "$s_oid\t";
                 print "\t";    #scaffold_name
+                print "$taxon_oid\t";
                 print "$taxon_display_name\t";
                 print "$gene_count\t";
                 print "$seq_length\t";

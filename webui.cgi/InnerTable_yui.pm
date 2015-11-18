@@ -61,7 +61,7 @@
 #           and descending, the sort direction specfied here will be sort
 #           the first time that column heading is clicked to be sorted.
 #
-# $Id: InnerTable_yui.pm 34105 2015-08-25 16:19:15Z aireland $
+# $Id: InnerTable_yui.pm 34655 2015-11-09 21:07:43Z klchu $
 ############################################################################
 package InnerTable;
 use strict;
@@ -79,6 +79,7 @@ my $main_cgi    = $env->{ main_cgi };
 my $verbose     = $env->{ verbose };
 my $cgi_url     = $env->{ cgi_url };
 my $YUI         = $env->{yui_dir_28};     #get local path to YUI libraries
+my $top_base_url = $env->{top_base_url};
 my $xml_cgi = $cgi_url .'/xml.cgi';
 my $sdDelim = "#==#";  # Hope this string doesn't appear in the data!! +BSJ 05/23/12
 
@@ -548,6 +549,7 @@ sub printOuterTable {
        }
        $yuiStr =~ s/__yui_url__/$YUI/g;
        $yuiStr =~ s/__base_url__/$base_url/g;
+       $yuiStr =~ s/__top_base_url__/$top_base_url/g;
 ######## uncomment line below for debug version of YUI JS headers #######
 #       $yuiStr =~ s/-min.js/-debug.js/g;
 ######## uncomment line above for debug version of YUI JS headers #######

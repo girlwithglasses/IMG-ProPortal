@@ -30,10 +30,24 @@ my $max_partsList_batch = 250;
 my $max_taxon_batch = 900;
 my $maxProfileOccurIds = 300;
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "imgPartsListCart" );
+    return 'IMG Parts List Cart';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param( "page" );
 
     if( $page eq "imgPartsListCart" || 

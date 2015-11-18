@@ -16,16 +16,21 @@
 @import "partials/layout";	// general page layouts
 @import "partials/header";
 @import "partials/footer";
-@import "partials/menu";	// IMG menu
-@import "partials/nav"; 	// ProPortal navigation
-@import "partials/breadcrumbs"; // breadcrumbs!
-@import "partials/main";
 @import "partials/forms";
+@import "partials/login-form";
 @import "partials/tables";
+@import "partials/nav"; // general navigation layout, etc.
+@import "partials/nav_jgi-links";
+@import "partials/nav_horiz-bar";
+@import "partials/nav_sidebar";
+@import "partials/nav_breadcrumbs"; // breadcrumbs!
+@import "partials/links";
 @import "partials/extras";	// extra bits and pieces
 @import "partials/graph";
+@import "partials/phyloviewer";
 
 // print style
 @import "partials/print";
 
 // body { @include background-grid(1.5em, #ccc); }
+@import "modules/errors";

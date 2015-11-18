@@ -1,7 +1,7 @@
 ###########################################################################
 # MissingGenes - Module for searching for missing genes.
 #
-# $Id: MissingGenes.pm 34457 2015-10-08 22:15:47Z imachen $
+# $Id: MissingGenes.pm 34566 2015-10-23 18:38:02Z imachen $
 ############################################################################
 package MissingGenes;
 my $section = "MissingGenes";
@@ -30,11 +30,14 @@ my $img_lite         = $env->{img_lite};
 my $use_gene_priam   = $env->{use_gene_priam};
 my $show_myimg_login = $env->{show_myimg_login};
 
+my $default_timeout_mins = 20;
+
 ############################################################################
-# dispatch
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    timeout( 60 * 20 );    # timeout in 20 minutes
+#    timeout( 60 * 20 );    # timeout in 20 minutes
+    timeout( 60 * $default_timeout_mins );
     my $page = param("page");
 
     if ( $page eq 'taxonGenesWithPriam' ) {
@@ -229,7 +232,7 @@ sub printSimilarityPage {
 # printCandidatesForm - Find candidates for missing genes.
 #    Fill in form.
 #
-# function can be ITERM or EC
+# function can be ITERM or EC or KO
 ############################################################################
 sub printCandidatesForm {
     my $taxon_oid        = param("taxon_oid");
@@ -312,6 +315,21 @@ sub printCandidatesForm {
 	}
 	$cur2->finish(); 
     }
+    elsif ( $funcId =~ /^KO/ ) {
+	## show enzymes too
+	my $sql2 = "select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+	for (;;) { 
+	    my ($ko2, $name2) = $cur2->fetchrow();
+	    last if ! $ko2; 
+
+	    if ( $match_ko && ($match_ko ne $ko2) ) {
+		next;
+	    }
+	    print "<p>$ko2 ($name2)\n";
+	}
+	$cur2->finish(); 
+    }
 
     # list options
     print "<p>\n";
@@ -363,6 +381,8 @@ sub printCandidatesForm {
         print "IMG terms";
     } elsif ( $tag eq 'EC' ) {
         print "enzymes";
+    } elsif ( $tag eq 'KO' ) {
+        print "KO terms";
     }
     print " through homologs in other genomes.<br/>\n";
     print "Homologs from the query genome <i>"
@@ -376,6 +396,8 @@ sub printCandidatesForm {
         print "gene-term association.<br/>\n";
     } elsif ( $tag eq 'EC' ) {
         print "gene-enzyme association.<br/>\n";
+    } elsif ( $tag eq 'KO' ) {
+        print "gene-KO association.<br/>\n";
     }
     print "</p>\n";
     printStatusLine( "Loading ...", 1 );
@@ -715,7 +737,7 @@ sub printOrthologCandidates {
     #$dbh->disconnect();
 
     # ko?
-    if ($with_ko_ec) {
+    if ($with_ko_ec && ($tag eq 'KO' || $tag eq 'EC') ) {
         my @ko_ec_recs = getKoEcRecords();
         my $count_h    = @recs;
         my $count_p    = @ko_ec_recs;
@@ -726,6 +748,7 @@ sub printOrthologCandidates {
 	    ( "$cnt1 distinct hits loaded. "
 	      . "($count_h total orthologs hits; $count_p KO hits)", 2 );
     } else {
+
         my $cnt1 = printRecords( "Ortholog", $tag, \@recs );
 
         print end_form();
@@ -783,6 +806,19 @@ sub printHomologCandidates {
 			 where ge.enzymes = ? )
 	     };
          push(@bindList_cond, $funcId);
+    } elsif ( $tag eq 'KO' ) {
+	my $sql2 = "select definition from ko_term where ko_id = ?";
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+	($func_name) = $cur2->fetchrow();
+	$cur2->finish();
+
+        $taxon_func_cond = qq{
+	     and tx.taxon_oid in
+		 (select distinct ge.taxon
+			 from gene_ko_terms ge
+			 where ge.ko_terms = ? )
+	     };
+         push(@bindList_cond, $funcId);
     }
 
     my $taxon_display_name = taxonOid2Name( $dbh, $taxon_oid );
@@ -807,6 +843,21 @@ sub printHomologCandidates {
 		next;
 	    }
 	    print "<p>$ko2 ($name2): $def2\n";
+	}
+	$cur2->finish(); 
+    }
+    elsif ( $funcId =~ /^KO/ ) {
+	## show enzymes too
+	my $sql2 = "select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+	for (;;) { 
+	    my ($ko2, $name2) = $cur2->fetchrow();
+	    last if ! $ko2; 
+
+	    if ( $match_ko && ($match_ko ne $ko2) ) {
+		next;
+	    }
+	    print "<p>$ko2 ($name2)\n";
 	}
 	$cur2->finish(); 
     }
@@ -918,7 +969,7 @@ sub printHomologCandidates {
     printStartWorkingDiv();
     my $merfs_timeout_mins = $env->{merfs_timeout_mins};
     if ( ! $merfs_timeout_mins ) {
-	$merfs_timeout_mins = 60;
+	$merfs_timeout_mins = $default_timeout_mins;
     } 
     timeout( 60 * $merfs_timeout_mins );
     my $start_time  = time();
@@ -940,10 +991,19 @@ sub printHomologCandidates {
         } elsif ( $tag eq 'EC' ) {
             getHomologs_EC( $dbh, $taxon_oid, $taxon_oid2, $funcId,
                             $minPercIdent, $maxEvalue, $maxHits, \@recs );
+        } elsif ( $tag eq 'KO' ) {
+            getHomologs_KO( $dbh, $taxon_oid, $taxon_oid2, $funcId,
+                            $minPercIdent, $maxEvalue, $maxHits, \@recs );
         }
+
+	### for test
+#	if ( scalar(@recs) > 0 ) {
+#	    last;
+#	}
     }
 
     printEndWorkingDiv();
+
     if ( $timeout_msg ) {
 	print "<p><font color='red'>Warning: " . $timeout_msg .
 	    "</font>\n";
@@ -952,10 +1012,11 @@ sub printHomologCandidates {
     #$dbh->disconnect();
 
     # KO
-    if ($with_ko_ec) {
+    if ($with_ko_ec && ($tag eq 'KO' || $tag eq 'EC') ) {
         my @ko_ec_recs = getKoEcRecords();
         my $count_h    = @recs;
         my $count_p    = @ko_ec_recs;
+
         my $cnt1       =
           printRecordsWithKoEc( "Homolog", $tag, \@recs, \@ko_ec_recs );
         print end_form();
@@ -1298,6 +1359,7 @@ sub printSimRecords {
           . alink( $url, $taxon_display_name2 ) . "\t";
 
         $r .= "$percent_identity\t";
+
         $r .=
           $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
         $r .=
@@ -1833,6 +1895,123 @@ sub getHomologs_EC {
 }
 
 ############################################################################
+# getHomologs_KO - Get list of homologs between pairs of taxons.
+#                  (based on gene-ko)
+############################################################################
+sub getHomologs_KO {
+    my ( $dbh, $taxon_oid1, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue,
+         $maxHits, $recs_ref )
+      = @_;
+    my ( $tag, $term_oid ) = split( /:/, $funcId );
+
+    my $taxon_name = taxonOid2Name( $dbh, $taxon_oid2 );
+
+    my $sql = qq{
+        select gk.gene_oid
+	from gene_ko_terms gk, gene g
+	where gk.ko_terms = ?
+	and gk.gene_oid = g.gene_oid
+	and g.taxon = ?
+	minus select gene_oid from gene_fusion_components
+    };
+
+    my %subjGeneHasKo;
+    my $cur = execSql( $dbh, $sql, $verbose, $funcId, $taxon_oid2 );
+    for ( ; ; ) {
+        my ($gene_oid) = $cur->fetchrow();
+        last if !$gene_oid;
+
+        $subjGeneHasKo{$gene_oid} = 1;
+    }
+    $cur->finish();
+
+    my @recs;
+    my $count = 0;
+    my @rows;
+
+    TaxonTarDir::getGenomePairData( $taxon_oid1, $taxon_oid2, \@rows );
+
+    my $nRows = @rows;
+    if( $nRows == 0 ) {
+	return;
+    }
+    for my $s( @rows ) {
+        my (
+             $qid,       $sid,   $percIdent, $alen,
+             $nMisMatch, $nGaps, $qstart,    $qend,
+             $sstart,    $send,  $evalue,    $bitScore
+          )
+          = split( /\t/, $s );
+        next if $evalue > $maxEvalue;
+        next if $percIdent < $minPercIdent;
+
+        my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
+        my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid );
+
+        next if !$subjGeneHasKo{$sgene_oid};
+        next
+          if !reciprocalHit( $taxon_oid2, $sid, $taxon_oid1, $qid,
+                             $minPercIdent, $maxEvalue );
+        $count++;
+        my $sql = qq{
+	    select g.gene_display_name
+	    from gene g
+	    where g.gene_oid = ?
+	    };
+        my $cur = execSql( $dbh, $sql, $verbose, $qgene_oid );
+        my ($gene_display_name1) = $cur->fetchrow();
+        #$cur->finish();
+
+        #
+        my $sql = qq{
+	    select g.gene_display_name, 
+	       tx.taxon_oid, tx.taxon_display_name,
+	       tx.domain, tx.seq_status, k.definition
+	    from gene g, taxon tx, gene_ko_terms gk, ko_term k
+	    where g.gene_oid = ?
+	    and gk.gene_oid = g.gene_oid
+	    and gk.ko_terms = k.ko_id
+	    and g.taxon = tx.taxon_oid
+	    };
+        my $cur = execSql( $dbh, $sql, $verbose, $sgene_oid );
+        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2,
+             $seq_status2, $term2 )
+          = $cur->fetchrow();
+        #$cur->finish();
+        my $nRecs = @$recs_ref;
+        if ( $nRecs > $maxHits ) {
+            last;
+        }
+        my $r;
+        $r .= "$qgene_oid\t";
+        $r .= "$gene_display_name1\t";
+        $r .= "$qlen\t";
+        $r .= "$sgene_oid\t";
+
+        #$r .= "$gene_display_name2\t";
+        $r .= "$term2\t";
+        $r .= "$slen\t";
+        $r .= "$taxon_oid2\t";
+        $r .= "$taxon_display_name2\t";
+        $r .= "$domain2\t";
+        $r .= "$seq_status2\t";
+        $r .= "$percIdent\t";
+        $r .= "$bitScore\t";
+        $r .= "$evalue\t";
+        $r .= "$qstart\t";
+        $r .= "$qend\t";
+        $r .= "$sstart\t";
+        $r .= "$send\t";
+        push( @$recs_ref, $r );
+    }
+    #$rfh->close();
+    print "<font color='red'>" if $count > 0;
+    print "$count hits found for <i>" . escHtml($taxon_name) . "</i>";
+    print "</font>" if $count > 0;
+    print "<br/>\n";
+}
+
+############################################################################
 # reciprocalHit - Check for reciprocal hit.
 ############################################################################
 sub reciprocalHit {
@@ -1960,6 +2139,7 @@ sub printRecords {
         }
     }
 
+    my $dbh = dbLogin();
     for my $r0 (@$recs_ref) {
         my (
              $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
@@ -2029,8 +2209,14 @@ sub printRecords {
 
         $r .= "$percent_identity\t";
 
+	if ( ! $aa_seq_length1 && isInt($gene_oid1)) {
+	    $aa_seq_length1 = geneOid2AASeqLength($dbh, $gene_oid1);
+	}
         $r .=
           $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+	if ( ! $aa_seq_length2 && isInt($gene_oid2)) {
+	    $aa_seq_length2 = geneOid2AASeqLength($dbh, $gene_oid2);
+	}
         $r .=
           $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
 
@@ -5508,9 +5694,14 @@ sub printKoEcCandidateList {
     my $func_name = "";
     if ( $tag eq 'EC' ) {
         $func_name = enzymeName( $dbh, $funcId );
+    } elsif ( $tag eq 'KO' ) {
+	my $sql2 = "select definition from ko_term where ko_id = ?";
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+	($func_name) = $cur2->fetchrow();
+	$cur2->finish();
     } else {
         #$dbh->disconnect();
-        webError("This function is only applicable to enzymes.");
+        webError("This function is only applicable to enzymes or KOs.");
         return;
     }
 
@@ -5538,6 +5729,21 @@ sub printKoEcCandidateList {
 		next;
 	    }
 	    print "<p>$ko2 ($name2): $def2\n";
+	}
+	$cur2->finish(); 
+    }
+    elsif ( $funcId =~ /^KO/ ) {
+	## show enzymes too
+	my $sql2 = "select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+	for (;;) { 
+	    my ($ko2, $name2) = $cur2->fetchrow();
+	    last if ! $ko2; 
+
+	    if ( $match_ko && ($match_ko ne $ko2) ) {
+		next;
+	    }
+	    print "<p>$ko2 ($name2)\n";
 	}
 	$cur2->finish(); 
     }
@@ -5581,7 +5787,7 @@ sub printKoEcCandidateList {
 
 ############################################################################
 # getKoEcRecords
-# (This will be for EC only)
+# (This will be for EC or KO only)
 ############################################################################
 sub getKoEcRecords {
     my ($taxon_oid) = param("taxon_oid");
@@ -5623,8 +5829,30 @@ sub getKoEcRecords {
          $taxonClause
 	 };
 
+    if ( $tag eq 'KO' ) {
+	$sql         = qq{
+	 select g1.gene_oid, g1.gene_display_name,
+	 kt.ko_id, kt.definition,
+	 g1.aa_seq_length, gckt.align_length, gckt.percent_identity,
+	 gckt.bit_score, gckt.evalue,
+	 gckt.query_start, gckt.query_end, gckt.subj_start, gckt.subj_end
+	     from gene g1, gene_candidate_ko_terms gckt,
+	     ko_term kt
+	     where g1.gene_oid = gckt.gene_oid
+	     and g1.taxon = ?
+	     and gckt.ko_terms = kt.ko_id
+	     and gckt.ko_terms = ?
+	     and gckt.percent_identity >= ?
+	     and gckt.evalue <= ?
+	     and gckt.bit_score >= ?
+         $taxonClause
+         order by 1, 7 desc, 8 desc
+	 };
+    }
+
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, $funcId, $minPercIdent, $maxEvalue, $bitScore );
     my @ko_ec_recs;
+    my $last_gene_oid = 0;
     for ( ; ; ) {
         my (
              $gene_oid1,        $gene_display_name1, $ko_id,
@@ -5647,6 +5875,10 @@ sub getKoEcRecords {
             next;
         }
 
+	if ( $gene_oid1 == $last_gene_oid ) {
+	    next;
+	}
+
         my $r;
         $r .= "$gene_oid1\t";
         $r .= "$gene_display_name1\t";
@@ -5660,7 +5892,9 @@ sub getKoEcRecords {
         $r .= "$query_end\t";
         $r .= "$subj_start\t";
         $r .= "$subj_end\t";
+
         push( @ko_ec_recs, $r );
+	$last_gene_oid = $gene_oid1;
     }
     $cur->finish();
 
@@ -5683,17 +5917,18 @@ sub printRecordsWithKoEc {
         print "</p>\n";
         return 0;
     }
+
     my $it = new InnerTable( 0, "missingGenes$$", "missingGenes", 12 );
     $it->addColSpec("Select");
     $it->addColSpec( "Candidate Gene",         "number asc", "left" );
     $it->addColSpec( "Candidate Gene Product", "char asc",   "left" );
-    if ( $tag eq 'EC' ) {
+    if ( $tag eq 'EC' || $tag eq 'KO' ) {
         $it->addColSpec( "Enzyme for Candidate Gene", "char asc", "left" );
     }
     $it->addColSpec( "$ortho_homo Gene", "number asc", "left" );
     $it->addColSpec( "$ortho_homo Gene Product<br/>(IMG Term)",
                      "char asc", "left" );
-    if ( $tag eq 'EC' ) {
+    if ( $tag eq 'EC' || $tag eq 'KO' ) {
         $it->addColSpec( "Enzyme for $ortho_homo Gene", "char asc", "left" );
     }
 
@@ -5769,6 +6004,7 @@ sub printRecordsWithKoEc {
         }
     }
 
+    my $dbh = dbLogin();
     for my $r0 (@$recs_ref) {
         my (
              $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
@@ -5834,8 +6070,14 @@ sub printRecordsWithKoEc {
 
         $r .= "$percent_identity\t";
 
+	if ( ! $aa_seq_length1 && isInt($gene_oid1)) {
+	    $aa_seq_length1 = geneOid2AASeqLength($dbh, $gene_oid1);
+	}
         $r .=
           $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+	if ( ! $aa_seq_length2 && isInt($gene_oid2)) {
+	    $aa_seq_length2 = geneOid2AASeqLength($dbh, $gene_oid2);
+	}
         $r .=
           $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
 
@@ -5897,7 +6139,6 @@ sub printRecordsWithKoEc {
     # print the genes that only have KO hits
     for my $key ( keys %ko_ec_h ) {
         if ( $gene_score{$key} ) {
-
             # skip
             next;
         }
@@ -5927,7 +6168,12 @@ sub printRecordsWithKoEc {
         my $enzyme1 = getEnzymeForGene($key);
         $r .= "$enzyme1\t";
 
-        $r .= "\t\t\t\t\t\t\t\t\t\t\t";
+	if ( $tag eq 'EC' || $tag eq 'KO' ) {
+	    $r .= "\t\t\t\t\t\t\t\t\t\t\t";
+	}
+	else {
+	    $r .= "\t\t\t\t\t\t\t\t\t";
+	}
         $r .= "Yes\t";
         my $ko_url =
           "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id";
@@ -6032,6 +6278,9 @@ sub printKoEcRecords {
         print "</p>\n";
         return 0;
     }
+
+##    print "<p>We have $nKoEcRecs records.\n";
+
     my $it = new InnerTable( 0, "missingGenes$$", "missingGenes", 12 );
     $it->addColSpec("Select");
     $it->addColSpec( "Candidate Gene",            "number asc", "left" );

@@ -1,7 +1,7 @@
 ###########################################################################
 # Display kegg map and do appropriate highlighting.
 # --es  11/03/2004
-# $Id: KeggMap.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: KeggMap.pm 34545 2015-10-20 21:36:40Z klchu $
 ###########################################################################
 package KeggMap;
 my $section = "KeggMap";
@@ -50,10 +50,23 @@ my %roiDone;
 # see GeneDetails::printKeggPathways()
 my %badmaps = ('map01100' => 1);
 
+
+sub getPageTitle {
+    return 'KEGG Map';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     my $map_id   = param("map_id");
     timeout( 60 * 20 );    # timeout in 20 mins (from main.pl)

@@ -1,11 +1,4 @@
 package D3ChartUtil; 
-require Exporter; 
-@ISA = qw( Exporter ); 
-@EXPORT = qw(
-    printHBarChart
-    printPieChart
-    printDonutChart
-); 
 
 use strict; 
 use DBI;
@@ -22,6 +15,7 @@ my $verbose = $env->{verbose};
 my $tmp_url = $env->{ tmp_url }; 
 my $tmp_dir = $env->{ tmp_dir }; 
 my $base_url = $env->{ base_url }; 
+my $top_base_url = $env->{top_base_url};
 
 sub printHBarChart {
     my ($data, $url2, $additional_text, $chart_div_name) = @_; 
@@ -39,12 +33,12 @@ sub printHBarChart {
 
     print qq{
       <link rel="stylesheet" type="text/css"
-            href="$base_url/d3barchart.css" />
+            href="$top_base_url/css/d3barchart.css" />
 
-      <script src="$base_url/d3.min.js"></script>
+      <script src="$top_base_url/js/d3.min.js"></script>
       <span id="ruler"></span>
       <svg id="$svg_id"></svg>
-      <script src="$base_url/d3barchart.js"></script>
+      <script src="$top_base_url/js/d3barchart.js"></script>
       <script>
           window.onload = drawHorizontalBars("$svg_id", "$url2", $data);
       </script>
@@ -76,11 +70,11 @@ sub printPieChart {
 
     print qq{
       <link rel="stylesheet" type="text/css"
-            href="$base_url/d3piechart.css" />
-      <script src="$base_url/d3.min.js"></script>
+            href="$top_base_url/css/d3piechart.css" />
+      <script src="$top_base_url/js/d3.min.js"></script>
       <span id="ruler"></span>
       <div id="$div_id"></div>
-      <script src="$base_url/d3piechart.js"></script>
+      <script src="$top_base_url/js/d3piechart.js"></script>
       <script>
           window.onload = drawPieChart
               ("$div_id", "$url1", "$url2", $data, $dolegend, $dotable, $columns, 
@@ -127,7 +121,7 @@ td, th {
 }
 </style>
 };
-    print "<script src='$base_url/d3.min.js'></script>\n";
+    print "<script src='$top_base_url/js/d3.min.js'></script>\n";
     print "<script>\n";
 
     print "var width = 500, height = 500, radius = Math.min(width, height) / 2;\n";

@@ -1,6 +1,6 @@
 ############################################################################
 # Creates a Bar Chart as a PNG file
-# $Id: BarChartImage.pm 32375 2014-12-03 20:49:53Z jinghuahuang $
+# $Id: BarChartImage.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package BarChartImage;
 
@@ -22,7 +22,7 @@ my $verbose = $env->{verbose};
 
 # location of yahoo's api
 my $YUI = $env->{yui_dir_28};
-
+my $top_base_url = $env->{top_base_url};
 
 sub dispatch {
     my $page = param("page");
@@ -197,7 +197,7 @@ sub getImage {
         if ($st == 0) { 
             my $url = "$tmp_url/".$chart->FILE_PREFIX.".png"; 
             my $imagemap = "#".$chart->FILE_PREFIX;
-	    my $script = "$base_url/overlib.js";
+	    my $script = "$top_base_url/js/overlib.js";
             my $width = $chart->WIDTH;
             my $height = $chart->HEIGHT;
 
@@ -403,7 +403,7 @@ sub getImage2 {
         if ($st == 0) { 
             my $url = "$tmp_url/".$chart->FILE_PREFIX.".png"; 
             my $imagemap = "#".$chart->FILE_PREFIX; 
-            my $script = "$base_url/overlib.js";
+            my $script = "$top_base_url/js/overlib.js";
             my $width = $chart->WIDTH;
             my $height = $chart->HEIGHT;
 
@@ -782,7 +782,7 @@ sub getImage3 {
         if ($st == 0) {
             my $url = "$tmp_url/".$chart->FILE_PREFIX.".png"; 
             my $imagemap = "#".$chart->FILE_PREFIX;
-            my $script = "$base_url/overlib.js";
+            my $script = "$top_base_url/js/overlib.js";
             my $width = $chart->WIDTH;
             my $height = $chart->HEIGHT;
 

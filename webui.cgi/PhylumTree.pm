@@ -7,7 +7,7 @@
 #			+ Genus Species
 #
 #
-# $Id: PhylumTree.pm 31086 2014-06-03 19:14:00Z klchu $
+# $Id: PhylumTree.pm 34662 2015-11-10 21:03:55Z klchu $
 #
 package PhylumTree;
 
@@ -33,7 +33,7 @@ my $verbose  = $env->{verbose};
 my $base_url = $env->{base_url};
 my $unknown  = "Unknown";
 my $nvl      = getNvl( );
-
+my $top_base_url = $env->{top_base_url};
 #
 # configuration - location of yahoo's api
 #
@@ -460,7 +460,7 @@ sub yuiPrintTreeFolderDynamic {
 
 	my $domain_aref = getDomainNames( $dbh, $taxon_oid );
 
-	print "<script src = \"$base_url/xml.js\" ></script>\n";
+	print "<script src = \"$top_base_url/js/xml.js\" ></script>\n";
 
 	# tool tips
 #	print <<EOF;

@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. web utility functions for file system
-# $Id: MetaUtil.pm 34322 2015-09-21 20:23:11Z jinghuahuang $
+# $Id: MetaUtil.pm 34581 2015-10-27 20:08:11Z jinghuahuang $
 ############################################################################
 package MetaUtil;
 require Exporter;
@@ -7511,12 +7511,13 @@ sub getAllScaffoldInfo {
 
         my $dbh = dbLogin();
         my $db_str = OracleUtil::getNumberIdsInClause( $dbh, @db_ids );
-        my $sql =
-            "select s.scaffold_oid, ss.seq_length, "
-          . "ss.gc_percent, ss.count_total_gene, "
-          . "s.read_depth from scaffold s, scaffold_stats ss "
-          . "where s.scaffold_oid in ($db_str) "
-          . "and s.scaffold_oid = ss.scaffold_oid ";
+        my $sql = qq{
+            select s.scaffold_oid, ss.seq_length, 
+            ss.gc_percent, ss.count_total_gene, s.read_depth 
+            from scaffold s, scaffold_stats ss 
+            where s.scaffold_oid in ($db_str) 
+            and s.scaffold_oid = ss.scaffold_oid
+        };
         my $cur = execSql( $dbh, $sql, $verbose );
         for ( ; ; ) {
             my ( $id2, $scaf_len, $scaf_gc, $scaf_gene_cnt, $depth ) = $cur->fetchrow();

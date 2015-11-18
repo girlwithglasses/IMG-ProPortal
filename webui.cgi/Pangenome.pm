@@ -1,6 +1,6 @@
 ############################################################################
 # Pangenome.pm - displays a pangenome and its composing genomes
-# $Id: Pangenome.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: Pangenome.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package Pangenome;
 my $section = "Pangenome";
@@ -26,7 +26,7 @@ my $tmp_dir          = $env->{tmp_dir};
 my $verbose          = $env->{verbose};
 my $show_myimg_login = $env->{show_myimg_login};
 my $base_url         = $env->{base_url};
-
+my $top_base_url = $env->{top_base_url};
 my $flank_length     = 25000;
 my $max_genes        = 40;
 
@@ -56,6 +56,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     
 #    my $enable_pangenome = $env->{enable_pangenome};
@@ -389,7 +390,7 @@ sub printDefault() {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "pangeneCountSummary", 1 );
             while ( my $s = $FH->getline() ) {
@@ -1265,7 +1266,7 @@ sub printNeighborhood {
     print "$s\n";
 
     # print tooltip code for the scaffold
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 }
 
 ############################################################################

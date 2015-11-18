@@ -2,7 +2,7 @@
 # TaxonSearch.pm - Set up for keyword search for taxons.
 # --es 12/22/2004
 #
-# $Id: TaxonSearch.pm 33504 2015-06-03 20:00:02Z klchu $
+# $Id: TaxonSearch.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package TaxonSearch;
 my $section = "TaxonSearch";
@@ -49,10 +49,19 @@ push(@termCols, @sOptCols);
 
 my $dateRegEx = '^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$';
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Taxon Search';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenomes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( param( "taxonTerm" ) ne "" || $page eq "orgsearch" ) {

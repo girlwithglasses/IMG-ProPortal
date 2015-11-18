@@ -6,7 +6,7 @@
 #  from the statistics page.
 #      --es 09/17/2004
 #
-# $Id: TaxonDetail.pm 34360 2015-09-25 18:49:46Z aratner $
+# $Id: TaxonDetail.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package TaxonDetail;
 my $section = "TaxonDetail";
@@ -91,7 +91,7 @@ my $in_file                           = $env->{in_file};
 #my $in_file                           = $env->{in_file};
 my $img_edu                           = $env->{img_edu};
 my $enable_genbank                    = 1;
-
+my $top_base_url = $env->{top_base_url};
 # Inner table sort delimiter
 my $sortDelim = InnerTable::getSdDelim();
 my $nvl       = getNvl();
@@ -129,10 +129,26 @@ my $max_scaffold_list2 = 10000;
 # For 2nd order list.
 my $max_scaffold_results = 20000;
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Taxon Details';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my $page = param('page');
+    my @a = ();
+    
+        if ( $page eq 'taxonArtemisForm' ) {
+            @a = ( "FindGenomes", '', '', '', '', 'GenerateGenBankFile.pdf' );
+        } elsif(WebUtil::paramMatch("noHeader") eq "") {
+            @a = ("FindGenomes");
+        }    
+    
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $sid  = getContactOid();
     my $page = param("page");
 
@@ -1760,7 +1776,7 @@ sub printTaxonDetail_ImgGold {
                     my $_map = <<END_MAP;
 		    <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
 		    <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-		    <script type="text/javascript" src="$base_url/googlemap.js"></script>
+		    <script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
 		    <div id="map_canvas" style="width: 500px; height: 300px; position: relative;"></div>
 		    <script type="text/javascript">
 		    var map = createMap(10, $clat, $clong);
@@ -1834,7 +1850,7 @@ END_MAP
                     my $_map = <<END_MAP;
             <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
             <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-            <script type="text/javascript" src="$base_url/googlemap.js"></script>
+            <script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
             <div id="map_canvas" style="width: 500px; height: 300px; position: relative;"></div>
             <script type="text/javascript">
             var map = createMap(10, $clat, $clong);
@@ -2491,7 +2507,7 @@ sub printEnvSampleDetails {
         my $_map = <<END_MAP;
 	<link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-	<script type="text/javascript" src="$base_url/googlemap.js"></script>
+	<script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
 	<div id="map_canvas" style="width: 500px; height: 300px; position: relative;"></div>
 	<script type="text/javascript">
 	var map = createMap(10, $clat, $clong);
@@ -3665,7 +3681,7 @@ sub printScaffoldDistribution {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html",
 		  "printScaffoldDistribution", 1 );
@@ -3797,7 +3813,7 @@ sub printScaffoldLengthDistribution {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html",
 		  "printScaffoldLengthDistribution", 1 );
@@ -5896,7 +5912,6 @@ sub printCogCategories {
         my $url1 = "$section_cgi&page=cate${og}List&cat=cat&taxon_oid=$taxon_oid";
     	my $url2 = "$section_cgi&page=${og}GeneList&cat=cat&taxon_oid=$taxon_oid";
 
-    	require D3ChartUtil;
     	D3ChartUtil::printPieChart
             ($d3data, $url1."&function_code=", $url2."&function_code=", "", 0, 1,
              "[\"color\", \"name\", \"count\", \"percent\"]", 500, 400);
@@ -7461,7 +7476,6 @@ sub printTaxonPfamCat {
 	my $url1 = "$section_cgi&page=catePfamList&cat=cat&taxon_oid=$taxon_oid";
 	my $url2 = "$section_cgi&page=pfamGeneList&cat=cat&taxon_oid=$taxon_oid";
 
-	require D3ChartUtil;
 	D3ChartUtil::printPieChart
 	    ($d3data, $url1."&func_code=", $url2."&func_code=", "", 0, 1,
 	     "[\"color\", \"name\", \"count\", \"percent\"]", 500, 400);
@@ -8167,7 +8181,7 @@ sub printTaxonTIGRfamCat {
     print "<td valign=top align=left>\n";
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		( $chart->FILEPATH_PREFIX . ".html", "printTIGRfam", 1 );
             while ( my $s = $FH->getline() ) {
@@ -8950,7 +8964,7 @@ sub printKeggCategories {
     print "<td valign=top align=left>\n";
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle
 		($chart->FILEPATH_PREFIX . ".html", "printKeggCategories", 1);
             while ( my $s = $FH->getline() ) {

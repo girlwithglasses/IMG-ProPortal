@@ -7,7 +7,7 @@
 #           the rest of the populations. The 4mer frequencies for
 #           each scaffold are computed and then analyzed using PCA.
 #
-# $Id: Kmer.pm 34103 2015-08-24 20:33:28Z klchu $
+# $Id: Kmer.pm 34707 2015-11-13 20:21:17Z klchu $
 ###########################################################################
 package Kmer;
 
@@ -35,6 +35,7 @@ my $verbose              = $env->{verbose};
 my $user_restricted_site = $env->{user_restricted_site};
 my $base_url             = $env->{base_url};
 my $base_dir             = $env->{base_dir};
+my $top_base_dir             = $env->{top_base_dir};
 my $taxon_fna_dir        = $env->{taxon_fna_dir};
 my $r_bin                = $env->{r_bin};
 my $java_home            = $env->{java_home};
@@ -46,7 +47,7 @@ my $defFragmentStep      = 500;
 my $defKmerSize          = 4;
 my $defMinVariation      = 10;
 
-my $kMerJar              = "$base_dir/KmerFrequencies.jar";
+my $kMerJar              = "$top_base_dir/lib/KmerFrequencies.jar";
 my $kMerRscript          = "$cgi_dir/bin/showKmerBin.R";
 my $kMerHtmlFile         = "Kmer.html"; # must be prepended with $base_dir
 
@@ -80,10 +81,32 @@ my %kmerParam = (
 
 my $SCAF_FOLDER = "scaffold";
 
+sub getPageTitle {
+    return 'Kmer Frequency Analysis';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    my @a = ();
+    if( !WebUtil::paramMatch("export")) {
+        @a = ( 'FindGenomes');
+    }
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 minutes (from main.pl)
     if ( $page eq "plot" ) {

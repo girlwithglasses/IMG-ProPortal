@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: TreeFile.pm 34506 2015-10-15 19:12:27Z aratner $
+# $Id: TreeFile.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package TreeFile;
 my $section = "TreeFile";
@@ -30,6 +30,7 @@ my $include_metagenomes = $env->{include_metagenomes};
 my $rdbms               = getRdbms();
 my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
 my $YUI                 = $env->{yui_dir_28};
+my $top_base_url = $env->{top_base_url};
 
 my $dir2 = WebUtil::getSessionDir();
 $dir2 .= "/$section";
@@ -680,8 +681,9 @@ sub printDomainTree {
         print buttonUrl( $url2, "Group by Phylogenetic Category", "medbutton" );
     }        
     
-    print hiddenVar( "page",    "message" );
-    print hiddenVar( "message", "Genome selection saved and enabled." );
+#    print hiddenVar( "page",    "message" );
+#    print hiddenVar( "section",    "Messages" );
+#    print hiddenVar( "message", "Genome selection saved and enabled." );
 
     print qq{
         <br/>
@@ -910,15 +912,15 @@ sub drawSunburst {
 
     print qq{
       <link rel="stylesheet" type="text/css"
-            href="$base_url/d3sunburst.css" />
-      <script src="$base_url/d3.min.js"></script>
+            href="$top_base_url/css/d3sunburst.css" />
+      <script src="$top_base_url/js/d3.min.js"></script>
       <div id="$trail_id"></div>
       <div id="main">
       <span id="ruler"></span>
       <div id="$div_id"></div>
       </div>
       <div id="sidebar"><div id="legend"></div></div>
-      <script src="$base_url/d3sunburst.js"></script>
+      <script src="$top_base_url/js/d3sunburst.js"></script>
       <script>
           window.onload = doSunburst
               ($data, "$div_id", "$levels_url", $levels);
@@ -1207,7 +1209,7 @@ sub printTree {
 #
 sub printJS {
     print qq{
-        <script type="text/javascript" src="$base_url/treeFile.js" ></script>
+        <script type="text/javascript" src="$top_base_url/js/treeFile.js" ></script>
 <script type="text/javascript" src="$YUI/build/yahoo/yahoo-min.js"></script>
 <script type="text/javascript" src="$YUI/build/event/event-min.js"></script>
 <script type="text/javascript" src="$YUI/build/connection/connection-min.js"></script>

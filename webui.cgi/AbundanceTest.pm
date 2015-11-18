@@ -121,8 +121,9 @@ sub printQueryForm {
     GenomeListFilter::appendGenomeListFilter($dbh, 'Yes', 0, 'genomesToSelect');
     ####$dbh->disconnect();
 
+    my $top_base_url = $env->{top_base_url};
     print qq{
-        <script type='text/javascript' src='$base_url/abundanceShare.js'>
+        <script type='text/javascript' src='$top_base_url/js/abundanceShare.js'>
         </script>
         <input type='button' class='tobutton' id='toQueryG' name='toQueryG' />
         <input type='hidden' name='queryGenomes' />

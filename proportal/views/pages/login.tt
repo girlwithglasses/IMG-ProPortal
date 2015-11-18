@@ -2,18 +2,19 @@
 	WRAPPER layouts/default.html.tt;
 	title = 'IMG ProPortal: Login';
 %]
-<p>Please sign in with your <a href='[% ext_links.sso_url %]'>JGI Single Sign-On</a> account to use the IMG ProPortal.</p>
+<h2>IMG ProPortal: Login</h2>
+<p>Sign in with your <a href='[% ext_links.sso_url %]'>JGI Single Sign-On</a> account to use the IMG ProPortal.</p>
 
 <!-- form id="home" action="[% link('login') %]" method="post" -->
 <form id="home" action="[% ext_links.sso_url %]/signon/create" method="post">
-	<fieldset>
-		<legend>JGI Single Sign-On (<abbr title="JGI Single Sign On">JGI SSO</abbr>)</legend>
+	<fieldset class="login__fields">
+		<legend class="login__legend" >JGI Single Sign-On (<abbr title="JGI Single Sign On">JGI SSO</abbr>)</legend>
 
-		<label for="login">Email (or <a href="[% ext_links.sso_url %]/help#username">user name</a>):</label>
-		<input id="login" type="text" name="login" autofocus required>
-		<label for="password">Password:</label>
-		<input id="password" type="password" name="password" required>
-		<input class="submit" type="submit" value="Sign In">
+		<label class="login__label--name" for="login">Email (or <a href="[% ext_links.sso_url %]/help#username">user name</a>):</label>
+		<input class="login__input--name" id="login" type="text" name="login" autofocus required>
+		<label class="login__label--password" for="password">Password:</label>
+		<input class="login__input--password" id="password" type="password" name="password" required>
+		<input class="login__submit" class="submit" type="submit" value="Sign In">
 	</fieldset>
 </form>
 <p>

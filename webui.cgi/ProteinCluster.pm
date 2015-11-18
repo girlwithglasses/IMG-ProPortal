@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: ProteinCluster.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: ProteinCluster.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package ProteinCluster;
 my $section = "ProteinCluster";
@@ -41,10 +41,19 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
 }
 my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Protein Cluster';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     
     if($page eq "exptForm") {

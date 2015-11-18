@@ -3,7 +3,7 @@
 #  Indexed file in pages for comparative gene information file which
 #  is precomputed.
 #      --es 06/10/09
-# $Id: GeneInfoPager.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: GeneInfoPager.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package GeneInfoPager;
 my $section = "GeneInfoPager";
@@ -34,10 +34,23 @@ my $img_internal = $env->{img_internal};
 
 my $forceNewFile = 1;
 
+sub getPageTitle {
+    return 'Download Gene Information';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenomes');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param("page");
 
     if ( $page eq "viewGeneInformation" ) {

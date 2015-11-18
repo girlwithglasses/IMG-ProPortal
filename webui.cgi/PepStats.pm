@@ -3,7 +3,7 @@
 #   in the web UI.
 #    --es 12/13/2005
 #
-# $Id: PepStats.pm 30360 2014-03-08 00:12:52Z jinghuahuang $
+# $Id: PepStats.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package PepStats;
 my $section = "PepStats";
@@ -23,10 +23,19 @@ my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
 my $bin_dir =  $env->{ bin_dir };
 my $verbose = $env->{ verbose };
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Peptide Stats';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( $page eq "" ) {

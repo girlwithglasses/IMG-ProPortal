@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: OracleUtil.pm 33157 2015-04-13 00:02:52Z jinghuahuang $
+# $Id: OracleUtil.pm 34715 2015-11-16 22:12:57Z klchu $
 #
 #
 #
@@ -31,11 +31,6 @@
 #
 #
 package OracleUtil;
-
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use Data::Dumper;

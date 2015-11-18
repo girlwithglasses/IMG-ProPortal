@@ -3,10 +3,6 @@
 ###########################################################################
 package WorkspaceJob;
 
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use Archive::Zip;
@@ -61,7 +57,7 @@ my $taxon_lin_fna_dir = $env->{taxon_lin_fna_dir};
 my $cgi_tmp_dir       = $env->{cgi_tmp_dir};
 
 my $essential_gene = $env->{essential_gene};
-
+my $top_base_url = $env->{top_base_url};
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 my $maxGeneListResults = 1000;
 if ( getSessionParam("maxGeneListResults") ne "" ) {
@@ -86,7 +82,6 @@ my $JOB_FOLDER    = "job";
 
 my $filename_size      = 25;
 my $filename_len       = 60;
-my $max_workspace_view = 10000;
 my $max_profile_select = 50;
 my $maxProfileOccurIds = 100;
 
@@ -97,10 +92,25 @@ my $unclassified = 'unclassified';
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
 
-#########################################################################
-# dispatch
-#########################################################################
+sub getPageTitle {
+    return 'Workspace';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $header = param("header");
+    if ( WebUtil::paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
+        # no header
+    } elsif ( $header eq "" && WebUtil::paramMatch("noHeader") eq "" ) {
+        @a = ("AnaCart", '', '', '', '', 'IMGWorkspaceUserGuide.pdf' );
+    }
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     return if ( !$enable_workspace );
     return if ( !$user_restricted_site );
 
@@ -183,7 +193,7 @@ sub printJobMainForm {
     print "<h1>Computation Jobs</h1>";
 
     print qq{
-        <script type="text/javascript" src="$base_url/Workspace.js" >
+        <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
     };
 
@@ -1295,7 +1305,7 @@ sub printSaveSelectedFuncGeneToWorkspace {
         print "<br/>";
 
         print qq{
-            <script type="text/javascript" src="$base_url/Workspace.js" >
+            <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
             </script>
         };
 

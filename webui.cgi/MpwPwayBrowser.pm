@@ -62,10 +62,23 @@ my $use_cache = 0;
 
 
  
+sub getPageTitle {
+    return 'Mpw Pathway Browser';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
-sub dispatch { 
+sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
  
     if ( $page eq "mpwPwayBrowser" ) {

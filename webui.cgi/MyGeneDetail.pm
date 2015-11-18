@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: MyGeneDetail.pm 33027 2015-03-19 17:50:11Z imachen $
+# $Id: MyGeneDetail.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package MyGeneDetail;
 my $section = "MyGeneDetail";
@@ -27,11 +27,23 @@ my $content_list         = $env->{content_list};
 my $web_data_dir         = $env->{web_data_dir};
 my $nvl                  = getNvl();
 
+sub getPageTitle {
+    return 'My Gene Detail';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenes');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-
+    my ( $self, $numTaxon ) = @_;
+    
     my $page = param("page");
     if ( $page eq "geneDetail" ) {
         printGeneDetail();

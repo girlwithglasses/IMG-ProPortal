@@ -833,13 +833,13 @@ my $static_links = {
 		url => 'menu/Downloads', label => 'Downloads',
 	},
 	'menu/FindFunctions' => {
-		url => 'menu/FindFunctions', label => 'Find Functions',
+		url => 'menu/FindFunctions', label => '<span class="extra-text">Find </span>Functions',
 	},
 	'menu/FindGenes' => {
-		url => 'menu/FindGenes', label => 'Find Genes',
+		url => 'menu/FindGenes', label => '<span class="extra-text">Find </span>Genes',
 	},
 	'menu/FindGenomes' => {
-		url => 'menu/FindGenomes', label => 'Find Genomes',
+		url => 'menu/FindGenomes', label => '<span class="extra-text">Find </span>Genomes',
 	},
 	'menu/IMGNetworks' => {
 		url => 'menu/IMGNetworks', label => 'IMG Networks',
@@ -857,7 +857,7 @@ my $static_links = {
 		url => 'menu/metagenomes', label => 'IMG Metagenomes',
 	},
 	'menu/MyIMG' => {
-		url => 'menu/MyIMG', label => 'MyIMG',
+		url => 'menu/MyIMG', label => 'My IMG',
 	},
 	'menu/omics' => {
 		url => 'menu/omics', label => 'OMICs',

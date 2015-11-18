@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: MetaCyc.pm 32375 2014-12-03 20:49:53Z jinghuahuang $
+# $Id: MetaCyc.pm 34543 2015-10-20 21:04:12Z klchu $
 #
 package MetaCyc;
 
@@ -53,7 +53,23 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
     $maxGeneListResults = getSessionParam("maxGeneListResults");
 } 
 
+sub getPageTitle {
+    return 'MetaCyc';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page     = param("page");
     my $database = getRdbms();
     if ( $page eq "detail" ) {

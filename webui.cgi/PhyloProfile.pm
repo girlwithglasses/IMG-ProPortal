@@ -11,7 +11,7 @@
 #    3: bin_oid
 #    4: gene_count
 #
-# $Id: PhyloProfile.pm 31915 2014-09-16 19:47:02Z jinghuahuang $
+# $Id: PhyloProfile.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package PhyloProfile;
 my $section = "PhyloProfile";
@@ -43,10 +43,19 @@ my $max_gene_batch = 250;
 
 my $verbose = $env->{verbose};
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Phylogenetic Profile';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('AnaCart');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( $page eq "phyloProfileGenes" ) {

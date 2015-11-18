@@ -5,7 +5,7 @@
 #   colored red if there's a hit (or occurrence in the genome).
 #    --es 02/06/2005
 #
-# $Id: PhyloDist.pm 30360 2014-03-08 00:12:52Z jinghuahuang $
+# $Id: PhyloDist.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package PhyloDist;
 my $section = "PhyloDist";
@@ -31,10 +31,19 @@ my $bbh_files_dir    = $env->{bbh_files_dir};
 my $bbh_zfiles_dir   = $env->{bbh_zfiles_dir};
 my $include_bbh_lite = $env->{include_bbh_lite};
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Phylogenetic Distribution';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( paramMatch("phyloOccurProfiles") ne "" ) {

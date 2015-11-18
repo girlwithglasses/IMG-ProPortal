@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: GeneCassetteSearch.pm 34122 2015-08-27 19:44:13Z klchu $
+# $Id: GeneCassetteSearch.pm 34662 2015-11-10 21:03:55Z klchu $
 
 package GeneCassetteSearch;
 my $section = "GeneCassetteSearch";
@@ -46,7 +46,7 @@ my $base_url              = $env->{base_url};
 my $enable_cassette       = $env->{enable_cassette};
 my $MIN_GENES = 2;
 my $nvl       = getNvl();
-
+my $top_base_url = $env->{top_base_url};
 # batch query that have in stmt with more than 1000 items
 my $BATCH_SIZE = 999;
 
@@ -1849,7 +1849,7 @@ sub readArray {
 sub printJS {
 
     print qq{
-        <script type="text/javascript" src="$base_url/treeFile.js" ></script>
+        <script type="text/javascript" src="$top_base_url/js/treeFile.js" ></script>
 <script type="text/javascript" src="$YUI/build/yahoo/yahoo-min.js"></script>
 <script type="text/javascript" src="$YUI/build/event/event-min.js"></script>
 <script type="text/javascript" src="$YUI/build/connection/connection-min.js"></script>

@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MetagPhyloDist.pm 34263 2015-09-16 05:34:01Z jinghuahuang $
+# $Id: MetagPhyloDist.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package MetagPhyloDist;
 
@@ -42,7 +42,7 @@ my $verbose             = $env->{verbose};
 my $web_data_dir        = $env->{web_data_dir};
 my $maxGeneListResults  = 1000;
 my $localhost           = $env->{img_ken_localhost};
-
+my $top_base_url = $env->{top_base_url};
 my $preferences_url = "$main_cgi?section=MyIMG&page=preferences";
 my $max_gene_batch  = 900;
 
@@ -62,11 +62,29 @@ my $DELIMITER    = "-,-";
 my $mer_fs_debug = 0;
 my $YUI = $env->{yui_dir_28};
 
+sub getPageTitle {
+    return 'Phylogenetic Distribution';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    my @a = ("CompareGenomes", '', '', $js );
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     my $sid  = getContactOid();
 
@@ -1168,7 +1186,7 @@ sub printResults {
         my $st = generateChart($chart);
         my $htmlpage;    # html page
         if ( $st == 0 ) {
-            $htmlpage = "<script src='$base_url/overlib.js'></script>\n";
+            $htmlpage = "<script src='$top_base_url/js/overlib.js'></script>\n";
             webLog( $chart->FILEPATH_PREFIX . ".html\n" );
 
             my $FH = newReadFileHandle
@@ -3473,7 +3491,7 @@ sub printBodySiteResults {
         my $st = generateChart($chart);
         my $htmlpage;    # html page
         if ( $st == 0 ) {
-            $htmlpage = "<script src='$base_url/overlib.js'></script>\n";
+            $htmlpage = "<script src='$top_base_url/js/overlib.js'></script>\n";
 
             webLog( $chart->FILEPATH_PREFIX . ".html\n" );
 

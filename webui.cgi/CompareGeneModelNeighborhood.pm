@@ -2,7 +2,7 @@
 #
 # Compare Gene Model Neighborhoods
 #
-# $Id: CompareGeneModelNeighborhood.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: CompareGeneModelNeighborhood.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package CompareGeneModelNeighborhood;
 use strict;
@@ -71,6 +71,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop.
 #
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ($page eq "printNeighborhood") {

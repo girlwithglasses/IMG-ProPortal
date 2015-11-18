@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeListJSON.pm 34471 2015-10-09 19:47:35Z klchu $
+# $Id: GenomeListJSON.pm 34543 2015-10-20 21:04:12Z klchu $
 #
 # issues to fix
 # 1. list name is static to genomeFilterSelection, tree view can be dynamic
@@ -48,6 +48,18 @@ $hidePlasmids = "Yes" if $hidePlasmids eq "";
 my $hideGFragment = getSessionParam("hideGFragment");
 $hideGFragment = "Yes" if $hideGFragment eq "";
 
+#    } elsif ( $section eq 'GenomeListJSON' ) {
+#
+#        # TODO testing forms
+#        require GenomeListJSON;
+#        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+#        $template->param( base_url => $base_url );
+#        $template->param( YUI      => $YUI );
+#        my $js = $template->output;
+#        printAppHeader( "AnaCart", '', '', $js );
+#
+#        GenomeListJSON::test();
+#
 sub test {
     my $page = param('page');
 

@@ -44,11 +44,23 @@ my $max_upload_line_count = 10000;    # limit the number of lines in file upload
 my $max_cond_count = 5;
 my $max_set_cond_count = 3;
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "geneCart" );
+    return 'Gene Cart Data Entry';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
 
 ############################################################################
 # dispatch - Dispatch to pages for this section.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
 
     ## Should not get here.
     my $section = param( "section" );

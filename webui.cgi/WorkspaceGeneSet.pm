@@ -1,14 +1,8 @@
 ###########################################################################
 # WorkspaceGeneSet.pm
-# $Id: WorkspaceGeneSet.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: WorkspaceGeneSet.pm 34662 2015-11-10 21:03:55Z klchu $
 ###########################################################################
 package WorkspaceGeneSet; 
-
-require Exporter; 
-@ISA    = qw( Exporter ); 
-@EXPORT = qw(
-); 
-
  
 use strict; 
 use Archive::Zip; 
@@ -81,7 +75,7 @@ my $kegg_orthology_url = $env->{kegg_orthology_url};
 my $mer_data_dir      = $env->{mer_data_dir};
 my $taxon_lin_fna_dir = $env->{taxon_lin_fna_dir};
 my $cgi_tmp_dir       = $env->{cgi_tmp_dir};
- 
+my $top_base_url = $env->{top_base_url};
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 my $maxGeneListResults = 1000;
 if ( getSessionParam("maxGeneListResults") ne "" ) {
@@ -103,7 +97,6 @@ my $FUNC_FOLDER   = "function";
 
 my $filename_size      = 25; 
 my $filename_len       = 60; 
-my $max_workspace_view = 10000; 
 my $max_profile_select = 50;
 my $maxProfileOccurIds    = 100;
 my $maxGeneProfileIds    = 100;
@@ -116,10 +109,27 @@ my $contact_oid;
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
 
-#########################################################################
-# dispatch
-#########################################################################
-sub dispatch { 
+
+sub getPageTitle {
+    return 'Workspace Gene Sets';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $header = param("header");
+    my $ws_yui_js = Workspace::getStyles();    # Workspace related YUI JS and styles
+    if ( WebUtil::paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
+        # no header
+    } elsif ( $header eq "" && WebUtil::paramMatch("noHeader") eq "" ) {
+        @a = ( "AnaCart", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
+    }
+    return @a;
+}
+
+sub dispatch {
+    my ( $self, $numTaxon ) = @_; 
     return if ( !$enable_workspace ); 
     return if ( !$user_restricted_site ); 
  
@@ -242,6 +252,27 @@ sub dispatch {
     }
 }
 
+sub printCartDiv {
+    print qq{
+        <h2>Gene Cart</h2>
+    };
+    
+    require GeneCartStor;
+    my $gsize = GeneCartStor::getSize();
+    
+    
+    if ( $gsize > 0 ) {
+        print qq{
+            You have <a href='main.cgi?section=GeneCartStor&page=geneCart'>$gsize Gene(s)</a> in your cart.<br>
+        };
+    } else {
+        print qq{
+            Your <a href='main.cgi?section=GeneCartStor&page=geneCart'>Gene Cart</a> is empty.
+        };
+    }
+    
+    
+}
 
 ############################################################################
 # printGeneSetMainForm
@@ -258,10 +289,17 @@ sub printGeneSetMainForm {
     my @files = readdir(DIR);
     closedir(DIR); 
 
-    print "<h1>My Workspace - Gene Sets</h1>"; 
+    print "<h1>Gene Workspace List</h1>"; 
+
+    printCartDiv();
+    
+    print qq{
+        <h2>Gene Sets List</h2>
+    };
+
 
     print qq{
-        <script type="text/javascript" src="$base_url/Workspace.js" >
+        <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
     }; 
  
@@ -618,7 +656,11 @@ sub printGeneSetDetail {
         			"&page=metaDetail&taxon_oid=$t_oid&";
         		} 
         		my $taxon_name = $taxon2name_href->{$t_oid};
-        		$r .= $t_oid . $sd . "<a href=\"$taxon_url\" >" . $taxon_name . "</a> \t";
+        		my $exported_taxon_name = $t_oid;
+        		if ( $taxon_name ) {
+                    $exported_taxon_name = $taxon_name;        		    
+        		}
+        		$r .= $exported_taxon_name . $sd . "<a href=\"$taxon_url\" >" . $taxon_name . "</a> \t";
     	    } 
     	    else {
                 $r .= "-" . $sd . "-" . "\t";

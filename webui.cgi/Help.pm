@@ -1,7 +1,7 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 34369 2015-09-25 21:57:59Z klchu $
+# $Id: Help.pm 34698 2015-11-12 21:53:15Z klchu $
 ############################################################################
 package Help;
 use strict;
@@ -42,10 +42,22 @@ my $public_nologin_site     = $env->{public_nologin_site};
 my $show_myimg_login        = $env->{show_myimg_login};
 my $enable_interpro         = $env->{enable_interpro};
 
+sub getPageTitle {
+    return 'Help';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('about');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param('page');
 
     if ( $page eq "sitemap" ) {
@@ -64,6 +76,25 @@ sub dispatch {
 
     } elsif ( $page eq 'news' ) {
         printNews();
+
+    } elsif($page eq 'about_index') {
+        my $text = WebUtil::file2Str("$base_dir/about_index.html");
+        print $text;
+    } elsif($page eq 'using_index') {
+        my $text = WebUtil::file2Str("$base_dir/using_index.html");
+        print $text;        
+
+    } elsif($page eq 'education') {
+        my $text = WebUtil::file2Str("$base_dir/education.html");
+        print $text;        
+
+    } elsif($page eq 'imgterms') {
+        my $text = WebUtil::file2Str("$base_dir/imgterms.html");
+        print $text;        
+
+    } elsif($page eq 'analysis') {
+        my $text = WebUtil::file2Str("$base_dir/analysis.html");
+        print $text;        
 
     } else {
         printSiteMap();
@@ -700,7 +731,7 @@ sub printFindFunctionsMap {
         <tr class='img' valign='top'>
         <td class='img' nowrap='nowrap'> 
         &nbsp; &nbsp; &nbsp; &nbsp;
-            <img class="menuimg" src="$base_url/favicon.ico">
+            <img class="menuimg" src="$base_url/images/favicon.ico">
         <a href="$main_cgi?section=ImgNetworkBrowser&page=imgNetworkBrowser"> <b>IMG Network</b> </a>
         </td>
         <td class='img'>
@@ -715,7 +746,7 @@ sub printFindFunctionsMap {
             <tr class='img' valign='top'>
                 <td class='img' nowrap='nowrap'> 
                     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-                    <img class="menuimg" src="$base_url/favicon.ico">
+                    <img class="menuimg" src="$base_url/images/favicon.ico">
                     <a href="main.cgi?section=ImgNetworkBrowser&page=imgNetworkBrowser"> IMG Network Browser </a>
                 </td>
                 <td class='img'></td>
@@ -725,7 +756,7 @@ sub printFindFunctionsMap {
             <tr class='img' valign='top'>
                 <td class='img'> 
                     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-                    <img class="menuimg" src="$base_url/favicon.ico">
+                    <img class="menuimg" src="$base_url/images/favicon.ico">
                     <a href="main.cgi?section=ImgPartsListBrowser&page=browse"> IMG Parts List </a>
                 </td>
                 <td class='img'></td>
@@ -735,7 +766,7 @@ sub printFindFunctionsMap {
             <tr class='img' valign='top'>
                 <td class='img'> 
                     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-                    <img class="menuimg" src="$base_url/favicon.ico">
+                    <img class="menuimg" src="$base_url/images/favicon.ico">
                     <a href="main.cgi?section=ImgPwayBrowser&page=imgPwayBrowser"> IMG Pathways </a>
                 </td>
                 <td class='img'>
@@ -746,7 +777,7 @@ sub printFindFunctionsMap {
             <tr class='img' valign='top'>
                 <td class='img'> 
                     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-                    <img class="menuimg" src="$base_url/favicon.ico">
+                    <img class="menuimg" src="$base_url/images/favicon.ico">
                     <a href="main.cgi?section=ImgTermBrowser&page=imgTermBrowser"> IMG Terms </a>
                 </td>
                 <td class='img'></td>
@@ -1657,7 +1688,7 @@ sub printUsingMap {
             <td class='img' NOWRAP> 
                 &nbsp; &nbsp; &nbsp; &nbsp;
                 <img class="menuimg" src="$base_url/images/mail.png">
-                <a href="$main_cgi?page=questions"> Questions/Comments</a>
+                <a href="$main_cgi?section=Questions"> Questions/Comments</a>
                 <!--
                 <img width="45" height="14" border="0" 
                 style="margin-left: 5px;" src="$base_url/images/updated.bmp">

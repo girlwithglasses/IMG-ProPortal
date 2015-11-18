@@ -32,15 +32,30 @@ my $img_lite             = $env->{img_lite};
 my $annotation_site_url  = $env->{annotation_site_url};
 my $show_private         = $env->{show_private};
 my $annot_site_url       = $env->{annot_site_url};
-
+my $top_base_url = $env->{top_base_url};
 my $YUI            = $env->{yui_dir_28}; 
 my $yui_tables     = $env->{yui_tables}; 
 
 
-###################################################################
-# dispatch
-###################################################################
+sub getPageTitle {
+    return 'My IMG';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    if(WebUtil::paramMatch("noHeader") eq "") {
+        @a = ('MyIMG');
+    }
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( $page eq 'showGroupDetail' ||
@@ -834,7 +849,7 @@ sub showGroupNewsSection {
       </script>
     };
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 
     my $contact_oid = WebUtil::getContactOid();
     my $my_role = "";

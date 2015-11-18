@@ -31,7 +31,7 @@ my $img_ken         = $env->{img_ken};
 my $YUI             = $env->{yui_dir_28};
 my $nvl             = getNvl();
 my $enable_biocluster = $env->{enable_biocluster};
-
+my $top_base_url = $env->{top_base_url};
 ############################################################################
 # printNaturalProductSearchForm - Show Secondary Metabolite search form.
 #   Read from template file and replace some template components.
@@ -43,7 +43,7 @@ sub printNaturalProductSearchForm {
     if ( $includeJS ) {
         print qq{
             <h1>Secondary Metabolite (SM) Search by Attributes</h1>
-            <script language='JavaScript' type='text/javascript' src='$base_url/validation.js'>
+            <script language='JavaScript' type='text/javascript' src='$top_base_url/js/validation.js'>
             </script>
         };        
     } else {

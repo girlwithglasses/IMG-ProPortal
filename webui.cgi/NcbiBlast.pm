@@ -2,7 +2,7 @@
 # Run external NCBI Blast.
 #    --es 09/14/2006
 #
-# $Id: NcbiBlast.pm 32060 2014-10-09 17:30:28Z klchu $
+# $Id: NcbiBlast.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package NcbiBlast;
 my $section = "NcbiBlast";
@@ -34,10 +34,19 @@ my $ncbi_entrez_base_url = $env->{ncbi_entrez_base_url};
 
 $ENV{BLAST_DB} = $blast_data_dir;
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'NCBI BLAST';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
 
     if ( paramMatch("ncbiBlast") ) {

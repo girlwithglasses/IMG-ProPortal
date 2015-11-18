@@ -2,7 +2,7 @@
 # ImgPwayBrowser.pm - IMG Pathway Browser module.
 #   Includes IMG pathway details.
 #
-# $Id: ImgPwayBrowser.pm 34481 2015-10-09 21:17:28Z imachen $
+# $Id: ImgPwayBrowser.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package ImgPwayBrowser;
 my $section = "ImgPwayBrowser";
@@ -48,10 +48,23 @@ my $img_pheno_rule_saved = $env->{img_pheno_rule_saved};
 my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
 
+sub getPageTitle {
+    return 'IMG Pathway Browser';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
 
     if ( $page eq "imgPwayBrowser" ) {

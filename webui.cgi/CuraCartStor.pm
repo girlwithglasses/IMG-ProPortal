@@ -58,6 +58,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( $page eq "curaCart" || paramMatch( "addToCuraCart" ) ne "" ||
@@ -624,7 +625,12 @@ sub saveSelected {
    $self->save( );
 }
 
-
+sub getSize {
+    my($self) = @_;
+    my $recs = $self->{ recs };
+    my $count = keys( %$recs );
+    return $count;
+}
 ############################################################################
 # printCuraCartForm - Print function cart 
 #  form with list of genes and operations

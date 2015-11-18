@@ -3,7 +3,7 @@
 #  Module to handle the "Find Genes" menu tab option.
 #    --es 07/07/2005
 #
-# $Id: FindGenes.pm 34488 2015-10-11 17:17:45Z jinghuahuang $
+# $Id: FindGenes.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package FindGenes;
 my $section = "FindGenes";
@@ -24,6 +24,7 @@ use GeneTableConfiguration;
 use MerFsUtil;
 use MetaUtil;
 use GenomeListJSON;
+use HTML::Template;
 
 my $env                   = getEnv();
 my $main_cgi              = $env->{main_cgi};
@@ -56,11 +57,11 @@ my $rdbms                 = getRdbms();
 my $in_file               = $env->{in_file};
 my $img_nr                = $env->{ img_nr };
 my $http_solr_url         = $env->{ http_solr_url };
-
+my $YUI = $env->{yui_dir_28};
 ### optional genome field columns to configuration and display
 my @optCols = GeneTableConfiguration::getGeneFieldAttrs();
 push( @optCols, 'scaffold' );
-
+my $top_base_url = $env->{top_base_url};
 #push(@optCols, 'ko_id,ko_name,definition');
 
 my %searchFilterName = (
@@ -86,12 +87,37 @@ if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
+sub getPageTitle {
+    return 'Find Genes';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ();
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+        my $page = param('page');
+        if (   $page eq 'findGenes'
+            || $page eq 'geneSearch'
+            || ( $page ne 'geneSearchForm' && WebUtil::paramMatch("fgFindGenes") eq '' ) ) {
+            @a = ( "FindGenes", '', '', $js, '', 'GeneSearch.pdf' );
+        } else {
+            @a = ( "FindGenes", '', '', $js );
+        }
+
+    return @a;
+}
 
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;    # number of saved genomes
+    my ( $self, $numTaxon ) = @_;
     $numTaxon = 0 if ( $numTaxon eq "" );
 
     timeout( 60 * $merfs_timeout_mins );
@@ -220,7 +246,7 @@ sub printForm {
 sub printTreeViewMarkup {
     printTreeMarkup();
     print qq{
-        <script language='JavaScript' type='text/javascript' src='$base_url/findGenesTree.js'>
+        <script language='JavaScript' type='text/javascript' src='$top_base_url/js/findGenesTree.js'>
         </script>
     };
 }

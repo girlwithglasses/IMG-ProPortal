@@ -2,7 +2,7 @@
 # ImgTermBrowser.pm - Browse IMG terms from this module.
 #   Include IMG term details.
 #
-# $Id: ImgTermStats.pm 31256 2014-06-25 06:27:22Z jinghuahuang $
+# $Id: ImgTermStats.pm 34568 2015-10-23 20:35:43Z klchu $
 ############################################################################
 package ImgTermStats;
 my $section = "ImgTermStats";
@@ -42,10 +42,23 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
 }
 my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
 
+sub getPageTitle {
+    return 'IMG Term';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
 
     my $sid = getContactOid();
@@ -3222,6 +3235,7 @@ sub printTermGenomeList {
     #$dbh->disconnect();
 
     print hiddenVar( "page",          "message" );
+    print hiddenVar( "section",    "Messages" );
     print hiddenVar( "message",       "Genome selection saved and enabled." );
     print hiddenVar( "menuSelection", "Genomes" );
 

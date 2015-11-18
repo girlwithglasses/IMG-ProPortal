@@ -3,20 +3,83 @@
 $text-color: #444;
 $body-bg: #fff;
 
+// JGI colours
+$jgi-palette: (
+	black:   #343434, // rgb(52,52,52);
+	dk_grey: #5a5a5a, // rgb(90,90,90);
+	midgrey: #919090, // rgb(145,144,144);
+	reddish: #d3691b, // rgb(211,105,27);
+	dk_blue: #648caa, // rgb(100,140,170);
+	green:   #99bd3c, // rgb(153,189,60);
+	lite_or: #fdba57 // rgb(253,186,87);
+);
+
+// non-JGI colours
+$palette: (
+	primary: map-get( $jgi-palette, dk_blue ),
+	secondary: map-get( $jgi-palette, reddish ),
+	valid:   map-get( $jgi-palette, green ),
+	error:   #d3080c,
+	warning: map-get( $jgi-palette, lite_or ),
+	info:    lighten( map-get( $jgi-palette, dk_blue ), 20% ),
+);
+
+@function hue($key) {
+  @if map-has-key( $jgi-palette, $key ) {
+  	@return map-get( $jgi-palette, $key );
+  }
+  @if not map-has-key($palette, $key) {
+    @warn "Key `#{$key}` not found in $palette map.";
+  }
+  @return map-get($palette, $key);
+}
+
 // primary colour for the theme
-$primary: rgb(100,140,170);
+$primary: hue( dk_blue );
 // secondary colour
-$secondary: rgb(211,105,27);
+$secondary: hue( reddish );
 
-/** JGI colours: */
+/** other useful colours */
 
-$black:   rgb(52,52,52);
-$dkgrey:  rgb(90,90,90);
-$midgrey: rgb(145,144,144);
-$reddish: rgb(211,105,27);
-$dk_blue: rgb(100,140,170);
-$green:   rgb(153,189,60);
-$lite_or: rgb(253,186,87);
+$valid: hue( valid );
+$valid-bg: lighten( $valid, 20% );
+
+$error: hue( error );
+$error-bg: lighten( $error, 20% );
+
+$warning: hue( warning );
+$warning-bg: lighten( hue( lite_or ), 50% );
+
+$info: hue( info );
+$info-bg: lighten( hue( dk_blue ), 60% );
+
+.primary-colour-bg {
+	background: $primary;
+}
+
+.secondary-colour-bg {
+	background: $secondary;
+}
+
+/**
+	swatches for patternlab
+*/
+
+.jgi-palette {
+
+	@each $name, $col in $jgi-palette {
+		.swatch--#{$name} {
+			background: $col;
+		}
+	}
+
+	@each $name, $col in $palette {
+		.swatch--#{$name} {
+			background: $col;
+		}
+	}
+
+}
 
 
 $nav-link: #000;
@@ -31,7 +94,7 @@ $nav-link-bg: #9ce;
 }
 
 @mixin borders( $w, $col ) {
-    border: $w solid $col;
+	border: $w solid $col;
 }
 
 @mixin nav-link {
@@ -98,25 +161,6 @@ $blockquote-left-bar: #666;
 // form element border (e.g. on inputs)
 $form-element-border: #333;
 
-// header nav colours:
-$h-menu-border: #999;
-// background
-$h-menu-bg: $main-link;
-// link colour
-$h-menu-link: #fff;
-$h-menu: $h-menu-link;
-// link background
-$h-menu-link-bg: $main-link;
-// hover/focus/active link
-$h-menu-hfa-link: $h-menu-link;
-// hover/focus/active link bg
-$h-menu-hfa-link-bg: lighten( $h-menu-link-bg, 10% );
-
-// the current menu item
-$h-menu-current: $h-menu-link;
-$h-menu-current-bg: $h-menu-link-bg;
-$h-menu-current-hilite: deepskyblue;
-
 // table colours
 $caption-bg: null;
 
@@ -135,3 +179,80 @@ $tr-bg: #fff;
 // table contents, odd row
 $tr-odd: null;
 $tr-odd-bg: lighten($main-link, 80%);
+
+// Navigation colours
+
+// horiz-bar
+
+// TODO: turn this into a function!
+
+
+// lx refers to the menu level at which the .parent is found
+$nav-hilite: (
+	l0: lighten( hue( secondary ), 40% ),
+	l1: lighten( hue( secondary ), 30% ),
+	l2: lighten( hue( secondary ), 20% ),
+	current:     hue( secondary ),
+);
+
+// link colour
+$horiz-bar__link: #eee;
+// hover/focus/active link
+$horiz-bar__link--hfa: #fff;
+
+// link background
+$horiz-bar__bg: $main-link;
+// hover/focus/active link bg
+$horiz-bar__bg--hfa: lighten( $horiz-bar__bg, 10% );
+
+// border colour
+$horiz-bar__border--hfa: hue( secondary );
+
+@function nav-hilite-lvl ( $key ) {
+  @if not map-has-key($nav-hilite, $key) {
+    @warn "Key `#{$key}` not found in $nav-hilite map.";
+  }
+  @return map-get($nav-hilite, $key);
+
+}
+
+// generate background and hover state
+@mixin horiz-bar__item--bg ( $level : null, $h-gap : $gutter * .5, $dir : null ) {
+
+	@if map-has-key( $nav-hilite, $level ) {
+
+		@if horiz == $dir {
+			@include two-stripes(
+				to bottom,
+				lighten( map-get( $nav-hilite, $level ), 10% ), // highlight
+				darken( $horiz-bar__bg, 5% ),   // bg colour
+				$h-gap
+			);
+		}
+		@else {
+			@include two-stripes(
+				to right,
+				lighten( map-get( $nav-hilite, $level ), 10% ), // highlight
+				darken( $horiz-bar__bg, 10% ),   // bg colour
+				$h-gap
+			);
+		}
+//		&:hover .horiz-bar-menu__link {
+//			@include two-stripes(
+//				to right,
+//				saturate( lighten( map-get( $nav-hilite, $level ), 10%), 10% ),
+//				saturate( $horiz-bar__bg, 10% ),   // bg colour
+//				$gutter * .5
+//			);
+//		}
+
+	}
+	@else {
+		background: inherit;
+	}
+}
+
+$sidebar-link:	$main-link;
+$sidebar-bg:	$body-bg;
+$sidebar-bg-h:	darken( $body-bg, 2.5% );
+

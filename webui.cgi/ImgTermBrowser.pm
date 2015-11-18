@@ -2,7 +2,7 @@
 # ImgTermBrowser.pm - Browse IMG terms from this module.
 #   Include IMG term details.
 #
-# $Id: ImgTermBrowser.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: ImgTermBrowser.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package ImgTermBrowser;
 my $section = "ImgTermBrowser";
@@ -48,10 +48,23 @@ if ( ! $merfs_timeout_mins ) {
     $merfs_timeout_mins = 60; 
 } 
 
+sub getPageTitle {
+    return 'IMG Term Browser';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
 
     timeout( 60 * $merfs_timeout_mins );
     

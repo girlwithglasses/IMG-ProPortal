@@ -1,6 +1,6 @@
 ###########################################################################
 # PathwayMaps.pm - for display of pathway maps
-# $Id: PathwayMaps.pm 33981 2015-08-13 01:12:00Z aireland $
+# $Id: PathwayMaps.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package PathwayMaps;
 my $section = "PathwayMaps";
@@ -36,7 +36,7 @@ my $verbose       = $env->{verbose};
 my $base_url      = $env->{base_url};
 my $kegg_data_dir = $env->{kegg_data_dir};
 my $ko_base_url   = $env->{kegg_orthology_url};
-
+my $top_base_url = $env->{top_base_url};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $user_restricted_site = $env->{user_restricted_site};
 
@@ -53,10 +53,23 @@ my %roiDone;
 my $YUI = $env->{yui_dir_28};
 
 
+sub getPageTitle {
+    return 'Pathway Maps';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('PathwayMaps');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     timeout( 60 * 20 );    # timeout in 20 mins (from main.pl)
     if ( $page eq "mapGenesKo" ) {
@@ -2097,7 +2110,7 @@ sub showMapForSamples {
 
 sub printJSForExpression {
     ######### for expression graph
-    print "<script src='$base_url/imgCharts.js'></script>\n";
+    print "<script src='$top_base_url/js/imgCharts.js'></script>\n";
     print qq{
         <link rel="stylesheet" type="text/css"
           href="$YUI/build/container/assets/skins/sam/container.css" />
@@ -2154,7 +2167,7 @@ sub printExpressionForGenes {
     my $dataFileName = param("dataFile");
 
     my $header = "Expression for selected gene(s)";
-    my $script = "$base_url/overlib.js";
+    my $script = "$top_base_url/js/overlib.js";
     if (scalar @gene_oids < 1) {
         my $body = "Please select up to 5 genes.";
 
@@ -2297,8 +2310,6 @@ sub printExpressionForGenes {
             my $imagemap = "#".$chart->FILE_PREFIX;
             my $width = $chart->WIDTH;
             my $height = $chart->HEIGHT;
-	    #my $header = "Expression";
-            #my $script = "$base_url/overlib.js";
 
             print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
             print qq {
@@ -3069,7 +3080,6 @@ sub colorByAbundance {
 sub printImageMapCoords {
     my ( $recs_ref, $map_id, $taxon_oid_str ) = @_;
 
-    #print "<script src='$base_url/overlib.js'></script>\n";
     foreach my $r (@$recs_ref) {
         my ( $x1, $y1, $w, $h, $shape, $koStr, $koLabelStr ) =
 	    split( /\t/, $r );
@@ -3109,7 +3119,7 @@ sub printImageMapCoords {
 sub printMapCoordsForSamples {
     my ( $recs_ref, $map_id, $sample_oid_str, $study, $ko2genes_ref ) = @_;
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     foreach my $r (@$recs_ref) {
         my ( $x1, $y1, $w, $h, $shape, $koStr, $koLabelStr ) =
 	    split( /\t/, $r );
@@ -3177,7 +3187,7 @@ sub printMapCoordsForSamples {
 sub printMapCoordsForFuncs {
     my ( $recs_ref, $map_id, $func_str ) = @_;
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     foreach my $r (@$recs_ref) {
         my ( $x1, $y1, $w, $h, $shape, $koStr, $koLabelStr ) =
 	    split( /\t/, $r );
@@ -3212,7 +3222,7 @@ sub printMapCoordsForFuncs {
 sub printMapCoordsForOneSample {
     my ( $recs_ref, $map_id, $roi2gene_ref, $sample_oid, $study ) = @_;
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     foreach my $r (@$recs_ref) {
         my ( $x1, $y1, $w, $h, $shape, $koStr, $koLabelStr ) =
 	    split( /\t/, $r );

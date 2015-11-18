@@ -1,7 +1,7 @@
 #
 # experimental
 #
-# $Id: TreeFileMgr.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: TreeFileMgr.pm 34662 2015-11-10 21:03:55Z klchu $
 package TreeFileMgr;
 use strict;
 use CGI qw( :standard );
@@ -25,7 +25,7 @@ my $include_metagenomes = $env->{include_metagenomes};
 my $rdbms               = getRdbms();
 my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
 my $YUI                 = $env->{yui_dir_28};
-
+my $top_base_url = $env->{top_base_url};
 my $dir2 = WebUtil::getSessionDir();
 $dir2 .= "/TreeFileMgr";
 if ( !(-e "$dir2") ) { 
@@ -609,7 +609,7 @@ sub printTreeDiv {
 
 sub printJS {
     print qq{
-        <script type="text/javascript" src="$base_url/treeFile.js" ></script>
+        <script type="text/javascript" src="$top_base_url/js/treeFile.js" ></script>
 <script type="text/javascript" src="$YUI/build/yahoo/yahoo-min.js"></script>
 <script type="text/javascript" src="$YUI/build/event/event-min.js"></script>
 <script type="text/javascript" src="$YUI/build/connection/connection-min.js"></script>

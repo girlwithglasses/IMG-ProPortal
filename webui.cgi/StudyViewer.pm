@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: StudyViewer.pm 34452 2015-10-08 19:48:55Z klchu $
+# $Id: StudyViewer.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package StudyViewer;
 use strict;
@@ -40,31 +40,6 @@ $cgi_tmp_dir = $dir2;
 
 $| = 1;
 
-#    } elsif ( $section eq 'StudyViewer' ) {
-#        my $yuijs = qq{
-#<link rel="stylesheet" type="text/css" href="$YUI/build/treeview/assets/skins/sam/treeview.css" />
-#<script type="text/javascript" src="$YUI/build/treeview/treeview-min.js"></script>
-#
-#<style type="text/css">
-#
-#.ygtvcheck0 { background: url($YUI/examples/treeview/assets/img/check/check0.gif) 0 0 no-repeat; width:16px; height:20px; float:left; cursor:pointer; }
-#.ygtvcheck1 { background: url($YUI/examples/treeview/assets/img/check/check1.gif) 0 0 no-repeat; width:16px; height:20px; float:left; cursor:pointer; }
-#.ygtvcheck2 { background: url($YUI/examples/treeview/assets/img/check/check2.gif) 0 0 no-repeat; width:16px; height:20px; float:left; cursor:pointer; }
-#
-#.ygtv-edit-TaskNode  {  width: 190px;}
-#.ygtv-edit-TaskNode .ygtvcancel, .ygtv-edit-TextNode .ygtvok  { border:none;}
-#.ygtv-edit-TaskNode .ygtv-button-container { float: right;}
-#.ygtv-edit-TaskNode .ygtv-input  input{ width: 140px;}
-#.whitebg {
-#    background-color:white;
-#}
-#</style>
-#};
-#
-#        require StudyViewer;
-#        $pageTitle = "Metagenome Study Viewer";
-#        printAppHeader( "FindGenomes", '', '', $yuijs );
-#        StudyViewer::dispatch();
 
 sub getPageTitle {
     return 'Metagenome Study Viewer';

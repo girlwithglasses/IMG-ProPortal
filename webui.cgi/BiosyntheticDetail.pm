@@ -1,6 +1,6 @@
 ############################################################################
 # BiosyntheticDetail - detail page for biosynthetic clusters
-# $Id: BiosyntheticDetail.pm 34539 2015-10-20 18:18:53Z aratner $
+# $Id: BiosyntheticDetail.pm 34697 2015-11-12 21:25:00Z klchu $
 ############################################################################
 package BiosyntheticDetail;
 my $section = "BiosyntheticDetail";
@@ -42,7 +42,7 @@ my $pfam_base_url   = $env->{pfam_base_url};
 my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
 my $YUI             = $env->{yui_dir_28};
 my $nvl             = getNvl();
-
+my $top_base_url = $env->{top_base_url};
 my $enable_biocluster  = $env->{enable_biocluster};
 my $maxGeneListResults = 1000;
 if ( getSessionParam("maxGeneListResults") ne "" ) {
@@ -64,12 +64,10 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my ($self) = @_;
-
     my @a = ();
     if ( WebUtil::paramMatch("noHeader") ne "" ) {
         return @a;
     } else {
-
         push( @a, "getsme" );
         return @a;
     }
@@ -583,7 +581,7 @@ sub printPairwiseTab {
     my $pairwise_url = "main.cgi?section=WorkspaceBcSet"
 	. "&page=findPairwiseSimilarity&clusterId=$clusterId&taxon_oid=$taxon_oid";
 
-    my $doc = '/webfs/projectdirs/microbial/img/public-web/vhosts/img-stage.jgi-psf.org/htdocs/docs/BC/pairwiseSimilarity.html';
+    my $doc = $base_dir . '/pairwiseSimilarity.html';
     my $str = WebUtil::file2Str($doc, 1);
 
     print qq{
@@ -1010,7 +1008,7 @@ sub printBioClusterGeneList {
     print hiddenVar( 'taxon_oid',  $taxon_oid );
     print hiddenVar( 'cluster_id', $cluster_id );
 
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
 
     my $it = new InnerTable( 1, "bcgenes$$", "bcgenes", 1 );
     my $sd = $it->getSdDelim();
@@ -2075,7 +2073,7 @@ sub printNeighborhoods {
         print "</p>";
     }
 
-    print "<script src='$base_url/overlib.js'></script>\n";
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
     loadNeighborhoods( $taxon_oid, $cluster_id, $in_file, $mygene, $colorBy );
 }
 
@@ -2234,8 +2232,7 @@ sub loadNeighborhoods {
 
     printNeighborhoodPanels
 	($dbh, \@clustergenes, \%s2q, $cluster_h, \%scaffold_info, \%genes_h,
-	 $cluster_id, $g2pfam_ref, \@sortedScfs, $mygene, $colorBy
-    );
+	 $cluster_id, $g2pfam_ref, \@sortedScfs, $mygene, $colorBy);
     print "</div>";    # colordiv for reloading
 
     print end_form();
@@ -2367,12 +2364,15 @@ sub printNeighborhoodPanels {
 
         print "<table>";
 
-        my $clurl        = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+        my $clurl = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
         my $cluster_link = alink( $clurl, $cluster_id );
 
-        print "<p>Neighborhood for Cluster ID $cluster_link:</p>";
+	my $additional_info = param("$cluster_id");
+	$additional_info = ":" if !$additional_info;
+
+        print "<p>Neighborhood for Cluster ID $cluster_link".$additional_info."</p>";
         if ( ( $maxend - $minstart ) > 2 * $flank_length ) {
-            my $n         = ceil( ( $maxend - $minstart ) / ( 2 * $flank_length ) );
+            my $n = ceil( ( $maxend - $minstart ) / ( 2 * $flank_length ) );
             my $tmp_start = $minstart;
             my $tmp_end   = $tmp_start + 2 * $flank_length + 1;
             for ( my $i = 0 ; $i < $n ; $i++ ) {
@@ -3984,7 +3984,7 @@ sub printKoModuleBCGenes {
     print hiddenVar( 'cluster_id', $cluster_id );
     print hiddenVar( 'module_id', $module_id );
 
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
 
     my $it = new InnerTable( 1, "bcgenes$$", "bcgenes", 1 );
     my $sd = $it->getSdDelim();
@@ -6658,7 +6658,7 @@ sub processBiosyntheticClusters {
     printHint($hint);
     print "<br/>";
 
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
 
     my $it   = new InnerTable( 1, "processbc$$", "processbc", 1 );
     my $sd   = $it->getSdDelim();
@@ -7493,7 +7493,7 @@ sub printSimilarBCGF {
     print "Add query cluster $link to those selected below";
     print "</p>";
 
-    print "<script src='$base_url/checkSelection.js'></script>\n";
+    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
     printPfamFooter("bcsimilar") if $count > 10;
     $it->hideAll()               if $count < 10;
     $it->printOuterTable(1);
@@ -7630,20 +7630,27 @@ sub viewNeighborhoodsForSelectedClusters {
         WebUtil::webError("No clusters have been selected.");
     }
 
+    my $from = param("from");
     printMainForm();
 
     print "<h1>Neighborhoods for Selected Biosynthetic Clusters</h1>";
+    if ($from && $from eq "pairwise_similarity") {
+	my $cluster_id = param("query_cluster");
+	my $clurl = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+	my $cluster_link = alink( $clurl, $cluster_id );
+	print "<p>Neighborhoods displayed below are selected from a list of similar clusters for BC: $cluster_link </p>";
+    }
+
     my $hint = "Mouse over a gene to see details (once page has loaded).<br>";
-    $hint .=
-      "Click on the red dashed box <font color='red'><b>- - -</b>" .
-      "</font> for functions associated with a cluster.<br>";
-    $hint .=
-        "Genes are <font color='darkGreen'>colored</font> "
-      . "by <u>COG</u> association.<br>"
-      . "Light yellow colored genes have <b>no</b> COG association.";
+    $hint .= "Click on the red dashed box <font color='red'><b>- - -</b>" .
+	"</font> for functions associated with a cluster.<br>";
+    $hint .= "Genes are <font color='darkGreen'>colored</font> "
+	. "by <u>PFAM</u> association.<br>"
+	. "Light yellow colored genes have <b>no</b> PFAM association.";
     $hint .= "<br/>Cluster neighborhood is flanked on each side by at least " .
 	"10,000 additional base pairs.<br/>";
     printHint($hint);
+    print "<script src='$top_base_url/js/overlib.js'></script>\n";
 
     my $dbh = dbLogin();
     my $bc_str = OracleUtil::getNumberIdsInClause( $dbh, @bc );
@@ -7666,7 +7673,7 @@ sub viewNeighborhoodsForSelectedClusters {
 
         printNeighborhoodPanels
 	    ($dbh, $clustergenes, "", $cluster_h, $scaffold_info,
-	     "", $cluster_id, "", "", "", "cog", "nolink");
+	     "", $cluster_id, "", "", "", "pfam", "nolink");
     }
     $cur->finish();
     OracleUtil::truncTable( $dbh, "gtt_num_id" )

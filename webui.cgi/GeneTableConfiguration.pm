@@ -1,7 +1,7 @@
 ############################################################################
 # GeneTableConfiguration.pm - share use
 #
-# $Id: GeneTableConfiguration.pm 33841 2015-07-29 20:48:56Z klchu $
+# $Id: GeneTableConfiguration.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package GeneTableConfiguration;
 
@@ -29,7 +29,7 @@ my $pfam_base_url      = $env->{pfam_base_url};
 my $tigrfam_base_url   = $env->{tigrfam_base_url};
 my $enzyme_base_url    = $env->{enzyme_base_url};
 my $kegg_orthology_url = $env->{kegg_orthology_url};
-
+my $top_base_url = $env->{top_base_url};
 my $YUI        = $env->{yui_dir_28};
 my $yui_tables = $env->{yui_tables};
 
@@ -262,7 +262,7 @@ sub appendGeneTableConfiguration {
 
     print qq{
         <div id='genomeConfiguration'>      
-          <script type='text/javascript' src='$base_url/genomeConfig.js'></script>
+          <script type='text/javascript' src='$top_base_url/js/genomeConfig.js'></script>
 
           <table border='0'>
             <tr>
@@ -492,7 +492,7 @@ sub appendGeneTableConfiguration_old {
 sub printTreeViewMarkup {
     printTreeMarkup();
     print qq{
-        <script language='JavaScript' type='text/javascript' src='$base_url/findGenesTree.js'>
+        <script language='JavaScript' type='text/javascript' src='$top_base_url/js/findGenesTree.js'>
         </script>
     };
 }

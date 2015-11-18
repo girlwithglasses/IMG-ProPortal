@@ -75,6 +75,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     timeout( 60 * $merfs_timeout_mins );
 
     my $page = param("page");

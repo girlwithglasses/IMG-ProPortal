@@ -3,7 +3,7 @@
 #   results in a matrix.
 #        --es 3/20/2006
 #
-# $Id: GeneProfilerStor.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: GeneProfilerStor.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package GeneProfilerStor;
 my $section = "GeneProfilerStor";
@@ -48,10 +48,24 @@ my $max_gene_batch       = 500;
 # Check whether using Yahoo! tables
 my $yui_tables = $env->{yui_tables};
 
+sub getPageTitle {
+    setSessionParam( "lastCart", "geneCart" );
+    return 'Gene Profiler';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
 
     if (    paramMatch("showGeneCartProfile_s") ne ""

@@ -13,7 +13,7 @@
 #       to view application log entries in the file specified
 #       by WebConfig.pm: $e->{ web_log_file }.
 #
-# $Id: GeneCartChrViewer.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: GeneCartChrViewer.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package GeneCartChrViewer;
 my $section = "GeneCartChrViewer";
@@ -50,10 +50,24 @@ my $maxScaffolds          = 10;
 my $module_name  = "drawCircMap";
 my $NUM_OF_BANDS = 8;
 
+sub getPageTitle {
+    WebUtil::setSessionParam( "lastCart", "geneCart" );
+    return 'Circular Chromosome Viewer';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch to pages for this section.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+    
     my $dbh = dbLogin();
     checkDomain($dbh);
 

@@ -1,7 +1,7 @@
 ############################################################################
 # FunctionAlignment.pm - new tool
 #
-# $Id: FunctionAlignment.pm 31652 2014-08-14 05:59:25Z jinghuahuang $
+# $Id: FunctionAlignment.pm 34543 2015-10-20 21:04:12Z klchu $
 ############################################################################
 package FunctionAlignment;
 my $section = "FunctionAlignment";
@@ -37,11 +37,21 @@ my %function2Name = (
       all  => "All"
 );
 
+sub getPageTitle {
+    return 'Function Alignment';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ( "FindFunctions", '', '', '', '', 'FunctionAlignment.pdf' );
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch to pages for this section.
 ############################################################################
 sub dispatch {
-
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     timeout( 60 * 180 );    # timeout in 3 hrs
     if ( paramMatch("showAlignmentForGene") ) {

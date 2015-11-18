@@ -3,7 +3,7 @@
 # It follows the same logic as main.pl and inner.pl
 # see xml.cgi
 #
-# $Id: xml.pl 34179 2015-09-03 20:53:31Z aireland $
+# $Id: xml.pl 34697 2015-11-12 21:25:00Z klchu $
 ############################################################################
 use strict;
 use CGI qw( :standard );
@@ -32,17 +32,18 @@ timeout( 60 * $default_timeout_mins );
 my $cgi     = WebUtil::getCgi();
 my $section = param("section");
 
-if ( $section eq "tooltip" ) {
-    my $filename = param('filename');
-    print header( -type => "text/html" );
-
-    my $file = $base_dir . '/doc/tooltips/' . $filename;
-    if ( -e $file ) {
-        my $str = file2Str($file);
-        print $str;
-    }
-
-} elsif ( $section eq "yuitracker" ) {
+#if ( $section eq "tooltip" ) {
+#    my $filename = param('filename');
+#    print header( -type => "text/html" );
+#
+#    my $file = $base_dir . '/doc/tooltips/' . $filename;
+#    if ( -e $file ) {
+#        my $str = file2Str($file);
+#        print $str;
+#    }
+#
+#} els
+if ( $section eq "yuitracker" ) {
     print header( -type => "text/html" );
     my $file = $env->{yui_export_tracker_log};
     my $afh = newAppendFileHandle( $file, "yui", 1 );

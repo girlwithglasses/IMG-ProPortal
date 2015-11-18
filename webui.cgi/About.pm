@@ -18,10 +18,19 @@ my $section_cgi = "$main_cgi?section=$section";
 my $verbose = $env->{ verbose };
 my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'About';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('about');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param('page');
     
     if($page eq "using") {

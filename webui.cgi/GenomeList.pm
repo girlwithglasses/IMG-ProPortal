@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeList.pm 34497 2015-10-13 20:33:17Z klchu $
+# $Id: GenomeList.pm 34731 2015-11-18 20:11:30Z klchu $
 ############################################################################
 package GenomeList;
 
@@ -47,7 +47,7 @@ my $myTaxonPrefs              = 'myTaxonPrefs';                      # filename
 my $myProjectPrefs            = 'myProjectPrefs';                    # filename
 my $mySamplePrefs             = 'mySamplePrefs';                     # filename
 my $myTaxonStatsPrefs         = 'myTaxonStatsPrefs';                 # filename
-
+my $top_base_url = $env->{top_base_url};
 #my $projectMetadataDir                 = "/webfs/scratch/img/gold/";
 #my $project_info_project_relevanceFile = $projectMetadataDir . 'project_info_project_relevance';
 #my $project_info_cell_arrangementFile  = $projectMetadataDir . 'project_info_cell_arrangement';
@@ -755,13 +755,30 @@ my $select_id_name = 'taxon_filter_oid';
 # =============================================================================
 
 sub getPageTitle {
-    return 'Genome List';
+    my $pageTitle = "Genome List";
+    if ( param("setTaxonFilter") ne "" ) {
+        my @taxon_filter_oid = param("taxon_filter_oid");
+        if ( $#taxon_filter_oid > -1) {
+            $pageTitle = "Genome Cart";
+        } else {
+            $pageTitle = "Genome Selection Message";
+        }
+    } 
+    return $pageTitle;
 }
 
 sub getAppHeaderData {
     my ($self) = @_;
 
     my @a = ('FindGenomes');
+    if ( param("setTaxonFilter") ne "" ) {
+        my @taxon_filter_oid = param("taxon_filter_oid");
+        if ( $#taxon_filter_oid > -1) {
+            @a = ('AnaCart');
+        } else {
+            @a = ('FindGenomes');
+        }
+    } 
     return @a;
 }
 
@@ -769,7 +786,38 @@ sub dispatch {
     my ( $self, $numTaxon ) = @_;
     my $page = param('page');
 
-    if ( $page eq 'genomeList' ) {
+
+    if ( param("setTaxonFilter") ne "" ) {
+        # this must be first
+        my @taxon_filter_oid = param("taxon_filter_oid");
+        if ( $#taxon_filter_oid > -1) {
+
+            #
+            # Exception case 2 - Ken
+            #
+            # this must before  the "} elsif (exists $validSections{ $section}) { "
+            # s.t. the genome cart is display after the user presses add to genome cart
+            #
+            # add to genome cart - ken
+            GenomeList::clearCache();
+
+            require GenomeCart;
+            WebUtil::setSessionParam( "lastCart", "genomeCart" );
+            GenomeCart::dispatch();
+        } else {
+
+            #
+            # Exception case 3 - ken
+            #
+            # I have a feeling this is no longer used - ken
+            #
+            WebUtil::printMessage(
+                "Saving 'no selections' is the same as selecting " . "all genomes. Genome filtering is disabled.\n" );
+
+        }
+
+
+    } elsif ( $page eq 'genomeList' ) {
         # redisplay
         my $from = param('from');
         param( -name => 'from', -value => 'orgsearch2' ) 
@@ -785,6 +833,8 @@ sub dispatch {
     } elsif ( $page eq 'phylumCartGenomeList' ) {
         # genome cart group by phyla
         printCartPhylumGenomeList();
+       
+        
     } else {
         #  test
         #  my $dbh = WebUtil::dbLogin();
@@ -1644,6 +1694,7 @@ and t.OBSOLETE_FLAG = 'No'
         my $gaId     = $sub_href->{'t.analysis_project_id'};
         if ( $gaId ne '' ) {
             my $aref = $data{$gaId};
+            next if($aref eq '' || $#$aref < 0);
             my($submission_id, $qc, $submission_type, $project_type, $assembly_method) = @$aref;
             $sub_href->{'gap.is_gene_primp'} = $qc if ( $qc ne '' );
             $sub_href->{'gap.submission_type'} = $submission_type if ( $submission_type ne '' );
@@ -2055,6 +2106,9 @@ sub getMetagenomeStats {
     }
 
     my @taxons   = keys %$taxon_data_href;
+    
+    return if($#taxons < 0); # no taxon oids - obsolete genome set - ken
+    
     my $taxonStr = OracleUtil::getTaxonIdsInClause( $dbh, @taxons );
 
     my @columns = keys %statsColumnsMerfs;
@@ -2125,7 +2179,7 @@ sub printConfigDiv {
 
     print qq{
         <div id='genomeConfiguration'>      
-          <script type='text/javascript' src='$base_url/genomeConfig.js'></script>
+          <script type='text/javascript' src='$top_base_url/js/genomeConfig.js'></script>
 
           <table border='0'>
             <tr>
@@ -2782,7 +2836,7 @@ sub printConfigDiv2 {
 
     print qq{
         <div id='genomeConfiguration'>      
-          <script type='text/javascript' src='$base_url/genomeConfig.js'></script>
+          <script type='text/javascript' src='$top_base_url/js/genomeConfig.js'></script>
 
           <table border='0'>
             <tr>

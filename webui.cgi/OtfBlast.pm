@@ -3,7 +3,7 @@
 #    from gene_oid specification.  Generate temp BLAST db dynamically.
 #   --es 12/03/2005
 #
-# $Id: OtfBlast.pm 33478 2015-05-29 20:48:54Z klchu $
+# $Id: OtfBlast.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package OtfBlast;
 my $section = "OtfBlast";
@@ -36,6 +36,7 @@ my $cgi_tmp_dir             = $env->{cgi_tmp_dir};
 my $cgi_dir                 = $env->{cgi_dir};
 my $cgi_url               = $env->{cgi_url};
 my $base_dir               = $env->{base_dir};
+my $base_url             = $env->{base_url};
 my $mer_data_dir            = $env->{mer_data_dir};
 my $taxon_faa_dir           = $env->{taxon_faa_dir};
 my $taxon_fna_dir           = $env->{taxon_fna_dir};
@@ -57,17 +58,32 @@ my $blastallm0_server_url   = $env->{blastallm0_server_url};
 my $img_ken                 = $env->{img_ken};
 my $z_arg                   = "-z 1000000";
 my $verbose                 = $env->{verbose};
-
+my $YUI = $env->{yui_dir_28};
 my $blast_max_genome = $env->{blast_max_genome};
 
 my $cgi_blast_cache_enable = $env->{cgi_blast_cache_enable};
 my $blast_wrapper_script   = $env->{blast_wrapper_script};
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Gene Details';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+
+    my @a = ( "FindGenes", '', '', $js );
+    return @a;
+}
+
 sub dispatch {
-    my($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
 
     my $sid = getContactOid();

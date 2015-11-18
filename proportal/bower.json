@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "leaflet.markercluster": "~0.4.0",
-    "d3kit": "~1.0.9"
+    "d3kit": "~1.0.9",
+    "d3.chart": "~0.2.1"
   }
 }

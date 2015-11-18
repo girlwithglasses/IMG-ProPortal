@@ -2,7 +2,7 @@
 # MyBins - allow super users to save their scaffolds as a bin
 #
 # - ken
-# $Id: MyBins.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: MyBins.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package MyBins;
 
@@ -46,7 +46,19 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
     $maxGeneListResults = getSessionParam("maxGeneListResults");
 }
 
+sub getPageTitle {
+    return 'My Bins';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('MyIMG');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     return if ( !$enable_workspace );
     return if ( !$user_restricted_site );
 

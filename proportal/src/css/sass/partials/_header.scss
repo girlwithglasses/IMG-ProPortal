@@ -1,49 +1,34 @@
 /* partials/headers */
-#jgi-header {
-	height:70px;
+.wrapper {
+    position: relative;
 }
-#jgi-logo {
-	float:left;
-}
-.jgi-nav {
-	display:  block;
-	overflow: hidden;
-}
-.jgi-nav ul {
-	margin-top:  10px;
-	margin-left: 50px;
-	padding:0;
-}
-.jgi-nav ul li {
-	display: inline-block;
-	list-style-type: none;
-//	font-family: "Karla", Helvetica, arial, sans-serif;
-//	text-transform: uppercase;
-//	font-size: 13px;
-//	text-decoration: underline;
-	padding-left: $gutter;
-//	list-style-position: inside;
-}
-.jgi-nav ul li a {
-	color:#5a5a5a;
-	text-transform: uppercase;
-	font-size: 13px;
-}
-.jgi-nav ul li a:hover {
-	color:#fdba4d;
-	text-decoration: underline;
-}
-
-
-// Header container
-.header {
-	@include cf;
+header {
 	margin-bottom: $line-ht;
 }
 
 // Logo
-.logo {
-	padding: $gutter 0;
+#jgi-logo {
+	max-height: 70px;
+    max-width: 480px;
 }
 
-.logo-img {}
+// layouts with enough room for header image and search box: enforce space between the two
+@include minw($med) {
+    #jgi-logo {
+        float: left;
+    }
+    #jgi-nav, .user-links {
+        margin-left: 530px;
+    }
+}
+
+.user-links {
+    float: right;
+    margin-top: 3rem;
+}
+.user-links__item {
+    display: inline-block;
+}
+.user-links__item + .user-links__item {
+    margin-left: $gutter;
+}

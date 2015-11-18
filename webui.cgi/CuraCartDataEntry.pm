@@ -59,7 +59,7 @@ sub getAppHeaderData {
 # dispatch - Dispatch to pages for this section.
 ############################################################################
 sub dispatch {
-
+    my ( $self, $numTaxon ) = @_;
     if( !$contact_oid ) {
         webError( "Please login in." );
     }

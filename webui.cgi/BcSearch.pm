@@ -1,6 +1,6 @@
 #
 #
-# $Id: BcSearch.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: BcSearch.pm 34662 2015-11-10 21:03:55Z klchu $
 #
 package BcSearch;
 my $section = "BcSearch";
@@ -31,7 +31,7 @@ my $img_ken         = $env->{img_ken};
 my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
 my $YUI             = $env->{yui_dir_28};
 my $nvl             = getNvl();
-
+my $top_base_url = $env->{top_base_url};
 
 sub getPageTitle {
     my $page = param('page');
@@ -53,6 +53,7 @@ sub getAppHeaderData {
 }
 
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param('page');
 
     if ( $page eq 'test' ) {
@@ -100,7 +101,7 @@ sub printNPSearchForms {
         <p>$idSearchLink</p>
     };
     print qq{
-        <script language='JavaScript' type='text/javascript' src='$base_url/validation.js'>
+        <script language='JavaScript' type='text/javascript' src='$top_base_url/js/validation.js'>
         </script>
     };
 
@@ -243,7 +244,7 @@ sub printChemSearchForm {
     if ( $includeJS ) {
         print qq{
             <h1>Secondary Metabolite (SM) Search By Chemical Structure</h1>
-            <script language='JavaScript' type='text/javascript' src='$base_url/validation.js'>
+            <script language='JavaScript' type='text/javascript' src='$top_base_url/js/validation.js'>
             </script>
         };        
     }

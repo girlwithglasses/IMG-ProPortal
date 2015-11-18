@@ -1,6 +1,6 @@
 #
 #
-# $Id: FindFunctionMERFS.pm 30511 2014-03-30 18:24:38Z jinghuahuang $
+# $Id: FindFunctionMERFS.pm 34543 2015-10-20 21:04:12Z klchu $
 #
 package FindFunctionMERFS;
 
@@ -14,6 +14,7 @@ use OracleUtil;
 use InnerTable;
 use MetaUtil;
 use MerFsUtil;
+use HTML::Template;
 
 my $section              = "FindFunctionMERFS";
 my $env                  = getEnv();
@@ -39,7 +40,7 @@ my $pfam_base_url        = $env->{pfam_base_url};
 my $pfam_clan_base_url   = $env->{pfam_clan_base_url};
 my $enzyme_base_url      = $env->{enzyme_base_url};
 my $cgi_tmp_dir          = $env->{cgi_tmp_dir};
-
+my $YUI = $env->{yui_dir_28};
 my $mer_data_dir = $env->{mer_data_dir};
 
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
@@ -50,10 +51,22 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
 
 $| = 1;
 
+sub getPageTitle {
+    return 'Find Functions';
+}
+
+sub getAppHeaderData {
+    my($self) = @_;
+    
+    my @a = ('FindFunctions');
+    return @a;
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     if ( $page eq 'geneDisplayNameGenes' ) {
         printGeneDisplayNameGenes();

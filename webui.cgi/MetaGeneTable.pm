@@ -63,10 +63,22 @@ if ( !$merfs_timeout_mins ) {
     $merfs_timeout_mins = 60;
 }
 
-#######################################################################################
-# dispatch
-#######################################################################################
+sub getPageTitle {
+    return 'Gene List';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindGenes');
+    return @a;
+}
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $sid  = getContactOid();
     my $page = param("page");
 

@@ -2,7 +2,7 @@
 # SixPack.pm - Six  frame translation.
 #    --es 06/22/08
 #
-# $Id: SixPack.pm 30377 2014-03-10 23:39:16Z jinghuahuang $
+# $Id: SixPack.pm 34555 2015-10-21 18:22:11Z klchu $
 ############################################################################
 package SixPack;
 my $section = "SixPack";
@@ -24,10 +24,19 @@ my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
 my $bin_dir =  $env->{ bin_dir };
 my $verbose = $env->{ verbose };
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Six Frame Translation';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param( "page" );
 
     if( paramMatch( "sixPack" ) ne "" ) {

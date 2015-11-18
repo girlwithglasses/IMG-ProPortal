@@ -7,7 +7,7 @@
 # filenames with white spaces     $filename =~ s/\s/_/g;
 # - ken
 #
-# $Id: Workspace.pm 34534 2015-10-19 16:04:48Z jinghuahuang $
+# $Id: Workspace.pm 34596 2015-10-30 20:25:04Z klchu $
 #
 ############################################################################
 package Workspace;
@@ -88,7 +88,6 @@ my $ownerFilesetDelim_message = "::::";
 
 my $filename_size      = 25;
 my $filename_len       = 60;
-my $max_workspace_view = 10000;
 my $max_upload_size    = 50000000;
 
 my $nvl          = getNvl();
@@ -131,10 +130,26 @@ sub initialize {
     }
 }
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Workspace';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ();
+    my $header = param("header");
+    my $ws_yui_js = getStyles();    # Workspace related YUI JS and styles
+    if ( WebUtil::paramMatch("wpload") ) {              ##use 'wpload' since param 'uploadFile' interferes 'load'
+        # no header
+    } elsif ( $header eq "" && WebUtil::paramMatch("noHeader") eq "" ) {
+        @a = ( "AnaCart", "", "", $ws_yui_js, '', 'IMGWorkspaceUserGuide.pdf' );
+    }
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     return if ( !$enable_workspace );
     return if ( !$user_restricted_site );
 
@@ -2779,7 +2794,7 @@ sub printWorkspaceSetDetail {
     while ( my $id = $res->getline() ) {
 
         # set a limit so that it won't crash web browser
-        if ( $row >= $max_workspace_view ) {
+        if ( $row >= WorkspaceUtil::getMaxWorkspaceView() ) {
             $trunc = 1;
             last;
         }
@@ -4087,7 +4102,7 @@ sub viewFile {
     while ( my $id = $res->getline() ) {
 
         # set a limit so that it won't crash web browser
-        if ( $row >= $max_workspace_view ) {
+        if ( $row >= WorkspaceUtil::getMaxWorkspaceView() ) {
             $trunc = 1;
             last;
         }

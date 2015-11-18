@@ -2,7 +2,7 @@
 # Phylogenetic Distribution of Genes from taxon detail
 # (file version)
 #
-# $Id: MetaFileHits.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: MetaFileHits.pm 34662 2015-11-10 21:03:55Z klchu $
 ###########################################################################
 package MetaFileHits;
 
@@ -122,13 +122,27 @@ my $nvl = getNvl();
 
 my $debug = 0;
 
-#
-# dispatch - Dispatch to pages for this section.
-#
-# this is the hook into main.pl
-# to get here, then I use section=??? to go the correct page after
-#
+sub getPageTitle {
+    return 'Metagenome Hits';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    if(param('noHeader') eq '' && WebUtil::paramMatch("noHeader") eq "") {
+        @a = ('FindGenomes');
+    }
+    
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $sid       = getContactOid();
     my $page      = param("page");
     my $taxon_oid = param("taxon_oid");
@@ -1787,8 +1801,6 @@ sub printMetagCogFuncPath {
     my ( $r_ref, $h_ref, $p_ref ) =
       PhyloUtil::readCacheData( $file1, $file2, $file4 );
 
-    #print "<script language='JavaScript' type='text/javascript'\n";
-    #print "src='$base_url/taxonDetails.js'></script>\n";
 
     MetagJavaScript::printMetagJS();
 
@@ -2256,8 +2268,6 @@ sub printTaxonomyMetagHits {
     # array of arrays rec data
     my @recs;
 
-    #print "<script language='JavaScript' type='text/javascript'\n";
-    #print "src='$base_url/taxonDetails.js'></script>\n";
 
     MetagJavaScript::printMetagJS();
 

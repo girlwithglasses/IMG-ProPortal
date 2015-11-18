@@ -1,6 +1,6 @@
 ############################################################################
 # IMGProteins.pm - displays proteomic data
-# $Id: IMGProteins.pm 34240 2015-09-14 16:27:38Z aratner $
+# $Id: IMGProteins.pm 34707 2015-11-13 20:21:17Z klchu $
 ############################################################################
 package IMGProteins;
 my $section = "IMGProteins";
@@ -33,20 +33,30 @@ my $main_cgi    = $env->{ main_cgi };
 my $section_cgi = "$main_cgi?section=IMGProteins";
 my $verbose     = $env->{ verbose };
 my $base_url    = $env->{ base_url };
+my $top_base_url             = $env->{top_base_url};
 my $cluster_bin = $env->{ cluster_bin }; 
 my $R           = $env->{ r_bin }; 
 my $nvl         = getNvl();
-
+my $top_base_url = $env->{top_base_url};
 my $user_restricted_site  = $env->{ user_restricted_site };
 my $color_array_file = $env->{ large_color_array_file };
 
 my $batch_size = 60;
 my $YUI = $env->{yui_dir_28};
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Proteomics';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ( "Proteomics", '', '', '', '', "Proteomics.pdf" );
+    return @a;
+}
+
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $page = param("page");
     if ($page eq "proteomics" ||
 	paramMatch("proteomics") ne "") {
@@ -1221,7 +1231,7 @@ sub printExperiments {
     print hiddenVar( "taxon_oid", $taxon_oid );
 
     ######### for preview graph
-    print "<script src='$base_url/imgCharts.js'></script>\n";
+    print "<script src='$top_base_url/js/imgCharts.js'></script>\n";
     print qq{ 
         <link rel="stylesheet" type="text/css" 
           href="$YUI/build/container/assets/skins/sam/container.css" />
@@ -1480,7 +1490,7 @@ sub printPreviewGraph {
     if ($sample1 eq "" || $sample2 eq "") { 
         my $header = "Preview";
         my $body = "Please select 2 samples.";
-	my $script = "$base_url/overlib.js";
+	my $script = "$top_base_url/js/overlib.js";
  
         print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
         print qq { 
@@ -1598,7 +1608,7 @@ sub printPreviewGraph {
 	if ($st == 0) {
             my $url = "$tmp_url/".$chart->FILE_PREFIX.".png"; 
             my $imagemap = "#".$chart->FILE_PREFIX;
-            my $script = "$base_url/overlib.js";
+            my $script = "$top_base_url/js/overlib.js";
 	    my $width = $chart->WIDTH;
             my $height = $chart->HEIGHT;
 
@@ -3652,9 +3662,9 @@ sub printClusterMap {
 
     if ($sortId eq "") {
 	# call the Java TreeView applet: 
-	my $archive = "$base_url/TreeViewApplet.jar," 
-	             ."$base_url/nanoxml-2.2.2.jar," 
-	             ."$base_url/Dendrogram.jar"; 
+	my $archive = "$top_base_url/lib/TreeViewApplet.jar," 
+	             ."$top_base_url/lib/nanoxml-2.2.2.jar," 
+	             ."$top_base_url/lib/Dendrogram.jar"; 
 	print qq{ 
 	    <APPLET code="edu/stanford/genetics/treeview/applet/ButtonApplet.class"
 		archive="$archive" 

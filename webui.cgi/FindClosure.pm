@@ -30,18 +30,29 @@ my $user_restricted_site = $env->{user_restricted_site};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $tmp_dir              = $env->{tmp_dir};
 my $tmp_url  = $env->{tmp_url};
-
+my $top_base_url = $env->{top_base_url};
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 
 my $max_func = 5;
 my $debug = 0;
 
+sub getPageTitle {
+    return 'Functional Closure';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
 
 
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     my $sid  = getContactOid();
 
@@ -2218,7 +2229,7 @@ sub showHistogram {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) { 
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printGenomeDistribution", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2415,7 +2426,7 @@ sub showTaxonGeneCntHistogram {
     if ( $env->{chart_exe} ne "" ) {
         my $st = generateChart($chart);
         if ( $st == 0 ) { 
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printGenomeDistribution", 1 );
             while ( my $s = $FH->getline() ) {

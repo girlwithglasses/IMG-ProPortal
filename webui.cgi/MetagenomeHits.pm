@@ -1,6 +1,6 @@
 ###########################################################################
 # Phylogenetic Distribution of Genes from taxon detail page
-# $Id: MetagenomeHits.pm 33936 2015-08-07 18:49:54Z klchu $
+# $Id: MetagenomeHits.pm 34545 2015-10-20 21:36:40Z klchu $
 ###########################################################################
 package MetagenomeHits;
 
@@ -101,13 +101,26 @@ my $mynull     = "mynull";
 
 my $nvl = getNvl();
 
-#
-# dispatch - Dispatch to pages for this section.
-#
-# this is the hook into main.pl
-# to get here, then I use section=??? to go the correct page after
-#
+sub getPageTitle {
+    return 'Genome Hits';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    if(WebUtil::paramMatch("noHeader") eq "") {
+        @a = ('FindGenomes');
+    }
+    
+    return @a;
+}
+
+
+############################################################################
+# dispatch - Dispatch loop.
+############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
     my $sid       = getContactOid();
     my $page      = param("page");
     my $taxon_oid = param("taxon_oid");

@@ -1,5 +1,5 @@
 #
-# $Id: GenomeGeneOrtholog.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: GenomeGeneOrtholog.pm 34543 2015-10-20 21:04:12Z klchu $
 #
 package GenomeGeneOrtholog;
 
@@ -59,7 +59,7 @@ sub getAppHeaderData {
 }
 
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     my $page = param('page');
     if ( $page eq 'compare' ) {
         timeout( 60 * 20 );

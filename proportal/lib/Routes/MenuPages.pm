@@ -55,7 +55,7 @@ prefix '/menu' => sub {
 sub menu_maker {
 	my $page = shift;
 	my $core = setting("_core");
-	if ( $core->get_link_data( $page ) ) {
+	if ( $core->link_data( $page ) ) {
 		# find the link in the menus
 		return $core->search_menu( $page );
 	}

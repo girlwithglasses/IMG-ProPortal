@@ -1,6 +1,6 @@
 ########################################################################### 
 # AllPwayBrowser.pm - Browser module for all IMG pathways
-# $Id: AllPwayBrowser.pm 33566 2015-06-11 10:47:36Z jinghuahuang $
+# $Id: AllPwayBrowser.pm 34545 2015-10-20 21:36:40Z klchu $
 ############################################################################ 
 package AllPwayBrowser; 
 use strict; 
@@ -43,10 +43,23 @@ my $enzyme_base_url      = $env->{enzyme_base_url};
 
 my $use_cache = 0;
  
+sub getPageTitle {
+    return 'All Pathways';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('FindFunctions');
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
-sub dispatch { 
+sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     if ( $page eq "allPwayBrowser" ) {
 	if ( $use_cache ) {

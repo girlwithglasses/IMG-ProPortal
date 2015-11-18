@@ -2,7 +2,7 @@
 # ImgCompound - Process search and browsing for IMG compound.
 #   imachen 12/08/2006
 #
-# $Id: ImgCompound.pm 32248 2014-11-05 21:33:44Z klchu $
+# $Id: ImgCompound.pm 34543 2015-10-20 21:04:12Z klchu $
 ###########################################################################
 package ImgCompound;
 use strict;
@@ -19,6 +19,9 @@ use FuncUtil;
 my $env = getEnv( );
 my $main_cgi = $env->{ main_cgi };
 my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
+my $base_url            = $env->{base_url};
+my $base_dir            = $env->{base_dir};
+my $YUI                 = $env->{yui_dir_28};
 
 my $verbose = $env->{ verbose };
 
@@ -29,14 +32,30 @@ my $section_cgi = "$main_cgi?section=$section";
 my $pubchem_base_url = "http://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?"; 
 
 
+sub getPageTitle {
+    return 'IMG Compound';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/meshTreeHeader.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    my @a = ("FindFunctions", '', '', $js );
+
+    return @a;
+}
+
+
 ############################################################################
-# dispatch - Dispatch pages for this section.
-#   All page links to this same section should be in the form of
-#
-#   my $url = "$main_cgi?section=$section&page=..." 
-#
+# dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
 
     my $page = param( "page" );
     if( $page eq "index" ) {

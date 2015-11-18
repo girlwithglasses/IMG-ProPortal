@@ -1,17 +1,14 @@
 /* partials/layout */
+
 // make sure that all the article content stays in the container
-.content-wrap, article {
+article {
 	@include cf;
 	clear: both;
 }
 
-
 @include maxw( $nar- ) {
 
-	.content-wrap {
-		clear: both;
-	}
-	#about, #user-guide, #news, .content-wrap article {
+	#about, #user-guide, #news, .content {
 		width: 100%;
 		padding: 0;
 	}
@@ -30,14 +27,13 @@
 }
 
 @include minw( $med ) {
-
-	.content-wrap article { // article
-		width: 80%;
+	.content { // article
+		width: 100% - $sidebar-width;
 		float: right;
 		padding: 0 $gutter;
 	}
-	.content-wrap .sidebar { // section navigation
-		width: 20%;
+	.sidebar { // section navigation
+		width: $sidebar-width;
 		float: left;
 	}
 	.footer {

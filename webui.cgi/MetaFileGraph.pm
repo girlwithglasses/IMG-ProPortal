@@ -3,7 +3,7 @@
 # MetaFileGraph: metagenome phylo distribution (file version)
 #
 # package to draw 2 recur plots and scatter plot
-# $Id: MetaFileGraph.pm 31256 2014-06-25 06:27:22Z jinghuahuang $
+# $Id: MetaFileGraph.pm 34545 2015-10-20 21:36:40Z klchu $
 ############################################################################
 package MetaFileGraph;
 
@@ -43,10 +43,27 @@ my $user_restricted_site = $env->{user_restricted_site};
 my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
 
+sub getPageTitle {
+    return 'Metagenome Graph';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ();
+    if(WebUtil::paramMatch("noHeader") eq "") {
+        @a = ('FindGenomes');
+    }
+    
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+    my ( $self, $numTaxon ) = @_;
+
     my $page = param("page");
     my $dbh  = dbLogin();
 

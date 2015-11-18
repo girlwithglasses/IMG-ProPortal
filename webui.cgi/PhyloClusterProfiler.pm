@@ -2,7 +2,7 @@
 # PhyloClusterProfiler.pm - Phylogenetic profiler, except using
 #    IMG clusters.         --es 07/13/11
 #
-# $Id: PhyloClusterProfiler.pm 34217 2015-09-09 20:28:14Z klchu $
+# $Id: PhyloClusterProfiler.pm 34662 2015-11-10 21:03:55Z klchu $
 ############################################################################
 package PhyloClusterProfiler;
 my $section = "PhyloClusterProfiler";
@@ -50,7 +50,7 @@ my $use_img_clusters     = $env->{use_img_clusters};
 my $taxonCluster_zfiles_dir = $env->{taxonCluster_zfiles_dir};
 my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
-
+my $top_base_url = $env->{top_base_url};
 my $phyloProfiler_sets_file;    # make obsolete
 my $preferences_url = "$main_cgi?section=MyIMG&form=preferences";
 
@@ -77,11 +77,19 @@ my %obsoleteGenes;
 my %pseudoGenes;
 my $nvl = getNvl();
 
-############################################################################
-# dispatch - Dispatch loop.
-############################################################################
+sub getPageTitle {
+    return 'Phylogenetic Profiler using Clusters';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+
+    my @a = ('FindGenes');
+    return @a;
+}
+
 sub dispatch {
-    my ($numTaxon) = @_;    # number of saved genomes
+    my ( $self, $numTaxon ) = @_;
     $numTaxon = 0 if ( $numTaxon eq "" );
     my $sid  = getContactOid();
     my $page = param("page");
@@ -2268,7 +2276,7 @@ sub printCogs {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printCogs", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2510,7 +2518,7 @@ sub printPfam {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printPfam", 1 );
             while ( my $s = $FH->getline() ) {
@@ -2747,7 +2755,7 @@ sub printTigrfam {
     ###########################
     if ( $env->{chart_exe} ne "" ) {
         if ( $st == 0 ) {
-            print "<script src='$base_url/overlib.js'></script>\n";
+            print "<script src='$top_base_url/js/overlib.js'></script>\n";
             my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
                                         "printTigrfam", 1 );
             while ( my $s = $FH->getline() ) {

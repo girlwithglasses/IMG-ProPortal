@@ -1,7 +1,7 @@
 ############################################################################
 # KeggPathwayDetail.pm - Show detail page for kegg pathway.
 #   --es 07/08/2005
-# $Id: KeggPathwayDetail.pm 34459 2015-10-08 22:26:11Z imachen $
+# $Id: KeggPathwayDetail.pm 34567 2015-10-23 18:38:30Z imachen $
 ############################################################################
 package KeggPathwayDetail;
 my $section = "KeggPathwayDetail";
@@ -32,6 +32,7 @@ use WorkspaceUtil;
 use QueryUtil;
 use GenomeListJSON;
 use KeggMap;
+use HTML::Template;
 
 my $env                  = getEnv();
 my $main_cgi             = $env->{main_cgi};
@@ -63,6 +64,7 @@ my $enzyme_base_url    = $env->{enzyme_base_url};
 my $kegg_reaction_url  = $env->{kegg_reaction_url};
 my $go_base_url        = $env->{go_base_url};
 my $cog_base_url       = $env->{cog_base_url};
+my $YUI                 = $env->{yui_dir_28};
 
 my $pubchem_base_url  = $env->{pubchem_base_url};
 if ( ! $pubchem_base_url ) {
@@ -84,11 +86,29 @@ my $nvl = WebUtil::getNvl();
 
 
 
+
+sub getPageTitle {
+    return 'KEGG Pathway Detail';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+        require GenomeListJSON;
+        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+        $template->param( base_url => $base_url );
+        $template->param( YUI      => $YUI );
+        my $js = $template->output;
+    
+    my @a = ( "FindFunctions", '', '', $js );
+    return @a;
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-    my ($numTaxon) = @_;
+    my ( $self, $numTaxon ) = @_;
     timeout( 60 * $merfs_timeout_mins );
 
     my $page = param("page");
@@ -119,8 +139,14 @@ sub dispatch {
         printKoGenomeList();
     } elsif ( $page eq "koList" || $page eq "kolist" ) {
         printKoList();
+    } elsif ( $page eq "participatingGenomesInPathway" ) {
+	printParticipatingGenomesInPathway();
     } elsif ( $page eq "potentialGenomesWithMissingEnzymes" ) {
 	printPotentialGenomesWithMissingEnzymes()
+    } elsif ( $page eq "participatingGenomesInModule" ) {
+	printParticipatingGenomesInModule();
+    } elsif ( $page eq "potentialGenomesWithMissingKOs" ) {
+	printPotentialGenomesWithMissingKOs()
     } elsif ( $page eq "keggmodulelist" ) {
         printKeggModuleList();
     } elsif ( $page eq "kodetail" ) {
@@ -1209,21 +1235,27 @@ sub printKoDetail {
 
 
 ##########################################################################
-# printPotentialGenomesWithMissingEnzymes
+# printParticipatingGenomesInPathway
 ##########################################################################
-sub printPotentialGenomesWithMissingEnzymes {
+sub printParticipatingGenomesInPathway {
     my $pathway_oid = param('pathway_oid');
+
     printMainForm(); 
-    print "<h1>Potential Genomes with Missing Enzymes</h1>\n";
+    print "<h1>Participating Genomes In KEGG Pathway</h1>\n";
     if ( ! $pathway_oid ) {
 	return;
     }
 
     my $dbh = dbLogin();
-    my $sql = qq{
-	select pathway_name from kegg_pathway where pathway_oid = ?
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
+    my $sql;
+    my $cur;
+    my @ecs = ();
+
+    ## check pathway
+    $sql = qq{
+	    select pathway_name from kegg_pathway where pathway_oid = ?
+        };
+    $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
     my ( $pathway_name ) = $cur->fetchrow();
     $cur->finish();
 
@@ -1231,34 +1263,37 @@ sub printPotentialGenomesWithMissingEnzymes {
     print hiddenVar( 'pathway_oid', $pathway_oid );
 
     ## get all enzymes from image_roi
-    $sql = "select pathway, roi_label from image_roi where roi_label != 'none' and pathway = ?";
+    $sql = "select distinct pathway, roi_label from image_roi where roi_label != 'none' and pathway = ? order by 1, 2";
     $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
-    my @ecs = ();
     for (;;) {
 	my ( $p2, $label ) = $cur->fetchrow();
 	last if ! $p2;
 	if ( $label ) {
-	    my $ec2 = 'EC:' . $label;
-	    push @ecs, ( $ec2 );
+	    if ( $label =~ /^\d/ ) {
+		my $ec2 = 'EC:' . $label;
+		push @ecs, ( $ec2 );
+	    }
 	}
     }
     $cur->finish();
 
     printStartWorkingDiv();
     my %taxon_h;
+    my $taxonClause2 = WebUtil::txsClause( "mv.taxon_oid", $dbh );
+    my $rclause2   = WebUtil::urClause("mv.taxon_oid");
+    my $imgClause2 = WebUtil::imgClauseNoTaxon("mv.taxon_oid");
+
     for my $ec2 ( @ecs ) {
 	print "<p>Checking $ec2 ...\n";
 	my $sql = qq{
-           (select gckt.taxon, kte.enzymes
-           from gene_candidate_ko_terms gckt, ko_term_enzymes kte
-           where gckt.ko_terms = kte.ko_id
-           and kte.enzymes = ? )
-           minus
-           (select gke.taxon, gke.enzymes
-           from gene_ko_enzymes gke 
-           where gke.enzymes = ? )
+           select mv.taxon_oid, mv.enzyme
+           from mv_taxon_ec_stat mv
+           where mv.enzyme = ? and mv.gene_count > 0
+           $taxonClause2
+           $rclause2
+           $imgClause2
            };
-	my $cur = execSql( $dbh, $sql, $verbose, $ec2, $ec2 );
+	my $cur = execSql( $dbh, $sql, $verbose, $ec2 );
 	for (;;) {
 	    my ( $t2, $e2 ) = $cur->fetchrow();
 	    last if ! $t2;
@@ -1274,10 +1309,13 @@ sub printPotentialGenomesWithMissingEnzymes {
 
     my @keys = (keys %taxon_h);
     if ( scalar(@keys) == 0 ) {
-	print "<h4>Cannot find any potential genomes.</h4>\n";
+	printEndWorkingDiv();
+	print "<h4>Cannot find any participating genomes.</h4>\n";
 	print end_form();
 	return;
     }
+
+    print "<p>Preparing result ...\n";
 
     my $taxonClause1 = WebUtil::txsClause( "t.taxon_oid", $dbh );
     my $rclause1   = WebUtil::urClause("t.taxon_oid");
@@ -1333,6 +1371,466 @@ sub printPotentialGenomesWithMissingEnzymes {
 	}
 	my $ec_str = join(", ", (keys %taxon_ec_h));
 	$r .= $ec_str . $sd . $ec_str . "\t";
+
+        $it->addRow($r);
+    }
+
+    printEndWorkingDiv();
+
+    if ( $count ) {
+	$it->printOuterTable(1);
+    }
+    else {
+	print "<h4>Cannot find any participating genomes.</h4>\n";
+    }
+
+    print end_form();
+}
+
+##########################################################################
+# printPotentialGenomesWithMissingEnzymes
+##########################################################################
+sub printPotentialGenomesWithMissingEnzymes {
+    my $pathway_oid = param('pathway_oid');
+
+    printMainForm(); 
+    print "<h1>Potential Genomes with Missing Enzymes</h1>\n";
+    if ( ! $pathway_oid ) {
+	return;
+    }
+
+    my $dbh = dbLogin();
+    my $sql;
+    my $cur;
+    my @ecs = ();
+
+    ## check pathway
+    $sql = qq{
+	    select pathway_name from kegg_pathway where pathway_oid = ?
+        };
+    $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
+    my ( $pathway_name ) = $cur->fetchrow();
+    $cur->finish();
+
+    print "<h2>Pathway $pathway_oid: $pathway_name</h2>\n";
+    print hiddenVar( 'pathway_oid', $pathway_oid );
+
+    ## get all enzymes from image_roi
+    $sql = "select distinct pathway, roi_label from image_roi where roi_label != 'none' and pathway = ? order by 1, 2 ";
+    $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
+    for (;;) {
+	my ( $p2, $label ) = $cur->fetchrow();
+	last if ! $p2;
+	if ( $label && $label =~ /^\d/ ) {
+	    my $ec2 = 'EC:' . $label;
+	    push @ecs, ( $ec2 );
+	}
+    }
+    $cur->finish();
+
+    printStartWorkingDiv();
+    my $taxonClause2 = WebUtil::txsClause( "gckt.taxon", $dbh );
+    my $rclause2   = WebUtil::urClause("gckt.taxon");
+    my $imgClause2 = WebUtil::imgClauseNoTaxon("gckt.taxon");
+    my %taxon_h;
+    for my $ec2 ( @ecs ) {
+	print "<p>Checking $ec2 ...\n";
+	my $sql = qq{
+           (select gckt.taxon, kte.enzymes
+           from gene_candidate_ko_terms gckt, ko_term_enzymes kte
+           where gckt.ko_terms = kte.ko_id
+           and kte.enzymes = ? 
+           $taxonClause2
+           $rclause2
+           $imgClause2 )
+           minus
+           (select mv.taxon_oid, mv.enzyme
+           from mv_taxon_ec_stat mv
+           where mv.enzyme = ? and mv.gene_count > 0)
+           };
+	my $cur = execSql( $dbh, $sql, $verbose, $ec2, $ec2 );
+	for (;;) {
+	    my ( $t2, $e2 ) = $cur->fetchrow();
+	    last if ! $t2;
+
+	    if ( $taxon_h{$t2} ) {
+		$taxon_h{$t2} .= "\t" . $e2;
+	    }
+	    else {
+		$taxon_h{$t2} = $e2;
+	    }
+	}
+    }
+
+    my @keys = (keys %taxon_h);
+    if ( scalar(@keys) == 0 ) {
+	printEndWorkingDiv();
+	print "<h4>Cannot find any potential genomes.</h4>\n";
+	print end_form();
+	return;
+    }
+
+    print "<p>Preparing result ...\n";
+
+    my $taxonClause1 = WebUtil::txsClause( "t.taxon_oid", $dbh );
+    my $rclause1   = WebUtil::urClause("t.taxon_oid");
+    my $imgClause1 = WebUtil::imgClauseNoTaxon("t.taxon_oid");
+
+    my $sql2 = qq{
+          select t.taxon_oid, substr(t.domain, 0, 1), substr(t.seq_status, 0, 1), 
+                 t.taxon_display_name, t.in_file 
+          from taxon t 
+          where t.taxon_oid = ?
+          $taxonClause1
+          $rclause1
+          $imgClause1
+        };
+    my $it = new InnerTable( 1, "genome$$", "genome", 0 );
+    my $sd = $it->getSdDelim();  # sort delimiter
+    $it->addColSpec( "Domain", "asc", "center", "",
+                     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "asc", "center", "",
+		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome Name", "asc", "left" );
+    $it->addColSpec( "Missing Enzyme(s)",  "asc", "left" );
+
+    my $count = 0;
+    for my $taxon_oid ( @keys ) {
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
+	my ($id2, $domain, $seq_status, $taxon_display_name, $in_file) = 
+	    $cur2->fetchrow();
+	$cur2->finish();
+
+	if ( ! $id2 ) {
+	    next;
+	}
+	$count++;
+
+        my $r;
+        $r .= "$domain\t";
+        $r .= "$seq_status\t";
+
+        my $url = "$main_cgi?section=TaxonDetail"
+                . "&page=taxonDetail&taxon_oid=$taxon_oid";
+        if ( $in_file ) {
+            $url = "$main_cgi?section=MetaDetail"
+		 . "&page=metaDetail&taxon_oid=$taxon_oid";
+        }
+        $r .= $taxon_display_name . $sd 
+	    . alink( $url, $taxon_display_name ) . "\t";
+
+	my @taxon_ecs = split(/\t/, $taxon_h{$taxon_oid});
+	my %taxon_ec_h;
+	for my $te2 ( @taxon_ecs ) {
+	    $taxon_ec_h{$te2} = 1;
+	}
+	my $ec_str = join(", ", (keys %taxon_ec_h));
+	$r .= $ec_str . $sd . $ec_str . "\t";
+
+        $it->addRow($r);
+    }
+
+    printEndWorkingDiv();
+
+    if ( $count ) {
+	$it->printOuterTable(1);
+    }
+    else {
+	print "<h4>Cannot find any potential genomes.</h4>\n";
+    }
+
+    print end_form();
+}
+
+##########################################################################
+# printParticipatingGenomesInModule
+##########################################################################
+sub printParticipatingGenomesInModule {
+    my $module_id = param('module_id');
+
+    printMainForm(); 
+    print "<h1>Participating Genomes In EKGG Module</h1>\n";
+    if ( ! $module_id ) {
+	return;
+    }
+
+    my $dbh = dbLogin();
+    my $sql;
+    my $cur;
+    my @kos = ();
+
+    ## check module
+    $sql = qq{
+	    select module_name from kegg_module where module_id = ?
+        };
+    $cur = execSql( $dbh, $sql, $verbose, $module_id );
+    my ( $module_name ) = $cur->fetchrow();
+    $cur->finish();
+
+    print "<h2>Module $module_id: $module_name</h2>\n";
+    print hiddenVar( 'module_id', $module_id );
+
+    ## get all kos from image_roi
+    $sql = "select distinct kegg_module, roi_label from km_image_roi where kegg_module = ? order by 1, 2";
+    $cur = execSql( $dbh, $sql, $verbose, $module_id );
+    for (;;) {
+	my ( $k2, $label ) = $cur->fetchrow();
+	last if ! $k2;
+	if ( $label && $label =~ /^K/ ) {
+	    my $ko2 = 'KO:' . $label;
+	    push @kos, ( $ko2 );
+	}
+    }
+    $cur->finish();
+
+    printStartWorkingDiv();
+    my %taxon_h;
+    my $taxonClause2 = WebUtil::txsClause( "mv.taxon_oid", $dbh );
+    my $rclause2   = WebUtil::urClause("mv.taxon_oid"); 
+    my $imgClause2 = WebUtil::imgClauseNoTaxon("mv.taxon_oid");
+
+    for my $ko2 ( @kos ) {
+	print "<p>Checking $ko2 ...\n";
+        my $sql = qq{
+           select mv.taxon_oid, mv.ko_term
+           from mv_taxon_ko_stat mv
+           where mv.ko_term = ? and mv.gene_count > 0
+           $taxonClause2 
+           $rclause2 
+           $imgClause2 
+	}; 
+	my $cur = execSql( $dbh, $sql, $verbose, $ko2 );
+	for (;;) {
+	    my ( $t2, $e2 ) = $cur->fetchrow();
+	    last if ! $t2;
+
+	    if ( $taxon_h{$t2} ) {
+		$taxon_h{$t2} .= "\t" . $e2;
+	    }
+	    else {
+		$taxon_h{$t2} = $e2;
+	    }
+	}
+    }
+
+    my @keys = (keys %taxon_h);
+    if ( scalar(@keys) == 0 ) {
+	printEndWorkingDiv();
+	print "<h4>Cannot find any participating genomes.</h4>\n";
+	print end_form();
+	return;
+    }
+
+    print "<p>Preparing result ...\n";
+
+    my $taxonClause1 = WebUtil::txsClause( "t.taxon_oid", $dbh );
+    my $rclause1   = WebUtil::urClause("t.taxon_oid");
+    my $imgClause1 = WebUtil::imgClauseNoTaxon("t.taxon_oid");
+
+    my $sql2 = qq{
+          select t.taxon_oid, substr(t.domain, 0, 1), substr(t.seq_status, 0, 1), 
+                 t.taxon_display_name, t.in_file 
+          from taxon t 
+          where t.taxon_oid = ?
+          $taxonClause1
+          $rclause1
+          $imgClause1
+        };
+    my $it = new InnerTable( 1, "genome$$", "genome", 0 );
+    my $sd = $it->getSdDelim();  # sort delimiter
+    $it->addColSpec( "Domain", "asc", "center", "",
+                     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "asc", "center", "",
+		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome Name", "asc", "left" );
+    $it->addColSpec( "KO ID(s)",  "asc", "left" );
+
+    my $count = 0;
+    for my $taxon_oid ( @keys ) {
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
+	my ($id2, $domain, $seq_status, $taxon_display_name, $in_file) = 
+	    $cur2->fetchrow();
+	$cur2->finish();
+
+	if ( ! $id2 ) {
+	    next;
+	}
+	$count++;
+
+        my $r;
+        $r .= "$domain\t";
+        $r .= "$seq_status\t";
+
+        my $url = "$main_cgi?section=TaxonDetail"
+                . "&page=taxonDetail&taxon_oid=$taxon_oid";
+        if ( $in_file ) {
+            $url = "$main_cgi?section=MetaDetail"
+		 . "&page=metaDetail&taxon_oid=$taxon_oid";
+        }
+        $r .= $taxon_display_name . $sd 
+	    . alink( $url, $taxon_display_name ) . "\t";
+
+	my @taxon_kos = split(/\t/, $taxon_h{$taxon_oid});
+	my %taxon_ko_h;
+	for my $te2 ( @taxon_kos ) {
+	    $taxon_ko_h{$te2} = 1;
+	}
+	my $ko_str = join(", ", (keys %taxon_ko_h));
+	$r .= $ko_str . $sd . $ko_str . "\t";
+
+        $it->addRow($r);
+    }
+
+    printEndWorkingDiv();
+
+    if ( $count ) {
+	$it->printOuterTable(1);
+    }
+    else {
+	print "<h4>Cannot find any participating genomes.</h4>\n";
+    }
+
+    print end_form();
+}
+
+##########################################################################
+# printPotentialGenomesWithMissingKOs
+##########################################################################
+sub printPotentialGenomesWithMissingKOs {
+    my $module_id = param('module_id');
+
+    printMainForm(); 
+    print "<h1>Potential Genomes with Missing KOs</h1>\n";
+    if ( ! $module_id ) {
+	return;
+    }
+
+    my $dbh = dbLogin();
+    my $sql;
+    my $cur;
+    my @kos = ();
+
+    ## check module
+    $sql = qq{
+	    select module_name from kegg_module where module_id = ?
+        };
+    $cur = execSql( $dbh, $sql, $verbose, $module_id );
+    my ( $module_name ) = $cur->fetchrow();
+    $cur->finish();
+
+    print "<h2>Module $module_id: $module_name</h2>\n";
+    print hiddenVar( 'module_id', $module_id );
+
+    ## get all kos from image_roi
+    $sql = "select distinct kegg_module, roi_label from km_image_roi where kegg_module = ? order by 1, 2 ";
+    $cur = execSql( $dbh, $sql, $verbose, $module_id );
+    for (;;) {
+	my ( $k2, $label ) = $cur->fetchrow();
+	last if ! $k2;
+	if ( $label && $label =~ /^K/ ) {
+	    my $ko2 = 'KO:' . $label;
+	    push @kos, ( $ko2 );
+	}
+    }
+    $cur->finish();
+
+    printStartWorkingDiv();
+    my %taxon_h;
+    my $taxonClause2 = WebUtil::txsClause( "gckt.taxon", $dbh );
+    my $rclause2   = WebUtil::urClause("gckt.taxon");
+    my $imgClause2 = WebUtil::imgClauseNoTaxon("gckt.taxon");
+    for my $ko2 ( @kos ) {
+	print "<p>Checking $ko2 ...\n";
+	my $sql = qq{
+           (select gckt.taxon, gckt.ko_terms
+           from gene_candidate_ko_terms gckt
+           where gckt.ko_terms = ?
+           $taxonClause2
+           $rclause2
+           $imgClause2 )
+           minus
+           (select mv.taxon_oid, mv.ko_term
+           from mv_taxon_ko_stat mv
+           where mv.ko_term = ? and mv.gene_count > 0)
+           };
+	my $cur = execSql( $dbh, $sql, $verbose, $ko2, $ko2 );
+	for (;;) {
+	    my ( $t2, $e2 ) = $cur->fetchrow();
+	    last if ! $t2;
+
+	    if ( $taxon_h{$t2} ) {
+		$taxon_h{$t2} .= "\t" . $e2;
+	    }
+	    else {
+		$taxon_h{$t2} = $e2;
+	    }
+	}
+    }
+
+    my @keys = (keys %taxon_h);
+    if ( scalar(@keys) == 0 ) {
+	printEndWorkingDiv();
+	print "<h4>Cannot find any potential genomes.</h4>\n";
+	print end_form();
+	return;
+    }
+
+    print "<p>Preparing result ...\n";
+
+    my $taxonClause1 = WebUtil::txsClause( "t.taxon_oid", $dbh );
+    my $rclause1   = WebUtil::urClause("t.taxon_oid");
+    my $imgClause1 = WebUtil::imgClauseNoTaxon("t.taxon_oid");
+
+    my $sql2 = qq{
+          select t.taxon_oid, substr(t.domain, 0, 1), substr(t.seq_status, 0, 1), 
+                 t.taxon_display_name, t.in_file 
+          from taxon t 
+          where t.taxon_oid = ?
+          $taxonClause1
+          $rclause1
+          $imgClause1
+        };
+    my $it = new InnerTable( 1, "genome$$", "genome", 0 );
+    my $sd = $it->getSdDelim();  # sort delimiter
+    $it->addColSpec( "Domain", "asc", "center", "",
+                     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "asc", "center", "",
+		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome Name", "asc", "left" );
+    $it->addColSpec( "Missing KO ID(s)",  "asc", "left" );
+
+    my $count = 0;
+    for my $taxon_oid ( @keys ) {
+	my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
+	my ($id2, $domain, $seq_status, $taxon_display_name, $in_file) = 
+	    $cur2->fetchrow();
+	$cur2->finish();
+
+	if ( ! $id2 ) {
+	    next;
+	}
+	$count++;
+
+        my $r;
+        $r .= "$domain\t";
+        $r .= "$seq_status\t";
+
+        my $url = "$main_cgi?section=TaxonDetail"
+                . "&page=taxonDetail&taxon_oid=$taxon_oid";
+        if ( $in_file ) {
+            $url = "$main_cgi?section=MetaDetail"
+		 . "&page=metaDetail&taxon_oid=$taxon_oid";
+        }
+        $r .= $taxon_display_name . $sd 
+	    . alink( $url, $taxon_display_name ) . "\t";
+
+	my @taxon_kos = split(/\t/, $taxon_h{$taxon_oid});
+	my %taxon_ko_h;
+	for my $te2 ( @taxon_kos ) {
+	    $taxon_ko_h{$te2} = 1;
+	}
+	my $ko_str = join(", ", (keys %taxon_ko_h));
+	$r .= $ko_str . $sd . $ko_str . "\t";
 
         $it->addRow($r);
     }
@@ -3904,16 +4402,25 @@ sub printViewPathwayForm {
 	  'showMap', 'meddefbutton', 'selectedGenome1', 1 );
     print $button;
 
-    ## Amy: hide this feature until Krishna fixes the database
-#    print nbsp(1);
-#    my $b_url = "$section_cgi&page=potentialGenomesWithMissingEnzymes";
-#    $b_url .= "&pathway_oid=$pathway_oid";
-#    print buttonUrlNewWindow( $b_url, "Potential Genomes with Missing Enzymes", "lgbutton" );
-
     print nbsp(1);
     print reset( -class => "smbutton" );
 
     GenomeListJSON::showGenomeCart($numTaxon);
+
+    print "<h2>Isolate Genomes Associated with This KEGG Pathway</h2>\n";
+    print "<p><b>(Isolate Genomes Only)</b> The following two functions list all isolate genomes with genes linking to this KEGG pathway, and all potential isolate genomes with missing enzymes associated with pathway, respectively. The result will be displayed in a separate window.\n";
+
+    print "<p>\n";
+    my $a_url = "$section_cgi&page=participatingGenomesInPathway";
+    $a_url .= "&pathway_oid=$pathway_oid";
+    print buttonUrlNewWindow( $a_url, "Genomes Participated in Pathway", "lgbutton" );
+
+    print nbsp(1);
+    my $b_url = "$section_cgi&page=potentialGenomesWithMissingEnzymes";
+    $b_url .= "&pathway_oid=$pathway_oid";
+    print buttonUrlNewWindow( $b_url, "Potential Genomes with Missing Enzymes", "lgbutton" );
+
+
 }
 
 
@@ -4059,6 +4566,7 @@ sub printViewModuleImageForm {
 
     my @blueRec = ();
     my @purpleRec = ();
+    my @greenRec = ();
     for my $key (keys %ko_h) {
 	if ( $ko_roi_h{$key} ) {
 	    my @rois = split(/\t/, $ko_roi_h{$key});
@@ -4075,6 +4583,40 @@ sub printViewModuleImageForm {
 			    last;
 			}
 		    }
+		}
+	    }
+	}
+    }
+
+    ## check potential genes
+    if ( $taxon_oid ) {
+	$sql = qq{
+           (select gckt.taxon, gckt.ko_terms
+           from gene_candidate_ko_terms gckt
+           where gckt.taxon = ? )
+           minus
+           (select gkt.taxon, gkt.ko_terms
+           from gene_ko_terms gkt 
+           where gkt.taxon = ? )
+           };
+	$cur = execSql( $dbh, $sql, $verbose, $taxon_oid, $taxon_oid );
+	my %ko_h;
+	for (;;) {
+	    my ($t2, $k2) = $cur->fetchrow();
+	    last if ! $t2;
+	    $ko_h{$k2} = 1;
+	}
+	$cur->finish();
+
+	for my $key (keys %roi_h) {
+	    my $rec = $roi_h{$key};
+	    my @arr = split(/\t/, $rec);
+	    my $label = $arr[-1];
+	    my $ko_label = 'KO:' . $label;
+	    for my $ko2 (keys %ko_h) {
+		if ( $ko2 eq $ko_label ) {
+		    push @greenRec, ( $roi_h{$key} );
+		    last;
 		}
 	    }
 	}
@@ -4100,6 +4642,16 @@ sub printViewModuleImageForm {
 	print "<br/>\n"; 
     }
 
+    if ( scalar(@greenRec) > 0 ) {
+	KeggMap::applyCoords($im, \@greenRec, 'green');
+
+	print "<p>\n";
+        print "<image src='$base_url/images/green-square.gif' "
+            . "width='10' height='10' />\n";
+	print "Potential Genes with KO"; 
+	print "<br/>\n";
+    }
+
     my $tmpPngFile = "$tmp_dir/$module_id.$$.png";
     my $tmpPngUrl  = "$tmp_url/$module_id.$$.png";
  
@@ -4122,6 +4674,30 @@ sub printViewModuleImageForm {
 	    my $g_url = "$section_cgi&page=kogenelist";
 	    $g_url .= "&taxon_oid=$taxon_oid"; 
 	    $g_url .= "&ko_id=$ko_id&gtype=$gtype";
+
+	    if ($shape eq "rect") { 
+		my $x2  = $x1 + $w; 
+		my $y2  = $y1 + $h; 
+ 
+		print "<area shape='rect' coords='$x1,$y1,$x2,$y2' href=\"$g_url\" " 
+		    . " target='_blank' title='$koLabelStr' >\n"; 
+	    } elsif ($shape eq "poly") { 
+		my $coord_str = $h; 
+		print "<area shape='poly' coords='$coord_str' href=\"$g_url\" " 
+		    . " target='_blank' title='$koLabelStr' >\n"; 
+	    } 
+	}
+    }
+
+    if ( $taxon_oid && scalar(@greenRec) > 0 ) {
+	for my $rec ( @greenRec ) {
+	    my ($x1, $y1, $w, $h, $shape, $roi_type, $roi_label)
+		= split(/\t/, $rec);
+	    my $ko_id = 'KO:' . $roi_label;
+	    my $koLabelStr = $roi_label;
+	    my $g_url = "$main_cgi?section=MissingGenes&page=candidatesForm";
+	    $g_url .= "&taxon_oid=$taxon_oid"; 
+	    $g_url .= "&roi_label=$roi_label&funcId=$ko_id";
 
 	    if ($shape eq "rect") { 
 		my $x2  = $x1 + $w; 
@@ -4407,12 +4983,26 @@ sub printSelectGenomeForKoModuleMap {
           'printTaxonKoModuleMap', 'meddefbutton', 
 	  'selectedGenome1', 1 ); 
     print $button; 
- 
+
     print nbsp(1); 
     print reset( -class => "smbutton" );
  
 #    my $numTaxon = 0;
 #    GenomeListJSON::showGenomeCart($numTaxon);
+
+    print "<h2>Isolate Genomes Associated with This KEGG Module</h2>\n";
+    print "<p><b>(Isolate Genomes Only)</b> The following two functions list all isolate genomes with genes linking to this KEGG module, and all potential isolate genomes with missing KOs associated with module, respectively. The result will be displayed in a separate window.\n";
+
+    print "<p>\n";
+    my $a_url = "$section_cgi&page=participatingGenomesInModule";
+    $a_url .= "&module_id=$module_id";
+    print buttonUrlNewWindow( $a_url, "Genomes Participated in Module", "lgbutton" );
+
+    print nbsp(1);
+    my $b_url = "$section_cgi&page=potentialGenomesWithMissingKOs";
+    $b_url .= "&module_id=$module_id";
+    print buttonUrlNewWindow( $b_url, "Potential Genomes with Missing KOs", "lgbutton" );
+
     print end_form();
 }
 
