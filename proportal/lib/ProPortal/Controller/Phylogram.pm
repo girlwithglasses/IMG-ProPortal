@@ -25,11 +25,11 @@ Phylogram query
 sub render {
 	my $self = shift;
 
-# 	my $res = $self->run_query({
-# 		query => 'taxon_oid_display_name',
-# 		filters => $self->filters,
-# 	});
-	my $res = [ grep { 'isolate' eq $_->{genome_type} } @{ decode_json <DATA> } ];
+ 	my $res = $self->run_query({
+ 		query => 'taxon_oid_display_name',
+ 		filters => $self->filters,
+ 	});
+#	my $res = [ grep { 'isolate' eq $_->{genome_type} } @{ decode_json <DATA> } ];
 
     my $data;
     my $count;

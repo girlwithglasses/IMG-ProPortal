@@ -3,7 +3,7 @@
 	title = 'IMG ProPortal: Phylogram';
 %]
 	<h2>Phylogram</h2>
-  <p>Click on the nodes in the tree below to explore the phylogenetic tree for the <i>Prochlorococcus</i>, <i>Synechococcus</i>, and cyanophage species.</p>
+  <p>Click on the nodes in the tree below to explore the phylogenetic tree for the <i>Prochlorococcus</i>, <i>Synechococcus</i>, and cyanophage species. Please note that taxonomic information is not available for metagenomes.</p>
 
 [%	IF data_filters && data_filters.all %]
 <section id="filters">

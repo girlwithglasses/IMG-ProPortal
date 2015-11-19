@@ -25,11 +25,11 @@ Ecosystem query
 sub render {
 	my $self = shift;
 
-# 	my $res = $self->run_query({
-# 		query => 'ecosystem',
-# 		filters => $self->filters,
-# 	});
-    my $res = decode_json <DATA>;
+	my $res = $self->run_query({
+		query => 'ecosystem',
+		filters => $self->filters,
+	});
+#    my $res = decode_json <DATA>;
     if ( ! $res ) {
         die 'No results found for query';
     }
