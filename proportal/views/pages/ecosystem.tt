@@ -40,12 +40,15 @@
 			Hover over a segment to identify it. Click on a blue segment (representing an environment type) to zoom in; click on the left-most segment to zoom out.
 		</p>
 	</li>
-[%	FOREACH s IN results.array; %]
+
+[%	#	have environment data available here
+
+	FOREACH s IN results.array; %]
 <li data-sample-id="[% s.taxon_oid %]" id="taxon_oid_[% s.taxon_oid %]" class="sample_details">
 	<h4>[% s.taxon_display_name %]</h4>
 	<p>Ecosystem classification:</p>
-	<dl>
-[%	FOR e IN results.class_types %]
+	<dl class="table-like">
+[%	FOREACH e IN results.class_types %]
 		<dt>[% e.replace("_", " ") %]</dt>
 		<dl>[% s.$e %]</dl>
 [%	END; %]

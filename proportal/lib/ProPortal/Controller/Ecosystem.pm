@@ -34,9 +34,24 @@ sub render {
         die 'No results found for query';
     }
 
+    my @class_types = qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem );
+
+    my $tree;
+
+    for ( @$res ) {
+        $tree->{ $_->{ecosystem} }
+            { $_->{ecosystem_category} }
+            { $_->{ecosystem_type} }
+            { $_->{ecosystem_subtype} }
+            { $_->{specific_ecosystem} }
+            { $_->{taxon_display_name} } = $_;
+    }
+
+
 	return $self->add_defaults_and_render({
         array => $res,
-	    class_types => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
+	    class_types => [ @class_types ],
+	    tree => $tree,
     });
 
 }

@@ -9,7 +9,7 @@ use Template::Plugin::JSON::Escape;
 has '+tmpl_includes' => (
 	default => sub {
 		return {
-			tt_scripts => qw( phylogram ),
+			tt_scripts => qw( phylogram_r34552 ),
 		};
 	},
 );
@@ -35,7 +35,14 @@ sub render {
     my $count;
     for ( @$res ) {
         $count++;
-        push @{$data->{ $_->{genome_type} }{ $_->{domain} || 'unclassified' }{ $_->{phylum} || 'unclassified' }{ $_->{ir_class} || 'unclassified' }{ $_->{ir_order} || 'unclassified' }{ $_->{family} || 'unclassified' }{ $_->{genus} || 'unclassified'}{ $_->{clade} || 'unclassified' }}, { name => $_->{taxon_display_name}, data => $_ };
+        push @{ $data->{ $_->{genome_type} }
+        	{ $_->{domain} || 'unclassified' }
+        	{ $_->{phylum} || 'unclassified' }
+        	{ $_->{ir_class} || 'unclassified' }
+        	{ $_->{ir_order} || 'unclassified' }
+        	{ $_->{family} || 'unclassified' }
+        	{ $_->{genus} || 'unclassified'}
+        	{ $_->{clade} || 'unclassified' } }, { name => $_->{taxon_display_name}, data => $_ };
     }
 
     my $tree;
@@ -46,7 +53,11 @@ sub render {
         die 'Viewing the full data set is currently disabled';
     }
 
-	return $self->add_defaults_and_render({ array => $res, tree => $tree, class_types => [ qw( genome_type domain phylum class order family genus clade species ) ], count => $count });
+	return $self->add_defaults_and_render({
+		array => $res,
+		tree => $tree,
+		class_types => [ qw( genome_type domain phylum class order family genus clade species ) ],
+		count => $count });
 
 }
 

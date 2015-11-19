@@ -4,23 +4,51 @@
 %]
 	<h2>Phylogram</h2>
   <p>Click on the nodes in the tree below to explore the phylogenetic tree for the <i>Prochlorococcus</i>, <i>Synechococcus</i>, and cyanophage species.</p>
-<p>Filter by genome type:</p>
+
 [%	IF data_filters && data_filters.all %]
+<section id="filters">
+<p>Filter by subset:</p>
 <ul>
 [%	# filter domain
 		FOR fd IN data_filters.all.keys.sort;
 			FOR f IN data_filters.all.$fd.values; %]
-<li><a class='filter' data-f_type='[% f.id %]' href="[% link( 'proportal/phylogram' ) %]/[% f.id %]">[% f.label %]</a>[%
+<li><a href="[% link('proportal/phylogram') %]/[% f.id %]">[% f.label %]</a>[%
 				IF data_filters.active && data_filters.active.$fd == f.id;
-		%] (currently displayed)[%
+		%] <span class="current">(currently displayed)</span>[%
 				END; %]
 </li>
 [%			END; %]
-<!-- li><a href="[% link( 'proportal/phylogram' ) %]">no filter</a>[%
+<!-- li><a href="[% link('proportal/phylogram') %]">no filter</a>[%
 			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
-			END; %]</li-->
+			END; %]</li -->
 [%		END; %]
 </ul>
+</section> <!-- / end section filters -->
 [% END %]
+<section role="complementary" class="init" id="info">
+<ul class="noDot">
+	<li class="instructions">
+		<h3>Sample details</h3>
+		<p>
+			Hover over a node to identify it. Solid blue nodes are nodes with children; click on them to expand and view the children. Clicking on a parent node will collapse the children. Click on a leaf node to view information about it.
+		</p>
+	</li>
+
+[%	USE Dumper;
+	FOREACH s IN results.array; %]
+<li data-sample-id="[% s.taxon_oid %]" id="taxon_oid_[% s.taxon_oid %]" class="sample_details">
+	<h4>[% s.taxon_display_name %]</h4>
+	<p>Phylogenetic classification:</p>
+	<dl class="table-like">
+[%		FOREACH e IN results.class_types %]
+		<dt>[% e.replace("_", " ") %]</dt>
+		<dl>[% s.$e || 'unclassified' %]</dl>
+[%		END; %]
+	</dl>
+	<p><a class="sample_details__link" href="[% link('taxon', { taxon_oid => s.taxon_oid }) %]">view taxon details</a></p>
+</li>
+</ul>
+[%	END; %]
+</section> <!-- / end complementary -->
 <div id="collapse" class="svg-container"></div>
 [%	END; %]
