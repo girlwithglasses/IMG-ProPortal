@@ -9,7 +9,7 @@ use Template::Plugin::JSON::Escape;
 has '+tmpl_includes' => (
 	default => sub {
 		return {
-			tt_scripts => qw( phylogram_r34552 ),
+			tt_scripts => qw( phylogram ),
 		};
 	},
 );
