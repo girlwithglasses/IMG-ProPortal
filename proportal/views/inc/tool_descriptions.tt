@@ -1,0 +1,376 @@
+[%	# Tool descriptions
+	description = {};
+
+	description.ABC = BLOCK %]
+
+[%	END;
+
+	description.ANI = BLOCK %]
+
+[%	END;
+
+	description.item('ANI/doSameSpeciesPlot') = BLOCK %]
+
+[%	END;
+
+	description.item('ANI/overview') = BLOCK %]
+
+[%	END;
+
+	description.item('ANI/pairwise') = BLOCK %]
+
+[%	END;
+
+	description.AbundanceProfileSearch = BLOCK %]
+<p>Search for functions based on over or under abundance in other genomes.</p>
+[%	END;
+
+	description.AbundanceComparisons = BLOCK %]
+<p>Multiple genome pairwise abundance comparisons.</p>
+[%	END;
+
+	description.AbundanceComparisonsSub = BLOCK %]
+<p>Pairwise functional category abundance comparisons.</p>
+[% END;
+	description.AbundanceComparisons = BLOCK %]
+<p>The <strong>Function Comparison</strong> tool displays pairwise comparisons between <em>one query</em> genome or metagenome to <em>multiple reference</em> genomes or metagenomes, including estimates of the statistical significance of the observed differences.</p>
+[%	END;
+
+	description.AbundanceComparisonsSub = BLOCK %]
+<p>
+	The <strong>Function Category Comparison</strong> tool allows you to compare <em>one query</em> genome or metagenome to <em>multiple reference</em> genomes or metagenomes in terms of the abundance of pre-defined groups of protein families as represented by different types of functional classifications such as COG Pathways, KEGG Pathways and KEGG Pathway Categories.
+</p>
+[%	END;
+
+	description.AbundanceProfileSearch = BLOCK %]
+<p>Find genes in genome (bin) of interest based on similarity to sequences in other genomes (BLASTP alignments). Only user-selected genomes appear in the profiler.</p>
+[%	END;
+
+	description.AbundanceProfiles = BLOCK %]
+<p>View abundance for all functions across selected genomes.</p>
+[%	END;
+
+	description.AllPwayBrowser = BLOCK %]
+
+[%	END;
+
+	description.Artemis = BLOCK %]
+<p><a rel="external" href="http://bioinformatics.oxfordjournals.org/cgi/content/abstract/21/16/3422">Artemis Comparison Tool</a> (ACT) is a viewer based on Artemis for pairwise genome DNA sequence comparisons. Sequence comparisons displayed by ACT are the result of running Mega BLAST search. Artemis <a rel="external" href="http://www.sanger.ac.uk/Software/ACT/">ACT</a> application requires <a rel="external" href="http://java.sun.com/javase/technologies/desktop/javawebstart/index.jsp">Java Web Start</a> and 1 GB of RAM.</p>
+[%	END;
+
+	description.BcNpIDSearch = BLOCK %]
+
+[%	END;
+
+	description.item('BcSearch/bcSearch') = BLOCK %]
+
+[%	END;
+
+	description.item('BcSearch/npSearches') = BLOCK %]
+
+[%	END;
+
+	description.BiosyntheticStats = BLOCK %]
+
+[%	END;
+
+	description.CompareGenomes = BLOCK %]
+
+[%	END;
+
+	description.DistanceTree = BLOCK %]
+
+[%	END;
+
+	description.DotPlot = BLOCK %]
+<p><strong>Dot Plot</strong> employs <a rel="external" href="http://mummer.sourceforge.net/manual/">Mummer</a> to generate dotplot diagrams between two genomes. It uses input DNA sequences directly for comparing genomes with similar sequences (<a rel="external" href="http://mummer.sourceforge.net/examples/#nucmernucmer">NUCmer</a>). It uses the six frame amino acid translation of the DNA input sequences (<a rel="external" href="http://mummer.sourceforge.net/examples/#promerpromer">PROmer</a>) for comparing genomes with dissimilar sequences (because the DNA sequence is not as highly conserved as the amino acid translation).</p>
+[%	END;
+
+	description.EgtCluster = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/cogList') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/cogList/stats') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/cogid2cat') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/enzymeList') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/ffoAllCogCategories') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/ffoAllKeggPathways/brite') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/ffoAllKeggPathways/ko') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/ffoAllKogCategories') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/ffoAllTc') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/findFunctions') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/kogList') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/kogList/stats') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/pfamCategories') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/pfamList') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/pfamList/stats') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/pfamListClans') = BLOCK %]
+
+[%	END;
+
+	description.item('FindFunctions/tcList') = BLOCK %]
+
+[%	END;
+
+	description.item('FindGenes/findGenes') = BLOCK %]
+
+[%	END;
+
+	description.item('FindGenes/geneSearch') = BLOCK %]
+
+[%	END;
+
+	description.FindGenesBlast = BLOCK %]
+
+[%	END;
+
+	description.FindGenomes = BLOCK %]
+
+[%	END;
+
+	description.FuncCartStor = BLOCK %]
+
+[%	END;
+
+	description.FunctionProfiler = BLOCK %]
+
+[%	END;
+
+	description.GeneCartStor = BLOCK %]
+
+[%	END;
+
+	description.GeneCassetteProfiler = BLOCK %]
+<p>Find genes in a query genome that are collocated in the query genome as well as across other genomes of interest, based on their inclusion in cassettes. Allows selection of up to 50 collocated-in genomes. Powered by <a rel="external" href="https://sdm.lbl.gov/fastbit/">Fastbit</a>.</p>
+
+[%	END;
+
+	description.GeneCassetteSearch = BLOCK %]
+
+[%	END;
+
+	description.GenomeCart = BLOCK %]
+
+[%	END;
+
+	description.GenomeGeneOrtholog = BLOCK %]
+
+[%	END;
+
+	description.GenomeHits = BLOCK %]
+<p>View the phylogenetic distribution of genes for an isolate genome run against a set of metagenomes.</p>
+[%	END;
+
+	description.Help = BLOCK %]
+
+[%	END;
+
+	description.item('Help/policypage') = BLOCK %]
+
+[%	END;
+
+	description.IMGProteins = BLOCK %]
+
+[%	END;
+
+	description.ImgNetworkBrowser = BLOCK %]
+
+[%	END;
+
+	description.ImgPartsListBrowser = BLOCK %]
+
+[%	END;
+
+	description.ImgPwayBrowser = BLOCK %]
+
+[%	END;
+
+	description.item('ImgPwayBrowser/phenoRules') = BLOCK %]
+
+[%	END;
+
+	description.ImgStatsOverview = BLOCK %]
+
+[%	END;
+
+	description.ImgTermBrowser = BLOCK %]
+
+[%	END;
+
+	description.Interpro = BLOCK %]
+
+[%	END;
+
+	description.MetagPhyloDist = BLOCK %]
+<p>View the phylogenetic distribution of genes for selected metagenomes.</p>
+[%	END;
+
+	description.Methylomics = BLOCK %]
+
+[%	END;
+
+	description.MyIMG = BLOCK %]
+
+[%	END;
+
+	description.item('MyIMG/home') = BLOCK %]
+
+[%	END;
+
+	description.item('MyIMG/myAnnotationsForm') = BLOCK %]
+<p>View and edit your annotations.</p>
+[%	END;
+
+	description.item('MyIMG/myJobForm') = BLOCK %]
+
+[%	END;
+
+	description.item('MyIMG/preferences') = BLOCK %]
+<p>View and set your data retrieval and display preferences throughout IMG.</p>
+[%	END;
+
+	description.NaturalProd = BLOCK %]
+
+[%	END;
+
+	description.PhyloCogs = BLOCK %]
+
+[%	END;
+
+	description.PhylogenProfiler = BLOCK %]
+<p>Find genes in a genome (bin) of interest, qualified by similarity, based on BLASTP alignments, to sequences in other genomes. Only user-selected genomes appear in the profiler.</p>
+[%	END;
+
+	description.Questions = BLOCK %]
+
+[%	END;
+
+	description.RNAStudies = BLOCK %]
+
+[%	END;
+
+	description.RadialPhyloTree = BLOCK %]
+<p>View the phylogenetic distribution as a radial tree.</p>
+<!-- The Radial Phylogenetic Tree is supplied with the help of:
+Meyer F, Paarmann D, DSouza M, Olson R, Glass EM, Kubal M, Paczian T, Rodriguez A, Stevens R, Wilke A, Wilkening J, Edwards RA:
+The Metagenomics RAST server - A public resource for the automatic phylogenetic and functional analysis of metagenomes.
+BMC Bioinformatics 2008, 9:386.
+http://www.biomedcentral.com/1471-2105/9/386 -->
+[%	END;
+
+	description.ScaffoldCart = BLOCK %]
+
+[%	END;
+
+	description.ScaffoldSearch = BLOCK %]
+
+[%	END;
+
+	description.TaxonDeleted = BLOCK %]
+<p>View genomes that have been removed from IMG for various reasons.</p>
+[%	END;
+
+	description.item('TigrBrowser/tigrBrowser') = BLOCK %]
+
+[%	END;
+
+	description.item('TigrBrowser/tigrfamList') = BLOCK %]
+
+[%	END;
+
+	description.item('TigrBrowser/tigrfamList/stats') = BLOCK %]
+
+[%	END;
+
+	description.TreeFile = BLOCK %]
+
+[%	END;
+
+	description.Vista = BLOCK %]
+<p>VISTA allows you to do full scaffold alignments between genomes.</p>
+[%	END;
+
+	description.Workspace = BLOCK %]
+<p>The workspace provides users with the ability to save genes, genomes, functions, and scaffolds, and lists any jobs that the user has running.
+</p>
+[%	END;
+
+	description.item('Workspace/WorkspaceFuncSet') = BLOCK %]
+[%	END;
+
+	description.item('Workspace/WorkspaceGeneSet') = BLOCK %]
+[%	END;
+
+	description.item('Workspace/WorkspaceGenomeSet') = BLOCK %]
+[%	END;
+
+	description.item('Workspace/WorkspaceJob') = BLOCK %]
+[%	END;
+
+	description.item('Workspace/WorkspaceRuleSet') = BLOCK %]
+[%	END;
+
+	description.item('Workspace/WorkspaceScafSet') = BLOCK %]
+[%	END;
+
+	description.WorkspaceFuncSet = BLOCK %]
+<p>Work with saved or selected sets of functions.</p>
+[%	END;
+
+	description.WorkspaceGeneSet = BLOCK %]
+<p>Work with saved or selected sets of genes.</p>
+[%	END;
+
+	description.WorkspaceGenomeSet = BLOCK %]
+<p>Work with saved or selected sets of genomes.</p>
+[%	END;
+
+	description.WorkspaceScafSet = BLOCK %]
+<p>Work with saved or selected sets of scaffolds.</p>
+[%	END; %]

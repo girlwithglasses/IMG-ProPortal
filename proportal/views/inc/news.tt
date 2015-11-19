@@ -1,0 +1,9 @@
+[%	IF news %]
+<ul>
+[%		FOREACH n IN news %]
+	<li><a href="[% links.news %][% n.id %]">[% n.title %]</a> ([% n.add_date %])</li>
+[%		END %]
+</ul>
+[% ELSE %]
+<p>Sorry, no news to report!</p>
+[% END %]

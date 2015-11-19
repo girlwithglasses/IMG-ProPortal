@@ -1,0 +1,49 @@
+<!-- output the page filters -->
+[%	#FOR d IN data_type; %]
+
+
+
+<!-- search box -->
+
+
+<!-- active filters -->
+	<div>
+	<h3>Active Filters</h3>
+[%	IF ! filters.active %]
+	<p>None</p>
+[%	ELSE %]
+	<dl>
+[%		FOR af IN filters.active; %]
+	<dt>[% labels.$af %]</dt>
+[%	IF filters.active.$af.min %]
+	<dd>[% filters.active.$af.min %]</dd>
+[%	END;
+	IF filters.active.$af.max %]
+	<dd>[% filters.active.$af.max %]</dd>
+[%	END;
+	IF filters.active.$af.val %]
+	<dd>[% filters.active.$af.val %]</dd>
+[%	END; %]
+	</dl>
+	</div>
+<!-- available filters -->
+[%	IF filters.avail %]
+<form action="[% ... %]" method="[% method %]" name="[% form_name %]">
+[%		FOR f IN filters.avail; %]
+	<h3>[% labels.${f.id} %]</h3>
+	<fieldset>
+[%
+			IF f.values;
+				FOR v IN f.values;
+					IF f.type == 'radio' || f.type == 'checkbox'; %]
+		<input type="[% f.type %]" name="[% f.id %]" value="[% v.id %]" id="[% f.id %].[% v.id %]" [% IF v.active %] checked[% END %] /><label for="[% f.id %].[% v.id %]">[% v.label %]</label>
+[%					ELSE;
+
+<field
+
+
+
+[%	END; # end if filters.avail %]
+<!-- filter builder -->
+
+<!-- view metadata -->

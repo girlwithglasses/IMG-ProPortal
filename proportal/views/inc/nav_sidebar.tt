@@ -1,0 +1,16 @@
+[%	IF navigation %]
+<nav class="sidebar" role="navigation">
+[%	FOREACH grp IN navigation;
+		IF grp.class;
+
+			nav_class = 'sidebar';
+			depth = 0;
+			item = [ grp ];
+			add_toggles = 0;
+			PROCESS 'inc/nav_recursive_menu.tt';
+
+		END;
+	END; %]
+<!-- p>Current page: [% current_page %]</p -->
+</nav>
+[% END; # end IF menu %]

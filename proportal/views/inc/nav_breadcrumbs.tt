@@ -1,0 +1,32 @@
+[%
+
+MACRO classy_nav BLOCK;
+	FOREACH m IN item;
+		IF m.class; %]
+	<li role="treeitem" class="[% m.class %] [% nav_class %]-menu__item"><a class="[% nav_class %]-menu__link" href="[% m.abs_url || link( m.id ) %]"[%
+		IF m.title;
+			%] title="[% m.title %]"[%
+		END;
+		%]>[% m.label %]</a></li>
+[%			IF m.submenu;
+				classy_nav( item = m.submenu, nav_class = nav_class );
+			END;
+		END; # end IF m.class
+	END; # end foreach
+END; # end macro
+
+IF navigation %]
+<nav class="breadcrumbs" role="navigation">
+[%	FOREACH grp IN navigation;
+		IF grp.class %]
+	<ul role="tree" class="breadcrumbs-menu">
+		<li class="breadcrumbs-menu__item">IMG</li>
+[%			classy_nav( item = [ grp ], nav_class = 'breadcrumbs' ); %]
+	</ul>
+[%		END;
+	END; %]
+</nav>
+[%
+END; # end IF menu
+
+%]

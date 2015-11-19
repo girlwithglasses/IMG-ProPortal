@@ -1,0 +1,9 @@
+	<link rel="stylesheet" type="text/css" href="[% settings.pp_assets %]css/proportal.css">
+
+	<meta charset="UTF-8">
+	<!-- link href="//www.google-analytics.com" rel="dns-prefetch" -->
+	<!-- link href="[% settings.base_url %]/images/icons/touch.png" rel="apple-touch-icon-precomposed" -->
+	<link href="http://jgi.doe.gov/favicon.ico" rel="shortcut icon">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Some information about the IMG ProPortal here">

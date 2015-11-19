@@ -1,0 +1,41 @@
+[% IF navigation %]
+<nav class="img_menu cf" role="navigation">
+[%	# simple_menu only has one level of recursion
+    # nested_menu (in nav.tt) supports multiple levels of recursion.
+    VIEW simple_menu;
+
+	BLOCK list; %]
+	<ul class="floatL" role="tree">
+[%		FOREACH m IN item %]
+	<li role="treeitem"[%
+	        IF m.class; %] class="[% m.class %]"[% END; %]>
+		<a href="[% m.abs_url || link( m.id ) %]"[%
+			IF m.title;
+			%] title="[% m.title %]"[%
+			END;
+			%]>[% m.label %]</a>
+[%			IF m.submenu %]
+		<ul class="sub-menu">
+[%				FOREACH s IN m.submenu %]
+			<li role="treeitem"[%
+	                IF s.class; %] class="[% s.class %]"[% END; %]>
+				<a href="[% s.abs_url || link( s.id ) %]"[%
+					IF s.title
+					%] title="[% s.title %]"[%
+					END
+					%]>[% s.label %]</a>
+			</li>
+[%				END %]
+		</ul>
+[%			END; #	end IF m.submenu %]
+	</li>
+[% 		END; %]
+	</ul>
+[%	END; # end block
+
+	END; # end view
+
+	simple_menu.print( navigation );
+%]
+</nav>
+[% END; # end IF menu %]

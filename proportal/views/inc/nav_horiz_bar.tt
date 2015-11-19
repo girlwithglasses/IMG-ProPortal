@@ -1,0 +1,17 @@
+[% IF navigation; %]
+<nav class="horiz-bar cf" role="navigation">
+[%
+	nav_class = 'horiz-bar';
+	depth = 0;
+	item = navigation;
+	add_toggles = 1;
+	PROCESS 'inc/nav_recursive_menu.tt';
+%]
+</nav>
+[% END;
+
+#	USE JSON;
+#	navigation.json;
+
+# end IF menu %]
+

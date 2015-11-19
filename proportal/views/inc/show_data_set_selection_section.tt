@@ -1,0 +1,32 @@
+<form action="main.cgi" method="GET">
+<fieldset>
+<label for="page.select">Graph</label>
+<select id="page.select" name="page">
+[%	# INCLUDE an error
+	# onchange="window.location='$new_url&page=' + this.value;"
+
+	FOR p IN page_h.keys.sort %]
+	<option value="[% p %]"[% IF graph_selected == p %] selected[% END %]>
+		[% page_h.$p %]
+	</option>
+[% END %]
+</select>
+</fieldset>
+[%	IF class_h; %]
+<fieldset>
+	<label for="class.select">Genomes</label>
+	<select id="class.select" name="class">
+[%
+		FOR c IN class_h.keys.sort %]
+	<option value="[% c %]"[% IF class_selected == c %] selected[% END %]>
+		[% class_h.$c %]
+	</option>
+[%		END %]
+	</select>
+</fieldset>
+[%	END %]
+<fieldset>
+<input type="hidden" name="section" value="[% section %]" />
+<input type="submit" value="GO!" />
+</fieldset>
+</form>

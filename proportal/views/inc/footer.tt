@@ -1,0 +1,25 @@
+<footer class="footer" role="contentinfo">
+	<ul class="collab">
+	<li><a class="collab__link logo-doe-sc" href="http://science.energy.gov/" rel="external" title="Department of Energy"><span class="collab__link--text">Department of Energy</span></a></li>
+	<li><a class="collab__link logo-moore-fnd" href="http://www.moore.org/" rel="external" title="The Moore Institute"><span class="collab__link--text">Moore Institute</span></a></li>
+	<li><a class="collab__link logo-chisholm-lab" href="https://chisholmlab.mit.edu/" rel="external" title="The Chisholm lab at MIT"><span class="collab__link--text">Chisholm Lab</span></a></li>
+	<li><a class="collab__link logo-mit" href="http://web.mit.edu/" rel="external" title="Massachusetts Institute of Technology"><span class="collab__link--text">Massachusetts Institute of Technology</span></a></li>
+	</ul>
+	<ul class="small">
+		<li><a href="https://sites.google.com/a/lbl.gov/img-form/contact-us">Contact us</a></li>
+		<li><a href="http://www.jgi.doe.gov/whoweare/accessibility.html">Accessibility/Section 508</a></li>
+		<li><a href="http://jgi.doe.gov/disclaimer/">Disclaimer</a></li>
+		<li>[% settings.db.version_year %]</li>
+		<li>[% server_name %] &bull; [% ora_service %] &bull; [% perl_version %] &bull; [% dancer_version %] &bull; [% settings.db.build_date %] &bull; [% request.forwarded_for_address || request.address %]</li>
+		<li>&copy; 1997&ndash;2015 The Regents of the University of California</li>
+	</ul>
+</footer>
+<!--
+[% # session data:
+#	'<pre>Session data: ';
+#	USE Dumper; Dumper.dump( params );
+#	navigation
+#	Dumper.dump( navigation );
+#	'</pre>';
+	%]
+-->

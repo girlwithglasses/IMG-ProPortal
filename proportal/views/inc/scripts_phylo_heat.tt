@@ -1,0 +1,88 @@
+<script src="/bower/d3/d3.min.js" type="text/javascript"></script>
+<script src="/bower/d3-tip/index.js" type="text/javascript"></script>
+<script src="/js/newick.js" type="text/javascript"></script>
+<script src="/js/d3.phyloviewer.js" type="text/javascript"></script>
+<script src="/js/heatmap.js" type="text/javascript"></script>
+<script src="/js/imgCartjson.js" type="text/javascript"></script>
+<script type="text/javascript">
+(function ready(){
+
+	function fn() {
+
+		// TREE INITIAL VARIABLES
+ 		var svgWidth = 2000,
+ 			newickNodes = [],
+			numLeaves = 0,
+			rowHeight = 25,
+			rightPaneEdge = 600;
+
+
+ 		// INITIAL STATES OF TOOLBAR AND TREE
+       	cleanDepth(imgData)		// Clean depth in raw data
+
+       	//imgCart tree
+ 		var newick = Newick.parse("( ( ( ( ( ( ( ( 2553536569:0.04806, 2553547864:0.02318) :0.13790, ( ( 2607817870:0.06292, ( ( 637686994:0.00904, 2607361738:0.00877) :0.00237, ( 2607811795:0.00000, 2624154139:0.00000) :0.01417) :0.04807) :0.11480, ( ( ( ( ( ( 640087144:0.00000, 2608168136:0.00000) :0.00000, 2624151930:0.00000) :0.00000, 2626314409:0.00000) :0.01710, ( ( 2608213837:0.00000, 2608216457:0.00000) :0.00000, 2608221109:0.00000) :0.02405) :0.19430, 2607807999:0.14371) :0.03774, ( ( 2607024285:0.00000, 2607027401:0.00000) :0.00000, 2607028865:0.00000) :0.15988) :0.01777) :0.06318) :0.04989, ( ( 637449936:0.00000, 2608229857:0.00000) :0.07062, ( ( ( 640080686:0.00000, 2608172520:0.00000) :0.00000, 2624147685:0.00000) :0.00000, 2626316849:0.00000) :0.07352) :0.04076) :0.05631, ( ( ( 2607035406:0.00000, 2608232869:0.00000) :0.00000, 2608236697:0.00000) :0.05689, ( 2608211019:0.05840, 2608233838:0.03815) :0.00863) :0.00299) :0.01776, 2608227678:0.02635) :0.00949, 2608199767:0.02571) :0.00179, ( ( 640943573:0.00000, 2607816045:0.00000) :0.00474, ( ( 647673898:0.00000, 2608172107:0.00000) :0.00000, 2626399128:0.00000) :0.00675) :0.01606) :0.00164, ( ( 2607980288:0.04953, ( ( 2607031065:0.00000, 2608208874:0.00000) :0.00000, 2608217268:0.00000) :0.02254) :0.00228, 2607022457:0.01276) :0.00073, ( ( 640078650:0.00000, 2624149569:0.00000) :0.01460, ( ( 640160519:0.00000, 2607814158:0.00000) :0.00000, 2626312088:0.00000) :0.01298) :0.00794);")
+
+		// BUILD NEWICK NODES FROM DATA.  Count number of leaves too.
+		//  	Alter this to add imgData to each leaf node.
+
+        function buildNewickNodes(node, callback) {
+          newickNodes.push(node)
+          if (node.branchset) {
+            for (var i=0; i < node.branchset.length; i++) {
+              buildNewickNodes(node.branchset[i])
+            }
+          }
+          else {
+          	// Need to add imgData to each leaf node here...
+          	for (var i=0; i<imgData.length; i++){
+				if (imgData[i]["Gene ID"] == node.name) {
+					node.metadata = imgData[i];
+				}
+          	}
+
+          	numLeaves++;
+          }
+        }
+        buildNewickNodes(newick);
+
+        p = d3.phylogram.build('#phylogram', newick, {
+          width: svgWidth,
+          treeWidth: 400,
+          height: (numLeaves * rowHeight),	// ensures the genes are always the same distance from each other
+          rowHeight: rowHeight,
+          rightPaneEdge: rightPaneEdge,		// offsets the elements right of the tree (heatmap etc)
+
+          // Toolbar initialization
+		  showDistRuler: false,
+		  treeType: "phylogram",
+
+          heatmap: true,
+          hm_showText: true
+        });
+   	}
+
+  	// Clean up array of depth data that contains strings of the form "11 m".
+	// Produces an integer array.
+	//--------------------------------------------------------------------------
+	function cleanDepth (d){
+		for (var i=0; i<d.length; i++){
+			imgData[i].Depth = +imgData[i]["Depth"].slice(0,-2);
+		}
+	}
+
+	if (document.readyState !== 'loading'){
+		fn();
+	} else if (document.addEventListener) {
+		document.addEventListener('DOMContentLoaded', function(){
+			fn();
+		});
+	} else {
+		document.attachEvent('onreadystatechange', function() {
+			if (document.readyState !== 'loading'){
+				fn();
+			}
+		});
+	}
+}());
+</script>

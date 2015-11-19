@@ -1,0 +1,24 @@
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=[% settings.googlemapsapikey %]"></script>
+<script type="text/javascript">
+(function ready(){
+	var res=[%
+	IF results && results.size > 0;
+		USE JSON.Escape( convert_blessed => 1 );
+		results.json;
+	ELSE;
+		'[]';
+	END;
+	',int_links='; # this should be links.taxon
+
+        t_link = { taxon => link('taxon') };
+
+		t_link.json;
+	';';
+
+	INCLUDE 'js/markerclustererplus.min.js';
+	INCLUDE 'js/map.js';
+	%]
+	google.maps.event.addDomListener(window,'load',function(){ fn(res,document,google.maps,MarkerClusterer,int_links);});
+}());
+</script>
+

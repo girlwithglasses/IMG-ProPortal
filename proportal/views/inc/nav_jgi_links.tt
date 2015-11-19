@@ -1,0 +1,27 @@
+<nav class="jgi-links">
+	<ul class="jgi-links-menu">
+		<li class="jgi-links-menu__item">
+			<a class="jgi-links-menu__link" href="http://jgi.doe.gov">JGI Home</a>
+		</li>
+[%		IF data_marts; %]
+		<li class="jgi-links-menu__item mart-list cf">
+			<input type="checkbox" id="mart-list-toggle" class="nav-toggle" />
+			<label for="mart-list-toggle" class="mart-list__toggle">expand</label>
+			<a class="jgi-links-menu__link" href="[% data_marts.abs_url || link( data_marts.id ) %]">[% data_marts.label %]</a>
+[%
+			nav_class = 'mart-list';
+			depth = 0;
+			item = data_marts.submenu;
+			add_toggles = 0;
+			PROCESS 'inc/nav_recursive_menu.tt';
+%]
+		</li>
+[%		END; %]
+		<li class="jgi-links-menu__item">
+			<a class="jgi-links-menu__link" href="http://jgi.doe.gov/contact-us/">Contact IMG</a>
+		</li>
+		<li class="jgi-links-menu__item header-search">
+        [%  PROCESS 'inc/header_search.tt' %]
+		</li>
+    </ul>
+</nav>

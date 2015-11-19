@@ -1,0 +1,21 @@
+<form action="[%
+	'insert_search_url_here';
+	%]" method="POST" role="search" class="inline-form header-search">
+    <fieldset>
+        <label for="header-search" class="header-search__label"><span class="screen-reader">Search</span></label>
+        <input type="search" id="header-search" class="header-search__input" />
+		<input type="submit" class="header-search__submit" value="Search" />
+	    <!-- button class="header-search__submit">
+	    	<span class="is-vishidden">Search</span>
+	    </button -->
+    </fieldset>
+</form>
+
+<!--
+
+			<form method="POST" action="#" role="search">
+				<label for="header-search" class="header-search__label"><span class="screen-reader">Search</span></label>
+				<input class="header-search__input" type="search" id="header-search" />
+				<button class="header-search__submit">Search</button>
+			</form>
+-->

@@ -1,0 +1,8 @@
+<pre class="debug">
+[%
+	USE dumper(Indent = 1);
+	IF results;
+		dumper.dump( results );
+	END;
+%]
+</pre>

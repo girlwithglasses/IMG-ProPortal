@@ -1,0 +1,33 @@
+[%	VIEW nested_menu;
+		BLOCK list %]
+    <ul role="tree">
+[%	FOREACH m IN item %]
+		<li role="treeitem"[%
+		IF m.class;
+			%] class="[% m.class %]"[%
+		END;
+		%]><a href="[% m.abs_url || link( m.id ) %]"[%
+		IF m.title;
+			%] title="[% m.title %]"[%
+		END;
+		%]>[% m.label %]</a>
+[%		IF m.submenu;
+			view.print(m.submenu.list);
+		END %]
+        </li>
+[%	END; # end foreach %]
+	</ul>
+[%		END; # end block
+	END; # end view
+
+
+	IF navigation %]
+<nav class="sidebar" role="navigation">
+[%	FOREACH grp IN navigation;
+		IF grp.class;
+			nested_menu.print( [ grp ] );
+		END;
+	END; %]
+<!-- p>Current page: [% current_page %]</p -->
+</nav>
+[% END; # end IF menu %]

@@ -1,0 +1,37 @@
+[%	MACRO recursive_nav BLOCK %]
+    <ul role="tree" class="[% nav_class %]-menu menu--l[% depth %][%
+    	IF add_toggles;
+    		%] toggle-me[%
+    	END;
+    	%]">
+[%	FOREACH m IN item; %]
+		<li role="treeitem" class="[% nav_class %]-menu__item menu__item--l[% depth %][%
+		IF m.class;
+			%] [% m.class %][%
+		END;
+		%]">
+[%		IF m.submenu;
+			IF add_toggles; %]
+			<input type="checkbox" class="nav-toggle" id="[% m.id || m.url %]" />
+			<label for="[% m.id || m.url %]" class="[% nav_class %]__toggle">expand</label>
+[%			END;
+		END; %]
+		<a class="[% nav_class %]-menu__link menu__link--l[% depth %]" href="[% m.abs_url || link( m.id ) %]"[%
+		IF m.title;
+			%] title="[% m.title %]"[%
+		END;
+		%]>[% m.label %]</a>
+[%		IF m.submenu;
+			recursive_nav( item = m.submenu, nav_class = nav_class, depth = depth + 1, add_toggles = add_toggles );
+		END %]
+        </li>
+[%	END; # end foreach %]
+	</ul>
+[%	END; # end macro
+
+	IF ! add_toggles;
+		add_toggles = 0;
+	END;
+	recursive_nav( item = item, depth=depth, nav_class=nav_class, add_toggles=add_toggles );
+
+%]

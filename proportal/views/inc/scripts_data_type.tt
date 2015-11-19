@@ -1,0 +1,39 @@
+<script type="text/javascript">
+(function ready(){
+[%
+#    INCLUDE 'bower/crossfilter/crossfilter.min.js';
+#	INCLUDE 'bower/dcjs/dc.min.js';
+#	INCLUDE 'bower/d3/d3.min.js';
+#	INCLUDE 'bower/d3-tip/index.js';
+%]
+
+	var res=[%
+	IF results.array && results.array.size > 0;
+		USE JSON.Escape( convert_blessed => 1 );
+		results.array.json;
+	ELSE;
+		'[]';
+	END;
+	';'; %]
+
+	var fn = function(res,document){
+//		var cf = crossfilter(res),
+//		by_ecosys_type = cd.dimension('ecosystem_type'),
+//		by_ecosys_subtype = cd.dimension('ecosystem_subtype'),
+//		by_ncbi_genus = cd.dimension('ncbi_genus');
+	};
+	if (document.readyState !== 'loading'){
+		fn();
+	} else if (document.addEventListener) {
+		document.addEventListener('DOMContentLoaded', function(){
+			fn();
+		});
+	} else {
+		document.attachEvent('onreadystatechange', function() {
+			if (document.readyState !== 'loading'){
+				fn();
+			}
+		});
+	}
+}());
+</script>
