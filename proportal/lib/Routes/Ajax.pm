@@ -1,19 +1,12 @@
 package Routes::Ajax;
 
-# use lib qw(
-# 	/global/u1/a/aireland/webUI/webui.cgi
-# 	/global/u1/a/aireland/webUI/proportal/lib
-# 	/global/u1/a/aireland/perl5/lib/perl5
-# );
-
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
 use parent 'CoreStuff';
 use Dancer2::Plugin::Ajax;
 
-use XMLProxy;
-
-use JSONProxy;
+# use XMLProxy;
+# use JSONProxy;
 
 our $VERSION = '0.1';
 
