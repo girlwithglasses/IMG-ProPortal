@@ -47,39 +47,37 @@ cover_db/
 proportal/lib/DBIC/
 
 # proportal specific stuff:
-MANIFEST
-MANIFEST.SKIP
-Makefile.PL
+proportal/MANIFEST
+proportal/MANIFEST.SKIP
+proportal/Makefile.PL
 
-bin/async.psgi
-bin/stream_test.psgi
+proportal/bin/async.psgi
+proportal/bin/stream_test.psgi
 
-environments/
+proportal/environments/
 proportal/docs/
-log/
-node_modules/
-public/assets/
-public/bower/
-image-sprite/
-icomoon/
-src/
-share/
-tmp/
-IMG_Core-full/
-IMG_SG_Dev-as-core/
-lib/PodServer.pm
-script/podserver
-lib/ProPortal/Model/Methods.pm
+proportal/log/
+proportal/node_modules/
+proportal/public/assets/
+proportal/public/bower/
+proportal/image-sprite/
+proportal/icomoon/
+proportal/share/
+proportal/tmp/
+proportal/IMG_Core-full/
+proportal/IMG_SG_Dev-as-core/
+proportal/lib/PodServer.pm
+proportal/script/podserver
+proportal/lib/ProPortal/Model/Methods.pm
 
-/blib/
-/.build/
-_build/
-cover_db/
-inc/
-Build
-!Build/
-Build.bat
-.last_cover_stats
+proportal/blib/
+proportal/.build/
+proportal/_build/
+proportal/cover_db/
+proportal/Build
+proportal/!Build/
+proportal/Build.bat
+proportal/.last_cover_stats
 /Makefile
 /Makefile.old
 /MANIFEST.bak
