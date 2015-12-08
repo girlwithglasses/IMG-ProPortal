@@ -3,52 +3,47 @@
 	title = 'IMG ProPortal: Phylogram';
 %]
 	<h2>Phylogram</h2>
-  <p>Click on the nodes in the tree below to explore the phylogenetic tree for the <i>Prochlorococcus</i>, <i>Synechococcus</i>, and cyanophage species. Please note that taxonomic information is not available for metagenomes.</p>
-
-[%	IF data_filters && data_filters.all %]
-<section id="filters">
-<p>Filter by subset:</p>
-<ul>
-[%	# filter domain
-		FOR fd IN data_filters.all.keys.sort;
-			FOR f IN data_filters.all.$fd.values; %]
-<li><a href="[% link('proportal/phylogram') %]/[% f.id %]">[% f.label %]</a>[%
-				IF data_filters.active && data_filters.active.$fd == f.id;
-		%] <span class="current">(currently displayed)</span>[%
-				END; %]
-</li>
-[%			END; %]
-<!-- li><a href="[% link('proportal/phylogram') %]">no filter</a>[%
-			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
-			END; %]</li -->
-[%		END; %]
-</ul>
-</section> <!-- / end section filters -->
-[% END %]
-<section role="complementary" class="init" id="info">
-<ul class="noDot">
-	<li class="instructions">
-		<h3>Sample details</h3>
-		<p>
-			Hover over a node to identify it. Solid blue nodes are nodes with children; click on them to expand and view the children. Clicking on a parent node will collapse the children. Click on a leaf node to view information about it.
-		</p>
-	</li>
-
-[%	USE Dumper;
-	FOREACH s IN results.array; %]
-<li data-sample-id="[% s.taxon_oid %]" id="taxon_oid_[% s.taxon_oid %]" class="sample_details">
+<section class="info--phylogram page-intro">
+<p>Click on the nodes in the tree below to explore the phylogenetic tree for the <i>Prochlorococcus</i>, <i>Synechococcus</i>, and cyanophage species. Please note that taxonomic information is not available for metagenomes and environmental data is shown instead.</p>
+<p>
+	Hover over a node to identify it. Solid blue nodes are nodes with children; click on them to expand and view the children. Clicking on a parent node will collapse the children. Click on a leaf node to view information about it; information is shown below the visualisation (but will be displayed more attractively in future iterations of the tool).
+</p>
+</section><!-- /end section phylogram__info -->
+[%	IF data_filters;
+		omit_datamart_filter = 1;
+		PROCESS 'inc/filters.tt';
+	END %]
+<section class="visualisation clear cf">
+<div id="phylogram" class="resizable">
+	<p class="js_vis_loading">
+		Please wait while the visualisation loads.
+	</p>
+</div>
+</section>
+<section role="complementary" class="sample-data">
+<form action="[% link('cart/genomes/add') %]" method="POST" class="sample-data__form">
+[%	FOREACH s IN results.array; %]
+<fieldset data-sample-id="[% s.taxon_oid %]" id="taxon_oid_[% s.taxon_oid %]" class="js_sample_details sample-data__item">
 	<h4>[% s.taxon_display_name %]</h4>
+	<input type="checkbox" class="sample-data__cbox" name="taxon_oid" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" />
+	<label for="cbox_[% s.taxon_oid %]" class="sample-data__label">
+		<span class="sample-data__labeltxt--unchecked">Add to selection</span>
+		<span class="sample-data__labeltxt--checked">Remove from selection</span>
+	</label>
 	<p>Phylogenetic classification:</p>
-	<dl class="table-like">
-[%		FOREACH e IN results.class_types %]
-		<dt>[% e.replace("_", " ") %]</dt>
-		<dl>[% s.$e || 'unclassified' %]</dl>
+	<dl class="table-like sample-data__classification cf">
+[%		FOREACH e IN results.js.class_types %]
+		<dt class="sample-data__classification--level">[% e.replace("_", " ") %]</dt>
+		<dl class="sample-data__classification--value">[% s.$e || 'unclassified' %]</dl>
 [%		END; %]
 	</dl>
 	<p><a class="sample_details__link" href="[% link('taxon', { taxon_oid => s.taxon_oid }) %]">view taxon details</a></p>
-</li>
-</ul>
+	<p>add to selection / add to cart</p>
+</fieldset>
 [%	END; %]
+<fieldset class="sample-data__controls">
+<input type="reset" value="Clear selection" class="sample-data__reset" />
+<input type="submit" value="Add selection to cart" class="sample-data__submit" />
+</fieldset>
 </section> <!-- / end complementary -->
-<div id="collapse" class="svg-container"></div>
 [%	END; %]

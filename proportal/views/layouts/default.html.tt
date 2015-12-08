@@ -67,7 +67,7 @@
 		END;
 		IF tmpl_includes.tt_scripts;
 			FOR s IN tmpl_includes.tt_scripts;
-				f_name = 'scripts_' _ s _ '.tt';
+				f_name = 'scripts/' _ s _ '.tt';
 				PROCESS $f_name;
 			END;
 		END;

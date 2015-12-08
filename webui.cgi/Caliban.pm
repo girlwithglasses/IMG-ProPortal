@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: Caliban.pm 34568 2015-10-23 20:35:43Z klchu $
+# $Id: Caliban.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
 #
 ############################################################################
 package Caliban;
@@ -93,6 +93,8 @@ sub dispatch {
         #printMigrateForm();
     } elsif ( $page eq 'submitMigrate' ) {
         #processMigrateForm();
+    } elsif ( $page eq 'userinfo' ) {
+        #getCalibanInfoFromEmail();
     }
 }
 
@@ -906,9 +908,22 @@ sub migrateImg2JgiSso {
 
 }
 
-# json data return must be an array or empty
+#sub getCalibanInfoFromEmail {
+#
+#    my $email = param('email');
+#    my $url = 'https://signon.jgi.doe.gov/api/users.json?email=' . $email;
+#    my $data_aref = getCv($url);
+#    print "getCalibanInfoFromEmail() data_aref: <br/>\n";
+#    print Dumper($data_aref);
+#    print "<br/>\n";    
+#    
+#}
+#
+#
+## json data return must be an array or empty
 #sub getCv {
 #    my ($url) = @_;
+#
 #    my $ua    = WebUtil::myLwpUserAgent();
 #    my $req   = GET($url);
 #    my $res   = $ua->request($req);
@@ -922,7 +937,7 @@ sub migrateImg2JgiSso {
 #
 #    return $data_aref;
 #}
-
+#
 # before print migrate form check to see if user has more than one account
 # with their email address
 #

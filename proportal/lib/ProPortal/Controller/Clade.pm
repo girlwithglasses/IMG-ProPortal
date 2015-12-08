@@ -72,6 +72,7 @@ sub coerce_for_clade_graph {
 
 	return {
 		data => $data,
+		js => { data => $data }
 	};
 
 }

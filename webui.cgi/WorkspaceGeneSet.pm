@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGeneSet.pm
-# $Id: WorkspaceGeneSet.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: WorkspaceGeneSet.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
 ###########################################################################
 package WorkspaceGeneSet; 
  
@@ -321,7 +321,7 @@ sub printGeneSetMainForm {
     TabHTML::printTabDiv("genesetTab", \@tabIndex, \@tabNames);
 
     print "<div id='genesettab1'>";
-    WorkspaceUtil::printShareMainTable($section_cgi, $section, $workspace_dir, $sid, $folder, @files);
+    WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files);
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 
@@ -353,8 +353,7 @@ sub printGeneSetMainForm {
         -class => 'meddefbutton',
         -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSets('$folder');"
     );
-    print nbsp(1); 
-    
+    print nbsp(1);     
     print "</div>\n";
 
     print "<div id='genesettab3'>";
@@ -377,19 +376,19 @@ sub printGeneSetMainForm {
         -onClick => "return checkSetsIncludingShare('$folder');"
     );
 
-#    print "<h2>Save Scaffolds to Workspace</h2>\n"; 
-#    print "<p>You may save scaffolds of selected gene set(s) to the workspace.<br/>"; 
-#        print "(<b>Note:</b> " 
-#            . "Only scaffolds of <b>assembled</b> genes will be saved.)\n"; 
-#    print "<p>File name:<br/>\n"; 
-#        print "<input type='text' " 
-#            . "size='$filename_size' maxLength='$filename_len' " 
-#            . "name='gene_scaf_filename' " 
-#            . "title='All special characters will be removed and spaces converted to _ ' />\n"; 
-#    print "<br/>";
-#    print "<input class='medbutton' type='submit' "
-#            . "name='_section_Workspace_saveGeneScaffolds' "
-#            . "value='Save Scaffolds to Workspace' />\n";
+    #print "<h2>Save Scaffolds to Workspace</h2>\n"; 
+    #print "<p>You may save scaffolds of selected gene set(s) to the workspace.<br/>"; 
+    #    print "(<b>Note:</b> " 
+    #        . "Only scaffolds of <b>assembled</b> genes will be saved.)\n"; 
+    #print "<p>File name:<br/>\n"; 
+    #    print "<input type='text' " 
+    #        . "size='$filename_size' maxLength='$filename_len' " 
+    #        . "name='gene_scaf_filename' " 
+    #        . "title='All special characters will be removed and spaces converted to _ ' />\n"; 
+    #print "<br/>";
+    #print "<input class='medbutton' type='submit' "
+    #        . "name='_section_Workspace_saveGeneScaffolds' "
+    #        . "value='Save Scaffolds to Workspace' />\n";
 
     print nbsp(1);
     WorkspaceUtil::printSaveGeneSetGenomesAlternativeToWorkspace('filename,share_filename');

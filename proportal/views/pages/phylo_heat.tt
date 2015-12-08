@@ -9,7 +9,7 @@
 <section class="cf">
 <div id="toolbar">
 	<ul id="title">
-		<li> <img src="tempLogoBeta3.png" alt="Logo"></li>
+		<li> <img src="[% settings.pp_assets %]images/tempLogoBeta3.png" alt="Logo"></li>
 	</ul>
 	<ul class="optionTitle">
 		<li>Phylogenetic Parameters</li>

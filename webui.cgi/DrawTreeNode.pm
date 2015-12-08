@@ -33,7 +33,8 @@ sub new {
    $self->{ mouseover } = ""; # title to use in mouse over
    $self->{ hyperlink } = "";  # hyperlink URL for clicking
    $self->{ branchLength } = $branchLength;
-   $self->{ branchLength } = 1.0 if $branchLength eq "";
+   #$self->{ branchLength } = 1.0 if $branchLength eq "";
+   $self->{ branchLength } = 0.0 if $branchLength eq "";
    $self->{ distance } = $distance;
    $self->{ distance } = 1.0 if $distance eq "";
    $self->{ leafOrder } = { };
@@ -198,7 +199,8 @@ sub writeNode {
 
    my $a = $self->{ children }; 
    my $nNodes = @$a; 
-   my $distance = 1 - $self->{ distance };
+   my $branchLength = 1 - $self->{ distance };
+   #my $branchLength = $self->{ branchLength };
 
    my $domains = $self->{ domains };
    my $href = "img";
@@ -208,11 +210,11 @@ sub writeNode {
        my ($lineage, $sname, $oid) = split(':', $self->{ desc });
        print $wfh "  $sp"."<name>";
        print $wfh $oid;
-       print $wfh "[".$self->{ id }."]" if $oid ne $self->{ id };
+       #print $wfh "[".$self->{ id }."]" if $oid ne $self->{ id };
        print $wfh "</name>\n"; 
 
        print $wfh "  $sp"."<branch_length>";
-       print $wfh $distance; 
+       print $wfh $branchLength; 
        print $wfh "</branch_length>\n"; 
 
        print $wfh "  $sp"."<taxonomy>\n";
@@ -288,7 +290,7 @@ sub writeNode {
 	   print $wfh "</name>\n"; 
        }
        print $wfh "  $sp"."<branch_length>";
-       print $wfh $distance;
+       print $wfh $branchLength;
        print $wfh "</branch_length>\n"; 
 
        print $wfh "  $sp"."<taxonomy>\n";
@@ -404,7 +406,7 @@ sub setCoordinates {
    for my $n( @leafNodes ) {
      my $x = 0;
      for( my $p = $n; $p; $p = $p->{ parent } ) {
-         $x += ( $p->{ branchLength } * $h_bar );
+         $x += ( (1 - $p->{ branchLength }) * $h_bar );
      }
      $n->{ x } = $x;
      $n->{ y } = $y;
@@ -445,7 +447,7 @@ sub setAlignCoordinates {
    for my $n( @leafNodes ) { 
        my $x = 0; 
        for( my $p = $n; $p; $p = $p->{ parent } ) { 
-	   $x += ( $p->{ branchLength } * $h_bar ); 
+	   $x += ( (1 - $p->{ branchLength }) * $h_bar ); 
        } 
        if ($x > $longest_x) {
 	   $longest_x = $x;
@@ -490,7 +492,7 @@ sub setParentCoordinates {
    my $y_avg = $y_sum / $nNodes;
    my $x = 0;
    for( my $p = $self->{ parent }; $p; $p = $p->{ parent } ) {
-       $x += ( $p->{ branchLength } * $h_bar );
+       $x += ( (1 - $p->{ branchLength }) * $h_bar );
    }
    $self->{ x } = $x;
    $self->{ y } = $y_avg;

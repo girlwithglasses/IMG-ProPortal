@@ -1,6 +1,6 @@
 ############################################################################
 # ImgNetworkBrowser.pm - Network Browser module.
-# $Id: ImgNetworkBrowser.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: ImgNetworkBrowser.pm 34770 2015-11-20 22:56:04Z klchu $
 ############################################################################
 package ImgNetworkBrowser;
 my $section = "ImgNetworkBrowser";
@@ -80,7 +80,7 @@ sub dispatch {
 # list of other IMG Network pages
 #
 sub printImgFam {
-    my $url = "$base_url/doc/imgterms.html";
+    my $url = "$base_url/imgterms.html";
     my $link = "<a href=$url target=_blank>IMG Networks</a>";
     my $text = "IMG Pathways are linked together through the common metabolites or macromolecular complexes to form $link. IMG Networks correspond to the fragments of a metabolic map that are known to perform a certain physiological role. IMG Networks can be linked to higher level IMG Networks based, again, on a common physiological role. ";
  

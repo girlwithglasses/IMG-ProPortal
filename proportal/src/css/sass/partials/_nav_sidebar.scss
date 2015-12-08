@@ -1,0 +1,117 @@
+/* partials/sidebar */
+
+// toggle to show and hide the sidebar
+
+.sidebar-toggle {
+	&__container {
+		float: left;
+		width: $sidebar-width;
+		margin: 0;
+		@include icon;
+		@include icon-l-arr;
+		&:hover, &:focus, &:active {
+			color: $horiz-bar__link;
+			background-color: $horiz-bar__bg;
+			background-position: 0 50%;
+		}
+	}
+	&__label {
+		display: block;
+		margin: 0;
+		padding: .75rem;
+		text-align: center;
+	}
+}
+
+// small screens: don't show the sidebar or the toggle at all
+@include maxw( $med- ) {
+	.sidebar {
+		display: none;
+	}
+	.sidebar-toggle__container {
+		display: none;
+	}
+}
+
+/**
+@include minw( $med ) {
+	.sidebar-toggle__container {
+		display: block;
+	}
+}
+*/
+
+.nav-toggle:checked {
+	& ~ .sidebar-toggle__container {
+		color: $horiz-bar__link;
+		background-color: $horiz-bar__bg;
+		@include icon;
+		@include icon-r-arr;
+		background-position: 100% 50%;
+	}
+
+	& ~ .sidebar {
+		margin-left: -#{$sidebar-width};
+		@include ht-0;
+	}
+}
+
+@include minw( $med ) {
+	.nav-toggle:checked ~ .content { // article
+		width: 100%;
+	}
+}
+
+
+.sidebar-menu {
+
+	&__link {
+		display: block;
+		padding: .5rem;
+		border-left: .25rem solid transparent;
+		border-bottom: 1px dotted lighten( hue( dk_grey ), 25%);
+
+		// indent links according to their depth in the menu system
+		&.menu__link {
+			&--l1 {
+				padding-left: $gutter;
+			}
+			&--l2 {
+				padding-left: $gutter * 2;
+			}
+			&--l3 {
+				padding-left: $gutter * 3;
+			}
+			&--l4 {
+				padding-left: $gutter * 4;
+			}
+		}
+
+        &:hover, &:focus, &:active {
+            border-bottom-style: solid;
+            border-left-color: $secondary;
+//			background: ???
+        }
+    }
+}
+//	&__item {
+//		// highlight parent items
+//		&.parent.menu__item {
+		.parent.menu__item {
+			&--l0 .sidebar-menu__link {
+				border-left-color: nav-hilite-lvl( l0 );
+			}
+			&--l1 .sidebar-menu__link {
+				border-left-color: nav-hilite-lvl( l1 );
+			}
+			&--l2 .sidebar-menu__link {
+				border-left-color: nav-hilite-lvl( l2 );
+			}
+		}
+//	}
+	.sidebar-menu__item.current .sidebar-menu__link {
+		// current item
+//		&.current .sidebar-menu__link {
+			border-left-color: nav-hilite-lvl( current );
+//		}
+	}

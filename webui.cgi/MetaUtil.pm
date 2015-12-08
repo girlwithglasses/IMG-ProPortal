@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. web utility functions for file system
-# $Id: MetaUtil.pm 34581 2015-10-27 20:08:11Z jinghuahuang $
+# $Id: MetaUtil.pm 34858 2015-12-08 18:48:04Z klchu $
 ############################################################################
 package MetaUtil;
 require Exporter;
@@ -4958,9 +4958,10 @@ sub getTaxonFuncMetaGenes {
 
 ############################################################################
 ## getPhyloGeneCounts
+# $xcopy if not null or blank do est_copy
 ############################################################################
 sub getPhyloGeneCounts {
-    my ( $taxon_oid, $data_type, $domain, $phylum, $ir_class, $family, $genus ) = @_;
+    my ( $taxon_oid, $data_type, $domain, $phylum, $ir_class, $family, $genus, $xcopy ) = @_;
     $taxon_oid = sanitizeInt($taxon_oid);
 
     my $dbh = dbLogin();
@@ -5011,6 +5012,15 @@ sub getPhyloGeneCounts {
                 from phylo_dist
                 where homo_taxon in ( $taxons_str )
             };
+            
+            if($xcopy eq 'est_copy' ) {
+                $sql3 = qq{
+                select sum(est_copy)
+                from phylo_dist
+                where homo_taxon in ( $taxons_str )
+            };
+            }
+            
             my $sth = $dbh3->prepare($sql3);
             $sth->execute();
             my ($cnt2) = $sth->fetchrow();

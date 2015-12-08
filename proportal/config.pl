@@ -33,12 +33,10 @@
 	googlemapsapikey => 'AIzaSyDrPC70YP1ZyZT-YIFXnol96In-3LKbn7w',
 
 	db => {
-		version_year => "Version 4.3 January 2014",
+		version_year => "Version alpha January 2014",
 		server_name => "Server name",
 		build_date => "Build date",
 	},
-
-	debug => 1,
 
 	# URL of the ProPortal app
 	pp_app => "https://img-proportal-dev.jgi-psf.org/",

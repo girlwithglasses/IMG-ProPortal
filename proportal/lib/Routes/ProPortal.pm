@@ -6,13 +6,13 @@ use ProPortal::Util::Factory;
 
 our $VERSION = '0.1';
 
-our @active_components = qw( home data_type location clade phylo_heat phylogram );
+our @active_components = qw( home data_type location clade phylo_viewer phylogram );
 
 prefix '/proportal' => sub {
 
 	# filterable queries
 	get qr{
-		/ (?<page> location | clade | data_type | phylo_heat | phylogram | ecosystem )
+		/ (?<page> location | clade | data_type | phylogram | ecosystem | big_ugly_taxon_table )
 		/? (?<subset> prochlor | synech | prochlor_phage | synech_phage | metagenome | isolate )?
 		}x => sub {
 
@@ -36,6 +36,26 @@ prefix '/proportal' => sub {
 
 		return template "pages/" . $p, $pp->render();
 
+	};
+
+	get qr{
+		/ (?<page> phylo_viewer )
+		/? (?<query> results )?
+		}x => sub {
+
+		my $c = captures;
+		my $p = delete $c->{page};
+		var menu_grp => 'proportal';
+		var page_id => 'proportal/' . $p;
+		my $suffix = ( $c->{query} ) ? 'Results' : 'Submit';
+
+		my $pp = CoreStuff::bootstrap( 'PhyloViewer::' . $suffix, config );
+		my $tmpl = 'pages/' . $p ;
+		if ( $c->{query} ) {
+			$tmpl .= '_results';
+		}
+
+		return template $tmpl, $pp->render();
 	};
 
 	get qr{

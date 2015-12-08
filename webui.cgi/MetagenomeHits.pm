@@ -1,6 +1,6 @@
 ###########################################################################
 # Phylogenetic Distribution of Genes from taxon detail page
-# $Id: MetagenomeHits.pm 34545 2015-10-20 21:36:40Z klchu $
+# $Id: MetagenomeHits.pm 34858 2015-12-08 18:48:04Z klchu $
 ###########################################################################
 package MetagenomeHits;
 
@@ -997,6 +997,9 @@ sub printForm {
     print hiddenVar( "page",             "radialtree" );
     print hiddenVar( "selectedGenome1",  $taxon_oid );
     print hiddenVar( "fromviewer",       "TreeFileMgr" );
+
+    require RadialPhyloTree;
+    RadialPhyloTree::printDisplayOptions();
 
     print submit(
           -name  => "",

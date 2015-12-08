@@ -1,0 +1,31 @@
+/* login form */
+.login__fields {
+    margin: 0;
+}
+.login__label--name, .login__label--password {
+    display: block;
+    margin-bottom: $gutter;
+}
+.login__input--name, .login__input--password {
+    width: 100%;
+    max-width: 20rem;
+    display: block;
+}
+.login__input--name, .login__input--password {
+    margin-bottom: $line-ht;
+}
+.login__submit {
+    display: block;
+    padding: $gutter $line-ht;
+    margin: 0;
+    @include maxw( 20rem ) {
+        width: 100%;
+        max-width: 20rem;
+        margin: 0 auto;
+    }
+    @include minw( 20rem ) {
+        width: 10rem;
+        margin-left: 5rem;
+    }
+}
+

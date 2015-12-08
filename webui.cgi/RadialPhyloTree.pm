@@ -1,6 +1,6 @@
 ###########################################################################
 # RadialPhyloTree.pm - draws a radial phylogenetic tree as seen on MG-RAST
-# $Id: RadialPhyloTree.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: RadialPhyloTree.pm 34859 2015-12-08 19:08:28Z klchu $
 ############################################################################
 package RadialPhyloTree;
 my $section = "RadialPhyloTree";
@@ -35,7 +35,7 @@ my $YUI                 = $env->{yui_dir_28};
 my $include_metagenomes = $env->{include_metagenomes};
 my $web_data_dir        = $env->{web_data_dir};
 my $top_base_url = $env->{top_base_url};
-    
+my $img_ken                  = $env->{img_ken};    
 
 my $hideViruses   = getSessionParam("hideViruses");
 my $hidePlasmids  = getSessionParam("hidePlasmids");
@@ -129,6 +129,52 @@ sub dispatch {
     }
 }
 
+sub printDisplayOptions {
+# <option title="Any hits above 30%" value="30p"> 30+ </option>
+print qq{
+<p>
+<b>Display Options </b>
+<br>
+<br>
+Percent Identity: &nbsp;&nbsp;  
+<select name="percentage">
+<option title="All" value="all" selected="selected"> 30%+ (All hits) </option>
+<option title="Any hits above 60%" value="60p"> 60+ </option>
+<option title="Any hits above 90%" value="90"> 90+ </option>
+<option title="Hits between 30% to 59%" value="30"> 30% to 59% </option>
+<option title="Hits between 60% to 89%" value="60"> 60% to 89% </option>
+</select>
+};
+
+    print qq{
+<br>
+<br> Distribution By:<br>
+<input type="radio" checked="checked" value="gene_count" name="xcopy"> Gene count
+<br>
+<input type="radio" value="est_copy" name="xcopy"> Estimated gene copies
+    };
+
+    my $taxon_oid = param('taxon_oid');
+
+    if(!$taxon_oid) {
+    print qq{
+<br>
+<br> Sample weight graph type: <br>
+<input type="radio" checked="checked" value="bar" name="graph"> Bar
+<br>
+<input type="radio" value="stack" name="graph"> Stack
+    };
+    print qq{
+        <br>
+        Note "stacked" bars does not reflect the number of hits to the lineage, <br> 
+        i.e. it's the same regardless of whether the lineage has 5 hits or 5 million hits.<br> 
+        And that in order to see lineage abundance one has to switch to "bar" display.        
+    };
+    }
+    
+    print "</p>\n";    
+}
+
 sub printForm {
     my ($numTaxon) = @_;
 
@@ -136,25 +182,16 @@ sub printForm {
 
     printHeader();
     printMainForm();
+
+    printDisplayOptions();
+
+
     print "<p>\n";
 
-=temporary, wait until genome vs metagenome radial tree is in place -- yjlin
     if ($include_metagenomes) {
-        print "Distribution type: ";
-        print qq{
-    <select name="type" style="width:16em">
-    <option value="genome">Metagenomes vs All Genomes</option>
-    <option value="metagenome">Genomes vs All Metagenomes</option>
-    </select>
-    <br/><br/>
-        };
-    }
-=cut
-
-    if ($include_metagenomes) {
-        print "Please select up to 5 samples or genomes for distribution:<br/>";
+        print "<b>Please select up to 5 samples or genomes for distribution:</b><br/>";
     } else {
-        print "Please select up to 5 genomes for distribution:<br/>";
+        print "<b>Please select up to 5 genomes for distribution:</b><br/>";
     }
 
     printMainJS();
@@ -247,6 +284,10 @@ sub runTree {
         $graphType = "bar" if !$graphType;
     }
 
+    # new - ken
+    my $percentage = param('percentage');
+    my $xcopy = param('xcopy');
+
     my $colorBy       = param("colorBy");
     my $titleWidth    = param("titleWidth");
     my $treeDia       = param("treeDia");
@@ -258,7 +299,8 @@ sub runTree {
 
     $viewBy = "family" if !$viewBy;
     $colorBy    = $type eq "metagenome" ? "class" : "phylum" if !$colorBy;
-    $graphType  = "stack"                                    if !$graphType;
+    #$graphType  = "stack"                                    if !$graphType;
+    $graphType  = "bar"                                    if !$graphType;
     $titleWidth = $treeParam{titleWidth}{val}                if !$titleWidth;
     $treeDia    = $treeParam{treeDia}{val}                   if !$treeDia;
     $graphSize  = $treeParam{graphSize}{val}                 if !$graphSize;
@@ -269,7 +311,8 @@ sub runTree {
     $page    = param("page")    if paramMatch("page");
 
     # show a bar (instead of stack) when only one genome is analyzed
-    $graphType = "bar" if ( scalar @oids == 1 );
+    #$graphType = "bar" if ( scalar @oids == 1 );
+    
     my %level = (
         domain => 1,
         phylum => 2,
@@ -292,6 +335,22 @@ sub runTree {
     }
 
     printHeader();
+    
+    my $percentage          = param("percentage"); 
+    
+    if($percentage eq 'all' || $percentage eq '30p') {
+       print "<p>All hits 30% and up.</p>\n"; 
+    } elsif ($percentage eq '60p') {
+        print "<p>All hits 60% and up.</p>\n";
+    } elsif ($percentage eq '90') {
+        print "<p>All hits 90% and up.</p>\n";
+    } elsif ($percentage eq '30') {
+        print "<p>All hits between 30% and 60%.</p>\n";
+    } elsif ($percentage eq '60') {
+        print "<p>All hits between 60% and 90%.</p>\n";
+    }    
+    
+    
     my $hint =
         "To include <b>Viruses</b>, <b>Plasmids</b>, "
       . "or <b>GFragment</b>, go to "
@@ -844,6 +903,7 @@ sub getGeneCounts {
 
     my $rclause;
     my $dbh = dbLogin();
+    my $xcopy = param('xcopy');
 
     printStatusLine( "<font color='red'>This may take several minutes. "
           . "Please wait ... </font>\n<img src="
@@ -876,6 +936,22 @@ sub getGeneCounts {
     my $rclause   = WebUtil::urClause('t');
     my $imgClause = WebUtil::imgClause('t');
 
+
+    my $percentage          = param("percentage"); 
+    my $perclause = '';
+    if($percentage eq 'all' || $percentage eq '30p') {
+       $perclause = ''; 
+    } elsif ($percentage eq '60p') {
+        $perclause = PhyloUtil::getPercentClause( 60, 1 );
+    } elsif ($percentage eq '90') {
+        $perclause = PhyloUtil::getPercentClause( 90, 1 );
+    } elsif ($percentage eq '30') {
+        $perclause = PhyloUtil::getPercentClause( 30, 0 );
+    } elsif ($percentage eq '60') {
+        $perclause = PhyloUtil::getPercentClause( 60, 0 );
+    }
+    
+
     my $sql;
     if ( $type eq "metagenome" ) {
         # Microbiome query
@@ -893,6 +969,7 @@ sub getGeneCounts {
             and dt.homolog_taxon = g.taxon
             and g.taxon in ($taxon_oid_str)
             and dt.homolog_taxon in ($taxon_oid_str)
+            $perclause
             $rclause
             $imgClause
             $virusClause
@@ -908,6 +985,7 @@ sub getGeneCounts {
             from dt_phylum_dist_genes dt, taxon t
             where dt.taxon_oid in ($taxon_oid_str)
             and dt.homolog_taxon = t.taxon_oid
+            $perclause
             $rclause
             $imgClause
             $virusClause
@@ -916,8 +994,31 @@ sub getGeneCounts {
             group by dt.domain, dt.phylum, dt.ir_class,
                  t.ir_order, t.family, dt.taxon_oid
         };
+        
+        if($xcopy eq 'est_copy') {
+            # we need to find the est_copy for isolates and metagenome
+            #   Add isolate genomes
+            $sql = qq{
+            select dt.domain, dt.phylum, dt.ir_class, t.ir_order,
+                t.family, dt.taxon_oid, sum(g.est_copy)
+            from dt_phylum_dist_genes dt, taxon t, gene g
+            where dt.taxon_oid in ($taxon_oid_str)
+            and dt.homolog_taxon = t.taxon_oid
+            and dt.GENE_OID = g.gene_oid
+            and dt.taxon_oid = g.taxon
+            $perclause
+            $rclause
+            $imgClause
+            $virusClause
+            $plasmidClause
+            $gFragmentClause
+            group by dt.domain, dt.phylum, dt.ir_class,
+                 t.ir_order, t.family, dt.taxon_oid
+            };
+        }
     }
     my $cur = execSql( $dbh, $sql, $verbose );
+
 
     my %lineage_hash;
     my %geneCounts;
@@ -941,9 +1042,6 @@ sub getGeneCounts {
     OracleUtil::truncTable( $dbh, "gtt_num_id" )
       if ( $taxon_oid_str =~ /gtt_num_id/i );
 
-    #print "geneCounts 1<br/>\n";
-    #print Dumper \%geneCounts;
-    #print "<br/>\n";
 
     # get gene counts for MER-FS taxons
     if ( scalar(@mer_fs_taxons) > 0 ) {
@@ -976,7 +1074,9 @@ sub getGeneCounts {
                 print "&nbsp;&nbsp;processing $key and $p ...<br/>\n";
                 my ( $domain, $phylum, $ir_class, $ir_order, $family ) = split( "\t", $p );
                 my $p2 = "$p\t$key";
-                my $cnt = MetaUtil::getPhyloGeneCounts( $key, $data_type, $domain, $phylum, $ir_class, $family );
+                
+                # metagenome adjust est gene copy here - ken
+                my $cnt = MetaUtil::getPhyloGeneCounts( $key, $data_type, $domain, $phylum, $ir_class, $family, '', $xcopy );
                 next if ( !$cnt );
                 $geneCounts{$p2}  = $cnt;
                 $lineage_hash{$p} = 1;
@@ -985,14 +1085,7 @@ sub getGeneCounts {
 
         WebUtil::printEndWorkingDiv();
 
-        #print currDateTime() . "<br>";
-
-        #print "geneCounts 2<br/>\n";
-        #print Dumper \%geneCounts;
-        #print "<br/>\n";
     }
-
-    #$dbh->disconnect();
 
     my @lineage_list = keys %lineage_hash;
     for my $cur_taxon (@$taxon_oid_ref) {

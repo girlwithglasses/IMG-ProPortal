@@ -781,6 +781,10 @@ my $static_links = {
 		label => 'IMG ProPortal',
 		url => 'proportal',
 	},
+	'proportal/big_ugly_taxon_table' => {
+		url => 'proportal/big_ugly_taxon_table', label => 'table view',
+	},
+
 	'proportal/clade' => {
 		url => 'proportal/clade', label => 'by clade',
 	},
@@ -793,8 +797,8 @@ my $static_links = {
 	'proportal/phylogram' => {
 		url => 'proportal/phylogram', label => 'by taxonomic tree',
 	},
-	'proportal/phylo_heat' => {
-		url => 'proportal/phylo_heat', label => 'phylogram / heat map',
+	'proportal/phylo_viewer' => {
+		url => 'proportal/phylo_viewer', label => 'PhyloViewer',
 	},
 	'proportal/ecosystem' => {
 		url => 'proportal/ecosystem', label => 'by ecosystem',
@@ -885,6 +889,11 @@ my $static_links = {
 	},
 	'menu/Workspace' => {
 		url => 'menu/Workspace', label => 'Workspace',
+	},
+
+	## FAKE LINK!!!
+	'cart/genomes/add' => {
+		url => 'cart/genomes/add', label => 'Add to genome cart'
 	},
 
 	'about' => { abs_url => $base_url_h->{server} . '/#IMGMission', label => 'IMG Mission' },

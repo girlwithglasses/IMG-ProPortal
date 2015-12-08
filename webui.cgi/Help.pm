@@ -1,7 +1,7 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 34698 2015-11-12 21:53:15Z klchu $
+# $Id: Help.pm 34770 2015-11-20 22:56:04Z klchu $
 ############################################################################
 package Help;
 use strict;
@@ -152,7 +152,7 @@ sub printDocs {
     print qq{
     <a name='userguide' href='#'><h2> User Guide </h2></a>
         <p>
-        <a href="$base_url/doc/userGuide.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide']);">
+        <a href="$base_url/../docs/userGuide.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide']);">
             <img src="$base_url/images/icon_pdf_medium.png" border="0" />
         </a>
         </p>
@@ -233,7 +233,7 @@ sub printWhatsNew {
         <tr>
         <td align="left" style="padding-right: 25px;">
         
-        <a href="$base_url/doc/releaseNotes.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'release notes']);">
+        <a href="$base_url/../docs/releaseNotes.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'release notes']);">
             <img src="$base_url/images/icon_pdf_medium.png" border="0" />
         </a> <br/>
         &nbsp;
@@ -242,11 +242,11 @@ sub printWhatsNew {
 
     if ($img_er) {
 
-        # https://img-stage.jgi-psf.org/er/doc/userGuideER.pdf
+        # https://img-stage.jgi-psf.org/er/../docs/userGuideER.pdf
         print qq{
             <td align="left" style="padding-right: 25px;">
         
-        <a href="$base_url/doc/userGuideER.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide er']);">
+        <a href="$base_url/../docs/userGuideER.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide er']);">
             <img src="$base_url/images/icon_pdf_medium.png" border="0" /> 
         </a> <br/>
         IMG/ER Tutorial
@@ -254,12 +254,12 @@ sub printWhatsNew {
         };
     }
 
-    # http://localhost/~ken/web25m.htd/doc/userGuide_m.pdf
+    # http://localhost/~ken/web25m.htd/../docs/userGuide_m.pdf
     if ($include_metagenomes) {
         print qq{
             <td align="left" style="padding-right: 25px;">
         
-        <a href="$base_url/doc/userGuide_m.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide m']);">
+        <a href="$base_url/../docs/userGuide_m.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide m']);">
             <img src="$base_url/images/icon_pdf_medium.png" border="0" />  
         </a> <br/>
         IMG/M Addendum
@@ -333,7 +333,7 @@ sub printFindGenomesMap {
 	    &nbsp; 
 	    </td>
 	    <td class='img'>
-	    <a href='$base_url/doc/GenomeBrowser.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'genome broeser']);">
+	    <a href='$base_url/../docs/GenomeBrowser.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'genome broeser']);">
 	    <img width="20" height="14" border="0"
 	    style="margin-left: 20px; vertical-align:middle"
 	    src="$base_url/images/help_book.gif"> 
@@ -353,7 +353,7 @@ sub printFindGenomesMap {
 	    By Metadata <br/>
 	    </td>
 	    <td class='img'>
-	    <a href='$base_url/doc/GenomeSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'genome search']);">
+	    <a href='$base_url/../docs/GenomeSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'genome search']);">
 	    <img width="20" height="14" border="0" 
 	    style="margin-top: 10px;margin-left: 20px; vertical-align:middle"
 	    src="$base_url/images/help_book.gif"> 
@@ -405,7 +405,7 @@ sub printFindGenesMap {
 	    Find genes in selected genomes by keyword.
 	    </td>
 	    <td class='img'>
-	    <a href='$base_url/doc/GeneSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'gene search']);">
+	    <a href='$base_url/../docs/GeneSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'gene search']);">
 	    <img width="20" height="14" border="0"
 	    style="margin-left: 20px; vertical-align:middle"
 	    src="$base_url/images/help_book.gif"> 
@@ -444,7 +444,7 @@ sub printFindGenesMap {
 	    Find sequence similarity in IMG database.
 	    </td>
             <td class='img'>
-	    <a href='$base_url/doc/Blast.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'blast']);">
+	    <a href='$base_url/../docs/Blast.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'blast']);">
 	    <img width="20" height="14" border="0" 
 	    style="margin-left: 20px; vertical-align:middle"
 	    src="$base_url/images/help_book.gif"> 
@@ -578,7 +578,7 @@ sub printFindFunctionsMap {
 	    Find functions in selected genomes by keyword.
 	    </td>
 	    <td class='img'>
-	    <a href='$base_url/doc/FunctionSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'function search']);">
+	    <a href='$base_url/../docs/FunctionSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'function search']);">
 	    <img width="20" height="14" border="0"  
 	    style="margin-left: 20px; vertical-align:middle" 
 	    src="$base_url/images/help_book.gif"> 
@@ -681,7 +681,7 @@ sub printFindFunctionsMap {
   #        List of SEED product names and subsystems.
   #        </td>
   #            <td class='img'>
-  #        <a href='$base_url/doc/SEED.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'seed']);">
+  #        <a href='$base_url/../docs/SEED.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'seed']);">
   #        <img width="20" height="14" border="0"
   #        style="margin-left: 20px; vertical-align:middle"
   #        src="$base_url/images/help_book.gif">
@@ -701,7 +701,7 @@ sub printFindFunctionsMap {
 	    List of Transporter Classification families
 	    </td>
             <td class='img'>
-	    <a href='$base_url/doc/TransporterClassification.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'transporter class']);">
+	    <a href='$base_url/../docs/TransporterClassification.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'transporter class']);">
 	    <img width="20" height="14" border="0" 
 	    style="margin-left: 20px; vertical-align:middle" 
 	    src="$base_url/images/help_book.gif"> 
@@ -916,7 +916,7 @@ sub printCompareGenomesMap {
 	    Dot Plot employs Mummer to generate dotplot diagrams between two genomes.  
 	    </td>
 	    <td class='img'>
-	    <a href='$base_url/doc/Dotplot.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'dot plot']);">
+	    <a href='$base_url/../docs/Dotplot.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'dot plot']);">
 	    <img width="20" height="14" border="0" 
 	    style="margin-left: 20px; vertical-align:middle" 
 	    src="$base_url/images/help_book.gif">
@@ -950,7 +950,7 @@ sub printCompareGenomesMap {
 	    Circular phylogenetic tree for selected genomes.
 	    </td>
 	    <td class='img'>
-	    <a href='$base_url/doc/DistanceTree.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'distance tree']);"> 
+	    <a href='$base_url/../docs/DistanceTree.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'distance tree']);"> 
 	    <img width="20" height="14" border="0" 
 	    style="margin-left: 20px; vertical-align:middle" 
 	    src="$base_url/images/help_book.gif"> 
@@ -993,10 +993,10 @@ sub printCompareGenomesMap {
 
     if ($include_metagenomes) {
         print
-qq{<a href='$base_url/doc/userGuide_m.pdf#page=18' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide m']);">};
+qq{<a href='$base_url/../docs/userGuide_m.pdf#page=18' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide m']);">};
     } else {
         print
-qq{<a href='$base_url/doc/userGuide.pdf#page=49' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide']);">};
+qq{<a href='$base_url/../docs/userGuide.pdf#page=49' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide']);">};
     }
 
     print qq{
@@ -1020,10 +1020,10 @@ qq{<a href='$base_url/doc/userGuide.pdf#page=49' target='_help' onClick="_gaq.pu
 
     if ($include_metagenomes) {
         print
-qq{<a href='$base_url/doc/userGuide_m.pdf#page=19' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide m']);">};
+qq{<a href='$base_url/../docs/userGuide_m.pdf#page=19' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide m']);">};
     } else {
         print
-qq{<a href='$base_url/doc/userGuide.pdf#page=51' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide']);">};
+qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'user guide']);">};
     }
 
     print qq{
@@ -1047,7 +1047,7 @@ qq{<a href='$base_url/doc/userGuide.pdf#page=51' target='_help' onClick="_gaq.pu
 		Compare metagenomes in terms of relative abundance of COGs, Pfams, TIGRFams, and Enzymes.
 		</td>
                 <td class='img'>
-                <a href='$base_url/doc/userGuide_m.pdf#page=20' target='_help'>
+                <a href='$base_url/../docs/userGuide_m.pdf#page=20' target='_help'>
                 <img width="20" height="14" border="0"
                 style="margin-left: 20px; vertical-align:middle"
                 src="$base_url/images/help_book.gif"> 
@@ -1065,7 +1065,7 @@ qq{<a href='$base_url/doc/userGuide.pdf#page=51' target='_help' onClick="_gaq.pu
 		Compare metagenomes in terms of relative abundance of genes assigned to different functional categories.
 		</td>
 		<td class='img'> 
-                <a href='$base_url/doc/userGuide_m.pdf#page=23' target='_help'>
+                <a href='$base_url/../docs/userGuide_m.pdf#page=23' target='_help'>
                 <img width="20" height="14" border="0"
                 style="margin-left: 20px; vertical-align:middle"
                 src="$base_url/images/help_book.gif">
@@ -1087,7 +1087,7 @@ qq{<a href='$base_url/doc/userGuide.pdf#page=51' target='_help' onClick="_gaq.pu
 	    a given function and a given genome.
 	    </td>
 	    <td class='img'>
-                <a href='$base_url/doc/releaseNotes2-7.pdf#page=6' target='_help'> 
+                <a href='$base_url/../docs/releaseNotes2-7.pdf#page=6' target='_help'> 
                 <img width="20" height="14" border="0" 
                 style="margin-left: 20px; vertical-align:middle" 
                 src="$base_url/images/help_book.gif">
@@ -1202,7 +1202,7 @@ sub printAnalysisCartMap {
 		Function Alignment
 	    </td>
             <td class='img'>
-                <a href='$base_url/doc/GeneCart.pdf' target='_help'>
+                <a href='$base_url/../docs/GeneCart.pdf' target='_help'>
                 <img width="20" height="14" border="0" 
 		style="margin-left: 20px; vertical-align:middle" 
 		src="$base_url/images/help_book.gif"> 
@@ -1228,7 +1228,7 @@ sub printAnalysisCartMap {
 	            Gene Cart
 	        </td>
             <td class='img'>
-                <a href='$base_url/doc/FunctionCart.pdf' target='_help'>
+                <a href='$base_url/../docs/FunctionCart.pdf' target='_help'>
                 <img width="20" height="14" border="0"
 		style="margin-left: 20px; vertical-align:middle" 
 		src="$base_url/images/help_book.gif"> 
@@ -1488,7 +1488,7 @@ sub printUsingMap {
 	<tr class='img' valign="top">
 	    <td class='img' nowrap="nowrap"> 
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$base_url/doc/mission.html"> IMG Mission </a>
+	    <a href="$base_url/../docs/mission.html"> IMG Mission </a>
 	    </td>
 	    <td class='img'></td>
 	    <td class='img'></td>
@@ -1497,7 +1497,7 @@ sub printUsingMap {
 	<tr class='img' valign="top">
 	    <td class='img' nowrap="nowrap"> 
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$base_url/doc/faq.html"> FAQ </a>
+	    <a href="$base_url/../docs/faq.html"> FAQ </a>
 	    </td>
 	    <td class='img'></td>
 	    <td class='img'></td>
@@ -1506,7 +1506,7 @@ sub printUsingMap {
 	<tr class='img' valign="top">
 	    <td class='img' nowrap="nowrap"> 
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$base_url/doc/related.html"> Related Links </a>
+	    <a href="$base_url/../docs/related.html"> Related Links </a>
 	    </td>
 	    <td class='img'></td>
 	    <td class='img'></td>
@@ -1515,7 +1515,7 @@ sub printUsingMap {
 	<tr class='img' valign="top">
 	    <td class='img' nowrap="nowrap"> 
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$base_url/doc/credits.html"> Credits </a>
+	    <a href="$base_url/../docs/credits.html"> Credits </a>
 	    </td>
 	    <td class='img'></td>
 	    <td class='img'></td>
@@ -1534,7 +1534,7 @@ sub printUsingMap {
 	<tr class='img' valign="top">
 	    <td class='img' nowrap="nowrap"> 
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$base_url/doc/systemreqs.html"> System Requirements </a>
+	    <a href="$base_url/../docs/systemreqs.html"> System Requirements </a>
 	    </td>
 	    <td class='img'></td>
 	    <td class='img'></td>
@@ -1551,7 +1551,7 @@ sub printUsingMap {
 	    Contains links to all tools and documents, including an archive of past What's New documents
 	    </td>
             <td class='img'>
-                <a href='$base_url/doc/SiteMap.pdf' target='_help'>
+                <a href='$base_url/../docs/SiteMap.pdf' target='_help'>
                 <img width="20" height="14" border="0" 
                 style="margin-left: 20px; vertical-align:middle"
                 src="$base_url/images/help_book.gif"> 
@@ -1563,7 +1563,7 @@ sub printUsingMap {
 	    <td class='img' nowrap="nowrap"> 
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 	    <img class="menuimg" src="$base_url/images/icon_pdf.gif">
-	    <a href="$base_url/doc/images/uiMap.pdf"> User Interface Map</a>
+	    <a href="$base_url/../docs/uiMap.pdf"> User Interface Map</a>
 	    </td>
 	    <td class='img'></td>
 	    <td class='img'></td>
@@ -1573,7 +1573,7 @@ sub printUsingMap {
 	    <td class='img' nowrap="nowrap"> 
 	        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 	        <img class="menuimg" src="$base_url/images/icon_pdf.gif">
-	        <a href="$base_url/doc/userGuide.pdf">
+	        <a href="$base_url/../docs/userGuide.pdf">
                 IMG User Manual</a>
 	    </td>
 	    <td class='img'></td>
@@ -1587,7 +1587,7 @@ sub printUsingMap {
         <td class='img' nowrap="nowrap"> 
             &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
             <img class="menuimg" src="$base_url/images/icon_pdf.gif">
-            <a href="$base_url/doc/userGuideER.pdf">
+            <a href="$base_url/../docs/userGuideER.pdf">
                 IMG ER Tutorial</a>
         </td>
         <td class='img'></td>
@@ -1602,7 +1602,7 @@ sub printUsingMap {
         <td class='img' nowrap="nowrap"> 
             &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
             <img class="menuimg" src="$base_url/images/icon_pdf.gif">
-            <a href="$base_url/doc/userGuide_m.pdf">
+            <a href="$base_url/../docs/userGuide_m.pdf">
                 IMG/M Addendum</a>
         </td>
         <td class='img'></td>
@@ -1876,7 +1876,7 @@ sub printGenomeDetailMap {
             </td>
             <td class='img'> &nbsp; </td>
             <td class='img'>
-                <a href='$base_url/doc/GenerateGenBankFile.pdf' target='_help'>
+                <a href='$base_url/../docs/GenerateGenBankFile.pdf' target='_help'>
                 <img width="20" height="14" border="0"
 		style="margin-left: 20px; vertical-align:middle"
 		src="$base_url/images/help_book.gif"> 
@@ -2035,7 +2035,7 @@ sub printOtherTools {
 	    <td class='img'>
 	    Gene Details Page -> Neighborhood Viewer or <br/>
 	    Chromosome Viewer -> Click intergenic region or <br/>
-	    Find Genes -> Phylogenetic Profilers -> Single Genes see <a href="$base_url/doc/releaseNotes2-7.pdf">IMG 2.7 release notes</a> 
+	    Find Genes -> Phylogenetic Profilers -> Single Genes see <a href="$base_url/../docs/releaseNotes2-7.pdf">IMG 2.7 release notes</a> 
 	    </td>
             <td class='img'></td>
         </tr>
@@ -2045,7 +2045,7 @@ sub printOtherTools {
                 &nbsp; &nbsp; &nbsp; &nbsp; Missing Enzymes 
             </td>
 	    <td class='img'>
-	    See <a href="$base_url/doc/releaseNotes2-7.pdf">IMG 2.7 release notes</a> 
+	    See <a href="$base_url/../docs/releaseNotes2-7.pdf">IMG 2.7 release notes</a> 
 	    </td>
             <td class='img'></td>
         </tr>
@@ -2069,7 +2069,7 @@ sub printOtherTools {
                 <a href="$main_cgi?section=IMGProteins&page=genomeexperiments&exp_oid=1&taxon_oid=643348509">Arthrobacter Study</a> 
             </td> 
             <td class='img'> 
-                <a href='$base_url/doc/Proteomics.pdf' target='_help'> 
+                <a href='$base_url/../docs/Proteomics.pdf' target='_help'> 
                 <img width="20" height="14" border="0" 
 		style="margin-left: 20px; vertical-align:middle" 
 		src="$base_url/images/help_book.gif"> 
@@ -2090,7 +2090,7 @@ sub printOtherTools {
                 <a href="$main_cgi?section=RNAStudies&page=experiments&exp_oid=3&taxon_oid=641522654">Synechococcus sp. Study</a> 
             </td> 
             <td class='img'> 
-                <a href='$base_url/doc/RNAStudies.pdf' target='_help'> 
+                <a href='$base_url/../docs/RNAStudies.pdf' target='_help'> 
                 <img width="20" height="14" border="0"
                 style="margin-left: 20px; vertical-align:middle"
                 src="$base_url/images/help_book.gif">
@@ -2116,7 +2116,7 @@ sub printOtherTools {
                 Residing in pages of Gene Search, Blast, Find Functions --> Keyword Search, Function Alignment Search, and many other area.
             </td> 
             <td class='img'>
-                <a href='$base_url/doc/GenomeFilter.pdf' target='_help'>
+                <a href='$base_url/../docs/GenomeFilter.pdf' target='_help'>
                 <img width="20" height="14" border="0"
 		style="margin-left: 20px; vertical-align:middle"
 		src="$base_url/images/help_book.gif"> 
@@ -2133,17 +2133,17 @@ sub printWhatsNewArchive {
         <p>
         <div class="pdflink">
         <ul>
-    <li> <a href="$base_url/doc/releaseNotes4-0-0.pdf">IMG 4.0.0</a></li>        
-    <li> <a href="$base_url/doc/releaseNotes3-5.pdf">IMG 3.5</a></li>
-    <li> <a href="$base_url/doc/releaseNotes3-4.pdf">IMG 3.4</a></li>
-    <li> <a href="$base_url/doc/releaseNotes3-3.pdf">IMG 3.3</a></li>
-    <li> <a href="$base_url/doc/releaseNotes3-2.pdf">IMG 3.2</a></li>
-    <li> <a href="$base_url/doc/releaseNotes3-1.pdf">IMG 3.1</a></li>
-    <li> <a href="$base_url/doc/releaseNotes3-0.pdf">IMG 3.0</a></li>
-    <li> <a href="$base_url/doc/releaseNotes2-9.pdf">IMG 2.9</a></li>
-    <li> <a href="$base_url/doc/releaseNotes2-8.pdf">IMG 2.8</a></li>
-    <li> <a href="$base_url/doc/releaseNotes2-7.pdf">IMG 2.7</a></li>
-    <li> <a href="$base_url/doc/releaseNotes2-6.pdf">IMG 2.6</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes4-0-0.pdf">IMG 4.0.0</a></li>        
+    <li> <a href="$base_url/../docs/releaseNotes3-5.pdf">IMG 3.5</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes3-4.pdf">IMG 3.4</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes3-3.pdf">IMG 3.3</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes3-2.pdf">IMG 3.2</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes3-1.pdf">IMG 3.1</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes3-0.pdf">IMG 3.0</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes2-9.pdf">IMG 2.9</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes2-8.pdf">IMG 2.8</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes2-7.pdf">IMG 2.7</a></li>
+    <li> <a href="$base_url/../docs/releaseNotes2-6.pdf">IMG 2.6</a></li>
         </ul>
         </div>
         </p>

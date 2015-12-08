@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: ImgStatsOverview.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: ImgStatsOverview.pm 34765 2015-11-20 18:46:25Z aratner $
 ############################################################################
 package ImgStatsOverview;
 
@@ -48,7 +48,7 @@ my $web_data_dir          = $env->{web_data_dir};
 my $user_restricted_site  = $env->{user_restricted_site};
 my $domain_stats_file     = $env->{domain_stats_file};
 my $enable_interpro       = $env->{enable_interpro};
-my $top_base_url = $env->{top_base_url};
+my $top_base_url          = $env->{top_base_url};
 my $GENE_TOTAL_COL = "Gene Total";
 my $total_gene_count;
 my %domain_gene_count;    # hash with gene total for each domain
@@ -2124,7 +2124,7 @@ sub googleMap_new {
     <script type="text/javascript" src="$top_base_url/js/googlemap.js"></script>
     <script type="text/javascript" src="$top_base_url/js/markerclusterer.js"></script>
     <script type="text/javascript" src="$top_base_url/js/markerwithlabel.js"></script>
-    <link rel="stylesheet" type="text/css" href="$base_url/markerwithlabel.css" />
+    <link rel="stylesheet" type="text/css" href="$top_base_url/css/markerwithlabel.css" />
 
     <div id="map_canvas" style="width:1000px; height:700px; position:relative;"></div>
 

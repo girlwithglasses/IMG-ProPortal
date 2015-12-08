@@ -6,6 +6,23 @@ use parent 'CoreStuff';
 #use AnyEvent;
 use AE;
 
+
+prefix '/test' => sub {
+
+	get qr{
+
+		/ (?<demo> table | matrix )
+
+		}x => sub {
+
+		my $c = captures;
+		my $p = delete $c->{demo};
+
+		return template "pages/test/" . $p;
+	};
+
+};
+
 any '/blastoff' => sub {
 	return '3... 2... 1... blast off!';
 };

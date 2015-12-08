@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeList.pm 34731 2015-11-18 20:11:30Z klchu $
+# $Id: GenomeList.pm 34752 2015-11-19 21:29:51Z klchu $
 ############################################################################
 package GenomeList;
 
@@ -2123,6 +2123,20 @@ where t.taxon_oid in ($taxonStr)
 and t.genome_type = 'metagenome'
 $orderByClause
     };
+
+    if($dataType eq 'both') {
+#    my $sql = qq{
+#select t.taxon_oid, $colStr
+#from taxon t left join taxon_stats ts 
+#on t.taxon_oid = ts.taxon_oid
+#where t.taxon_oid in ($taxonStr)
+#and t.genome_type = 'metagenome'
+#$orderByClause
+#    };        
+
+        return; # just return on both taxon_stats is both
+    }
+
 
     my %data;    # taxon oid => col => value
     my $cur = execSql( $dbh, $sql, $verbose );

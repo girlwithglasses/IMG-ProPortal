@@ -3,42 +3,23 @@
 	title = 'IMG ProPortal: Clade Graph';
 %]
 <h2>Sample Distribution by Clade</h2>
+<section class="info--clade init page-intro">
 <p>
-	This visualisation shows the
+	This visualisation shows [something]. Only <i>Prochlorococcus</i> and <i>Synechococcus</i> are classified into clades.
 </p>
-<section class="clade" id="primary">
-<h3>Species distribution by Clade</h3>
-[%	IF data_filters && data_filters.all %]
-<section id="filters">
-<p>Filter by subset:</p>
-<ul>
-[%	# filter domain
-		FOR fd IN data_filters.all.keys.sort;
-			FOR f IN data_filters.all.$fd.values; %]
-<li><a href="[% link('proportal/clade') %]/[% f.id %]">[% f.label %]</a>[%
-				IF data_filters.active && data_filters.active.$fd == f.id;
-		%] (currently displayed)[%
-				END; %]
-</li>
-[%			END; %]
-<li><a href="[% link('proportal/clade') %]">no filter</a>[%
-			IF ! data_filters.active || data_filters.active.datamart %] (currently displayed)[%
-			END; %]</li>
-[%		END; %]
-</ul>
+<p class="instructions">
+	Click on a bar to view the taxa that are part of that clade.
+</p>
 </section>
-[% END %]
+[%	IF data_filters;
+		PROCESS 'inc/filters.tt';
+	END %]
+<section class="clade" id="primary">
 <div id="clade">
 </div>
 </section>
-<section role="complementary" class="init" id="info">
+<section role="complementary" class="clade-data">
 <ul class="noDot">
-	<li class="instructions">
-		<h3>Sample details</h3>
-		<p>
-			Click on a clade to view the details.
-		</p>
-	</li>
 [%	FOREACH clade IN results.data.keys.sort;
 		c = results.data.$clade; %]
 <li data-clade-id="[% c.id %]" id="[% c.id %]" class="clade_details">

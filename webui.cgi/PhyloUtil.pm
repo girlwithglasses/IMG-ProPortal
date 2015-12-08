@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id: PhyloUtil.pm 34217 2015-09-09 20:28:14Z klchu $
+# $Id: PhyloUtil.pm 34858 2015-12-08 18:48:04Z klchu $
 ###########################################################################
 package PhyloUtil;
 
@@ -76,6 +76,8 @@ sub printTaxonNameAndPhyloDistDate {
         print qq{
             <br/>
             <b>Phylogenetic distribution was computed on <font color='red'>$phyloDist_date</font></b>
+            <br>
+            Note: gene hit counts maybe higher than the acutal gene list as some genomes or genes may have been obsoleted recently.
         };
     }
     HtmlUtil::printEndTag();

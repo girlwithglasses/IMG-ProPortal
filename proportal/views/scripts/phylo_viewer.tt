@@ -1,0 +1,80 @@
+[%	WRAPPER scripts/pageload_wrapper.tt;
+	scr_arr =  [
+		'/js/d3.min.js',
+		'/js/d3-tip.js',
+		'/js/d3.chart.min.js',
+		'/js/element-resize-detector.min.js',
+		'/js/d3.chart.base-ext.js',
+		'/js/d3.chart.layout.hierarchy-ext.js',
+		'/js/d3.phyloviewer.js',
+#		'/js/heatmap.js'
+	];
+%]
+		var json = getJson()
+		, tip = d3.tip()
+			.attr('class', 'd3-tip')
+	//		.rootElement( document.getElementById('partition') )
+			.direction(function(d) {
+				if ( d.children ) {
+					return 'e';
+				}
+				return 'w';
+			})
+			.offset([0, 0])
+			.html(function(d) {
+				if ( d.data && d.data.taxon_display_name) {
+					return d.data.taxon_display_name;
+				}
+				if( d.depth > 0 ) {
+					return json.results.class_types[ d.depth-1 ] + ': ' + d.name + ', ' + ( d.value || d.values.length ) + ' samples';
+				}
+			})
+
+		, container = d3.select("#cladogram")
+			.append("svg")
+			.style('width', '100%')
+			.style('height','100%')
+			.call(tip)
+/**
+		, vis = container.chart("tree.cartesian.diagonal")
+			.margin({ top:10,left:10,right:10,bottom:10 })
+//			.height(800)
+			.radius( 0 )
+			.with_tips( tip )
+			.diagonal( 'rightAngle' )
+			.levelGap( 'length' )
+			.max_length( json.results.max_length )
+			.sortable("_ASC_");
+
+		d3.selectAll('.js_vis_loading')
+			.style('display','none');
+		d3.selectAll('.js_sample_details')
+			.style('display','none');
+
+		vis.draw( json.results.tree );
+*/
+		// TREE INITIAL VARIABLES
+		var numLeaves = json.results.n_leaves
+		, rowHeight = 25
+		, rightPaneEdge = 600
+		, totalWidth = 2000
+		;
+
+		d3.phylogram.build('#phyloviewer',
+		json.results.tree, {
+			width: totalWidth,
+			treeWidth: 400,
+			height: (json.results.n_leaves * rowHeight),	// ensures the genes are always the same distance from each other
+			rowHeight: rowHeight,
+			rightPaneEdge: rightPaneEdge,		// offsets the elements right of the tree (heatmap etc)
+
+			// Toolbar initialization
+			showDistRuler: false,
+			treeType: "phylogram",
+			heatmap: {
+				data: json.results.array,
+				cols: ["Latitude", "Longitude", "Depth", "DNA Sequence Length (bp)", "Amino Acid Sequence Length (aa)"],
+				showText: true
+			}
+        });
+[%	END %]

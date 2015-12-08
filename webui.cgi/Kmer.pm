@@ -7,7 +7,7 @@
 #           the rest of the populations. The 4mer frequencies for
 #           each scaffold are computed and then analyzed using PCA.
 #
-# $Id: Kmer.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: Kmer.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
 ###########################################################################
 package Kmer;
 
@@ -713,10 +713,13 @@ sub getKmerSettingTableStr {
         </script>
         };
     }
+    else {
+        $options .= qq{
+            <link rel="stylesheet" type="text/css"
+                href="$YUI/build/datatable/assets/skins/sam/datatable.css" />
+        };        
+    }
     $options .= qq{
-        <link rel="stylesheet" type="text/css"
-            href="$YUI/build/datatable/assets/skins/sam/datatable.css" />
-
         <div class='yui-dt'>
         <p style='color:red'>
         Lowering the 'Oligomer size' helps avoid memory issues

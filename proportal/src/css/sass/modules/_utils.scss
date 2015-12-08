@@ -23,7 +23,7 @@
     @include hidden-text;
 }
 
-.hide {
+.hide, .js_hide {
   display: none;
 }
 

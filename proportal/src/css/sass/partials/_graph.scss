@@ -1,20 +1,49 @@
 /* partials/graph */
 
-// Styling for SVGs and the like
-.svg-container {
-	display: inline-block;
+.resizable {
+	border: 1px solid hue( midgrey );
 	position: relative;
-	width: 100%;
-	padding-bottom: 100%;
-	vertical-align: middle;
-	overflow: hidden;
+//	padding: 0 $gutter $gutter 0;
+	svg {
+		width: 100%;
+		height: 100%;
+		margin: 0 $gutter $gutter 0;
+		border: 1px solid hue( dk_blue );
+	}
+	.resizer--x, .resizer--y {
+		overflow: hidden;
+	}
 }
 
-.svg-container > svg {
-	display: inline-block;
+#partition {
+	height: 500px;
+}
+
+.resizer--x, .resizer--y {
 	position: absolute;
-	top: 0;
-	left: 0;
+	background: hue( midgrey );
+    font-size: .5rem;
+    line-height: 1;
+    text-transform: uppercase;
+    text-align: center;
+	vertical-align: middle;
+	&:hover {
+		background: hue( dk_blue );
+	}
+}
+
+.resizer--x {
+    height: 100%;
+    width: $gutter;
+    right: 0;
+    cursor: ew-resize;
+}
+
+.resizer--y {
+    width: 100%;
+    height: $gutter;
+    bottom: 0;
+    cursor: ns-resize;
 }
 
 .node {
@@ -54,6 +83,10 @@
 		pointer-events: none;
 		font-size: .675rem;
 	}
+}
+
+.matrix .qundefined-9 {
+	fill: white;
 }
 
 .d3-tip {

@@ -12,11 +12,15 @@
     "gulp-chmod": "^1.2.0"
   },
   "devDependencies": {
+    "d3": "^3.5.9",
+    "d3.chart": "^0.2.1",
     "del": "^0.1.2",
+    "element-resize-detector": "^1.0.3",
     "gulp": "^3.8.11",
     "gulp-autoprefixer": "^2.1.0",
     "gulp-concat": "^2.5.2",
     "gulp-filter": "^2.0.2",
+    "gulp-jscs": "^3.0.2",
     "gulp-jshint": "^1.8.4",
     "gulp-livereload": "^3.8.0",
     "gulp-load-plugins": "^1.0.0-rc.1",
@@ -30,7 +34,8 @@
     "gulp-uglify": "^1.1.0",
     "jshint-stylish": "^0.4.0",
     "map-tools": "^2.0.0",
-    "reductio": "^0.2.0"
+    "reductio": "^0.2.0",
+    "requirejs": "^2.1.22"
   },
   "engines": {
     "node": ">=0.10.0"

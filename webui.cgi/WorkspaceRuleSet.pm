@@ -288,7 +288,7 @@ sub printRuleSetMainForm {
     printMainForm(); 
  
     my $super_user_flag = getSuperUser(); 
-    WorkspaceUtil::printSetMainTable($section_cgi, $section, $workspace_dir, $sid, $folder, @files);
+    WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files, 1);
     print hiddenVar( "directory", "$folder" );
     print hiddenVar( "folder", "$folder" );
     print "<br/>";

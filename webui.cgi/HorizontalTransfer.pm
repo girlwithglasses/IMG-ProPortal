@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: HorizontalTransfer.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: HorizontalTransfer.pm 34797 2015-11-26 05:08:21Z jinghuahuang $
 #
 package HorizontalTransfer;
 
@@ -113,24 +113,7 @@ sub printPhylum {
     print "$domain, $phylum, $class, $order, $family, $genus $species<br/>\n";
     print "</p>";
 
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select t.domain, t.phylum, count(distinct g.gene_oid), 
-    count(distinct hth.homolog) 
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    group by t.domain, t.phylum       
-    };
-
+    my $sql = getPhylumSql();
     my @a = ( $taxon_oid, $phylo_level, $phylo_val );
     my $cur = WebUtil::execSqlBind( $dbh, $sql, \@a, $verbose );
 
@@ -179,6 +162,33 @@ sub printPhylum {
     printStatusLine( "$count Loaded.", 2 );
 }
 
+sub getPhylumSql {
+
+    # some gene_oid hit multiple homologs, which may spread
+    # over different phylum some the sum of gene_oid
+    # may be greater than the sum genes under the domain
+    my $rclause   = WebUtil::urClause('t');
+    my $imgClause = WebUtil::imgClause('t');
+    my $sql = qq{
+        select t.domain, t.phylum, count(distinct g.gene_oid), 
+        count(distinct hth.homolog) 
+        from gene g, dt_ht_hits hth, gene g2, taxon t
+        where g.gene_oid = hth.gene_oid
+        and g.taxon = ?
+        $rclause
+        $imgClause
+        and hth.phylo_level = ?
+        and hth.phylo_val = ?
+        and hth.homolog = g2.gene_oid
+        and g2.taxon = t.taxon_oid
+        group by t.domain, t.phylum       
+    };
+        #and hth.rev_gene_oid is not null
+
+    return $sql;
+}
+
+
 sub printHomologPhylum2 {
     my $taxon_oid   = param("taxon_oid");
     my $phylo_val   = param("phylo_val");
@@ -202,26 +212,7 @@ sub printHomologPhylum2 {
     print "From Phylum: $hg_phylum <br/>\n";
     print "</p>";
 
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select t.ir_class, t.ir_order, t.family,
-    count(distinct g.gene_oid), count(distinct hth.homolog) 
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    group by t.ir_class, t.ir_order, t.family 
-    };
-
+    my $sql = getHomologPhylumSql();
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     my $cur = WebUtil::execSqlBind( $dbh, $sql, \@a, $verbose );
 
@@ -304,30 +295,40 @@ sub printHomologPhylum2GeneList {
     print "From Phylum: $hg_phylum <br/>\n";
     print "</p>";
 
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select distinct g.gene_oid, g.gene_display_name,
-      g2.gene_oid, g2.gene_display_name,
-      t.taxon_oid, t.taxon_display_name
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    };
+    my $sql = getHomologPhyloGeneListSql();
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     printHorTransferredLevelVal( $dbh, $sql, \@a );
     #$dbh->disconnect();
 
 }
+
+sub getHomologPhyloGeneListSql {
+    my ($clause) = @_;
+
+    my $rclause   = WebUtil::urClause('t');
+    my $imgClause = WebUtil::imgClause('t');
+    my $sql = qq{
+        select distinct g.gene_oid, g.gene_display_name,
+          g2.gene_oid, g2.gene_display_name,
+          t.taxon_oid, t.taxon_display_name
+        from gene g, dt_ht_hits hth, gene g2, taxon t
+        where g.gene_oid = hth.gene_oid
+        and g.taxon = ?
+        $rclause
+        $imgClause
+        and hth.phylo_level = ?
+        and hth.phylo_val = ?
+        and hth.homolog = g2.gene_oid
+        and g2.taxon = t.taxon_oid
+        and t.domain = ?
+        and t.phylum = ?
+        $clause
+    };
+        #and hth.rev_gene_oid is not null
+
+    return $sql;
+}
+
 
 sub printHomologFamily2 {
     my $taxon_oid   = param("taxon_oid");
@@ -362,27 +363,7 @@ sub printHomologFamily2 {
     $clause .= " and t.ir_class = ? " if ( $hg_class  ne "" );
     $clause .= " and t.ir_order = ? " if ( $hg_order  ne "" );
     $clause .= " and t.family = ? "   if ( $hg_family ne "" );
-
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select t.genus, t.species,
-    count(distinct g.gene_oid), count(distinct hth.homolog) 
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    $clause
-    group by t.genus, t.species 
-    };
+    my $sql = getHomologFamilySql($clause);
 
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     push( @a, $hg_class )  if ( $hg_class  ne "" );
@@ -435,6 +416,33 @@ sub printHomologFamily2 {
     printStatusLine( "$count Loaded.", 2 );
 }
 
+sub getHomologFamilySql {
+    my ($clause) = @_;
+
+    my $rclause   = WebUtil::urClause('t');
+    my $imgClause = WebUtil::imgClause('t');
+    my $sql = qq{
+        select t.genus, t.species,
+        count(distinct g.gene_oid), count(distinct hth.homolog) 
+        from gene g, dt_ht_hits hth, gene g2, taxon t
+        where g.gene_oid = hth.gene_oid
+        and g.taxon = ?
+        $rclause
+        $imgClause
+        and hth.phylo_level = ?
+        and hth.phylo_val = ?
+        and hth.homolog = g2.gene_oid
+        and g2.taxon = t.taxon_oid
+        and t.domain = ?
+        and t.phylum = ?
+        $clause
+        group by t.genus, t.species 
+    };
+        #and hth.rev_gene_oid is not null
+    
+    return $sql;
+}
+
 sub printHomologFamily2GeneList {
     my $taxon_oid   = param("taxon_oid");
     my $phylo_val   = param("phylo_val");
@@ -468,27 +476,8 @@ sub printHomologFamily2GeneList {
     $clause .= " and t.ir_class = ? " if ( $hg_class  ne "" );
     $clause .= " and t.ir_order = ? " if ( $hg_order  ne "" );
     $clause .= " and t.family = ? "   if ( $hg_family ne "" );
+    my $sql = getHomologPhyloGeneListSql($clause);
 
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select distinct g.gene_oid, g.gene_display_name,
-      g2.gene_oid, g2.gene_display_name,
-      t.taxon_oid, t.taxon_display_name
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    $clause
-    };
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     push( @a, $hg_class )  if ( $hg_class  ne "" );
     push( @a, $hg_order )  if ( $hg_order  ne "" );
@@ -537,27 +526,8 @@ sub printHomologGenus2GeneList {
     $clause .= " and t.family = ? "   if ( $hg_family  ne "" );
     $clause .= " and t.genus = ? "    if ( $hg_genus   ne "" );
     $clause .= " and t.species = ? "  if ( $hg_species ne "" );
+    my $sql = getHomologPhyloGeneListSql($clause);
 
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select distinct g.gene_oid, g.gene_display_name,
-      g2.gene_oid, g2.gene_display_name,
-      t.taxon_oid, t.taxon_display_name
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    $clause
-    };
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     push( @a, $hg_class )  if ( $hg_class  ne "" );
     push( @a, $hg_order )  if ( $hg_order  ne "" );
@@ -601,27 +571,7 @@ sub printDomain {
     print "$domain, $phylum, $class, $order, $family, $genus $species<br/>\n";
     print "</p>";
 
-    # some gene_oid hit multiple homologs, which may spread
-    # over different phylum some the sum of gene_oid
-    # may be greater than the sum genes under the domain
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select t.domain, t.phylum, count(distinct g.gene_oid), 
-    count(distinct hth.homolog) 
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    group by t.domain, t.phylum       
-    };
-
+    my $sql = getPhylumSql();
     my @a = ( $taxon_oid, $phylo_level, $phylo_val );
     my $cur = WebUtil::execSqlBind( $dbh, $sql, \@a, $verbose );
 
@@ -694,29 +644,7 @@ sub printHomologPhylum {
     print "From Phylum: $hg_phylum <br/>\n";
     print "</p>";
 
-    # some gene_oid hit multiple homologs, which may spread
-    # over different phylum some the sum of gene_oid
-    # may be greater than the sum genes under the domain
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select t.ir_class, t.ir_order, t.family,
-    count(distinct g.gene_oid), count(distinct hth.homolog) 
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    group by t.ir_class, t.ir_order, t.family 
-    };
-
+    my $sql = getHomologPhylumSql();
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     my $cur = WebUtil::execSqlBind( $dbh, $sql, \@a, $verbose );
 
@@ -777,6 +705,34 @@ sub printHomologPhylum {
 
 }
 
+sub getHomologPhylumSql {
+
+    # some gene_oid hit multiple homologs, which may spread
+    # over different phylum some the sum of gene_oid
+    # may be greater than the sum genes under the domain
+    my $rclause   = WebUtil::urClause('t');
+    my $imgClause = WebUtil::imgClause('t');
+    my $sql = qq{
+        select t.ir_class, t.ir_order, t.family,
+        count(distinct g.gene_oid), count(distinct hth.homolog) 
+        from gene g, dt_ht_hits hth, gene g2, taxon t
+        where g.gene_oid = hth.gene_oid
+        and g.taxon = ?
+        $rclause
+        $imgClause
+        and hth.phylo_level = ?
+        and hth.phylo_val = ?
+        and hth.homolog = g2.gene_oid
+        and g2.taxon = t.taxon_oid
+        and t.domain = ?
+        and t.phylum = ?
+        group by t.ir_class, t.ir_order, t.family 
+    };
+        #and hth.rev_gene_oid is not null
+
+    return $sql;
+}
+
 sub printHomologPhylumGeneList {
     my $taxon_oid   = param("taxon_oid");
     my $phylo_val   = param("phylo_val");
@@ -799,28 +755,7 @@ sub printHomologPhylumGeneList {
     print "From Phylum: $hg_phylum <br/>\n";
     print "</p>";
 
-    # some gene_oid hit multiple homologs, which may spread
-    # over different phylum some the sum of gene_oid
-    # may be greater than the sum genes under the domain
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select distinct g.gene_oid, g.gene_display_name,
-      g2.gene_oid, g2.gene_display_name,
-      t.taxon_oid, t.taxon_display_name
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    };
+    my $sql = getHomologPhyloGeneListSql();        
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     printHorTransferredLevelVal( $dbh, $sql, \@a );
     #$dbh->disconnect();
@@ -860,27 +795,7 @@ sub printHomologFamily {
     $clause .= " and t.ir_class = ? " if ( $hg_class  ne "" );
     $clause .= " and t.ir_order = ? " if ( $hg_order  ne "" );
     $clause .= " and t.family = ? "   if ( $hg_family ne "" );
-
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select t.genus, t.species,
-    count(distinct g.gene_oid), count(distinct hth.homolog) 
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    $clause
-    group by t.genus, t.species 
-    };
+    my $sql = getHomologFamilySql($clause);
 
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     push( @a, $hg_class )  if ( $hg_class  ne "" );
@@ -966,27 +881,8 @@ sub printHomologFamilyGeneList {
     $clause .= " and t.ir_class = ? " if ( $hg_class  ne "" );
     $clause .= " and t.ir_order = ? " if ( $hg_order  ne "" );
     $clause .= " and t.family = ? "   if ( $hg_family ne "" );
+    my $sql = getHomologPhyloGeneListSql($clause);
 
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select distinct g.gene_oid, g.gene_display_name,
-      g2.gene_oid, g2.gene_display_name,
-      t.taxon_oid, t.taxon_display_name
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    $clause
-    };
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     push( @a, $hg_class )  if ( $hg_class  ne "" );
     push( @a, $hg_order )  if ( $hg_order  ne "" );
@@ -1035,27 +931,8 @@ sub printHomologGenusGeneList {
     $clause .= " and t.family = ? "   if ( $hg_family  ne "" );
     $clause .= " and t.genus = ? "    if ( $hg_genus   ne "" );
     $clause .= " and t.species = ? "  if ( $hg_species ne "" );
+    my $sql = getHomologPhyloGeneListSql($clause);
 
-    my $rclause   = WebUtil::urClause('t');
-    my $imgClause = WebUtil::imgClause('t');
-    my $sql = qq{
-    select distinct g.gene_oid, g.gene_display_name,
-      g2.gene_oid, g2.gene_display_name,
-      t.taxon_oid, t.taxon_display_name
-    from gene g, dt_ht_hits hth, gene g2, taxon t
-    where g.gene_oid = hth.gene_oid
-    and g.taxon = ?
-    $rclause
-    $imgClause
-    and hth.phylo_level = ?
-    and hth.phylo_val = ?
-    and hth.rev_gene_oid is not null
-    and hth.homolog = g2.gene_oid
-    and g2.taxon = t.taxon_oid
-    and t.domain = ?
-    and t.phylum = ?
-    $clause
-    };
     my @a = ( $taxon_oid, $phylo_level, $phylo_val, $hg_domain, $hg_phylum );
     push( @a, $hg_class )  if ( $hg_class  ne "" );
     push( @a, $hg_order )  if ( $hg_order  ne "" );

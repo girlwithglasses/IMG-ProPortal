@@ -148,6 +148,10 @@
   }
 }
 
+.centre-hv {
+    @include centre-me( true, true );
+}
+
 $icon-w: 32px;
 $icon-h: 32px;
 

@@ -1,0 +1,38 @@
+[%	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: PhyloViewer';
+	class = 'phylo_viewer';
+
+%]
+<h2>
+	PhyloViewer (beta)
+</h2>
+<section class="info--phyloviewer page-intro">
+<p>
+	Blurb here!
+</p>
+</section>
+<section class="cf clear">
+<form method="POST" class="[% class %]__form" action="[% link('proportal/phylo_viewer') %]">
+	<fieldset>
+[%	FOREACH t IN results.options; %]
+		<fieldset class="[% class %]__field--[% t %]">
+			<legend class="[% class %]__legend">[% t.label %]</legend>
+[%		IF 'radio' == t.type || 'checkbox' == t.type;
+			FOREACH c IN t.values; %]
+		<input class='[% class %]__input--[% t %]' type='[% t.type %]' name='[% t %]' value='[% c.id %]' id='[% t %]_[% c.id %]'[% IF t.default == c.id || c.selected %] selected[% END %] />
+		<label for='[% t %]_[% c.id %]' class='[% class %]__label--[% t %]'>[% c.label %]</label>
+[%
+			END; # end t.values
+#		ELSE IF 'select' == t.type;
+
+		END; # end t type %]
+		</fieldset>
+[%	END; # end options %]
+		<input type="submit" value="Go" disabled>
+	</fieldset>
+</form>
+
+<p class="C"><a href="[% link('proportal/phylo_viewer') %]/results">View sample results</a></p>
+
+</section>
+[% END; %]

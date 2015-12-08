@@ -1,49 +1,23 @@
 <!-- output the page filters -->
-[%	#FOR d IN data_type; %]
-
-
-
-<!-- search box -->
-
-
-<!-- active filters -->
-	<div>
-	<h3>Active Filters</h3>
-[%	IF ! filters.active %]
-	<p>None</p>
-[%	ELSE %]
-	<dl>
-[%		FOR af IN filters.active; %]
-	<dt>[% labels.$af %]</dt>
-[%	IF filters.active.$af.min %]
-	<dd>[% filters.active.$af.min %]</dd>
-[%	END;
-	IF filters.active.$af.max %]
-	<dd>[% filters.active.$af.max %]</dd>
-[%	END;
-	IF filters.active.$af.val %]
-	<dd>[% filters.active.$af.val %]</dd>
-[%	END; %]
-	</dl>
-	</div>
-<!-- available filters -->
-[%	IF filters.avail %]
-<form action="[% ... %]" method="[% method %]" name="[% form_name %]">
-[%		FOR f IN filters.avail; %]
-	<h3>[% labels.${f.id} %]</h3>
-	<fieldset>
-[%
-			IF f.values;
-				FOR v IN f.values;
-					IF f.type == 'radio' || f.type == 'checkbox'; %]
-		<input type="[% f.type %]" name="[% f.id %]" value="[% v.id %]" id="[% f.id %].[% v.id %]" [% IF v.active %] checked[% END %] /><label for="[% f.id %].[% v.id %]">[% v.label %]</label>
-[%					ELSE;
-
-<field
-
-
-
-[%	END; # end if filters.avail %]
-<!-- filter builder -->
-
-<!-- view metadata -->
+[%	IF data_filters && data_filters.all %]
+<section class="filters">
+<p>Filter by subset:</p>
+<ul class="subset-filters">
+[%	# filter domain
+	FOR fd IN data_filters.all.keys.sort;
+		FOR f IN data_filters.all.$fd.values; %]
+	<li class="subset-filters__item"><a class="subset-filters__link" href="[% link( current_page ) %]/[% f.id %]">[% f.label %]</a>[%
+			IF data_filters.active && data_filters.active.$fd == f.id;
+		%] <span class="subset-filters__current">(currently displayed)</span>[%
+			END; %]
+	</li>
+[%		END;
+		IF ! omit_datamart_filter; %]
+	<li class="subset-filters__item"><a class="subset-filters__link" href="[% link( current_page ) %]">no filter</a>[%
+			IF ! data_filters.active || data_filters.active.datamart %] <span class="subset-filters__current">(currently displayed)</span>[%
+			END; %]</li -->
+[%		END;
+	END; %]
+</ul>
+</section><!-- /end section filters -->
+[%	END %]

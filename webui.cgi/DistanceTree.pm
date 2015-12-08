@@ -1,6 +1,6 @@
 ###########################################################################
 # DistanceTree.pm - draws a radial phylogenetic tree
-# $Id: DistanceTree.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: DistanceTree.pm 34863 2015-12-08 19:37:59Z aratner $
 ############################################################################
 package DistanceTree;
 my $section = "DistanceTree";
@@ -29,7 +29,7 @@ my $taxon_fna_dir = $env->{ taxon_fna_dir };
 my $verbose       = $env->{ verbose };
 my $base_url      = $env->{ base_url };
 my $base_dir      = $env->{ base_dir };
-my $top_base_dir      = $env->{ top_base_dir };
+my $top_base_dir  = $env->{ top_base_dir };
 my $top_base_url  = $env->{top_base_url};
 
 my $tool = lastPathTok( $0 );
@@ -320,6 +320,8 @@ sub runTree {
     print "<p>[This may take time] " . (scalar @oids) . " genomes selected";
 
     my %taxonNames;
+    my $data = "";
+
     my @taxon_oids;
     my @m_taxon_oids;
 
@@ -344,12 +346,28 @@ sub runTree {
 	    $order, $family, $genus ) = $cur->fetchrow();
 	last if !$taxon_oid;
 
+        $name =~ s/^\W+//g;
+        $name =~ s/"//g;
+	$name =~ s/'//g;
+        $name =~ s/\t/ /g;
+        $name = CGI::escapeHTML($name);
+
 	if ($genome_type eq "metagenome") {
 	    push( @m_taxon_oids, $taxon_oid );
 	} else {
 	    push( @taxon_oids, $taxon_oid );
 	}
 	$taxonNames{ $taxon_oid } = $name;
+
+	if ($data) {
+	    $data .= ",";
+	} else {
+	    $data .= "[";
+	}
+        $data .= "{\'name\': \'" . $name
+	    . "\', \'id\': \'" . $taxon_oid
+	    . "\', \'phylum\': \'" . $phylum
+	    . "\'}";
 
 	my $code;
 	my $cnt = $taxon2cnt_href->{ $taxon_oid };
@@ -384,6 +402,10 @@ sub runTree {
     }
     $cur->finish();
     close $wfh;
+
+    if ($data) {
+	$data .= "]";
+    }
 
     my $nTaxons = scalar @taxon_oids;
     my $n_mTaxons = scalar @m_taxon_oids;
@@ -547,7 +569,7 @@ sub runTree {
 	print "BLAST Percent Identity used: ".$perc."+"."<br/>";
     }
     print "Last computed on: <font color='red'>$timestamp</font>";
-    print "<br/><br/>";
+    print "<br/>";
 
     if (!(-e $newickFile)) {
 	print "<p>\n";
@@ -564,38 +586,111 @@ sub runTree {
 	webError( "Could not create the required phyloXML input file: " );
     }
 
+    my $newick_str = "";
+    my $rfh = newReadFileHandle( $newickFile, "readNewickFile" );
+    while ( my $s = $rfh->getline() ) {
+        chomp $s;
+        $newick_str .= $s;
+    }
+    close $rfh;
+
+    if ( blankStr($newick_str) ) {
+        webError("Invalid newick '$newick_str' string.\n");
+    }
+
+    print "<p>";
+    my $url1 = "$base_url/tmp/decorated$$.txt";
+    print alink($url1, "View phyloXML", "_blank");
+    print "<br/>";
+    my $url2 = "$base_url/tmp/newick$$.txt";
+    print alink($url2, "View Newick File", "_blank");
+    print "</p>\n";
+
+    printStatusLine("Done - $nTaxons genomes analyzed.", 2);
+
     require TabHTML;
     TabHTML::printTabAPILinks("treeTab");
 
-    my @tabIndex = ("#treetab1", "#treetab2");
-    my @tabNames = ("Phylogenetic Tree", "Aptx Tree");
+    my @tabIndex = ("#treetab1", "#treetab2", "#treetab3");
+    my @tabNames = ("Radial Phylogram", "Rectangular Phylogram", "Aptx Tree");
     TabHTML::printTabDiv("treeTab", \@tabIndex, \@tabNames);
 
     print "<div id='treetab1'>";
-    my $url = "http://www.jsphylosvg.com/";
-    print "<p>The tree below is generated using ".alink($url, "jsPhyloSVG")."</p>";
-    # this method allows adding extra information to the phyloXML:
-    require DrawTree;
-    my %hash = ();   # placeholder
-    my $newick = WebUtil::file2Str($newickFile);
-    if ( blankStr($newick) ) {
-        webError("Invalid newick '$newick' string.\n");
-    }
-    #my $dt = new DrawTree( $newick, \%hash );
-    #my $xmlFile = "treeXML$$.txt";
-    #$dt->toPhyloXML( $xmlFile );
-    #printTree("treeXML$$.txt");
-    printTree("decorated$$.txt");
+    configurePhylogram($newick_str, $data, "radial");
     print "</div>";    # end treetab1
 
     print "<div id='treetab2'>";
-    my $url = "http://www.phylosoft.org/archaeopteryx/";
-    print "<p>The tree below is generated using the ".alink($url, "Archaeopteryx")." applet</p>";
-    printAptxApplet("decorated$$.txt");
+    printRectangularPhylogram($newick_str, $data);
+    #configurePhylogram($newick_str, $data, "rectangular");
     print "</div>";    # end treetab2
 
+    print "<div id='treetab3'>";
+    my $url = "http://www.phylosoft.org/archaeopteryx/";
+    print "<p>The tree below is generated using the ".alink($url, "Archaeopteryx")." applet<br/>";
+    print "<font color='red'><b><u>PLEASE NOTE</u></font>:</b> Use of java in most browsers is deprecated.</p>";
+    printAptxApplet("decorated$$.txt");
+    print "</div>";    # end treetab3
+
     TabHTML::printTabDivEnd();
-    printStatusLine("Done - $nTaxons genomes analyzed.", 2);
+}
+
+sub configurePhylogram {
+    my ($newick_str, $data, $type) = @_;
+    $type = "radial" if (!$type || $type eq "");
+    print qq{
+        <script language='JavaScript' type='text/javascript'> 
+        function showView(type) {
+        if (type == 'svg') {
+            document.getElementById('canvasview').style.display = 'none';
+            document.getElementById('svgview').style.display = 'block';
+        } else {
+            refreshCanvas();
+            document.getElementById('canvasview').style.display = 'block';
+            document.getElementById('svgview').style.display = 'none';
+        }
+        }
+        </script>                      
+    };
+
+    print "<div id='svgview' style='display: block;'>";
+    print "<input type='button' class='medbutton' name='view'"
+	. " value='View as PNG'"
+	. " onclick='showView(\"png\")' />";
+    print "<br/>";
+    if ($type eq "radial") {
+	printD3Phylogram($newick_str, $data);
+    #} elsif ($type eq "rectangular") {
+	#printRectangularPhylogram($newick_str, $data);
+    }
+    print "</div>";
+
+    print "<div id='canvasview' style='font: 12px sans-serif; display: none;'>";
+    print "<input type='button' class='medbutton' name='view'"
+	. " value='Back to SVG'"
+	. " onclick='showView(\"svg\")' />";
+    print "<p>";
+    print "To save the PNG, right-click and select \"<i>Save image as...</i>\"</p>";
+    showAsPNG($type);
+    print "</div>";
+}
+
+sub printRectangularPhylogram {
+    my( $newick_str, $data ) = @_;
+
+    my $div_id = "phylogram";
+    my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
+    #my $js_dir = "$base_url";
+    my $js_dir = "$top_base_url/js";
+
+    # do not import d3.min.js twice, else it messes up the zoom! -Anna
+    print qq{
+      <span id="ruler"></span>
+      <div id="$div_id"></div>
+      <script src="$js_dir/d3phylogram.js"></script>
+      <script>
+          window.onload = drawPhylogram("$newick_str", "$div_id", "$txurl", $data);
+      </script>
+    };
 }
 
 ############################################################################
@@ -880,55 +975,52 @@ sub getNewickFile {
     return $newickFile;
 }
 
-# This is a non-java tree viewer that uses jsPhyloSVG and Raphael -Anna
-sub printTree {
-    my( $treeFileName, $type ) = @_;
-    my $treeFile = $tmp_dir . "/$treeFileName";
-
-    print "<p>";
-    my $url = "$base_url/tmp/$treeFileName";
-    print alink($url, "View phyloXML", "_blank");
-    print "</p>\n";
-
-# loading a file doesn't seem to work:
-#<script src="$YUI/build/js/yui-min.js"></script>
-#YUI().use(['oop', 'json-stringify', 'io-base', 'event', 'event-delegate'], function(Y){
-#phylocanvas = new Smits.PhyloCanvas
-#({ phyloxml: $treeFile, fileSource: true }, 'svgCanvas', 800, 800);
-    my $phylotree;
-    my $rfh = newReadFileHandle( $treeFile, "phyloXML" );
-    while ( my $s = $rfh->getline() ) {
-	chomp $s;
-	$phylotree .= $s;
-    }
-    close $rfh;
+# This is a non-java tree viewer that uses d3 -Anna
+sub printD3Phylogram {
+    my( $newick_str, $data ) = @_;
+    my $div_id = "phylotree";
 
     my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
+    #my $js_dir = "$base_url";
+    #my $css_dir = "$base_url";
+    my $js_dir = "$top_base_url/js";
+    my $css_dir = "$top_base_url/css";
 
     print qq{
-        <link rel="stylesheet" type="text/css" href="$YUI/build/fonts/fonts-min.css" />
-        <link rel="stylesheet" type="text/css" href="$top_base_url/css/d3tree.css" />
-        <script src="$top_base_url/js/d3.min.js"></script>
-        <script src="$top_base_url/js/d3tree.js"></script>
+      <link rel="stylesheet" type="text/css" href="$css_dir/d3phylotree.css" />
+      <script src="$top_base_url/js/d3.min.js"></script>
+      <script src="$top_base_url/js/newick.js"></script>
+      <div id="$div_id"></div>
+      <script src="$js_dir/d3phylotree.js"></script>
+      <script>
+          window.onload = drawPhylogram("$newick_str", "$div_id", "$txurl", $data);
+      </script>
+    };
+}
 
-        <script type="text/javascript" src="$top_base_url/js/raphael-min.js" ></script>
-        <script type="text/javascript" src="$top_base_url/js/jsphylosvg-min.js"></script>                
-        <script src="$YUI/build/yahoo/yahoo-min.js"></script>
-        <div id="svgCanvas"></div>
-        <span id="ruler"></span>
-        <div id="svgtree"></div>
+sub showAsPNG {
+    my ($type) = @_;
+    print qq{
+    <canvas id="canvas" width="1500" height="1500"></canvas>
+    <div id="png-container"></div>
 
-        <script type="text/javascript">
-        window.onload = function() {
-            var phylocanvas = new Smits.PhyloCanvas
-                ({phyloxml: '$phylotree'}, 'svgCanvas', 1000, 1000, 'circular');
-            var svgSource = phylocanvas.getSvgSource();
-            var svgObj = phylocanvas.getSvg().svg;
-            drawSVG(svgSource, svgObj, "svgtree", "$txurl");
-            // hack to remove the original svg:
-            document.getElementById('svgCanvas').innerHTML = '';
-        };
-        </script>
+    <script language='JavaScript' type='text/javascript'>
+    var svg_str = new XMLSerializer().serializeToString(document.querySelector('svg'));
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    var imgsrc = 'data:image/svg+xml;base64,'+ btoa(svg_str);
+    img.src = imgsrc;
+
+    img.onload = function() {
+        context.drawImage(img, 0, 0);
+        var canvasdata = canvas.toDataURL("image/png");
+        var pngimg = '<img src="'+canvasdata+'">'; 
+        d3.select("#png-container").html(pngimg);
+    };
+    </script>
     };
 }
 

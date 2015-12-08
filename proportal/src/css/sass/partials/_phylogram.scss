@@ -1,0 +1,36 @@
+.subset-filters {
+	@include noDot;
+}
+
+.sample-data {
+	&__classification {
+
+		&--level { // dt element
+			clear: left;
+			float: left;
+			width: 10rem;
+			margin: 0;
+		}
+
+		&--value { // dd
+			float: left;
+			max-width: 42rem;
+			margin: 0 0 0 $gutter;
+		}
+	}
+
+	&__label {
+		// style the label here!
+	}
+	&__labeltxt--checked {
+		display: none;
+	}
+	&__cbox:checked ~ &__label &__labeltxt {
+		&--unchecked {
+			display: none;
+		}
+		&--checked {
+			display: inline;
+		}
+	}
+}

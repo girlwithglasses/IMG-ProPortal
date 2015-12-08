@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceScafSet.pm
-# $Id: WorkspaceScafSet.pm 34666 2015-11-10 21:32:42Z jinghuahuang $
+# $Id: WorkspaceScafSet.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
 ###########################################################################
 package WorkspaceScafSet;
 
@@ -329,12 +329,6 @@ sub printScafSetMainForm {
 
     printMainForm();
 
-#print qq{
-#    <form method="post" action="main.cgi" enctype="multipart/form-data" name="mainForm" accept-charset="UTF-8">
-#};
-
-    my $super_user_flag = getSuperUser();
-
     TabHTML::printTabAPILinks("scafsetTab");
     my @tabIndex = ( "#scafsettab1", "#scafsettab2", "#scafsettab3", 
 		     "#scafsettab4", "#scafsettab5", "#scafsettab6",
@@ -346,8 +340,7 @@ sub printScafSetMainForm {
     TabHTML::printTabDiv( "scafsetTab", \@tabIndex, \@tabNames );
 
     print "<div id='scafsettab1'>";
-    WorkspaceUtil::printShareMainTable
-	( $section_cgi, $section, $workspace_dir, $sid, $folder, @files );
+    WorkspaceUtil::printShareMainTable( $section, $workspace_dir, $sid, $folder, \@files );
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 
@@ -360,7 +353,7 @@ sub printScafSetMainForm {
     my $extra_text = "";
     my $grpCnt = WorkspaceUtil::getContactImgGroupCnt();
     if ( $grpCnt > 0 ) {
-	$extra_text = "<u>your own</u>";
+    	$extra_text = "<u>your own</u>";
     }
     print "<p>You may export data from $extra_text selected scaffold set(s).\n";
     print "<p>\n";
@@ -432,7 +425,7 @@ sub printScafSetMainForm {
     print "<h2>Histogram</h2>";
     my $grpCnt = WorkspaceUtil::getContactImgGroupCnt();
     if ( $grpCnt > 0 ) { 
-	print "<p><b>This is a scaffold set editing function, and therefore only applies to your own datasets.</b>";
+    	print "<p><b>This is a scaffold set editing function, and therefore only applies to your own datasets.</b>";
     }
     print "<p>You may compare selected scaffold sets by: ";
     print "     <select name='histogram_type' class='img' size='1'>\n";
@@ -481,7 +474,7 @@ sub printScafSetMainForm {
     Workspace::printSubmitComputation( $sid, $folder, 'kmer', 
         '_section_WorkspaceScafSet_submitKmer', $tableStr, $scafKmerSets_ref );
     
-    print "</div>";  # end scaffoldcarttab5
+    print "</div>";  # end scaffoldcarttab6
 
     print "<div id='scafsettab7'>";
     printHint(
@@ -633,8 +626,6 @@ sub printScafSetDetail {
     print start_form(-id     => "$tblname"."_frm",
 		     -name   => "mainForm",
 		     -action => "$main_cgi" );
-
-    my $super_user_flag = getSuperUser();
 
     if ($show_title) {
         print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";

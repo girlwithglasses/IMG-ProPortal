@@ -275,12 +275,10 @@ function fn(){
 			.on('mouseover', tip.show)
 			.on('mouseout', tip.hide)
 			.on('click', function(d) {
-				d3.select('#info')
-					.attr('class',"");
 				d3.selectAll('.clade_details')
-					.style('display','none');
+					.classed('js_hide', true);
 				d3.select( '#' + d.id )
-					.style('display', 'block');
+					.classed('js_hide', false);
 			});
 
 	/*
@@ -310,7 +308,7 @@ function fn(){
 
 
 	d3.selectAll('.clade_details')
-		.style('display', 'none');
+		.classed('js_hide',true);
 
 	// tree
 	var treeData = [{
@@ -394,34 +392,32 @@ function fn(){
 		}]
 	}],
 
+	, root = treeData[0]
 
-	root = treeData[0],
-
-	margin = {
+	, margin = {
 		top: 10,
 		right: 20,
 		bottom: 10,
 		left: 20
-	},
+	}
 
-	width = 500 - margin.right - margin.left,
-	height = 500 - margin.top - margin.bottom,
+	, width = 500 - margin.right - margin.left
+	, height = 500 - margin.top - margin.bottom
 
-	//var svg =	 d3.select("#chart_div").append('svg')
-	//		.attr({'width':width,'height':height});
+	, res = getJson().data
 
-	svg = d3.select("#clade")
+	, svg = d3.select("#clade")
 		.append('svg')
 		.attr("id","cladogram")
 		.attr("width", width + margin.right + margin.left)
 		.attr("height", height + margin.top + margin.bottom)
 		.append("g")
-		.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-	tree = d3.layout.tree()
-		.size([height, width]),
+	, tree = d3.layout.tree()
+		.size([height, width])
 
-	diagonal = d3.svg.diagonal()
+	, diagonal = d3.svg.diagonal()
 		.projection(function(d) {
 			return [d.y, d.x];
 		});
@@ -430,7 +426,7 @@ function fn(){
 
 	makeGenusBoxes( svg );
 
-	makeBarChart( res, svg );
+	makeBarChart( getJson(), svg );
 
 
 }

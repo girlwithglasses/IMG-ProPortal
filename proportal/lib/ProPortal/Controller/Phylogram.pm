@@ -25,11 +25,11 @@ Phylogram query
 sub render {
 	my $self = shift;
 
- 	my $res = $self->run_query({
- 		query => 'taxon_oid_display_name',
- 		filters => $self->filters,
- 	});
-#	my $res = [ grep { 'isolate' eq $_->{genome_type} } @{ decode_json <DATA> } ];
+#  	my $res = $self->run_query({
+#  		query => 'taxon_oid_display_name',
+#  		filters => $self->filters,
+#  	});
+my $res = [ grep { 'isolate' eq $_->{genome_type} } @{ decode_json <DATA> } ];
 
     my $data;
     my $count;
@@ -55,9 +55,12 @@ sub render {
 
 	return $self->add_defaults_and_render({
 		array => $res,
-		tree => $tree,
-		class_types => [ qw( genome_type domain phylum class order family genus clade species ) ],
-		count => $count });
+		js => {
+			count => $count,
+			tree => $tree,
+			class_types => [ qw( genome_type domain phylum class order family genus clade species ) ],
+		}
+	});
 
 }
 

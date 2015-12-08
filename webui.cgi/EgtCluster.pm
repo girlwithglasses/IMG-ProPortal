@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: EgtCluster.pm 34822 2015-12-03 05:08:23Z aratner $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -1084,6 +1084,7 @@ sub printHierResults {
     }
 
     my %id2Rec;
+    my $data = "";
 
     ## Taxon list
     my $sql = qq{
@@ -1107,6 +1108,16 @@ sub printHierResults {
 	$family =~ s/[^\w]/_/g;
 	$genus  =~ s/[^\w]/_/g;
 
+	if ($data) {
+	    $data .= ",";
+        } else {
+            $data .= "[";
+        }
+        $data .= "{\'name\': \'" . $name
+            . "\', \'id\': \'" . $taxon_oid
+            . "\', \'phylum\': \'" . $phylum
+            . "\'}";
+
 	my $highlight = 0;
 	my $r = "$domain,$phylum,$class,$order,$family,$genus"
    	      . ":$name".":$taxon_oid\t";
@@ -1117,6 +1128,10 @@ sub printHierResults {
 	$id2Rec{ $taxon_oid } = $r;
     }
     $cur->finish();
+
+    if ($data) {
+	$data .= "]";
+    }
 
     WebUtil::unsetEnvPath();
     runCmd( "$cluster_bin -g 1 -m s -f $tmpProfileFile -u $tmpClusterRoot" );
@@ -1129,7 +1144,6 @@ sub printHierResults {
     if (! (-e $tmpClusterGtr) || ! (-e $tmpClusterCdt)) {
         print "<p><font color='red'>Could not create the necessary files. "
             . "(from $tmpProfileFile)</font></p>\n";
-        #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         return;
     }
@@ -1139,9 +1153,7 @@ sub printHierResults {
 
     my $func = param( "func" );
     my $func_name = nameForFunction($func);
-    my $url = "http://www.phylosoft.org/archaeopteryx/";
-#http://code.google.com/p/forester/
-#https://sites.google.com/site/cmzmasek/home/software/archaeopteryx
+
     my $textStr = "$nTaxons genomes selected for analysis.";
     if ($usethem) {
 	$textStr = "Using $nTaxons genomes in genome cart for analysis.";
@@ -1151,15 +1163,53 @@ sub printHierResults {
     print "$textStr<br/>";
     print "Clustering is based on <u>$func_name</u> profiles "
 	. "for selected genomes.<br/>";
-    print "The tree below is generated using the "
-	. alink($url, "Archaeopteryx")." applet";
     print "</p>\n";
 
     my $xmlFile = $tmp_dir . "/treeXML$$"."_".$sid.".txt";
     $dt->toPhyloXML( $xmlFile );
-    DistanceTree::printAptxApplet("treeXML$$"."_".$sid.".txt");
 
-    #$dbh->disconnect();
+    require TabHTML;
+    TabHTML::printTabAPILinks("treeTab");
+
+    my @tabIndex = ("#treetab1", "#treetab2");
+    my @tabNames = ("Phylogenetic Tree", "Aptx Tree");
+    TabHTML::printTabDiv("treeTab", \@tabIndex, \@tabNames);
+
+    print "<div id='treetab1'>";
+
+    use Bio::Phylo::IO;
+    use Bio::Phylo::Forest::Tree;
+    my $tree = Bio::Phylo::IO->parse_tree('-file' => $xmlFile, '-format' => 'phyloxml');
+    my $newick_str = $tree->to_newick;
+    if ( blankStr($newick_str) ) {
+        webError("Invalid newick '$newick_str' string.\n");
+    }
+
+    my $newickFile = $tmp_dir . "/newick$$"."_".$sid.".txt";
+    my $wfh = newWriteFileHandle( $newickFile, "writeNewickFile" );
+    print $wfh $newick_str;
+    close $wfh;
+
+    print "<p>";
+    my $url1 = "$base_url/tmp/"."treeXML$$"."_".$sid.".txt";
+    print alink($url1, "View phyloXML", "_blank");
+    print "<br/>";
+    my $url2 = "$base_url/tmp/newick$$"."_".$sid.".txt";
+    print alink($url2, "View Newick File", "_blank");
+    print "</p>\n";
+
+    DistanceTree::configurePhylogram($newick_str, $data);
+    print "</div>";    # end treetab1
+
+    print "<div id='treetab2'>";
+    my $url = "http://www.phylosoft.org/archaeopteryx/";
+    print "<p>The tree below is generated using the ".alink($url, "Archaeopteryx")." applet</p>";
+    print "<font color='red'><b><u>PLEASE NOTE</u></font>:</b> Use of java in most browsers is deprecated.<br/>";
+    DistanceTree::printAptxApplet("treeXML$$"."_".$sid.".txt");
+    print "</div>";    # end treetab2
+
+    TabHTML::printTabDivEnd();
+
     printStatusLine( "$count Loaded.", 2 );
     wunlink( $tmpProfileFile );
     wunlink( $tmpClusterCdt );

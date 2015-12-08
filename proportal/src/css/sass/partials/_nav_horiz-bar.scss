@@ -1,0 +1,282 @@
+/* partials/horiz-bar */
+/* main IMG menu */
+
+.horiz-bar {
+	background: $horiz-bar__bg;
+	margin: 0;
+
+	&-menu {
+		background: inherit;
+
+		// first level menus
+		&.menu--l1 {
+			z-index: 2;
+		}
+
+		&__item {
+			border-top: 1px solid lighten($horiz-bar__bg, 15%);
+//			background: inherit;
+			@include horiz-bar__item--bg();
+
+			// highlight parent items
+			// .horiz-bar-menu__item
+			&.parent {
+				&.menu__item {
+					&--l0 {
+						@include horiz-bar__item--bg( l0 );
+					}
+					&--l1 {
+						@include horiz-bar__item--bg( l1 );
+					}
+					&--l2 {
+						@include horiz-bar__item--bg( l2 );
+					}
+				}
+			}
+			// current item
+			&.current {
+				@include horiz-bar__item--bg( current );
+			}
+		}
+
+		&__link {
+			/** width-sensitive! */
+			@include mobile_nav;
+			// indent links according to their depth in the menu system
+			&.menu__link {
+				&--l1 {
+					padding-left: $gutter;
+				}
+				&--l2 {
+					padding-left: $gutter*2;
+				}
+				&--l3 {
+					padding-left: $gutter*3;
+				}
+				&--l4 {
+					padding-left: $gutter*4;
+				}
+			}
+
+//			@include horiz-bar__link;
+			color: $horiz-bar__link;
+			&:link, &:visited {
+				color: $horiz-bar__link;
+			}
+
+			&:hover, &:focus, &:active {
+				color: $horiz-bar__link--hfa;
+				background-color: $horiz-bar__bg--hfa;
+				border-left-color: $horiz-bar__border--hfa;
+			}
+		}
+	}
+
+	// .horiz-bar__toggle -- label (the nav toggle)
+	&__toggle {
+		background-position: 50% 50%;
+		/** width-sensitive! */
+		@include mobile_nav();
+		width: $toggle-width;
+
+		&:hover, &:focus, &:active {
+			color: $horiz-bar__link--hfa;
+			background-color: $horiz-bar__bg--hfa;
+		}
+
+/**	// Uncomment for link + label to share styling
+
+		&:hover + .horiz-bar-menu__link, &:focus + .horiz-bar-menu__link, &:active + .horiz-bar-menu__link {
+			color: $horiz-bar__link--hfa;
+			background-color: $horiz-bar__bg--hfa;
+			border-left-color: $horiz-bar__border--hfa;
+		}
+*/
+	}
+
+	// .horiz-bar-toggle__container
+	&-toggle__container {
+		// container for the horiz bar toggle
+		text-align: center;
+		@include horiz-bar__item--bg();
+	}
+
+	// .horiz-bar-toggle__label: hides/shows the menu in mobile view
+	&-toggle__label {
+		background-color: $horiz-bar__bg;
+		@include mobile-nav;
+		@include icon;
+		@include icon-down-arr;
+		background-position: 100% 50%;
+
+		color: $horiz-bar__link;
+		&:hover, &:focus, &:active {
+			color: $horiz-bar__link--hfa;
+		}
+	}
+}
+
+
+.nav-trigger:checked ~ .horiz-bar-toggle__container .horiz-bar-toggle__label {
+	@include icon-up-arr;
+}
+
+// horizontal bar form
+@include minw( $med ) {
+	.horiz-global-toggle {
+		display: none;
+	}
+
+	.horiz-bar {
+		margin-top: $gutter;
+
+		&-menu {
+			// horizontal bar, top level
+			&.menu--l0 {
+				float: left;
+			}
+			// level one menus: drop downs
+			&.menu--l1 {
+				@include ht-0;
+				position: absolute;
+				left: auto;
+				top: $menu-ht;
+				width: $l-sub-w;
+			}
+			// level two menus: don't display
+			// should also hide the toggles!
+			&.menu--l2 {
+			//	@include offscreen;
+				@include ht-0;
+			}
+
+			&__item {
+				// horiz bar
+				&.menu__item--l0 {
+					overflow: visible;
+					position: relative;
+					float: left;
+
+					// make sure menu doesn't go offscreen
+					&:last-child > ul {
+						right: 0;
+					}
+
+					// uncomment to enable :hover menu expansion
+					&:hover .menu--l1 {
+//						@include ht-max;
+					}
+				}
+				// .horiz-bar-menu__item
+				&.parent.menu__item--l0 {
+					> label {
+						border-right-color: hue(secondary);
+					}
+					> a {
+						border-left-color: hue(secondary);
+					}
+//					@include horiz-bar__item--bg( l0, horiz );
+
+					.menu--l1 {
+						@include horiz-bar__item--bg( l0 );
+					}
+
+				}
+			}
+
+			&__link.menu__link--l0 {
+				margin-right: $toggle-width;
+				padding-right: 0;
+				border-right: 0;
+			}
+		}
+
+		&-toggle__container {
+			display: none;
+		}
+	}
+}
+
+@include minmax ( $med, 79.99rem ) {
+
+	$toggle-width-nar: 2rem;
+	$h-gap: .25rem;
+
+	.horiz-bar {
+		.extra-text {
+			display: none;
+		}
+		&-menu {
+			&__item {
+				// highlight parent items
+				// .horiz-bar-menu__item
+				&.parent.menu__item {
+					&--l0 {
+						@include horiz-bar__item--bg( l0, $h-gap );
+					}
+					&--l1 {
+						@include horiz-bar__item--bg( l1, $h-gap );
+					}
+					&--l2 {
+						@include horiz-bar__item--bg( l2, $h-gap );
+					}
+					.menu--l1 {
+						@include horiz-bar__item--bg( l0, $h-gap );
+					}
+				}
+				// current item
+				&.current {
+					@include horiz-bar__item--bg( current, $h-gap );
+				}
+			}
+
+			&__link {
+				/** width-sensitive! */
+				@include mobile_nav( $h-gap );
+
+				&.menu__link--l0 {
+					margin-right: $toggle-width-nar;
+				}
+			}
+		}
+		// .horiz-bar__toggle -- label (the nav toggle)
+		&__toggle {
+			/** width-sensitive! */
+			@include mobile_nav( $h-gap );
+			width: $toggle-width-nar;
+		}
+
+	}
+}
+
+@include minmax( $med, 59.99rem ) {
+
+	.horiz-bar {
+		font-size: .85rem;
+	}
+
+}
+
+// mobilesque nav
+@include maxw( $med- ) {
+
+
+	.horiz-bar {
+		font-size: 1rem;
+		// initially hidden
+		@include ht-0;
+
+		&-menu {
+			@include ht-0;
+
+			&__item {
+				display: block;
+			}
+		}
+	}
+
+	.horiz-global-toggle:checked ~ .horiz-bar,
+	.horiz-global-toggle:checked ~ .horiz-bar > .horiz-bar-menu {
+		@include ht-max;
+	}
+}

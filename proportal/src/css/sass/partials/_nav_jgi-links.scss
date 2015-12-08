@@ -1,0 +1,176 @@
+/* partials/jgi-links */
+
+.jgi-links {
+
+	/* set bg while developing */
+	background: #fff;
+
+	&__item {
+		display: block;
+	}
+}
+/*
+.menu__link--l1 {
+	padding-left: $line-ht;
+}
+.menu__link--l2 {
+	padding-left: $line-ht*2;
+}
+.menu__link--l3 {
+	padding-left: $line-ht*3;
+}
+.menu__link--l4 {
+	padding-left: $line-ht*4;
+}
+*/
+
+// show / hide the data mart list
+.nav-toggle {
+	~ .mart-list-menu {
+		@include ht-0;
+	}
+	&:checked ~ .mart-list-menu {
+		@include ht-max;
+	}
+}
+
+.mart-list__toggle {
+
+	background-position: 50% 50%;
+	background-size: 80%;
+	/** width-sensitive! */
+//	@include mobile_nav();
+	width: $toggle-width;
+}
+
+.header-search {
+	&__input {
+		margin-bottom: 0;
+		width: 3rem;
+		&:active, &:focus {
+			width: 20rem;
+		}
+	}
+	&__label {
+
+	}
+	&__submit {
+		padding: 0 $gutter;
+	}
+
+}
+
+.mart-list-menu__link {
+	@include mobile_nav;
+	font-size: 1rem;
+	background: $body-bg;
+}
+
+/**
+
+// is this needed???
+@include minw( $med ) {
+	.jgi-links {
+		@include ht-max;
+	}
+}
+
+*/
+
+// narrow view
+@include maxw( $med- ) {
+
+	.jgi-links {
+		position: static;
+		@include ht-0;
+
+		&__toggle, &-menu__item,
+		.mart-list__toggle, .mart-list-menu__item {
+			display: block;
+		}
+		&-menu__item,
+		.mart-list-menu__item {
+			border-top: 1px solid lighten($horiz-bar__bg, 15%);
+		}
+		&__toggle,
+		.mart-list__toggle {
+			padding: $gutter;
+		}
+		&-menu__link,
+		.mart-list-menu__link {
+			width: 100%;
+			@include mobile_nav;
+		}
+	}
+
+	.horiz-global-toggle:checked ~ .jgi-links {
+		@include ht-max;
+	}
+
+}
+
+// wide view
+@include minw( $med ) {
+
+	.jgi-links {
+		position: absolute;
+		top: 0;
+		right: $gutter;
+		margin-top: $gutter;
+
+		// 'global navigation' label
+		&__toggle {
+			display: none;
+		}
+
+		&-menu {
+			padding: 0;
+
+			&__item {
+				display: inline-block;
+				text-transform: uppercase;
+				list-style-type: none;
+				font-size: .8rem;
+				line-height: $line-ht;
+				color: hue( dk_grey );
+				a {
+					color: hue( dk_grey );
+					text-decoration: underline;
+					&:hover, &:focus, &:active {
+						color: hue( lite_or );
+						text-decoration: underline;
+					}
+				}
+				& + & {
+					margin-left: $gutter;
+				}
+			}
+		}
+	}
+
+	.mart-list {
+		position: relative;
+		// list of IMG sites
+		&-menu.menu--l0 {
+			@include ht-0;
+			background: $body-bg;
+			position: absolute;
+			display: block;
+			min-width: 12rem;
+			right: 0;
+			z-index: 2;
+			padding: 0 $gutter;
+			text-transform: none;
+
+			&__item {
+				display: block;
+				padding-left: 0;
+				text-transform: none;
+			}
+		}
+		// data mart links
+		&-menu__item.menu__link--l1 {
+			padding-left: $gutter;
+		}
+	}
+}

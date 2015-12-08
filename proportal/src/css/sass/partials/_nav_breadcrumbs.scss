@@ -1,0 +1,28 @@
+/* partials/nav */
+
+.breadcrumbs {
+	margin-left: 20%;
+}
+
+@include maxw( $med- ) {
+	.breadcrumbs {
+		margin-left: 0;
+	}
+}
+
+.breadcrumbs {
+	&-menu {
+		margin: .75rem;
+	}
+	&-menu__item {
+		font-size: .8rem;
+		display: inline;
+	}
+	&-menu__item + &-menu__item {
+		margin-left: .5rem;
+	}
+	&-menu__item + &-menu__item:before {
+		content: '>>';
+		padding-right: .5rem;
+	}
+}

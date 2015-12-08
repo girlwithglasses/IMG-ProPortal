@@ -250,8 +250,7 @@ sub printFuncSetMainForm {
     TabHTML::printTabDiv("funcsetTab", \@tabIndex, \@tabNames);
 
     print "<div id='funcsettab1'>";
-    WorkspaceUtil::printShareMainTable($section_cgi, $section, 
-		       $workspace_dir, $sid, $folder, @files);
+    WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files);
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 

@@ -1,0 +1,44 @@
+[%	IF scr_arr;
+		FOREACH s IN scr_arr;
+			'<script type="text/javascript" src="' _ s _ '"></script>';
+		END;
+	END;
+%]
+<script type="text/javascript">
+(function(){
+	"use strict";
+	var fn=function(){
+[%	content %]
+		function getJson(){
+			return { results:[%
+	USE JSON.Escape( convert_blessed => 1 );
+	IF results.js;
+		results.js.json;
+	ELSE;
+		'{}';
+	END;
+		%],filters:[%
+	IF data_filters && data_filters.all;
+		data_filters.json;
+	ELSE;
+		'{}';
+	END; %]
+			};
+		}
+	}
+	if (document.readyState !== 'loading'){
+		fn();
+	} else if (document.addEventListener) {
+		document.addEventListener('DOMContentLoaded', function(){
+			fn();
+		});
+	} else {
+		document.attachEvent('onreadystatechange', function() {
+			if (document.readyState !== 'loading'){
+				fn();
+			}
+		});
+	}
+}());
+</script>
+

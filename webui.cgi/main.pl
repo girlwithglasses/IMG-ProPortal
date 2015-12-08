@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 34725 2015-11-17 23:02:58Z klchu $
+# $Id: main.pl 34825 2015-12-03 21:37:06Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -216,6 +216,7 @@ if ( param('oldLogin') eq 'true' || $oldLogin ) {
     $oldLogin = 0;
 }
 
+
 if ( !$oldLogin && $sso_enabled ) {
     require Caliban;
     if ( !$contact_oid ) {
@@ -295,6 +296,7 @@ if ( !$oldLogin && $sso_enabled ) {
         setSessionParam( "oldLogin", 1 );
 
         #if($img_ken) {
+        $redirecturl =~ s/oldLogin=false/oldLogin=true/;
         Caliban::migrateImg2JgiSso($redirecturl);
 
         if ( $sso_enabled && $redirecturl ne "" ) {
@@ -716,7 +718,7 @@ sub printHTMLHead {
             <input type="hidden" value="orgsearch" name="page">
             <input type="hidden" value="TaxonSearch" name="section">
 
-            <a style="color: black;" href="$base_url/doc/orgsearch.html">
+            <a style="color: black;" href="$base_url/orgsearch.html">
             <font style="color: black;"> Quick Genome Search: </font>
             </a><br/>
             <div id="myAutoComplete" >
@@ -893,7 +895,7 @@ sub printMenuDiv {
     $img_edu           = 0 if ( $img_edu           eq "" );
     $scaffold_cart     = 0 if ( $scaffold_cart     eq "" );
 
-    #$template->param( img_internal            => $img_internal );
+    $template->param( img_internal            => $img_internal ) if $img_ken;
     $template->param( include_metagenomes     => $include_metagenomes );
     $template->param( not_include_metagenomes => $not_include_metagenomes );
     $template->param( enable_cassette         => $enable_cassette );
@@ -1403,8 +1405,18 @@ sub printContentEnd {
     print qq{
 	</div> <!-- end of content div  -->
         <div id="myclear"></div>
-	</div> <!-- end of container div  -->
     };
+
+#    if($abc) {
+#        # end of the large div width such that content 
+#        print '</div>';
+#    }
+
+
+    print qq{
+    </div> <!-- end of container div  -->
+    };
+
 }
 
 ############################################################################
@@ -1432,13 +1444,22 @@ sub printAppHeader {
     if ( $sso_enabled && $current eq "login" && $sso_url ne "" ) {
         my $url = $cgi_url . "/" . $main_cgi . redirectform(1);
         $url = $redirecturl if ( $redirecturl ne "" );
+        
+        if($url =~ /cgi$/) {
+            $url = $url . '?oldLogin=false';
+        } elsif($url =~ /oldLogin=true/) {
+            $url =~ s/oldLogin=true/oldLogin=false/;    
+        } else {
+            $url = $url . '&oldLogin=false';
+        }
+        
         $cookie_return = CGI::Cookie->new(
             -name   => $sso_cookie_name,
             -value  => $url,
             -domain => $sso_domain
         );
     } elsif ($sso_enabled) {
-        my $url = $cgi_url . "/" . $main_cgi;
+        my $url = $cgi_url . "/" . $main_cgi . '?oldLogin=false';
         $cookie_return = CGI::Cookie->new(
             -name   => $sso_cookie_name,
             -value  => $url,
@@ -1475,6 +1496,10 @@ sub printAppHeader {
         HtmlUtil::cgiCacheStart() or return;
 
         my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
+
+#print qq{
+#  <div style='width:2000px'>  
+#};
 
         printAbcNavBar();
         printContentHome();
@@ -1514,45 +1539,10 @@ Small organic molecules produced<br/>by living organisms<br/>
         print qq{
     </div>
 </div>
-</div>     
+</div> 
 };
-
+# </div>
         HtmlUtil::cgiCacheStop();
-
-#    } elsif ( $current eq "Home" && $abc ) {
-#
-#        # old abc home page
-#
-#        # caching home page
-#        my $sid  = getContactOid();
-#        my $time = 3600 * 24;         # 24 hour cache
-#
-#        printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-#        printMenuDiv( $current, $dbh );
-#        printErrorDiv();
-#
-#        HtmlUtil::cgiCacheInitialize("homepage");
-#        HtmlUtil::cgiCacheStart() or return;
-#
-#        my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
-#
-#        printAbcNavBar();
-#        printContentHome();
-#
-#        require NaturalProd;
-#        my $bcp_cnt = NaturalProd::getPredictedBc($dbh);
-#        my $np_cnt  = NaturalProd::getSmStructures($dbh);
-#        $bcp_cnt = Number::Format::format_number($bcp_cnt);
-#        $np_cnt  = Number::Format::format_number($np_cnt);
-#
-#        my $templateFile = "$base_dir/home-v33.html";
-#        my $template = HTML::Template->new( filename => $templateFile );
-#        $template->param( base_url     => $base_url );
-#        $template->param( bc_predicted => $bcp_cnt );
-#        $template->param( np_items     => $np_cnt );
-#        print $template->output;
-#
-#        HtmlUtil::cgiCacheStop();
 
     } elsif ( $img_proportal && $current eq "Home" ) {
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
@@ -1592,7 +1582,7 @@ Small organic molecules produced<br/>by living organisms<br/>
 
         # to stop the inline-block or float left from wrapping
         # to the next line - ken
-        print qq{<div style="width: 1200px;">};
+        #print qq{<div style="width: 1200px;">};
         printStatsTableDiv( $maxAddDate, $maxErDate );
         printContentHome();
         my $templateFile = "$base_dir/home-v33.html";
@@ -1715,7 +1705,12 @@ $newsStr
         printBreadcrumbsDiv( $current, $help, $dbh );
         printErrorDiv();
 
-        printAbcNavBar() if ( $abc && $current ne 'login' && $current ne 'logout' );
+        if ( $abc && $current ne 'login' && $current ne 'logout' ) {
+#            print qq{
+#                <div style='width:2000px'>  
+#            };
+            printAbcNavBar() 
+        }
         printContentOther();
     }
 

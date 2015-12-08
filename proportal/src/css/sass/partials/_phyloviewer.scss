@@ -1,0 +1,151 @@
+/* partials/phyloviewer */
+
+$toolbar-w: 220px;
+
+#wrapper {
+	width: 1220px;
+}
+
+#toolbar {
+	width: $toolbar-w;
+	float: left;
+	font-size: .75rem;
+}
+
+/* =========  TOOLBAR ELEMENTS  =========  */
+#title {
+	margin: 0;
+	padding: 20px;
+}
+.optionBox {
+	width: 100%;
+//	float: left;
+	margin: 0px;
+	padding: $gutter 0 15px;
+}
+.optionTitle {
+	width: 100%;
+	padding: $gutter;
+	padding-left: 15px;
+	background: whitesmoke;
+	font-weight: bold;
+//	float: left;
+	margin: 0;
+}
+.optionSubtitle {
+	width: 100%;
+	padding: 5px;
+	padding-left: 15px;
+	background: whitesmoke;
+	font-weight: bold;
+//	float: left;
+	margin: 0;
+}
+
+.optionBox * {
+//	float: left;
+}
+
+.optionBox .label {
+	width: 110px;
+}
+.optionBox .labelShort {
+	width: 80px;
+}
+.optionBox input {
+//	float: left;
+}
+.optionBox input[type="range"]{
+	width: 57px
+}
+.optionBox input[type="radio"]{
+	margin-left: 25px;
+	margin-right: 5px;
+}
+.optionBox input[type="checkbox"]{
+	margin-right: 5px;
+//	position: absolute;	/* these three lines center the element vertically in the <li> */
+//	top: 35%;
+//	transform: translateY(-50%);
+}
+.optionBox input[type="submit"]{
+	float: right;
+	width: 40px;
+	border-radius: 3px;
+	margin: 2px;
+}
+.optionBox select{
+	float: right;
+	margin: 2px;
+	width: 90px;
+}
+
+
+#toolbar li {
+	list-style: none;
+//	display: inline;
+	display: block;
+	position: relative;
+}
+
+.optionBox .colorPicker {
+	width: 24px;
+	height: 24px;
+	font-size: $font-size * .5;
+	text-align: center;
+	vertical-align: middle;
+	border-radius: 4px;
+	border: 1px dotted grey;
+	margin-right: 8px;
+	float: right;
+}
+
+
+#phyloWrapper {
+	margin-left: $toolbar-w;
+}
+
+#phyloviewer {
+	width: 100%;
+	margin-left: $toolbar-w;		/* makes room for left toolbar */
+	display: inline-block; /* keeps this from wrapping under toolbar */
+	float: right;
+	position: relative;
+
+	.link {				/* tree branches */
+		stroke: grey;
+	}
+	.leafnode circle {
+		r: 4.5;
+		stroke: grey;
+		fill: white;
+		stroke-width: 2px;
+	}
+	.leafnode:hover circle {
+		r: 7;
+		stroke: orange;
+	}
+
+	.leafnode:hover rect {
+		stroke: orange;
+	}
+
+	.rootnode circle {
+		r: 4.5;
+		stroke: #369;
+		fill: steelblue;
+		stroke-width: 2px;
+	}
+}
+
+.heatmap {
+	white-space: nowrap;
+	font-size: $font-size * .5;
+}
+
+.legend {
+	font-size: $font-size;
+	font-weight: bold;
+	text-anchor: start;
+}
+

@@ -1,4 +1,4 @@
-# $Id: ANI.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: ANI.pm 34815 2015-12-02 19:15:49Z jinghuahuang $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -632,8 +632,7 @@ sub selectFiles {
         -action => "$main_cgi",
    );
 
-    WorkspaceUtil::printSetMainTableNoFooter
-	("WorkspaceGenomeSet", $workspace_dir, $sid, $folder, \@files);
+    WorkspaceUtil::printShareMainTableNoFooter("WorkspaceGenomeSet", $workspace_dir, $sid, $folder, \@files, 0, 1);
     print end_form();
 
     print qq {

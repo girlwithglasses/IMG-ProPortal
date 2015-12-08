@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: MetaDetail.pm 34797 2015-11-26 05:08:21Z jinghuahuang $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -14497,9 +14497,9 @@ sub printHorTransferred {
         from gene g, dt_ht_hits hth
         where g.gene_oid = hth.gene_oid
         and g.taxon = ?
-        and hth.rev_gene_oid is not null
         order by hth.phylo_level, hth.phylo_val
     };
+        #and hth.rev_gene_oid is not null
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
     my %phyloVal2Level;
     my %level2PhyloVals;
@@ -14774,9 +14774,9 @@ sub printHorTransferredLevel {
         and g.taxon = ?
         and g.obsolete_flag = 'No'
         and hth.phylo_level = ?
-        and hth.rev_gene_oid is not null
         order by g.gene_oid
     };
+        #and hth.rev_gene_oid is not null
     TaxonDetailUtil::printGeneListSectionSorting( $sql, "Putative Horizontally Transferred Genes",
         "", $taxon_oid, $phylo_level );
 }
@@ -14821,11 +14821,11 @@ sub printHorTransferredLevelVal {
         and g.obsolete_flag = 'No'
         and hth.phylo_level = ?
         and hth.phylo_val = ?
-        and hth.rev_gene_oid is not null
         and hth.homolog = g2.gene_oid
         and g2.taxon = tx2.taxon_oid
         order by g.gene_oid
     };
+        #and hth.rev_gene_oid is not null
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, $phylo_level, $phylo_val );
     my %genes;
     my $count = 0;

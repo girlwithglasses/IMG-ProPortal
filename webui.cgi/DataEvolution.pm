@@ -64,7 +64,7 @@ sub dispatch {
 # printDataEvolutionPage - Print data evolution page.
 ############################################################################
 sub printDataEvolutionPage {
-    my $templateFile = "$base_dir/doc/dataEvolution.html";
+    my $templateFile = "$base_dir/dataEvolution.html";
     my $rfh = newReadFileHandle( $templateFile, "printDataEvolutionPage" );
     while( my $s = $rfh->getline( ) ) {
        chomp $s;

@@ -25,35 +25,62 @@ Ecosystem query
 sub render {
 	my $self = shift;
 
-	my $res = $self->run_query({
-		query => 'ecosystem',
-		filters => $self->filters,
-	});
-#    my $res = decode_json <DATA>;
+# 	my $res = $self->run_query({
+# 		query => 'ecosystem',
+# 		filters => $self->filters,
+# 	});
+#    my $res = [ grep { 'isolate' eq $_->{genome_type} } @{ decode_json <DATA> } ];
+    my $res = decode_json <DATA>;
     if ( ! $res ) {
         die 'No results found for query';
     }
 
     my @class_types = qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem );
 
-    my $tree;
+    my $data;
 
     for ( @$res ) {
-        $tree->{ $_->{ecosystem} }
+        push @{$data->{ $_->{ecosystem} }
             { $_->{ecosystem_category} }
             { $_->{ecosystem_type} }
             { $_->{ecosystem_subtype} }
-            { $_->{specific_ecosystem} }
-            { $_->{taxon_display_name} } = $_;
+            { $_->{specific_ecosystem} } }, { name => $_->{taxon_display_name}, data => $_ };
     }
 
+    my $tree;
+    if ( 1 == scalar keys %$data ) {
+        $tree = { name => ( keys %$data )[0], children => $self->recurse( ( values %$data )[0] ) };
+    }
+    else {
+        $tree = { name => 'all', children => $self->recurse( $data ) };
+#        die 'Viewing the full data set is currently disabled';
+    }
 
 	return $self->add_defaults_and_render({
         array => $res,
-	    class_types => [ @class_types ],
-	    tree => $tree,
+        js => {
+            class_types => [ @class_types ],
+            tree => $tree,
+        }
     });
 
+}
+
+sub recurse {
+    my $self = shift;
+    my $ds = shift;
+    if ( 'ARRAY' eq ref $ds ) {
+        return [ sort { $a->{name} cmp $b->{name} } @$ds ];
+#        return [];
+    }
+    elsif ( 'HASH' eq ref $ds ) {
+        my $struct;
+        for ( sort keys %$ds ) {
+            push @$struct, { name => $_, children => $self->recurse( $ds->{$_} ) };
+        }
+        return $struct;
+    }
+    die 'encountered unexpected input: ' . $ds;
 }
 
 1;

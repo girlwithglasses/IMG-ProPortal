@@ -22,7 +22,7 @@
 # views/500.tt, 'error_template' template, or a default error template will be used.
 	show_errors => 1,
 
-	debug => 1,
+#	debug => 1,
 
 	# print the banner
 	startup_info => 1,

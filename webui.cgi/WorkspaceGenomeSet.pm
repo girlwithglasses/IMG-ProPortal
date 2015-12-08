@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGenomeSet.pm
-# $Id: WorkspaceGenomeSet.pm 34666 2015-11-10 21:32:42Z jinghuahuang $
+# $Id: WorkspaceGenomeSet.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
 ############################################################################
 package WorkspaceGenomeSet;
 
@@ -272,8 +272,7 @@ sub printGenomeSetMainForm {
     TabHTML::printTabDiv( "genomesetTab", \@tabIndex, \@tabNames );
 
     print "<div id='genomesettab1'>";
-    WorkspaceUtil::printShareMainTable( $section_cgi, $section, $workspace_dir,
-        $sid, $folder, @files );
+    WorkspaceUtil::printShareMainTable( $section, $workspace_dir, $sid, $folder, \@files );
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 
@@ -351,7 +350,6 @@ sub printGenomeSetMainForm {
     WorkspaceUtil::printGenomeListForm();
     my $name = "_section_Workspace_saveGenomeSetCreation";
     WorkspaceUtil::printSaveSelectedGenomeToWorkspace( $name );
-
     print "</div>\n";
 
     print "<div id='genomesettab7'>";

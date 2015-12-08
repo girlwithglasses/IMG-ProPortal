@@ -1,0 +1,56 @@
+/* partials/links */
+
+/* LINKS */
+
+a {
+
+	text-decoration: none;
+	color: $main-link;
+	@if variable-exists(main-link-bg) {
+		background-color: $main-link-bg;
+	}
+
+	&:hover, &:focus {
+		text-decoration: none;
+		@if variable-exists(main-hflink) {
+			color: $main-hflink;
+		}
+		@if variable-exists(main-hflink-bg) {
+			background-color: $main-hflink-bg;
+		}
+	}
+
+	&:focus {
+		outline: thin dotted;
+	}
+
+	&:active {
+		@if variable-exists(main-alink) {
+			color: $main-alink;
+		}
+		@if variable-exists(main-alink-bg) {
+			background-color: $main-alink-bg;
+		}
+	}
+
+	&:visited {
+		color: $main-vlink;
+		@if variable-exists(main-vlink-bg) {
+			background-color: $main-vlink-bg;
+		}
+	}
+
+	.img {
+		border: 1px dotted $main-link;
+		display: block;
+	}
+}
+
+article a {
+	// bordered links
+	border-bottom: 1px dotted $main-link;
+
+	&:hover, &:focus, &:active {
+		border-bottom: 1px solid $main-hflink;
+	}
+}

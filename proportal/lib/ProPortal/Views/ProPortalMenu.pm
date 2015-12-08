@@ -59,7 +59,7 @@ sub proportal {
 			'proportal/location',
 			'proportal/ecosystem',
 			'proportal/phylogram',
-			'proportal/phylo_heat',
+			'proportal/phylo_viewer',
 		],
 	};
 }
