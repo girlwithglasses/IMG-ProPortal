@@ -2,13 +2,11 @@ package Routes::Ajax;
 
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
-use parent 'CoreStuff';
+use parent 'AppCore';
 use Dancer2::Plugin::Ajax;
 
 # use XMLProxy;
 # use JSONProxy;
-
-our $VERSION = '0.1';
 
 any '/inner.cgi' => sub {
 
@@ -20,7 +18,6 @@ ajax '/xml.cgi' => sub {
 
 	require XMLProxy;
 	return XMLProxy->run( params => request->parameters, config => config );
-#	return 'Called xml.cgi!';
 
 };
 
@@ -36,7 +33,6 @@ ajax '/json_proxy.cgi' => sub {
 		content_type 'application/json';
 		return to_json $result;
 	}
-#	return 'Called json_proxy.cgi!';
 };
 
 

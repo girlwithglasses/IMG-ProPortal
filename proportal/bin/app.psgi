@@ -1,21 +1,25 @@
 #!/usr/bin/env perl
+my @dir_arr;
+my $dir;
 
 BEGIN {
 	use File::Spec::Functions qw( rel2abs catdir );
 	use File::Basename qw( dirname basename );
-	my $dir = dirname( rel2abs( $0 ) );
+	$dir = dirname( rel2abs( $0 ) );
 	while ( 'webUI' ne basename( $dir ) ) {
 		$dir = dirname( $dir );
 	}
-	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib );
+	@dir_arr = map { catdir( $dir, $_ ) } qw(
+		webui.cgi
+		proportal/lib
+		jbrowse/src/perl5
+		jbrowse/extlib/lib/perl5
+	);
 }
 use lib @dir_arr;
-
 use IMG::Util::Base;
-use FindBin qw/ $Bin /;
-my $base = dirname($Bin);
-my $home = $base;
-$home =~ s!webUI/.*!webUI!;
+use IMG::Util::File qw( :all );
+
 use Plack::Builder;
 #use Log::Contextual qw(:log);
 $ENV{PLACK_URLMAP_DEBUG} = 1;
@@ -25,19 +29,39 @@ $ENV{TWIGGY_DEBUG} = 1;
 use Mojo::Server::PSGI;
 
 my $server = Mojo::Server::PSGI->new;
-$server->load_app( "$base/bin/podserver" );
+$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
+
+say 'running app.psgi!';
+sub make_config {
+
+	my $env_dir = catdir( $dir, 'proportal/environments' );
+	my @files = map { "$env_dir/$_" } get_dir_contents({
+		dir => $env_dir,
+		filter => sub { -f "$env_dir/$_" }
+	});
+	push @files, catfile( $dir, 'proportal/config.pl' );
+
+	my $cfg = Config::Any->load_files({
+		files => [ @files ],
+		use_ext => 1,
+		flatten_to_hash => 1
+	});
+
+	my @keys = keys %$cfg;
+	for ( @keys ) {
+		if ( m!.+/(\w+)\.\w+$!x ) {
+			$cfg->{ $1 } = delete $cfg->{ $_ };
+		}
+	}
+
+	say 'config: ' . Dumper $cfg;
+
+	return $cfg;
+
+}
 
 use ProPortalPackage;
-
-my $pp = sub {
-  ProPortalPackage->to_app;
-};
-
 use TestApp;
-my $testapp = sub {
-    TestApp->to_app;
-};
-
 
 builder {
 	enable "Deflater";
@@ -51,13 +75,13 @@ builder {
 
 	enable 'Static',
 		path => sub { s!^/jbrowse_assets!! },
-		root => $home . '/jbrowse';
+		root => $dir . '/jbrowse';
 
 	enable 'Static',
 		path => sub { s!^/data_dir!! },
 		root => '/tmp/jbrowse';
 
-#    mount "/" => $testapp->();
-	mount "/" => $pp->();
+    mount "/testapp" => TestApp->to_app;
+	mount "/" => ProPortalPackage->to_app;
 
 };

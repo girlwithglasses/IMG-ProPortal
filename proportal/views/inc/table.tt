@@ -1,0 +1,48 @@
+[%	# A generic table component %]
+[%
+
+IF results.js.array.size > 0;
+	headers = results.js.table_headers; %]
+	<table>
+[%	IF results.js.table_caption %]
+	<caption>[% results.js.table_caption %]</caption>
+[%	END %]
+	<thead>
+	<tr>
+[%		FOREACH th IN headers.enum; %]
+	<th class='[% th %]'>[% IF headers.enum_map.$th; headers.enum_map.$th; END; %]</th>
+[%		END; %]
+	</tr>
+	</thead>
+	<tbody class="data-table__tbody">
+[%		FOREACH t IN results.js.array; %]
+		<tr[%
+		IF t.__id;
+			' id="' _ t.__id _ '"';
+		END;
+		IF t.__class;
+			' class="' _ t.__class _ '"';
+		END;
+
+		%]>
+[%			FOREACH th IN headers.enum;
+				IF results.transform.$th;
+					IF 'cbox' == th;
+					%]<td>
+[%						chbox = results.transform.$th( t ); %]
+<input type="checkbox" name="[% chbox.name %]" id="[% chbox.id %]" value="[% chbox.value %]" [% IF chbox.status; chbox.status; END %] />
+						</td>
+[%					ELSE;
+						'<td class="' _ th _ '">';
+						results.transform.$th( t );
+						'</td>';
+					END;
+				ELSE;
+%]				<td class="[% th %]">[% t.$th %]</td>
+[%				END;
+			END; %]
+		</tr>
+[%		END; %]
+	</tbody>
+	</table>
+[% END %]

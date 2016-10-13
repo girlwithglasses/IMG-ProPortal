@@ -1,19 +1,18 @@
 package IMG::Util::Timed;
 
-our (@ISA, @EXPORT_OK);
-
-BEGIN {
-	require Exporter;
-	@ISA = qw( Exporter );
-	@EXPORT_OK = qw( time_this );
-}
-
-use IMG::Util::Base;
+use parent Exporter;
+use IMG::Util::Base 'MooRole';
+use IMG::App::Role::ErrorMessages qw( err );
+use Attribute::Contract -types => [ qw/ Tuple Int CodeRef slurpy Any Optional / ];
 use Time::HiRes 1.9721;
 use Time::Out qw( timeout );
 use Scalar::Util qw( looks_like_number );
-use Attribute::Contract -types => [ qw/ Tuple Int CodeRef slurpy Any Optional / ];
 use POSIX;
+
+our ( @ISA, @EXPORT_OK );
+@ISA = qw( Exporter );
+@EXPORT_OK = qw( time_this );
+
 
 =head3 time_this
 
@@ -58,7 +57,10 @@ sub timed_function {
 	# allow hash or hashref args
 	my $args = ( @_ && 1 < scalar(@_) ) ? { @_ } : shift || {};
 
-	die "Missing required arguments for timed_test" unless defined $args->{ fn } && defined $args->{ fn_timeout };
+	die err({
+		err => 'missing',
+		subject => 'function and/or timeout'
+	}) unless defined $args->{ fn } && defined $args->{ fn_timeout };
 
 	die "test must be a coderef" unless 'CODE' eq ref( $args->{ fn } );
 
@@ -74,11 +76,12 @@ sub timed_function {
 	my $result;
 	eval {
 		eval {
-			alarm( $args->{fn_timeout} || 10 );    # seconds before time out
+			# seconds before time out
+			alarm( $args->{fn_timeout} || 10 );
 			# run the test.
 			$result = $args->{ fn }->();
 		};
-		alarm(0);                  # cancel alarm (if connect worked fast)
+		alarm(0); # cancel alarm (if connect worked fast)
 		die $@ if $@;
     };
     if ($@) {

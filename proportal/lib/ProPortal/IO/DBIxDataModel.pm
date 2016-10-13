@@ -9,7 +9,7 @@ use DBIx::DataModel;
 use DataModel::IMG_Core;
 use DataModel::IMG_Gold;
 
-requires 'schema', 'user';
+requires 'schema', 'choke';
 
 has 't0' => (
 	is => 'lazy',
@@ -18,7 +18,6 @@ has 't0' => (
 sub _build_t0 {
 	my $self = shift;
 	return [ Time::HiRes::gettimeofday ];
-#	$self->set_t0( [ Time::HiRes::gettimeofday ] );
 }
 
 
@@ -28,22 +27,46 @@ Run a database query
 
 If there is no database handle set, takes care of doing the login first
 
-@param  hash with keys
+This is a thin wrapper around DBIx::DataModel; see that module for
+specifics on how to specific SQL.
 
-@param  query  => the name of the query to be run
-	(a.k.a. the name of the method in this package)
+https://metacpan.org/pod/DBIx::DataModel
 
-@param  input  => extra query param to be filled in using $self->proportal_filters
+@param $args    hashref with keys
 
-@return $output - raw output from the query
+    query     the name of the query to be run
+              (i.e. the name of the method in this package)
+
+    where     the query parameter(s), e.g.
+              { taxon_oid => [ 123, 456, 789 ] }
+
+    filters       (optional) hashref of standardised filters,
+                  e.g. implemented by ProPortalFilters
+
+    return_as     (optional) return the statement object in a specific
+                  format, e.g. result_as => 'flat_arrayref'
+                  see DBIx::DataModel for options
+
+    check_results (optional) run check_results on the db results
+                  specify params for check_results as hashref, i.e.
+
+                  check_results => {
+                  	param => 'taxon_oid',
+                  	query => [ 123, 456, 789 ],
+                  	subject => 'taxon_oids'
+                  }
+
+	TODO: count results, return paged results
+
+@return $output - returns $statement->all unless return_as is specified
 
 =cut
 
 sub run_query {
 	my $self = shift;
 
+	# set the timer
 	$self->t0;
-#	$self->set_t0( [ Time::HiRes::gettimeofday ] );
 
 	my $args;
 	if ( @_ && 1 < scalar( @_ ) ) {
@@ -58,154 +81,168 @@ sub run_query {
 
 	my $query = $args->{query}
 		# no query specified
-		or croak __PACKAGE__ . ' ' . (caller(0))[3]
-		. ': no query specified!';
+		or $self->choke({
+			err => 'missing',
+			subject => 'database query'
+		});
 
 	if (! $self->can($query)) {
-		croak __PACKAGE__ . ' ' . (caller(0))[3]
-		. ': no query named $query exists!';
+		$self->choke({
+			err => 'invalid',
+			subject => $query,
+			type => 'database query'
+		});
 	}
 
 	# get the query as a statement
-	my $stt = $self->$query({ result_as => 'statement' });
+	my $stt = $self->$query( $args );
+
+#	say 'statement: ' . Dumper $stt;
 
 	# add filters
 	if ($args->{filters}) {
-		$stt = $self->add_filters( $stt, $args->{filters} );
+		$stt = $self->add_filters({
+			statement => $stt,
+			filters => $args->{filters}
+		});
 	}
 
-	say 'Returning data... time elapsed since query init: ' . Time::HiRes::tv_interval( $self->t0, [ Time::HiRes::gettimeofday ] );
+#	say 'Returning data... time elapsed since query init: ' . Time::HiRes::tv_interval( $self->t0, [ Time::HiRes::gettimeofday ] );
+
+	# TODO: set the output format
+# 	-result_as      => 'rows'      || 'firstrow'
+#                   || 'hashref'   || [hashref => @cols]
+#                   || 'sth'       || 'sql'
+#                   || 'subquery'  || 'flat_arrayref'
+#                   || 'statement' || 'fast_statement'
+
+	if ( $args->{result_as} ) {
+		return $stt->refine( -result_as => $args->{result_as} );
+	}
+
+	if ( $args->{check_results} ) {
+		return $self->check_results({
+			results => $stt->all,
+			%{$args->{check_results}}
+		});
+	}
+
+#	say 'statement: ' . Dumper $stt;
 
 	return $stt->all;
 
 }
 
-=head2 subset_filter
 
-Get the filters for the ProPortal-specific species
+=head2 check_results
 
-Filters apply to the 'GoldTaxonVw' table
+Make sure that we got all the results we were hoping for!
+
+@param $args    hashref with keys
+
+	param    - parameter of the result objects to examine
+	query    - arrayref containing the original query
+	results  - arrayref of results (from run_query or elsewhere)
+	subject  - human-readable string representing param
+	           (for the error message)
+
+@return     dies on failure with an error message
 
 =cut
 
-sub subset_filter {
+sub check_results {
 	my $self = shift;
-	my $f_name = shift // croak "No filters supplied!";
+	my $args = shift;
 
-	my $filters = {
+	for ( qw( param query results subject ) ) {
+		if ( ! defined $args->{$_} ) {
+			$self->choke({
+				err => 'missing',
+				subject => 'check_results parameter "' . $_ . '"'
+			});
+		}
+	}
 
-		prochlor => sub {
-		    return {
-                ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-                genome_type => 'isolate',
-                genus => 'Prochlorococcus',
-                domain => 'Bacteria',
-            };
-		},
+	if ( ! scalar @{$args->{results}} ) {
+		$self->choke({
+			err => 'no_results',
+			subject => $args->{subject}
+		});
+	}
+	my $results = $args->{results};
+	my %all;
 
-		synech => sub {
-            return {
-                ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-                genome_type => 'isolate',
-                genus => 'Synechococcus',
-                domain => 'Bacteria',
-            };
-		},
+	@all{ @{$args->{ query } } } = ( 1 ) x scalar @{ $args->{query} };
 
-		prochlor_phage => sub {
-            return {
-            #	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-                genome_type => 'isolate',
-                taxon_display_name => { -like => 'Prochlorococcus%' },
-                domain => 'Viruses',
-            };
-		},
+	for ( @$results ) {
+		delete $all{ $_->{ $args->{param} } };
+	}
 
-		synech_phage => sub {
-            return {
-            #	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-                genome_type => 'isolate',
-                taxon_display_name => { -like => 'Synechococcus%' },
-                domain => 'Viruses',
-            };
-		},
-
-		metagenome => sub {
-            return {
-                genome_type => 'metagenome',
-                ecosystem_type => 'Marine',
-            };
-		},
-	};
-
-    $filters->{isolate} = sub {
-        return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage ) ];
-    };
-
-    $filters->{isolates} = $filters->{isolate};
-    $filters->{metagenomes} = $filters->{metagenome};
-
-	$filters->{datamart} = sub {
-	    return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage metagenome ) ];
-	};
-
-    croak "Filter '$f_name' not found" unless defined $filters->{$f_name};
-
-	return { -where => $filters->{$f_name}->() };
-
+	if ( keys %all ) {
+		$self->choke({
+			err => 'missing_results',
+			subject => $args->{subject},
+			ids => [ keys %all ]
+		});
+	}
+	return $results;
 }
 
+
+=head2 add_filters
+
+Add the filters for the ProPortal-specific subset
+
+@param $args    hashref with keys
+
+	statement   - the DBIx::DataModel statement object
+	filters     - whatever filters are to be applied
+	              (see ProPortal::IO::ProPortalFilters for examples)
+
+@return  $stt   modified statement object
+
+=cut
 
 sub add_filters {
 
 	my $self = shift;
-	my $stt = shift // croak "No statement supplied";
-	my $filters = shift // return $stt;
+	my $args = shift;
+
+	if ( ! $args->{statement} ) {
+		$self->choke({
+			err => 'missing',
+			subject => 'DBIxDataModel statement object'
+		});
+	}
+
+	if ( ! $args->{filters} ) {
+		return $args->{statement};
+	}
 
 	my $f;
 
-	if ( $filters->{subset} ) {
-		$f = $self->subset_filter( $filters->{subset} );
+	## This is implemented by ProPortal::IO::Filters
+	## Not sure this is an ideal way to do this...
+	if ( $args->{filters}{subset} ) {
+		$f = $self->subset_filter( $args->{filters}{subset} );
 	}
 
 	## other filters
-	if ($filters->{taxon_oid}) {
-		$f = { -where => $filters->{taxon_oid} };
+	if ( $args->{filters}{taxon_oid} ) {
+		$f = { -where => $args->{filters}{taxon_oid} };
 	}
 
-	say 'query now: ' . Dumper $f;
+	$args->{statement}->refine( %$f );
 
-	$stt->refine( %$f );
+	return $args->{statement};
 
-	return $stt;
-
-}
-
-=cut
-
-=head2 schema_init
-
-Create the DBIx::Lite schema object
-
-@param $hash connection params
-@param dsn, user, password, options
-
-=cut
-
-sub schema_init {
-	my $self = shift;
-	my $args = shift;
-
-	say "Running schema init";
-
-	DataModel::IMG_Core->dbh( $self->dbh );
-
-	return $self;
 }
 
 =head3 clade
 
 Search for spp with a clade defined
+
+No additional arguments
 
 =cut
 
@@ -229,6 +266,10 @@ sub clade {
 
 Search for latitude/longitude
 
+No additional arguments
+
+Queries the GoldTaxonVw table, which is restricted to public taxa
+
 =cut
 
 sub location {
@@ -236,7 +277,7 @@ sub location {
 
 	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype ) ],
+			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype proportal_subset ) ],
 			-where    => {
 				latitude  => { '!=' => undef },
 				longitude => { '!=' => undef },
@@ -246,72 +287,12 @@ sub location {
 		);
 }
 
-=head3 news
-
-Get the ProPortal news!
-
-=cut
-
-sub news {
-	my $self = shift;
-
-	my $g_id = 26;
-
-	say 'user: ' . Dumper $self;
-
-	die unless $self->can('user') && defined $self->user;
-
-	my $c_id = $self->user->contact_oid;
-#    my $contact_oid = WebUtil::getContactOid();
-	die unless $c_id;
-
-#	my $sql = "select role from contact_img_groups\@imgsg_dev where contact_oid = ? and img_group = ? ";
-
-	my $role = $self->schema('img_core')->table('ContactImgGroups')
-		->select(
-			-columns => [ 'role' ],
-			-where => {
-				contact_oid => $c_id,
-				img_group   => $g_id,
-			},
-			-result_as => 'firstrow',
-		);
-
-	say 'role: ' . Dumper $role;
-
-	my $stt = $self->schema('img_core')->table('ImgGroupNews')
-		->select(
-			-columns => [ qw( news_id title add_date ) ],
-			-where   => {
-				group_id => $g_id,
-			},
-			-order_by => [ 'add_date' ],
-			-result_as => 'statement',
-		);
-
-	if (! $role && ! $self->user->is_superuser) {
-		$stt->refine(
-			-where => {
-				is_public => 'Yes'
-			}
-		);
-	}
-	return $stt;
-
-#    my $cond = "and n.is_public = 'Yes'" if ! $role || $super_user_flag eq 'No';
-#    $sql = "select n.news_id, n.title, n.add_date " .
-#	"from img_group_news\@imgsg_dev n " .
-#	"where n.group_id = ? " . $cond .
-#	" order by 3 desc ";
-
-#	my $news_url = "main.cgi?section=ImgGroup" .
-#	    "&page=showNewsDetail" .
-#            "&group_id=$group_id&news_id=$news_id";
-}
 
 =head3 ecosystem
 
 Query for ecosystem
+
+No additional arguments
 
 =cut
 
@@ -320,117 +301,32 @@ sub ecosystem {
 
 	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain genus ), map { 'nvl(' . $_ . ", 'Unclassified') \"$_\""  } qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ecotype geo_location ) ],
+			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain genus ), map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ecotype geo_location ) ],
 			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem taxon_display_name ) ],
 			-result_as => 'statement',
 		);
 }
 
-sub taxon_details {
+=head3 ecotype
 
-	my $self = shift;
-	my $args = shift;
-	my $data;
-
-	# taxonomic info
-	my $res = $self->schema('img_core')->table('GoldTaxon')
-		->select(
-			-columns => [ qw( taxon.* gold_sequencing_project.* ) ],
-			-where => { taxon_oid => $args }
-		);
-
-	say "results: " . Dumper $res;
-
-	if (scalar @$res != 1) {
-		croak "Found " . scalar(@$res) . " results for taxon query";
-	}
-	$res = $res->[0];
-
-	my @associated = qw(
-		gsp_genome_publications
-		gsp_habitats
-		gsp_energy_sources
-		gsp_phenotypes
-		goldanaproj
-		gsp_seq_centers
-		gsp_seq_methods
-		gsp_relevances
-		gsp_cell_arrangements
-		gsp_metabolisms
-		gsp_study_gold_ids
-		gsp_collaborators
-		gsp_diseases
-	);
-
-	for my $assoc (@associated) {
-		my $r = $res->$assoc;
-		if ($r && scalar @$r) {
-			$res->{$assoc} = $r;
-		}
-	}
-
-	return $res;
-}
-
-=head3 gold_project_details
-
+Query for ecotype
 
 =cut
 
-sub gold_project_details {
+sub ecotype {
 	my $self = shift;
-	my $args = shift;
 
-
-	my $related = [ qw(
-		 GoldSpCellArrangement GoldSpCollaborator GoldSpDisease GoldSpEnergySource GoldSpGenomePublication GoldSpHabitat GoldSpMetabolism GoldSpPhenotype GoldSpRelevance GoldSpSeqCenter GoldSpSeqMethod GoldSpStudyGoldId
-	)];
-
-	my $data;
-
-	my @res = $self->dbic_schema->resultset('GoldSequencingProject')->search({
-		'me.gold_id' => $args->{input}
-	},{
-	#	prefetch => $related,
-		result_class => 'DBIx::Class::ResultClass::HashRefInflator',
-	})->all;
-
-	if (scalar @res != 1) {
-		die "No data found for GOLD ID " . $args->{input};
-	}
-	$data = $res[0];
-
-	my $rs = $self->dbic_schema->resultset('GoldSequencingProject')->result_source;
-	# get the related data
-	my %r_hash;
-	my @r_tables = map {
-		my $rh = $rs->relationship_info($_);
-		( my $c = $rh->{class} ) =~ s/DbSchema::IMG_Core::Result:://;
-		( $_, $c );
-	 } $rs->relationships;
-
-	my %rel_h = ( @r_tables );
-
-	# taxonomic info
-	$data->{taxa} = [ $self->dbic_schema->resultset('Taxon')->search({
-		'me.sequencing_gold_id' => $args->{input}
-	},{
-		result_class => 'DBIx::Class::ResultClass::HashRefInflator',
-	})->all ];
-
-	for my $r (keys %rel_h) {
-		next if $r =~ /taxa/;
-		$data->{$r} = [ $self->dbic_schema->resultset( $rel_h{$r} )->search({
-			'me.gold_id' => $args->{input}
-		},{
-		#	prefetch => $related,
-			result_class => 'DBIx::Class::ResultClass::HashRefInflator',
-		})->all ];
-	}
-
-	return $data;
+	return $self->schema('img_core')->table('GoldTaxonVw')
+		->select(
+			-columns  => [ qw( taxon_display_name taxon_oid clade ecotype ) ],
+			-where => {
+#				'length(ecotype)'  => { '>' => 1 },
+				ecotype => { '!=' => undef },
+				clade => { '!=' => undef },
+			},
+			-result_as => 'statement',
+		);
 }
-
 
 =head3 taxon_oid_display_name
 
@@ -438,23 +334,7 @@ Query from data_type_graph
 
 @param  $args   -
 
-@return $resultset
-
-=cut
-
-sub taxon_oid_display_name {
-	my $self = shift;
-
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ '*' ],
-#			-order_by => [ qw( genome_type ecosystem_subtype taxon_display_name ) ],
-            -order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
-			-result_as => 'statement',
-		);
-}
-
-=cut
+@return $resultset, with fields:
 
 genome_type
 taxon_oid
@@ -496,39 +376,51 @@ ecosystem_category
 ecosystem_type
 ecosystem_subtype
 specific_ecosystem
+proportal_subset
 
 =cut
 
-
-=head3 taxon_marine_metagenome
-
-Marine metagenome taxon query
-
-=cut
-
-sub taxon_marine_metagenome {
-
+sub taxon_oid_display_name {
 	my $self = shift;
 
-	return $self->schema('img_core')->table('Taxon')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid ) ],
-			-where    => {
-				%{$self->public_extant},
-				%{$self->marine_metagenome},
-			},
-			-order_by => [ qw( family taxon_display_name taxon_oid ) ],
+			-columns  => [ '*' ],
+			-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
+			-result_as => 'statement',
 		);
-
-	return "select t.taxon_oid, t.taxon_display_name, t.family "
-	. "from taxon t "
-	. "where t.genome_type = 'metagenome' "
-	. "and t.ir_order = 'Marine' "
-	. "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
-	. "and (t.combined_sample_flag is null or t.combined_sample_flag = 'No') "
-	. "order by t.taxon_display_name";
-
 }
+
+
+
+=head3 taxon_metadata
+
+Given an array of taxon IDs (or other 'where' statement to identify
+taxa), retrieve all associated metadata
+
+@param  args->{where} should be in the form
+
+	taxon_oid => [ arrayref of taxon IDs ]
+
+=cut
+
+sub taxon_metadata {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+	->select(
+		-columns  => [ '*' ],
+		-where    => $args->{where},
+		-result_as => 'statement',
+	);
+}
+
+
+=head3 depth_graph query
+
+Legacy, from DBIx::Class days
+
 
 sub depth_graph {
 	my $self = shift;
@@ -542,32 +434,14 @@ sub depth_graph {
 			geo_location latitude longitude altitude depth ecotype ) ]
 		});
 
-	return 'select t.taxon_oid, t.taxon_display_name, t.genome_type, '
-	. 'p.geo_location, p.latitude, p.longitude, p.altitude, p.depth, t.genus '
-	. 'from taxon t, gold_sequencing_project\@imgsg_dev p '
-	. 'where t.sequencing_gold_id = p.gold_id '
-	. "and p.ecosystem_type = 'Marine' AND p.depth is not null "
-	. "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
-	. 'ORDER BY 4, 5, 2';
+# 	return 'select t.taxon_oid, t.taxon_display_name, t.genome_type, '
+# 	. 'p.geo_location, p.latitude, p.longitude, p.altitude, p.depth, t.genus '
+# 	. 'from taxon t, gold_sequencing_project\@imgsg_dev p '
+# 	. 'where t.sequencing_gold_id = p.gold_id '
+# 	. "and p.ecosystem_type = 'Marine' AND p.depth is not null "
+# 	. "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
+# 	. 'ORDER BY 4, 5, 2';
 
-}
-
-sub coerce_clade {
-	my $self = shift;
-	my $c = shift // return;
-	$c =~ s/^(\d\.\d[A-Z]?).*/$1/g;
-	# remove non-\w and replace with underscores
-	(my $web_safe_c = $c) =~ s/[^\w]/_/g;
-	return ($c, $web_safe_c);
-}
-
-sub get_genus {
-	my $self = shift;
-	my $obj = shift;
-	if ($obj->{taxon_display_name} =~ m/((prochlor|synech)ococcus)/i) {
-		return $1;
-	}
-	return "";
 }
 
 sub depth_clade {
@@ -628,218 +502,280 @@ sub depth_ecotype {
 
 }
 
+=cut
 
-sub tax_count {
-	my $self = shift;
-	my $args = shift;
+=head3 taxon_details
 
-	my $sql = 'select count(*) from taxon t '
-		. "where t.obsolete_flag = 'No' and t.is_public = 'Yes' ";
-
-	return $sql if ! $args;
-
-	return $self->add_proportal_filters($sql);
-}
-
-
-=head3 stats
-
-database stats
+Taxon details. Not currently working / used.
 
 =cut
 
-sub stats {
-	my $self = shift;
-	my $f = $self->proportal_filters;
+sub taxon_details {
 
-	return join(" UNION ", map {
-		"select '"
-		. $_
-		. "', t.taxon_oid, t.domain, t.taxon_display_name "
-		. 'from taxon t '
-		. 'where (' . $f->{$_} . ') '
-		. "and t.obsolete_flag = 'No' and t.is_public = 'Yes'";
-	 } keys %$f)
-	 . " ORDER BY 4, 5, 2";
+	my $self = shift;
+	my $args = shift;
+	my $data;
+
+	# taxonomic info
+	my $res = $self->schema('img_core')->table('GoldTaxon')
+		->select(
+			-columns => [ qw( taxon.* gold_sequencing_project.* ) ],
+			-where => { taxon_oid => $args }
+		);
+
+	say "results: " . Dumper $res;
+
+	if (scalar @$res != 1) {
+		croak "Found " . scalar(@$res) . " results for taxon query";
+	}
+	$res = $res->[0];
+
+	my @associated = qw(
+		gsp_genome_publications
+		gsp_habitats
+		gsp_energy_sources
+		gsp_phenotypes
+		goldanaproj
+		gsp_seq_centers
+		gsp_seq_methods
+		gsp_relevances
+		gsp_cell_arrangements
+		gsp_metabolisms
+		gsp_study_gold_ids
+		gsp_collaborators
+		gsp_diseases
+	);
+
+	for my $assoc (@associated) {
+		my $r = $res->$assoc;
+		if ($r && scalar @$r) {
+			$res->{$assoc} = $r;
+		}
+	}
+
+	return $res;
 }
 
+=head3 gene_oid_taxon_oid
 
+Given an array of gene IDs, get the taxon_oid
+
+@param  args->{where} should be in the form
+
+	gene_oid => [ arrayref of gene IDs ] (or a single gene_oid)
+
+@return arrayref of results in the format
+
+	{ gene_oid => #####, taxon_oid => ##### }
 
 =cut
 
-sub role {
+sub gene_oid_taxon_oid {
 
-#	select($source, $fields, $where, $order)
-
-		{
-		contact_oid =>
-
-	schema->resultset('ContactImgGroups@imgsg_dev')->search(
-		{ contact_oid => { '=' => ... } }
-		{ img_group   => { '=' => ... } }
-
-
-	return qq{select role from contact_img_groups\@imgsg_dev where contact_oid = ? and img_group = ? };
-	my $schema;
-	# role
-
-	my $role = $schema->resultset('ContactImgGroups@imgsg_dev')->search(
-
-	select( 'contact_img_groups@imgsg_dev', 'role',
-	[
-		contact_oid => $contact_oid ,
-		img_group   => $g_id,
-	},
-
-	);
-
-	my @search_cond = (
-		{ group_id => $g_id },
-		{ rows => 3, order_by => { -desc => 'add_date' } }
-	);
-
-	if (! $role || $super_user_flag ne 'Yes' ) {
-		unshift @search_cond, { is_public => 'Yes' };
-	}
-
-
-	my @news = $schema->resultset( 'ImgGroupNews@imgsg_dev' )->search(@search_cond);
-
-
-
-
-
-
-
-
-
-}
-
-=head3 news
-
-@param $args - exists if the user is a super-user or a member of the group
-
-
-sub news {
 	my $self = shift;
 	my $args = shift;
 
-	my %where = (
-		group_id => $g_id,
-		is_public => 'Yes'
+	return $self->schema('img_core')->table('Gene')
+		->select(
+			-columns => [ qw( gene_oid taxon|taxon_oid ) ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
+=head3 gene_details
+
+Given an array of gene IDs, get the gene data
+
+@param  args->{where} should be in the form
+
+	gene_oid => [ arrayref of gene IDs ] (or a single gene_oid)
+
+@return arrayref of results in the format
+
+	{ gene_oid => #####, taxon_oid => ##### }
+
+=cut
+
+sub gene_details {
+
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_core')->table('Gene')
+		->select(
+			-columns => [ qw( gene_oid gene_symbol gene_display_name product_name locus_tag locus_type scaffold description taxon|taxon_oid obsolete_flag ) ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
+=head3 taxon_name_public
+
+@param  args->{where} should be in the form
+
+	taxon_oid   => ######
+
+@return arrayref of results in the format
+
+	{ taxon_oid => #####, taxon_display_name => #####, is_public => 'Yes|No' }
+
+=cut
+
+sub taxon_name_public {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_core')->table('Taxon')
+	->select(
+		-columns => [ qw( taxon_oid taxon_display_name is_public ) ],
+		-where   => $args->{where},
+		-result_as => 'statement'
 	);
-	if ( $args ) {
-		delete $where{is_public};
-	}
-
-	select(
-		'img_group_news@imgsg_dev'
-		[ qw( news_id title add_date ) ],
-		{
-			group_id  => $g_id
-			is_public => 'Yes'
-		},
-		{ -desc => 'add_date' }
-	);
+}
 
 
-	return 'select n.news_id, n.title as title, n.add_date '
-	. 'from img_group_news\@imgsg_dev n '
-	. 'where n.group_id = ? '
-	. $args ? "and n.is_public = 'Yes'" : ''
-	. 'order by 3 desc';
+=head3 taxon_permissions_by_contact_oid
+
+Given a user's contact ID and a taxon ID, see if the user is permitted
+to access the taxon.
+
+@param  args->{where} should be in the form
+
+	taxon_permissions   => ######
+	contact_oid => ######
+
+@return arrayref of results in the format
+
+	{ contact_oid => #####, taxon_permissions => ##### }
+
+=cut
+
+sub taxon_permissions_by_contact_oid {
+	my $self = shift;
+	my $args = shift;
+
+	$args->{where}{taxon_permissions} = delete $args->{where}{taxon_oid} if $args->{where}{taxon_oid};
+
+	return $self->schema('img_core')->table('ContactTaxonPermissions')
+		->select(
+			-columns => [ qw( contact_oid taxon_permissions ) ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
+=head3 user_data
+
+Get the data for a user or set of users.
+
+@param  args->{where} should be in the form
+
+	contact_oid => # IMG user ID  OR
+	caliban_id  => # user ID on the JGI Caliban system  OR
+	email       => # email addr
+
+	# or other distinguishing feature(s)
+
+=cut
+
+sub user_data {
+	my $self = shift;
+	my $args = shift;
+
+	my @cols = qw( contact_oid username name super_user email img_editor img_group img_editing_level );
+
+	return $self->schema('img_core')->table('Contact')
+		->select(
+			-columns  => [ @cols ],
+			-where    => $args->{where},
+			-result_as => 'statement'
+		);
 }
 
 =head3
 
-Append a filter string corresponding to the three taxa sets
+Check for banned users
+
+@param   args->{where} featuring either
+
+	username => ... OR
+	email    => ...
 
 =cut
 
-sub add_proportal_filters {
+sub banned_users {
 	my $self = shift;
-	my $sql  = shift;
-
-	return $sql . ' AND ( '
-		. join( " OR ", values %{$self->proportal_filters} )
-		. ' )';
-}
-
-
-sub data_type_graph {
-	my $self    = shift;
-
-	## TEMPLATE: data_type_graph
-
-	my $e = $self->get_datamart_env();
-
-	my $data = $self->show_data_set_selection_section( 'data_type_graph' );
-
-	my $rset = $self->dbic_schema->resultset('Taxon')
-		->public_extant
-		->search_related('goldseqproj')
-			->marine_eco
-			->not_null('clade')
-			->search(undef, {
-		columns  => [ map { "me.$_" } qw( taxon_oid taxon_display_name genome_type genus ),
-			map { "goldseqproj.$_"} qw( geo_location latitude longitude altitude depth ecotype ) ]
-		});
-
-# sub taxon_oid_display_name {
 	my $args = shift;
 
-	if ($args =~ /phage/) {
-
-		return $self->dbic_schema->resultset('Taxon')
-			->public_extant
-			->phage
-			->search(undef,{
-			columns  => [ qw( taxon_display_name taxon_oid ) ],
-			order_by => [ qw( taxon_display_name taxon_oid ) ],
-			result_class => 'DBIx::Class::ResultClass::HashRefInflator',
-		});
-
-	}
-	else {
-
-		return $self->dbic_schema->resultset('Taxon')
-			->public_extant
-			->genus($args)
-			->search({
-				sequencing_gold_id => {
-					in => $self->dbic_schema->resultset('GoldSequencingProject')->marine_eco_ids
-				},
-			},{
-			columns  => [ qw( taxon_display_name taxon_oid ) ],
-			order_by => [ qw( taxon_display_name taxon_oid ) ],
-			result_class => 'DBIx::Class::ResultClass::HashRefInflator',
-		});
-	}
-
-
-
-	# run taxon_oid_display_name for each of the members
-	for my $x ( @{$e->{tax_groups}} ) {
-		$data->{genomes}{$x} = $self->dbi->run_query(
-			query => 'taxon_oid_display_name',
-			input => $x,
-			output => 'fetchall_aoh'
+	return $self->schema('img_gold')->table('CancelledUser')
+		->select(
+			-where => $args->{where},
+			-columns => [ qw( username email ) ],
+			-result_as => 'statement'
 		);
-	}
-
-	## metagenomes
-	my $mgq = $self->dbi->run_query(
-		query  => 'taxon_marine_metagenome',
-		output => 'fetchall_aoh'
-	);
-
-	for my $m ( @$mgq ) {
-		push @{ $data->{metagen}{ $m->[2] || 'Unclassified' } }, $m;
-	}
-
-	return $data;
-
 }
+
+
+
+=head3 news
+
+Get the ProPortal news!
+
+=cut
+
+sub news {
+	my $self = shift;
+
+	my $g_id = 26;
+
+	# TODO: fail more nicely!
+
+	die unless $self->can('user') && defined $self->user;
+	say 'user: ' . Dumper $self->user;
+
+	my $c_id = $self->user->contact_oid;
+	die unless $c_id;
+
+#	my $sql = "select role from contact_img_groups\@imgsg_dev where contact_oid = ? and img_group = ? ";
+
+	my $role = $self->schema('img_core')->table('ContactImgGroups')
+		->select(
+			-columns => [ 'role' ],
+			-where => {
+				contact_oid => $c_id,
+				img_group   => $g_id,
+			},
+			-result_as => 'firstrow',
+		);
+
+	say 'role: ' . Dumper $role;
+
+	my $where = { group_id => $g_id };
+
+	if (! $role && ! $self->user->is_superuser) {
+		$where->{is_public} = 'Yes';
+	}
+
+	return $self->schema('img_core')->table('ImgGroupNews')
+		->select(
+			-columns   => [ qw( news_id title add_date ) ],
+			-where     => $where,
+			-order_by  => [ 'add_date' ],
+			-result_as => 'statement',
+		);
+
+#    my $cond = "and n.is_public = 'Yes'" if ! $role || $super_user_flag eq 'No';
+#    $sql = "select n.news_id, n.title, n.add_date " .
+#	"from img_group_news\@imgsg_dev n " .
+#	"where n.group_id = ? " . $cond .
+#	" order by 3 desc ";
+
+#	my $news_url = "main.cgi?section=ImgGroup" .
+#	    "&page=showNewsDetail" .
+#            "&group_id=$group_id&news_id=$news_id";
+}
+
 
 
 1;

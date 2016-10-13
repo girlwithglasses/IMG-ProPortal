@@ -6,6 +6,7 @@ use Class::Load ':all';
 use String::CamelCase qw(camelize);
 use IMG::Util::Factory;
 
+# adding a controller to
 
 sub create_pp_component {
 

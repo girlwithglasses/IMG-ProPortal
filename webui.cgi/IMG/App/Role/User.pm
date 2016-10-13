@@ -1,32 +1,27 @@
 ###########################################################################
 #
-# $Id: User.pm 34501 2015-10-13 23:40:50Z aireland $
+# $Id: User.pm 35833 2016-07-06 02:42:03Z aireland $
 #
 ############################################################################
 package IMG::App::Role::User;
 
 use IMG::Util::Base 'MooRole';
+use Acme::Damn;
 
-use DBI;
-use JSON;
-use IMG::Model::Contact;
-use IMG::Util::File;
+with 'IMG::App::Role::ErrorMessages';
 
-use DataModel::IMG_Core;
-use DataModel::IMG_Gold;
-
-requires 'config', 'schema';
-
-has 'user' => (
-	is => 'ro',
-	writer => 'set_user',
-);
+requires 'user', 'config', 'schema', 'choke';
 
 =head3 get_db_contact_data
 
 get user data from IMG Core
 
-@param  $caliban_id     user ID on the JGI Caliban system
+@param  $args   hashref with key
+
+caliban_id    user ID on the JGI Caliban system OR other unique parameter
+email         email address on Caliban
+
+username <-- is this unique?
 
 @return   die if no database connection
           contact data from IMG_Core if available
@@ -36,63 +31,104 @@ get user data from IMG Core
 
 sub get_db_contact_data {
 	my $self = shift;
-	my $caliban_id = shift // die "No Caliban ID supplied";
+	my $args = shift;
+	if ( ! keys %$args ) {
+		$self->choke({ err => 'missing', subject => "identifier for contact" });
+	}
 
-	my @cols = qw( contact_oid username name super_user email img_editor img_group img_editing_level );
+	my $pass;
+	my @valid = qw( caliban_id contact_oid email );
 
-	my $sth = $self->schema('img_core')->table('Contact')
-		->select(
-			-columns  => [ @cols ],
-			-where    => { caliban_id  => $caliban_id },
-			-result_as => 'sth'
-		);
+	for ( @valid ) {
+		$pass++ if defined $args->{$_};
+	}
 
-	my $user = $sth->fetchall_arrayref();
+	if (! $pass ) {
+		$self->choke({
+			err => 'invalid_enum',
+			type => 'identifier for contact',
+			subject => join( ", ", keys %$args ),
+			enum => [ @valid ]
+		});
+	}
 
-	die 'Found ' . ( scalar @$user ) . ' users with caliban ID ' . $caliban_id if scalar @$user != 1;
+	my $users = $self->run_query({
+		query => 'user_data',
+		where => $args
+	});
+
+	if ( ! scalar @$users ) {
+		$self->choke({
+			err => 'no_results',
+			subject => 'users',
+		});
+	}
+
+	if ( 1 != scalar @$users ) {
+
+		## This is a seriously weird error!
+		## LOG THIS!
+
+
+
+		$self->choke({
+			subject => 'users with matching user IDs',
+			err => 'unexpected',
+			msg => 'expected one result, but got ' . scalar( @$users )
+		});
+
+	}
 
 	# return user data as a hash:
-	my %user_h;
-	@user_h{ @cols } = @{$user->[0]};
-	return \%user_h;
+	my $hash = damn $users->[0];
+	delete $hash->{__schema};
+	return $hash;
 }
 
 =head3 check_banned_users
 
 Check that names and email addresses don't appear in the cancelled users table
 
-@param  array of name and email addresses to check
+@param  $args  hashref of args with keys
 
-@return   die with error if no db connection
-          die with 403 if user account is locked
-          do nothing if user is OK
+	test => [ 'email@home.com', 'Carmen Sandiego', 'carmen@broderbund.net' ]
+				# array of name and email addresses to check
+
+@return 	die with error if no db connection
+			die with 403 if user account is locked
+			do nothing if user is OK
 =cut
 
 sub check_banned_users {
 	my $self = shift;
-	my @names = map { lc( $_ ) } grep { defined $_ && /\w+/ } @_;
-	die "No user names or emails supplied" unless @names;
+	my $args = shift;
+	my @names;
+
+	if ( $args->{test} ) {
+		@names = map { $_ = lc( $_ ) } grep { defined $_ && /\w+/ } @{$args->{test}};
+	}
+
+	$self->choke({
+		err => 'missing',
+		subject => 'user names or emails'
+	}) if ! $args->{test} || ! scalar @names;
+
 	my %uniq;
 	undef @uniq{ @names };
-	die "No user names or emails supplied" unless scalar keys %uniq;
 
-	my $losers = $self->schema('img_gold')->table('CancelledUser')
-		->select(
-			-where =>
-			[
-				'lower(username)' => [ keys %uniq ],
-				'lower(email)'    => [ keys %uniq ],
-			],
-			-columns => [ qw( username email ) ],
-			-result_as => 'flat_arrayref'
-		);
+	my $losers = $self->run_query({
+		query => 'banned_users',
+		where =>
+		[	'lower(username)' => [ keys %uniq ],
+			'lower(email)'    => [ keys %uniq ],
+		],
+	});
 
-
-	if ( @$losers ) {
+	if ( scalar @$losers ) {
 		die {
 			status  => 403,
 			title   => 'Access denied',
-			message => 'Your account has been locked. If you believe this is an error, please email us at <a href="mailto:imgsupp@lists.jgi-psf.org">imgsupp@lists.jgi-psf.org</a>.',
+			message => $self->make_message({ err => 'acc_locked' }),
 		};
 	}
 

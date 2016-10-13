@@ -1,0 +1,11 @@
+<tool id="env_debug" name="Env Debug" version="0.1.0">
+<description>Print out Perl environment</description>
+<command>perl /global/homes/a/aireland/webUI/proportal/script/env_diag.pl --outfile "$outfile"</command>
+  <outputs>
+    <data name="outfile" format="txt" label="Environment" />
+  </outputs>
+  <help>
+Prints out the Perl version and @INC.
+  </help>
+
+</tool>

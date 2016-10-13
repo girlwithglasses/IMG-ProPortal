@@ -26,7 +26,7 @@ function fn(res,d,gm,MarkerClusterer,links) {
 			opts = {
 			//	mapTypeControl: true,
 				streetViewControl: false,
-				zoom: zoom || 1,
+				zoom: zoom || 5,
 			//  center: cen,
 				mapTypeId: ppMap.type
 			};
@@ -46,7 +46,7 @@ function fn(res,d,gm,MarkerClusterer,links) {
 
 	*/
 		makeClstrMap: function(){
-			ppMap.makeMap();
+			ppMap.makeMap(5,0,0);
 			// add the clusterer
 			ppMap.cm = new MarkerClusterer(ppMap.map, ppMap.markers, {
 			//	zoomOnClick: false,

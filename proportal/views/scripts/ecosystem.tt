@@ -1,133 +1,114 @@
-<style type="text/css"><!--
-      .partition rect {
-        cursor: pointer;
-        fill: steelblue;
-        stroke: #fff; }
-
-      .partition text {
-        pointer-events: none; }
-
-      .partition.leaf rect {
-        stroke: #eee;
-        fill: #aaa; }
-rect {
-  stroke: #eee;
-  fill: #aaa;
-  fill-opacity: .8;
-}
-.background {
-	fill: none;
-}
-
-.axes-layer path, .axes-layer line {
-  fill: none;
-  stroke: #fff;
-  shape-rendering: crispEdges;
-}
-
-rect.parent {
-  cursor: pointer;
-  fill: steelblue;
-}
-
---></style>
 [%	WRAPPER scripts/pageload_wrapper.tt;
 	scr_arr =  [
 		'/js/d3.min.js',
-		'/js/d3-tip.js',
 		'/js/d3.chart.min.js',
-		'/js/element-resize-detector.min.js',
-		'/js/d3.chart.base-ext.js',
+		'/js/d3.chart.tooltip.js',
 		'/js/d3.chart.layout.hierarchy-ext.js',
 	];
 %]
-// 		d3.chart("tippedPartition",{
-// 			initialise: function(){
-// 				var chart = this
-// 				, svg = chart.base.append('svg')
-// 				, bases = {
-// 					partG: svg.append('g').classed("partition",true),
-// 					tipG: d3.select('body')
-// 				};
-//
-// 				chart.charts = {
-// 					partition : bases.partG
-// 						.chart("partition.rectangle")
-// 						.value('_COUNT_')
-// 						.collapsible()
-// 						.sortable("_ASC_")
-// 					,
-// 					tooltips: bases.tipG
-// 						.chart("TooltipMixinChart")
-// 						.options({
-// 							layer: bases.partitionG,
-// 							type : "rect"
-// 						})
-// 				};
-//
-// 				chart.attach('partition', chart.charts.partition);
-// 				chart.attach('tooltips', chart.charts.tooltips);
-//
-// 				return chart;
-// 			}
-// 		});
-//
-// 		// create an instance of the chart on a d3 selection
-// 		var chart = d3.select("#partition")
-// 			.append("svg")
-// 			.attr("height", 60)
-// 			.attr("width", 600)
-// 			.chart("tippedPartition");
-//
-// 		chart.attach('tooltips').text(function(d) {
-// 			return "<b style='background-color:white; padding:5px; border: 1px solid #eee;'>" + d + "</b>";
-// 		});
-//
-// 		chart.draw( tree_struct );
 
-		var json=getJson()
-		, tip = d3.tip()
-			.attr('class', 'd3-tip')
-	//		.rootElement( document.getElementById('partition') )
-			.direction(function(d) {
-				if ( d.children ) {
-					return 'e';
-				}
-				return 'w';
-			})
-			.offset([0, 0])
-			.html(function(d) {
-				if ( d.data && d.data.taxon_display_name) {
-					return d.data.taxon_display_name;
-				}
-				if( d.depth > 0 ) {
-					return json.results.class_types[ d.depth-1 ] + ': ' + d.name + ', ' + ( d.value || d.values.length ) + ' samples';
-				}
-			})
+d3.chart("TippedVisualisation", {
 
+	sortable: function( args ){
+		return this.attach('vis').sortable( args );
+	},
+
+	collapsible: function( args ){
+		return this.attach('vis').collapsible( args );
+	},
+
+	colors: function( args ){
+		return this.attach('vis').colors( args );
+	},
+
+	name: function( args ){
+		return this.attach('vis').name( args );
+	},
+
+	value: function( args ){
+		return this.attach('vis').value( args );
+	},
+
+	duration: function( args ){
+		return this.attach('vis').duration( args );
+	},
+
+	zoomable: function( args ){
+		return this.attach('vis').zoomable( args );
+	},
+
+	tooltip: function( args ){
+
+		var func = function(d) {
+			return d[ args ] || 'no data for ' + args;
+		};
+		this.attach('tips').text( func );
+	},
+
+	resize: function() {
+		this.trigger('change:size');
+		if ( this.data ) {
+			this.draw( this.data );
+		}
+	},
+
+	initialize: function( options ) {
+
+	  // attach the charts under a specific name to the parent chart
+		this.attach("vis",
+			this.base
+				.chart( options.chart_type , options.chart )
+			);
+
+		var tips_options = {
+			layer : this.attach('vis'),
+			type : options.tooltip.selector,
+			text : options.tooltip.text || function(d) {
+				return d.name;
+			}
+		};
+
+		this.attach('tips',
+			d3.select('body')
+				.chart('TooltipMixinChart', tips_options )
+			);
+	}
+});
+
+
+		var json = getJson()
+		, class_type_h = json.results.class_type_h
 		, container = d3.select("#partition")
+			.style('height', '500px')
 			.append("svg")
-			.call(tip)
 
-		, vis = container.chart("partition.rectangle")
-//			.cfg({ height: 800 })
-			.value('_COUNT_')
-			// .zoomable([1, 5])
-			.collapsible()
-//			.resizable()
-			.with_tips( tip )
-			// .duration(200)
-			.sortable("_ASC_");
+		, text_fn = function(d,i,tip) {
+			if ( d.data && d.data.taxon_display_name) {
+				return d.data.taxon_display_name;
+			}
+			if( d.depth ) {
+				return class_type_h[ d.depth ] + ': ' + d.name + ', ' + ( d.value || d.values.length ) + ' samples';
+			}
+			return 'all ecosystem classifications';
+		}
 
-// 		d3.chart('BaseChart').extend('ResizablePartition',{
-// 		});
+		, vis = container.chart("TippedVisualisation", {
+				chart_type: 'partition.rectangle'
+				, tooltip: {
+					selector: '.partition'
+					, text: text_fn
+				}
+			});
+
+		vis.value( '_COUNT_' )
+		.sortable( '_ASC_' )
+		.collapsible();
 
 		d3.selectAll('.js_vis_loading')
 			.remove();
-		d3.selectAll('.js_sample_details')
-			.classed('js_hide',true);
 
 		vis.draw( json.results.tree );
+
 //		make_chart_two(json.tree,json.class_types);
 
 [%	END %]

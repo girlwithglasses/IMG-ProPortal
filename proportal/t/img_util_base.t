@@ -6,7 +6,7 @@ use IMG::Util::Base 'NetTest';
 use File::Basename;
 my $base = dirname($Bin);
 
-use ProPortal;
+use ProPortalPackage;
 use Test::More;
 use Plack::Test;
 use HTTP::Request::Common;
@@ -15,7 +15,7 @@ use Plack::Util;
 
 my $psgi = Plack::Util::load_psgi( "$base/bin/app.psgi" );
 
-my $pp = ProPortal->to_app;
+my $pp = ProPortalPackage->to_app;
 is( ref $pp, 'CODE', 'Got app' );
 is( ref $psgi, 'CODE', 'Got psgi app' );
 
@@ -40,7 +40,7 @@ subtest 'A empty request' => sub {
 subtest 'Login' => sub {
 	my $res = $test->request( GET '/login' );
     ok( $res->is_success, 'Successful request' );
-    ok( $res->content =~ /
+    ok( $res->content =~ //);
     $jar->extract_cookies($res);
 	say "jar looks like this: " . $jar->as_string;
 	ok( $jar->as_string =~ /jgi_return/ );

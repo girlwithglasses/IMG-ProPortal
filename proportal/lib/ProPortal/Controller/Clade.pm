@@ -1,19 +1,32 @@
 package ProPortal::Controller::Clade;
 
-use IMG::Util::Base 'Class';
-
-extends 'ProPortal::Controller::Filtered';
+use IMG::Util::Base 'MooRole';
 
 use Template::Plugin::JSON::Escape;
 
-has '+tmpl_includes' => (
+has 'controller_args' => (
+	is => 'lazy',
 	default => sub {
+#		say 'running default controller args';
 		return {
-			tt_scripts => qw( clade ),
-			tt_styles  => qw( clade ),
+			class => 'ProPortal::Controller::Filtered',
+			tmpl => 'pages/clade.tt',
+			tmpl_includes => {
+				tt_scripts => qw( clade ),
+				tt_styles  => qw( clade ),
+			},
+			filters => {
+				subset => 'isolate'
+			},
+			valid_filters => {
+				subset => {
+					enum => [ qw( prochlor synech isolate ) ],
+				}
+			},
 		};
-	},
+	}
 );
+
 
 =head3 render
 
@@ -25,35 +38,16 @@ sub render {
 
 	my $self = shift;
 
-	my $data = $self->coerce_for_clade_graph(
-		$self->run_query({
-			query => 'clade',
-			filters => $self->filters,
-		})
-	);
+#	say 'self: ' . $self;
 
-	return $self->add_defaults_and_render( $data );
-
-}
-
-=head3 coerce_for_clade_graph
-
-collect genomes by the web-friendly clade name
-
-=cut
-
-sub coerce_for_clade_graph {
-	my $self = shift;
-	my $res = shift;
+	my $res = $self->get_data();
 	my $data;
-	# map by clade
-
-#	say "results: " . Dumper $res;
 
 	for my $r (@$res) {
 		# only required for badly-populated dbs
 		next unless $r->{clade};
 
+		# collect genomes by the web-friendly clade name
 		if ( ! $data->{ $r->{generic_clade} }) {
 			(my $wsc = $r->{generic_clade}) =~ s/([^\w]+)/_/g;
 			$data->{ $r->{generic_clade} } = {
@@ -70,11 +64,29 @@ sub coerce_for_clade_graph {
 		}
 	}
 
-	return {
-		data => $data,
-		js => { data => $data }
-	};
+	return $self->add_defaults_and_render({
+		js => { data => $data, original_data => $res }
+	});
+
+# 	return {
+# 		results => {
+# 			js => { data => $data, original_data => $res }
+# 		}
+# 	};
+
+}
+
+sub get_data {
+	my $self = shift;
+
+	my $res = $self->run_query({
+		query => 'clade',
+		filters => $self->filters,
+	});
+
+	return [ grep { $_->{clade} } @$res ];
 
 }
 
 1;
+

@@ -1,0 +1,320 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'Heatmap Demo';
+%]
+	<style>
+		.matrix__container .null {
+			fill: deepskyblue;
+		}
+		.matrix__container .qundefined-9 {
+			fill: none;
+		}
+		.matrix text {
+			font-size: .75rem;
+		}
+		.text_hidden text {
+			opacity: 0;
+		}
+		.q5-9 ~ text, .q6-9 ~ text, .q7-9 ~ text, .q8-9 ~ text {
+			fill: #fff;
+		}
+		.data-input__textarea {
+			width: 100%;
+		}
+		.matrix text {
+			font-size: .675rem;
+		}
+		.data-input__fieldset, .col-chooser__fieldset, .controls__fieldset {
+			border: .25rem solid transparent;
+			border-width: 0 .25rem;
+			padding: .75rem;
+		}
+		.data-input__errmsg, .col-chooser__errmsg {
+			display: none;
+		}
+		.error .data-input__errmsg, .error .col-chooser__errmsg {
+			display: block;
+		}
+		.data-input__fieldset.error, .col-chooser__fieldset.error {
+			border-left-color: red;
+		}
+		.col-chooser__item {
+			float: left;
+			padding: .75rem;
+			margin-right: 1rem;
+		}
+		.col-chooser__cbox {
+			display: none;
+		}
+		.col-chooser__item :checked ~ label {
+			color: red;
+		}
+		.controls__label + select {
+			display: block;
+		}
+
+	</style>
+	<h1>
+		Heatmap
+	</h1>
+	<div id="colorPicker">
+		<h3>
+			Colour scheme
+		</h3>
+	<label for="colors_select" class="controls__label"> Select the colour scheme to use for the chart. <a rel="external" href="http://bl.ocks.org/mbostock/5577023">Colour scheme reference</a> </label>
+	</div>
+	<fieldset>
+		<input type="checkbox" name='show_labels' value='on' id="labels" checked />
+		<label for="labels">Show text labels</label>
+	</fieldset>
+	<fieldset class="parseable">
+		<fieldset>
+			<legend>Dimensions</legend> <button data-param='cell_dimensions' data-value='{ "w":"_MAX_","h":"_MAX_"}'>Fill area</button> <button data-param='cell_dimensions' data-value='{ "w": 30, "h": 30 }'>30 x 30</button> <button data-param='cell_dimensions' data-value='{ "w": 50, "h": 15 }'>50 x 15</button>
+		</fieldset>
+		<fieldset>
+			<legend>Sorting</legend> <button data-param='sortable' data-value='{"taxon_oid":"_ASC_"}' id="sort_asc">Sort by taxon_oid ascending</button> <button data-param='sortable' data-value='{"taxon_oid":"_DESC_"}' id="sort_desc">Sort by taxon_oid descending</button> <button data-param='sortable' data-value='{"latitude":"_ASC_"}'>sort by latitude, asc</button> <button data-param='sortable' data-value='{"latitude":"_DESC_"}'>sort by latitude, desc</button>
+		</fieldset>
+		<fieldset>
+			<legend>Columns</legend> <button data-param='columns' data-value='["latitude","taxon_oid"]' id="change_cols">Change cols to 'latitude', 'taxon_oid'</button> <button data-param='columns' data-value='["ncbi_taxon_id","latitude","longitude"]' id="change_cols_2">Change cols to 'latitude','longitude', 'ncbi_taxon_id'</button> <button data-param='columns' data-value='["taxon_display_name","latitude","longitude","taxon_oid","ncbi_taxon_id"]' id="restore_cols">Restore original cols</button>
+		</fieldset>
+	</fieldset>
+	<div>
+		<h3>
+			Data content
+		</h3>
+		<button id="change_data">Remove null lat, long</button> <button id="change_data_2">Remove taxon_oids not starting with 2</button> <button id="restore_data">Restore original data</button>
+	</div>
+	<div id="vis" style="height: 800px">
+	</div>
+	<div id="table">
+	</div>
+<script src="/js/d3.min.js"></script>
+<script src="/js/d3-tip.js"></script>
+<script src="/js/d3.chart.js"></script>
+<script src="/js/d3.chart.tooltip.js"></script>
+<script src="/js/colorbrewer.js"></script>
+<script src="/js/d3.form.element.colorbrewer.js"></script>
+<script src="/js/d3.chart.heatmap.js"></script>
+<script src="/js/koto.js"></script>
+<script src="/js/MatrixHeatMap.js"></script>
+<script>
+/* global d3, document, colorbrewer */
+/*jshint laxcomma: true */
+(function(){
+"use strict";
+var fn=function(){
+
+d3.chart("TippedMatrix", {
+
+	sortable: function( args, extra ){
+		return this.attach('matrix').sortable( args, extra );
+	},
+
+	cell_dimensions: function( args ){
+		return this.attach('matrix').cell_dimensions( args );
+	},
+
+	colors: function( args ){
+		return this.attach('matrix').colors( args );
+	},
+
+	columns: function( args ){
+		return this.attach('matrix').columns( args );
+	},
+
+	tooltip: function( args ){
+
+		var func = function(d) {
+			return d[ args ] || 'no data for ' + args;
+		};
+		this.attach('tips').text( func );
+		return this;
+	},
+
+	resize: function() {
+		this.trigger('change:size');
+		if ( this.data ) {
+			this.draw( this.data );
+		}
+		return this;
+	},
+
+	initialize: function( options ) {
+
+	  // attach the charts under a specific name to the parent chart
+		this.attach("matrix",
+			this.base
+				.chart("MatrixHeatMap", options )
+			);
+
+		var tips_options = {
+			layer : this.attach('matrix'), // this.matrix
+			type : '.matrix > g',
+			text : function(d) {
+				return d.taxon_oid + ( d.taxon_display_name ? ', ' + d.taxon_display_name : '' );
+			}
+		};
+
+		this.attach('tips',
+			d3.select('body')
+				.chart('TooltipMixinChart', tips_options )
+			);
+		if ( options.tooltip ) {
+			this.tooltip( options.tooltip );
+		}
+		return this;
+	}
+});
+
+	var cols = [ 'taxon_display_name', 'latitude', 'longitude', 'taxon_oid', 'ncbi_taxon_id' ]
+
+	, rects = d3.select("#vis")
+		.append("svg")
+		.chart("TippedMatrix", {
+			columns: cols
+		})
+
+
+	, col_arr = Object.keys( colorbrewer ).filter(function(c){
+		return colorbrewer[c].hasOwnProperty('9');
+	}).map(function(c){
+		return '<option value="' + c + '">' + c + '</option>';
+	})
+	, buttons = document.querySelectorAll('.sortable button')
+	, i = 0
+	, bl = buttons.length
+	, e
+	, arr = getJson()
+	;
+
+	var cbc = new ColorBrewerControl(colorbrewer);
+	cbc.add_colorbrewer_control({ el:'#colorPicker label', id: "colors_select" })
+	.on('change', function(){
+		rects.colors( this.value );
+	});
+
+	rects.draw( arr );
+
+	d3.select('.parseable')
+		.on('click', function(d, i){
+			var e = d3.event.target
+			, param = e.getAttribute('data-param')
+			, value = e.getAttribute('data-value') || null
+			, value_args
+			;
+			if( value && -1 !== value.indexOf('"') ){
+				value_args = JSON.parse( value );
+				if( 'sortable' === param ){
+					var k = Object.keys( value_args )[0];
+					rects[param]( value_args[k], k );
+				}
+				else {
+					rects[param]( value_args );
+				}
+			}
+			else {
+				rects[param]( value );
+			}
+		});
+
+	d3.select('#labels')
+		.on('click', function(){
+			var e = d3.event.target;
+			d3.select('svg')
+				.classed('text_hidden', function(){
+					if ( e.checked ) {
+						return false;
+					}
+					return true;
+				});
+		});
+
+	d3.select('#change_data')
+		.on('click', function(){
+			arr = arr.filter(function(d){
+				return null !== d.longitude;
+			});
+			rects.draw( arr );
+		});
+	d3.select('#change_data_2')
+		.on('click', function(){
+			arr = arr.filter(function(d){
+				return '2' === d.taxon_oid.charAt(0);
+			});
+			rects.draw( arr );
+		});
+	d3.select('#restore_data')
+		.on('click',function(){
+			rects.draw( getJson() );
+		});
+
+	function render_chart( args ){
+
+		var fmt = args.format || 'csv'
+		, data
+		, cols
+		, errs = []
+		;
+		if ( 'csv' === fmt || 'tsv' === fmt ) {
+			// try reading the string.
+			data = d3[fmt].parse( args.data );
+			cols = d3[fmt].parseRows( args.cols );
+			if ( data.length === 0 ) {
+				errs.push( { param: 'data' } );
+			}
+			if ( cols.length === 0 ) {
+				errs.push( { param: 'cols' } );
+			}
+		}
+		else if ( 'json' === fmt ) {
+			data = JSON.parse( args.data );
+			cols = d3.csv.parseRows( args.cols );
+		}
+		else {
+			errs.push( { param: 'format' } );
+		}
+
+		if ( errs.length > 0 ) {
+			return errs;
+		}
+
+		// otherwise, render the chart
+		var target = d3.select('#target');
+		target.style.width = '100%';
+		target.style.height = 24 * data.length;
+		target.innerHTML = '';
+
+		var chart = target.append("svg")
+		.classed('tipped_matrix', true)
+		.chart("TippedMatrix", { columns: cols });
+		chart.draw( data );
+
+		var chart2 = target.append('svg')
+		.classed('kotoheatmap', true)
+		.chart('KotoMatrixHeatMap', { columns: cols });
+		chart2.draw(data);
+	}
+
+
+	};
+
+	function getJson(){
+		return [{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Rod-shaped","sequencing_gold_id":"Gp0012341","ncbi_order":"Chroococcales","latitude":"9.26583","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. KORDI-100 (genome sequencing)","longitude":"158.40167","biotic_rel":null,"depth":null,"longhurst_code":"WARM","study_gold_id":"Gs0033812","ecosystem":"Environmental","clade":"5.1-UC-A","gold_id":"Gp0012341","strain":"KORDI-100","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":null,"taxon_oid":"2507262013","longhurst_description":"Trades - W. Pacific Warm Pool Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. KORDI-100","domain":"Bacteria","geo_location":"Pacific Ocean","temp_range":null,"specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"1280380","analysis_project_id":"Ga0009892","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. KORDI-100","ecosystem_category":"Aquatic","oxygen_req":"Aerobe","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified","depth_string":"0 m"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0000430","ncbi_order":"Chroococcales","latitude":null,"ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. CC9605","longitude":null,"biotic_rel":"Free living","depth":"51","longhurst_code":"CCAL","study_gold_id":"Gs0033799","ecosystem":"Environmental","clade":"5.1A-II","gold_id":"Gp0000430","strain":"CC9605","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":"Nonsporulating","gram_stain":"Gram-","taxon_oid":"637000310","longhurst_description":"Coastal - California Upwelling Coastal Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. CC9605","domain":"Bacteria","geo_location":"California coast","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"110662","analysis_project_id":"Ga0031133","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"sp.","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Rod-shaped","sequencing_gold_id":"Gp0012340","ncbi_order":"Chroococcales","latitude":"32.00000","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. KORDI-52 (genome sequencing)","longitude":"126.75000","biotic_rel":null,"depth":"30","longhurst_code":"KURO","study_gold_id":"Gs0033812","ecosystem":"Environmental","clade":"5.1A-II","gold_id":"Gp0012340","strain":"KORDI-52","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":null,"taxon_oid":"2507262012","longhurst_description":"Westerlies - Kuroshio Current Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. KORDI-52","domain":"Bacteria","geo_location":"East China Sea","temp_range":null,"specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"585425","analysis_project_id":"Ga0009791","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. KORDI-52","ecosystem_category":"Aquatic","oxygen_req":"Aerobe","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0003233","ncbi_order":"Chroococcales","latitude":"39.64333","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH 8109","longitude":"-70.46200","biotic_rel":"Free living","depth":null,"longhurst_code":"NWCS","study_gold_id":"Gs0033827","ecosystem":"Environmental","clade":"5.1A-II","gold_id":"Gp0003233","strain":"WH 8109","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"2563366603","longhurst_description":"Coastal - NW Atlantic Shelves Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 8109","domain":"Bacteria","geo_location":"Sargasso Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"166314","analysis_project_id":"Ga0024209","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. WH 8109","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0000622","ncbi_order":"Chroococcales","latitude":"22.49500","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH8102","longitude":"-65.60000","biotic_rel":"Free living","depth":null,"longhurst_code":"NWCS","study_gold_id":"Gs0033830","ecosystem":"Environmental","clade":"5.1A-III","gold_id":"Gp0000622","strain":"WH8102","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"637000314","longhurst_description":"Coastal - NW Atlantic Shelves Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 8102","domain":"Bacteria","geo_location":"Tropical Atlantic ocean","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"84588","analysis_project_id":"Ga0031145","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"sp.","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0002097","ncbi_order":"Chroococcales","latitude":"41.66667","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. BL107","longitude":"2.80000","biotic_rel":"Free living","depth":"100","longhurst_code":"MEDI","study_gold_id":"Gs0033807","ecosystem":"Environmental","clade":"5.1A-IV","gold_id":"Gp0002097","strain":"BL107","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Marginal sea","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"2623620351","longhurst_description":"Westerlies - Mediterranean Sea, Black Sea Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. BL107","domain":"Bacteria","geo_location":"Blanes Bay in the Mediterranean Sea at a depth of 100m","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"313625","analysis_project_id":"Ga0067679","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. BL107","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0002097","ncbi_order":"Chroococcales","latitude":"41.66667","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. BL107","longitude":"2.80000","biotic_rel":"Free living","depth":"100","longhurst_code":"MEDI","study_gold_id":"Gs0033807","ecosystem":"Environmental","clade":"5.1A-IV","gold_id":"Gp0002097","strain":"BL107","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Marginal sea","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"639857006","longhurst_description":"Westerlies - Mediterranean Sea, Black Sea Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. BL107","domain":"Bacteria","geo_location":"Blanes Bay in the Mediterranean Sea at a depth of 100m","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"313625","analysis_project_id":"Ga0031129","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. BL107","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0000432","ncbi_order":"Chroococcales","latitude":null,"ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. CC9902","longitude":null,"biotic_rel":"Free living","depth":"5","longhurst_code":"CCAL","study_gold_id":"Gs0033799","ecosystem":"Environmental","clade":"5.1A-IV","gold_id":"Gp0000432","strain":"CC9902","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"637000311","longhurst_description":"Coastal - California Upwelling Coastal Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. CC9902","domain":"Bacteria","geo_location":"California current","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"316279","analysis_project_id":"Ga0031134","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"sp.","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Rod-shaped","sequencing_gold_id":"Gp0012237","ncbi_order":"Chroococcales","latitude":"32.50000","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. KORDI-49 (genome sequencing)","longitude":"126.00000","biotic_rel":null,"depth":"20","longhurst_code":"CHIN","study_gold_id":"Gs0033812","ecosystem":"Environmental","clade":"5.1A-WPC1","gold_id":"Gp0012237","strain":"KORDI-49","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Marginal sea","motility":null,"sporulation":null,"gram_stain":null,"taxon_oid":"2507262011","longhurst_description":"Coastal - China Sea Coastal Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. KORDI-49","domain":"Bacteria","geo_location":"East China Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"585423","analysis_project_id":"Ga0009790","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. KORDI-49","ecosystem_category":"Aquatic","oxygen_req":"Aerobe","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":null,"sequencing_gold_id":"Gp0009723","ncbi_order":"Chroococcales","latitude":"41.52599","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH 8016","longitude":"-70.67609","biotic_rel":"Free living","depth":null,"longhurst_code":"NASW","study_gold_id":"Gs0033803","ecosystem":"Environmental","clade":"5.1B-I","gold_id":"Gp0009723","strain":"WH 8016","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Nonmotile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"2507262052","longhurst_description":"Westerlies - N. Atlantic Subtropical Gyral Province (West) (STGW)","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 8016","domain":"Bacteria","geo_location":"Woods Hole, MA","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"166318","analysis_project_id":"Ga0024874","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. WH 8016","ecosystem_category":"Aquatic","oxygen_req":"Aerobe","ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0002094","ncbi_order":"Chroococcales","latitude":"29.46667","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. RS9916","longitude":"34.91667","biotic_rel":"Free living","depth":"10","longhurst_code":"REDS","study_gold_id":"Gs0033823","ecosystem":"Environmental","clade":"5.1B-IX","gold_id":"Gp0002094","strain":"RS9916","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Marginal sea","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"2623620281","longhurst_description":"Coastal - Red Sea, Persian Gulf Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. RS9916","domain":"Bacteria","geo_location":"station A, Eilat, Red Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"221359","analysis_project_id":"Ga0067678","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. RS9916","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0002094","ncbi_order":"Chroococcales","latitude":"29.46667","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. RS9916","longitude":"34.91667","biotic_rel":"Free living","depth":"10","longhurst_code":"REDS","study_gold_id":"Gs0033823","ecosystem":"Environmental","clade":"5.1B-IX","gold_id":"Gp0002094","strain":"RS9916","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Marginal sea","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"639857007","longhurst_description":"Coastal - Red Sea, Persian Gulf Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. RS9916","domain":"Bacteria","geo_location":"station A, Eilat, Red Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"221359","analysis_project_id":"Ga0031140","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. RS9916","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0000142","ncbi_order":"Chroococcales","latitude":"33.74230","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH7803","longitude":"-67.49130","biotic_rel":"Free living","depth":"25","longhurst_code":"NASW","study_gold_id":"Gs0019915","ecosystem":"Environmental","clade":"5.1B-V","gold_id":"Gp0000142","strain":"WH 7803","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"640427149","longhurst_description":"Westerlies - N. Atlantic Subtropical Gyral Province (West) (STGW)","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 7803","domain":"Bacteria","geo_location":"Sargasso Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"32051","analysis_project_id":"Ga0031143","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. WH 7803","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0000142","ncbi_order":"Chroococcales","latitude":"33.74230","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH7803","longitude":"-67.49130","biotic_rel":"Free living","depth":"25","longhurst_code":"NASW","study_gold_id":"Gs0019915","ecosystem":"Environmental","clade":"5.1B-V","gold_id":"Gp0000142","strain":"WH 7803","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"2623620330","longhurst_description":"Westerlies - N. Atlantic Subtropical Gyral Province (West) (STGW)","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 7803","domain":"Bacteria","geo_location":"Sargasso Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"32051","analysis_project_id":"Ga0067152","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. WH 7803","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0002092","ncbi_order":"Chroococcales","latitude":"33.75000","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH7805","longitude":"-67.50000","biotic_rel":"Free living","depth":null,"longhurst_code":"NASW","study_gold_id":"Gs0033829","ecosystem":"Environmental","clade":"5.1B-VI","gold_id":"Gp0002092","strain":"WH7805","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"2623620868","longhurst_description":"Westerlies - N. Atlantic Subtropical Gyral Province (West) (STGW)","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 7805","domain":"Bacteria","geo_location":"33N/67W","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"59931","analysis_project_id":"Ga0076775","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. WH 7805","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0002092","ncbi_order":"Chroococcales","latitude":"33.75000","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH7805","longitude":"-67.50000","biotic_rel":"Free living","depth":null,"longhurst_code":"NASW","study_gold_id":"Gs0033829","ecosystem":"Environmental","clade":"5.1B-VI","gold_id":"Gp0002092","strain":"WH7805","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"638341215","longhurst_description":"Westerlies - N. Atlantic Subtropical Gyral Province (West) (STGW)","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 7805","domain":"Bacteria","geo_location":"33N/67W","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"59931","analysis_project_id":"Ga0031144","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. WH 7805","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0006220","ncbi_order":"Chroococcales","latitude":"29.46667","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. RS9917","longitude":"34.91667","biotic_rel":"Free living","depth":"10","longhurst_code":"REDS","study_gold_id":"Gs0033824","ecosystem":"Environmental","clade":"5.1B-VIII","gold_id":"Gp0006220","strain":"RS9917","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Marginal sea","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"638341213","longhurst_description":"Coastal - Red Sea, Persian Gulf Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. RS9917","domain":"Bacteria","geo_location":"station A, Eilat, Red Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"221360","analysis_project_id":"Ga0031141","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. RS9917","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0002093","ncbi_order":"Chroococcales","latitude":"41.05808","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. WH5701","longitude":"-72.86560","biotic_rel":"Free living","depth":null,"longhurst_code":"NWCS","study_gold_id":"Gs0033828","ecosystem":"Environmental","clade":"5.2","gold_id":"Gp0002093","strain":"WH5701","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"638341214","longhurst_description":"Coastal - NW Atlantic Shelves Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. WH 5701","domain":"Bacteria","geo_location":"Long Island Sound","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"69042","analysis_project_id":"Ga0031142","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. WH 5701","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":null,"ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0000143","ncbi_order":"Chroococcales","latitude":"39.16667","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. RCC307","longitude":"6.16667","biotic_rel":"Free living","depth":"15","longhurst_code":"MEDI","study_gold_id":"Gs0033821","ecosystem":"Environmental","clade":"5.3-I / X","gold_id":"Gp0000143","strain":"RCC 307","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"640427148","longhurst_description":"Westerlies - Mediterranean Sea, Black Sea Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. RCC307","domain":"Bacteria","geo_location":"Seawater from the Mediterranean Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"316278","analysis_project_id":"Ga0031139","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. RCC307","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":"Coccus-shaped","sequencing_gold_id":"Gp0000143","ncbi_order":"Chroococcales","latitude":"39.16667","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. RCC307","longitude":"6.16667","biotic_rel":"Free living","depth":"15","longhurst_code":"MEDI","study_gold_id":"Gs0033821","ecosystem":"Environmental","clade":"5.3-I / X","gold_id":"Gp0000143","strain":"RCC 307","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":"Motile","sporulation":null,"gram_stain":"Gram-","taxon_oid":"2623620283","longhurst_description":"Westerlies - Mediterranean Sea, Black Sea Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. RCC307","domain":"Bacteria","geo_location":"Seawater from the Mediterranean Sea","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"316278","analysis_project_id":"Ga0067153","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. RCC307","ecosystem_category":"Aquatic","oxygen_req":"Facultative","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":null,"sequencing_gold_id":"Gp0018820","ncbi_order":"Chroococcales","latitude":null,"ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. CC9616","longitude":null,"biotic_rel":null,"depth":null,"longhurst_code":"CCAL","study_gold_id":"Gs0033803","ecosystem":"Environmental","clade":null,"gold_id":"Gp0018820","strain":"CC9616","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":"Gram-","taxon_oid":"2517093019","longhurst_description":"Coastal - California Upwelling Coastal Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. CC9616","domain":"Bacteria","geo_location":null,"temp_range":null,"specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"110663","analysis_project_id":"Ga0026647","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. CC9616","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":null,"sequencing_gold_id":"Gp0097362","ncbi_order":"Chroococcales","latitude":null,"ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. NKBG 042902","longitude":null,"biotic_rel":null,"depth":null,"longhurst_code":null,"study_gold_id":"Gs0112237","ecosystem":"Environmental","clade":null,"gold_id":"Gp0097362","strain":"NKBG 042902","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":null,"taxon_oid":"2585428034","longhurst_description":null,"ncbi_class":null,"ncbi_species":"Synechococcus sp. NKBG042902","domain":"Bacteria","geo_location":null,"temp_range":null,"specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"490193","analysis_project_id":"Ga0056671","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. NKBG042902","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":null,"sequencing_gold_id":"Gp0071509","ncbi_order":"Chroococcales","latitude":null,"ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. NKBG15041c","longitude":null,"biotic_rel":null,"depth":null,"longhurst_code":null,"study_gold_id":"Gs0109685","ecosystem":"Environmental","clade":null,"gold_id":"Gp0071509","strain":"NKBG15041c","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":null,"taxon_oid":"2579778681","longhurst_description":null,"ncbi_class":null,"ncbi_species":"Synechococcus sp. NKBG15041c","domain":"Bacteria","geo_location":null,"temp_range":null,"specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"1407650","analysis_project_id":"Ga0051930","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. NKBG15041c","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":null,"sequencing_gold_id":"Gp0009615","ncbi_order":"Chroococcales","latitude":null,"ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. PCC 73109","longitude":null,"biotic_rel":null,"depth":null,"longhurst_code":null,"study_gold_id":"Gs0033818","ecosystem":"Environmental","clade":null,"gold_id":"Gp0009615","strain":"PCC 73109","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":null,"taxon_oid":"2504643003","longhurst_description":null,"ncbi_class":null,"ncbi_species":"Synechococcus sp. PCC 73109","domain":"Bacteria","geo_location":null,"temp_range":null,"specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"374982","analysis_project_id":"Ga0010394","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. PCC 73109","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":null,"sequencing_gold_id":"Gp0005931","ncbi_order":"Chroococcales","latitude":"37.87100","ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. PCC 7336","longitude":"-122.27200","biotic_rel":"Free living","depth":null,"longhurst_code":"CCAL","study_gold_id":"Gs0014887","ecosystem":"Environmental","clade":null,"gold_id":"Gp0005931","strain":"PCC 7336","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":"Gram-","taxon_oid":"2506520048","longhurst_description":"Coastal - California Upwelling Coastal Province","ncbi_class":null,"ncbi_species":"Synechococcus sp. PCC 7336","domain":"Bacteria","geo_location":"Berkeley, California, USA","temp_range":"Mesophile","specific_ecosystem":"Unclassified","altitude":null,"ncbi_taxon_id":"195250","analysis_project_id":"Ga0025409","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. PCC 7336","ecosystem_category":"Aquatic","oxygen_req":"Aerobe","ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"},{"combined_sample_flag":null,"genome_type":"isolate","ecosystem_type":"Marine","cell_shape":null,"sequencing_gold_id":"Gp0009763","ncbi_order":"Chroococcales","latitude":null,"ncbi_genus":"Synechococcus","taxon_display_name":"Synechococcus sp. PCC 8807","longitude":null,"biotic_rel":null,"depth":null,"longhurst_code":null,"study_gold_id":"Gs0033820","ecosystem":"Environmental","clade":null,"gold_id":"Gp0009763","strain":"PCC 8807","ncbi_family":null,"family":"unclassified","ecosystem_subtype":"Pelagic","motility":null,"sporulation":null,"gram_stain":null,"taxon_oid":"2504643002","longhurst_description":null,"ncbi_class":null,"ncbi_species":"Synechococcus sp. PCC 8807","domain":"Bacteria","geo_location":null,"temp_range":null,"specific_ecosystem":null,"altitude":null,"ncbi_taxon_id":"195248","analysis_project_id":"Ga0010202","ncbi_phylum":"Cyanobacteria","ir_order":"Chroococcales","genus":"Synechococcus","salinity":null,"species":"Synechococcus sp. PCC 8807","ecosystem_category":"Aquatic","oxygen_req":null,"ncbi_kingdom":"Bacteria","ecotype":null,"phylum":"Cyanobacteria","ir_class":"unclassified"}];
+	}
+	if (document.readyState !== 'loading'){
+		fn();
+	} else if (document.addEventListener) {
+		document.addEventListener('DOMContentLoaded', function(){
+			fn();
+		});
+	} else {
+		document.attachEvent('onreadystatechange', function() {
+			if (document.readyState !== 'loading'){
+				fn();
+			}
+		});
+	}
+}());
+</script>
+
+[% END; %]

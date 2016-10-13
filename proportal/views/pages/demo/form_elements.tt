@@ -1,0 +1,61 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'Form Elements Demo';
+%]
+	<style>
+	#palette svg {
+		width: 100%;
+		height: 40px;
+	}
+	#palette rect {
+		width: 30px;
+		height: 30px;
+	}
+	</style>
+
+		<h3>Colorbrewer palette selector</h3>
+		<div id="palette"></div>
+		<div id="select_target"></div>
+
+		<h3>select</h3>
+		<div id="select"></div>
+
+		<h3>radio</h3>
+		<div id="radio"></div>
+
+		<h3>checkbox</h3>
+		<div id="checkbox"></div>
+
+		<h3>fancy drag-n-drop thing</h3>
+		<div id="dnd_thing"></div>
+
+		<h3>scrolling text</h3>
+		<div id='scroller_text' class="resizable"></div>
+
+<script src="/js/d3.min.js"></script>
+<script src="/js/colorbrewer.js"></script>
+<script src="/js/d3.chart.min.js"></script>
+<script src="/js/d3.chart.form.js"></script>
+<script src="/js/d3.form.element.colorbrewer.js"></script>
+<script>
+	var p = d3.select("#palette")
+		.append('svg')
+		.append('g')
+        .attr("transform", function(d) { return "translate(" + 5 + "," + 5 + ")"; })
+		.classed('YlGn', true)
+	, cbc = new ColorBrewerControl(colorbrewer);
+
+	p.selectAll('rect')
+	.data( d3.range(9) )
+  .enter().append("rect")
+	.attr("class", function(d){ return 'q' + d + '-9' })
+	.attr('x', function(d,i){ return 30 * i })
+	.text(function(d){ return d; } );
+
+	cbc.add_colorbrewer_control({ el:'#select_target', id: "colors_select" })
+	.on('change', function(){
+		p.attr( 'class', this.value );
+	});
+</script>
+<script src="/js/demo_form_elements.js"></script>
+[%	END; %]

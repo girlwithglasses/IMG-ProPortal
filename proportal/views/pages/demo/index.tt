@@ -1,0 +1,15 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'Demos';
+%]
+<h2>ProPortal Demos</h2>
+<p>Welcome to the ProPortal demo section! The following visualisations are currently under development and may change rapidly (or not be working)
+TG.</p>
+
+<ul>
+[%	FOREACH p IN pages %]
+	<li><a href="/demo/[% p %]">[% p %]</a></li>
+[%	END %]
+</ul>
+
+[%	END; %]

@@ -33,7 +33,7 @@ Returns a data structure representing the menu. This can be overridden by site-s
 =cut
 
 sub _get_menu_items {
-
+	my $self = shift;
 	return [
 		proportal(),
 		genomes(),
@@ -42,7 +42,7 @@ sub _get_menu_items {
 		compare_genomes(),
 		omics(),
 		using(),
-		my_img(),
+		$self->my_img,
 		datamarts(),
 	];
 
@@ -58,8 +58,9 @@ sub proportal {
 			'proportal/data_type',
 			'proportal/location',
 			'proportal/ecosystem',
+			'proportal/ecotype',
 			'proportal/phylogram',
-			'proportal/phylo_viewer',
+			'galaxy',
 		],
 	};
 }
@@ -72,7 +73,7 @@ sub genomes {
 		[
 			'TreeFile',
 			'FindGenomes',
-			'TaxonDeleted',
+#			'TaxonDeleted',
 			'ScaffoldSearch',
 		],
 	};
@@ -245,7 +246,6 @@ sub abc {
 
 			'ABC',
 
-
 			'BcNpIDSearch',
 			'BiosyntheticStats',
 			'BcSearch/bcSearch',
@@ -255,16 +255,24 @@ sub abc {
 	};
 }
 
+sub workspace {
+	return {
+		id => 'menu/Workspace',
+		submenu =>
+		[
+			'Workspace', # label => 'Export Workspace' },
+			'WorkspaceGeneSet',
+			'WorkspaceFuncSet',
+			'WorkspaceGenomeSet',
+			'WorkspaceScafSet',
+		],
+	};
+}
 
 sub my_img {
+	my $self = shift;
 
-# 	if ( ! $self->logged_in ) {
-# 		return {
-# 			id => 'menu/MyIMG',
-# 		}
-# 	};
-
-	return {
+	my $core_menu = {
 		id => 'menu/MyIMG',
 		submenu =>
 		[
@@ -279,22 +287,19 @@ sub my_img {
 				],
 			},
 			'MyIMG/preferences',
-			'MyIMG/myAnnotationsForm',
-			'MyIMG/myJobForm',
-			{
-				id => 'menu/Workspace',
-				submenu =>
-				[
-					'Workspace', # label => 'Export Workspace' },
-					'WorkspaceGeneSet',
-					'WorkspaceFuncSet',
-					'WorkspaceGenomeSet',
-					'WorkspaceScafSet',
-				],
-			},
-			'logout',
-		],
+		]
 	};
+
+	# logged in
+	if ( $self->has_user ) {
+		# show workspace links
+		for ( 'MyIMG/myAnnotationsForm', 'MyIMG/myJobForm', workspace(), 'logout' ) {
+			push @{$core_menu->{submenu}}, $_;
+		}
+	}
+
+	return $core_menu;
+
 }
 
 

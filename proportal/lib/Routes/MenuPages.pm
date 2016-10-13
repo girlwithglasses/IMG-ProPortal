@@ -1,8 +1,7 @@
 package Routes::MenuPages;
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
-use parent 'CoreStuff';
-our $VERSION = '0.1';
+use parent 'AppCore';
 
 # render menu pages
 =head3 menu_page_subs
@@ -46,7 +45,7 @@ prefix '/menu' => sub {
 			$data = $rtn->{page};
 		}
 
-		template "pages/menu_page", { content => $content, data => $data };
+		template "pages/menu_page.tt", { content => $content, data => $data };
 
 	};
 

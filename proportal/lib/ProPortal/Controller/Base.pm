@@ -2,15 +2,33 @@ package ProPortal::Controller::Base;
 
 use IMG::Util::Base 'Class';
 
-has '_core' => (
-	is => 'ro',
-	predicate => 1,
-	handles => [ qw(
-		config schema http_ua session user
-	) ],
+with 'IMG::App::Role::ErrorMessages';
+
+# has '_core' => (
+# 	is => 'ro',
+# 	predicate => 1,
+# 	handles => [ qw(
+# 		config schema http_ua session user run_query
+# 	) ],
+# );
+
+=head3 tmpl
+
+templates to use for rendering the page
+
+=cut
+
+has 'tmpl' => (
+	is => 'lazy'
 );
 
-with 'ProPortal::IO::DBIxDataModel';
+sub _build_tmpl {
+	my $self = shift;
+	$self->choke({
+		err => 'missing',
+		subject => 'template name'
+	});
+}
 
 =head3 tmpl_includes
 
@@ -19,33 +37,12 @@ templates to include in the page
 =cut
 
 has 'tmpl_includes' => (
-	is => 'ro',
-	predicate => 1,
+	is => 'lazy',
 );
 
-=head3 filters
-
-The filters on the current query
-
-=cut
-
-has 'filters' => (
-	is => 'rw',
-	predicate => 1,
-	writer => 'set_filters',
-);
-
-=head3 valid_filters
-
-Valid filters for the query
-
-=cut
-
-has 'valid_filters' => (
-	is => 'ro',
-	predicate => 1,
-);
-
+sub _build_tmpl_includes {
+	return {};
+}
 
 sub BUILDARGS {
 	my $class = shift;
@@ -70,29 +67,23 @@ attempts to add
 
 =cut
 
-# convert to 'after' ?
 
 sub add_defaults_and_render {
 	my $self = shift;
-	my $data = shift // {};
 
 	my $rtn = {
-		results => $data
+		results => $_[0] // {}
 	};
 
-	if ($self->has_tmpl_includes) {
-		$rtn->{tmpl_includes} = $self->tmpl_includes;
-	}
+	$rtn->{tmpl_includes} = $self->tmpl_includes;
 
-	if ($self->has_filters) {
-		$rtn->{data_filters}{active} = $self->filters;
-	}
-
-	if ($self->has_valid_filters) {
-		$rtn->{data_filters}{all} = $self->valid_filters;
-	}
+# 	if ( $self->can('filters') ) {
+# 		$rtn->{data_filters}{active} = $self->filters;
+# 		$rtn->{data_filters}{all} = $self->valid_filters;
+# 	}
 
 	return $rtn;
+
 }
 
 

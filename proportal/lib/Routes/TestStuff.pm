@@ -1,26 +1,121 @@
 package Routes::TestStuff;
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
-use parent 'CoreStuff';
+use parent 'AppCore';
+use JSON qw( encode_json decode_json );
+use IMG::Util::File qw( :all );
+use File::Spec::Functions;
 
 #use AnyEvent;
 use AE;
 
+prefix '/cart' => sub {
+	any '/genomes/add' => sub {
 
-prefix '/test' => sub {
+		say Dumper body_parameters;
+		my @tax_arr = body_parameters->get_all('taxon_oid[]');
+		return join "<br>", @tax_arr;
+		require GenomeCart;
+		GenomeCart::addToGenomeCart( \@tax_arr );
+		GenomeCart::dispatch();
+	};
+};
+
+prefix '/demo' => sub {
+
+	# get the demo pages in the directory '/views/pages/demo' (minus the index)
+	my @demo_pages = sort map { s/\.tt//; $_ }
+		@{ get_dir_contents({ dir => catdir( config->{views}, 'pages/demo' ), filter => sub { $_ !~ /index/ && -f catfile( config->{views}, 'pages/demo', $_ ) } }) };
+
+	my $re = join '|', @demo_pages;
 
 	get qr{
 
-		/ (?<demo> table | matrix )
+		/ (?<demo> $re )
 
 		}x => sub {
 
 		my $c = captures;
 		my $p = delete $c->{demo};
 
-		return template "pages/test/" . $p;
+		return template "pages/demo/$p";
 	};
 
+	get qr{ /? }x => sub {
+
+		var menu_grp => 'proportal';
+		var page_id => 'proportal';
+		return template 'pages/demo/index', { pages => [ @demo_pages ] };
+
+	}
+};
+
+
+{
+	package MiniContr;
+	use IMG::Util::Base 'Class';
+	with 'IMG::App::Role::Controller';
+	1;
+}
+
+prefix '/api/proportal' => sub {
+
+	my @valid_queries = qw( location clade data_type phylogram ecosystem ecotype big_ugly_taxon_table );
+
+	my @subsets = qw( metagenome isolate prochlor synech prochlor_phage synech_phage );
+
+	my $re = join '|', @valid_queries;
+
+	# filterable queries
+	get qr{
+		/ (?<page> $re )
+		/? (?<subset> \w+.* )?
+		}x => sub {
+
+		my $c = captures;
+		my $p = delete $c->{page};
+
+
+		my $pp = AppCore::bootstrap( $p );
+		if ( $c->{subset} ) {
+			$pp->set_filters({ subset => $c->{subset} });
+		}
+
+		my $rslt = $pp->get_data();
+
+		if ( ! $rslt ) {
+			$rslt = { 'error' => 001, 'message' => 'No data returned by query' };
+		}
+
+		say Dumper $rslt;
+
+		content_type 'application/json';
+
+		my $json = JSON->new->convert_blessed(1)->encode( $rslt );
+
+		return $json;
+	};
+
+
+	get qr{ /? }x => sub {
+
+		# for each query, set the controller
+		# get the valid_filters
+		my $v_q;
+		for ( @valid_queries ) {
+			my $app = MiniContr->new();
+			$app->add_controller_role( $_ );
+			say $_ . ' controller: ' . Dumper $app->controller;
+			$v_q->{$_} = $app->controller->valid_filters;
+		}
+
+		say 'valid filters: ' . Dumper $v_q;
+
+		var menu_grp => 'proportal';
+		var page_id => 'proportal';
+		return template 'pages/datamart_stats', { queries => [ @valid_queries ], subsets => [ @subsets ] };
+
+	}
 };
 
 any '/blastoff' => sub {
@@ -62,7 +157,7 @@ get '/delayed' => sub {
         });
 
 
-        my $output = IMG::App::Role::Templater::render_template( 'any_content.tt', {} );
+        my $output = IMG::App::Role::Templater::render_template({ tmpl => 'any_content.tt' });
         content $output;
 
 =cut

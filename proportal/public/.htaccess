@@ -1,0 +1,10 @@
+<IfModule mod_setenvif.c>
+	# SetEnvIfNoCase User-Agent ^$ keep_out
+	SetEnvIfNoCase User-Agent (accelobot|ai-agent|becomebot|binlar|casper|cmsworldmap|comodo|crawler|curl|darwin|diavol|dotbot|feedfinder|firstgov|flicky|ia_archiver|java|jeeves|kmccrew|libwww|lwp|mechanize|nimblecrawler|nutch|planetwork|purebot|pycurl|python|skygrid|slurp|sphider|sucker|turnit|vikspider|wget|ysearch|zmeu) keep_out
+    SetEnvIfNoCase User-Agent "lynx.*libwww" !keep_out
+	<limit GET POST PUT>
+		Order Allow,Deny
+		Allow from all
+		Deny from env=keep_out
+	</limit>
+</IfModule>

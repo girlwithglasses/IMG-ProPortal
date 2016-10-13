@@ -27,10 +27,10 @@ IMG::App::Role::Templater
     my $app = IMG::App->new( %args );
 
     # print out a data using a template:
-    print $app->render_template( 'random_page.tt', { title => 'Random Page', data => $data } );
+    print $app->render_template({ tmpl => 'random_page.tt', tmpl_data => { title => 'Random Page', data => $data } });
 
     # save formatted data as a string:
-    my $str = $app->render_template( 'my_tmpl.tt', { fee => 'fi', fo => 'fum' } );
+    my $str = $app->render_template({ tmpl => 'my_tmpl.tt', tmpl_data => { fee => 'fi', fo => 'fum' } });
 
 
 =head2 DESCRIPTION
@@ -41,8 +41,10 @@ Provides easy access to Template Toolkit via the render_template method, with bu
 
 Render a template using Template::Toolkit
 
-@param  $tmpl_name      name of the template to render
-@param  $data           hashref of data to render
+takes hashref of parameters:
+
+@param  tmpl      => $tmpl_name    name of the template to render
+@param  tmpl_data => $data         data to render (hashref)
 
 
 The config parameter 'tmpl_args' is used to set the template arguments. If there is no INCLUDE_PATH specified, the config parameter tmpl_dir (if set) will be used as the INCLUDE_PATH. See the Template::Toolkit documentation for configuration details.
@@ -60,27 +62,49 @@ Dies with an error if there is an issue
 =cut
 
 sub render_template {
-    my $self = shift;
-	my $tmpl_name = shift || die "No template name specified!";
-	my $data = shift // {};
+	my $self = shift;
+	my $args = shift;
+	if ( ! $args->{tmpl} ) {
+		$self->choke({
+			err => 'missing',
+			subject => 'template name'
+		});
+	}
+
+	my $data = $args->{tmpl_data} // {};
 
     my $tmpl_args = ( $self->config && defined $self->config->{tmpl_args} )
     ? $self->config->{tmpl_args}
-    : {};
+    : { INTERPOLATE => 1 };
 
     $tmpl_args->{INCLUDE_PATH} ||= ( $self->config && defined $self->config->{tmpl_dir} )
     ? $self->config->{tmpl_dir}
     : '';
 
-	my $tt = Template->new( $tmpl_args ) || die "Template error: $Template::ERROR\n";
+	## ADDED TEMPORARILY ##
+	$tmpl_args = $args->{tmpl_args};
+
+	my $tt = Template->new( $tmpl_args ) || die "Template error: $Template::ERROR";
 
     # add in link generation
 	$data->{settings} = $self->config;
 	$data->{ext_link} = sub { return $self->get_ext_link( @_ ) };
-	$data->{link} = sub { return $self->get_img_link_tt( @_ ) };
+
+# 	if ( $self->can('get_ext_link') ) {
+# 		say 'Can get_ext_link';
+# 	} else {
+# 		say 'Cannot get_ext_link';
+# 	}
+# 	if ( $self->can('get_img_link_tt') ) {
+# 		say 'can get_img_link_tt';
+# 	} else {
+# 		say 'cannot get_img_link_tt';
+# 	}
+
+#	$data->{link} = sub { return $self->get_img_link_tt( @_ ) };
 
 	my $out;
-	$tt->process($tmpl_name, $data, \$out) || die $tt->error() . "\n";
+	$tt->process( $args->{tmpl}, $data, \$out, $args->{extras} || {} ) || die $tt->error();
 	return $out;
 }
 
@@ -93,7 +117,7 @@ sub print_message {
 		carp 'No message found';
 	}
 	else {
-		return $self->render_template( 'message.tt', $message );
+		return $self->render_template({ tmpl => 'message.tt', tmpl_data => $message });
 	}
 #	print "<div id='message'>\n";
 #	print "<p>\n";

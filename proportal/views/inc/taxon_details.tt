@@ -1,0 +1,48 @@
+[%	IF show && ! show.h_level || ! show;
+		show.h_level = 'h4';
+	END;
+%]
+<fieldset data-sample-id="[% s.taxon_oid %]" id="taxon_oid_[% s.taxon_oid %]" class="js_sample_details sample-data__item">
+	<[% show.h_level %]>[% s.taxon_display_name %]</[% show.h_level %]>
+	<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" />
+	<label for="cbox_[% s.taxon_oid %]" class="sample-data__label">
+		<span class="sample-data__labeltxt--unchecked">Add to selection</span>
+		<span class="sample-data__labeltxt--checked">Remove from selection</span>
+	</label>
+[%	IF show;
+		IF show.phylogen_class %]
+	<p>Phylogenetic classification:</p>
+	<dl class="table-like sample-data__classification cf">
+[%		FOREACH e IN results.js.class_types %]
+		<dt class="sample-data__classification--level">[% e.replace("_", " ") %]</dt>
+		<dl class="sample-data__classification--value">[% s.$e || 'unclassified' %]</dl>
+[%		END; %]
+	</dl>
+[%		END;  # end show.phylogen_class
+
+		IF show.ecosystem %]
+	<p>Ecosystem classification:</p>
+	<dl class="table-like sample-data__classification cf">
+[%	FOREACH e IN results.class_types %]
+		<dt class="sample-data__classification--level">[% e.replace("_", " ") %]</dt>
+		<dl class="sample-data__classification--value">[% s.$e %]</dl>
+[%	END; %]
+	</dl>
+[%		END; # end show.ecosystem
+
+		IF show.ecotype %]
+	<p>Ecotype classification:</p>
+	<dl class="table-like sample-data__classification cf">
+		<dt class="sample-data__classification--level">Ecotype</dt>
+		<dl class="sample-data__classification--value">[% s.ecotype %]</dl>
+		<dt class="sample-data__classification--level">Clade</dt>
+		<dl class="sample-data__classification--value">[% s.clade %]</dl>
+	</dl>
+[%		END; # end show.ecotype
+
+
+
+
+	END; %]
+	<p><a class="sample_details__link" href="[% link('taxon', { taxon_oid => s.taxon_oid }) %]">view taxon details</a></p>
+</fieldset>

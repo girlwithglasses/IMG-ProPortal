@@ -49,6 +49,8 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
 button, html input[type="button"], input[type="reset"], input[type="submit"] {
 	border: none;
 	background: $secondary;
+    padding: 0 $gutter;
+    margin: $gutter 0;
 	color: white;
 	text-transform: uppercase;
 	vertical-align: middle;

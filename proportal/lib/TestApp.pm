@@ -2,10 +2,24 @@ package TestApp;
 use IMG::Util::Base;
 
 #use AnyEvent;
-#use AE;
+use AE;
 
 use Dancer2;
+use Dancer2::Plugin::Ajax;
 use AnyEvent;
+
+# ajax '/ajax' => sub {
+#
+# 	return 'got an ajax query!';
+#
+# };
+#
+
+get '/ajax' => sub {
+
+	return 'called for some AJAX!';
+
+};
 
 get '/delayed' => sub {
     my %timers;

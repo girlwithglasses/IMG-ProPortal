@@ -3,6 +3,8 @@ package IMG::App::Role::Schema;
 use IMG::Util::Base 'MooRole';
 use IMG::Util::Factory;
 
+with 'IMG::App::Role::ErrorMessages';
+
 requires 'config', 'db_connection_h';
 
 =head1 IMG::Schema
@@ -67,44 +69,60 @@ if they do not already exist.
 
 sub schema {
 	my $self = shift;
-	my $s = shift || die "No schema specified";
-	return $self->schema_h->{$s}{module} if $self->has_schema_h && $self->schema_h->{$s};
+	my $s = shift || $self->choke({ err => 'missing', subject => 'schema' });
+	if ( $self->has_schema_h && $self->schema_h->{$s} ) {
+		return $self->schema_h->{$s}{module};
+	}
 	return $self->_init_schema( $s, @_ );
 }
 
-sub _build_schema_h {
-	my $self = shift;
-	if ( $self->has_config && $self->config->{db} && $self->config->{schema} ) {
 
-		# do something
-	}
-	else {
+=head3 _init_schema
 
-		return {
-			img_core => { module => 'DataModel::IMG_Core', db => 'img_core' },
-			img_gold => { module => 'DataModel::IMG_Gold', db => 'img_gold' },
-		}
-	}
-}
+Initialise a database schema
+
+@param $schema   -- schema name
+
+@param $options  -- hashref
+
+
+=cut
 
 sub _init_schema {
 	my $self = shift;
-	my $schema = shift || die "No schema specified";
+	my $schema = shift || $self->choke({ err => 'missing', subject => 'schema' });
 	my $options = shift || {};
 
-	# find the appropriate config for the module
-	die "No config found" unless $self->has_config;
+	if ( ! $self->config->{schema} ) {
+		$self->choke({ err => 'cfg_missing', subject => 'schema' });
+	}
 
-	if ( ! $self->config->{schema} || ! $self->config->{schema}{$schema} || ! $self->config->{schema}{$schema}{module} || ! $self->config->{schema}{$schema}{db} ) {
-		die "DB schema configuration for $schema not found!";
+	# find the appropriate config for the module
+	if ( ! $self->config->{schema}{$schema}
+		|| ! $self->config->{schema}{$schema}{module}
+		|| ! $self->config->{schema}{$schema}{db} ) {
+			$self->choke({
+				err => 'invalid',
+				subject => $schema,
+				type => 'schema'
+			});
 	}
 
 	my $schema_mod = $self->config->{schema}{$schema}{module};
+
+=cut
+# $schema->debug(1);             # will warn for each SQL statement
+# $schema->debug($debug_object); # will call $debug_object->debug($sql)
+=cut
 	# set up the module...
 	my %module_args = (
-		debug => 1,
+#		debug => 1,
 		dbi_prepare_method => 'prepare_cached',
 	);
+
+	if ( $self->config->{environment} && 'production' eq $self->config->{environment} ) {
+		delete $module_args{debug};
+	}
 
 	if ( ! $options->{no_connection} ) {
 		$module_args{dbh} = $self->connection_for_schema( $schema )->dbh;
@@ -112,7 +130,6 @@ sub _init_schema {
 
 	# dies if the module cannot be loaded
 	my $module = IMG::Util::Factory::create( $schema_mod, %module_args );
-
 
 	$self->set_schema_h({ %{ $self->schema_h || {} }, $schema => { module => $module, db => sub { return shift->get_connection_for_schema($schema); } } });
 

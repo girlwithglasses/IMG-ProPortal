@@ -1,0 +1,70 @@
+<tool id="proportal_vis" name="ProPortal visualisations" version="0.1.0">
+<description>ProPortal visualisations</description>
+<command>perl /global/homes/a/aireland/webUI/proportal/script/galaxy/proportal_vis.pl
+	--query "$visualisation.query"
+	--subset "$visualisation.subset"
+	--outfile "$outfile"
+</command>
+<inputs>
+	<conditional name="visualisation">
+	<param name="query" type="select" label="Select a viewer">
+		<option value="clade">clade</option>
+		<option value="ecotype">ecotype</option>
+		<option value="ecosystem">ecosystem</option>
+		<option value="location">location</option>
+		<option value="phylogram">phylogram</option>
+	</param>
+	<when value="clade">
+		<param name="subset" type="select" label="Select the subset to visualise">
+			<option value="isolate">All ProPortal isolates</option>
+			<option value="prochlor">Prochlorococcus species</option>
+			<option value="synech">Synechococcus species</option>
+		</param>
+	</when>
+	<when value="ecosystem">
+		<param name="subset" type="select" label="Select the subset to visualise">
+			<option value="all_proportal">All isolates and metagenomes</option>
+			<option value="isolate">All ProPortal isolates</option>
+			<option value="prochlor">Prochlorococcus species</option>
+			<option value="synech">Synechococcus species</option>
+			<option value="prochlor_phage">Prochlorococcus phage species</option>
+			<option value="synech_phage">Synechococcus phage species</option>
+			<option value="metagenome">Marine metagenomes</option>
+		</param>
+	</when>
+	<when value="ecotype">
+		<param name="subset" type="select" label="Select the subset to visualise">
+			<option value="prochlor">Prochlorococcus species</option>
+		</param>
+	</when>
+	<when value="location">
+		<param name="subset" type="select" label="Select the subset to visualise">
+			<option value="all_proportal">All isolates and metagenomes</option>
+			<option value="isolate">All ProPortal isolates</option>
+			<option value="prochlor">Prochlorococcus species</option>
+			<option value="prochlor">Prochlorococcus species</option>
+			<option value="synech">Synechococcus species</option>
+			<option value="prochlor_phage">Prochlorococcus phage species</option>
+			<option value="synech_phage">Synechococcus phage species</option>
+		</param>
+	</when>
+	<when value="phylogram">
+		<param name="subset" type="select" label="Select the subset to visualise">
+			<option value="isolate">All ProPortal isolates</option>
+			<option value="prochlor">Prochlorococcus species</option>
+			<option value="synech">Synechococcus species</option>
+			<option value="prochlor_phage">Prochlorococcus phage species</option>
+			<option value="synech_phage">Synechococcus phage species</option>
+		</param>
+	</when>
+	</conditional>
+
+	</inputs>
+  <outputs>
+    <data name="outfile" format="html" label="Visualisation HTML page" />
+  </outputs>
+  <help>
+This tool allows you to view the standard ProPortal visualisations in Galaxy.
+  </help>
+
+</tool>

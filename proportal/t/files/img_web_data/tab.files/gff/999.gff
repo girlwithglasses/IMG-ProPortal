@@ -1,0 +1,11 @@
+##gff-version 3
+NC_005072	img_core_v400	CDS	174	1331	.	+	0	ID=637448992;locus_tag=PMM0001;product=DNA polymerase III subunit beta
+NC_005072	img_core_v400	CDS	1333	2040	.	+	0	ID=637448993;locus_tag=PMM0002;product=hypothetical protein
+NC_005072	img_core_v400	CDS	2044	4383	.	+	0	ID=637448994;locus_tag=PMM0003;product=phosphoribosylformylglycinamidine synthase subunit II
+NC_005072	img_core_v400	CDS	4430	5890	.	+	0	ID=637448995;locus_tag=PMM0004;product=amidophosphoribosyltransferase
+NC_005072	img_core_v400	CDS	5887	8328	.	-	0	ID=637448996;locus_tag=PMM0005;product=DNA gyrase/topoisomerase IV, subunit A
+NC_005072	img_core_v400	CDS	8416	9270	.	-	0	ID=637448997;locus_tag=PMM0006;product=hypothetical protein
+NC_005072	img_core_v400	CDS	9275	10219	.	-	0	ID=637448998;locus_tag=PMM0007;product=hypothetical protein
+NC_005072	img_core_v400	CDS	10367	11104	.	+	0	ID=637448999;locus_tag=PMM0008;product=hypothetical protein
+NC_005072	img_core_v400	CDS	11105	11734	.	+	0	ID=637449000;locus_tag=PMM0009;product=transcription antitermination protein NusB
+NC_005072	img_core_v400	CDS	11793	13115	.	+	0	ID=637449001;locus_tag=PMM0010;product=signal recognition particle docking protein FtsY

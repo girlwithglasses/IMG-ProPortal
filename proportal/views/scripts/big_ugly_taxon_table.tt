@@ -1,0 +1,29 @@
+[%	WRAPPER scripts/pageload_wrapper.tt;
+	scr_arr =
+	[
+		'/js/d3.min.js',
+		'/js/d3.chart.min.js',
+		'/js/d3.chart.table.js'
+	];
+%]
+
+//		var cf = crossfilter(res),
+//		by_ecosys_type = cd.dimension('ecosystem_type'),
+//		by_ecosys_subtype = cd.dimension('ecosystem_subtype'),
+//		by_ncbi_genus = cd.dimension('ncbi_genus');
+
+	// bind data to the table
+	var data = getJson()
+	, rects = d3.select("#table")
+		.chart("Table")
+		.name( 'taxon_oid' )
+		.columns([ 'taxon_display_name', 'latitude', 'longitude', 'taxon_oid', 'ncbi_taxon_id' ]);
+
+	d3.selectAll(".data-table__tbody tr")
+		.data(data.results.array, function(d) {
+			return d ? 'taxon_oid_' + d.taxon_oid : this.id;
+		});
+
+		rects.draw( data );
+
+[%	END %]

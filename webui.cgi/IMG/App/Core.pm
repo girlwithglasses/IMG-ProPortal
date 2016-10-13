@@ -3,17 +3,43 @@
 #
 #	Core attributes, etc.
 #
-#	$Id: Core.pm 34542 2015-10-20 20:56:35Z aireland $
+#	$Id: Core.pm 36174 2016-09-15 13:29:13Z aireland $
 ############################################################################
 package IMG::App::Core;
 
 use IMG::Util::Base 'Class';
+use IMG::Model::Contact;
+use Time::HiRes;
+
+
+has 'id' => (
+	is => 'ro',
+	builder => 1
+);
+
+sub _build_id {
+	return [ Time::HiRes::gettimeofday ];
+}
 
 has 'config' => (
-	is => 'ro',
+	is => 'lazy',
 	isa => HashRef,
-    lazy => 1,
+#	lazy => 1,
+#	builder => 1,
+#	predicate => 1,
+);
+
+sub _build_config {
+	return {};
+}
+
+
+has 'user' => (
+	is => 'rwp',
 	predicate => 1,
+	coerce => sub {
+		return IMG::Model::Contact->new( @_ );
+	},
 );
 
 has 'http_params' => (

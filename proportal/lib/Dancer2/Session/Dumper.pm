@@ -34,7 +34,7 @@ sub _freeze_to_handle {
 
 sub _thaw_from_handle {
     my ( $self, $fh ) = @_;
-    my $str = IMG::Util::File::slurp( $fh );
+    my $str = IMG::Util::File::file_slurp( $fh );
 	my ($safe_str) = $str =~ m/^(.*)$/s;
 	my $rv = Safe->new->reval( $safe_str );
     if ( $@ ) {

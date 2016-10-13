@@ -50,7 +50,7 @@ sub make_menu {
 
 	# if the ID is not defined, return the default menu
 	if ( not defined $page_id ) {
-		warn "page ID is not defined: group was " . Dumper $menu_grp;
+#		warn "page ID is not defined: group was " . Dumper $menu_grp;
 #		return make_menus( undef, $menu_grp, $page_id );
 	}
 
@@ -62,18 +62,18 @@ sub make_menu {
 	# get the menu structures and populate the links
 	my $menus = $self->get_menu_items();
 
-	say 'Looking for group ' . ( $menu_grp || 'undefined' ) . ' and page ' . ( $page_id || 'undefined' );
+#	say 'Looking for group ' . ( $menu_grp || 'undefined' ) . ' and page ' . ( $page_id || 'undefined' );
 
 	my $fn = sub {
 		my $l = shift;
 		my $rtn;
 		if ( $menu_grp && $menu_grp eq $l->{id} ) {
-			say 'MATCH! Group matches ' . $l->{id};
+#			say 'MATCH! Group matches ' . $l->{id};
 			$l->{class} = 'parent';
 			$rtn++;
 		}
 		if ( $page_id && $page_id eq $l->{id} ) {
-			say 'MATCH! page ID matches ' . $l->{id};
+#			say 'MATCH! page ID matches ' . $l->{id};
 			$l->{class} = 'current';
 			$rtn++;
 		}
@@ -155,7 +155,7 @@ Search for a page ID in a menu, and return the section of the menu that comprise
 
 sub search_menu {
 	my $self = shift;
-	my $id = shift // die 'No ID supplied';
+	my $id = shift // $self->choke({ err => 'missing', subject => 'page ID' });
 	my $menus = $self->get_menu_items();
 	my $rslt = $self->_get_subtree( $menus, $id );
 	if ( $rslt ) {
@@ -178,8 +178,8 @@ that page to be in the menu!)
 
 sub find_parent_menu {
 	my $self = shift;
-	my $id = shift // die 'No ID supplied';
-	say 'Looking for ' . $id;
+	my $id = shift // $self->choke({ err => 'missing', subject => 'page ID' });
+#	say 'Looking for ' . $id;
 	my $menus = $self->get_menu_items();
 	for my $m ( @$menus ) {
 		my $rslt = $self->_get_subtree( [ $m ], $id );
@@ -209,7 +209,7 @@ sub _get_group {
 	my $menu_grp = shift;
 	my $page_id = shift;
 
-	say 'menu_grp: >>' . ( $menu_grp // 'undefined' ) . '<<';
+#	say 'menu_grp: >>' . ( $menu_grp // 'undefined' ) . '<<';
 
 	my $mapping = {
 		FindGenomes    => 'menu/FindGenomes',
@@ -225,7 +225,7 @@ sub _get_group {
 	};
 
 	if ( defined $menu_grp && $mapping->{ $menu_grp } ) {
-		say 'We definitely have this one!';
+#		say 'We definitely have this one!';
 		return $mapping->{ $menu_grp };
 	}
 #	else {

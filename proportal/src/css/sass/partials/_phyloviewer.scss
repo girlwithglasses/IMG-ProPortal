@@ -1,116 +1,171 @@
 /* partials/phyloviewer */
 
+
 $toolbar-w: 220px;
 
-#wrapper {
-	width: 1220px;
-}
+.phylo_viewer__container {
 
-#toolbar {
-	width: $toolbar-w;
-	float: left;
-	font-size: .75rem;
-}
+	#wrapper {
+		width: 1220px;
+	}
 
-/* =========  TOOLBAR ELEMENTS  =========  */
-#title {
-	margin: 0;
-	padding: 20px;
-}
-.optionBox {
-	width: 100%;
-//	float: left;
-	margin: 0px;
-	padding: $gutter 0 15px;
-}
-.optionTitle {
-	width: 100%;
-	padding: $gutter;
-	padding-left: 15px;
-	background: whitesmoke;
-	font-weight: bold;
-//	float: left;
-	margin: 0;
-}
-.optionSubtitle {
-	width: 100%;
-	padding: 5px;
-	padding-left: 15px;
-	background: whitesmoke;
-	font-weight: bold;
-//	float: left;
-	margin: 0;
-}
+	#toolbar {
+		width: $toolbar-w;
+		height: 100%;
+		float: left;
+//		position: fixed;
+		background: white;
+		z-index: 1;
+	}
+	#toolbar * {
+		font-size: 12px;
+	}
+	#phyloWrapper {
+		margin-left: $toolbar-w;
+	}
+	#phylogram {
+		width: 100%;
+		margin-left: $toolbar-w;		/* makes room for left toolbar */
+		display: inline-block;/* keeps this from wrapping under toolbar */
+		float: right;
+		position: relative;
 
-.optionBox * {
-//	float: left;
-}
+	}
+	#footer {
+		clear: both;
+	}
 
-.optionBox .label {
-	width: 110px;
-}
-.optionBox .labelShort {
-	width: 80px;
-}
-.optionBox input {
-//	float: left;
-}
-.optionBox input[type="range"]{
-	width: 57px
-}
-.optionBox input[type="radio"]{
-	margin-left: 25px;
-	margin-right: 5px;
-}
-.optionBox input[type="checkbox"]{
-	margin-right: 5px;
-//	position: absolute;	/* these three lines center the element vertically in the <li> */
-//	top: 35%;
-//	transform: translateY(-50%);
-}
-.optionBox input[type="submit"]{
-	float: right;
-	width: 40px;
-	border-radius: 3px;
-	margin: 2px;
-}
-.optionBox select{
-	float: right;
-	margin: 2px;
-	width: 90px;
-}
+/* 		=========  TOOLBAR ELEMENTS  =========  */
+	#title {
+		margin: 0px;
+		padding: 20px;
+	}
+	.optionBox {
+		width: 100%;
+		float: left;
+		margin: 0px;
+		padding: 10px 0px 10px 15px;
+	}
+	.optionTitle {
+		width: 100%;
+		padding: 10px;
+		padding-left: 15px;
+		background: whitesmoke;
+		font-weight: bold;
+		float: left;
+		margin: 0px;
+	}
+	.optionSubtitle {
+		width: 100%;
+		padding: 5px;
+		padding-left: 15px;
+		background: whitesmoke;
+		font-weight: bold;
+		float: left;
+		margin: 0px;
+	}
+
+	.optionBox * {
+		float: left;
+	}
+
+	.optionBox .label {
+		width: 110px;
+	}
+	.optionBox .labelShort {
+		width: 80px;
+	}
+	.optionBox input {
+		float: left;
+
+	}
+	.optionBox input[type="range"]{
+		width: 57px
+	}
+	.optionBox input[type="radio"]{
+		margin-left: 25px;
+		margin-right: 5px;
+	}
+	.optionBox input[type="checkbox"]{
+		margin-right: 5px;
+		position: absolute;				/* these three lines center the element vertically in the <li> */
+		top: 35%;
+		transform: translateY(-50%);
+	}
+	.optionBox input[type="submit"]{
+		float: right;
+		width: 40px;
+		border-radius: 3px;
+		margin: 2px;
+	}
+	.optionBox select{
+		float: right;
+		margin: 2px;
+		width: 90px;
+	}
 
 
-#toolbar li {
-	list-style: none;
-//	display: inline;
-	display: block;
-	position: relative;
-}
+	#toolbar li {
+		list-style:none;
+		display: inline;
+		position: relative;
+	}
 
-.optionBox .colorPicker {
-	width: 24px;
-	height: 24px;
-	font-size: $font-size * .5;
-	text-align: center;
-	vertical-align: middle;
-	border-radius: 4px;
-	border: 1px dotted grey;
-	margin-right: 8px;
-	float: right;
-}
+	.optionBox .colorPicker {
+		width: 24px;
+		height: 24px;
+/* 			background: cyan; */
+		font-size: 8px;
+		text-align: center;
+		vertical-align: middle;
+		border-radius: 4px;
+		border: 1px dotted grey;
+		margin-right: 8px;
+		float: right;
+	}
 
+	// default: no show?
+	.leafnode_label {
+		opacity: 0;
+	}
+	.show_leafnode_labels .leafnode_label {
+		opacity: 1;
+	}
 
-#phyloWrapper {
-	margin-left: $toolbar-w;
-}
+	.branchLengths {
+		font-size: 10px;
+		fill: #ccc;
+		opacity: 0;
+	}
+	.show_branchLengths .branchLengths {
+		opacity: 1;
+	}
 
-#phyloviewer {
-	width: 100%;
-	margin-left: $toolbar-w;		/* makes room for left toolbar */
-	display: inline-block; /* keeps this from wrapping under toolbar */
-	float: right;
-	position: relative;
+	.distTicks {
+		opacity: 0;
+	}
+	.show_distTicks .distTicks {
+		opacity: 1;
+	}
+/*
+	.Distance Ruler
+	Distance Labels
+	Internal Nodes
+	Leaf
+	Leaf Color
+	Leaf Node Size
+*/
+
+	.matrix {
+		white-space: nowrap;
+		font-size: 8px;
+	}
+
+	.legend {
+		font-size: 16px;
+		font-weight: bold;
+		text-anchor: start;
+	}
 
 	.link {				/* tree branches */
 		stroke: grey;
@@ -136,16 +191,5 @@ $toolbar-w: 220px;
 		fill: steelblue;
 		stroke-width: 2px;
 	}
-}
 
-.heatmap {
-	white-space: nowrap;
-	font-size: $font-size * .5;
 }
-
-.legend {
-	font-size: $font-size;
-	font-weight: bold;
-	text-anchor: start;
-}
-

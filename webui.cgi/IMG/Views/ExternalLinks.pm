@@ -10,6 +10,7 @@ BEGIN {
 	@EXPORT_OK = qw( get_external_link );
 }
 
+use IMG::App::Role::ErrorMessages qw( err );
 
 =pod
 
@@ -207,8 +208,11 @@ Get an external link from the library
 =cut
 
 sub get_external_link {
-	my $target = shift // die 'No link target provided';
-	die 'Link target ' . ( $target || '' ) . ' not found' unless defined $external_links->{$target};
+	my $target = shift // die err({ err => 'missing', subject => 'link target' });
+
+	die err({ err => 'not_found',
+		subject => 'link target ' . ( $target || '' )
+	}) unless defined $external_links->{$target};
 
 	# simple string; append any arguments to it
 	if ( ! ref $external_links->{$target} ) {

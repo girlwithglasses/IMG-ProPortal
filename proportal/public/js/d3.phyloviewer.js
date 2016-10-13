@@ -274,12 +274,13 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
     // Draw leaf labels and nodes
     vis.selectAll('.leafnode')
     	.append("text")
-          .attr("class", "id_leafnode_label")
+    	.classed('leafnode_label', true )
+//          .attr("class", "id_leafnode_label")
           .attr("dx", 10)
           .attr("dy", 3)
           .attr("text-anchor", "start")		// move to css
           .attr('font-size', '12px')		// move to css
-          .text(function(d) { return d.metadata["Locus Tag"]; });
+          .text(function(d) { if (d.metadata) { return d.metadata["gene_oid"]; } return d.name; });
     vis.selectAll('.leafnode').append('circle');
     vis.selectAll('.rootnode').append('circle');
     //vis.selectAll('g.innernode').append('text').text( function(d) { return d.depth; });
@@ -287,7 +288,7 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
     // Draw branch lengths
     vis.selectAll('.innernode')
       .append("text")
-        .attr("class", "id_branchLengths")
+		.classed('branchLengths', true)
         .attr("dx", -6)
         .attr("dy", -6)
         .attr("text-anchor", 'end')		// move to css
@@ -295,30 +296,27 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
         .attr('fill', '#ccc')			// move to css
         .text(function(d) { return d.length; });
 
-    // Draw tree distance ruler (only if treeType = Phylogram!)
 	  vis.selectAll('line')
           .data(yscale.ticks(10))
-        .enter().append('line')
-          .attr("class", "id_distTicks")
+        .enter()
+        	.append('line')
+        	.classed('distTicks', true)
           .attr('y1', 0)
           .attr('y2', h)
           .attr('x1', yscale)
           .attr('x2', yscale)
-          .attr("stroke", "#ddd")			// move to css
-          .style("opacity", function() {  return options.showDistRuler ? 1 : 0; });	 // initial condition
+          .attr("stroke", "#ddd");			// move to css
 
       vis.selectAll("text.rule")
           .data(yscale.ticks(10))
         .enter().append("text")
-          .attr("id", "id_distTicks")
-          .attr("class", "rule")
+        	.classed('rule distTicks', true)
           .attr("x", yscale)
           .attr("y", 0)
           .attr("dy", -3)
           .attr("text-anchor", "middle")	// move to css
           .attr('font-size', '10px')		// move to css
           .attr('fill', '#ccc')				// move to css
-          .style("opacity", function() {  return options.showDistRuler ? 1 : 0; })  // initial condition
           .text(function(d) { return Math.round(d*100) / 100; });
 
 
@@ -328,23 +326,28 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 		var h_data = options.heatmap.data
 		, cols = options.heatmap.cols
 		, rows = vis.selectAll('.leafnode')
-		, zScale
+		, zScale_data = {}
 		;
 
 		cols.forEach( function(c,i){
-			zScale = d3.scale.linear()
-				.domain( d3.extent( h_data, function(x){ return x[c]; } ) )
-				.range([ 'white', 'black' ]);
+			zScale_data[ c ] = d3.scale.quantile()
+				.domain( d3.extent( h_data, function(d){ return +d[c]; } ) )
+				.range( d3.range(9) );
+		});
 
-			rows.append("rect")
-				.attr("class", "heatmap")  // not working right now
+		cols.forEach( function(c,i){
+			rows
+				.append("rect")
+			//	.attr("class", "heatmap")  // not working right now
 				.attr("y", (rowHeight/2)-rowHeight)
 				.attr("x", function(d) { return (rightPaneEdge - d.y) + i*rowHeight; })    // d.y --> d.x!
 				.attr("width", rowHeight-1)
 				.attr("height", rowHeight-1)
-				.style("fill", function(d) { return zScale(d.metadata[c]); });
-
-			rows.append("text")
+				.attr("class", function(d) {
+					return 'q' + zScale_data[c](d.metadata[c]) + '-9';
+				});
+			rows
+				.append("text")
 				.attr("width", 10)
 				.attr("y", (rowHeight/2)-rowHeight + (rowHeight/2) + 2)
 				.attr("x", function(d) { return (rightPaneEdge - d.y) + (i*rowHeight) + (rowHeight/2); })    // d.y --> d.x!
@@ -355,39 +358,6 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 				.text(function(d) { return d.metadata[c]; });
 		});
 
-/**
-		// prep data
-		for (i=0; i<cl; i++){
-			var thisP = h_data.map(function(o) { return o[cols[i]]; } )
-			, maxVal = Math.max.apply(Math, thisP)
-			, minVal = Math.min.apply(Math, thisP)
-			, color = d3.scale.linear()
-				.domain([minVal, maxVal])
-				.range(["white", "blue"]);
-			propColors.push(color);
-		}
-		for (i=0; i<cl; i++){   // Each column
-			rows.append("rect")
-				.attr("class", "heatmap")  // not working right now
-				.attr("y", (rowHeight/2)-rowHeight)
-				.attr("x", function(d) { return (rightPaneEdge - d.y) + i*rowHeight; })    // d.y --> d.x!
-				.attr("width", rowHeight-1)
-				.attr("height", rowHeight-1)
-				.style("fill", function(d) { return propColors[i](d.metadata[cols[i]]); });
-
-			rows.append("text")
-				.attr("width", 10)
-				.attr("y", (rowHeight/2)-rowHeight + (rowHeight/2) + 2)
-				.attr("x", function(d) { return (rightPaneEdge - d.y) + (i*rowHeight) + (rowHeight/2); })    // d.y --> d.x!
-				.attr("text-anchor", "middle")									// move to css
-				.attr('font-family', 'Helvetica Neue, Helvetica, sans-serif')	// move to css
-				.attr('font-size', '10px')										// move to css
-				.attr('fill', 'black')											// move to css
-				.text(function(d) { return d.metadata[cols[i]]; });
-		}
-
-*/
-
 	}
 
 
@@ -395,6 +365,14 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 
 //  CONTROL PANEL FUNCTIONALITY
 //=====================================================================
+
+	var vis_node = d3.select( 'svg' )
+		, vnp = vis_node.node().parentNode
+		, vnpp = vnp.parentNode
+		;
+	vis_node.classed('show_leafnode_labels', true);
+    // Draw tree distance ruler (only if treeType = Phylogram!)
+    vis_node.classed('show_dist_rule', options.showDistRuler);
 
 	d3.select("#o_treeType")
    	 .on("change", function() {
@@ -416,13 +394,13 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 
 
 	d3.select("#treeWidthLabel").text(options.treeWidth);
+
 	d3.select("#o_treeWidth")
 	  .attr("value", options.treeWidth)
       .on("input", function() {
       	d3.select("#treeWidthLabel").text(this.value);
       	d3.select("#o_treeWidth").property("value", this.value);
       	tree.size([h, o_treeWidth.value]);
-
    	  });
 
     d3.select("#o_leafHeight")
@@ -433,11 +411,7 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 
     d3.select("#o_showLeafLabels")
       .on("change", function(){
-        var active = id_leafnode_label.active ? false : true,
-          newOpacity = active ? 0 : 1;
-          vis.selectAll("#id_leafnode_label").style("opacity", newOpacity);
-          id_leafnode_label.active = active;
-
+      	vis_node.classed('show_leafnode_labels', this.checked );
       });
 
 	d3.select("#o_showDistRuler")
@@ -445,28 +419,30 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 			return options.showDistRuler ? true : false;
 		})
 		.property('disabled', function(){
-			if (d3.select("#o_treeType").property('value')==="phylogram") {
+			if ( d3.select("#o_treeType").property('value')==="phylogram" ) {
 				return false;
    	 		} else if (d3.select("#o_treeType").property('value')==="cladogram") {
 	 			return true;
         	}
 		})
      	.on("change", function() {
-			if (id_distTicks.active) {
-				vis.selectAll("#id_distTicks").style("opacity", 0);
-				id_distTicks.active = false;
-			} else {
-				vis.selectAll("#id_distTicks").style("opacity", 1);
-				id_distTicks.active = true;
-			}
+			vis_node.classed('show_distTicks', this.checked);
+// 			if (id_distTicks.active) {
+// 				vis.selectAll(".distTicks").style("opacity", 0);
+// 				id_distTicks.active = false;
+// 			} else {
+// 				vis.selectAll(".distTicks").style("opacity", 1);
+// 				id_distTicks.active = true;
+// 			}
 	    });
 
    d3.select("#o_showDistLabels")
      .on("change", function() {
-        var active = id_branchLengths.active ? false : true,
-          newOpacity = active ? 0 : 1;
-          vis.selectAll("#id_branchLengths").style("opacity", newOpacity);
-          id_branchLengths.active = active;
+		vis_node.classed('show_branchLengths', this.checked);
+//         var active = id_branchLengths.active ? false : true,
+//           newOpacity = active ? 0 : 1;
+//           vis.selectAll(".branchLengths").style("opacity", newOpacity);
+//           id_branchLengths.active = active;
      });
 
     return {tree: tree, vis: vis};

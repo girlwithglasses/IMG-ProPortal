@@ -3,14 +3,17 @@ package IMG::Util::File;
 use IMG::Util::Base;
 use Scalar::Util qw(tainted);
 use IMG::Util::Untaint;
+use IMG::App::Role::ErrorMessages qw( err );
+use Text::CSV_XS;
 use Storable;
 
-our (@ISA, @EXPORT_OK);
+our ( @ISA, @EXPORT_OK, %EXPORT_TAGS );
 
 BEGIN {
 	require Exporter;
 	@ISA = qw( Exporter );
-	@EXPORT_OK = qw( slurp file_to_array file_to_aoa file_to_hash file_touch );
+	@EXPORT_OK = qw( file_slurp file_to_array file_to_aoa file_to_hash file_touch get_dir_contents );
+	%EXPORT_TAGS = ( all => \@EXPORT_OK );
 }
 
 
@@ -41,7 +44,7 @@ IMG::Util::File - Miscellaneous file-related utility routines
 	my $cell = $data->[2][4];
 
 	# get a file as a string
-	my $str = IMG::Util::File::slurp( '/path/to/text/file.txt' );
+	my $str = IMG::Util::File::file_slurp( '/path/to/text/file.txt' );
 	# $str will still have line endings embedded in it
 
 	# parse a file of key-value data with ':' as the separator
@@ -50,90 +53,124 @@ IMG::Util::File - Miscellaneous file-related utility routines
 		# do something
 	}
 
-=head3 slurp
+=head3 file_slurp / fh_slurp
 
-slurp a file into a scalar (the file contents will be a single string)
+slurp a file or filehandle into a scalar (the file contents will be a single string)
+
+@param  $file | $fh  the file or filehandle to parse (including path)
 
 =cut
 
-=head3 file_to_array
+=head3 file_to_array / fh_to_array
 
 read a file into an array
 
-@param  $file       the file to parse (including path)
+@param  $file | $fh  the file or filehandle to parse (including path)
 
 @return $arrayref   of non-blank lines in the file
 
 
-=head3 file_to_hash
+=head3 file_to_hash / fh_to_hash
 
 read a file and parse it into a hash
 
 Identical keys are overwritten
 
-@param  $file       the file to parse (including path)
-@param  $sep        key / value separator; defaults to '='
+@param  $file | $fh  the file or filehandle to parse (including path)
+@param  $sep         key / value separator; defaults to '='
 
 @return $hashref
 
 
-=head3 file_to_aoa
+=head3 file_to_aoa / fh_to_aoa
 
 parse a file into an array of arrays
 
-@param  $file       the file to parse (including path)
-@param  $sep        record separator; defaults to "\t" (tab)
+@param  $file | $fh  the file or filehandle to parse (including path)
+@param  $sep         record separator; defaults to "\t" (tab)
 
 @return $arrayref of arrays
 
 =cut
 
 
-sub slurp {
-
-	return _parse( 'slurp', @_ );
-
+sub file_slurp {
+	return _parse({ file => shift, fread_sub => 'slurp' });
+}
+sub fh_slurp {
+	return _parse({ fh => shift, fread_sub => 'slurp' });
 }
 
 sub file_to_array {
-
-	return _parse( 'file_to_array', @_ );
-
+	return _parse({ file => shift, fread_sub => 'to_array' }, @_ );
+}
+sub fh_to_array {
+	return _parse({ fh => shift, fread_sub => 'to_array' }, @_ );
 }
 
 sub file_to_aoa {
-
-	return _parse( 'file_to_aoa', @_ );
-
+	return _parse({ file => shift, fread_sub => 'to_aoa' }, @_ );
+}
+sub fh_to_aoa {
+	return _parse({ fh => shift, fread_sub => 'to_aoa' }, @_ );
 }
 
 sub file_to_hash {
-
-	return _parse( 'file_to_hash', @_ );
-
+	return _parse({ file => shift, fread_sub => 'to_hash' }, @_ );
 }
+sub fh_to_hash {
+	return _parse({ fh => shift, fread_sub => 'to_hash' }, @_ );
+};
 
 sub _parse {
+	my $args = shift;
 
-	my $sub = shift || croak 'No file reading sub specified!';
-	my $file = shift || croak 'No file specified!';
+	if ( ! $args->{ fread_sub } ) {
+		# THIS SHOULD NEVER HAPPEN!!!
+		die err({
+			err => 'missing',
+			subject => 'fread_sub'
+		});
+	}
+	if ( ! $args->{file} && ! $args->{fh} ) {
+		die err({
+			err => 'missing',
+			subject => 'input file'
+		});
+	}
 
-	# if file is tainted, untaint it
-#	if ( tainted( $file ) ) {
-#		$file = IMG::Util::Untaint::check_file( 'fake', $file );
-#	}
+	my $fh;
+	if ( $args->{fh} ) {
+		$fh = $args->{fh};
+		seek $fh, 0, 0;
+	}
+	else {
+		# if file is tainted, untaint it
+	#	if ( tainted( $file ) ) {
+	#		$file = IMG::Util::Untaint::check_file( 'fake', $file );
+	#	}
+		open ( $fh, "<", $args->{file} ) or die err({
+			err => 'not_readable',
+			subject => $args->{file},
+			msg => $!
+		});
+	}
 
-	open (my $fh, "<", $file) or croak "Could not open $file: $!";
 
 	my $sub_h = {
 
 		slurp => sub {
+			my $par = shift;
 			local $/;
 			my $contents = <$fh>;
+			if ( $args->{verbose} ) {
+				say $contents;
+			}
 			return $contents;
 		},
 
-		file_to_array => sub {
+		to_array => sub {
+			my $par = shift;
 			my @contents;
 			while (<$fh>) {
 				next unless /\w/;
@@ -143,8 +180,9 @@ sub _parse {
 			return [ @contents ];
 		},
 
-		file_to_aoa => sub {
-			my $sep = shift // "\t";
+		to_aoa => sub {
+			my $par = shift;
+			my $sep = $par->{sep} // "\t";
 			my @contents;
 			while (<$fh>) {
 				next unless /\w/;
@@ -154,8 +192,9 @@ sub _parse {
 			return [ @contents ];
 		},
 
-		file_to_hash => sub {
-			my $sep = shift // '=';
+		to_hash => sub {
+			my $par = shift;
+			my $sep = $par->{sep} // '=';
 			my %contents;
 			while (<$fh>) {
 				next unless /\w/;
@@ -168,9 +207,17 @@ sub _parse {
 
 	};
 
-	croak 'invalid file parsing routine supplied' unless $sub_h->{$sub};
+	die err({
+		err => 'invalid',
+		subject => $args->{fread_sub},
+		type => 'fread_sub'
+	}) unless $sub_h->{$args->{fread_sub}};
 
-	return $sub_h->{ $sub }->( @_ );
+	if ( $_[0] ) {
+		$args->{sep} = shift;
+	}
+
+	return $sub_h->{ $args->{fread_sub} }->( $args );
 
 }
 
@@ -186,9 +233,9 @@ Warns if the file could not be touched; dies if file does not exist
 =cut
 
 sub file_touch {
-	my $file_path = shift // die 'No file specified';
+	my $file_path = shift // die err({ err => 'missing', subject => 'file' });
 
-	die $file_path . ' does not exist' if ! -e $file_path;
+	die err({ err => 'not_found', subject => $file_path }) if ! -e $file_path;
 
 	# untaint path if necessary
 	if ( tainted($file_path) ) {
@@ -203,6 +250,10 @@ sub file_touch {
 
 does $d exist?
 
+@return     true if the file is readable
+            false if it is not
+            dies if the file/dir isn't specified
+
 =cut
 
 sub file_exists {
@@ -215,12 +266,16 @@ sub file_exists {
 
 is $d readable?
 
+@return     true if the file is readable
+            false if it is not
+            dies if the file/dir isn't specified or if it does not exist
+
 =cut
 
 sub is_readable {
 	my $d = shift // die 'No file or directory specified';
 	return -r $d if file_exists($d);
-	die "$d does not exist";
+	die err({ err => 'not_found', subject => $d });
 }
 
 =head3 is_writable
@@ -232,7 +287,7 @@ is $d writable?
 sub is_writable {
 	my $d = shift // die 'No file or directory specified';
 	return -w $d if file_exists($d);
-	die "$d does not exist";
+	die err({ err => 'not_found', subject => $d });
 }
 
 =head3 is_dir
@@ -244,7 +299,7 @@ is $d a directory?
 sub is_dir {
 	my $d = shift // die 'No file or directory specified';
 	return -d $d if file_exists($d);
-	die "$d does not exist";
+	die err({ err => 'not_found', subject => $d });
 }
 
 =head3 is_rw
@@ -256,9 +311,137 @@ is $d readable and writable?
 sub is_rw {
 	my $d = shift // die 'No file or directory specified';
 	return -r $d && -w _ if file_exists($d);
-	die "$d does not exist";
+	die err({ err => 'not_found', subject => $d });
 }
 
+=head3 write_csv
+
+Create a CSV file
+
+@param $args->{...}
+	file OR fh      output file or filehandle
+	module_args     the arguments to pass directly to Text::CSV_XS
+	cols            columns to print and in what order
+	data_arr        array of data items to be printed
+	csv_obj         CSV_XS object (optional)
+
+@return
+
+=cut
+
+sub write_csv {
+	my $args = shift;
+
+	my $fh;
+
+	if ( $args->{fh} ) {
+		$fh = $args->{fh};
+	}
+	elsif ( $args->{file} ) {
+		open $fh, ">", $args->{file} or die err({
+			err => 'not_writable',
+			subject => $args->{file},
+			msg => $!
+		});
+	}
+	else {
+		die err({
+			err => 'missing',
+			subject => 'output file'
+		});
+	}
+
+	# also need cols, data_arr
+	for ( qw( cols data_arr ) ) {
+		if ( ! $args->{$_} ) {
+			die err({
+				err => 'missing',
+				subject => $_
+			});
+		}
+		elsif ( ! ref $args->{$_} || 'ARRAY' ne ref $args->{$_} ) {
+			die err({
+				err => 'format_err',
+				subject => $_,
+				fmt => 'an arrayref'
+			});
+		}
+	}
+
+	if ( ! $args->{module_args} ) {
+		$args->{module_args} = { eol => $/, sep_char => "\t" };
+	}
+
+	my $csv = $args->{csv_obj} // Text::CSV_XS->new( $args->{module_args} );
+	#{ eol => $args->{eol} // $/, sep_char => $args->{sep_char} // "\t" });
+	$csv->eol( $/ );
+	$csv->print( $fh, $args->{cols} );
+
+	for my $d ( @{$args->{data_arr}} ) {
+		$csv->print( $fh, [ map { $d->{$_} // '' } @{$args->{cols}} ] );
+	}
+	close $fh;
+
+	return;
+
+}
+
+
+
+# sub read_csv {
+#
+# 	my $aoh = csv (in => "data.csv",
+#                headers => "auto");
+#
+#
+# }
+
+=head3 get_dir_contents
+
+Get the contents of a directory
+
+@param $args  hashref with keys
+
+	dir => $directory
+
+	filter => sub { ... }  (optional) filter
+
+@return  arrayref of the file titles
+=cut
+
+sub get_dir_contents {
+	my $args = shift // {};
+
+	my $dir = $args->{dir} // die err({
+		err => 'missing',
+		subject => 'dir'
+	});
+
+	if ( ! is_dir( $dir ) ) {
+		die err({
+			err => 'format_err',
+			subject => $dir,
+			fmt => 'a directory'
+		});
+	}
+
+	opendir( my $dh, $dir ) or die err({
+		err => 'not_readable',
+		subject => $dir,
+		msg => $!
+	});
+
+	my @files;
+	if ( $args->{filter} ) {
+		@files = grep { $args->{filter}->($_) } readdir( $dh );
+	}
+	else {
+		@files = readdir( $dh );
+	}
+
+	closedir( $dh );
+	return [ @files ];
+}
 
 
 

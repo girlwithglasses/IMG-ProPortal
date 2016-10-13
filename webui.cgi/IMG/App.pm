@@ -4,31 +4,36 @@
 #	Core IMG application to run pre-flight checks, check the user, initiate
 #	the session, parse params, and dispatch the appropriate app.
 #
-#	$Id: App.pm 34542 2015-10-20 20:56:35Z aireland $
+#	$Id: App.pm 35780 2016-06-15 20:41:20Z klchu $
 ############################################################################
 package IMG::App;
 
 use IMG::Util::Base 'Class';
 
-our $VERSION = 0.01;
+our $VERSION = 0.1.0;
+
+#use IMG::Model::Contact;
 
 extends 'IMG::App::Core';       # config
                                 # http_params, cgi, psgi_env (to be deprecated)
-
 with
-	'IMG::App::Role::HttpClient',     # http_ua
-	'IMG::App::Role::Session',        # session
-	'IMG::App::Role::PreFlight',      # remote_addr, user_agent (both to be deprecated)
+	'IMG::App::Role::HttpClient',      # http_ua
+	'IMG::App::Role::Session',         # session -- already handled by Dancer session?
+	'IMG::App::Role::PreFlight',       # remote_addr, user_agent (both to be deprecated)
 	'IMG::App::Role::DbConnection',    # db_connection_h
 	'IMG::App::Role::JGISessionClient',
-#   'IMG::App::Cache',          # to write!
-#	'IMG::App::Logger',         # to write!
-	'IMG::App::Role::User',           # user
+	'IMG::App::Role::ErrorMessages',   # standard error messages
+#	'IMG::App::Cache',                 # to write!
+#	'IMG::App::Logger',                # to write!
+	'IMG::App::Role::User',            # user
 	'IMG::App::Role::UserChecks',
 	'IMG::App::Role::FileManager',
-    'IMG::App::Role::LinkManager',
-    'IMG::App::Role::MenuManager',
-	'IMG::App::Role::Schema';              # schema_h
+	'IMG::App::Role::LinkManager',
+#	'IMG::App::Role::MenuManager',     # menu manager: only needed for web output
+
+	'IMG::App::Role::Controller',      # web query controller
+	'IMG::App::Role::Schema';          # schema_h
+
 
 sub BUILDARGS {
 	my $class = shift;

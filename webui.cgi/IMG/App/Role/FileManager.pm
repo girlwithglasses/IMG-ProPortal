@@ -5,7 +5,7 @@ use Scalar::Util qw(tainted);
 use IMG::Util::File;
 use File::Spec::Functions qw( catdir catfile );
 use Storable;
-requires 'config', 'session';
+requires 'config', 'session', 'choke';
 
 =pod
 
@@ -32,7 +32,8 @@ IMG::Util::FileSystem - Miscellaneous file system-related utility routines
 
 Get the name (well, path) of a directory. Does not check whether the directory is present.
 
-@param  $dir    the type of directory; valid params: session | cart |
+@param  $dir    the type of directory;
+                valid params: session | cart | web_data_dir
 
 @return $dirname
 
@@ -40,7 +41,7 @@ Get the name (well, path) of a directory. Does not check whether the directory i
 
 sub get_dirname {
 	my $self = shift;
-	my $dir = lc( shift ) || die 'No directory specified';
+	my $dir = lc( shift ) || $self->choke({ err => 'missing', subject => 'dir' });
 
 	if ( 'session' eq $dir ) {
 		return $self->get_session_dirname();
@@ -48,6 +49,10 @@ sub get_dirname {
 	# workspace
 	if ( 'workspace' eq $dir ) {
 		return $self->get_workspace_dirname();
+	}
+
+	if ( 'web_data_dir' eq $dir ) {
+		return $self->config->{web_data_dir};
 	}
 
 	my $sess_subdirs = {
@@ -63,10 +68,17 @@ sub get_dirname {
 
 	# session sub-directories
 	if ( $sess_subdirs->{ $dir } ) {
-		return catdir( $self->get_session_dirname, $sess_subdirs->{$dir} );
+		return catdir(
+			$self->get_session_dirname,
+			$sess_subdirs->{$dir}
+		);
 	}
 
-    die "directory '$dir' not known";
+    $self->choke({
+    	err => 'invalid',
+    	type => 'directory',
+    	subject => $dir
+    });
 }
 
 
@@ -80,13 +92,21 @@ Get the name (path) of the session directory. No checking for presence/absence o
 
 sub get_session_dirname {
 	my $self = shift;
-	die 'Config parameter "cgi_tmp_dir" not set' unless $self->has_config && $self->config->{cgi_tmp_dir};
-	die 'No session ID found' unless $self->has_session && defined $self->session->id;
+	$self->choke({
+		err => 'cfg_missing',
+		subject => '"cgi_tmp_dir" configuration parameter'
+#	}) unless $self->has_config && $self->config->{cgi_tmp_dir};
+	}) unless $self->config->{cgi_tmp_dir};
+
+	$self->choke({
+		err => 'missing',
+		subject => 'sess_id'
+	}) unless $self->has_session && defined $self->session->id;
 
 	return catdir( $self->config->{cgi_tmp_dir}, $self->session->id );
 }
 
-=head3 get_workspace_dirname {
+=head3 get_workspace_dirname
 
 Get the name (path) of the user's workspace directory.
 
@@ -96,38 +116,129 @@ Get the name (path) of the user's workspace directory.
 
 sub get_workspace_dirname {
 	my $self = shift;
-	die 'Config parameter "workspace_dir" not set' unless $self->has_config && defined $self->config->{workspace_dir};
-	die 'User ID not found in session' unless $self->has_session && defined $self->session->read('contact_oid');
+	$self->choke({
+		err => 'cfg_missing',
+		subject => '"workspace_dir" configuration parameter'
+#	}) unless $self->has_config && $self->config->{workspace_dir};
+	}) unless $self->config->{workspace_dir};
+
+	$self->choke({
+		err => 'missing',
+		subject => 'contact_oid'
+	}) unless $self->has_session
+	&& defined $self->session->read('contact_oid');
+
 	return catdir(
 		$self->config->{workspace_dir},
 		$self->session->read('contact_oid')
 	);
 }
 
+=head3 get_taxon_file
+
+Get the location of a taxon-related file -- e.g. sequence file,
+blast results, GFF, etc.
+
+@param $args hashref of arguments
+
+	type => 'aa_seq' | 'dna_seq' | 'genes' | etc    type of file to retrieve
+	taxon_oid => 1234567  taxon_oid
+
+@return  /path/to/file
+
+=cut
+
+sub get_taxon_file {
+	my $self = shift;
+	my $args = shift;
+
+	$self->choke({
+		err => 'cfg_missing',
+		subject => '"web_data_dir" config parameter'
+	}) unless $self->config->{web_data_dir};
+
+	my $f_names = {
+		aa_seq => sub { return 'taxon.faa/' . +shift->{taxon_oid} . '.faa'; },
+		dna_seq => sub { return 'taxon.fna/' . +shift->{taxon_oid} . '.fna'; },
+#		lin_seq => sub { return 'taxon.lin.fna/' . +shift . '.lin.fna'; },
+#		genes => sub { return 'taxon.genes.fna/' . +shift . '.fna'; },
+		gff => sub { return 'tab.files/gff/' . +shift->{taxon_oid} . '.gff'; },
+		cog => sub { return 'tab.files/cog/' . +shift->{taxon_oid} . '.cog.tab.txt' },
+		kog => sub { return 'tab.files/kog/' . +shift->{taxon_oid} . '.kog.tab.txt' },
+		pfam => sub { return 'tab.files/pfam/' . +shift->{taxon_oid} . '.pfam.tab.txt' },
+		tigrfam => sub { return 'tab.files/tigrfam/' . +shift->{taxon_oid} . '.tigrfam.tab.txt' },
+		ipr => sub { return 'tab.files/ipr/' . +shift->{taxon_oid} . '.ipr.tab.txt' },
+		kegg => sub { return 'tab.files/ko/' . +shift->{taxon_oid} . '.ko.tab.txt' },
+	};
+
+	# aliases
+	$f_names->{faa} = $f_names->{aa_seq};
+	$f_names->{fna} = $f_names->{dna_seq};
+
+	my $type = $args->{type} || $self->choke({ err => 'missing', subject => 'file type' });
+
+	$self->choke({ err => 'invalid', subject => $type, type => 'file type' }) unless $f_names->{$type};
+
+	return catdir(
+		$self->config->{web_data_dir},
+		$f_names->{ $type }->( $args )
+	);
+}
+
 
 my $file_index = {
 
-	prefs => { dirname => 'workspace', fn => 'mypreferences', fmt => 'hash' },
+	prefs => {
+		dirname => 'workspace',
+		fn => 'mypreferences',
+		fmt => 'hash'
+	},
 
-	genome_cart_state => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'genomeCart.' . $self->session->id . '.stor'; }, fmt => 'aoa' },
+	genome_cart_state => {
+		dirname => 'cart',
+		fn_sub => sub { my $self = shift; return 'genomeCart.' . $self->session->id . '.stor'; },
+		fmt => 'aoa'
+	},
 
-	genome_cart_col_ids => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.colid'; }, fmt => 'array' },
+	gene_cart_col_ids => {
+		dirname => 'cart',
+		fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.colid'; },
+		fmt => 'array'
+	},
 
-	gene_cart_state => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.stor'; }, fmt => 'aoa' },
+	gene_cart_state => {
+		dirname => 'cart',
+		fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.stor'; },
+		fmt => 'aoa'
+	},
 
-	scaf_cart_state => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'scaffoldCart.' . $self->session->id . '.stor'; }, fmt => 'aoa' },
+	scaf_cart_state => {
+		dirname => 'cart', fn_sub => sub { my $self = shift; return 'scaffoldCart.' . $self->session->id . '.stor'; }, fmt => 'aoa'
+	},
 
 	# returns the actual cart object!
-	cura_cart_state => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'curaCart.' . $self->session->id . '.stor'; }, fmt => 'storable' },
+	cura_cart_state => {
+		dirname => 'cart', fn_sub => sub { my $self = shift; return 'curaCart.' . $self->session->id . '.stor'; }, fmt => 'storable'
+	},
 
-	func_cart_state => { dirname => 'cart', fn_sub => sub { my $self = shift; return 'funcCart.' . $self->session->id . '.stor'; }, fmt => 'storable' },
+	func_cart_state => {
+		dirname => 'cart', fn_sub => sub { my $self = shift; return 'funcCart.' . $self->session->id . '.stor'; }, fmt => 'storable'
+	},
+
+
+
+#	genes_fna => // img_web_data/taxon.genes.fna/TAXON_OID.fna
 
 };
 
+
+
+
 my $read_h = {
-	hash => sub { return IMG::Util::File::file_to_hash( @_ ); },
-	aoa  => sub { return IMG::Util::File::file_to_aoa( @_ ); },
-	storable => sub { return retrieve( @_ ); },
+	hash  => sub { return IMG::Util::File::file_to_hash( $_[0] ); },
+	aoa   => sub { return IMG::Util::File::file_to_aoa( $_[0] ); },
+	array => sub { return IMG::Util::File::file_to_aoa( $_[0], ',' )->[0] // []; },
+	storable => sub { return retrieve( $_[0] ); },
 };
 
 =head3 read_file
@@ -138,19 +249,19 @@ Look up a file by path or by ID, read it, and return it!
 
 sub read_file {
 	my $self = shift;
-	my $file = shift // die 'No file specified';
+	my $file = shift // $self->choke({ err => 'missing', subject => 'file' });
 	my $fn = $self->get_filename( $file );
 	if ( -e $fn ) {
 		my $fmt = $self->get_file_fmt( $file );
 		my $contents = $read_h->{$fmt}->( $fn );
 		return $contents;
 	}
-	die $fn . ' not found';
+	$self->choke({ err => 'not_found', subject => $fn });
 }
 
 sub get_file_fmt {
 	my $self = shift;
-	my $file = shift // die 'No file specified';
+	my $file = shift // $self->choke({ err => 'missing', subject => 'file' });
 	if ( $file_index->{$file} ) {
 		return $file_index->{$file}{fmt} || die 'No format specified';
 	}
@@ -171,7 +282,7 @@ Dies if the file is not known.
 
 sub get_filename {
 	my $self = shift;
-	my $file = shift // die 'No file specified';
+	my $file = shift // $self->choke({ err => 'missing', subject => 'file' });
 	if ( $file_index->{$file} ) {
 		my $path = '';
 		if ( $file_index->{$file}{dirname} ) {
@@ -201,7 +312,7 @@ catches the error.
 
 sub touch {
 	my $self = shift;
-	my $file = shift // die 'No file specified';
+	my $file = shift // $self->choke({ err => 'missing', subject => 'file' });
 	my $fn = $self->get_filename( $file );
 	local $@;
 	eval { IMG::Util::File::file_touch( $fn ); };

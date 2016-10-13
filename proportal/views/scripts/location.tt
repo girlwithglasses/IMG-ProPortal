@@ -1,4 +1,7 @@
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=[% settings.googlemapsapikey %]"></script>
+<script type="text/javascript" src="[% settings.pp_assets %]/js/markerclustererplus.min.js"></script>
+<script type="text/javascript" src="[% settings.pp_assets %]/js/map.js"></script>
+
 <script type="text/javascript">
 (function ready(){
 	var res=[%
@@ -15,8 +18,8 @@
 		t_link.json;
 	';';
 
-	INCLUDE 'js/markerclustererplus.min.js';
-	INCLUDE 'js/map.js';
+#	INCLUDE '../public/js/markerclustererplus.min.js';
+#	INCLUDE '../public/js/map.js';
 	%]
 	google.maps.event.addDomListener(window,'load',function(){ fn(res,document,google.maps,MarkerClusterer,int_links);});
 }());

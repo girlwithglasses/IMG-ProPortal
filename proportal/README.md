@@ -24,6 +24,16 @@ Install cpanm: `cpan install App::cpanminus`
 
 Install Perl modules: `cd webUI/proportal; cpanm --installdeps .`
 
+Install JBrowse:
+
+download JBrowse from http://jbrowse.org
+
+
+
+Some modules need to be installed by hand, including DBD::Oracle.
+
+
+
 ProPortal uses bower to manage web-related dependencies -- javascript and CSS libraries, etc. Bower can be installed
 
 
@@ -31,7 +41,7 @@ ProPortal uses bower to manage web-related dependencies -- javascript and CSS li
 ### Installation on genepool (NERSC users) ###
 
 To set up bower, you need to activate the nodejs module and install the assets. `cd` to your home directory and do the following:
-        `module add nodejs/0.12.7`  (for genepool)
+        `module add nodejs`  (for genepool)
         `npm install npm`
 
 
@@ -47,9 +57,16 @@ To set up bower, you need to activate the nodejs module and install the assets. 
         --- I did have issues so I had to undo everything -- eg sudo apt-get remove --purge node
 
 
-It's much easier if you now set npm's default install directory to your own home directory, as illustrated in the
-instructions here:
+It's much easier if you now set npm's default install directory to your own home directory, as illustrated in the instructions here:
 https://docs.npmjs.com/getting-started/fixing-npm-permissions -- use option 2. (for genepool)
+
+    module load nodejs/4.2.6
+    npm config set prefix '/webfs/projectdirs/microbial/img/npm-global'
+
+in ~/.profile or ~/.bashrc:
+
+	export PATH=/webfs/projectdirs/microbial/img/npm-global:$PATH
+
 
 When you have done this, you can install bower globally:
     `npm install -g bower`
@@ -97,17 +114,17 @@ combined into a single directory.
 
 Set $base to the directory that the webUI installation is installed in. The following parameters should be changed:
 
-    base_url => "https://<server-name>/pristine_assets",
-    cgi_url => "https://<server-name>/cgi-bin",
-    domain_name => "<server-name>",
+    base_url      => "https://<server-name>/pristine_assets",
+    cgi_url       => "https://<server-name>/cgi-bin",
+    domain_name   => "<server-name>",
     https_cgi_url => "https://<server-name>/cgi-bin/main.cgi",
-    tmp_url => "https://<server-name>/tmp",
+    tmp_url       => "https://<server-name>/tmp",
 
-    base_dir => $base . "/webUI/webui.htd",
-    cgi_dir => $base . "/webUI/webui.cgi",
+    base_dir      => $base . "/webUI/webui.htd",
+    cgi_dir       => $base . "/webUI/webui.cgi",
     scriptEnv_script => $base . "/webUI/webui.cgi/bin/scriptEnv.sh",
-    tmp_dir => $base . "/tmp",
-    top_base_url => "https://img.jgi.doe.gov/",
+    tmp_dir       => $base . "/tmp",
+    top_base_url  => "https://img.jgi.doe.gov/",
 
 This is not a comprehensive list but will suffice for simple usage.
 
@@ -129,11 +146,10 @@ DataModel::*        -- DBIx::DataModel models of the Gold and core databases
 
 Routes::*           -- Dancer-based routing modules that parse the URL and dispatch the appropriate request.
 
-CoreStuff           -- Dancer-based functionality common to all routes, such as checks on incoming requests and template
+AppCore             -- Dancer-based functionality common to all routes, such as checks on incoming requests and template
                        defaults. Caching capabilities are available but not yet implemented.
 
-ProPortal::Controller::*    -- controllers for specific ProPortal routes. Base.pm has the core controller functionality.
-                               Controllers and their functionality are independent of Dancer.
+ProPortal::Controller::*    -- controllers for specific ProPortal routes. Base.pm has the core controller functionality. Controllers and their functionality are independent of Dancer.
 
 ProPortal::IO::*    -- Input/output-related modules. Currently just DBIxDataModel
                     -- previously had other modules but these are no longer in use.
@@ -172,6 +188,23 @@ IMG::Util::Untaint: untaint your paths!
 
 IMG::Views::ExternalLinks   functional interface to external link data
 IMG::Views::Links           functional interface to internal link data
+
+
+## Installing Galaxy
+
+Install Galaxy from
+
+- biojs2galaxy, for using biojs tools:
+
+http://www.benjamenwhite.com/2015/07/biojs2galaxy-a-step-by-step-guide/
+
+	then install MSA tool:
+	biojs2galaxy msa -o <path2galaxy>/config/plugins/visualizations/
+
+
+## Installing JBrowse
+
+Download the latest JBrowse release from http://jbrowse.org.
 
 
 ## Usage

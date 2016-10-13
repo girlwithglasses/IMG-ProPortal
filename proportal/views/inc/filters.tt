@@ -1,23 +1,21 @@
 <!-- output the page filters -->
-[%	IF data_filters && data_filters.all %]
+[%
+	IF ! mode || mode != 'galaxy';
+		IF data_filters && data_filters.all; %]
 <section class="filters">
 <p>Filter by subset:</p>
 <ul class="subset-filters">
 [%	# filter domain
 	FOR fd IN data_filters.all.keys.sort;
-		FOR f IN data_filters.all.$fd.values; %]
-	<li class="subset-filters__item"><a class="subset-filters__link" href="[% link( current_page ) %]/[% f.id %]">[% f.label %]</a>[%
-			IF data_filters.active && data_filters.active.$fd == f.id;
+		FOR f IN data_filters.all.$fd.enum; %]
+	<li class="subset-filters__item"><a class="subset-filters__link" href="[% link( current_page ) %]/[% f %]">[% data_filters.all.$fd.enum_map.$f || f %]</a>[%
+			IF data_filters.active && data_filters.active.$fd == f;
 		%] <span class="subset-filters__current">(currently displayed)</span>[%
 			END; %]
 	</li>
 [%		END;
-		IF ! omit_datamart_filter; %]
-	<li class="subset-filters__item"><a class="subset-filters__link" href="[% link( current_page ) %]">no filter</a>[%
-			IF ! data_filters.active || data_filters.active.datamart %] <span class="subset-filters__current">(currently displayed)</span>[%
-			END; %]</li -->
-[%		END;
 	END; %]
 </ul>
 </section><!-- /end section filters -->
-[%	END %]
+[%	END;
+	END %]

@@ -1,0 +1,110 @@
+<tool id="img_gene_id_to_fasta" name="Prepare FASTA file from gene IDs" version="0.1.0">
+  <description>Retrieve the FASTA sequences for a set of gene IDs</description>
+  <command>perl /global/homes/a/aireland/webUI/proportal/script/img_gene_id_to_fasta.pl
+--infile
+#if $source.reference_source_selector == "paste":
+"$infile" --infile_format "tsv"
+#elif $source.reference_source_selector == "gene_list":
+"$gene_history_item"
+#elif $source.reference_source_selector == "tab":
+"$tab_sepd" --infile_format "tsv"
+#end if
+--outfile "$output"
+--gene_taxon_file "$gene_taxon_file"
+--seq_type $seq_type</command>
+  <inputs>
+	<conditional name="source">
+		<param name="reference_source_selector" type="select" label="Select a set of IMG taxon IDs">
+			<option value="paste">Paste into a text box</option>
+			<option value="gene_list">Gene ID list from history</option>
+			<option value="tab">Tab-delimited data from history</option>
+		</param>
+		<when value="paste">
+			<param name="input" type="text" area="True" size="10x25" label="IMG gene IDs">
+				<sanitizer invalid_char="">
+				  <valid initial="string.printable" />
+				</sanitizer>
+			</param>
+		</when>
+		<when value="gene_list">
+			<!-- list of taxon IDs -->
+			<param name="gene_history_item" type="data" format="tabular,txt">
+				<label>List of IMG gene IDs (no header row, please!)</label>
+			</param>
+		</when>
+		<when value="tab">
+			<!-- tab-sep'd data -->
+			<param name="tab_sepd" type="data" format="tsv">
+				<label>Tab-separated data with a 'gene_oid' column containing IMG gene IDs</label>
+			</param>
+		</when>
+	</conditional>
+
+	<param name="seq_type" type="select" display="radio" label="Sequence type">
+	  <option value="fna">DNA</option>
+	  <option value="faa">Amino acid</option>
+	</param>
+  </inputs>
+<configfiles>
+<configfile name="infile">#
+#if str( $source.reference_source_selector ) == "paste":
+gene_oid
+${source.input}
+#end if
+</configfile>
+</configfiles>
+
+  <outputs>
+    <data name="output" format="fasta" label="Concatenated FASTA file" />
+    <data name="gene_taxon_file" format="tsv" label="Gene-taxon mapping" />
+  </outputs>
+
+  <tests>
+    <test>
+      <param name="config" value="input.txt" />
+      <param name="input" value="input.txt" />
+      <output name="output" file="fa_gc_content_output.txt" />
+    </test>
+  </tests>
+
+  <help>
+This tool takes a set of IMG gene IDs and retrieves their sequences in FASTA format. Gene IDs should be entered as a list of numbers, one line per ID. The output is suitable for tools that require a single FASTA file as input, such as ClustalW.
+
+Here's a sample set of gene IDs to query::
+
+	637449936
+	637686994
+	2608236697
+	2608233838
+	2608232869
+	2608229857
+	2608227678
+	2608221109
+	2608217268
+	2608216457
+	2608213837
+	2608211019
+	2608208874
+	2608199767
+	2607980288
+	640078650
+	640080686
+	640087144
+	640160519
+	640943573
+	647673898
+	2553536569
+	2553547864
+	2607022457
+	2607024285
+	2607027401
+	2607028865
+	2607031065
+	2607035406
+	2607361738
+	2607816045
+	2607817870
+
+  </help>
+
+</tool>

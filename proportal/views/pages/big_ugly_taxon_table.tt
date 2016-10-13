@@ -1,5 +1,8 @@
 [%
-	WRAPPER layouts/default.html.tt;
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
 	title = 'IMG ProPortal: Data Type Inventory';
 %]
 <h2>Data Type Inventory</h2>
@@ -13,7 +16,7 @@
 %]
 <section>
 	<h3>Data Type</h3>
-[%	IF results.js.array.size > 0;
+[%	IF results.js.array && results.js.array.size > 0;
 		headers = results.js.cols; %]
 	<table>
 	<caption>Taxonomic data and sample metadata</caption>
@@ -24,9 +27,9 @@
 [%		END; %]
 	</tr>
 	</thead>
-	<tbody>
+	<tbody class="data-table__tbody">
 [%		FOREACH t IN results.js.array; %]
-		<tr>
+		<tr id="taxon_oid_[% t.taxon_oid %]">
 			<td><a href="[% link( 'taxon', { taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
 [%			FOREACH th IN headers; %]
 			<td>[%
@@ -40,6 +43,8 @@
 [%		END; %]
 	</tbody>
 	</table>
+
+	<div id="table"></div>
 [% END %]
 </section>
 [% END %]

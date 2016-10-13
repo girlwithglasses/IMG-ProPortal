@@ -1,15 +1,17 @@
 package ProPortal::Controller::Location;
 
-use IMG::Util::Base 'Class';
-
-extends 'ProPortal::Controller::Filtered';
-
+use IMG::Util::Base 'MooRole';
 use Template::Plugin::JSON::Escape;
 
-has '+tmpl_includes' => (
+has 'controller_args' => (
+	is => 'lazy',
 	default => sub {
 		return {
-			tt_scripts => qw( location ),
+			class => 'ProPortal::Controller::Filtered',
+			tmpl => 'pages/location.tt',
+			tmpl_includes => {
+				tt_scripts => qw( location ),
+			}
 		};
 	},
 );
@@ -23,36 +25,14 @@ Requires JSON plugin for rendering data set on a Google map
 sub render {
 	my $self = shift;
 
-	my $data = $self->coerce_for_location_map(
-			$self->run_query({
-			query => 'location',
-			filters => $self->filters,
-		})
-	);
-
-#	my $data = $self->dao->location;
-
-	return $self->add_defaults_and_render( $data );
-
-}
-
-
-=head3 coerce_for_location_map
-
-collect the data by lat/long
-
-=cut
-
-sub coerce_for_location_map {
-	my $self = shift;
-	my $res = shift;
+	my $res = $self->get_data;
 
 	my $data;
 	for (@$res) {
 		# only required for badly-populated dbs
 		next unless $_->{latitude} && $_->{longitude};
 
-		#group by lat/long
+		# group by lat/long
 		if (! $data->{ $_->{latitude} ."_". $_->{longitude} } ) {
 			$data->{ $_->{latitude} ."_". $_->{longitude} } = {
 				latitude => $_->{latitude},
@@ -66,9 +46,17 @@ sub coerce_for_location_map {
 		}
 
 	}
-	return [ values %$data ];
+
+	return $self->add_defaults_and_render([ values %$data ]);
+
 }
 
-
+sub get_data {
+	my $self = shift;
+	return $self->run_query({
+		query => 'location',
+		filters => $self->filters,
+	});
+}
 
 1;

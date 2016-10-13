@@ -12,6 +12,7 @@ our @IMPORT_MODULES = (
 	'feature' => [ qw( :5.16 ) ],
 	'Data::Dumper::Concise',
 	'Carp',
+	'local::lib'
 );
 
 $Data::Dumper::Sortkeys = 1;
@@ -19,15 +20,39 @@ $Data::Dumper::Indent = 1;
 
 our %IMPORT_BUNDLES = (
 
-	Class => [ 'Moo', 'Types::Standard' => [qw( :all )] ],
+	Class =>   [ 'Moo', 'Types::Standard' => [qw( :all )] ],
 
 	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )] ],
 
-	Test  => [ qw( Test::Most Test::Fatal ) ],
+	Test  =>   [
+		'File::Temp' => [ qw( tempfile tempdir )],
+		'TestUtils' => [ qw( :all ) ],
+		'IMG::App::Role::ErrorMessages' => [ 'err' ],
+		qw( File::Spec::Functions Test::Most Test::Fatal Test::Script ),
+		# in t/lib:
+		'ProPortalTestData' => [ ':all' ],
+		'MyUserAgent',
+		'DataModel::IMG_Test',
+	],
 
-	NetTest => [ qw( Test::Most Test::Fatal Plack::Test Plack::Util HTTP::Request::Common HTTP::Cookies ) ],
+	NetTest => [
+		'File::Temp' => [ qw( tempfile tempdir )],
+		'TestUtils' => [ qw( :all ) ],
+		'IMG::App::Role::ErrorMessages' => [ 'err' ],
+		qw( File::Spec::Functions Test::Most Test::Fatal Test::Script Plack::Test Plack::Util HTTP::Request::Common HTTP::Cookies ),
+		# in t/lib:
+		'ProPortalTestData' => [ ':all' ],
+		'MyUserAgent',
+		'DataModel::IMG_Test',
+
+	],
 
 );
+
+# $IMPORT_BUNDLES{ TestVerbose } = [ @{$IMPORT_BUNDLES{ Test }}, 'Carp::Always' ];
+# $IMPORT_BUNDLES{ NetTestVerbose } = [ @{$IMPORT_BUNDLES{ NetTest }}, 'Carp::Always' ];
+
+
 
 sub new {
     my $class = shift;

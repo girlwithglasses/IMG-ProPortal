@@ -75,7 +75,7 @@ has 'db_connection_h' => (
 	writer => 'set_db_connection_h',
 );
 
-requires 'config';
+requires 'config', 'choke';
 
 sub _build_db_connection_h {
 	my $self = shift;
@@ -98,8 +98,14 @@ Get a database connection; if the connection is not present, it will be created.
 
 sub db_conn {
 	my $self = shift;
-	my $h = shift || die "Specify a connection to return";
-	return $self->db_connection_h->{$h} if $self->has_db_connection_h && $self->db_connection_h->{$h};
+	my $h = shift || $self->choke({
+		err => 'missing',
+		subject => 'db_conn',
+	});
+
+	if ( $self->has_db_connection_h && $self->db_connection_h->{$h} ) {
+		return $self->db_connection_h->{$h};
+	}
 	return $self->create_db_conn( $h );
 }
 
@@ -116,8 +122,11 @@ Get a database handle; if the connection is not present, it will be created.
 
 sub dbh {
 	my $self = shift;
-	my $h = shift || die "Specify a database to return a handle for";
-	return $self->db_connection_h->{$h}->dbh if $self->has_db_connection_h && $self->db_connection_h->{$h};
+	my $h = shift || $self->choke({ err => 'missing', subject => 'db_conn' });
+
+	if ( $self->has_db_connection_h && $self->db_connection_h->{$h} ) {
+		return $self->db_connection_h->{$h}->dbh;
+	}
 	return $self->create_db_conn( $h )->dbh;
 }
 
@@ -135,7 +144,7 @@ Get an existing database connection
 
 sub db_conn_no_create {
 	my $self = shift;
-	my $h = shift || die "Specify a connection to return";
+	my $h = shift || $self->choke({ err => 'missing', subject => 'db_conn' });
 	return undef unless $self->has_db_connection_h;
 	return $self->db_connection_h->{$h} || undef;
 }
@@ -154,10 +163,21 @@ Given a schema (img_core or img_gold), get a connection to it
 
 sub connection_for_schema {
 	my $self = shift;
-	my $schema = shift || die 'No schema specified';
+	my $schema = shift || $self->choke({ err => 'missing', subject => 'schema' });
 
-	if ( ! $self->has_config || ! $self->config->{schema} || ! $self->config->{schema}{$schema} || ! $self->config->{schema}{$schema}{db} ) {
-		die "No configuration data found for $schema";
+	if ( ! $self->config->{schema} ) {
+		$self->choke({
+			err => 'cfg_missing',
+			subject => 'schema'
+		});
+	}
+	elsif ( ! $self->config->{schema}{$schema}{db} ) {
+		$self->choke({
+			err => 'invalid',
+			subject => $schema,
+			type => 'schema'
+		});
+#		die "No configuration data found for $schema";
 	}
 
 	# get the connection for this schema
@@ -182,12 +202,20 @@ Will overwrite existing connections of the same name
 
 sub set_db_conn {
 	my $self = shift;
-	my ($dbh_name, $dbh) = (shift, shift);
-	die "No name supplied for dbh" if ! $dbh_name;
-	die "No database handle supplied" if ! $dbh;
+	my $dbh_name = shift || $self->choke({ err => 'missing', subject => 'database connection ID' });
+	my $dbh = shift || $self->choke({ err => 'missing', subject => 'dbh' });
 
 	# this will die if the $dbh or $dbh_name are not of the correct type!
-	$self->set_db_connection_h({ %{$self->db_connection_h || {} }, $dbh_name => $dbh });
+	local $@;
+	eval {
+		$self->set_db_connection_h({ %{$self->db_connection_h || {} }, $dbh_name => $dbh });
+	};
+	if ( $@ ) {
+		$self->choke({
+			err => 'format_err',
+			subject => 'db_conn_params'
+		});
+	}
 	return $self;
 }
 
@@ -205,23 +233,33 @@ Create a database connection; also sets it in db_connection_h
 
 sub create_db_conn {
 	my $self = shift;
-	my $h = shift || die "Specify a connection to create";
+	my $h = shift || $self->choke({ err => 'missing', subject => 'db_conn' });
 
 	# find the config and load it
-	if (! $self->has_config || ! $self->config->{db} || ! $self->config->{db}{$h}) {
-		die "No db conf found for $h";
+	if ( ! $self->config->{db} ) {
+		$self->choke({
+			err => 'cfg_missing',
+			subject => 'db'
+		});
+	}
+	elsif ( ! $self->config->{db}{$h} ) {
+		$self->choke({
+			err => 'invalid',
+			subject => $h,
+			type => 'db_conf'
+		});
 	}
 
-    # set the timeout
-    my $to = $self->config->{db_connect_timeout} // 30;
+	# set the timeout
+	my $to = $self->config->{db_connect_timeout} // 30;
 
-    # TODO: make sure that db_connect_timeout is numeric!
+	# TODO: make sure that db_connect_timeout is numeric!
 
 	local $@;
-    my $conn = time_this( $to,
-        \&IMG::Util::DBIxConnector::get_dbix_connector,
-        $self->config->{db}{$h}
-    );
+	my $conn = time_this( $to,
+		\&IMG::Util::DBIxConnector::get_dbix_connector,
+		$self->config->{db}{$h}
+	);
 	if ( $@ ) {
 		if ( $@ =~ /DB connection error/ ) {
 			warn $@;

@@ -1,11 +1,14 @@
 [%
-	WRAPPER layouts/default.html.tt;
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
 	title = 'IMG ProPortal: Location Map';
 %]
 <h2>Sample Distribution by Location</h2>
 <section class="page-intro info--location">
 <p>
-	There are [% results.size %] public genomes <!--, of which [% result.displayed %] are -->displayed on the map below. Only public projects that have provided longitude and latitude coordinates are displayed; if the coordinates are invalid, the project will not appear on the map.
+	There are [% results.size %] sampling locations displayed on the map below. Only public projects that have provided longitude and latitude coordinates are displayed; if the coordinates are invalid, the project will not appear on the map.
 </p>
 <p>
 	Map pins represent location counts; some pins may have multiple genomes.

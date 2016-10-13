@@ -1,0 +1,21 @@
+<tool id="jbrowse_fetch_files" name="Fetch files for JBrowse" version="0.1.0">
+<description>Fetch the sequence and GFF files required to create a JBrowse visualisation for a genome</description>
+<command><![CDATA[
+perl /global/homes/a/aireland/webUI/proportal/script/jbrowse_fetch_files.pl -s "$sequence" -g "$gff" -e $__user_email__ -t "$taxon_oid"
+]]></command>
+	<inputs>
+	<param name="taxon_oid" type="text" label="IMG taxon ID">
+    <sanitizer invalid_char="">
+      <valid initial="string.printable" />
+    </sanitizer>
+	</param>
+	</inputs>
+  <outputs>
+    <data name="sequence" format="fasta" label="$taxon_oid sequence file" />
+	<data name="gff" format="gff3" label="GFF file" />
+  </outputs>
+  <help>
+Fetches the sequence and GFF files for a taxon.
+  </help>
+
+</tool>

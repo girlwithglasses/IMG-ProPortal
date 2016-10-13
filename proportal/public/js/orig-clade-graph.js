@@ -1,3 +1,6 @@
+/* global d3, getJson */
+/*jshint laxcomma: true */
+
 function fn(){
 
 	"use strict";
@@ -151,16 +154,16 @@ function fn(){
 		chart,
 		clades = ['', 'HLI', 'HLII', 'LLI', 'LLII/III', 'LLIV', '5.1A', '5.1B', '5.2', '5.3'],
 		objForMap = { data: cd },
-		sortedCladeData = clades.map(function(e){
-			if( this[e] ) {
-				this[e].count = +this[e].count;
-				return this[e];
+		sortedCladeData = clades.map(function(c){
+			if( this[c] ) {
+				this[c].count = +this[c].count;
+				return this[c];
 			}
 			return { id: "", count: 0 };
 		}, cd),
 
 		x = d3.scale.linear()
-			.domain([0, d3.max(sortedCladeData,function(d){ return d.count } )])
+			.domain([0, d3.max(sortedCladeData,function(d){ return d.count; } )])
 			.range([0, width]),
 
 		y = d3.scale.linear()
@@ -247,13 +250,7 @@ function fn(){
 			.attr("transform", "translate(" + offset + ",10)")
 			.attr('id', 'yaxis')
 			.call(yAxis);
-	/*
-		// show counts
-		vis.append('g')
-			.attr("transform", "translate(" + offset + "," + height + ")")
-			.attr('id', 'xaxis')
-			.call(xAxis);
-	*/
+
 		chart = vis.append('g')
 			.attr("transform", "translate(" + offset + ",0)")
 			.attr('id', 'bars')
@@ -280,27 +277,6 @@ function fn(){
 				d3.select( '#' + d.id )
 					.classed('js_hide', false);
 			});
-
-	/*
-		  .attr("x", function(d) { return x(d.letter); })
-		  .attr("width", x.rangeBand())
-		  .attr("y", function(d) { return y(d.frequency); })
-		  .attr("height", function(d) { return height - y(d.frequency); });
-
-
-		chart.append("rect")
-			.attr("x", function(d) { return x(d.count); })
-			.attr("width", function(d) { return height - x(d.count); })
-			.attr("height", y.rangeBand());
-
-
-		chart.append("text")
-			.attr("x", function(d) { return x(d.count) + 3; })
-			.attr("y", y.rangeBand() / 2)
-			.attr("dy", ".75em")
-			.text(function(d) { return d.id; });
-
-	*/
 
 		vis.call(tip);
 
@@ -390,7 +366,7 @@ function fn(){
 			parent: "Top Level",
 			x0: 336
 		}]
-	}],
+	}]
 
 	, root = treeData[0]
 
@@ -404,9 +380,8 @@ function fn(){
 	, width = 500 - margin.right - margin.left
 	, height = 500 - margin.top - margin.bottom
 
-	, res = getJson().data
-
 	, svg = d3.select("#clade")
+		.classed('populated', true)
 		.append('svg')
 		.attr("id","cladogram")
 		.attr("width", width + margin.right + margin.left)
@@ -422,11 +397,13 @@ function fn(){
 			return [d.y, d.x];
 		});
 
+	d3.selectAll('.js_vis_loading')
+		.remove();
+
 	makeTree(root);
 
 	makeGenusBoxes( svg );
 
-	makeBarChart( getJson(), svg );
-
+	makeBarChart( res, svg );
 
 }

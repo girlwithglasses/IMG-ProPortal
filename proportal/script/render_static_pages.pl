@@ -4,6 +4,8 @@
 
 Generate the 404 and 500 error pages; adds the files to public/ as 404.html and 500.html
 
+Not currently in use as dynamic 404 and 500 pages are employed.
+
 usage:
 
 	perl render_static_pages.pl

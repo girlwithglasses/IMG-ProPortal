@@ -4,6 +4,7 @@ use warnings;
 use feature ':5.10';
 use Data::Dumper;
 use local::lib;
+use IMG::App::Role::ErrorMessages qw( err );
 use Text::CSV_XS qw( csv );
 use DBI;
 
@@ -26,7 +27,10 @@ my $dbh = DBI->connect(
 	$dbs->{imgcore}{dsn},
 	$dbs->{imgcore}{user},
 	$dbs->{imgcore}{password},
-	$dbs->{imgcore}{options}) or die $DBI::errstr;
+	$dbs->{imgcore}{options}) or die err({
+		err => 'db_conn_err',
+		msg => $DBI::errstr
+	});
 
 my $sql = "select * from taxon
 WHERE obsolete_flag = 'No' and is_public = 'Yes'

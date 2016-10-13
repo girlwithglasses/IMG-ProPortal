@@ -1,6 +1,6 @@
 [%	IF scr_arr;
 		FOREACH s IN scr_arr;
-			'<script type="text/javascript" src="' _ s _ '"></script>';
+			'<script type="text/javascript" src="' _ settings.pp_assets _ s _ '"></script>';
 		END;
 	END;
 %]

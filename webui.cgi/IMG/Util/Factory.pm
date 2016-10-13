@@ -1,14 +1,18 @@
 package IMG::Util::Factory;
 
 use IMG::Util::Base;
-
+use IMG::App::Role::ErrorMessages qw( :all );
 use Class::Load ':all';
 
 sub create {
 	my $class = shift;
 
 	my ( $ok, $error ) = try_load_class($class);
-	$ok or die "Unable to load class $class: $error";
+	$ok or die err({
+		err => 'module_load',
+		subject => $class,
+		msg => $error
+	});
 
 	return $class->new( @_ );
 }
@@ -17,7 +21,11 @@ sub load_module {
 
 	my $module = shift;
 	my ( $ok, $error ) = try_load_class( $module );
-	$ok or die "Unable to load class $module: $error";
+	$ok or die err({
+		err => 'module_load',
+		subject => $module,
+		msg => $error
+	});
 	return;
 
 }

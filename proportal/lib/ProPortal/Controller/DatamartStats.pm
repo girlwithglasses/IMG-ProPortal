@@ -2,7 +2,7 @@ package ProPortal::Controller::DatamartStats;
 
 use IMG::Util::Base 'Class';
 
-extends 'ProPortal::Controller::Base';
+with 'ProPortal::Controller::Base';
 
 =head3 datamart_stats
 

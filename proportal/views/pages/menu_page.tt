@@ -1,13 +1,15 @@
 [%
 	WRAPPER layouts/default.html.tt;
-#	title = content.title || content.label;
+	title = content.title || content.label || 'Menu';
+
+	USE Dumper;
 
 	VIEW app_list;
 		BLOCK list %]
 	<ul role="tree">
 [%	FOREACH m IN item %]
 	  <li role="treeitem">
-	  	<h5 id="[% m.id %]"><a href="[% m.url %]">[% m.title || m.label %]</a></h5>
+	  	<h5 id="[% m.id %]"><a href="[% link( m.id ) %]">[% m.title || m.label %]</a></h5>
 [%		IF description.${m.id};
 			description.${m.id};
 		END;

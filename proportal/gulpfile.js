@@ -14,20 +14,14 @@ var gulp = require( "gulp" ),
 
 	],
 	/** @type {Object of Array} CSS source files to concatenate and minify */
-	cssminSrc = {
-		development: [
-			/** Normalize */
-			source + "bower/normalize.css/normalize.css",
-			/** Theme style */
-			target + "css/" + ppcss
-		],
-		production: [
-			/** Normalize */
-			source + "bower/normalize.css/normalize.css",
-			/** Theme style */
-			target + "css/" + ppcss
-		]
-	},
+	cssminSrc = [
+        /** Normalize */
+        target + "bower/normalize.css/normalize.css",
+        /** colorbrewer */
+        target + "bower/colorbrewer.css",
+        /** Theme style */
+        source + "css/" + ppcss
+    ],
 	/** @type {String} Used inside task for set the mode to 'development' or 'production' */
 	env = (function() {
 		/** @type {String} Default value of env */
@@ -78,19 +72,21 @@ gulp.task("libsass", function () {
 		.pipe( p.autoprefixer( "last 2 version" ) )
 //		.pipe( p.pixrem( 16, { atrules: true } ) )
         .pipe( p.chmod(666))
-		.pipe( gulp.dest( target + 'css/') );
+		.pipe( gulp.dest( source + 'css/') );
 });
 
 /** STYLES */
 gulp.task( "styles", [ "libsass" ], function() {
 	console.log( "`styles` task run in `" + env + "` environment" );
-	var stream = gulp.src( cssminSrc[ env ] )
+	var stream = gulp.src( cssminSrc )
 		.pipe( p.plumber({
             errorHandler: onError
         }))
-		.pipe( p.concat( ppcss ))
+		.pipe( p.concat( ppcss )) // cssminSrc will be concat'd into ppcss
 		.pipe( p.autoprefixer( "last 2 version" ) )
-		.pipe( p.pixrem( 16, { atrules: true }) );
+		.pipe( p.pixrem( 16, { atrules: true }) )
+//		.pipe( gulp.dest( source + 'css/' ) ); // save here
+		;
 
 	if ( env === "production" ) {
 	//	minifier

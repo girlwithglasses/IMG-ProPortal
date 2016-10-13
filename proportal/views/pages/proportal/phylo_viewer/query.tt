@@ -1,0 +1,56 @@
+[%
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+title = 'IMG ProPortal: PhyloViewer';
+	class = 'phylo_viewer';
+
+%]
+<h2>
+	PhyloViewer (beta)
+</h2>
+<section class="info--phyloviewer page-intro">
+<p>
+	Blurb here!
+</p>
+</section>
+<section class="cf clear">
+[%	IF ! results.js.array; %]
+	<p>The gene cart is currently empty. To run the PhyloViewer, you need to collect a set of genes of interest in the gene cart.
+	</p>
+	<p><a href="[% link('proportal/phylo_viewer') %]/demo">View a sample set of genes</a></p>
+
+[%	ELSE; %]
+
+<p>Select the genes to perform the analysis on.</p>
+<form method="POST" class="[% class %]__form" action="[% link('proportal/phylo_viewer') %]/query">
+[%	FOREACH f IN results.form;
+		t = results.schema.$f; %]
+		<fieldset class="[% class %]__field--[% f %]">
+			<legend class="[% class %]__legend">[% t.label %]</legend>
+[%
+
+		IF 'radio' == t.control || 'checkbox' == t.control;
+			FOREACH c IN t.enum; %]
+		<input class='[% class %]__input--[% f %]' type='[% t.control %]' name='[% t.name %]' value='[% c.id %]' id='[% f %]_[% c.id %]'[% IF t.default == c.id || c.selected %] selected[% END %] />
+		<label for='[% f %]_[% c.id %]' class='[% class %]__label--[% f %]'>[% c.label %]</label>
+[%
+			END; # end t.enum
+
+		ELSIF 'checkbox_table' == t.control;
+%]
+			<fieldset>
+[%	INCLUDE 'inc/table.tt' %]
+			</fieldset>
+[%		END; # end t type %]
+		</fieldset>
+[%	END; # end options %]
+		<input type="submit" value="Go!" />
+	</fieldset>
+</form>
+[%	END; %]
+<p><a href="[% link('proportal/phylo_viewer') %]/results/demo">View sample results</a></p>
+
+</section>
+[% END; %]

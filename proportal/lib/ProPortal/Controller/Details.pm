@@ -1,8 +1,8 @@
 package ProPortal::Controller::Details;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Base 'MooRole';
 
-extends 'ProPortal::Controller::Base';
+with 'ProPortal::Controller::Base';
 
 =head3 render
 

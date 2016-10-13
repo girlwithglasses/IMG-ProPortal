@@ -926,7 +926,7 @@ DBIC::IMG_Core::Result::GoldSequencingProject
 use strict;
 use warnings;
 
-use ProPortal::Model::UnitConverter;
+use IMG::Model::UnitConverter;
 
 =head1 BASE CLASS: L<DBIC>
 
@@ -1814,7 +1814,7 @@ __PACKAGE__->has_many(
 __PACKAGE__->inflate_column('longitude', {
   inflate => sub {
     my ($db_val, $result_object) = @_;
-	ProPortal::Model::UnitConverter::latlong( $db_val );
+	IMG::Model::UnitConverter::latlong( $db_val );
   },
   deflate => sub {
 #    my ($user_val, $result_object) = @_;
@@ -1824,7 +1824,7 @@ __PACKAGE__->inflate_column('longitude', {
 __PACKAGE__->inflate_column('latitude', {
   inflate => sub {
     my ($db_val, $result_object) = @_;
-	ProPortal::Model::UnitConverter::latlong( $db_val );
+	IMG::Model::UnitConverter::latlong( $db_val );
   },
   deflate => sub {
 #    my ($user_val, $result_object) = @_;
@@ -1835,7 +1835,7 @@ __PACKAGE__->inflate_column('latitude', {
 __PACKAGE__->inflate_column('depth', {
   inflate => sub {
     my ($db_val, $result_object) = @_;
-	my $d = ProPortal::Model::UnitConverter::convert_depth($db_val);
+	my $d = IMG::Model::UnitConverter::convert_depth($db_val);
   },
   deflate => sub {
 #    my ($user_val, $result_object) = @_;
@@ -1845,7 +1845,7 @@ __PACKAGE__->inflate_column('depth', {
 
 
 1;
-# End of lines loaded from '/global/u1/a/aireland/gn-img-proportal-mojo/script/../lib/DBIC/IMG_Core/Result/GoldSequencingProject.pm' 
+# End of lines loaded from '/global/u1/a/aireland/gn-img-proportal-mojo/script/../lib/DBIC/IMG_Core/Result/GoldSequencingProject.pm'
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -3,7 +3,7 @@
 #
 #	Core dispatcher code
 #
-#	$Id: DispatchCore.pm 34176 2015-09-03 19:41:14Z aireland $
+#	$Id: DispatchCore.pm 35833 2016-07-06 02:42:03Z aireland $
 ############################################################################
 package IMG::App::DispatchCore;
 
@@ -26,18 +26,24 @@ Load the module and prepare a coderef for dispatch
 sub prepare_dispatch_coderef {
 	my $arg_h = shift;
 
-	my $module = $arg_h->{module} || croak "No module defined!";
-	my $sub = $arg_h->{sub} || croak "No sub defined!";
+	my $module = $arg_h->{module} || die err ({ err => 'missing', subject => 'module' });
+	my $sub = $arg_h->{sub} || die err ({ err => 'missing', subject => 'sub' });
 
 	my ($ok, $err) = try_load_class( $module );
-	$ok or croak "Unable to load class " . $module . ": $err";
+	$ok or die "Unable to load class " . $module . ": $err";
 
 	# make sure that we can run the sub:
 	if ( ! $module->can( $sub ) ) {
-		croak "$module does not have $sub implemented!";
+		die "module does not have $sub implemented!";
 	}
 
 #	warn "Loaded module OK!";
+
+	# get the module info
+
+#	getPageTitle
+#	getAppHeaderData
+
 
 	my $to_do;
 	if (! ref $sub ) {

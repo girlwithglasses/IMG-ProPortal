@@ -1,10 +1,17 @@
 #!/usr/bin/env perl
 
-use FindBin qw/ $Bin /;
-use lib qw(
-	$Bin/../lib
-	$Bin/../../webui.cgi
-);
+my $dir;
+my @dir_arr;
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	$dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	@dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib );
+}
+use lib @dir_arr;
 
 use IMG::Util::Base;
 use File::Path qw( make_path );
@@ -30,14 +37,12 @@ generate the DBIx::Class schema:
 
 =cut
 
-my $base = dirname($Bin);
-
 my $dbs = {
-	'img_core' => { constraint => qr/^(cancelled|contact|taxon$|gold.+|img.+)/i },
+	'img_core' => { constraint => qr/^(cancelled|contact|taxon$|gene^|gold.+|img.+)/i },
 	'img_gold' => { constraint => qr/^(cancelled|contact|gold|img)_*/i },
 };
 
-my $lib_dir = "$base/tmp/";
+my $lib_dir = "$dir/tmp/";
 
 for my $x (keys %$dbs) {
 	$dbs->{$x}{conn} = IMG::Util::DB::get_oracle_connection_params({ database => $x });

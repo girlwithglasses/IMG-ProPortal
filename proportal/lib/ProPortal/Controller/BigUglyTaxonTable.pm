@@ -1,25 +1,26 @@
 package ProPortal::Controller::BigUglyTaxonTable;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Base 'MooRole';
 
-extends 'ProPortal::Controller::Filtered';
+#with 'ProPortal::Controller::Filtered';
 
 use JSON qw( encode_json decode_json );
 
 use Template::Plugin::JSON::Escape;
 
-has '+tmpl_includes' => (
+has 'controller_args' => (
+	is => 'lazy',
 	default => sub {
 		return {
-			tt_scripts => qw( data_type ),
-		};
-	},
+			tmpl => 'pages/big_ugly_taxon_table.tt',
+			class => 'ProPortal::Controller::Filtered',
+		}
+	}
 );
 
+=head3 render
 
-=head3 data_type_graph
-
-
+Get all the GoldTaxonVw table data
 
 =cut
 
@@ -27,14 +28,13 @@ sub render {
 	my $self = shift;
 
 	# run taxon_oid_display_name for each of the members
-# 	my $res = $self->run_query({
-# 		query => 'taxon_oid_display_name',
-# 		filters => $self->filters,
-# 	});
 
-    my $res = decode_json <DATA>;
-    if ( ! $res ) {
-        die 'No results found for query';
+	my $res = $self->get_data();
+
+    if ( ! $res || ! scalar @$res ) {
+		$self->choke({
+			err => 'no_results',
+		});
     }
 
 	my $cols = [ qw( genome_type ncbi_kingdom domain ),
@@ -49,6 +49,15 @@ qw( strain ncbi_taxon_id analysis_project_id study_gold_id gold_id sequencing_go
 
 	return $self->add_defaults_and_render({ js => { array => $res, cols => $cols } });
 
+}
+
+sub get_data {
+	my $self = shift;
+#	return decode_json <DATA>;
+	return $self->run_query({
+		query => 'taxon_oid_display_name',
+		filters => $self->filters,
+	});
 }
 
 1;

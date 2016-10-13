@@ -3,6 +3,7 @@ package IMG::Util::DB;
 use IMG::Util::Base;
 use JSON;
 use MIME::Base64;
+use IMG::App::Role::ErrorMessages qw( err );
 
 use IMG::Util::DBIxConnector;
 
@@ -18,6 +19,8 @@ Current contents: img_core, img_gold
 
 my $common = {
 	img_core => 'web.img_core_v400.config',
+	gemini_1 => 'oracle.img_core_v400_gem1_shared.config',
+	gemini_2 => 'oracle.img_core_v400_gem2_shared.config',
 	img_gold => 'oracle.imgsg_dev.config',
 };
 

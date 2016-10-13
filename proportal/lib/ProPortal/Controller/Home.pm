@@ -1,8 +1,6 @@
 package ProPortal::Controller::Home;
 
-use IMG::Util::Base 'Class';
-
-extends 'ProPortal::Controller::Base';
+use IMG::Util::Base 'MooRole';
 
 =head3
 

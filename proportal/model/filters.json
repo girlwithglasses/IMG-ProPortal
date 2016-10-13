@@ -1,0 +1,121 @@
+{
+    "id": "https://img-proportal.dev/entry-schema#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for ProPortal subset filters",
+    "type": "object",
+    "required": [ "filter" ],
+    "properties": {
+        "filter": {
+            "type": "object",
+            "oneOf": [
+                { "$ref": "#/definitions/proportal" },
+                { "$ref": "#/definitions/metagenome" },
+                { "$ref": "#/definitions/isolate" },
+                { "$ref": "#/definitions/prochlorococcus" },
+                { "$ref": "#/definitions/prochlorococcus_phage" },
+                { "$ref": "#/definitions/synechococcus" },
+                { "$ref": "#/definitions/synechococcus_phage" }
+            ]
+        }
+    },
+
+    "filter_params": {
+    	"type":"object",
+    	"properties": { }
+
+	},
+
+    "definitions": {
+    	"proportal": {
+    		"type": "object",
+    		"title": "All ProPortal genomes",
+			"properties": {
+				"allOf": [
+					{ "$ref": "#/definitions/metagenome" },
+					{ "$ref": "#/definitions/isolate" },
+				]
+			}
+		}
+
+        "metagenome": {
+        	"type": "object",
+        	"title": "Marine metagenomes",
+
+                "genome_type": "metagenome",
+                "ecosystem_type": "Marine",
+
+
+        },
+        "isolate": {
+        	"type": "object",
+        	"title": "All isolates",
+        	"properties": {
+        		"allOf": [
+					{ "$ref": "#/definitions/prochlorococcus" },
+					{ "$ref": "#/definitions/prochlorococcus_phage" },
+					{ "$ref": "#/definitions/synechococcus" },
+					{ "$ref": "#/definitions/synechococcus_phage" }
+				]
+			}
+        },
+        "prochlorococcus": {
+        	"type": "object",
+        	"title": "Prochlorococcus",
+
+                "ecosystem_subtype": [ "Marginal Sea", "Pelagic" ],
+                "genome_type": "isolate",
+                "domain": "Bacteria",
+                "genus": "Prochlorococcus",
+
+
+        },
+        "synechococcus": {
+        	"type": "object",
+        	"title": "Synechococcus",
+
+                "ecosystem_subtype": [ "Marginal Sea", "Pelagic" ],
+                "genome_type": "isolate",
+                "domain": "Bacteria",
+                "genus": "Synechococcus",
+
+
+        },
+        "prochlorococcus_phage": {
+        	"type": "object",
+        	"title": "Prochlorococcus phage",
+
+            #	"ecosystem_subtype": [ "Marginal Sea", "Pelagic" ],
+
+                "genome_type": "isolate",
+                "taxon_display_name": { -"like": "Prochlorococcus%" },
+                "domain": "Viruses",
+
+        },
+        "synechococcus_phage": {
+        	"type": "object",
+        	"title": "Synechococcus phage",
+
+            #	"ecosystem_subtype": {
+            		"type":"string",
+            		"oneOf": [ "Marginal Sea", "Pelagic" ],
+            		"not_yet_implemented": true
+            	},
+
+                "genome_type": {
+                	"type":"string",
+                	"value":"isolate"
+                }
+
+                "taxon_display_name": {
+                	"type": "string",
+                	"pattern": "Synechococcus.*"
+                }
+
+                "domain": {
+                	"type":"string",
+                	"value":"Viruses"
+                }
+
+        },
+    }
+}

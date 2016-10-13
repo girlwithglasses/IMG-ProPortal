@@ -1,27 +1,13 @@
-<style type="text/css"><!--
-    .axis .domain {
-        fill: none;
-        stroke: black;
-        stroke-width: 0;
-        shape-rendering: crispEdges;
-    }
-
-	.node circle { fill: #fff; }
-	.node.expandable circle { fill: #069; }
-    .axis .tick text { font-size: .75rem; }
-    .grid-background { fill: #eee; }
-
---></style>
 [%	WRAPPER scripts/pageload_wrapper.tt;
 	scr_arr =
 	[
 		'/js/d3.min.js',
-		'/js/d3-tip.js',
-		'/js/element-resize-detector.min.js',
+#		'/js/d3-tip.ext.js',
+#		'/js/element-resize-detector.min.js',
 		'/js/d3.chart.min.js',
-		'/js/d3.chart.base-ext.js',
-		'/js/d3.chart.layout.hierarchy-ext.js',
-#		'/js/d3.chart.tooltip.js'
+#		'/js/d3.chart.base-ext.js',
+		'/js/d3.chart.tooltip.js',
+		'/js/d3.chart.layout.hierarchy-ext.js'
 	];
 %]
 /**
@@ -292,42 +278,136 @@
 
 */
 
+
+d3.chart("TippedVisualisation", {
+
+	sortable: function( args ){
+		return this.attach('vis').sortable( args );
+	},
+
+	collapsible: function( args ){
+		return this.attach('vis').collapsible( args );
+	},
+
+	colors: function( args ){
+		return this.attach('vis').colors( args );
+	},
+
+	name: function( args ){
+		return this.attach('vis').name( args );
+	},
+
+	value: function( args ){
+		return this.attach('vis').value( args );
+	},
+
+	duration: function( args ){
+		return this.attach('vis').duration( args );
+	},
+
+	zoomable: function( args ){
+		return this.attach('vis').zoomable( args );
+	},
+
+	margin: function( args ){
+		return this.attach('vis').margin( args );
+	},
+
+	diagonal: function( args ){
+		return this.attach('vis').diagonal( args );
+	},
+
+	levelGap: function( args ){
+		return this.attach('vis').levelGap( args );
+	},
+
+	tooltip: function( args ){
+
+		var func = function(d) {
+			return d[ args ] || 'no data for ' + args;
+		};
+		this.attach('tips').text( func );
+	},
+
+	resize: function() {
+		this.trigger('change:size');
+		if ( this.data ) {
+			this.draw( this.data );
+		}
+	},
+
+	initialize: function( options ) {
+
+	  // attach the charts under a specific name to the parent chart
+		this.attach("vis",
+			this.base
+				.chart( options.chart_type , options.chart )
+			);
+
+		var tips_options = {
+			layer : this.attach('vis'),
+			type : options.tooltip.selector,
+			text : options.tooltip.text || function(d) {
+				return d.name;
+			}
+		};
+
+		this.attach('tips',
+			d3.select('body')
+				.chart('TooltipMixinChart', tips_options )
+			);
+	}
+});
+
 		var json=getJson()
-		, tip = d3.tip()
-			.attr('class', 'd3-tip')
-	//		.rootElement( document.getElementById('partition') )
-			.direction(function(d) {
-				if ( d.children ) {
-					return 'e';
-				}
-				return 'w';
-			})
-			.offset([0, 0])
-			.html(function(d) {
-				if ( d.data && d.data.taxon_display_name) {
-					return d.data.taxon_display_name;
-				}
-				if( d.depth > 0 ) {
-					return json.results.class_types[ d.depth-1 ] + ': ' + d.name + ', ' + ( d.value || d.values.length ) + ' samples';
-				}
-			})
+		, count = +json.results.count
+		, class_types = ['tree'].concat ( json.results.class_types.map( function(ct) {
+			return ct.replace( /_/g, ' ' );
+		} ), 'taxon' )
 
 		, container = d3.select("#phylogram")
+			.style('height', 16 * count + 'px')
 			.append("svg")
-			.call(tip)
 
-		, vis = container.chart("tree.cartesian.diagonal")
-			.margin({ top:10,left:10,right:10,bottom:10 })
-			.collapsible(1)
-			.with_tips( tip )
+		, text_fn = function(d,i,tip) {
+			if ( d.data && d.data.taxon_display_name) {
+				return d.data.taxon_display_name;
+			}
+			if( d.depth ) {
+				return class_types[ d.depth ] + ': ' +
+					d.name;
+			}
+			return 'life';
+		}
+
+		, vis = container.chart("TippedVisualisation", {
+				chart_type: 'tree.cartesian.diagonal'
+				, tooltip: {
+					selector: '.node'
+					, text: text_fn
+				}
+			})
+		, sample_details = d3.selectAll('.js_sample_details')
+			.classed('js_hide',true)
+		;
+
+		vis // = container.chart("tree.cartesian.diagonal")
+			.margin({ top:20,left:20,right:20,bottom:20 })
+			.collapsible(7)
 			.diagonal( 'rightAngle' )
 			.levelGap( 80 )
 			.sortable("_ASC_");
 
+		d3.selectAll('.leaf')
+			.on('click',function(d,i){
+				console.log('Detected a click!');
+				sample_details.classed('js_hide', true);
+				d3.select('#taxon_oid_' + d.data.taxon_oid)
+					.classed('js_hide', false);
+			});
+
 		d3.selectAll('.js_vis_loading')
 			.remove();
-		d3.selectAll('.js_sample_details')
-			.classed('js_hide',true);
 
 		vis.draw( json.results.tree );
 

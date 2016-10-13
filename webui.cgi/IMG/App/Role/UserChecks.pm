@@ -1,8 +1,8 @@
 ###########################################################################
 #
-# $Id: UserChecks.pm 34501 2015-10-13 23:40:50Z aireland $
+# $Id: UserChecks.pm 35833 2016-07-06 02:42:03Z aireland $
 #
-############################################################################
+###########################################################################
 package IMG::App::Role::UserChecks;
 
 use IMG::Util::Base 'MooRole';
@@ -14,28 +14,45 @@ requires 'config', 'session', 'check_jgi_session', 'get_jgi_user_json', 'get_db_
 
 Ensure that the user is valid
 
+@param  $u_id   user ID
+
 =cut
 
 sub run_user_checks {
 	my $self = shift;
-	my $u_id = shift // die "No user ID supplied";
+	my $u_id = shift || $self->choke({ err => 'missing', subject => 'user ID' });
 
 	# ping the server
 	my $user_data = $self->get_jgi_user_json( $u_id );
 
 	say 'got user data... continuing with my work!';
 
-	my $db_data = $self->get_db_contact_data( $user_data->{user}{id} );
+	my $db_data = $self->get_db_contact_data({ caliban_id => $user_data->{user}{id} });
 
 	# this will die if all is not well
 	if ( ! $self->has_session || ! $self->session->read('banned_checked') ) {
-		$self->check_banned_users( $db_data->{username}, $db_data->{email}, $user_data->{user}{email_address} );
+		$self->check_banned_users({
+			test => [ $db_data->{email}, $user_data->{user}{email_address}, $db_data->{username} ]
+		});
+	}
 
+	##	merge user and db data:
+	my %new = %$db_data;
+	if ( %$user_data ) {
+		$new{jgi_session_id} = $user_data->{id};
+		$new{caliban_id} = $user_data->{user}{contact_id};
+		$new{caliban_user_name} = $user_data->{user}{login};
+	}
+
+	for (keys %new) {
+		delete $new{$_} unless defined $new{$_};
 	}
 
 	# create a user object
-	my $user = IMG::Model::Contact->new({ db_data => $db_data, user_data => $user_data });
-	$self->set_user( $user );
+#	my $user = IMG::Model::Contact->new({ db_data => $db_data, user_data => $user_data });
+#	$self->_set_user( $user );
+	$self->_set_user( %new );
+
 	return { db_data => $db_data, user_data => $user_data };
 
 =cut
@@ -82,7 +99,7 @@ requires 'get_dirname';
 
 =head3 touch_cart_files
 
-Touch the user's session files so they don't get purged
+Touch the user's cart files so they don't get purged
 
 =cut
 
@@ -104,7 +121,7 @@ sub touch_cart_files {
 			$self->touch( $f );
 			my $contents = eval { $self->read_file( $f ); };
 			if ( $contents ) {
-			# do something with this data?
+				# do something with this data?
 				if ('func_cart_state' eq $f) {
 					$self->session->write( $f, scalar keys %{$contents->{recs}} );
 				}
@@ -114,7 +131,7 @@ sub touch_cart_files {
 			}
 		}
 
-		$self->touch( 'genome_cart_col_ids' );
+		$self->touch( 'gene_cart_col_ids' );
 
 	}
 	# autocreate the cart directory?

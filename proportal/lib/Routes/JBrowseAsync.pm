@@ -1,14 +1,10 @@
 package Routes::JBrowse;
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
-use parent 'CoreStuff';
-our $VERSION = '0.1';
+use parent 'AppCore';
+our $VERSION = '0.1.0';
 
 use FindBin qw/ $Bin /;
-use lib (
-	"/Users/gwg/webUI/jbrowse/src/perl5",
-	"/Users/gwg/webUI/jbrowse/extlib/lib/perl5"
-);
 
 use File::Path qw( make_path );
 use File::Temp qw(tempfile);
@@ -67,7 +63,7 @@ sub get_taxon_name {
 
 	my $taxid = shift;
 
-	my $app = CoreStuff::bootstrap( undef, config );
+	my $app = AppCore::bootstrap( undef, config );
 
 	my $results = $app->schema('img_core')->table('Taxon')
 		->select(

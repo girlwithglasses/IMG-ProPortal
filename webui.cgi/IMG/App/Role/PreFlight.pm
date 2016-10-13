@@ -3,13 +3,14 @@
 #
 #	Run preflight checks to ensure app is ready for action
 #
-#	$Id: PreFlight.pm 34542 2015-10-20 20:56:35Z aireland $
+#	$Id: PreFlight.pm 35789 2016-06-16 19:26:50Z aireland $
 ############################################################################
 package IMG::App::Role::PreFlight;
 
 use IMG::Util::Base 'MooRole';
 use IMG::Util::File;
 use IMG::Util::Timed;
+use IMG::App::Role::ErrorMessages qw( err );
 
 requires 'config', 'remote_addr', 'user_agent';
 
@@ -114,8 +115,8 @@ sub db_lock_check {
 
 	# check whether there is a message in the lock file
 	local $@;
-	my $s = eval { IMG::Util::File::slurp( $self->config->{dblock_file} ); };
-	$s ||= 'The database is currently being serviced; we apologise for the inconvenience. Please try again later.';
+	my $s = eval { IMG::Util::File::file_slurp( $self->config->{dblock_file} ); };
+	$s ||= err({ err => 'db_service' });#'The database is currently being serviced; we apologise for the inconvenience. Please try again later.';
 
 	return {
 		status => 503,
@@ -202,7 +203,7 @@ sub block_bots {
 				return {
 					status  => 403,
 					title   => 'Forbidden',
-					message => 'Bots are forbidden from accessing this area of IMG.',
+					message => err({ err => 'no_bots' })#'Bots are forbidden from accessing this area of IMG.',
 				};
             }
         }
@@ -236,7 +237,7 @@ sub block_ip_address {
 		return {
 			status => 429,
 			title  => 'Too Many Requests',
-			message => 'There have been too many requests from your IP address, so it has blocked.',
+			message => err({ err => 'ip_blocked' }) #'There have been too many requests from your IP address, so it has blocked.',
 		};
 
 	}
@@ -268,7 +269,7 @@ sub max_cgi_process_check {
 
 	my $count = 0;
 
-	open my $pipe, $cmd or die "Could not create pipe: $!";
+	open my $pipe, $cmd or $self->choke({  "Could not create pipe: $!" });
 	while ( <$pipe> ) {
 		$count = $1 if m!(\d+)!;
 	}
@@ -280,7 +281,7 @@ sub max_cgi_process_check {
 		return {
 			status => 503,
 			title  => 'Service Unavailable',
-			message => 'The IMG servers are currently overloaded and unable to process your request. Please try again later.',
+			message => err({ err => 'server_overload' })#'The IMG servers are currently overloaded and unable to process your request. Please try again later.',
 		};
     }
 	return undef;
@@ -320,7 +321,7 @@ sub check_dir {
 	return {
 		status => 503,
 		title  => 'Service Unavailable',
-		message => 'The IMG file system is not available. Please try again later.',
+		message => err({ err => 'fs_unavailable' }) # 'The IMG file system is not available. Please try again later.',
 	};
 }
 

@@ -192,6 +192,18 @@ DataModel::IMG_Core->metadm->define_table(
 );
 
 DataModel::IMG_Core->metadm->define_table(
+  class       => 'Gene',
+  db_name     => 'GENE',
+  primary_key => 'gene_oid',
+);
+
+DataModel::IMG_Core->metadm->define_table(
+  class       => 'Scaffold',
+  db_name     => 'SCAFFOLD',
+  primary_key => 'scaffold_oid',
+);
+
+DataModel::IMG_Core->metadm->define_table(
   class       => 'GoldTaxonVw',
   db_name     => 'VW_GOLD_TAXON',
   primary_key => 'gold_id',
@@ -203,12 +215,21 @@ DataModel::IMG_Core->metadm->define_table(
 	},
 );
 
+DataModel::IMG_Core->metadm->define_table(
+  class       => 'ContactTaxonPermissions',
+  db_name     => 'CONTACT_TAXON_PERMISSIONS',
+);
+
 DataModel::IMG_Core
 #---------------------------------------------------------------------#
 #                      ASSOCIATION DECLARATIONS                       #
 #---------------------------------------------------------------------#
 #     Class                      Role                         Mult Join
 #     =====                      ====                         ==== ====
+->Association(
+  [qw/Gene                       gene                         1    scaffold                 /],
+  [qw/Scaffold                   scaffold                     *    scaffold_oid /])
+
 ->Association(
   [qw/GoldSequencingProject      gold                         1    gold_id                 /],
   [qw/GoldSpGenomePublication    gold_sp_genome_publications  *    gold_id                 /])
@@ -300,26 +321,6 @@ DataModel::IMG_Core
 # normalize case
 #	fromDB => sub {  },
 
-
-
-my $sql = 'GOLD_SEQUENCING_PROJECT INNER JOIN TAXON ON GOLD_SEQUENCING_PROJECT.gold_id = TAXON.sequencing_gold_id';
-
-DataModel::IMG_Core->metadm->define_table(
-	class => 'GoldTaxon',
-	db_name => $sql,
-	where => {
-		obsolete_flag => 'No',
-		is_public => 'Yes',
-#		ecosystem_type => 'Marine',
-	},
-	column_types => {
-		GenericClade => [ qw( clade ) ],
-		Distance     => [ qw( altitude depth ) ],
-		LatLng       => [ qw( latitude longitude )],
-		EcoNorm      => [ qw( ecosystem_subtype )],
-	},
-);
-
 =cut
 
 DBIx::DataModel->Schema('HR') # Human Resources
@@ -340,60 +341,6 @@ $meta_emp->define_column_type(Multival => qw/kids interests/);
 $meta_emp->define_column_type(Upcase   => qw/interests/);
 
 =cut
-
-DataModel::IMG_Core
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpGenomePublication    gsp_genome_publications      *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpHabitat              gsp_habitats                 *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpEnergySource         gsp_energy_sources           *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpPhenotype            gsp_phenotypes               *    gold_id                 /])
-
-->Association(
-  [qw/GoldAnalysisProject        goldanaproj                  1    gold_analysis_project_id/],
-  [qw/GoldTaxon                  gt                           *    analysis_project_id     /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpSeqCenter            gsp_seq_centers              *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpSeqMethod            gsp_seq_methods              *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpRelevance            gsp_relevances               *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpCellArrangement      gsp_cell_arrangements        *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpMetabolism           gsp_metabolisms              *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpStudyGoldId          gsp_study_gold_ids           *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpCollaborator         gsp_collaborators            *    gold_id                 /])
-
-->Association(
-  [qw/GoldTaxon                  gt                           1    gold_id                 /],
-  [qw/GoldSpDisease              gsp_diseases                 *    gold_id                 /])
-;
 
 # latlng
 #DataModel::IMG_Core->ColumnType(latlng =>

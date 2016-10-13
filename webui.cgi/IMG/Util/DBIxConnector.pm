@@ -3,6 +3,7 @@ package IMG::Util::DBIxConnector;
 use IMG::Util::Base;
 
 use DBIx::Connector;
+use IMG::App::Role::ErrorMessages qw( err );
 
 =head3 get_dbix_connector
 
@@ -16,15 +17,15 @@ Create a database handle for a database using DBIx::Connector
 =cut
 
 sub get_dbix_connector {
-	my $arg_h = shift // die "No connection parameters specified!";
+	my $arg_h = shift // die err ({ err => 'missing', subject => 'connection parameters' });
 
 	if (! ref $arg_h || ref $arg_h ne 'HASH' ) {
-		die "database connection params should be specified as a hash ref";
+		die err({ err => 'format_err', subject => 'database connection parameters', fmt => 'hashref' });
 	}
 
 	if (! $arg_h->{dsn} ) {
 		if (! $arg_h->{database} || ! $arg_h->{driver} ) {
-			die "database connections require either a DSN string or the database name and driver";
+			die err ({ err => 'missing', subject => "DSN string or database name and driver" });
 		}
 		$arg_h->{dsn} = 'dbi'
 			. ':' . $arg_h->{driver}
@@ -49,7 +50,7 @@ sub __connector {
 		$arg_h->{username} // $arg_h->{user} // undef,
 		$arg_h->{password} // $arg_h->{pass} // undef,
 		$arg_h->{options} // $arg_h->{dbi_params} // { RaiseError => 1 }
-	) or die "DB connection error: $DBI::errstr";
+	) or die err ({ err => 'db_conn_err', msg => $DBI::errstr });
 
 }
 

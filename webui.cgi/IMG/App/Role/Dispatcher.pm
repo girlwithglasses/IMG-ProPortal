@@ -3,24 +3,22 @@
 #
 #	Parse query params and run the appropriate code
 #
-#	$Id: Dispatcher.pm 34501 2015-10-13 23:40:50Z aireland $
+#	$Id: Dispatcher.pm 35833 2016-07-06 02:42:03Z aireland $
 ############################################################################
 package IMG::App::Role::Dispatcher;
 
-use IMG::Util::Base;
+use IMG::Util::Base 'MooRole';
 use IMG::App::DispatchCore;
-
-use Dancer2::Plugin;
 
 use Class::Load ':all';
 
-register 'cgi_dispatch' => sub {
-	return prepare_dispatch( @_ );
-};
-
-register 'prep_parse_params' => sub {
-	return prepare_to_parse( @_ );
-};
+# register 'cgi_dispatch' => sub {
+# 	return prepare_dispatch( @_ );
+# };
+#
+# register 'prep_parse_params' => sub {
+# 	return prepare_to_parse( @_ );
+# };
 
 
 sub prepare_to_parse {
@@ -93,6 +91,9 @@ sub parse_params {
 	my $section = $req->params->{section};
 
 	say "page: $page; section: $section";
+
+#	getPageTitle
+#	getAppHeaderData
 
 	my $section_table = {
 	  ANI => sub {
@@ -843,12 +844,10 @@ sub parse_params {
 			$hdrs = sub {
 				return IMG::Views::ViewMaker::print_excel_header("stats_export$$.xls");
 			};
-			$module = 'GeneCartStor';
-			$sub = 'printGenesToExcelLarge';
+			$module = 'GeneDataUtil';
+			$sub = 'printGeneDataFile';
 			# where has @gene_oid come from?
-			#	$module::printGenesToExcelLarge( \@gene_oid );
-#				GeneCartStor::printGenesToExcelLarge( \@gene_oid ); };
-#				WebUtil::webExit(0);
+			#	$module::printGeneDataFile( \@gene_oid );
 		}
 		elsif ( 'nucleic' eq $et ) {
 			$module = 'GenerateArtemisFile';

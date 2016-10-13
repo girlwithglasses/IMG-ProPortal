@@ -1,22 +1,74 @@
 /* partials/graph */
 
+
 .resizable {
-	border: 1px solid hue( midgrey );
+//	border: 1px solid hue( midgrey );
 	position: relative;
 //	padding: 0 $gutter $gutter 0;
 	svg {
 		width: 100%;
 		height: 100%;
-		margin: 0 $gutter $gutter 0;
-		border: 1px solid hue( dk_blue );
+//		margin: 0 $gutter $gutter 0;
+//		border: 1px solid hue( dk_blue );
 	}
+	margin: 0;
+	padding: 0;
+
 	.resizer--x, .resizer--y {
 		overflow: hidden;
 	}
+//	padding: 0 $gutter $gutter 0;
+//	margin-bottom: $line-ht;
 }
 
-#partition {
-	height: 500px;
+.chart__container {
+	position: relative;
+	margin: 0;
+	padding: 0;
+//	svg {
+		width: 100%;
+		height: 100%;
+//	}
+}
+
+/* clade graph */
+
+@include minw( $med ) {
+	.populated {
+		&.visualisation {
+			float: left;
+			width: 66.6%;
+			padding: 0 $gutter;
+			margin-bottom: $line-ht;
+		}
+		&.clade-data {
+			width: 33.3%;
+			float: right;
+			padding-left: $gutter;
+			margin-bottom: $line-ht;
+		}
+	}
+}
+
+
+/* Partition graph */
+
+.partition {
+	rect {
+		cursor: pointer;
+//		fill: hue( dk_blue );
+		stroke: #eee;
+//		fill-opacity: .8;
+	}
+	text {
+		pointer-events: none;
+		font-size: .75rem;
+		fill: black;
+	}
+
+	&.leaf rect {
+//		fill: #aaa;
+	}
 }
 
 .resizer--x, .resizer--y {
@@ -46,6 +98,24 @@
     cursor: ns-resize;
 }
 
+.active {
+	stroke: red;
+}
+
+.axis .domain {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+.c.axis {
+	fill: none;
+	stroke: #999;
+	stroke-dasharray: 1,4;
+}
+
+/** phylogram colours */
+
 .node {
   cursor: pointer;
 }
@@ -55,6 +125,7 @@
   stroke: hue( dk_blue );
   stroke-width: 1.5px;
 }
+.node.expandable circle { fill: #069; }
 
 .node text {
   font-size: .675rem;
@@ -64,25 +135,6 @@
   fill: none;
   stroke: #ccc;
   stroke-width: 1.5px;
-}
-
-#ecosystem {
-	svg {
-		margin: auto;
-	}
-	rect {
-		stroke: #eee;
-		fill: #aaa;
-		fill-opacity: .8;
-	}
-	.parent {
-		cursor: pointer;
-		fill: hue( dk_blue );
-	}
-	text {
-		pointer-events: none;
-		font-size: .675rem;
-	}
 }
 
 .matrix .qundefined-9 {
@@ -145,3 +197,13 @@
   top: 50%;
   left: 100%;
 }
+
+.tooltip text {
+	fill: white;
+	stroke: none;
+}
+.tooltip line {
+	stroke: white;
+	fill: white;
+}
+

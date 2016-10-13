@@ -2,6 +2,7 @@ package IMG::Util::Parser::TSV2GFF;
 
 use IMG::Util::Base;
 use URI::Escape;
+use IMG::App::Role::ErrorMessages qw( err );
 
 our (@ISA, @EXPORT_OK);
 
@@ -269,9 +270,15 @@ Create the dispatch table of subs for parsing a certain TSV file
 =cut
 
 sub prepare_parser {
-	my $f_type = shift || die 'No file type specified';
+	my $f_type = shift || die err({ err => 'missing', subject => 'file type' });
 
-	die 'No parsing information available for ' . $f_type unless $col_data->{$f_type};
+	if ( ! $col_data->{$f_type} ) {
+		die err({
+			err => 'invalid',
+			subject => $f_type,
+			type => 'parseable file type'
+		});
+	}
 
 	my %d_hash = ( %defaults, %{$col_data->{$f_type}{remap}} );
 
@@ -299,10 +306,15 @@ Retrieve the sequence ID from the GFF file
 
 sub get_seqid_from_gff {
 
-	my $file = shift || die 'No GFF file specified';
+	my $file = shift || die err({ err => 'missing', subject => 'GFF file' });
 
 	my ($id, $is_gff);
-	open( my $fh, '<', $file ) or die 'Could not open ' . $file . ': ' . $!;
+	open( my $fh, '<', $file ) or die err({
+		err => 'not_readable',
+		subject => $file,
+		msg => $!
+	});
+
 	while ( <$fh> ) {
 		next unless m!\w!;
 		if ( m!^##gff-version 3! ) {
@@ -316,17 +328,40 @@ sub get_seqid_from_gff {
 		}
 	}
 
-	die 'No GFF header found in ' . $file unless $is_gff;
-	die 'No seqID found in ' . $file unless defined $id;
+	die err({ err => 'not_found_in_file', subject => 'GFF header', file => $file }) unless $is_gff;
+	die err({ err => 'not_found_in_file', subject => 'sequence ID', file => $file }) unless defined $id;
 	return $id;
 }
 
+=head3 parse_gff
+
+Retrieve the sequence ID from the GFF file
+
+@param  $file   - /path/to/GFF_file.gff
+
+@return mapping hashref with keys
+
+	gene ID =>
+	{	seqid => sequence ID
+		type  => GP type
+		start => start coordinate
+		end   => end coordinate
+	}
+
+=cut
+
 sub parse_gff {
 
-	my $file = shift || die 'No GFF file specified';
+	my $file = shift || die err({ err => 'missing', subject => 'GFF file' });
+
 	my ($id, $is_gff);
 	my $mapping;
-	open( my $fh, '<', $file ) or die 'Could not open ' . $file . ': ' . $!;
+	open( my $fh, '<', $file ) or die err({
+		err => 'not_readable',
+		subject => $file,
+		msg => $!
+	});
+
 	while ( <$fh> ) {
 		next unless m!\w!;
 		if ( m!^##gff-version 3! ) {
@@ -342,7 +377,7 @@ sub parse_gff {
 		}
 	}
 
-	die 'No GFF header found in ' . $file unless $is_gff;
+	die err({ err => 'not_found_in_file', subject => 'GFF header', file => $file }) unless $is_gff;
 	return $mapping;
 }
 
@@ -350,7 +385,16 @@ sub parse_gff {
 
 Convert tab-separated values into GFF3!
 
-@param
+@param   hashref of params, including
+
+	infile    input file to be parsed
+
+	outfile   output file (for GFF data) [optional]
+	out_fh    output file handle         [optional]
+	          output is stored in an arrayref otherwise
+
+	fmt       format
+
 
 @return
 
@@ -358,25 +402,31 @@ Convert tab-separated values into GFF3!
 
 sub tsv2gff {
 
-	my $arg_h = shift;
+	my $args = shift;
 
-	my $infile = $arg_h->{infile};
-	my $parse_h = $arg_h->{parse_h};
-	my $fmt = $arg_h->{fmt};
+	die err({ err => 'missing', subject => 'input file' }) unless defined $args->{infile};
+	die err({ err => 'missing', subject => 'GFF data' }) unless defined $args->{gff_data};
+	die err({ err => 'missing', subject => 'format' }) unless defined $args->{fmt};
+
+	my $parse_h = $args->{parse_h};
+
+	$gff_data = $args->{gff_data};
+
     my $output_me;
     my $out;
-    if ( $arg_h->{outfile} ) {
+
+    if ( $args->{outfile} ) {
         # open a file for output, and set up output_me as a writer
-        open( $out, '>', $arg_h->{outfile} ) or die 'Could not open ' . $arg_h->{outfile} . ': ' . $!;
+        open( $out, '>', $args->{outfile} ) or die err({ err => 'not_writable', subject => $args->{outfile}, msg => $! });
 
         $output_me = sub {
             my $line = shift;
             print { $out } $line . "\n";
         };
     }
-    elsif ( $arg_h->{out_fh} ) {
+    elsif ( $args->{out_fh} ) {
         # outfile handle supplied
-        $out = $arg_h->{out_fh};
+        $out = $args->{out_fh};
         $output_me = sub {
             my $line = shift;
             print { $out } $line . "\n";
@@ -391,20 +441,16 @@ sub tsv2gff {
         };
     }
 
-	$gff_data = $arg_h->{gff_data};
-	die 'No GFF data found!' unless defined $gff_data;
 
-	open( my $fh, '<', $infile ) or die 'Could not open ' . $infile . ': ' . $!;
+	open( my $fh, '<', $args->{infile} ) or die err({ err => 'not_readable', subject => $args->{infile}, msg => $! });
 	my $first_line = <$fh>;
 	while ( my $line = <$fh> ) {
 		chomp $line;
 		my %data;
-#		say 'line: ' . $line;
-		@data{ @{$col_data->{$fmt}{cols}} } = split "\t", $line;
-#		say 'data: ' . Dumper \%data;
+		@data{ @{$col_data->{ $args->{fmt} }{cols}} } = split "\t", $line;
         $output_me->( join "\t", map { $parse_h->{$_}->( \%data ) } @gff_cols );
 	}
-	say 'Finished parsing!';
+#	say 'Finished parsing!';
 
 	undef $gff_data;
 

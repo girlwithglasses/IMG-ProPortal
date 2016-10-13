@@ -1,0 +1,55 @@
+<tool id="bioperl_converter" name="BioPerl Converter" version="0.1.0">
+  <description>Convert between different bio file formats using BioPerl</description>
+  <command><![CDATA[
+  perl /global/homes/a/aireland/webUI/proportal/script/bioperl_converter.pl
+    --infile "$input"
+    #if $conversionType.type == "fasta2phy":
+     --from fasta
+     --to phylip
+     --outfile "$outputPhylip"
+    #end if
+    #if $conversionType.type == "phy2fasta":
+     --from phylip
+     --to fasta
+     --outfile "$outputFasta"
+    #end if
+    #if $conversionType.type == "nhxtnd2nhx":
+     --from nhxtnd
+     --to nhx
+     --outfile "$outputNhx"
+    #end if
+  ]]></command>
+  <inputs>
+    <conditional name="conversionType">
+      <param name="type" type="select" label="Select a conversion type">
+        <option value="fasta2phy">alignment: FASTA to PHYLIP</option>
+        <option value="phy2fasta">alignment: PHYLIP to FASTA</option>
+        <option value="nhxtnd2nhx">tree: New Hampshire eXtended to Newick</option>
+      </param>
+      <when value="fasta2phy">
+        <param name="input" type="data" format="fasta" label="FASTA file to convert" />
+      </when>
+      <when value="phy2fasta">
+        <param name="input" type="data" format="phylip" label="PHYLIP file to convert" />
+      </when>
+      <when value="nhxtnd2nhx">
+        <param name="input" type="data" format="nhxtnd" label="New Hampshire eXtended format file to convert" />
+      </when>
+    </conditional>
+  </inputs>
+  <outputs>
+    <data name="outputPhylip" format="phylip">
+      <filter>conversionType['type'] == 'fasta2phy'</filter>
+    </data>
+    <data name="outputFasta" format="fasta">
+      <filter>conversionType['type'] == 'phy2fasta'</filter>
+    </data>
+    <data name="outputNhx" format="nhx">
+      <filter>conversionType['type'] == 'nhxtnd2nhx'</filter>
+    </data>
+  </outputs>
+  <help>
+This tool converts between different bio file formats to enable different tools to work together.
+  </help>
+
+</tool>

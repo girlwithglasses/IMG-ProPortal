@@ -1,34 +1,52 @@
 #!/usr/bin/env perl
+my @dir_arr;
+my $dir;
 
-use strict;
-use warnings;
-use feature ':5.16';
-use Data::Dumper::Concise;
-use local::lib;
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	$dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	@dir_arr = map { catdir( $dir, $_ ) } qw(
+		webui.cgi
+		proportal/lib
+		jbrowse/src/perl5
+		jbrowse/extlib/lib/perl5
+	);
+}
+use lib @dir_arr;
+use IMG::Util::Base;
+use IMG::Util::File qw( :all );
 
-use FindBin qw/ $Bin /;
-use lib ( "$Bin/../../webui.cgi", "$Bin/../lib", "$Bin/../../../WebAPI-DBIC/lib", "$Bin/../../jbrowse/src/perl5", "$Bin/../../jbrowse/extlib/lib/perl5");
+use JBlibs;
 use CGI::Compile;
 use CGI::Emulate::PSGI;
 use File::Basename;
 use ProPortalPackage;
 use Plack::Builder;
-use Log::Contextual qw(:log);
+use Log::Contextual qw( :log );
 use Config::Any;
-my $base = dirname($Bin);
+use Dancer2;
 
-my $home = '/global/u1/a/aireland/';
+my $home = basename( $dir );
 
 sub make_config {
 
-	my $env_dir = $base . '/environments';
-	opendir(my $dh, $env_dir) || die "can't opendir $env_dir: $!";
-	my @files = map { "$env_dir/$_" } grep { /^[^\.]/ && -f "$env_dir/$_" } readdir($dh);
-	closedir $dh;
-	push @files, $base . '/config.pl';
+	my $env_dir = catdir( $dir, 'proportal/environments' );
+	my @files = map { "$env_dir/$_" } get_dir_contents({
+		dir => $env_dir,
+		filter => sub { -f "$env_dir/$_" }
+	});
+	push @files, catfile( $dir, 'proportal/config.pl' );
 
+	my $cfg = Config::Any->load_files({
+		files => [ @files ],
+		use_ext => 1,
+		flatten_to_hash => 1
+	});
 
-	my $cfg = Config::Any->load_files({ files => [ @files ], use_ext => 1, flatten_to_hash => 1 });
 	my @keys = keys %$cfg;
 	for ( @keys ) {
 		if ( m!.+/(\w+)\.\w+$!x ) {
@@ -36,9 +54,7 @@ sub make_config {
 		}
 	}
 
-	say 'config: ' . Dumper $cfg;
-
-
+#	say 'config: ' . Dumper $cfg;
 
 	return $cfg;
 
@@ -46,30 +62,33 @@ sub make_config {
 
 # $ENV{PLACK_URLMAP_DEBUG} = 1;
 
-my $pp = sub {
-	ProPortalPackage->to_app;
-};
+# my $pp = sub {
+# 	ProPortalPackage->to_app;
+# };
 
 # CGI server
 use Plack::App::CGIBin;
 
-my $old_img = sub {
-	Plack::App::CGIBin->new(root => $home . "pristine/webUI/webui.cgi")->to_app;
-};
+# my $old_img = sub {
+# 	Plack::App::CGIBin->new(root => catdir( $home, "pristine/webUI/webui.cgi" ) )->to_app;
+# };
+
+# =comment HAL+JSON WebAPI
+
+use WebAPI::DBIC::WebApp;
+use Alien::Web::HalBrowser;
 
 my $schema_h = {
 	img_gold => 'DBIC::IMG_Gold',
 	img_core => 'DBIC::IMG_Core',
 };
 
-=comment HAL+JSON WebAPI
+my $cfg = config;
 
-use WebAPI::DBIC::WebApp;
-use Alien::Web::HalBrowser;
-
+#say Dumper $cfg;
 my $apps;
-for my $db ( qw( img_gold img_core ) ) {
-	next unless defined $cfg->{$db};
+for my $db ( keys %{$cfg->{schema}} ) {
+	next unless defined $cfg->{db}{ $cfg->{schema}{$db}{db} };
 
 	my $hal_app = Plack::App::File->new(
 	  root => Alien::Web::HalBrowser->dir
@@ -79,9 +98,9 @@ for my $db ( qw( img_gold img_core ) ) {
 	eval "require $schema_class" or die "Error loading $schema_class: $@";
 
 	my $schema = $schema_class->connect(
-		$cfg->{$db}{dsn} || 'dbi:Oracle:' . $cfg->{$db}{database},
-		$cfg->{$db}{username} || $cfg->{$db}{user},
-		$cfg->{$db}{password}
+		$cfg->{db}{ $cfg->{schema}{$db}{db} }{dsn} || 'dbi:Oracle:' . $cfg->{db}{ $cfg->{schema}{$db}{db} }{database},
+		$cfg->{db}{ $cfg->{schema}{$db}{db} }{username} || $cfg->{db}{ $cfg->{schema}{$db}{db} }{user},
+		$cfg->{db}{ $cfg->{schema}{$db}{db} }{password}
 	); # uses DBI_DSN, DBI_USER, DBI_PASS env vars
 
 	my $app = WebAPI::DBIC::WebApp->new({
@@ -92,16 +111,12 @@ for my $db ( qw( img_gold img_core ) ) {
 
 }
 
-=cut
+
 
 builder {
-	enable "Deflater";
-
-#	enable "Static", path => qr#^/(images|css|js)
-#	.*?
-#	(\.(css|jpg|jpeg|png|gif|js))#x, root => $base . "/public";
-#	enable "Static", path => qr#^/nyt#x, root => $base . "/public";
+	enable 'Deflater';
 	enable 'Debug';
+
 # 	enable_if { $_[0]->{REQUEST_URI} !~ m#/nyt/nytprofhtml# } 'Debug', panels => [
 # 		'Timer',
 # 		'Memory',
@@ -117,33 +132,34 @@ builder {
 # 	];
 	enable 'Static',
 		path => sub { s!^/pristine_assets!! },
-		root => $home . 'pristine/webUI/webui.htd';
+		root => catdir( $home, 'pristine/webUI/webui.htd' );
 
 	enable 'Static',
 		path => sub { s!^/jbrowse_assets!! },
-		root => $home . 'webUI/jbrowse';
+		root => catdir( $home, 'webUI/jbrowse' );
 
 	# jbrowse data directory
 #	scratch_dir => '/global/homes/a/aireland/tmp/jbrowse/',
 
 	enable 'Static',
 		path => sub { s!^/data_dir!! },
-		root => $home . 'tmp/jbrowse';
+		root => catdir( $home, 'tmp/jbrowse' );
 
-	enable "Static",
+	enable 'Static',
 		path => qr#^/yui282#x,
-		root => "/webfs/projectdirs/microbial/img/public-web/vhosts/img-stage.jgi-psf.org/htdocs/";
+		root => '/webfs/projectdirs/microbial/img/public-web/vhosts/img-stage.jgi-psf.org/htdocs/';
 
-	mount "/" => $pp->();
+	mount "/img_core" => builder {
+		mount "/browser" => $apps->{img_core}{hal};
+		mount "/" => $apps->{img_core}{main};
+	};
+	mount "/img_gold" => builder {
+		mount "/browser" => $apps->{img_gold}{hal};
+		mount "/" => $apps->{img_gold}{main};
+	};
 
-	mount '/pristine' => $old_img->();
+	mount '/' => ProPortalPackage->to_app;
 
-# 	mount "/img_core" => builder {
-# 		mount "/browser" => $apps->{img_core}{hal};
-# 		mount "/" => $apps->{img_core}{main};
-# 	};
-#      mount "/img_gold" => builder {
-#          mount "/browser" => $apps->{img_gold}{hal};
-#          mount "/" => $apps->{img_gold}{main};
-#      };
+	mount '/pristine' => Plack::App::CGIBin->new(root => catdir( $home, "pristine/webUI/webui.cgi" ) )->to_app;
+
 };

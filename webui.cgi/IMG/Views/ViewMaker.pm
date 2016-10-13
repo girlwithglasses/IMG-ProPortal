@@ -16,9 +16,8 @@ my $req;
 
 my $imgAppTerm;
 
-register 'img_render' => sub {
-
-	my $dsl = shift;
+sub img_render {
+	my $self = shift;
 
 #	say "dsl: " . Dumper $dsl;
 
@@ -28,7 +27,7 @@ register 'img_render' => sub {
 
 
 	$self = $dsl->app;
-	$env = { %$env, %{ $dsl->app->config } };
+	$env = { %$env, %{ $app->config } };
 	$req = $args{request};
 
 	if ( $part ) {
@@ -47,7 +46,7 @@ register 'img_render' => sub {
 	# otherwise print the whole page
 
 
-};
+}
 
 # set 'env' to the application config
 
@@ -90,9 +89,9 @@ sub render_template {
 	my $tt = Template->new({
 		INCLUDE_PATH =>  [
 			$env->{base_dir} . "/views",
-			$env->{base_dir} . "/views/pages",
-			$env->{base_dir} . "/views/layouts",
-			$env->{base_dir} . "/views/inc"
+#			$env->{base_dir} . "/views/pages",
+#			$env->{base_dir} . "/views/layouts",
+#			$env->{base_dir} . "/views/inc"
 		],
 	}) || die "Template error: $Template::ERROR\n";
 
@@ -110,7 +109,7 @@ sub print_message {
 		carp 'No message found';
 	}
 	else {
-		render_template( 'message.tt', $message );
+		render_template({ tmpl => 'message.tt', tmpl_data => $message });
 	}
 	return;
 #	print "<div id='message'>\n";
@@ -271,7 +270,6 @@ sub print_app_header {
 	# not all sites have breadcrumbs
 	. printBreadcrumbsDiv( $args{current}, $args{help}, $dbh )
 	. printErrorDiv();
-	$out .= printAbcNavBar() if $env->{abc};
 
 #	non-home
 #		print_html_head( %args );
@@ -279,7 +277,6 @@ sub print_app_header {
 #		printBreadcrumbsDiv( $args{current}, $args{help}, $dbh );
 #		printErrorDiv();
 
-#	printAbcNavBar() if $env->{abc};
 #	printContentHome() if 'Home' eq $args{current};
 
 
@@ -378,7 +375,7 @@ sub generic_home {
 		$templateFile = $env->{base_dir} . "/home-hmpm-v33.html";
 		my $f = $env->{'hmp_home_page_file'};
 #				$hmpGoogleJs = file2Str( $f, 1 );
-		$hmpGoogleJs = eval { IMG::Util::File::slurp( $f ) };
+		$hmpGoogleJs = eval { IMG::Util::File::file_slurp( $f ) };
 	}
 
 	my ( $sampleCnt, $proposalCnt, $newSampleCnt, $newStudies );
@@ -397,7 +394,7 @@ sub generic_home {
 
 	#	$table_str = file2Str( $file, 1 );
 		local $@;
-		$table_str = eval { IMG::Util::File::slurp( $file ); };
+		$table_str = eval { IMG::Util::File::file_slurp( $file ); };
 		die $@ if $@;
 		$table_str =~ s/__IMG__/$img_app_term/;
 
@@ -409,7 +406,7 @@ sub generic_home {
 
 #		$table_str = file2Str( $file, 1 );
 		local $@;
-		$table_str = eval { IMG::Util::File::slurp( $file ); };
+		$table_str = eval { IMG::Util::File::file_slurp( $file ); };
 		die $@ if $@;
 
 	}
@@ -420,7 +417,7 @@ sub generic_home {
 		# w
 		my $file = $env->{webfs_data_dir} . "/hmp/img_w_home_page_v400.txt";
 		local $@;
-		$table_str = eval { IMG::Util::File::slurp( $file ); };
+		$table_str = eval { IMG::Util::File::file_slurp( $file ); };
 		die $@ if $@;
 
 	}
@@ -929,7 +926,7 @@ sub printMainFooter {
 
 #	my $s = file2Str( $templateFile, 1 );
 	local $@;
-	my $s = eval { IMG::Util::File::slurp( $templateFile ); };
+	my $s = eval { IMG::Util::File::file_slurp( $templateFile ); };
 	die $@ if $@;
 
 
@@ -1669,7 +1666,7 @@ sub googleAnalyticsJavaScript {
 #	my $str = file2Str( $env->{base_dir} . "/google.js", 1 );
 
 	local $@;
-	my $str = eval { IMG::Util::File::slurp( $env->{base_dir} . "/google.js" ); };
+	my $str = eval { IMG::Util::File::file_slurp( $env->{base_dir} . "/google.js" ); };
 	die $@ if $@;
 
 	$str =~ s/__google_key__/$google_key/g;
@@ -1683,7 +1680,7 @@ sub googleAnalyticsJavaScript2 {
 	my ( $server, $google_key ) = @_;
 
 	local $@;
-	my $str = eval { IMG::Util::File::slurp( $env->{base_dir} . "/google2.js" ); };
+	my $str = eval { IMG::Util::File::file_slurp( $env->{base_dir} . "/google2.js" ); };
 	die $@ if $@;
 
 #	my $str = file2Str( $env->{base_dir} . "/google2.js", 1 );
@@ -1767,17 +1764,6 @@ sub redirecturl {
 };
 }
 
-#
-# print the ABC nav bar / menu on the left side
-#
-sub printAbcNavBar {
-	if ( $env->{abc} ) {
-		my $templateFile = $env->{base_dir} . "/abc-nav-bar.html";
-		my $template = HTML::Template->new( filename => $templateFile );
-		return $template->output;
-	}
-}
-
 ############################################################################
 # webError - Show error message.
 ############################################################################
@@ -1808,7 +1794,7 @@ sub webError {
     my $templateFile = $env->{base_dir} . "/footer.html";
 
 	local $@;
-	my $str = eval { IMG::Util::File::slurp( $templateFile ); };
+	my $str = eval { IMG::Util::File::file_slurp( $templateFile ); };
 	die $@ if $@;
 
 #    my $str            = file2Str($templateFile);

@@ -4,113 +4,133 @@
 	PhyloViewer (beta)
 </h2>
 <p>
-	Blurb here!
+	Some blurb here.
 </p>
-<section class="visualisation clear cf">
+<!-- section class="visualisation clear cf">
 <div id="cladogram" style="height: 800px">
 	<p class="js_vis_loading">
 		Please wait while the visualisation loads.
 	</p>
 </div>
-</section>
-<section class="cf">
+</section -->
+<section class="cf phylo_viewer__container">
 	<div id="toolbar">
-
-<form method="POST" class="seqalign-method__form" action="[% link('proportal/phylo_viewer') %]">
-		<img src="[% settings.pp_assets %]images/tempLogoBeta3.png" alt="Logo" />
-		<fieldset class="phylogram-opt__box--all">
-			<fieldset class="phylogram-opt__box--phylo">
-				<legend>Phylogenetic parameters</legend>
-				<fieldset class="">
-					List of sequences: V <label for="import.cart" class="sequence-import"> import all from Gene Cart... </label>
-					<input type="checkbox" id="import.cart" value="cart" name="import" />
-				</fieldset>
-			</fieldset>
-			<fieldset class="phylogram-opt__box--display">
-				<legend>Visual Properties</legend>
-				<fieldset>
-					<label for="o_treeType"> Tree Type </label>
-					<select id="o_treeType">
+		<ul id="title">
+			<li>  <img src="/images/tempLogoBeta3.png" alt=""></li> </ul>
+			<ul class="optionTitle"><li>Phylogenetic Parameters</li></ul>
+			<ul class="optionBox">
+				<li>List of sequences: V</li>
+				<li><i>&nbsp;&nbsp;&nbsp;&nbsp;import all from Gene Cart...</i></li>
+				<li>
+					<div class="labelShort">MSA Method</div>
+					<select id="o_msaMethod" style="width: 120px;" disabled>
+						<option value="method1">Method 1</option>
+						<option value="method2">Method 2</option>
+					</select>
+				</li>
+				<li>
+					<div class="labelShort">Tree Method</div>
+					<select id="o_treeMethod" style="width: 120px;" disabled>
+						<option value="method1">Method 1</option>
+						<option value="method2">Method 2</option>
+					</select>
+				</li>
+				<li>
+					<div style="width: 190px;">
+					<input type="submit" value="Go" disabled>
+					</div>
+				</li>
+			</ul>
+	  		<ul class="optionTitle"><li>Visual Properties</li></ul>
+			<ul class="optionBox">
+				<li>
+					<div class="labelShort">Tree Type</div>
+					<select id="o_treeType" style="width: 120px;">
 						<option value="phylogram">phylogram</option>
 						<option value="cladogram">cladogram</option>
 					</select>
-				</fieldset>
-				<fieldset>
-					<label for="o_branchDiagonal"> Branch Diagonal </label>
+				</li>
+				<li>
+					<div class="label">Branch Diagonal</div>
 					<select id="o_branchDiagonal" disabled>
 						<option value="rightAngle">Right Angle</option>
 						<option value="curved">Curved</option>
 					</select>
-				</fieldset>
-				<fieldset>
-					<label for="o_treeWidth"> Tree Width </label>
-					<input type="range" min="300" max="700" id="o_treeWidth" />
+				</li>
+				<li>
+					<div class="label">Tree Width</div>
+					<input type="range" min="300" max="700" id="o_treeWidth">
 					<span id="treeWidthLabel" style="text-align: right; padding-left: 7px;">…</span>
-				</fieldset>
-				<fieldset>
-					<label for="o_leafHeight"> Tree Height </label>
-					<input type="range" min="8" max="20" id="o_leafHeight" disabled />
+
+				</li>
+				<li>
+					<div class="label">Tree Height</div>
+					<input type="range" min="8" max="20" id="o_leafHeight" disabled>
 					<span id="leafHeightLabel" style="text-align: right; padding-left: 7px; anchor: ">…</span>
-				</fieldset>
-				<fieldset>
-					<label for="o_showDistRuler"> Distance Ruler </label>
-					<input type="checkbox" id="o_showDistRuler" checked="checked" />
-				</fieldset>
-				<fieldset>
-					<label for="o_showDistLabels"> Distance Labels </label>
-					<input type="checkbox" id="o_showDistLabels" checked="checked" />
-				</fieldset>
-				<fieldset>
-					<label for="o_showInternalNodes"> Internal Nodes </label>
-					<input type="checkbox" id="o_showInternalNodes" checked="" disabled />
-				</fieldset>
-				<fieldset>
-					<label for="o_showLeafLabels"> Leaf labels </label>
-					<input type="checkbox" id="o_showLeafLabels" checked="" />
-					<label for="o_leafLabelData"> Leaf label data to show </label>
+
+				</li>
+				<li> <div class="label">Distance Ruler</div><input type="checkbox" id="o_showDistRuler" checked=""></li>
+				<li> <div class="label">Distance Labels</div><input type="checkbox" id="o_showDistLabels" checked=""></li>
+
+				<li>
+					<div class="label">Internal Nodes</div>
+					<input type="checkbox" id="o_showInternalNodes" checked="" disabled>
+					<div class="labelShort">&nbsp;</div>  <!-- Spacer -->
+				</li>
+
+
+
+				<li>
+					<div class="label">Leaf Labels &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<input type="checkbox" id="o_showLeafLabels" checked=""></div>
 					<select id="o_leafLabelData" disabled>
 						<option value="genome">Genome</option>
 						<option value="gene_id">Gene ID</option>
 						<option value="metadata">Other Metadata...</option>
 					</select>
-				</fieldset>
-				<fieldset>
-					<label for="o_leafColor"> Leaf color </label>
-					<div class="colorPicker">
-					</div>
-				</fieldset>
-				<fieldset>
-					<label for=""> Leaf Node Size </label>
-					<input type="range" min="5" max="15" id="o_leafNodeSize" disabled />
-				</fieldset>
-			</fieldset>
-			<fieldset class="phylogram-opt__box--details">
-				<legend>Details Pane</legend>
-				<fieldset>
-					<label for="o_treeType"> ... </label>
+
+				</li>
+
+				<li>
+					<div class="label">Leaf Color
+					<div class="colorPicker"></div></div>
+					<select id="o_leafLabelData" style="padding-left: 20px;" disabled>
+						<option value="genome">Genome</option>
+						<option value="gene_id">Gene ID</option>
+						<option value="metadata">Other Metadata...</option>
+					</select>
+				</li>
+				<li>
+					<div class="label">Leaf Node Size</div>
+					<input type="range" min="5" max="15" id="o_leafNodeSize" disabled>
+					<span id="treeWidthLabel" style="text-align: right; padding-left: 7px;">…</span>
+
+				</li>
+				</ul>
+			<ul class="optionTitle"><li>Details Pane</li></ul>
+			<ul class="optionBox">
+				<li>
+
 					<select id="o_treeType" style="width: 190px;" disabled>
 						<option value="heatmap"> Metadata Heatmap</option>
 						<option value="neighborhood"> Genome Neighborhood </option>
 						<option value="none"> None </options>
 					</select>
-				</fieldset>
-				<fieldset>
-					<label for="o_mh_showValues"> Show Values </label>
-					<input type="checkbox" id="o_mh_showValues" checked="" disabled />
-				</fieldset>
-				<fieldset>
-					<label for="">Column display</label>
-					<p>
-						Add/Delete/Reorder Columns Here...
-					</p>
-					<i>This optionBox will be displayed when the user chooses "Metadata Heatmap" above. </i>
-				</fieldset>
-			</fieldset>
-		</fieldset>
-	</div>
-	<div id="phyloWrapper">
-		<div id="phyloviewer" class="resizable">
-		</div>
-	</div>
+				</li>
+			</ul>
+			<ul class="optionBox" style="border: 1px solid gray;">
+				<li>
+					<div class="label">Show Values</div>
+					<input type="checkbox" id="o_mh_showValues" checked="" disabled>
+				</li>
+				<li>
+					<div class="label" style="width: 100%;">Add/Delete/Reorder Columns Here...
+					<i>This optionBox will be displayed when the user chooses "Metadata Heatmap" above. </i></div></li>
+
+			</ul>
+
+
+  	</div>
+  	<div id="phyloWrapper"><div id="phyloviewer" class="Blues"></div></div>
 </section>
 [% END; %]

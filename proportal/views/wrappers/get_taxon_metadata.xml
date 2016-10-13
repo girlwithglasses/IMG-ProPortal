@@ -1,0 +1,86 @@
+<tool id="get_taxon_metadata" name="Get taxon metadata" version="0.1.0">
+  <description>Retrieve metadata for a set of taxon IDs</description>
+  <command>perl /global/homes/a/aireland/webUI/proportal/script/get_taxon_metadata.pl
+--infile
+#if $source.reference_source_selector == "paste":
+"$infile" --infile_format "tsv"
+#elif $source.reference_source_selector == "tax_list":
+"$taxon_list"
+#elif $source.reference_source_selector == "tab":
+"$tab_sepd" --infile_format "tsv"
+#end if
+--outfile "$output"</command>
+  <inputs>
+	<conditional name="source">
+		<param name="reference_source_selector" type="select" label="Select a set of IMG taxon IDs">
+			<option value="paste">Paste into a text box</option>
+			<option value="tax_list">Taxon list from history</option>
+			<option value="tab">Tab-delimited data from history</option>
+		</param>
+		<when value="paste">
+			<param name="input" type="text" area="True" size="10x25" label="IMG taxon IDs">
+				<sanitizer invalid_char="">
+				  <valid initial="string.printable" />
+				</sanitizer>
+			</param>
+		</when>
+		<when value="tax_list">
+			<!-- list of taxon IDs -->
+			<param name="taxon_list" type="data" format="tabular,txt">
+				<label>List of IMG taxon IDs (no header row, please!)</label>
+			</param>
+		</when>
+		<when value="tab">
+			<!-- tab-sep'd data -->
+			<param name="tab_sepd" type="data" format="tsv">
+				<label>Tab-separated data with a 'taxon_oid' column containing IMG taxon IDs</label>
+			</param>
+		</when>
+	</conditional>
+	</inputs>
+	<outputs>
+		<data name="output" format="tsv" label="Taxon metadata" />
+	</outputs>
+	<configfiles>
+		<configfile name="infile">#
+#if $source.reference_source_selector == "paste":
+taxon_oid
+${source.input}
+#end if
+</configfile>
+	</configfiles>
+
+  <!-- tests>
+    <test>
+      <param name="config" value="input.txt" />
+      <param name="input" value="input.txt" />
+      <output name="output" file="fa_gc_content_output.txt" />
+    </test>
+  </tests -->
+
+  <help>
+This tool takes a set of IMG taxon IDs and searches the database for the metadata associated with those taxa.
+
+Here is a sample set of taxon IDs to query::
+
+	3300007599
+	3300007601
+	3300007604
+	3300007605
+	3300007608
+	3300007610
+	3300007612
+	3300007613
+	3300007615
+	637000210
+	637000211
+	637000212
+	637000213
+	637000214
+	637000309
+	637000310
+
+
+  </help>
+
+</tool>

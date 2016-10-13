@@ -9,8 +9,8 @@
 		<li><a href="https://sites.google.com/a/lbl.gov/img-form/contact-us">Contact us</a></li>
 		<li><a href="http://www.jgi.doe.gov/whoweare/accessibility.html">Accessibility/Section 508</a></li>
 		<li><a href="http://jgi.doe.gov/disclaimer/">Disclaimer</a></li>
-		<li>[% settings.db.version_year %]</li>
-		<li>[% server_name %] &bull; [% ora_service %] &bull; [% perl_version %] &bull; [% dancer_version %] &bull; [% settings.db.build_date %] &bull; [% request.forwarded_for_address || request.address %]</li>
+		<li>ProPortal v[% sw_version %]</li>
+		<li>[% server_name %] &bull; [% ora_service %] &bull; [% settings.db.build_date %] &bull; [% request.forwarded_for_address || request.address %]</li>
 		<li>&copy; 1997&ndash;2015 The Regents of the University of California</li>
 	</ul>
 </footer>

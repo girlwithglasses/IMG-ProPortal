@@ -1,25 +1,19 @@
 package Routes::IMG;
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
-use parent 'CoreStuff';
+use parent 'AppCore';
 
-use IMG::App::Role::Dispatcher;
+# use IMG::App::Role::Dispatcher;
 # use IMG::Views::ViewMaker;
 use Filter::Handle qw( Filter UnFilter) ;
-our $VERSION = '0.1';
-
-any '/launch' => sub {
-	return '3... 2... 1... blast off!';
-};
 
 # menu pages
-
 
 prefix '/cgi-bin' => sub {
 
 	any '/main.cgi?**' => sub {
 
-		my $rtn = prep_parse_params( request );
+		my $rtn; # = prep_parse_params( request );
 
 		# get template variables
 		var menu_grp => $rtn->{tmpl_args}{current};
@@ -128,9 +122,9 @@ prefix '/cgi-bin' => sub {
 
 	any '/main.cgi' => sub {
 		# home pages
-		my $tmpl_args = get_tmpl_vars();
-
-		img_render( tmpl_args => $tmpl_args, request => request );
+# 		my $tmpl_args = get_tmpl_vars();
+#
+# 		img_render( tmpl_args => $tmpl_args, request => request );
 
 		return;
 

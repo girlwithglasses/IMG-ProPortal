@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: JGISessionClient.pm 34501 2015-10-13 23:40:50Z aireland $
+# $Id: JGISessionClient.pm 36088 2016-08-31 21:32:28Z aireland $
 #
 ############################################################################
 package IMG::App::Role::JGISessionClient;
@@ -10,7 +10,7 @@ use JSON;
 use IMG::Model::Contact;
 use IMG::Util::File;
 
-requires 'config', 'http_ua';
+requires 'config', 'http_ua', 'choke';
 
 =head3 get_jgi_user_json
 
@@ -25,16 +25,16 @@ Get user JSON from Caliban
 
 sub get_jgi_user_json {
 	my $self = shift;
-	my $req_url = $self->_create_sso_url( cookie_val => @_ );
+	my $req_url = $self->_create_sso_url({ type => 'cookie_val', cookie_val => +shift });
 
 	my $response = $self->_run_request( $req_url );
 
 	if ( ! $response->{success}) {
-		if ( 599 == $response->{status} ) {
-			# programmer error...
-			die Dumper $response;
-		}
-		warn "No user data found at $req_url";
+# 		if ( 599 == $response->{status} ) {
+# 			# programmer error...
+# 			die Dumper $response;
+# 		}
+# 		warn "No user data found at $req_url";
 		die {
 			status  => $response->{status},
 			title   => $response->{reason},
@@ -45,12 +45,17 @@ sub get_jgi_user_json {
 	local $@;
 	my $json = eval { from_json $response->{content} };
 	if ($@) {
-		die 'JSON decoding error: $@';
+		$self->choke({
+			err => 'json_decode_err',
+			msg => $@
+		});
 	}
 
 	# make sure we have the correct fields
 	if (! $json->{user} || ! $json->{user}{login} || ! $json->{user}{email_address} || ! $json->{user}{id} ) {
-		die 'JSON response lacks required fields';
+		$self->choke({
+			err => 'caliban_err'
+		});
 	}
 
 	return $json;
@@ -70,7 +75,7 @@ Checks that the current JGI session is still valid by pinging Caliban
 
 sub check_jgi_session {
 	my $self = shift;
-	my $req_url = $self->_create_sso_url( session_id => @_ );
+	my $req_url = $self->_create_sso_url({ type => 'session_id', session_id => +shift });
 
     # https://signon.jgi-psf.org/api/sessions/
 	my $response = $self->_run_request( $req_url, 'head' );
@@ -83,43 +88,61 @@ sub check_jgi_session {
 
 =head3 _create_sso_url
 
-@param  $id_type    - either cookie_val or session_id
-@param  $id         - $cookie_val or $session_id
+
+@param $args    hashref with keys
+
+	type   - either cookie_val or session_id
+	$type  - $cookie_val or $session_id
+
+i.e. to supply a cookie value:
+
+	$self->_create_sso_url({
+		type => 'cookie_val', cookie_val => 'abc123'
+	});
 
 @return $complete_url_for_json
 
 =cut
 
 sub _create_sso_url {
-    my $self = shift;
-    my $id_type = shift || die 'No ID type specified';
+	my $self = shift;
+	my $args = shift;
 
-    if ( ! $self->has_config ) {
-        die "No config found!";
-    }
     if ( ! $self->config->{sso_url_prefix} || ! $self->config->{sso_domain} ) {
-        die "Missing required config parameters: sso_url_prefix: "
-            . ( $self->config->{sso_url_prefix} || '<undefined>' )
-            . '; sso_domain: '
-            . ( $self->config->{sso_domain} || '<undefined>' );
+		$self->choke({
+			err => 'cfg_missing',
+			subject => 'sso_config'
+		});
     }
 
-    if ( ref $id_type || ( 'cookie_val' ne $id_type && 'session_id' ne $id_type ) ) {
-        die 'ID type must be "cookie_val" or "session_id"';
-    }
+	my $id_type = $args->{type} || $self->choke({
+		err => 'missing',
+		subject => 'ID type'
+	});
 
-    my $id = shift || die 'No ' . $id_type . ' supplied';
+	my @valid_types = qw( cookie_val session_id );
+	if ( ref $id_type || ! grep { $id_type eq $_ } @valid_types ) {
+		$self->choke({
+			err => 'invalid_enum',
+			subject => $id_type,
+			type => 'ID type',
+			enum => \@valid_types
+		});
+	}
 
-    die $id_type . ' must be a string' if ref $id;
+	my $id = $args->{ $id_type } || $self->choke({
+		err => 'missing',
+		subject => $id_type
+	});
 
-    if ( 'session_id' eq $id_type ) {
-        my $insert = ( substr( $self->config->{sso_domain}, -1) eq '/' )
-        ? 'api/sessions/'
-        : '/api/sessions/';
-        $id = $insert . $id;
-    }
+	if ( 'session_id' eq $id_type ) {
+		my $insert = ( substr( $self->config->{sso_domain}, -1) eq '/' )
+		? 'api/sessions/'
+		: '/api/sessions/';
+		$id = $insert . $id;
+	}
 
-    # https://signon.jgi-psf.org/api/sessions/
+	# https://signon.jgi-psf.org/api/sessions/
 	return $self->config->{sso_url_prefix} . $self->config->{sso_domain} . $id . '.json';
 
 }
@@ -140,7 +163,10 @@ sub _run_request {
 	my $self = shift;
 	my $url  = shift;
 	if ( ! $url || $url !~ /\w+/ ) {
-		die 'No URL specified for _run_request';
+		$self->choke({
+			err => 'missing',
+			subject => 'URL for _run_request'
+		});
 	}
 	my $head = shift || undef;
 	my $method = ( $head ) ? 'head' : 'get' ;
