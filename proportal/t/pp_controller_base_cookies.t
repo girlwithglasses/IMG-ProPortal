@@ -1,8 +1,22 @@
 #!/usr/bin/env perl
 
-use FindBin qw/ $Bin /;
-use lib "$Bin/../lib";
+my $dir;
+my @dir_arr;
+
+BEGIN {
+	$ENV{'DANCER_ENVIRONMENT'} = 'testing';
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	$dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	@dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib proportal/t/lib );
+}
+
+use lib @dir_arr;
 use IMG::Util::Base 'NetTest';
+use Dancer2;
 use HTTP::CookieJar;
 use Test::MockModule;
 

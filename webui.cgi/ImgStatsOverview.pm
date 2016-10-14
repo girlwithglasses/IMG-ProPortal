@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: ImgStatsOverview.pm 34765 2015-11-20 18:46:25Z aratner $
+# $Id: ImgStatsOverview.pm 36288 2016-10-07 02:46:25Z aratner $
 ############################################################################
 package ImgStatsOverview;
 
@@ -57,6 +57,7 @@ my @globalDomain = ( "Bacteria", "Archaea", "Eukaryota", "Plasmids", "Viruses", 
 push( @globalDomain, "*Microbiome" ) if $include_metagenomes;
 
 my $microbiomeLabel = "Metagenome";    # column heading for *Microbiome
+my $viral_table_name = "dt_viral_clusters\@core_v400_musk";    # table 1
 
 #$microbiomeLabel = "Samples" if $img_hmp;
 
@@ -260,7 +261,7 @@ sub printAdminStats {
 
     };
 
-    if ($include_metagenomes) {
+    return if (!$include_metagenomes); 
 
         print qq{
         <h2>Samples Study Tree Viewer</h2>
@@ -277,38 +278,90 @@ sub printAdminStats {
     value="Sample Table Viewer" onclick="window.open('main.cgi?section=StudyViewer&page=sampletableview&onlyGoldId=1', '_self')">
     </p>
     };
-    }
 
-# phylum breakdown counts
-#        print qq{
-#        <h2>Phylum Count Statistics</h2>
+
+    # Gs break down
 #
-#   <input class="smbutton" style="min-width: 90px;" type="button" name="Bacteria"
-#    value="Bacteria" onclick="window.open('main.cgi?section=ImgStatsOverview&page=treeStats&domain=Bacteria', '_self')">
-#
-#   <input class="smbutton" style="min-width: 90px;" type="button" name="Archaea"
-#    value="Archaea" onclick="window.open('main.cgi?section=ImgStatsOverview&page=treeStats&domain=Archaea', '_self')">
-#
-#   <input class="smbutton" style="min-width: 90px;" type="button" name="Eukaryota"
-#    value="Eukaryota" onclick="window.open('main.cgi?section=ImgStatsOverview&page=treeStats&domain=Eukaryota', '_self')">
-#
-#   <input class="smbutton" style="min-width: 90px;" type="button" name="GFragment"
-#    value="GFragment" onclick="window.open('main.cgi?section=ImgStatsOverview&page=treeStats&domain=GFragment', '_self')">
-#
-#   <input class="smbutton" style="min-width: 90px;" type="button" name="Plasmid"
-#    value="Plasmid" onclick="window.open('main.cgi?section=ImgStatsOverview&page=treeStats&domain=Plasmid', '_self')">
-#
-#   <input class="smbutton" style="min-width: 90px;" type="button" name="Viruses"
-#    value="Viruses" onclick="window.open('main.cgi?section=ImgStatsOverview&page=treeStats&domain=Viruses', '_self')">
+#    print qq{
+#        <h2>Gs to IMG Datasets</h2>        
 #    };
-#
-#        if ($include_metagenomes) {
-#            print qq{
-#   <input class="smbutton" style="min-width: 90px;" type="button" name="Metagenomes"
-#    value="Metagenomes" onclick="window.open('main.cgi?section=ImgStatsOverview&page=treeStats&domain=*Microbiome', '_self')">
-#        };
+#    
+#    my $sql = qq{
+#select t.domain, count(distinct t.STUDY_GOLD_ID), 
+#count(distinct t.SEQUENCING_GOLD_ID), 
+#count(distinct t.ANALYSIS_PROJECT_ID),
+#count(distinct t.taxon_oid)
+#from taxon t
+#where t.OBSOLETE_FLAG = 'No'
+#group by t.domain
+#    };
+#    my $dbh    = dbLogin();
+#    my $cur = execSql( $dbh, $sql, $verbose);
+#    
+#    #
+#    # domain => hash (gsCnt => 1, gpCnt => 2, gaCnt => 3 ,  oidCnt => 4) 
+#    #
+#    my %hash;
+#    for ( ; ; ) {
+#        my ( $domain, $gsCnt, $gpCnt, $gaCnt, $oidCnt ) = $cur->fetchrow();
+#        last if(!$domain);
+#        if($domain =~ /^Pla/) {
+#            $domain = 'Plasmid';
+#        } elsif($domain =~ /^GFrag/) {
+#            $domain = 'GFragment';
+#        } elsif($domain eq '*Microbiome') {
+#            $domain = 'Metagenome';
 #        }
-
+#        
+#        if(exists $hash{$domain}) {
+#            my $href = $hash{$domain};
+#            $href->{'gsCnt'} += $gsCnt;
+#            $href->{'gpCnt'} += $gpCnt;
+#            $href->{'gaCnt'} += $gaCnt;
+#            $href->{'oidCnt'} += $oidCnt;
+#        } else {
+#            my %h = (
+#            'gsCnt' => $gsCnt, 
+#            'gpCnt' => $gpCnt, 
+#            'gaCnt' => $gaCnt,  
+#            'oidCnt' => $oidCnt
+#            );
+#            $hash{$domain} = \%h;
+#        }
+#    }
+#    
+#    my $it = new StaticInnerTable();
+#    my $sd = $it->getSdDelim();
+#
+#    $it->addColSpec( "Domain",       "asc", "left" );
+#    $it->addColSpec( "Gs Count", "", " right" );
+#    $it->addColSpec( "Gp Count", "", " right" );
+#    $it->addColSpec( "Ga Count", "", " right" );
+#    $it->addColSpec( "Genome Count", "", " right" );
+#
+#    foreach my $domain(sort keys %hash) {
+#        my $href   = $hash{$domain};
+#        my $gsCnt  = $href->{'gsCnt'};
+#        my $gpCnt  = $href->{'gpCnt'};
+#        my $gaCnt  = $href->{'gaCnt'};
+#        my $oidCnt = $href->{'oidCnt'};        
+#
+#        my $url = "main.cgi?section=StudyViewer&page=project";
+#        my $r   = "";
+#        $r .= $domain . $sd . $domain . "\t";
+#        
+#        my $url1 = alink("$url&domain=$domain&type=gs", $gsCnt);
+#        $r .= $gsCnt . $sd . $url1 . "\t";
+#        $url1 = alink("$url&domain=$domain&type=gp", $gpCnt);
+#        $r .= $gpCnt . $sd . $url1 . "\t";
+#        $url1 = alink("$url&domain=$domain&type=ga", $gaCnt);
+#        $r .= $gaCnt . $sd . $url1 . "\t";
+#        $url1 = alink("$url&domain=$domain&type=oid", $oidCnt);
+#        $r .= $oidCnt . $sd . $url1 . "\t";
+#        
+#        $it->addRow($r);
+#    }
+#    $it->printOuterTable(1);        
 }
 
 # public data non redundant
@@ -826,7 +879,7 @@ sub printFunctionStats() {
         "KO Terms total",
 
         #                          "SEED total",
-        "Swiss-Prot total"
+        #"Swiss-Prot total"
     );
 
     commonStats( $header, \@rowTitleField );
@@ -1520,9 +1573,7 @@ sub printCassetteBoxDetail {
 }
 
 sub printBbhOccurrence {
-    print "<h1>\n";
-    print "IMG Ortholog Clusters Occurrence\n";
-    print "</h1>\n";
+    print "<h1>IMG Ortholog Clusters Occurrence</h1>\n";
 
     my $dbh = dbLogin();
     printStatusLine("Loading ...");
@@ -1793,9 +1844,13 @@ sub getEnvSample_v20 {
         $imgClause
         };
     } elsif ( $type eq 'virus' ) {
+	## Amy: we want to show all counts
+	$rclause = "";
+	$imgClause = "";
+
         $sql = qq{
         select count(v.scaffold_id)
-        from taxon t, dt_virals_from_metag\@core_v400_musk v
+        from taxon t, $viral_table_name v
         where t.taxon_oid = v.taxon_oid
         and t.obsolete_flag = 'No'
         $rclause
@@ -1804,9 +1859,8 @@ sub getEnvSample_v20 {
 
 	# count distinct will give different count here:
         my $sql2 = qq{
-            select p.ecosystem, count(v.scaffold_id)
-            from taxon t, GOLD_SEQUENCING_PROJECT p,
-                 dt_virals_from_metag\@core_v400_musk v
+            select p.ecosystem, count(distinct v.scaffold_id)
+            from taxon t, GOLD_SEQUENCING_PROJECT p, $viral_table_name v
             where p.GOLD_ID = t.SEQUENCING_GOLD_ID
             and t.obsolete_flag = 'No'
             and t.taxon_oid = v.taxon_oid
@@ -1821,16 +1875,72 @@ sub getEnvSample_v20 {
         for ( ;; ) {
             my ( $ecosystem, $cnt ) = $cur2->fetchrow();
             last if !$ecosystem;
-            $cnt_per_ecosystem{$ecosystem} = $cnt;
-	    $total_cnt += $cnt;
+            #$cnt_per_ecosystem{$ecosystem} = $cnt;
+	    #$total_cnt += $cnt;
         }
-	$cnt_per_ecosystem{"all"} = $total_cnt;
+	#$cnt_per_ecosystem{"all"} = $total_cnt;
         $cur2->finish();
+
+	my @all_eco = ('Engineered', 'Environmental', 'Host-associated');
+	foreach my $eco (@all_eco) {
+	    my $count = 0;
+	    my $sql3 = qq{
+                select g.ecosystem_category, count(distinct s.scaffold_oid)
+                from taxon t, scaffold s, gold_sequencing_project\@imgsg_dev g
+                where t.domain = 'Viruses'
+                and t.obsolete_flag = 'No'
+                and t.is_public = 'Yes'
+                and s.taxon = t.taxon_oid
+                and t.sequencing_gold_id = g.gold_id
+                and g.ecosystem = ?
+                and g.ecosystem_category is not null
+                $rclause
+                $imgClause
+                group by g.ecosystem_category
+            };
+	    my $cur = execSql( $dbh, $sql3, $verbose, $eco );
+	    for ( ;; ) {
+		my ($cat, $cnt) = $cur->fetchrow();
+		last if ! $cat;
+		$count += $cnt;
+		$total_cnt += $cnt;
+	    }
+	    $cur->finish();
+
+	    $sql3 = qq{
+                select g.ecosystem_category, count(distinct s.scaffold_id)
+                from taxon t, $viral_table_name s,
+                gold_sequencing_project\@imgsg_dev g
+                where s.taxon_oid = t.taxon_oid
+                and t.obsolete_flag = 'No'
+                and t.genome_type = 'metagenome'
+                and t.sequencing_gold_id = g.gold_id
+                and g.ecosystem = ?
+                and g.ecosystem_category is not null
+                $rclause
+                $imgClause
+                group by g.ecosystem_category
+	    };
+
+	    $cur = execSql( $dbh, $sql3, $verbose, $eco );
+	    for ( ;; ) {
+		my ($cat, $cnt) = $cur->fetchrow();
+		last if ! $cat;
+		$count += $cnt;
+		$total_cnt += $cnt;
+	    }
+	    $cur->finish();
+            $cnt_per_ecosystem{$eco} = $count;
+	}
+	$total = $total_cnt;
+	$cnt_per_ecosystem{"all"} = $total_cnt;
     }
 
-    if ( $type eq 'genome' || $type eq 'metagenome' || $type eq 'virus' ) {
+    if ( $type eq 'genome' || $type eq 'metagenome' ) {
         my $cur = execSql( $dbh, $sql, $verbose );
         ($total) = $cur->fetchrow();
+    } elsif ($type eq 'virus') {
+	# already set
     } elsif ( $type eq 'cart' ) {
         my $oidsInCart_ref = GenomeCart::getAllGenomeOids();
         $total = $#$oidsInCart_ref + 1;
@@ -1839,7 +1949,7 @@ sub getEnvSample_v20 {
     my %taxon2scaffoldcnt;    # for viruses only
     if ( $type eq 'metagenome' ) {
         $sql = qq{
-        select distinct t.taxon_oid, t.taxon_display_name,
+        select distinct t.taxon_oid, t.taxon_display_name, t.is_public,
         p.geo_location, p.latitude, p.longitude, p.altitude
         from taxon t, GOLD_SEQUENCING_PROJECT p
         where p.GOLD_ID = t.SEQUENCING_GOLD_ID
@@ -1854,7 +1964,7 @@ sub getEnvSample_v20 {
 
     } elsif ( $type eq 'genome' ) {
         $sql = qq{
-        select distinct t.taxon_oid, t.taxon_display_name,
+        select distinct t.taxon_oid, t.taxon_display_name, t.is_public,
         p.geo_location, p.latitude, p.longitude, p.altitude
         from taxon t, GOLD_SEQUENCING_PROJECT p
         where p.GOLD_ID = t.SEQUENCING_GOLD_ID
@@ -1868,7 +1978,7 @@ sub getEnvSample_v20 {
 
     } elsif ( $type eq 'cart' ) {
         $sql = qq{
-        select distinct t.taxon_oid, t.taxon_display_name,
+        select distinct t.taxon_oid, t.taxon_display_name, t.is_public,
         p.geo_location, p.latitude, p.longitude, p.altitude
         from taxon t, GOLD_SEQUENCING_PROJECT p
         where p.GOLD_ID = t.SEQUENCING_GOLD_ID
@@ -1881,12 +1991,12 @@ sub getEnvSample_v20 {
     } elsif ( $type eq 'virus' ) {
 	my $selected_ecosystem = param('ecosystem');
 	my $ecosystem_clause;
-	$ecosystem_clause = " and p.ecosystem = '$selected_ecosystem' " if $selected_ecosystem ne "";
+	$ecosystem_clause = " and p.ecosystem = '$selected_ecosystem' "
+	    if $selected_ecosystem ne "";
         $sql = qq{
-        select distinct t.taxon_oid, t.taxon_display_name,
-        p.geo_location, p.latitude, p.longitude, p.altitude
-        from taxon t, GOLD_SEQUENCING_PROJECT p,
-             dt_virals_from_metag\@core_v400_musk v
+        select distinct t.taxon_oid, t.taxon_display_name, t.is_public,
+               p.geo_location, p.latitude, p.longitude, p.altitude
+        from taxon t, GOLD_SEQUENCING_PROJECT p, $viral_table_name v
         where p.GOLD_ID = t.SEQUENCING_GOLD_ID
         and t.obsolete_flag = 'No'
         and t.taxon_oid = v.taxon_oid
@@ -1898,7 +2008,7 @@ sub getEnvSample_v20 {
 
         my $sql2 = qq{
             select t.taxon_oid, count(distinct v.scaffold_id)
-            from taxon t, dt_virals_from_metag\@core_v400_musk v
+            from taxon t, $viral_table_name v
             where t.taxon_oid = v.taxon_oid
             and t.obsolete_flag = 'No'
             group by t.taxon_oid
@@ -1919,8 +2029,9 @@ sub getEnvSample_v20 {
     # so this ad hoc is for numbers only
     my $cur = execSql( $dbh, $sql, $verbose );
     my @matrix; # array of arrays
-    for ( ; ; ) {
-        my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = $cur->fetchrow();
+    for ( ;; ) {
+        my ( $taxon_oid, $name, $is_public, 
+	     $geo_location, $latitude, $longitude, $altitude ) = $cur->fetchrow();
         last if !$taxon_oid;
         $latitude  = WebUtil::strTrim($latitude);
         $longitude = WebUtil::strTrim($longitude);       
@@ -1934,13 +2045,13 @@ sub getEnvSample_v20 {
             $longitude = $longitude * 1;
         }
 
-        my @row = ($taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude);
+        my @row = ($taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude, $is_public);
         push(@matrix, \@row);
     }
     
     # now sort by col  3, 4, 2, 1
     my @sorted = sort{
-        $a->[3] cmp$b->[3] || 
+        $a->[3] cmp $b->[3] || 
         $a->[4] cmp $b->[4] ||
         $a->[4] cmp $b->[2] ||
         $a->[4] cmp $b->[1]      
@@ -1949,8 +2060,8 @@ sub getEnvSample_v20 {
     
     my @recs;
     foreach my $row_aref (@sorted) {
-        my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = @$row_aref;
-        push( @recs, "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude" );        
+        my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude, $is_public ) = @$row_aref;
+        push( @recs, "$taxon_oid\t$name\t$geo_location\t$latitude\t$longitude\t$altitude\t$is_public" );        
     }
 
     return ( \@recs, ( $total - ( $#recs + 1 ) ), $total, \%taxon2scaffoldcnt, \%cnt_per_ecosystem );
@@ -1979,10 +2090,11 @@ sub getEnvSample_v20 {
 #    order by e.latitude, e.longitude, e.geo_location, t.taxon_display_name
 #
 sub googleMap_new {
+    my ($type) = @_;
     # flag=1 -> show only those genomes in the cart
     # flag=0 or missing -> show all genomes
     my $flag_mapCart = param('mapcart');
-    my $type         = param('type');
+    $type = param('type') if !$type || $type eq '';
     $type = 'metagenome' if $type eq '';
 
     my $hmpMetagenomeCnt = 748;    # no metadata
@@ -1993,7 +2105,7 @@ sub googleMap_new {
     } elsif ( $type eq 'cart' ) {
         print "<h1>Genome Cart Map</h1>";
     } elsif ( $type eq 'virus' ) {
-        print "<h1>Virus Projects Map</h1>";
+        #print "<h1>Virus Projects Map</h1>";
     }
 
     # get Oids for genomes in cart
@@ -2036,7 +2148,7 @@ sub googleMap_new {
     my $recsToDisplay_aref;
     my $count_display = 0;
 
-    my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude );
+    my ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude, $is_public );
     if ( $flag_mapCart eq 1 ) {    # put on map only those genomes in the cart
                                    # turn array into hash for easy lookup
         my %oidsInCart_hash = map { $_ => "1" } @$oidsInCart_ref;
@@ -2046,7 +2158,8 @@ sub googleMap_new {
         my @recsToDisplay = ();
         $recsToDisplay_aref = \@recsToDisplay;
         foreach my $line (@$recs_aref) {
-            ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
+            ( $taxon_oid, $name, $geo_location, $latitude, $longitude,
+	      $altitude, $is_public ) = split( /\t/, $line );
             if ( exists $oidsInCart_hash{$taxon_oid} ) {
                 push( @recsToDisplay, $line );
             }
@@ -2057,12 +2170,7 @@ sub googleMap_new {
 
     my $okcount = 0;
     if ( $type eq 'virus' ) {
-        #foreach my $line (@$recsToDisplay_aref) {
-        #    ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
-        #    my $t2scount = $taxon2scaffoldcnt{$taxon_oid};
-        #    $okcount = $okcount + $t2scount;
-        #}
-	$okcount = $cnt_per_ecosystem{"all"};
+	$okcount = $total; #$cnt_per_ecosystem{"all"};
         $count_rejected_getEnvSample = $total - $okcount;
     }
 
@@ -2095,13 +2203,18 @@ sub googleMap_new {
         </p>
         };
     } elsif ( $type eq 'virus' ) {
+	my $tooltip = "Map pins are grouped into clusters and clusters themselves into larger clusters. The number on a cluster indicates how many markers it contains. As you zoom into any of the cluster locations, the number on the cluster decreases, and you begin to see the individual markers on the map. Zooming out of the map consolidates the markers into clusters again.";
+
         print qq{
         <p style='width: 950px;'>
         $okcount viral scaffolds <br/>
         Some projects maybe rejected via Google Maps because of bad location coordinates.
-        <br/>Map pins represent location counts. Some pins may have multiple genomes.
-        </p>
+        <br/><u>Map pins</u> represent location counts. Some pins may have multiple genomes.
         };
+	print "<br/>Map pins are grouped into ";
+	WebUtil::printInfoTipLink($tooltip, $tooltip, "", "clusters");
+	print " and clusters themselves into larger clusters.";
+	print "</p>";
 
         my $hint = "For any given genome at a location on the map, you may access the <u>list of scaffolds</u> that belong to a virus by clicking on a map pin and selecting the <u>count</u> next to the genome of interest for that location. The <u>total count</u> of viral scaffolds for a location is displayed in the label and tooltip of a map pin e.g. Arctic Ocean [3].";
         printHint($hint);
@@ -2143,7 +2256,8 @@ sub googleMap_new {
     my $scf_url = "$main_cgi?section=ScaffoldCart&page=viralScaffolds&taxon_oid=";
 
     foreach my $line (@$recsToDisplay_aref) {    # these are already sorted
-        ( $taxon_oid, $name, $geo_location, $latitude, $longitude, $altitude ) = split( /\t/, $line );
+        ( $taxon_oid, $name, $geo_location, $latitude, $longitude,
+	  $altitude, $is_public ) = split( /\t/, $line );
 
         $name = escapeHTML($name);
         my $tmp_geo_location = escHtml($geo_location);
@@ -2174,7 +2288,7 @@ sub googleMap_new {
             }
 
             # new point
-            $info          = "";
+            $info = "";
             $total_scf_cnt = 0;
 
             # clean lat and long remove " ' , etc
@@ -2189,14 +2303,22 @@ sub googleMap_new {
 
             # TODO: add link to viral scaffolds -Anna
             my $link = "<a href='$scf_url$taxon_oid' target='_blank'>$scf_cnt</a>";
-            $info = "<h1>$tmp_geo_location</h1>";
+	    $link = $scf_cnt if $is_public ne "Yes";
+	    my $txlink = "<a href='$url$taxon_oid' target='_blank'>$name</a>";
+	    $txlink = $name if $is_public ne "Yes";
+
+            $info = "<h2>$tmp_geo_location</h2>";
             $info .= "<div><p>$latitude, $longitude<br/>$tmp_altitude";
-            $info .= "<br/><a href='$url$taxon_oid' target='_blank'>$name</a>";
+            $info .= "<br/>$txlink";
             $info .= "&nbsp;&nbsp; " . $link if $type eq 'virus';
 
         } else {
             my $link = "<a href='$scf_url$taxon_oid' target='_blank'>$scf_cnt</a>";
-            $info .= "<br/><a href='$url$taxon_oid' target='_blank'>$name</a>";
+	    $link = $scf_cnt if $is_public ne "Yes";
+	    my $txlink = "<a href='$url$taxon_oid' target='_blank'>$name</a>";
+	    $txlink = $name if $is_public ne "Yes";
+
+            $info .= "<br/>$txlink";
             $info .= "&nbsp;&nbsp; " . $link if $type eq 'virus';
         }
         $last_lat = $latitude;
@@ -2232,7 +2354,7 @@ sub googleMap_new {
 
     # finish map
     print qq{
-        cluster(map);
+        cluster(map, '$top_base_url');
         </script>
     };
 
@@ -2262,16 +2384,15 @@ sub printSelectViralEcosystem {
     my $selected_ecosystem = param('ecosystem');
 
     print "<p>Ecosystem: ";
-    my $url = "$section_cgi&page=googlemap&type=virus&ecosystem=";
+    #my $url = "$section_cgi&page=googlemap&type=virus&ecosystem=";
+    my $url = "$main_cgi?section=Viral&page=googlemap&type=virus&ecosystem=";
     print qq{
         <select id='ecosystem' name='ecosystem'
                 onchange="window.open('$url' + this.value, '_self')";
                 style="width:200px;">
     };
-    my $total = $cnt_per_ecosystem{"all"};
-    print "<option value=''>All [$total]</option>\n";
     foreach my $x (@ecosystems) {
-	next if $x eq "all"; # already added
+	next if $x eq "all"; # special case
 	my $total = $cnt_per_ecosystem{$x};
         print "<option value='$x' ";
         if ( $x eq $selected_ecosystem ) {
@@ -2279,6 +2400,12 @@ sub printSelectViralEcosystem {
         }
         print ">" . $x . " [$total]</option>\n";
     }
+    my $total = $cnt_per_ecosystem{"all"};
+    print "<option value='' ";
+        if ( "" eq $selected_ecosystem ) {
+            print " selected ";
+        }
+        print ">All [$total]</option>\n";
     print "</select></p>";
 }
 

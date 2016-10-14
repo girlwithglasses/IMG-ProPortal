@@ -2,7 +2,7 @@
 # TaxonSearch.pm - Set up for keyword search for taxons.
 # --es 12/22/2004
 #
-# $Id: TaxonSearch.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: TaxonSearch.pm 35309 2016-02-24 21:23:18Z jinghuahuang $
 ############################################################################
 package TaxonSearch;
 my $section = "TaxonSearch";
@@ -33,7 +33,7 @@ my $img_mer_submit_url   = $env->{img_mer_submit_url};
 my $preferences_url      = "$main_cgi?section=MyIMG&page=preferences";
 
 ### optional genome field columns to configuration and display 
-my @gOptCols = getGenomeFieldAttrs();
+my @gOptCols = TaxonSearchUtil::getGenomeFieldAttrs();
 splice(@gOptCols, 0, 0, 'proposal_name'); #add 'taxon_display_name' at index 0
 splice(@gOptCols, 1, 0, 'taxon_display_name'); #add 'taxon_display_name' at index 0
 splice(@gOptCols, 6, 0, 'domain'); #add 'domain' at index 5
@@ -192,7 +192,7 @@ lower( tx.sequencing_gold_id ) like ? or
         push(@bindList_eq, "$searchTerm") if ($searchTerm =~ /$dateRegEx/);
     }
 
-    my ($restrictClause, @bindList_res) = getPreferenceRestrictClause();
+    my ($restrictClause, @bindList_res) = TaxonSearchUtil::getPreferenceRestrictClause();
 
 
     my ($rclause, @bindList_ur) = urClauseBind("tx");

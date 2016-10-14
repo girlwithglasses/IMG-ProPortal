@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. utility functions to support HTML.
-# $Id: HtmlUtil.pm 34715 2015-11-16 22:12:57Z klchu $
+# $Id: HtmlUtil.pm 36263 2016-09-29 21:02:54Z klchu $
 ############################################################################
 package HtmlUtil;
 
@@ -87,9 +87,15 @@ sub isCgiCacheEnable {
 # namespace - name the cache file
 #
 sub cgiCacheInitialize {
-    my ( $namespace, $override_cache_size, $override_expires_time ) = @_;
+    my ( $namespace, $override_cache_size, $override_expires_time, $forcePublicCache ) = @_;
     
-    if($user_restricted_site) {
+    $forcePublicCache = 1; # lets just share cache - ken 2016-09-29
+    
+    if($forcePublicCache || !$user_restricted_site) {
+        # public system shared cache
+        $namespace = $namespace . '_0';
+    
+    } elsif($user_restricted_site) {
         # session cache
         my $sid = WebUtil::getSessionId();
         $namespace = $namespace . '_' . $sid;
@@ -1349,7 +1355,7 @@ sub printMetagGeneListSection {
     $cur->finish();
 
     if ( !@gene_oids ) {
-        printMessage("There are no genes that satisfy this criteria.");
+        WebUtil::printMessage("There are no genes that satisfy this criteria.");
     } else {
         flushMetagGeneBatch( $dbh, \@gene_oids, $it, $taxonlink );
         printGeneCartFooter();

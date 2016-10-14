@@ -1,6 +1,6 @@
 ###########################################################################
 # MetaGeneDetail.pm - file version
-# $Id: MetaGeneDetail.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: MetaGeneDetail.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package MetaGeneDetail;
 my $section = "MetaGeneDetail";
@@ -28,6 +28,10 @@ use MetaFuncAlignmentUtil;
 use HashUtil;
 use MetaGeneTable;
 use WorkspaceUtil;
+use ScaffoldDataUtil;
+use QueryUtil;
+use Command;
+
 
 my $env          = getEnv();
 my $main_cgi     = $env->{main_cgi};
@@ -223,27 +227,16 @@ sub dispatch {
         HtmlUtil::cgiCacheStop();
 
     } elsif ( $page eq "rnaHomolog" ) { 
-#        if ($user_restricted_site && HtmlUtil::isCgiCacheEnable()) { 
-#            my $dbh = dbLogin(); 
-#            my $taxon_oid = param("taxon_oid"); 
-#            my $x = WebUtil::isTaxonPublic($dbh, $taxon_oid); 
-#            #$dbh->disconnect(); 
-###            $sid = 0 if($x); # public cache                                                  #                
-#        } 
-#        HtmlUtil::cgiCacheInitialize("$section" . "_" . $sid); 
-#        HtmlUtil::cgiCacheStart() or return; 
+        HtmlUtil::cgiCacheInitialize("$section"); 
+        HtmlUtil::cgiCacheStart() or return; 
  
         timeout( 60 * 20 );      # timeout in 20 minutes
         printRnaHomologPage(); 
  
-#        HtmlUtil::cgiCacheStop(); 
+        HtmlUtil::cgiCacheStop(); 
  
-    } elsif ( $page eq "mygeneNeighborhood" ) {
-        printNeighborhoodMyGene();
-    } elsif ( $page eq "neighborhoodAlignment" ) {
-        printNeighborhoodAlignment();
     } elsif ( $page eq "geneSnp" ) {
-        use Snps;
+        require Snps;
         Snps::printGeneSnps();
     } elsif ( $page eq "exportMetaGenes" ) {
         my $gene_oid = param("gene_oid");
@@ -570,8 +563,7 @@ sub printGeneDetail {
         print "<tr class='highlight'>\n";
         print "<th class='subhead' align='center'>";
         print "<font color='darkblue'>\n";
-        print "RNA Information</th>\n";
-        print "</font>\n";
+        print "RNA Information</font></th>\n";
         print "<td class='img'>" . nbsp(1) . "</td>\n";
         print "</tr>\n";
         ( $scaffold_oid, $taxon_oid, $start_coord, $end_coord, $strand, $gene_display_name ) =
@@ -587,8 +579,7 @@ sub printGeneDetail {
         print "<tr class='highlight'>\n";
         print "<th class='subhead' align='center'>";
         print "<font color='darkblue'>\n";
-        print "Gene Information</th>\n";
-        print "</font>\n";
+        print "Gene Information</font></th>\n";
         print "<td class='img'>" . nbsp(1) . "</td>\n";
         print "</tr>\n";
 
@@ -603,8 +594,7 @@ sub printGeneDetail {
             print "<tr class='highlight'>\n";
             print "<th class='subhead' align='center'>";
             print "<font color='darkblue'>\n";
-            print "Protein Information</th>\n";
-            print "</font>\n";
+            print "Protein Information</font></th>\n";
             print "<td class='img'>" . nbsp(1) . "</td>\n";
             print "</tr>\n";
             printProteinInfo( $dbh, $gene_oid, $taxon_oid, $data_type, 
@@ -617,8 +607,7 @@ sub printGeneDetail {
             print "<tr class='highlight'>\n";
             print "<th class='subhead' align='center'>";
             print "<font color='darkblue'>\n";
-            print "Pathway Information</th>\n";
-            print "</font>\n";
+            print "Pathway Information</font></th>\n";
             print "<td class='img'>" . nbsp(1) . "</td>\n";
             print "</tr>\n";
 
@@ -639,8 +628,7 @@ sub printGeneDetail {
             print "<tr class='highlight'>\n";
             print "<th class='subhead' align='center'>";
             print "<font color='darkblue'>\n";
-            print "IMG Clusters</th>\n";
-            print "</font>\n";
+            print "IMG Clusters</font></th>\n";
             print "<td class='img'>" . nbsp(1) . "</td>\n";
             print "</tr>\n";
 
@@ -653,18 +641,19 @@ sub printGeneDetail {
     my $contact_oid = getContactOid();
     print "</table>\n";
 
-    #printAddQueryGene($gene_oid, $aa_seq_length); # if $aa_seq_length > 0;
+    # Amy: restore more functions for metagenome genes
+    printAddQueryGene($gene_oid, $aa_seq_length); # if $aa_seq_length > 0;
     # add to gene cart button
-    print start_form( -name   => "addQueryGeneForm",
-                      -action => $main_cgi );
+#    print start_form( -name   => "addQueryGeneForm",
+#                      -action => $main_cgi );
     print hiddenVar( "gene_oid", "$taxon_oid $data_type $gene_oid" );
-    my $name = "_section_GeneCartStor_addToGeneCart";
-    print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => "medbutton"
-    );
-    print end_form();
+#    my $name = "_section_GeneCartStor_addToGeneCart";
+#    print submit(
+#                  -name  => $name,
+#                  -value => "Add To Gene Cart",
+#                  -class => "medbutton"
+#    );
+   print end_form();
 
 
 
@@ -949,7 +938,7 @@ sub printMetaGeneInfo {
     $url .= "&taxon_oid=$taxon_oid&data_type=$data_type";
     $url .= "&gene_oid=$gene_oid&scaffold_oid=$scaffold_oid";
     $url .= "&strand=$strand&start_coord=$start_coord&end_coord=$end_coord";
-    my $link = alink( $url, "${dna_seq_length}bp", '', '', '', "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link exportMetaGenes']);" );
+    my $link = alink( $url, "${dna_seq_length}bp", '', '', '', "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link exportMetaGenes']); " );
 
     my $scf_start  = 0;
     my $scf_end    = 0;
@@ -985,7 +974,7 @@ sub printMetaGeneInfo {
         my $url =
             "$main_cgi?section=MetaScaffoldGraph"
           . "&page=metaScaffoldGraph&scaffold_oid=$scaffold_oid"
-          . "&taxon_oid=$taxon_oid";
+          . "&taxon_oid=$taxon_oid&data_type=$data_type";
         $url .= "&start_coord=$start_coord&end_coord=$scf_end";
         $url .= "&marker_gene=$gene_oid&seq_length=$scf_seq_length";
 
@@ -1408,7 +1397,7 @@ sub printMetaRnaInfo {
         my $url =
             "$main_cgi?section=MetaScaffoldGraph"
           . "&page=metaScaffoldGraph&scaffold_oid=$scaffold_oid"
-          . "&taxon_oid=$taxon_oid";
+          . "&taxon_oid=$taxon_oid&data_type=$data_type";
         $url .= "&start_coord=$scf_start&end_coord=$scf_end";
         $url .= "&marker_gene=$gene_oid&seq_length=$scf_seq_length";
 
@@ -1805,6 +1794,12 @@ sub printAddQueryGene {
     print start_form( -name   => "addQueryGeneForm",
                       -action => $main_cgi );
     print hiddenVar( "gene_oid", $gene_oid );
+
+    my $t2 = param('taxon_oid');
+    my $d2 = param('data_type');
+    print hiddenVar( "taxon_oid", $t2 );
+    print hiddenVar( "data_type", $d2 );
+
     my $name = "_section_GeneCartStor_addToGeneCart";
     print submit(
                   -name  => $name,
@@ -1812,7 +1807,10 @@ sub printAddQueryGene {
                   -class => "medbutton"
     );
 
-    return if ( $aa_seq_length < 1 );
+    if($aa_seq_length < 1) {
+     #print end_form();
+     return;
+    }
 
     my $contact_oid     = getContactOid();
     my $super_user_flag = "";
@@ -1821,25 +1819,26 @@ sub printAddQueryGene {
     }
 
     # find missing enzymes
-    print nbsp(1);
-    my $name = "_section_MissingGenes_geneKOEnzymeList";
-    print submit(
-                  -name  => $name,
-                  -value => "Find Candidate Enzymes",
-                  -class => "medbutton"
-    );
+#    print nbsp(1);
+#    my $name = "_section_MissingGenes_geneKOEnzymeList";
+#    print submit(
+#                  -name  => $name,
+#                  -value => "Find Candidate Enzymes",
+#                  -class => "medbutton"
+#    );
 
-    if ( $show_myimg_login && $contact_oid > 0 ) {
-        if ( $super_user_flag eq 'Yes' ) {
-            print nbsp(1);
-            my $name = "_section_MyIMG_showGeneAnnotation";
-            print submit(
-                          -name  => $name,
-                          -value => "Show All User Annotations",
-                          -class => "medbutton"
-            );
-        }
-    }
+# We don't support MyIMG annotation for metagenome genes
+#    if ( $show_myimg_login && $contact_oid > 0 ) {
+#        if ( $super_user_flag eq 'Yes' ) {
+#            print nbsp(1);
+#            my $name = "_section_MyIMG_showGeneAnnotation";
+#            print submit(
+#                          -name  => $name,
+#                          -value => "Show All User Annotations",
+#                          -class => "medbutton"
+#            );
+#        }
+#    }
 
     # Victor wants 'find product name' function
     # to be available to public IMG as well
@@ -1847,14 +1846,21 @@ sub printAddQueryGene {
     ( "candidate", "<h2>Find Candidate Product Name</h2>" );
 
     print "<p>\n";
-    print "Display Option: ";
+    print "Method: ";
+    print nbsp(1);
+    print "<select name='findProdNameMethod'>\n";
+    print "<option value='sequence-based' selected>Sequence Based</option>\n";
+    print "<option value='function-based'>Function Based</option>\n";
+    print "</select>\n";
+    print "<p>\n";
+    print "Display Option (for sequence based only): ";
     print nbsp(1);
     print "<select name='findProdNameOption'>\n";
     print "<option value='showAll' selected>Show All</option>\n";
     print "<option value='hideHypothetical'>Hide Hypothetical Protein</option>\n";
     print "</select>\n";
 
-    print nbsp(2);
+    print "<p>\n";
     my $name = "_section_MissingGenes_findProdName";
     print submit(
                   -name  => $name,
@@ -1863,7 +1869,7 @@ sub printAddQueryGene {
     );
 
     print "</p>\n";
-    print end_form();
+    #print end_form();
     print "\n <!-- end addQueryGeneForm form  -->\n";
 
 }
@@ -3155,7 +3161,7 @@ sub printIprFamily {
     my $tmpFile    = "$tmp_dir/$fileName";
     my $tmpFileUrl = "$tmp_url/$fileName";
     my $map        = IprGraph::writeFile( $aa_seq_length, \@recs, $tmpFile );
-    print "<image src='$tmpFileUrl' usemap='#iprmap' border='1' />\n";
+    print "<img src='$tmpFileUrl' usemap='#iprmap' border='1' />\n";
     print "<map name='iprmap'>\n";
     print $map;
     print "</map>\n";
@@ -3346,16 +3352,10 @@ sub printMetaNeighborhood {
         $sp->addBracket( $scf_seq_length, "right" );
     }
 
-    #    addNxFeatures( $dbh, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
-    require MetaScaffoldGraph;
-    MetaScaffoldGraph::addMetaRepeats( $taxon_oid, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
-
-    #    addIntergenic( $dbh, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
+    ScaffoldDataUtil::addMetaCrisprRepeats( $taxon_oid, $data_type, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
 
     my $s = $sp->getMapHtml("overlib");
     print "$s\n";
-
-    #    $cur->finish();
 
     print "<br/>\n";
     print "<font color='red'>red = Current Gene</font><br/>\n";
@@ -3380,7 +3380,7 @@ sub printMetaNeighborhood {
     #              . "Neigboring genes with MyIMG EC number assignment</font><br/>\n";
     #        }
     #    }
-    print "<image src='$crispr_png' width='25' height='10' alt='Crispr' >\n";
+    print "<img src='$crispr_png' width='25' height='10' alt='Crispr' >\n";
     print "CRISPR array<br/>\n";
 
     # Sequence Viewer
@@ -3456,275 +3456,6 @@ sub printMetaNeighborhood {
     print "</form>\n";
 }
 
-#
-# print neighborhood for my gene / missing gene
-# This is for a stand alone html page
-# used by the my gene page to do dynamic viewer
-#
-sub printNeighborhoodMyGene {
-    my $mygene_oid   = param("gene_oid");
-    my $start_coord0 = param("start_coord");
-    my $end_coord0   = param("end_coord");
-    my $scaffold_oid = param("scaffold");
-    my $strand0      = param("strand");
-
-    print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-    print qq { 
-        <response> 
-            <div id='nbhood'><![CDATA[ 
-    };
-
-    print qq{
-        <p>
-            My Gene Id: $mygene_oid <br/>
-            Start Coord. $start_coord0 <br/>
-            End Coord.  $end_coord0 <br/>
-        </p>
-    };
-
-    my $sp = getScaffoldPanel( $mygene_oid, $start_coord0, $end_coord0, $scaffold_oid, $strand0 );
-    my $s = $sp->getMapHtml("overlib");
-    print "$s\n";
-    print "<br/>\n";
-    print "<p>\n";
-    print "<font color='red'>red = Current Gene</font><br/>\n";
-    print "cyan or dashes = My Gene<br/>\n";
-    print "white = Pseudo Gene<br/>\n";
-
-    my $url = "$section_cgi&page=regionScoreNote";
-    print "<image src='$crispr_png' width='25' height='10' alt='Crispr' >\n";
-    print "CRISPR array<br/>\n";
-    print "</p>\n";
-
-    print qq{ 
-           ]]></div>
-       </response> 
-    };
-}
-
-############################################################################
-# printNeighborhoodAlignment - xml to show the neighborhood alignment
-#   of two gene segments. This is called from DotPlot.
-############################################################################
-sub printNeighborhoodAlignment {
-    my $start_coord1  = param("start_coord1");
-    my $end_coord1    = param("end_coord1");
-    my $scaffold_oid1 = param("scaffold1");
-    my $accession1    = param("accession1");
-
-    my $start_coord2  = param("start_coord2");
-    my $end_coord2    = param("end_coord2");
-    my $scaffold_oid2 = param("scaffold2");
-    my $accession2    = param("accession2");
-
-    print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-    print qq { 
-        <response> 
-            <div id='nbhood'><![CDATA[ 
-    };
-
-    my $style1 = " style='font-size: 12px; " . "font-family: Arial,Helvetica,sans-serif; " . "line-height: 1.0em;' ";
-    my $style2 = " style='font-size: 11px; " . "font-family: Arial,Helvetica,sans-serif; " . "line-height: 1.0em;' ";
-    print qq{ 
-        <p $style1>Referrence ($start_coord1..$end_coord1) [$accession1]
-    <br/></p> 
-    };
-    my $sp = getScaffoldPanel( "", $start_coord1, $end_coord1, $scaffold_oid1 );
-    my $s = $sp->getMapHtml("overlib");
-    print "$s\n";
-    print "<br/>\n";
-
-    print qq{ 
-        <p $style1>Query ($start_coord2..$end_coord2) [$accession2]<br/></p> 
-    };
-    my $sp = getScaffoldPanel( "", $start_coord2, $end_coord2, $scaffold_oid2 );
-    my $s = $sp->getMapHtml("overlib");
-    print "$s\n";
-
-    print "<p $style2>\n";
-    print "dashed frame = Aligned Region<br/>\n";
-
-    #print "<font color='red'>red = Current Gene</font><br/>\n";
-    print "cyan or dashes = My Gene<br/>\n";
-    print "white = Pseudo Gene<br/>\n";
-
-    my $url = "$section_cgi&page=regionScoreNote";
-    print "<image src='$crispr_png' width='25' height='10' alt='Crispr' >\n";
-    print "CRISPR array<br/>\n";
-    print "</p>\n";
-
-    print qq { 
-           ]]></div> 
-       </response> 
-    };
-}
-
-sub getScaffoldPanel {
-    my ( $mygene_oid, $start_coord0, $end_coord0, $scaffold_oid, $strand0 ) = @_;
-    my $dbh       = dbLogin();
-    my $mid_coord = int( ( $end_coord0 - $start_coord0 ) / 2 ) + $start_coord0 + 1;
-
-    ## Rescale for large organisms
-    my $taxon_oid     = scaffoldOid2TaxonOid( $dbh, $scaffold_oid );
-    my $taxon_rescale = getTaxonRescale( $dbh,      $taxon_oid );
-    $flank_length *= $taxon_rescale;
-
-    my $left_flank  = $mid_coord - $flank_length + 1;
-    my $left_flank  = $left_flank > 0 ? $left_flank : 0;
-    my $right_flank = $mid_coord + $flank_length + 1;
-    
-    #my %gene2Enzymes;
-    #WebUtil::gene2EnzymesMap( $dbh, $scaffold_oid, $left_flank, $right_flank, \%gene2Enzymes );
-    my %gene2MyEnzymes;
-    WebUtil::gene2MyEnzymesMap( $dbh, $scaffold_oid, $left_flank, $right_flank, \%gene2MyEnzymes );
-
-    # ken is_pseudogene new 2.7
-    my $rclause   = WebUtil::urClause('g.taxon');
-    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
-    my $sql       = qq{
-        select distinct g.gene_oid, g.gene_symbol, 
-            g.gene_display_name, g.locus_type,
-            g.locus_tag, g.start_coord, g.end_coord, g.strand,
-            g.aa_seq_length, ss.seq_length, g.is_pseudogene, 
-            g.img_orf_type, g.cds_frag_coord
-        from scaffold scf, scaffold_stats ss, gene g
-        where g.scaffold = ?
-            and g.scaffold = scf.scaffold_oid
-            and scf.scaffold_oid = ss.scaffold_oid
-            and g.start_coord > 0
-            and g.end_coord > 0
-            and g.obsolete_flag = 'No'
-            and (
-              ( g.start_coord >= ? and g.end_coord <= ? ) 
-              or
-              (( g.end_coord + g.start_coord ) / 2 >= ? and
-               ( g.end_coord + g.start_coord ) / 2 <= ? )
-            )
-            $rclause
-            $imgClause
-    };
-    my @binds = ( $scaffold_oid, $left_flank, $right_flank, $left_flank, $right_flank );
-
-    my $cur        = execSql( $dbh, $sql, $verbose, @binds );
-    my @all_genes;
-    for ( ; ; ) {
-        my (
-             $gene_oid,        $gene_symbol,   $gene_display_name, $locus_type,
-             $locus_tag,       $start_coord,   $end_coord,         $strand, $aa_seq_length,
-             $scf_seq_length0, $is_pseudogene, $img_orf_type,      $cds_frag_coord
-          )
-          = $cur->fetchrow();
-        last if !$gene_oid;
-
-        push( @all_genes,
-                "$gene_oid\t$gene_symbol\t$gene_display_name\t"
-              . "$locus_type\t$locus_tag\t$start_coord\t"
-              . "$end_coord\t$strand\t$aa_seq_length\t$scf_seq_length0\t"
-              . "$is_pseudogene\t$img_orf_type\t$cds_frag_coord" );    
-    }
-    $cur->finish();
-    
-    my $id         = "gd.$scaffold_oid.$start_coord0..$end_coord0";
-    my $coord_incr = 5000;
-    $coord_incr *= $taxon_rescale;
-    my $args = {
-                 id                   => $id,
-                 start_coord          => $left_flank,
-                 end_coord            => $right_flank,
-                 coord_incr           => $coord_incr,
-                 strand               => "+",
-                 has_frame            => 1,
-                 x_width              => 800,
-                 gene_page_base_url   => "$section_cgi&page=geneDetail",
-                 mygene_page_base_url => "$main_cgi?section=MyGeneDetail&page=geneDetail",
-                 color_array_file     => $env->{small_color_array_file},
-                 tmp_dir              => $env->{tmp_dir},
-                 tmp_url              => $env->{tmp_url},
-    };
-    my $sp = new ScaffoldPanel($args);
-    my $scf_seq_length;
-
-    # number of pseudogene count
-    my $pseudogene_cnt = 0;
-
-    if ( $mygene_oid eq "" ) {
-        $sp->highlightRegion( $start_coord0, $end_coord0 );
-    }
-
-    foreach my $geneline (@all_genes) {
-        my (
-             $gene_oid,        $gene_symbol,   $gene_display_name, $locus_type,
-             $locus_tag,       $start_coord,   $end_coord,         $strand, $aa_seq_length,
-             $scf_seq_length0, $is_pseudogene, $img_orf_type,      $cds_frag_coord
-          )
-          = split( /\t/, $geneline );
-
-        $scf_seq_length = $scf_seq_length0;
-
-        my $ez2 = $gene2MyEnzymes{$gene_oid};
-
-        my $label = $gene_symbol;
-        $label = $locus_tag       if $label eq "";
-        $label = "gene $gene_oid" if $label eq "";
-        $label .= " : $gene_display_name";
-        $label .= " $start_coord..$end_coord";
-        if ( $locus_type eq "CDS" ) {
-            $label .= "(${aa_seq_length}aa)";
-        } else {
-            my $len = $end_coord - $start_coord + 1;
-            $label .= "(${len}bp)";
-        }
-        my $color = $sp->{color_yellow};
-        $color = $sp->{color_red} if $gene_oid eq $mygene_oid;
-        $color = $sp->{color_cyan}
-          if $ez2      ne ""
-          && $gene_oid ne $mygene_oid
-          && $show_myimg_login;
-
-        # All pseudo gene should be white - 2008-04-09 ken
-        if (    ( $gene_oid ne $mygene_oid )
-             && ( uc($is_pseudogene) eq "YES" || $img_orf_type eq "pseudo" ) )
-        {
-            $color = $sp->{color_white};
-            $pseudogene_cnt++;
-        }
-
-        my @coordLines = GeneUtil::getMultFragCoords( $dbh, $gene_oid, $cds_frag_coord );
-        if ( scalar(@coordLines) > 1 ) {
-            foreach my $line (@coordLines) {
-                my ( $frag_start, $frag_end ) = split( /\.\./, $line );
-                my $tmplabel = $label . " $frag_start..$frag_end";
-                $sp->addGene( $gene_oid, $frag_start, $frag_end, $strand, $color, $tmplabel );
-            }
-
-        } else {
-            $sp->addGene( $gene_oid, $start_coord, $end_coord, $strand, $color, $label );
-        }
-    }    # end for loop
-
-    # find missing gene / my gene data?
-    if ( ( $img_er || $img_internal ) && ( $mygene_oid ne "" ) ) {
-        ScaffoldGraph::addMyGene( $dbh, $sp, $scaffold_oid, $left_flank, $right_flank, $taxon_oid, $mygene_oid );
-        my $color  = $sp->{color_red};
-        my $label  = "$mygene_oid, $start_coord0, $end_coord0";
-        my $strand = "+";
-        $strand = "-" if ( $strand0 eq "-" );
-        $sp->addMyGene( $mygene_oid, $start_coord0, $end_coord0, $strand, $color, $label );
-    }
-
-    if ( $left_flank <= 1 ) {
-        $sp->addBracket( 1, "left" );
-    }
-    if ( $left_flank <= $scf_seq_length && $scf_seq_length <= $right_flank ) {
-        $sp->addBracket( $scf_seq_length, "right" );
-    }
-    WebUtil::addNxFeatures( $dbh, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
-    WebUtil::addRepeats( $dbh, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
-    WebUtil::addIntergenic( $dbh, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
-
-    return $sp;
-}
-
 ############################################################################
 # scaffoldGraphCoords - Get coordinates for ScaffoldGraph.
 #   Return( $scaffold_oid, $start_coord, $end_coord, $seq_length )
@@ -3746,8 +3477,8 @@ sub scaffoldGraphCoords {
     my $mid_coord = int( ( $end_coord0 - $start_coord0 ) / 2 ) + $start_coord0 + 1;
 
     ## Rescale for large organisms
-    my $taxon_oid     = scaffoldOid2TaxonOid( $dbh, $scaffold_oid );
-    my $taxon_rescale = getTaxonRescale( $dbh,      $taxon_oid );
+    my $taxon_oid     = QueryUtil::scaffoldOid2TaxonOid( $dbh, $scaffold_oid );
+    my $taxon_rescale = WebUtil::getTaxonRescale( $dbh,      $taxon_oid );
     $flank_length *= $taxon_rescale;
 
     my $left_flank  = $mid_coord - $flank_length + 1;
@@ -4719,6 +4450,7 @@ sub printTopAssembleHomologs {
 
     # Write input FASTA file
     my $gid2    = MetaUtil::sanitizeGeneId3($gene_oid);
+    $cgi_tmp_dir = Command::createSessionDir();
     my $tmpFile = "$cgi_tmp_dir/gene.$gid2.$$.faa";
     my $wfh     = newWriteFileHandle( $tmpFile, "blastServer" );
     print $wfh ">$gene_oid\n";
@@ -4743,12 +4475,29 @@ sub printTopAssembleHomologs {
     }
 
     my $contact_oid = getContactOid();
-    if ( $contact_oid == 312 ) {
-        print "*** cmd: $cmd<br/>\n";
-    }
+#    if ( $contact_oid == 312 ) {
+#        print "*** cmd: $cmd<br/>\n";
+#    }
 
     WebUtil::unsetEnvPath();
-    my $cfh = newCmdFileHandle( $cmd, "blastServer" );
+    
+        print "Calling blast api<br>\n";
+        my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        Command::startDotThread(120);
+        my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
+        if ( $stdOutFile == -1 ) {
+            Command::killDotThread();
+            # close working div but do not clear the data
+            printEndWorkingDiv( '', 1 );
+            printStatusLine( "Error.", 2 );
+            WebUtil::webExit(-1);
+        }
+        Command::killDotThread();
+        print "blast done<br>\n";
+        print "Reading output $stdOutFile<br>\n";
+        my $cfh = WebUtil::newReadFileHandle($stdOutFile);
+    
+    
     my $count = 0;
     while ( my $s = $cfh->getline() ) {
         chomp $s;
@@ -4913,7 +4662,7 @@ sub printTopAssembleHomologs {
         if ($include_metagenomes) {
             # scaffold ID
             my $scaf_url =
-                "$main_cgi?section=MetaDetail"
+                "$main_cgi?section=MetaScaffoldDetail"
               . "&page=metaScaffoldDetail&scaffold_oid=$scf_ext_accession"
               . "&taxon_oid=$taxon_oid&data_type=$data_type";
             my $scaf_link = alink( $scaf_url, $scf_ext_accession );
@@ -4923,7 +4672,7 @@ sub printTopAssembleHomologs {
             my $scaf_len_url =
                 "$main_cgi?section=MetaScaffoldGraph"
               . "&page=metaScaffoldGraph&scaffold_oid=$scf_ext_accession"
-              . "&taxon_oid=$taxon_oid"
+              . "&taxon_oid=$taxon_oid&data_type=$data_type"
               . "&start_coord=1&end_coord=$scf_seq_length"
               . "&marker_gene=$homolog&seq_length=$scf_seq_length";
             my $scaf_len_link = alink( $scaf_len_url, $scf_seq_length );
@@ -5993,11 +5742,11 @@ sub printMetaRnaHomologsBlast {
             my $scaffold_url;
             if ($data_type eq 'database' && WebUtil::isInt($scaffold_oid)) {
                 $scaffold_url = 
-                    "$main_cgi?section=ScaffoldGraph"
+                    "$main_cgi?section=ScaffoldDetail"
                   . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
             } else {
                 $scaffold_url =
-                    "$main_cgi?section=MetaDetail"
+                    "$main_cgi?section=MetaScaffoldDetail"
                   . "&page=metaScaffoldDetail&scaffold_oid=$scaffold_oid"
                   . "&taxon_oid=$taxon_oid&data_type=$data_type";
             }
@@ -7942,15 +7691,16 @@ sub printCdsTools {
     #    print alink($url, "Phylogenetic Profile Similarity Search")."<br/>\n";
     #}
 
-    if ($img_internal) {
-        # TODO web artemis -ken does not work yet
-        require Artemis;
-        my $url = "$main_cgi?section=Artemis"
-            . "&page=processArtemisFile&processArtemisFile=1"
-        . "&scaffold_oid=$scaffold_oid&format=embl"
-        . "&taxon_oid=$taxon_oid";
-        print alink( $url, "Web Artemis" ) . "<br/>\n";
-    }
+#    if ($img_internal) {
+#        # TODO web artemis -ken does not work yet
+#        # need to re-implement for metagenome -jenny
+#        require Artemis;
+#        my $url = "$main_cgi?section=Artemis"
+#            . "&page=processArtemisFile&processArtemisFile=1"
+#        . "&scaffold_oid=$scaffold_oid&format=embl"
+#        . "&taxon_oid=$taxon_oid";
+#        print alink( $url, "Web Artemis" ) . "<br/>\n";
+#    }
 
     print "</p>\n";
 }
@@ -8268,6 +8018,7 @@ sub printHomologSelect {
     }
     my $contact_oid = getContactOid();
     my $genome_type;
+
     if ($include_bbh_lite) {
         $genome_type = geneOid2GenomeType( $dbh, $gene_oid );
     }
@@ -8285,6 +8036,7 @@ sub printHomologSelect {
       }
     };
     print "</script>\n";
+
     my ( $ocSelected, $oSelected, $hSelected, $otfSelected );
     my ( $nrhitsSelected, $fusComSelected, $fusRelSelected );
     my ( $pheSelected, $ecoSelected, $disSelected, $relSelected );
@@ -8760,6 +8512,7 @@ sub printCdsHomologs {
         printHomologSelect( $dbh, $taxon_oid, $data_type, $gene_oid, $homologs );
         printNrHits( $dbh, $gene_oid );
     }
+
     print end_form();
 }
 

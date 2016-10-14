@@ -2,7 +2,7 @@
 # ScaffoldHits -- adopted from MetagenomeHits
 # change from taxon_oid to a set of scaffold oids
 #
-# $Id: ScaffoldHits.pm 34545 2015-10-20 21:36:40Z klchu $
+# $Id: ScaffoldHits.pm 35581 2016-04-21 19:42:33Z jinghuahuang $
 ###########################################################################
 package ScaffoldHits;
 
@@ -355,7 +355,7 @@ sub printMetagenomeStatsResults {
     # fix url if too many scaffold oids
     #
     my $scaffold_str = join( ",", @scaffold_oids );
-    my $url3         = "javascript:mySubmit2('ScaffoldCart', 'selectedScaffolds')";
+    my $url3         = "javascript:mySubmit2('ScaffoldDetail', 'selectedScaffolds')";
     my $tmpcnt       = scalar(@scaffold_oids);
     my $link3        = qq{
         <p>Number of selected scaffolds: <a href="$url3"> $tmpcnt </a>
@@ -1066,7 +1066,8 @@ sub listScaffolds {
         execStmt( $cur, $scaffold_oid );
         my ($scaffold_name) = $cur->fetchrow();
 
-        my $url2 = "$main_cgi?section=ScaffoldCart" . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
+        my $url2 = "$main_cgi?section=ScaffoldDetail" 
+            . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
         print nbsp(1);
         print alink( $url2, $scaffold_name );
 
@@ -1183,7 +1184,7 @@ sub printMetagenomeHits {
     print hiddenVar( "page",          "" );
     print hiddenVar( "scaffold_oids", "$scaffold_str" );
 
-    my $url3   = "javascript:mySubmit2('ScaffoldCart', 'selectedScaffolds')";
+    my $url3   = "javascript:mySubmit2('ScaffoldDetail', 'selectedScaffolds')";
     my $tmpcnt = scalar(@scaffold_oids);
     my $link3  = qq{
         <a href="$url3"> $tmpcnt </a>
@@ -1606,7 +1607,7 @@ sub printFamilyStats {
     print "<h1>Family Statistics (Selected Scaffolds)</h1>\n";
     PhyloUtil::printPhyloTitle( $domain, $phylum, $ir_class, $ir_order );
 
-    my $url3   = "javascript:mySubmit2('ScaffoldCart', 'selectedScaffolds')";
+    my $url3   = "javascript:mySubmit2('ScaffoldDetail', 'selectedScaffolds')";
     my $tmpcnt = scalar(@scaffold_oids);
     my $link3  = qq{
         <a href="$url3"> $tmpcnt </a>
@@ -2089,7 +2090,7 @@ sub printSpeciesStats {
     print "<h1>Species Statistics (Selected Scaffolds)</h1>\n";
     PhyloUtil::printPhyloTitle( $domain, $phylum, $ir_class, $ir_order, $family );
 
-    my $url3   = "javascript:mySubmit2('ScaffoldCart', 'selectedScaffolds')";
+    my $url3   = "javascript:mySubmit2('ScaffoldDetail', 'selectedScaffolds')";
     my $tmpcnt = scalar(@scaffold_oids);
     my $link3  = qq{
         <a href="$url3"> $tmpcnt </a>
@@ -2704,7 +2705,7 @@ sub printTaxonomyMetagHits {
     print "</h2>\n";
     printStatusLine( "Loading ...", 1 );
 
-    my $url3   = "javascript:mySubmit2('ScaffoldCart', 'selectedScaffolds')";
+    my $url3   = "javascript:mySubmit2('ScaffoldDetail', 'selectedScaffolds')";
     my $tmpcnt = scalar(@scaffold_oids);
     my $link3  = qq{
         <a href="$url3"> $tmpcnt </a>

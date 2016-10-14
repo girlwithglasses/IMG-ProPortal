@@ -6,7 +6,7 @@
 #
 # for workspace the temp cart file is teh unsaved buffer file
 #
-# $Id: WorkspaceBcSet.pm 34725 2015-11-17 23:02:58Z klchu $
+# $Id: WorkspaceBcSet.pm 36225 2016-09-26 19:05:04Z jinghuahuang $
 ########################################################################
 package WorkspaceBcSet;
 
@@ -16,6 +16,7 @@ use Data::Dumper;
 use DBI;
 use Tie::File;
 use File::Copy;
+use File::Path;
 use Template;
 use FileHandle;
 use TabHTML;
@@ -27,6 +28,9 @@ use Workspace;
 use Command;
 use OracleUtil;
 use QueryUtil;
+use Cwd;
+use BcUtil;
+
 $| = 1;
 
 my $section              = "WorkspaceBcSet";
@@ -53,6 +57,15 @@ my $sid                  = WebUtil::getContactOid();
 my $contact_oid          = $sid;
 my $BC_DIR               = $workspace_dir . '/' . $sid . '/bc/';
 my $top_base_url = $env->{top_base_url};
+my $abc                      = $env->{abc};
+
+my $GENOME_FOLDER = "genome";
+my $GENE_FOLDER   = "gene";
+my $SCAF_FOLDER   = "scaffold";
+my $FUNC_FOLDER   = "function";
+my $BC_FOLDER = "bc";
+
+
 sub getPageTitle {
     return 'Workspace';
 }
@@ -84,23 +97,34 @@ sub dispatch {
     my ( $self, $numTaxon ) = @_;
 
     my $page      = param('page');
-    my @filenames = param('filename');    # to workspace set
-    my @bcIds     = param('bc_id');
 
     my $sid = WebUtil::getContactOid();
-    return if ( $sid == 0 || $sid < 1 || $sid eq '901' );
+    #return if ( $sid == 0 || $sid < 1 || $sid eq '901' );
 
     # check to see user's folder has been created
     Workspace::initialize();
 
     if ( $page eq 'addToBcBuffer' || paramMatch("addToBcBuffer") ne "" ) {
-        addBcIds( \@bcIds, $filenames[0] );
-    } elsif ( $page eq 'deleteBcIds' || paramMatch("deleteBcIds") ne "" ) {
-        deleteBcIds( \@bcIds, $filenames[0] );
+        addToBcBuffer();
+        return;        
+    } elsif ( $page eq 'addToGenomeCart' || paramMatch("addToGenomeCart") ne "" ) {
+        addToOtherCart($GENOME_FOLDER);
+        return;        
+    } elsif ( $page eq 'addToScaffoldCart' || paramMatch("addToScaffoldCart") ne "" ) {
+        addToOtherCart($SCAF_FOLDER);
+        return;        
+    } elsif ( $page eq 'addToGeneCart' || paramMatch("addToGeneCart") ne "" ) {
+        addToOtherCart($GENE_FOLDER);
+        return;        
+    } elsif ( $page eq 'addToFunctionCart' || paramMatch("addToFunctionCart") ne "" ) {
+        addToOtherCart($FUNC_FOLDER);
+        return;        
+    } elsif ( $page eq 'removeFromBuffer' || paramMatch("removeFromBuffer") ne "" ) {
+        removeFromBcBuffer();
+        return;        
     } elsif ( $page eq 'delete' || paramMatch("delete") ne "" ) {
-        deleteSelectedFiles();
-    } elsif ( $page eq 'saveBc' || paramMatch("saveBc") ne "" ) {
-        saveToWorkspace();
+        Workspace::deleteFile();
+        return;
     } elsif ( $page eq 'findPairwiseSimilarity' || paramMatch('findPairwiseSimilarity') ne '' ) {
         findPairwiseSimilarity(); # from BiosyntheticDetail page tab 8
         return;
@@ -109,12 +133,24 @@ sub dispatch {
     if ( $page eq 'viewCart' ) {
         printBuffer();
     } elsif ( $page eq 'viewSet' ) {
-        printSetList();
+        printBcSetDetail();
+    } elsif ($page eq 'uploadBcCart' || paramMatch("uploadBcCart") ne "") {
+        # import bc cart
+        uploadToBcCart();
+        printBuffer();
+    } elsif ($page eq 'exportBc' || paramMatch("exportBc") ne "") {
+        # export the bc cart
+        exportInCart();
     } else {
-        printWorkspaceSets();
+        if ($enable_workspace) {
+            printBcSetMainForm();
+        } else {
+            printBuffer();
+        }
     }
 }
 
+############################################################################
 #Searching for clusters similar to 160328918 (This should take a couple of minutes)
 #.............................. 30 seconds elapsed
 #.............................. 60 seconds elapsed
@@ -139,7 +175,7 @@ sub dispatch {
 # no '#' for the results
 #160324345   0.597   0.483   42
 #161315262   0.496   0.432   38
-#
+############################################################################
 sub findPairwiseSimilarity {
     my $clusterId = param('clusterId');
     my $taxon_oid = param('taxon_oid');
@@ -170,59 +206,30 @@ sub findPairwiseSimilarity {
     </p>
     };
 
-    my $cmd = '/global/dna/projectdirs/microbial/omics-biosynthetic/pairwiseSimilarities/retrieveSimilarBC_sqlite.py';
+    #my $cmd = '/global/dna/projectdirs/microbial/omics-biosynthetic/pairwiseSimilarities/retrieveSimilarBC_sqlite.py';
+    #$cmd .= " $clusterId";
+    my $cmd = 'python /global/dna/projectdirs/microbial/omics-biosynthetic/pairwiseSimilarities/findSimilarBCs_OnDemand.py';
     $cmd .= " $clusterId";
+    $cmd .= " | sort -k 3nr | head -n 100";
+    #print "$cmd <br>\n";
+
+    my $sid        = WebUtil::getContactOid();
+    my $stderrFile = "/webfs/scratch/img/tmp/bcPairwise_${sid}_$$.stderr";
+    #print "$stderrFile <br>\n";
+    
+    # http://www.perlmonks.org/?node=How+can+I+capture+STDERR+from+an+external+command?
 
     printStartWorkingDiv();
-
-    print "$cmd <br>\n";
 
     my $cfh;
     my @resultsLine;
     my $totalLine;
 
-    my $sid        = WebUtil::getContactOid();
-    my $stderrFile = "/webfs/scratch/img/tmp/bcPairwise_${sid}_$$.stderr";
-
-    #    if (0) {
-    #        # command way
-    #        print "Calling Pairwise api<br/>\n";
-    #        my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
-    #        my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
-    #        if ( $stdOutFile == -1 ) {
-    #
-    #            # close working div but do not clear the data
-    #            printEndWorkingDiv( '', 1 );
-    #            printStatusLine( "Error.", 2 );
-    #            WebUtil::webExit(-1);
-    #        }
-    #        print "Done<br/>\n";
-    #        print "Reading output $stdOutFile<br/>\n";
-    #        $cfh = WebUtil::newReadFileHandle($stdOutFile);
-    #
-    #    } elsif(0) {
-    #        # test dump of:
-    #        # /global/dna/projectdirs/microbial/omics-biosynthetic/pairwiseSimilarities/retrieveSimilarBC.py 160320026
-    #        #
-    #        $cmd = "/global/u1/k/klchu/Dev/svn/webUI/pairwiseDump.pl";
-    #print "$cmd <br>\n";
-    #        $cfh = new FileHandle("$cmd |");
-    #        if ( !$cfh ) {
-    #            webLog("Failure: runCmd $cmd\n");
-    #            WebUtil::webExit(-1);
-    #        }
-    #    } else {
-    # runs on web servers - slow
-    #$cfh = new FileHandle("$cmd 2>\&1 |");
-    # http://www.perlmonks.org/?node=How+can+I+capture+STDERR+from+an+external+command?
-    print "$stderrFile <br>\n";
     $cfh = new FileHandle("$cmd 2>$stderrFile |");
     if ( !$cfh ) {
         webLog("Failure: runCmd $cmd\n");
         WebUtil::webExit(-1);
     }
-
-    #    }
 
     my @clusterIds;
     while ( my $s = $cfh->getline() ) {
@@ -586,10 +593,10 @@ sub findPairwiseSimilarity {
 
         # scaffold oid
         my $scaffold_oid = $bcid2scaffold{$bcId};
-        my $s_url        = "$main_cgi?section=ScaffoldCart&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
+        my $s_url        = "$main_cgi?section=ScaffoldDetail&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
         if ( $taxon_in_file{$taxon_oid} eq 'Yes' ) {
             $s_url =
-                "$main_cgi?section=MetaDetail"
+                "$main_cgi?section=MetaScaffoldDetail"
               . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid"
               . "&scaffold_oid=$scaffold_oid";
         }
@@ -634,8 +641,14 @@ sub findPairwiseSimilarity {
     printStatusLine( "$totalLine", 2 ) if $count > 0;
 }
 
-# print list bc workspace sets
-sub printWorkspaceSets {
+############################################################################
+# printBcSetMainForm
+############################################################################
+sub printBcSetMainForm {
+    my ($text) = @_;
+
+    my $folder = $BC_FOLDER;
+
     print qq{
         <h1>Biosynthetic Cluster Workspace List</h1>  
     };
@@ -646,36 +659,36 @@ sub printWorkspaceSets {
 
     print qq{
         <h2>Biosynthetic Cluster Cart</h2>
-        <p>
     };
 
+    print "<p>\n";
     if ( !isEmptyCart() ) {
-
         # show the buffer
         $bufferFilename = getBufferFile();
 
         # get the ids count
-        my $aref = getAllIds();
+        my $aref = getAllIdsInBuffer();
         $bufferIdCount = $#$aref + 1;
 
         print qq{
-            You have <a href='main.cgi?section=WorkspaceBcSet&page=viewCart'> $bufferIdCount BC Ids</a> in your cart.<br>
+            You have <a href='main.cgi?section=WorkspaceBcSet&page=viewCart'> $bufferIdCount BC IDs</a> in your cart.  
+            Your cart data will be lost when you logout or close your browser.<br/>
         };
 
         if ($enable_workspace) {
             print qq{
-                <a href='main.cgi?section=WorkspaceBcSet&page=viewCart'>View BC cart</a> to save it to your workspace. <br> 
-                Your cart data will be lost when you logout or close your browser
+                View <a href='main.cgi?section=WorkspaceBcSet&page=viewCart'>BC Cart</a> to save the selected into your workspace.<br> 
             };
         } else {
             return;    # public site no workspace
         }
 
     } else {
-        print "Your BC Cart is empty.";
+        print "0 BC(s) in cart.\n";
     }
+    print "</p>\n";
 
-    print qq{ </p>
+    print qq{ 
         <h2>Biosynthetic Cluster Sets List</h2>
     };
 
@@ -685,7 +698,7 @@ sub printWorkspaceSets {
 
     # get all the set sizes
     foreach my $f (@files) {
-        my $aref = getAllIds($f);
+        my $aref = getAllIdsInBuffer($f);
         my $cnt  = $#$aref + 1;
         $file2Size{$f} = $cnt;
     }
@@ -697,7 +710,7 @@ sub printWorkspaceSets {
     # columns headers
     $it->addColSpec("Select");
     $it->addColSpec( "File Name",        'num asc', "right" );
-    $it->addColSpec( "Number of BC Ids", "desc",    "right" );
+    $it->addColSpec( "Number of BC IDs", "desc",    "right" );
 
     my $count = 0;
     foreach my $file ( keys %file2Size ) {
@@ -713,26 +726,26 @@ sub printWorkspaceSets {
         $count++;
     }
 
+    print qq{
+        <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
+        </script>
+    };
+    
+    print $text;
+
     printMainForm();
     TabHTML::printTabAPILinks("bcsetTab");
-    my @tabIndex = ( "#bcsettab1", "#bcsettab2",      "#bcsettab3" );
-    my @tabNames = ( "BC Sets",    "Import & Export", "Pairwise" );
+    my @tabIndex = ( "#bcsettab1", "#bcsettab2"); #,      "#bcsettab3" );
+    my @tabNames = ( "BC Sets",    "Import & Export");#, "Pairwise" );
     TabHTML::printTabDiv( "bcsetTab", \@tabIndex, \@tabNames );
 
     # tab 1
     print "<div id='bcsettab1'>";
     if ($count) {
-        WebUtil::printButtonFooterInLine();
-
-        print nbsp(1);
-        print submit(
-            -name    => "_section_" . $section . "_delete",
-            -value   => 'Remove Selected',
-            -class   => 'medbutton',
-            -onClick => "return confirmDelete('bc');"
-        );
-
+        WorkspaceUtil::printSetMainTableButtons( $section, $BC_FOLDER, 'BC' ) if ( $count > 10 );
         $it->printOuterTable(1);
+        WorkspaceUtil::printSetMainTableButtons( $section, $BC_FOLDER, 'BC' );        
+        print hiddenVar( "directory", "$folder" );
 
     } else {
         print "<h5>No workspace BC sets.</h5>\n";
@@ -741,20 +754,21 @@ sub printWorkspaceSets {
     print "</div>\n";
 
     # tab 2
-    printImportExportTab();
+    print "<div id='bcsettab2'>";
+    # Import/Export
+    Workspace::printImportExport($folder);
+    print "</div>\n";
 
     # tab 3
-    printPairwiseTab();
+    #printPairwiseTab();
 
     print end_form();
 
 }
 
-sub printImportExportTab {
-    print "<div id='bcsettab2'>";
-    print "</div>\n";
-}
-
+############################################################################
+# printPairwiseTab
+############################################################################
 sub printPairwiseTab {
     print "<div id='bcsettab3'>";
 
@@ -773,6 +787,9 @@ Save as a new job with name:
     print "</div>\n";
 }
 
+############################################################################
+# getAllBcSetFilenames
+############################################################################
 sub getAllBcSetFilenames {
     opendir( DIR, "$BC_DIR" ) or webDie("failed to open folder list");
     my @files = readdir(DIR);
@@ -787,41 +804,26 @@ sub getAllBcSetFilenames {
     return @a;
 }
 
+############################################################################
 # this should show the contents of a bc cart or set bc set
 #
 # $filename - full absolute path to bc cart file or set
+############################################################################
 sub printBuffer {
+
     print qq{
       <h1>Biosynthetic Cluster Cart</h1\>  
     };
 
     my $filename = getBufferFile();
 
-    my $list_aref = getAllIds();
+    my $list_aref = getAllIdsInBuffer();
 
-    my $txTableName = "bctable";
-    my $it          = new InnerTable( 1, "$txTableName$$", $txTableName, 1 );
-    my $sd          = $it->getSdDelim(); # sort delimiter
+    printValidationJS();
 
-    # columns headers
-    $it->addColSpec("Select");
-    $it->addColSpec( "BC Id", 'num asc', "right" );
-
-    my $url = 'main.cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=';
-
-    my $count = 0;
-    foreach my $bcId (@$list_aref) {
-        my $row = $sd . "<input type='checkbox' name='bc_id' value='$bcId' />\t";
-        my $tmp = alink( $url . $bcId, $bcId );
-        $row .= $bcId . $sd . $tmp . "\t";
-        $it->addRow($row);
-        $count++;
-    }
-
-    #printCartTab1Start();
     TabHTML::printTabAPILinks("bcTab");
-    my @tabIndex = ( "#bccarttab1", "#bccarttab2" );
-    my @tabNames = ( "BC in Cart",  "Upload & Export & Save" );
+    my @tabIndex = ( "#bccarttab1", "#bccarttab2", "#bccarttab3", "#bccarttab4",  "#bccarttab5");
+    my @tabNames = ( "BC in Cart",  "Upload & Export & Save", "Function HeatMap", "Similarity Network", "Neighborhoods");
     TabHTML::printTabDiv( "bcTab", \@tabIndex, \@tabNames );
 
     print "<div id='bccarttab1'>";
@@ -829,33 +831,41 @@ sub printBuffer {
     printMainForm();
     printStatusLine( "Loading", 1 );
 
-if($count > 0) {
-    WebUtil::printButtonFooterInLineWithToggle();
-    print nbsp(1);
+    my $count = $#$list_aref + 1;
+    if ($count > 0) {
+        printBufferButtons() if ($count > 10);
+        
+        my $dbh = dbLogin();
+        require BiosyntheticDetail;
+        BiosyntheticDetail::processBiosyntheticClusters($dbh, '', $list_aref, '', '', '', 1);
 
-    print submit(
-        -id    => "remove",
-        -name  => "_section_WorkspaceBcSet_deleteBcIds",
-        -value => "Remove Selected",
-        -class => "meddefbutton"
-    );
-}
-
-    if($count > 0) {
-    $it->printOuterTable(1);
-    printSave2BcSet();
+        printBufferButtons();
     } else {
-        print "Your BC Cart is empty<br>\n";
+        print "<p>\n";
+        print "0 BC(s) in cart.<br/>\n";
+        print qq{
+            In order to view BC(s) you need to
+            select / upload BC(s) into BC cart.
+        };
+        print "</p>\n";
     }
 
     #printCartTab1End($count);
     printStatusLine( "$count BC(s) in cart.", 2 );
     print "</div>";
 
-    # end genomecarttab1
+    # end bccarttab1
     #printCartTab2($count);
     print "<div id='bccarttab2'>";
     print "<h2>Upload BC Cart</h2>";
+    print "<p style='width: 650px;'>";
+    print "You may upload a genome cart from a tab-delimited file.<br/> ";
+    print "The file should have a column header 'bc_id'.<br/>\n";
+    print qq{
+        (This file may initially be obtained by using the
+        <font color="blue"><u>Export BC</u></font> section below.)<br/>\n
+    };
+    print "<br/>\n";
 
     my $textFieldId = "cartUploadFile";
     print "File to upload:<br/>\n";
@@ -870,28 +880,258 @@ if($count > 0) {
         -onClick => "return uploadFileName('$textFieldId');",
     );
 
+    if ( $enable_workspace ) {
+        print nbsp(1);
+        my $url = "$main_cgi?section=WorkspaceBcSet";
+        print WebUtil::buttonUrl( $url, "Upload from Workspace", "medbutton" );
+    }
+    print "</p>\n";
+
     print "<h2>Export BC</h2>";
     print "<p>\n";
-    print "You may select BC from the cart to export.";
+    print "You may select BCs from the cart to export.";
     print "</p>\n";
 
     my $name = "_section_${section}_exportBc_noHeader";
-    my $str = HtmlUtil::trackEvent( "Export", $contact_oid, "img button $name" );
+    my $str = HtmlUtil::trackEvent( "Export", $contact_oid, "img button $name", "return validateSelection(1);" );
     print qq{
-    <input class='medbutton' name='$name' type="submit" value="Export BC" $str>
+        <input class='medbutton' name='$name' type="submit" value="Export BC" $str>
     };
 
+    if ( $enable_workspace ) {
+        WorkspaceUtil::printSaveBcToWorkspace('bc_id');
+    }
+    
     print "</div>";    # end bccarttab2
+
+    print "<div id='bccarttab3'>";
+    print "<h2>Download Function Matrix</h2>";
+    print "<p style='width: 650px;'>";
+    print "You may select BC(s) from the cart for Function Matrix.  The downloaded file is comma separated, which can be imported into Gene-e for visualization.<br/> ";
+    print "<br/>\n";
+
+    my $name = "_section_${section}_downloadFunctionMatrix_noHeader";
+    print button(
+        -name    => $name,
+        -value   => "Download Matrix",
+        -class   => "medbutton heatmapbutton",
+        -onClick => "if ( validateSelection(1) ) window.clickHeatmapDownload();",
+    );
+    print nbsp(1);
+    print button(
+        -name    => "plotHeatmapButton",
+        -value   => "Plot",
+        -class   => "medbutton heatmapbutton",
+        -onClick => "if ( validateSelection(1) ) window.clickHeatmapPlot();",
+    );
+    print "</p>\n";
+
+    my $HEATMAP_HTML = <<END_HTML;
+<img id="heatmap_loading_image" src="%s/images/loading-large.gif" style="display: none;" />
+<script src="/js/d3.min.js"></script>
+<script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/kinetic-v5.1.0.min.js"></script>
+<script src="/js/inchlib-1.2.0.min.js"></script>
+<script src="/js/sigma/sigma.min.js" charset="utf-8"></script>
+<script src="/js/sigma/plugins/sigma.layouts.forceLink.min.js" charset="utf-8"></script>
+<script src="/js/sigma/plugins/sigma.exporters.image.min.js" charset="utf-8"></script>
+<script src="/js/ABCCommon.js"></script>
+<script src="/js/ABCHeatmapUI.js"></script>
+<table>
+  <tr><td style="vertical-align: top;"><div id="inchlib"></div></td>
+    
+  <td style="vertical-align: top;"><div id="heatmap_detail" style="border-style:solid; border-width: 1px;"></div></td>
+</table>
+END_HTML
+
+    printf $HEATMAP_HTML, $base_url;
+
+    print "</div>";    # end bccarttab3
+
+
+    print "<div id='bccarttab4'>";
+    print "<h2>Similarity Network</h2>";
+    print "<p style='width: 650px;'>";
+    print "You may select BC(s) from the cart for Similarity Network.  The downloaded file is comma separated.<br/> ";
+    print "<br/>\n";
+
+    print button(
+        -name    => "SimilarityDownloadButton",
+        -value   => "Download Data",
+        -class   => "medbutton simnetbutton",
+        -onClick => "if ( validateSelection(1) ) window.clickSimilarityDownload();",
+    );
+    print nbsp(1);
+
+    print button(
+        -name    => "SimilarityPlotButton",
+        -value   => "Plot",
+        -class   => "medbutton simnetbutton",
+        -onClick => "if ( validateSelection(1) ) window.clickSimilarityPlot();",
+    );
+    print "</p>\n";
+
+    my $SIMILARITY_HTML = <<END_HTML;
+<img id="similarity_loading_image" src="%s/images/loading-large.gif" style="display: none;" />
+<div id="SimilarityPlotDiv" style="display:none">
+
+<table><tr>
+  <td style="vertical-align: top;" rowspan="2">
+    <div style="z-index: 1; position: absolute; top: 180px; left: 20px;">
+      <input type="button" value ="Download" onclick="window.clickDownloadPlot(); return false;"></input>
+      <input type="button" value ="Reset" onclick="window.clickResetView(); return false;"></input>
+      <input type="button" value ="+" onclick="window.clickZoomIn(); return false;"></input>
+      <input type="button" value ="-" onclick="window.clickZoomOut(); return false;"></input>
+      <div class="sigma-poweredby" style="background: rgba(255, 255, 255, 0.701961);"><a href="https://linkurio.us" target="_blank" style="font-family:'Helvetica Neue',Arial,Helvetica,sans-serif; font-size:11px"> Linkurious</a></div>
+    </div>
+    <div id="viewport">
+    </div>
+  </td>
+  <td style="vertical-align: top;">
+    <div id="bcdetails" style="border-style:solid; border-width: 1px;"></div>
+    <p>
+      <label for="color_by_selection">Color Nodes By:</label>
+      <select id="color_by_selection" onchange="window.updateSimilarityPlotColors()"></select>
+      <table id="legend"></table>
+    </p>
+  </td>
+  </tr>
+</table>
+</div>
+<script src="/js/ABCSimilarityNetworkUI.js"></script>
+END_HTML
+
+    printf $SIMILARITY_HTML, $base_url;
+
+    print "</div>";    # end bccarttab4
+
+
+    print "<div id='bccarttab5'>";
+    print "<h2>Neighborhoods</h2>\n";
+    
+    print submit(
+        -name  => "_section_BiosyntheticDetail_selectedNeighborhoods",
+        -value => "View Selected BCs Neighborhoods",
+        -class => 'meddefbutton',
+        -onClick => "return validateSelection(1);",
+    );
+    print nbsp(1);    
+    
+    print "</div>";    # end bccarttab5
 
     TabHTML::printTabDivEnd();
 
     print end_form();
     
+    my $size = getSize();
+    
+    print qq{
+        <script>
+        document.getElementById("bc_cart").innerHTML = "$size";
+        </script>    
+    }    
+    
 }
 
-sub printSetList {
-    my $filename = param('filename');
+############################################################################
+# printValidationJS
+############################################################################
+sub printValidationJS {
+    print qq{
+        <script language='JavaScript' type='text/javascript'>
+        function validateSelection(num) {
+            var startElement = document.getElementById("bccarttab1");
+            var els = startElement.getElementsByTagName('input');
 
+            var count = 0;
+            for (var i = 0; i < els.length; i++) {
+                var e = els[i];
+
+                if (e.type == "checkbox" &&
+                    e.name == "bc_id" &&
+                    e.checked == true) {
+                    count++;
+                }
+            }
+
+            if (count < num) {
+                if (num == 1) {
+                    alert("Please select some BCs");
+                } else {
+                    alert("Please select at least "+num+" BCs");
+                }
+                return false;
+            }
+
+            return true;
+        }
+        </script>
+    };
+}
+
+
+############################################################################
+# printBufferButtons
+############################################################################
+sub printBufferButtons {
+
+    print submit(
+        -name  => '_section_WorkspaceBcSet_addToGenomeCart',
+        -value => 'Add Selected to Genome Cart',
+        -class => 'meddefbutton',
+        -onClick => "return validateSelection(1);",
+    );
+    print nbsp(1);
+    print submit(
+        -name  => '_section_WorkspaceBcSet_addToScaffoldCart',
+        -value => 'Add Selected to Scaffold Cart',
+        -class => 'meddefbutton',
+        -onClick => "return validateSelection(1);",
+    );
+    print nbsp(1);
+    print submit(
+        -name  => '_section_WorkspaceBcSet_addToGeneCart',
+        -value => 'Add Selected to Gene Cart',
+        -class => 'meddefbutton',
+        -onClick => "return validateSelection(1);",
+    );
+    print nbsp(1);
+    print submit(
+        -name  => '_section_WorkspaceBcSet_addToFunctionCart',
+        -value => 'Add Selected Pfam to Function Cart',
+        -class => 'meddefbutton',
+        -onClick => "return validateSelection(1);",
+    );
+    print "<br/>";
+
+#    print submit(
+#        -name  => "_section_BiosyntheticDetail_selectedNeighborhoods",
+#        -value => "View Selected Neighborhoods",
+#        -class => 'meddefbutton',
+#        -onClick => "return validateSelection(1);",
+#    );
+#    print nbsp(1);
+
+    WebUtil::printButtonFooterInLineWithToggle();
+    print nbsp(1);
+
+    print submit(
+        -id    => "remove",
+        -name  => "_section_WorkspaceBcSet_removeFromBuffer",
+        -value => "Remove Selected",
+        -class => "meddefbutton",
+        -onClick => "return validateSelection(1);",
+    );
+    
+}
+
+
+############################################################################
+# printBcSetDetail
+############################################################################
+sub printBcSetDetail {
+    
+    my $filename = param('filename');
     if ( $filename && !blankStr($filename) ) {
         WebUtil::checkFileName($filename);
         $filename = WebUtil::validFileName($filename);
@@ -905,132 +1145,56 @@ sub printSetList {
         return;
     }
 
-    print qq{
-        <h1>Biosynthetic Cluster Set $filename</h1>
-    };
+    printMainForm();
 
-    my $rfh = newReadFileHandle($path);
+    print "<h1>My Workspace - Biosynthetic Cluster Sets - Individual BC Set</h1>";
+    print "<h2>Set Name: <i>" . escapeHTML($filename) . "</i></h2>\n";
+
     my @ids;
-
+    my $cnt;
+    my $rfh = newReadFileHandle($path);
     while ( my $id = $rfh->getline() ) {
         chomp $id;
         next if ( $id eq "" );
         push( @ids, $id );
+        $cnt++;
     }
-
     close $rfh;
 
-    my $txTableName = "bctable";
-    my $it          = new InnerTable( 1, "$txTableName$$", $txTableName, 1 );
-    my $sd          = $it->getSdDelim(); # sort delimiter
+    print "<div id='bcsettab1'>";
+    BcUtil::printSetDetailFooter() if ($cnt > 10);
+    my $dbh = dbLogin();
+    require BiosyntheticDetail;
+    my $count = BiosyntheticDetail::processBiosyntheticClusters($dbh, '', \@ids, '', '', '', 1); 
+    BcUtil::printSetDetailFooter();
+    print "</div>\n";
 
-    # columns headers
-    $it->addColSpec( "Select" );
-    $it->addColSpec( "Cluster ID", "asc", "right" );
-
-    my $count = 0;
-    my $url   = 'main.cgi?section=BiosyntheticDetail&page=cluster_detail&cluster_id=';
-    foreach my $bcId (@ids) {
-        my $row = $sd . "<input type='checkbox' name='bc_id' value='$bcId' />\t";
-        my $tmp = alink( $url . $bcId, $bcId );
-        $row .= $bcId . $sd . $tmp . "\t";
-        $it->addRow($row);
-        $count++;
-    }
-
-    $it->printOuterTable(1);
+    print "<div id='bcsettab2'>";
+    WorkspaceUtil::printSaveBcToWorkspace('bc_id');
+    print "</div>\n";
+    
+    print end_form();
     printStatusLine( "$count rows", 2 ) if $count > 0;
 }
 
-#
-# print Save to BC My workpsace section
-#
-sub printSave2BcSet {
-    my @files  = getAllBcSetFilenames();
-    my @sorted = sort @files;
+############################################################################
+# addToBcBuffer
+############################################################################
+sub addToBcBuffer {
 
-    print qq{
-<h2>Save BC to My Workspace</h2>
-<p>
-Save <b>selected BC</b> to <a href="main.cgi?section=Workspace">My Workspace</a>.<br/>(<i>Special characters in file name will be removed and spaces converted to _ </i>)<br/><br/>
-
-<input type='radio' name='ws_save_mode' value='save' checked />
-Save to File name:&nbsp; <input id='workspace' type='text' name='workspacefilename' size='25' maxLength='60' title='All special characters will be removed and spaces converted to _' /><br/>
-<input type='radio' name='ws_save_mode' value='append' /> Append to the following genome set: <br/>
-<input type='radio' name='ws_save_mode' value='replace' /> Replacing the following genome set: <br/>
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-<select name='selectedwsfilename'>
-    };
-
-    foreach my $f (@sorted) {
-        print "<option value='$f'>$f</option>\n";
-    }
-
-    print qq{
-</select>
-<br/>
-<input type="submit" name="_section_WorkspaceBcSet_saveBc" value="Save Selected to Workspace" 
-onclick="" class="medbutton" />
-</p>
-};
+    my @filenames = param('filename');    # to workspace set
+    my @bcIds     = param('bc_id');
+    addBcIds( \@bcIds, $filenames[0] );
+    printBuffer();
 
 }
 
-# save to workspace
-#
-#
-sub saveToWorkspace {
-    my $saveMode           = param('ws_save_mode');
-    my $selectedwsfilename = param('selectedwsfilename');    # replace mode
-    my $filename           = param('workspacefilename');
-    my @bcIds              = param('bc_id');
-    my $sid                = WebUtil::getContactOid();
-
-    if ( $filename && !blankStr($filename) ) {
-        WebUtil::checkFileName($filename);
-        $filename = WebUtil::validFileName($filename);
-
-        $filename =~ s/\W+/_/g;
-    }
-
-    if ( $saveMode eq 'save' ) {
-        if ( -e "$workspace_dir/$sid/bc/$filename" ) {
-            webError("File name $filename already exists. Please enter a new file name.");
-            return;
-        }
-
-        my $path = "$workspace_dir/$sid/bc/$filename";
-        my $wfh  = newWriteFileHandle($path);
-        foreach my $id (@bcIds) {
-            print $wfh "$id\n";
-        }
-        close $wfh;
-
-    } elsif ( $saveMode eq 'append' ) {
-
-        # TODO check for duplicates and do not add duplicate ids
-        my $path = "$workspace_dir/$sid/bc/$selectedwsfilename";
-        my $wfh  = newAppendFileHandle($path);
-        foreach my $id (@bcIds) {
-            print $wfh "$id\n";
-        }
-        close $wfh;
-
-    } elsif ( $saveMode eq 'replace' ) {
-        my $path = "$workspace_dir/$sid/bc/$selectedwsfilename";
-        my $wfh  = newWriteFileHandle($path);
-        foreach my $id (@bcIds) {
-            print $wfh "$id\n";
-        }
-        close $wfh;
-    }
-}
-
-#
+############################################################################
 # add a list of bc ids to the cart / set
 #
 # array ref to bc ids
 # $filename - workspace filename not path - blank for bc cart
+############################################################################
 sub addBcIds {
     my ( $bcId_aref, $filename ) = @_;
 
@@ -1053,10 +1217,8 @@ sub addBcIds {
 
     foreach my $bcId (@$bcId_aref) {
         if ( exists $distinct{$bcId} ) {
-
             #print "skipping id: $bcId <br>\n";
         } else {
-
             #print "adding: $bcId <br>";
             print $afh "$bcId\n";
         }
@@ -1064,40 +1226,25 @@ sub addBcIds {
     close $afh;
 }
 
-# delete a bc id from cart or set
-#
-# bc id to delete
-# $filename - workspace filename not path - blank for bc cart
-sub deleteBcId {
-    my ( $bcId, $filename ) = @_;
-    if ( $filename eq '' ) {
-        $filename = getBufferFile();
-    } else {
-        $filename = $BC_DIR . $filename;
-    }
+############################################################################
+# remove a list of bc ids from Buffer
+############################################################################
+sub removeFromBcBuffer {
 
-    my @array;
-    my $j = -1;
-    tie @array, 'Tie::File', $filename or die "delete from failed $!\n";
-    for ( my $i = 0 ; $i <= $#array ; $i++ ) {
-        if ( $bcId eq $array[$i] ) {
-            $j = $i;
-            last;
-        }
-    }
+    my @filenames = param('filename');    # to workspace set
+    my @bcIds     = param('bc_id');
 
-    if ( $j > -1 ) {
-        splice @array, $j, 1;
-    }
+    deleteBcIds( \@bcIds, $filenames[0] );
+    printBuffer();
 
-    untie @array;    # done and should close the open file
 }
 
-#
+############################################################################
 # delete a list of bc ids
-#
+############################################################################
 sub deleteBcIds {
     my ( $bcId_aref, $filename ) = @_;
+
     if ( $filename eq '' ) {
         $filename = getBufferFile();
     } else {
@@ -1127,10 +1274,72 @@ sub deleteBcIds {
     move( $tempfile, $filename );
 }
 
+############################################################################
+# delete a bc id from cart or set
+#
+# bc id to delete
+# $filename - workspace filename not path - blank for bc cart
+# not used
+############################################################################
+sub deleteBcId {
+    my ( $bcId, $filename ) = @_;
+
+    if ( $filename eq '' ) {
+        $filename = getBufferFile();
+    } else {
+        $filename = $BC_DIR . $filename;
+    }
+
+    my @array;
+    my $j = -1;
+    tie @array, 'Tie::File', $filename or die "delete from failed $!\n";
+    for ( my $i = 0 ; $i <= $#array ; $i++ ) {
+        if ( $bcId eq $array[$i] ) {
+            $j = $i;
+            last;
+        }
+    }
+
+    if ( $j > -1 ) {
+        splice @array, $j, 1;
+    }
+
+    untie @array;    # done and should close the open file
+}
+
+
+############################################################################
+# downloadFile
+############################################################################
+sub downloadFile {
+    my ($filename, $name, $isTxt) = @_;
+
+    if ( !-e $filename ) {
+        webErrorHeader("File $filename not found.");
+    }
+
+    my $sz = fileSize($filename);
+    if ($isTxt) {
+        WebUtil::printTxtHeader($name, $sz);        
+    }
+    else {
+        WebUtil::printExcelHeader($name, $sz);        
+    }
+
+    my $rfh = newReadFileHandle( $filename, "download" );
+    while ( my $s = $rfh->getline() ) {
+        chomp $s;
+        print "$s\n";
+    }
+    close $rfh;
+}
+
+############################################################################
 # all ids in cart
 #
 # # $filename - workspace filename not path - blank for bc cart
-sub getAllIds {
+############################################################################
+sub getAllIdsInBuffer {
     my ($filename) = @_;
 
     if ( $filename eq '' ) {
@@ -1157,17 +1366,19 @@ sub getAllIds {
 
 }
 
+############################################################################
 # gets cart size
+############################################################################
 sub getSize {
-    my $aref = getAllIds();
+    my $aref = getAllIdsInBuffer();
     my $size = $#$aref + 1;
     return $size;
 }
 
-#
+############################################################################
 # the cart name or buffer
 # return full absolute path to file
-#
+############################################################################
 sub getBufferFile {
 
     # temp file - cart file or the unsaved workspace set
@@ -1187,22 +1398,24 @@ sub getBufferFile {
     return $tempFilename;
 }
 
+############################################################################
 # delete the cart / buffer on exit or ui
 #
 # what happens if the user does not exit / logout
 # - no logout for publoc ABC
 #
 # - session files will build up see deleteOldCarts()
-#
+############################################################################
 sub deleteBufferFile {
     unlink getBufferFile();
 }
 
-#
+
+############################################################################
 # is the cart / buffer file empty
 #
 # I've tried with -z and -s but a newline / blank lines in the file are causing issues too - ken
-#
+############################################################################
 sub isEmptyCart {
     my $res = newReadFileHandle( getBufferFile(), "runJob", 1 );
     if ( !$res ) {
@@ -1218,17 +1431,248 @@ sub isEmptyCart {
     return 1;
 }
 
-sub deleteSelectedFiles {
-    my @files = param('filename');
+############################################################################
+# export bc cart
+############################################################################
+sub exportInCart {
+    my @bc_ids = param("bc_id");
 
-    foreach my $f (@files) {
-        if ( $f eq getBufferFile() ) {
-            deleteBufferFile();
-        } else {
-            unlink $BC_DIR . $f;
+    if ( $#bc_ids < 0 ) {
+        main::printAppHeader();
+        webError("You must select at least one BC to export.");
+    }
+
+    WebUtil::printExcelHeader("bccart_export$$.xls");
+    print "bc_id\n";
+
+    foreach my $id (@bc_ids) {
+        print "$id\n";
+    }
+
+    WebUtil::webExit(0);
+}
+
+############################################################################
+# upload into bc cart
+############################################################################
+sub uploadToBcCart {
+    
+    my @bc_oids;
+    my %upload_cart_names;
+    my @recs_ids;
+    my $dbh = dbLogin();
+    my $errmsg;
+
+    #if ( !MyIMG::uploadOidsFromFile( "bc_id", \@bc_oids, \$errmsg) ) {
+    if ( !MyIMG::uploadIdsFromFile( "bc_id", \@bc_oids, \$errmsg) ) {
+        printStatusLine( "Error.", 2 );
+        webError($errmsg);
+    }    
+    
+    addBcIds(\@bc_oids);
+}
+
+############################################################################
+# add to Genome or Scaffold or Gene or Function cart
+############################################################################
+sub addToOtherCart {
+    my ($folder) = @_;
+
+    #selected bc ids
+    my @bcids =  param('bc_id');
+    if ( scalar(@bcids) == 0 ) {
+        webError("Please select some BC IDs.");
+        return;
+    }
+
+    my $dbh = dbLogin();
+    my @ids;
+
+    my $rclause   = WebUtil::urClause('g.taxon');
+    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
+    
+    my ( $dbClusterIds_ref, $metaClusterIds_ref );
+    if ( scalar(@bcids) > 0 ) {
+        ( $dbClusterIds_ref, $metaClusterIds_ref ) = MerFsUtil::splitDbAndMetaOids( @bcids);        
+    }
+
+    if ( $dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0 ) {
+        my $cluster_ids_str = OracleUtil::getNumberIdsInClause( $dbh, @$dbClusterIds_ref );
+    
+        my $sql;
+        if ( $folder eq $GENOME_FOLDER || $folder eq $SCAF_FOLDER ) {
+            my $col;
+            if ( $folder eq $GENOME_FOLDER ) {
+                $col = ' g.taxon ';
+            }
+            elsif ( $folder eq $SCAF_FOLDER ) {
+                $col = ' g.scaffold ';
+            }
+            $sql = qq{
+                select distinct $col
+                from bio_cluster_new g
+                where g.cluster_id in ($cluster_ids_str)
+                $rclause
+                $imgClause
+            };
+        }
+        elsif ( $folder eq $GENE_FOLDER ) {
+            $sql = qq{
+                select distinct bcf.gene_oid
+                from bio_cluster_new g, bio_cluster_features_new bcf
+                where g.cluster_id in ($cluster_ids_str)
+                and g.cluster_id = bcf.cluster_id
+                $rclause
+                $imgClause
+            };
+        }
+        elsif ( $folder eq $FUNC_FOLDER ) {
+            $sql = qq{
+                select distinct gpf.PFAM_FAMILY
+                from bio_cluster_new g, bio_cluster_features_new bcf, GENE_PFAM_FAMILIES gpf
+                where g.cluster_id in ($cluster_ids_str)
+                and g.cluster_id = bcf.cluster_id
+                and g.taxon = gpf.taxon
+                and bcf.gene_oid = gpf.gene_oid
+                $rclause
+                $imgClause
+            };
+        }
+        my $cur = execSql( $dbh, $sql, $verbose );
+    
+        for ( ;; ) {
+            my ( $id ) = $cur->fetchrow();
+            last if !$id;
+            push(@ids, $id);
+        }
+        $cur->finish();
+        OracleUtil::truncTable( $dbh, "gtt_num_id" ) 
+            if ( $cluster_ids_str =~ /gtt_num_id/i );
+    }
+
+    if ( $metaClusterIds_ref && scalar(@$metaClusterIds_ref) > 0 ) {
+
+        if ( $folder eq $GENOME_FOLDER || $folder eq $SCAF_FOLDER ) {
+            my %scaffolds;
+            for my $metaId (@$metaClusterIds_ref) {
+                my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $metaId );
+                $scaffolds{$scaffold_oid} = 1;
+            }
+            my @scaffolds = keys %scaffolds;    
+            my $scaffold_ids_str = OracleUtil::getNumberIdsInClause( $dbh, @scaffolds );
+
+            my $col;
+            if ( $folder eq $GENOME_FOLDER ) {
+                $col = ' g.taxon ';
+            }
+            elsif ( $folder eq $SCAF_FOLDER ) {
+                $col = ' g.scaffold_oid ';
+            }
+            my $sql = qq{
+                select distinct $col
+                from scaffold g
+                where g.scaffold_oid in ($scaffold_ids_str)
+                $rclause
+                $imgClause
+            };
+            my $cur = execSql( $dbh, $sql, $verbose );
+        
+            for ( ;; ) {
+                my ( $id ) = $cur->fetchrow();
+                last if !$id;
+                push(@ids, $id);
+            }
+            $cur->finish();
+            OracleUtil::truncTable( $dbh, "gtt_num_id" ) 
+                if ( $scaffold_ids_str =~ /gtt_num_id/i );
+
+        }
+        elsif ( $folder eq $GENE_FOLDER || $folder eq $FUNC_FOLDER ) {
+            #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+            #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+            #to make sure that the genes that starts below the starting range but ends within the range, 
+            #or starts below the ending range but ends beyond the ending range, get in
+            my $sql = qq{
+                select distinct g.gene_oid
+                from scaffold s, gene g
+                where s.scaffold_oid = ?
+                and g.scaffold = s.scaffold_oid
+                and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+                and g.start_coord > 0 
+                and g.end_coord > 0
+                and g.obsolete_flag = 'No'
+                and s.ext_accession is not null
+                $rclause
+                $imgClause
+            };
+            
+            my @genes;
+            for my $metaId (@$metaClusterIds_ref) {
+                my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $metaId );
+    
+                my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                    $start_coord, $end_coord, $start_coord, $end_coord );
+                for ( ;; ) {
+                    my ( $id ) = $cur->fetchrow();
+                    last if !$id;
+                    push(@genes, $id);
+                }
+                $cur->finish();
+            }
+
+            if ( $folder eq $GENE_FOLDER ) {
+                push(@ids, @genes);
+            }
+            elsif ( $folder eq $FUNC_FOLDER ) {
+                my $gene_ids_str = OracleUtil::getNumberIdsInClause( $dbh, @genes );
+                my $sql = qq{
+                    select distinct g.PFAM_FAMILY
+                    from GENE_PFAM_FAMILIES g
+                    where g.gene_oid in ($gene_ids_str)
+                    $rclause
+                    $imgClause
+                };
+                my $cur = execSql( $dbh, $sql, $verbose );
+            
+                for ( ;; ) {
+                    my ( $id ) = $cur->fetchrow();
+                    last if !$id;
+                    push(@ids, $id);
+                }
+                $cur->finish();
+                OracleUtil::truncTable( $dbh, "gtt_num_id" ) 
+                    if ( $gene_ids_str =~ /gtt_num_id/i );
+            }
         }
 
     }
+
+    if ( scalar(@ids) > 0 ) {
+        if ( $folder eq $GENOME_FOLDER ) {
+            require GenomeCart;
+            GenomeCart::addToGenomeCart( \@ids );
+            GenomeCart::dispatch();        
+        }
+        elsif ( $folder eq $SCAF_FOLDER ) {
+            require ScaffoldCart;
+            ScaffoldCart::addToScaffoldCart( \@ids );
+            ScaffoldCart::printIndex();        
+        }        
+        elsif ( $folder eq $GENE_FOLDER ) {
+            require GeneCartStor;
+            my $gc = new GeneCartStor();
+            $gc->addGeneBatch( \@ids );
+            $gc->printGeneCartForm( "", 1 );
+        }
+        elsif ( $folder eq $FUNC_FOLDER ) {
+            require FuncCartStor;
+            my $fc = new FuncCartStor();
+            $fc->addFuncBatch( \@ids );
+            $fc->printFuncCartForm( '', 1 );
+        }        
+    }
+    
 }
+
 
 1;

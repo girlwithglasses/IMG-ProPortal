@@ -3,7 +3,7 @@
 #   for environmental samples.
 #       --es 06/15/2005
 #
-# $Id: GenePageEnvBlast.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: GenePageEnvBlast.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package GenePageEnvBlast;
 my $section = "GenePageEnvBlast";
@@ -195,14 +195,16 @@ sub runSnpBlastMERFS {
     my $start_coord  = param("start_coord");
     my $end_coord    = param("end_coord");
     my $strand       = param("strand");
+    
+    my $data_type="assembled";
 
     $evalue = checkEvalue($evalue);
     $taxon_oid = sanitizeInt($taxon_oid);
 
     my ( $scf_start, $scf_end, $scf_strand ) =
-	MetaUtil::getScaffoldCoord($taxon_oid, "assembled", $scaffold_oid);
+	MetaUtil::getScaffoldCoord($taxon_oid, $data_type, $scaffold_oid);
     my $scf_seq_length = $scf_end - $scf_start + 1;
-    my $seq = MetaUtil::getScaffoldFna($taxon_oid, "assembled", $scaffold_oid);
+    my $seq = MetaUtil::getScaffoldFna($taxon_oid, $data_type, $scaffold_oid);
 
     if ( $use_contig ne "" && $scaffold_oid ne "" ) {
 	my $seq2 = wrapSeq($seq);
@@ -213,7 +215,7 @@ sub runSnpBlastMERFS {
     my $url =
             "$main_cgi?section=MetaScaffoldGraph"
           . "&page=metaScaffoldGraph&scaffold_oid=$scaffold_oid"
-          . "&taxon_oid=$taxon_oid"
+          . "&taxon_oid=$taxon_oid&data_type=$data_type"
 	  . "&start_coord=$scf_start&end_coord=$scf_end"
 	  . "&marker_gene=$gene_oid&seq_length=$scf_seq_length";
     my $link = alink( $url, "$scaffold_oid (${scf_seq_length}bp)" );
@@ -253,6 +255,7 @@ sub runSnpBlastMERFS {
     blastProcCheck();
     printStatusLine( "Loading ...", 1 );
 
+    $tmp_dir = Command::createSessionDir();
     my $tmpFile = "$tmp_dir/merfssnpblast$$.fna";
     my $snp_blast_data_dir =
 	"/global/dna/projectdirs/microbial/img_web_data_merfs/";
@@ -278,15 +281,26 @@ sub runSnpBlastMERFS {
     webLog "Start BLAST process=$$ " . currDateTime() . "\n" if $verbose >= 1;
     webLog "+ $cmd\n" if $verbose >= 1;
     my $blastOutFile = "blastOut$$";
-    my $blastOutPath = "$tmp_dir/$blastOutFile";
+    my $blastOutPath = $env->{tmp_dir} . "/$blastOutFile";
 
     WebUtil::unsetEnvPath();
 
-    if ( $blast_wrapper_script ne "" ) {
-        $cmd = "$blast_wrapper_script $cmd";
-    }
-
-    my $cfh = newCmdFileHandle( $cmd, "runSnpBlastMERFS" );
+        print "Calling blast api<br>\n";
+        my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        Command::startDotThread(120);
+        my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
+        if ( $stdOutFile == -1 ) {
+            Command::killDotThread();
+            # close working div but do not clear the data
+            printEndWorkingDiv( '', 1 );
+            printStatusLine( "Error.", 2 );
+            WebUtil::webExit(-1);
+        }
+        Command::killDotThread();
+        print "blast done<br>\n";
+        print "Reading output $stdOutFile<br>\n";
+        my $cfh = WebUtil::newReadFileHandle($stdOutFile);
+    
     my $wfh = newWriteFileHandle( $blastOutPath, "runSnpBlastMERFS" );
 
     print "<pre>\n";
@@ -315,8 +329,8 @@ sub runSnpBlastMERFS {
     print "</pre>\n";
 
     if ( !$foundQuery ) {
-	printStatusLine( "Error", 2 );
-	return;
+    	printStatusLine( "Error", 2 );
+    	return;
     }
 
     print "<br/>\n";
@@ -381,8 +395,7 @@ sub printGenePageEnvBlastForm {
     my @coordLines = GeneUtil::getMultFragCoords( $dbh, $gene_oid, $cds_frag_coord );
 
     my $path = "$taxon_lin_fna_dir/$taxon.lin.fna";
-    my $seq  = WebUtil::readLinearFasta
-	( $path, $ext_accession, $start_coord, $end_coord, $strand, \@coordLines );
+    my $seq  = WebUtil::readLinearFasta( $path, $ext_accession, $start_coord, $end_coord, $strand, \@coordLines );
     my $seq2 = wrapSeq($seq);
 
     print hiddenVar( "page",              "envBlastOut" );
@@ -617,6 +630,8 @@ sub runLocalEnvBlast {
     printStatusLine( "Loading ...", 1 );
 
     my $dbFile  = "$snp_blast_data_dir/$db";
+    
+    $tmp_dir = Command::createSessionDir();
     my $tmpFile = "$tmp_dir/blast$$.fna";
 
     my $wfh = newWriteFileHandle( $tmpFile, "runLocalEnvBlast" );
@@ -637,15 +652,28 @@ sub runLocalEnvBlast {
     webLog "Start BLAST process=$$ " . currDateTime() . "\n" if $verbose >= 1;
     webLog "+ $cmd\n" if $verbose >= 1;
     my $blastOutFile = "blastOut$$";
-    my $blastOutPath = "$tmp_dir/$blastOutFile";
+    my $blastOutPath = $env->{tmp_dir} . "/$blastOutFile";
 
     WebUtil::unsetEnvPath();
 
-    if ( $blast_wrapper_script ne "" ) {
-        $cmd = "$blast_wrapper_script $cmd";
-    }
-
-    my $cfh = newCmdFileHandle( $cmd,            "runLocalEnvBlast" );
+        print "Calling blast api<br>\n";
+        my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        Command::startDotThread(120);
+        my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
+        if ( $stdOutFile == -1 ) {
+            Command::killDotThread();
+            # close working div but do not clear the data
+            printEndWorkingDiv( '', 1 );
+            printStatusLine( "Error.", 2 );
+            WebUtil::webExit(-1);
+        }
+        Command::killDotThread();
+        print "blast done<br>\n";
+        print "Reading output $stdOutFile<br>\n";
+        my $cfh = WebUtil::newReadFileHandle($stdOutFile);
+        
+    
+    
     my $wfh = newWriteFileHandle( $blastOutPath, "runLocalEnvBlast" );
 
     print "<pre>\n";

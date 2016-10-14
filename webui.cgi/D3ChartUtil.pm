@@ -36,7 +36,6 @@ sub printHBarChart {
             href="$top_base_url/css/d3barchart.css" />
 
       <script src="$top_base_url/js/d3.min.js"></script>
-      <span id="ruler"></span>
       <svg id="$svg_id"></svg>
       <script src="$top_base_url/js/d3barchart.js"></script>
       <script>

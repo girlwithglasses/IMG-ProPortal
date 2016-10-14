@@ -7,7 +7,7 @@
 #           the rest of the populations. The 4mer frequencies for
 #           each scaffold are computed and then analyzed using PCA.
 #
-# $Id: Kmer.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
+# $Id: Kmer.pm 36217 2016-09-23 18:26:38Z aratner $
 ###########################################################################
 package Kmer;
 
@@ -94,12 +94,11 @@ sub getAppHeaderData {
         my $js = $template->output;
     
     my @a = ();
-    if( !WebUtil::paramMatch("export")) {
+    if ( !WebUtil::paramMatch("export")) {
         @a = ( 'FindGenomes');
     }
     return @a;
 }
-
 
 ############################################################################
 # dispatch - Dispatch loop.
@@ -149,8 +148,9 @@ sub kmerPlotScaffolds {
         my @scafs = param($scaf_set);
         $set2scafs{$scaf_set} = \@scafs;
 
-        my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $scaf_set, '', $SCAF_FOLDER );
-        my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
+        my ($owner, $x) = WorkspaceUtil::splitAndValidateOwnerFileset
+	    ($sid, $scaf_set, '', $SCAF_FOLDER);
+        my $share_set_name = WorkspaceUtil::fetchShareSetName($dbh, $owner, $x, $sid);
         $set2shareSetName{$scaf_set} = $share_set_name;
     }
 
@@ -250,7 +250,6 @@ sub writeScaffoldsMapFile {
     return $scaffoldsMapFile;
 }
 
-
 ############################################################################
 # kmerPlotTaxon - Print kmer frequency plot for a given taxon
 ############################################################################
@@ -308,16 +307,13 @@ sub kmerPlotTaxon {
 # printKmerWindow - shows the Kmer settings popup
 ############################################################################
 sub printKmerWindow {
-    my ($taxon_oid, $scaffold_oid_aref, $set2scafs_href, $isSet,
-	$ignoreSettings) = @_;
-
+    my ($taxon_oid, $scaffold_oid_aref, $set2scafs_href, $isSet, $ignoreSettings) = @_;
     my $outputPrefix;
     if ( ! $ignoreSettings ) {
         $outputPrefix = findKmerSettings();
     }
     printKmerSettings($outputPrefix, $taxon_oid, $scaffold_oid_aref,
 		      $set2scafs_href, $isSet);
-
     return $outputPrefix;
 }
 
@@ -329,7 +325,6 @@ sub findKmerSettings {
     my $fragmentStep   = param("fragmentStep");
     my $kmerSize       = param("kmerSize");
     my $minVariation   = param("minVariation");
-    #print "findKmerSettings() fragmentWindow=$fragmentWindow, fragmentStep=$fragmentStep, kmerSize=$kmerSize, minVariation=$minVariation<br/>\n";
 
     $kmerParam{fragmentWindow}{val} = $fragmentWindow if ($fragmentWindow);
     $kmerParam{fragmentStep}{val}   = $fragmentStep   if ($fragmentStep);
@@ -360,7 +355,6 @@ sub getOutputPrefix {
         "-${kmerParam{fragmentStep}{val}}" .
         "-${kmerParam{kmerSize}{val}}" .
         "-${kmerParam{minVariation}{val}}";
-
     return $outputPrefix;
 }
 
@@ -380,13 +374,14 @@ sub printKmerSettings {
     }
 
     print "<div style='border:2px solid #99ccff;"
-        . "padding:1px 5px;margin-left:1px;width:100%'>\n";
-    my $oligo_text = "<span style='color:red'>Lowering the 'Oligomer size' helps avoid running out of memory</span>";
+        . "padding:1px 5px;margin-left:1px;width:900px;'>";
+    my $oligo_text = "<span style='color:red'>"
+	. "Lowering the 'Oligomer size' helps avoid running out of memory</span>";
     print "<table width='100%'>";
     print "<tr><td>\n";
-    print "<span style='padding-left:15px;margin:0px;'>\n";
+    print "<span style='padding-left:1px;margin:0px;'>\n";
     print "$oligo_text <br/>";
-    print "<span style='padding-left:15px;margin:0px; "
+    print "<span style='padding-left:1px;margin:0px; "
 	. "title='Length of fragment represented by each "
         . "point on the plot'>${kmerParam{fragmentWindow}{text}}: "
         . "<b>${kmerParam{fragmentWindow}{val}}</b> "
@@ -576,15 +571,15 @@ sub showScaffoldGraph {
     webError("Unable to proceed with missing scaffold name") if !$extAccession;
 
     if (!$scaffold_oid || $scaffold_oid eq "") {
-	webError("Unable to proceed with missing taxon_oid")
-	    if !$taxon_oid || $taxon_oid eq "";
+    	webError("Unable to proceed with missing taxon_oid")
+    	    if !$taxon_oid || $taxon_oid eq "";
     }
 
     my $dbh = dbLogin();
     my $last_coord;
 
     if ($taxon_oid && $taxon_oid ne "") {
-	my $sql = qq{
+    	my $sql = qq{
             select scf.scaffold_oid, st.seq_length
     	    from scaffold scf, scaffold_stats st
     	    where scf.scaffold_oid = st.scaffold_oid
@@ -592,38 +587,38 @@ sub showScaffoldGraph {
             and scf.ext_accession = ?
             and scf.taxon = ?
         };
-	my $cur = execSql($dbh, $sql, $verbose, $extAccession, $taxon_oid);
-	($scaffold_oid, $last_coord) = $cur->fetchrow();
-	param("scaffold_oid", $scaffold_oid);
+    	my $cur = execSql($dbh, $sql, $verbose, $extAccession, $taxon_oid);
+    	($scaffold_oid, $last_coord) = $cur->fetchrow();
+    	param("scaffold_oid", $scaffold_oid);
 
     } else {
-	if (isInt($scaffold_oid)) {
-	    my $sql = qq{
-            select scf.taxon, st.seq_length
-            from scaffold scf, scaffold_stats st
-            where scf.scaffold_oid = st.scaffold_oid
-            and scf.scaffold_oid = st.scaffold_oid
-            and scf.scaffold_oid = ?
-            };
-	    my $cur = execSql($dbh, $sql, $verbose, $scaffold_oid);
-	    ($taxon_oid, $last_coord) = $cur->fetchrow();
-	} else {
-	    # merfs
-	    my ($tx_oid, $d2, $scf_oid) = split("-", $scaffold_oid);
-	    my ($seq_length, $gc, $gcount)
-		= MetaUtil::getScaffoldStats($tx_oid, $d2, $scf_oid);
-	    $last_coord = $seq_length;
-	    $taxon_oid = $tx_oid;
-	    param("data_type", $d2);
-	    param("scaffold_oid", $scf_oid);
-	}
+    	if (isInt($scaffold_oid)) {
+    	    my $sql = qq{
+                select scf.taxon, st.seq_length
+                from scaffold scf, scaffold_stats st
+                where scf.scaffold_oid = st.scaffold_oid
+                and scf.scaffold_oid = st.scaffold_oid
+                and scf.scaffold_oid = ?
+                };
+    	    my $cur = execSql($dbh, $sql, $verbose, $scaffold_oid);
+    	    ($taxon_oid, $last_coord) = $cur->fetchrow();
+    	} else {
+    	    # merfs
+    	    my ($tx_oid, $d2, $scf_oid) = split("-", $scaffold_oid);
+    	    my ($seq_length, $gc, $gcount)
+    		= MetaUtil::getScaffoldStats($tx_oid, $d2, $scf_oid);
+    	    $last_coord = $seq_length;
+    	    $taxon_oid = $tx_oid;
+    	    param("data_type", $d2);
+    	    param("scaffold_oid", $scf_oid);
+    	}
     }
 
     if ($range) {
-	($start_coord, $end_coord) = split(/\-/, $range);
+    	($start_coord, $end_coord) = split(/\-/, $range);
     } else {
-	$start_coord = 1;
-	$end_coord   = $last_coord;
+    	$start_coord = 1;
+    	$end_coord   = $last_coord;
     }
 
     my $window_size = $end_coord - ($start_coord - 1);
@@ -639,12 +634,12 @@ sub showScaffoldGraph {
     param("end_coord",    $right_flank);
 
     if (isInt($scaffold_oid)) {
-	require ScaffoldGraph;
-	ScaffoldGraph::printScaffoldGraph();
+    	require ScaffoldGraph;
+    	ScaffoldGraph::printScaffoldGraph();
     } else {
-	# merfs
-	use MetaScaffoldGraph;
-	MetaScaffoldGraph::printMetaScaffoldGraph();
+    	# merfs
+    	use MetaScaffoldGraph;
+    	MetaScaffoldGraph::printMetaScaffoldGraph();
     }
 }
 
@@ -770,7 +765,6 @@ sub printKmerHTML {
 
     my $htmlTemplate = "$base_dir/$kMerHtmlFile";
     my $htmlStr = WebUtil::file2Str( $htmlTemplate );
-
     my $options = getKmerSettingTableStr();
 
     # Add hidden variables to form
@@ -828,16 +822,13 @@ sub printLocalStatus {
 		    "'$base_url/images/ajax-loader.gif'>")
 }
 
-
 ############################################################################
 # extractKmerSettings
 ############################################################################
 sub extractKmerSettings {
     my ($outputPrefix) = @_;
-
     my ($junk, $fragmentWindow, $fragmentStep, $kmerSize, $minVariation)
         = split(/\-/, $outputPrefix);
-
     return ($fragmentWindow, $fragmentStep, $kmerSize, $minVariation);
 }
 
@@ -846,7 +837,6 @@ sub extractKmerSettings {
 ############################################################################
 sub getKmerSettingDisplay {
     my ($outputPrefix) = @_;
-
     my ($fragmentWindow, $fragmentStep, $kmerSize, $minVariation)
         = extractKmerSettings($outputPrefix);
     my $text;
@@ -854,7 +844,6 @@ sub getKmerSettingDisplay {
     $text .= "Fragment step: " . $fragmentStep . " bp, ";
     $text .= "Oligomer size: " . $kmerSize . ", ";
     $text .= "Minimum variation: " . $minVariation . " ";
-
     return $text;
 }
 

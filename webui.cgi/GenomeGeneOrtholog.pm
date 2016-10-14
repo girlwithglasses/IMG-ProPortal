@@ -1,5 +1,5 @@
 #
-# $Id: GenomeGeneOrtholog.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: GenomeGeneOrtholog.pm 36089 2016-08-31 21:38:02Z klchu $
 #
 package GenomeGeneOrtholog;
 
@@ -48,7 +48,7 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my($self) = @_;
-    require GenomeListJSON;
+
     my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
     $template->param( base_url => $base_url );
     $template->param( YUI      => $YUI );
@@ -1120,7 +1120,7 @@ sub printForm3 {
     $template->param( selectedGenome1Title => 'Reference Genome' );
     $template->param( selectedGenome2Title => 'Query Genomes (50 max)' );
     $template->param( selectedGenome3Title => 'Excluded Genomes' );
-    $template->param( from                 => '' );
+    $template->param( from                 => 'isolate' );
     $template->param( maxSelected2         => 50 );
     $template->param( maxSelected3         => -1 );
 

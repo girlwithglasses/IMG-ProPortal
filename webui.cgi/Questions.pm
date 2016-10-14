@@ -1,7 +1,7 @@
 ##########################################################################
 # Questions and comments form
 #
-# $Id: Questions.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: Questions.pm 36278 2016-10-05 18:19:39Z klchu $
 ##########################################################################
 package Questions;
 
@@ -12,24 +12,28 @@ use CGI qw( :standard );
 use Data::Dumper;
 use LWP::UserAgent;
 use MailUtil;
+use REST::Client;
+use MIME::Base64;
+use JSON;
 
 # Force flush
 $| = 1;
 
-my $env         = getEnv();
-my $base_url    = $env->{base_url};
-my $base_dir    = $env->{base_dir};
-my $cgi_url     = $env->{cgi_url};
-my $cgi_dir     = $env->{cgi_dir};
-my $main_cgi    = $env->{main_cgi};
-my $img_ken     = $env->{img_ken};
-my $img_version = $env->{img_version};
-my $tmp_dir     = $env->{tmp_dir};
+my $env          = getEnv();
+my $base_url     = $env->{base_url};
+my $base_dir     = $env->{base_dir};
+my $cgi_url      = $env->{cgi_url};
+my $cgi_dir      = $env->{cgi_dir};
+my $main_cgi     = $env->{main_cgi};
+my $img_ken      = $env->{img_ken};
+my $img_version  = $env->{img_version};
+my $tmp_dir      = $env->{tmp_dir};
 my $top_base_url = $env->{top_base_url};
+
 # if jira form submit fails display error message with the following email
 my $jira_email_error = $env->{jira_email_error};
 my $jira_email       = $env->{jira_email};
-my $jira_email2       = $env->{jira_email2};
+my $jira_email2      = $env->{jira_email2};
 
 #my $jira_submit_url  = $env->{jira_submit_url};
 
@@ -41,7 +45,7 @@ $sendmail = "/usr/sbin/sendmail" if ( $sendmail eq "" );
 my $toEmail = $env->{bugmaster_email};
 $toEmail = "klchu\@lbl.gov" if ( $toEmail eq "" );
 
-my $charNumLimit = 2000;                           # max number chars in textarea and other fields
+my $charNumLimit = 2000;    # max number chars in textarea and other fields
 
 sub getPageTitle {
     return 'Questions / Comments';
@@ -51,7 +55,7 @@ sub getAppHeaderData {
     my ($self) = @_;
 
     my @a = ();
-    if(param("noHeader") eq "") {
+    if ( param("noHeader") eq "" ) {
         @a = ('about');
     }
     return @a;
@@ -72,32 +76,20 @@ sub dispatch {
     } elsif ( $page eq "jirasubmit" ) {
 
         # new jira form submit 3.2 - ken
-        jiraProcess();
-
-    } elsif ( $page eq "test" ) {
-        test();
+        #jiraProcess();
+        jiraProcessRestApi();
 
     } else {
         jiraForm();
 
-        #        if($jira_submit_url ne "") {
-        #            # new jira form 3.2 - ken
-        #            jiraForm();
-        #        } else {
-        #            # old bug master way
-        #
-        #            #printForm();
-        #        }
     }
-    
-    
-        if ( param("noHeader") eq "true" ) {
 
-            # form redirect submit to jira - ken
-            WebUtil::webExit(0);
-        }    
+    if ( param("noHeader") eq "true" ) {
+
+        # form redirect submit to jira - ken
+        WebUtil::webExit(0);
+    }
 }
-
 
 #
 # new 3.2 - jira form
@@ -147,8 +139,6 @@ sub jiraForm {
       <input type="hidden" name="page" value="jirasubmit" />
       
       <p>
-      Now using the NEW JIRA <a href='http://issues.jgi-psf.org'>http://issues.jgi-psf.org</a>
-      <br/>
       If you request supplementary IMG materials for educational purposes,<br/>
       please provide your full name, affiliation, address, name of course, and course description.
       <br/>
@@ -215,13 +205,13 @@ $message
 sub jiraProcess {
 
     #environment variables
-    my $remote_addr     = remote_addr();    #$ENV{'REMOTE_ADDR'};
-    my $remote_host     = remote_host();    #$ENV{'REMOTE_HOST'};
-    my $remote_user     = remote_user();    #$ENV{'REMOTE_USER'};
-    my $http_user_agent = user_agent();     #$ENV{'HTTP_USER_AGENT'};
-    my $http_cookie     = raw_cookie();     #$ENV{'HTTP_COOKIE'};
-    my $hostname = WebUtil::getHostname();
-    my $sid = WebUtil::getSessionId();
+    my $remote_addr     = WebUtil::getIpAddress();
+    my $remote_host     = remote_host();             #$ENV{'REMOTE_HOST'};
+    my $remote_user     = remote_user();             #$ENV{'REMOTE_USER'};
+    my $http_user_agent = user_agent();              #$ENV{'HTTP_USER_AGENT'};
+    my $http_cookie     = raw_cookie();              #$ENV{'HTTP_COOKIE'};
+    my $hostname        = WebUtil::getHostname();
+    my $sid             = WebUtil::getSessionId();
 
     #form variables
     my $subject = param('subject');
@@ -278,7 +268,126 @@ sub jiraProcess {
         my $response  = param('recaptcha_response_field');
 
         # Verify submission
-        my $result = $c->check_answer( "$google_key", $ENV{'REMOTE_ADDR'}, $challenge, $response );
+        my $result = $c->check_answer( "$google_key", WebUtil::getIpAddress(), $challenge, $response );
+
+        if ( $result->{is_valid} ) {
+
+            #print "Yes!";
+            # do noting
+            #jiraForm("TEST: reCAptcha was fine can continue and remove from code");
+            #return;
+        } else {
+
+            # Error
+            jiraForm("Incorrect reCaptcha response!");
+            return;
+        }
+    }
+
+    my $userinfo = qq{
+From: $name
+Email: $email
+Subject: $subject
+
+$message
+
+Environment Variables
+HTTP_USER_AGENT: $http_user_agent
+IMG SYSTEM: $img_version ${base_url}/
+$remote_addr
+$remote_host
+$remote_user
+$hostname
+$sid
+    };
+
+    $message = $userinfo;
+
+    MailUtil::sendMail( $jira_email, '', $subject, $message, $email );
+
+    print qq{
+            <h1> Thank You </h1>
+            <p>
+            Your feedback has been received.
+            Thank you for taking time to send us your question or comment.
+            <br/>
+            You may receive a confirmation email from 
+            <b> JGI-Issues $jira_email or $jira_email2 </b>
+            <br/>
+            To make any additional comments just reply to the email from JGI-Issues.
+            <br/>
+            The email from JIRA will be in HTML format.
+            </p>            
+        };
+}
+
+sub jiraProcessRestApi {
+
+    #environment variables
+    my $remote_addr     = WebUtil::getIpAddress();
+    my $remote_host     = remote_host();             #$ENV{'REMOTE_HOST'};
+    my $remote_user     = remote_user();             #$ENV{'REMOTE_USER'};
+    my $http_user_agent = user_agent();              #$ENV{'HTTP_USER_AGENT'};
+    my $http_cookie     = raw_cookie();              #$ENV{'HTTP_COOKIE'};
+    my $hostname        = WebUtil::getHostname();
+    my $sid             = WebUtil::getSessionId();
+
+    #form variables
+    my $subject = param('subject');
+    my $message = param('message');
+    my $name    = param('name');
+    my $email   = param('email');
+
+    my $error = "";
+
+    # check for required fields
+    if ( blankStr($name) ) {
+        $error .= "Name cannot be blank <br/>";
+    }
+    if ( length($name) > $charNumLimit ) {
+        $error .= "Name too long. Must be $charNumLimit characters or less <br/>";
+    }
+
+    if ( blankStr($email) ) {
+        $error .= "Email cannot be blank <br/>";
+    }
+    if ( length($email) > $charNumLimit ) {
+        $error .= "Email too long. Must be $charNumLimit characters or less <br/>";
+    }
+
+    if ( blankStr($subject) ) {
+        $error .= "Subject cannot be blank <br/>";
+    }
+    if ( length($subject) > $charNumLimit ) {
+        $error .= "Subject too long. Must be $charNumLimit characters or less <br/>";
+    }
+
+    if ( blankStr($message) ) {
+        $error .= "Message cannot be blank <br/>";
+    }
+    if ( length($message) > $charNumLimit ) {
+        $error .= "Message too long. Must be $charNumLimit characters or less <br/>";
+    }
+
+    if ( !blankStr($email) && !MailUtil::validateEMail($email) ) {
+        $error .= "$email is not a valid email address <br/>";
+    }
+
+    if ( !blankStr($error) ) {
+        jiraForm($error);
+        return;
+    }
+
+    # now print reCaptcha - form ok
+    my ( $server, $google_key ) = WebUtil::getGoogleReCaptchaPrivateKey();
+    if ( $google_key ne "" ) {
+        require Captcha::reCAPTCHA;
+        my $c         = Captcha::reCAPTCHA->new;
+        my $challenge = param('recaptcha_challenge_field');
+        my $response  = param('recaptcha_response_field');
+
+        # Verify submission
+        my $result = $c->check_answer( "$google_key", WebUtil::getIpAddress(), $challenge, $response );
 
         if ( $result->{is_valid} ) {
 
@@ -311,10 +420,32 @@ $hostname
 $sid
     };
 
-    $message = $userinfo;
+    my $username = 'imgsupp';
+    my $password = 'imgsupp123?987';
+    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+    my $headers = {
+        Content_Type  => 'application/json',
+        Accept        => 'application/json',
+        Authorization => 'Basic ' . encode_base64( $username . ':' . $password )
+    };
 
-    MailUtil::sendMail($jira_email, '', $subject, $message, $email);
+    my %hash = (
+        'fields' => {
+            'project'           => { 'key'  => 'IMGSUPP' },
+            'summary'           => $subject,
+            'description'       => $userinfo,
+            'issuetype'         => { 'name' => 'Support' },
+            'customfield_10556' => $email,
+            'reporter' => {"name" => "extuser"}
+        }
+    );
+    my $str    = encode_json( \%hash );
+    my $url    = "https://issues.jgi-psf.org/rest/api/2/issue/";
+    my $client = REST::Client->new();
+    $client->POST( $url, $str, $headers );
+    my $status = $client->responseCode();
 
+    if ( $status eq '200' || $status eq '201' ) {
         print qq{
             <h1> Thank You </h1>
             <p>
@@ -322,82 +453,22 @@ $sid
             Thank you for taking time to send us your question or comment.
             <br/>
             You should receive a confirmation email from 
-            <b> JGI-Issues $jira_email or $jira_email2 </b>
+            <b> IMG Support $jira_email or $jira_email2 </b>
             <br/>
-            To make any additional comments just reply to the email from JGI-Issues.
+            To make any additional comments just reply to the email from JGI-Issues or IMG Support
             <br/>
             The email from JIRA will be in HTML format.
+            <br>
+            ..
             </p>            
         };
-
-#    my $ua = WebUtil::myLwpUserAgent(); 
-#    my $response = $ua->post(
-#                              "$jira_submit_url",
-#                              {
-#                                 "name"            => $name,
-#                                 "email"           => $email,
-#                                 "subject"         => $subject,
-#                                 "message"         => $message,
-#                                 "inquiry"         => "imgsupp",
-#                                 "http_referer"    => $base_url,
-#                                 "remote_addr"     => $remote_addr,
-#                                 "remote_host"     => $remote_host,
-#                                 "remote_user"     => $remote_user,
-#                                 "http_cookie"     => "",
-#                                 "http_user_agent" => "",
-#                              }
-#    );
-#
-#    my $content = $response->content();
-#
-#    if ( $response->is_success ) {
-#        print qq{
-#            <h1> Thank You </h1>
-#            <p>
-#            Your feedback has been received.
-#            Thank you for taking time to send us your question or comment.
-#            <br/>
-#            You should receive a confirmation email from 
-#            <b> JGISupport (JGI Support) jgisupport+imgsupp\@lbl.gov </b>
-#            <br/>
-#            To make any additional comments just reply to the email from JGISupport.
-#            </p>            
-#        };
-#
-#        #print $response->decoded_content;    # or whatever
-#    } else {
-#
-#        print qq{
-#        <h1> Error </h1>
-#        <p>
-#        Something went wrong. <br/>
-#        Please report problems directly to: <a href=\"mailto:$jira_email_error\">IMG Support</a></p>
-#        <br/>            
-#        };
-#
-#        webError( $response->status_line . " <br/> " . "$cgi_url/$main_cgi" );
-#
-#    }
-
-}
-
-#
-# testing
-#
-sub test {
-    my $subject = param('subject');
-    my $message = param('message');
-    my $name    = param('name');
-    my $email   = param('email');
-
-    print qq{
-        <p>
-        $name <br/>
-        $email <br/>
-        $subject <br/>
-        $message <br/>
-        </p>
-    };
+    } else {
+        print "Error $status:<br>\n";
+        my $ref = $client->responseContent();
+        my $ref = decode_json($ref);
+        print Dumper $ref;
+        print "<br>\n";
+    }
 }
 
 1;

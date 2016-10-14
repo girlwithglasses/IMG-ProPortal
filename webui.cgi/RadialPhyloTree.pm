@@ -1,6 +1,6 @@
 ###########################################################################
 # RadialPhyloTree.pm - draws a radial phylogenetic tree as seen on MG-RAST
-# $Id: RadialPhyloTree.pm 34859 2015-12-08 19:08:28Z klchu $
+# $Id: RadialPhyloTree.pm 36233 2016-09-27 21:18:18Z klchu $
 ############################################################################
 package RadialPhyloTree;
 my $section = "RadialPhyloTree";
@@ -369,7 +369,7 @@ sub runTree {
     }
 
     # If cached do not make db call
-    my $file = "$cgi_tmp_dir/$statsId." . getSessionId() . ".treestats";
+    my $file = "$cgi_tmp_dir/$statsId" . getSessionId() . ".treestats";
     my @names;
     if ( $statsId && -e $file ) {
         my $geneStats = retrieve($file);
@@ -463,7 +463,7 @@ sub runTree {
       if ( $radialLength < $TREE_RADIAL_LENGTH );
 
     # dump treestats data into a text file for user download.
-    my $dataFile = "$cgi_tmp_dir/$statsId." . getSessionId() . ".treestats.text";
+    my $dataFile = "$cgi_tmp_dir/$statsId" . getSessionId() . ".treestats.text";
     $Data::Dumper::Terse = 1;
     my $wfh = newWriteFileHandle( $dataFile, "runTree" );
     print $wfh "Taxon Names: @names \n\n";
@@ -591,7 +591,7 @@ sub runTree {
     print $pt->output();
 
     ## write newick string into text files for user download.
-    my $newickDir = "$cgi_tmp_dir/$statsId." . getSessionId() . ".newick";
+    my $newickDir = "$cgi_tmp_dir/$statsId" . getSessionId() . ".newick";
     if ( $newickDir =~ /^(.*)$/ ) { $newickDir = $1; }    # bug fix untaint - ken
     my $newickFile1      = "newick_without_counts.txt";
     my $newickFile2      = "newick_with_counts.txt";
@@ -1349,7 +1349,7 @@ sub exportTreeData {
     my $id      = param("treeId");
     my $statsId = param("id");
 
-    my $newickDir  = "$cgi_tmp_dir/$statsId." . getSessionId() . ".newick";
+    my $newickDir  = "$cgi_tmp_dir/$statsId" . getSessionId() . ".newick";
     my $newickZip  = "$newickDir/newick.zip";
     my $exportFile = "Radialtree${id}_newick.zip";
 

@@ -3,7 +3,7 @@
 #   of genes based on common homologs or subtraction of homologs.
 #      --es 02/28/2005
 #
-# $Id: PhylogenProfiler.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: PhylogenProfiler.pm 36089 2016-08-31 21:38:02Z klchu $
 #
 ############################################################################
 package PhylogenProfiler;
@@ -53,6 +53,7 @@ my $myimg_jobs_dir 	 = $env->{myimg_jobs_dir};
 my $use_img_clusters     = $env->{use_img_clusters};
 my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
+
 my $top_base_url = $env->{top_base_url};
 my $pfam_base_url    = $env->{pfam_base_url};
 my $cog_base_url     = $env->{cog_base_url};
@@ -61,6 +62,9 @@ my $enzyme_base_url  = $env->{enzyme_base_url};
 my $kegg_module_url  = $env->{kegg_module_url};  
 my $ipr_base_url     = $env->{ipr_base_url};
 
+# main.cgi?section=KeggPathwayDetail&page=koterm2&ko_id=KO:K13280&gene_oid=646510566
+my $ko_base_url = 'main.cgi?section=KeggPathwayDetail&page=koterm2';
+my $cassette_base_url  = 'main.cgi?section=GeneCassette&page=cassetteBox&type=cog';
 
 $use_img_clusters        = 0;  # Use PhyloClusterProfiler instead. --es 07/13/11
 
@@ -138,21 +142,21 @@ sub dispatch {
         #printPhyloProfileFormFull();
         # I need to test to see if there are user selected / saved
         # genomes - if yes do not use cache pages at all!
-#        my $ans = 1;        # do not use cache pages if $ans
-#        if ( HtmlUtil::isCgiCacheEnable() ) {
-#            $ans = $numTaxon;
-#            if ( !$ans ) {
-#
-#                # start cached page - all genomes
-#                HtmlUtil::cgiCacheInitialize( $section);
-#                HtmlUtil::cgiCacheStart() or return;
-#            }
-#        }
-#        printPhyloProfileFormFull();
-#
-#        HtmlUtil::cgiCacheStop() if ( HtmlUtil::isCgiCacheEnable() && !$ans );
+        #my $ans = 1;        # do not use cache pages if $ans
+        #if ( HtmlUtil::isCgiCacheEnable() ) {
+        #    $ans = $numTaxon;
+        #    if ( !$ans ) {
+        #
+        #        # start cached page - all genomes
+        #        HtmlUtil::cgiCacheInitialize( $section);
+        #        HtmlUtil::cgiCacheStart() or return;
+        #    }
+        #}
+        #printPhyloProfileFormFull();
+        #
+        #HtmlUtil::cgiCacheStop() if ( HtmlUtil::isCgiCacheEnable() && !$ans );
 
-printPhyloProfileFormFull3($numTaxon);
+        printPhyloProfileFormFull3($numTaxon);
 
     } elsif( $page eq "phyloProfileFormJob" ) {
         printPhyloProfileFormJob( );
@@ -191,21 +195,21 @@ printPhyloProfileFormFull3($numTaxon);
     } elsif ( $page eq "tigrfamGeneList" ) {
         printTIGRfamGeneList();
     } else {
-#        # I need to test to see if there are user selected / saved
-#        # genomes - if yes do not use cache pages at all!
-#        my $ans = 1;    # do not use cache pages if $ans
-#        if ( HtmlUtil::isCgiCacheEnable() ) {
-#            $ans = $numTaxon;
-#            if ( !$ans ) {
-#                # start cached page - all genomes
-#                HtmlUtil::cgiCacheInitialize( $section);
-#                HtmlUtil::cgiCacheStart() or return;
-#            }
-#        }
-#        printPhyloProfileFormFull();
-#
-#        HtmlUtil::cgiCacheStop() if ( HtmlUtil::isCgiCacheEnable() && !$ans );
-printPhyloProfileFormFull3($numTaxon);
+        ## I need to test to see if there are user selected / saved
+        ## genomes - if yes do not use cache pages at all!
+        #my $ans = 1;    # do not use cache pages if $ans
+        #if ( HtmlUtil::isCgiCacheEnable() ) {
+        #    $ans = $numTaxon;
+        #    if ( !$ans ) {
+        #        # start cached page - all genomes
+        #        HtmlUtil::cgiCacheInitialize( $section);
+        #        HtmlUtil::cgiCacheStart() or return;
+        #    }
+        #}
+        #printPhyloProfileFormFull();
+        #
+        #HtmlUtil::cgiCacheStop() if ( HtmlUtil::isCgiCacheEnable() && !$ans );
+        printPhyloProfileFormFull3($numTaxon);
     }
 }
 
@@ -836,23 +840,23 @@ sub printPhyloProfileFormFull3 {
     printMainForm();
 
     if ($include_metagenomes) { 
-    WebUtil::printHeaderWithInfo 
-        ("Phylogenetic Profiler for Single Genes", '', 
-         "show description for this tool", "PPSG Info", 1); 
+        WebUtil::printHeaderWithInfo 
+            ("Phylogenetic Profiler for Single Genes", '', 
+             "show description for this tool", "PPSG Info", 1); 
     } else { 
-    WebUtil::printHeaderWithInfo 
-        ("Phylogenetic Profiler for Single Genes", '', 
-         "show description for this tool", "PPSG Info"); 
+        WebUtil::printHeaderWithInfo 
+            ("Phylogenetic Profiler for Single Genes", '', 
+             "show description for this tool", "PPSG Info"); 
     } 
 
-my $hideViruses = getSessionParam("hideViruses");
-$hideViruses = "Yes" if $hideViruses eq "";
-
-my $hidePlasmids = getSessionParam("hidePlasmids");
-$hidePlasmids = "Yes" if $hidePlasmids eq "";
-
-my $hideGFragment = getSessionParam("hideGFragment");
-$hideGFragment = "Yes" if $hideGFragment eq "";
+    my $hideViruses = getSessionParam("hideViruses");
+    $hideViruses = "Yes" if $hideViruses eq "";
+    
+    my $hidePlasmids = getSessionParam("hidePlasmids");
+    $hidePlasmids = "Yes" if $hidePlasmids eq "";
+    
+    my $hideGFragment = getSessionParam("hideGFragment");
+    $hideGFragment = "Yes" if $hideGFragment eq "";
 
     my $xml_cgi = $cgi_url . '/xml.cgi';
     my $template = HTML::Template->new( filename => "$base_dir/genomeJsonThreeDiv.html" );
@@ -868,7 +872,7 @@ $hideGFragment = "Yes" if $hideGFragment eq "";
     $template->param( selectedGenome1Title => 'Find Genes In' );
     $template->param( selectedGenome2Title => 'With Homologs In' );
     $template->param( selectedGenome3Title => 'Without Homologs In' );
-    $template->param( from                 => '' );
+    $template->param( from                 => 'isolate' );
     $template->param( maxSelected2         => -1 );
     $template->param( maxSelected3         => -1 );
 
@@ -996,7 +1000,8 @@ $hideGFragment = "Yes" if $hideGFragment eq "";
     # function selection
     print "<h2>Function Display Options</h2>\n";
     print qq{
-<p> Include the following functions in results:
+<p> Include the following functions in results:<br/><br/>
+<input type="checkbox" value="Yes" name="functionName"/>Display applicable function name
 <table class='img'  border=1>        
 <tr class='img'><td class='img'><input type="checkbox" value="COG"  name="function"/></td><td class='img'>COG</td></tr>
 <tr class='img'><td class='img'><input type="checkbox" value="Enzyme" name="function"/></td><td class='img'>Enzyme</td></tr>
@@ -1009,31 +1014,30 @@ $hideGFragment = "Yes" if $hideGFragment eq "";
 </table>
     };
     print "<p>\n";
-#    print submit( -class => 'smdefbutton', -name => 'submit', -value => 'Go' );
-#    print nbsp(1);
-#    print reset( -class => 'smbutton' );
+    #print submit( -class => 'smdefbutton', -name => 'submit', -value => 'Go' );
+    #print nbsp(1);
+    #print reset( -class => 'smbutton' );
+
+    #if ( $myimg_job ) {
+    #    ### add computation on demand
+    #    print "<h2>Request Recomputation</h2>\n";
+    #    print "<p>\n"; 
+    #    print "You can request the phylogenetic profiler to be recomputed.\n";
+    #    print "<p>User Notes:";
+    #    print nbsp( 1 );
+    #    print "<input type='text' name='user_notes' value='' " .
+    #        "size='60' maxLength='800' />\n";
+    #    print "<br/>";
+    #    my $name = "_section_MyIMG_computePhyloProfOnDemand";
+    #    print submit(
+    #             -name  => $name,
+    #             -value => "Request Recomputation",
+    #             -class => "meddefbutton"
+    #             );
+    #    print "</p>\n";
+    #}
 
     printStatusLine( "loaded.", 2 );
-
-#    if ( $myimg_job ) {
-#    ### add computation on demand
-#    print "<h2>Request Recomputation</h2>\n";
-#    print "<p>\n"; 
-#    print "You can request the phylogenetic profiler to be recomputed.\n";
-#    print "<p>User Notes:";
-#    print nbsp( 1 );
-#    print "<input type='text' name='user_notes' value='' " .
-#        "size='60' maxLength='800' />\n";
-#    print "<br/>";
-#    my $name = "_section_MyIMG_computePhyloProfOnDemand";
-#    print submit(
-#             -name  => $name,
-#             -value => "Request Recomputation",
-#             -class => "meddefbutton"
-#             );
-#    print "</p>\n";
-#    }
-
     print end_form();
     GenomeListJSON::showGenomeCart($numTaxon);
 }
@@ -1736,6 +1740,7 @@ sub runJob {
     my $percWithoutHomologs = param("percWithoutHomologs");
     my $excludePseudo       = param("excludePseudo");
     my $compMethod          = param("compMethod");
+    
     my @functions           = param("function"); # COG Enzyme Pfam InterPro KOTerm Tigrfam Cassette KEGGMap
     my $functionsStr = join(',', @functions);
     my %functionsHash;
@@ -1743,6 +1748,8 @@ sub runJob {
         $functionsHash{$f} = $f;
     }
     
+    my $functionName        = param("functionName");
+    #print "functionName=$functionName<br/>\n";
 
     my $doPercentage        = 0;
     if (    $algorithm eq "percent"
@@ -1785,10 +1792,15 @@ sub runJob {
     } else {
         $s .= " (Please be patient.)" if $nTaxons > 100;
     }
-    print "$s\n";
+    print "$s";
+    if ( $functionName ne 'Yes' ) {
+        print "<br/>\n";
+        print "Only Function IDs are displayed.  Please go back and make the selection if applicable function names are desired.\n";
+    }
     print "</p>\n";
 
     printStartWorkingDiv();
+
     loadTaxonBinNames( $dbh, \%taxonBinOid2Name );
     loadObsoleteGenes($dbh);
     loadPseudoGenes($dbh) if $excludePseudo eq "Yes";
@@ -1812,23 +1824,23 @@ sub runJob {
     my $fromStmt_bin = "bin b, bin_scaffolds bs, gene g";
     # where clause
     my $where = qq{
-where g.taxon = ?
-and g.locus_type = ?
-and g.obsolete_flag = ?
+        where g.taxon = ?
+        and g.locus_type = ?
+        and g.obsolete_flag = ?
     };
 
     my $where_bin = qq{
-where g.taxon = ?
-and g.scaffold = bs.scaffold
-and bs.bin_oid = b.bin_oid
-and b.bin_oid = ? 
-and g.locus_type = ? 
-and g.obsolete_flag = ?
+        where g.taxon = ?
+        and g.scaffold = bs.scaffold
+        and bs.bin_oid = b.bin_oid
+        and b.bin_oid = ? 
+        and g.locus_type = ? 
+        and g.obsolete_flag = ?
     };
 
     
     # COG Enzyme Pfam InterPro KOTerm Tigrfam Cassette KEGGMap
-    if(exists $functionsHash{'COG'}) {
+    if (exists $functionsHash{'COG'}) {
         $colums .= ", gcg.cog";
         $fromStmt .= "\n left join gene_cog_groups gcg on g.gene_oid = gcg.gene_oid";
         $colums_bin .= $colums;
@@ -1838,7 +1850,7 @@ and g.obsolete_flag = ?
         $colums_bin .= ", 'na'";
     }
     
-    if(exists $functionsHash{'Enzyme'}) {
+    if (exists $functionsHash{'Enzyme'}) {
         $colums .= ", ge.enzymes";
         $fromStmt .= "\n left join gene_ko_enzymes ge on g.gene_oid = ge.gene_oid";
         $colums_bin .= $colums;
@@ -1848,7 +1860,7 @@ and g.obsolete_flag = ?
         $colums_bin .= ", 'na'";
     }
 
-    if(exists $functionsHash{'Pfam'}) {
+    if (exists $functionsHash{'Pfam'}) {
         $colums .= ", gpf.pfam_family";
         $fromStmt .= "\n left join gene_pfam_families gpf on g.gene_oid = gpf.gene_oid";
         $colums_bin .= $colums;
@@ -1858,7 +1870,7 @@ and g.obsolete_flag = ?
         $colums_bin .= ", 'na'";
     }
 
-    if(exists $functionsHash{'InterPro'}) {
+    if (exists $functionsHash{'InterPro'}) {
         $colums .= ", giih.iprid";
         $fromStmt .= "\n left join gene_img_interpro_hits giih on g.gene_oid = giih.gene_oid";
         $colums_bin .= $colums;
@@ -1868,11 +1880,11 @@ and g.obsolete_flag = ?
         $colums_bin .= ", 'na'";
     }
 
-    if(exists $functionsHash{'KOTerm'}) {
+    if (exists $functionsHash{'KOTerm'}) {
         $colums .= ", dgkmp.ko_terms";
         $fromStmt .= qq{
-left join dt_gene_ko_module_pwys dgkmp
-on g.gene_oid = dgkmp.gene_oid
+            left join dt_gene_ko_module_pwys dgkmp
+            on g.gene_oid = dgkmp.gene_oid
         };
         $colums_bin .= $colums;
         $fromStmt_bin = $fromStmt;        
@@ -1881,7 +1893,7 @@ on g.gene_oid = dgkmp.gene_oid
         $colums_bin .= ", 'na'";
     }
 
-    if(exists $functionsHash{'Tigrfam'}) {
+    if (exists $functionsHash{'Tigrfam'}) {
         $colums .= ", gtf.ext_accession";
         $fromStmt .= "\n left join gene_tigrfams gtf on g.gene_oid = gtf.gene_oid";
         $colums_bin .= $colums;
@@ -1891,7 +1903,7 @@ on g.gene_oid = dgkmp.gene_oid
         $colums_bin .= ", 'na'";
     }
 
-    if(exists $functionsHash{'Cassette'}) {
+    if (exists $functionsHash{'Cassette'}) {
         $colums .= ", gc.cassette_oid";
         $fromStmt .= "\n left join gene_cassette_genes gc on g.gene_oid = gc.gene";
         $colums_bin .= $colums;
@@ -1901,23 +1913,23 @@ on g.gene_oid = dgkmp.gene_oid
         $colums_bin .= ", 'na'";
     }
 
-    if(exists $functionsHash{'KEGGMap'}) {
+    if (exists $functionsHash{'KEGGMap'}) {
         $colums .= ", dgkmp.image_id, kp.pathway_name, km.module_name";
         if(exists $functionsHash{'KOTerm'}) {
             $fromStmt .= qq{
-left join kegg_module km
-on dgkmp.module_id = km.module_id            
-left join kegg_pathway kp
-on dgkmp.pathway_oid = kp.pathway_oid            
+                left join kegg_module km
+                on dgkmp.module_id = km.module_id            
+                left join kegg_pathway kp
+                on dgkmp.pathway_oid = kp.pathway_oid            
             };
         } else {
             $fromStmt .= qq{
-left join dt_gene_ko_module_pwys dgkmp
-on g.gene_oid = dgkmp.gene_oid
-left join kegg_module km
-on dgkmp.module_id = km.module_id
-left join kegg_pathway kp
-on dgkmp.pathway_oid = kp.pathway_oid            
+                left join dt_gene_ko_module_pwys dgkmp
+                on g.gene_oid = dgkmp.gene_oid
+                left join kegg_module km
+                on dgkmp.module_id = km.module_id
+                left join kegg_pathway kp
+                on dgkmp.pathway_oid = kp.pathway_oid            
             };
         }
         $colums_bin .= $colums;
@@ -1931,12 +1943,12 @@ on dgkmp.pathway_oid = kp.pathway_oid
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
 
     my $sql_taxon = qq{
-$colums
-$fromStmt
-$where
-$pseudoClause
-$rclause
-$imgClause
+        $colums
+        $fromStmt
+        $where
+        $pseudoClause
+        $rclause
+        $imgClause
     };
 
 
@@ -1950,13 +1962,12 @@ $imgClause
     #my $rclause   = WebUtil::urClause('g.taxon');
     #my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
     my $sql_bin = qq{
-$colums_bin
-$fromStmt_bin
-$where_bin
-$pseudoClause
-$rclause
-$imgClause
-
+        $colums_bin
+        $fromStmt_bin
+        $where_bin
+        $pseudoClause
+        $rclause
+        $imgClause
     };
     my @bindList_bin = ($toi_taxon_oid, $toi_bin_oid, 'CDS', 'No');
     if (scalar(@bindList_pseu) > 0) {
@@ -1973,6 +1984,7 @@ $imgClause
     	$sql = $sql_taxon;
         @bindList = @bindList_taxon;    	
     }
+    #print "sql=$sql.<br/>\n";
     print "Getting all gene information.<br/>\n";
     
     my $cur = execSqlBind( $dbh, $sql, \@bindList, 1 );
@@ -2063,6 +2075,55 @@ $imgClause
     }
     $cur->finish();
 
+    my @retrievedCogs       = retrieveUniques(\%toiGene2Cog);
+    my @retrievedEnzymes    = retrieveUniques(\%toiGene2Enzyme);
+    my @retrievedPfamIds    = retrieveUniques(\%toiGene2Pfam);
+    my @retrievedIprIds     = retrieveUniques(\%toiGene2Ipr);
+    my @retrievedKoIds      = retrieveUniques(\%toiGene2Ko);
+    my @retrievedTigrfamIds = retrieveUniques(\%toiGene2Tigrfam);
+    my @retrievedCassettes  = retrieveUniques(\%toiGene2Cassette);
+    my @retrievedKeggs      = retrieveUniques(\%toiGene2Kegg);
+
+    my %cogId2name_h;
+    my %enzymeNum2name_h;
+    my %pfamId2name_h;
+    my %iprId2name_h;
+    my %koId2name_h;
+    my %tigrfamId2name_h;
+    
+    if ( $functionName eq 'Yes') {
+        if (scalar(@retrievedCogs) > 0) {
+            QueryUtil::fetchCogIdNameHash( $dbh, \%cogId2name_h, @retrievedCogs);
+        }
+        if (scalar(@retrievedEnzymes) > 0) {
+            QueryUtil::fetchEnzymeNumberNameHash( $dbh, \%enzymeNum2name_h, @retrievedEnzymes);
+        }
+        if (scalar(@retrievedPfamIds) > 0) {
+            QueryUtil::fetchPfamIdNameHash( $dbh, \%pfamId2name_h, @retrievedPfamIds);
+        }
+        if (scalar(@retrievedIprIds) > 0) {
+            QueryUtil::fetchInterproIdNameHash( $dbh, \%iprId2name_h, @retrievedIprIds);
+        }
+        if (scalar(@retrievedKoIds) > 0) {
+            QueryUtil::fetchKoIdDefHash( $dbh, \%koId2name_h, @retrievedKoIds);
+        }    
+        if (scalar(@retrievedTigrfamIds) > 0) {
+            QueryUtil::fetchTigrfamIdNameHash( $dbh, \%tigrfamId2name_h, @retrievedTigrfamIds);
+        }        
+        #print "cogId2name_h:<br/>\n";
+        #print Dumper(\%cogId2name_h)."<br/>\n";
+        #print "enzymeNum2name_h:<br/>\n";
+        #print Dumper(\%enzymeNum2name_h)."<br/>\n";
+        #print "pfamId2name_h:<br/>\n";
+        #print Dumper(\%pfamId2name_h)."<br/>\n";
+        #print "iprId2name_h:<br/>\n";
+        #print Dumper(\%iprId2name_h)."<br/>\n";
+        #print "koId2name_h:<br/>\n";
+        #print Dumper(\%koId2name_h)."<br/>\n";
+        #print "tigrfamId2name_h:<br/>\n";
+        #print Dumper(\%tigrfamId2name_h)."<br/>\n";
+    }        
+
     printEndWorkingDiv();
     print "<p>\n";
 
@@ -2152,9 +2213,9 @@ $imgClause
     }
 
     ## Load genes with no function and no similarity, unique genes in IMG.
-#    my %uniqueGenes;
-#    loadUniqueGenes( $dbh, $toi, \%toiBinGenes, \%uniqueGenes )
-#      if !$img_lite;
+    #my %uniqueGenes;
+    #loadUniqueGenes( $dbh, $toi, \%toiBinGenes, \%uniqueGenes )
+    #  if !$img_lite;
 
     ## Print out results.
     my @keys           = sort( keys(%$toiGenes_ref) );
@@ -2172,14 +2233,22 @@ $imgClause
     my $keggCount      = 0;
 
     # Get the unique counts 
-    my $uniqCogs       = countUniques(\%toiGene2Cog);
-    my $uniqEnzymes    = countUniques(\%toiGene2Enzyme);
-    my $uniqPfams      = countUniques(\%toiGene2Pfam);
-    my $uniqIprs       = countUniques(\%toiGene2Ipr);
-    my $uniqKos        = countUniques(\%toiGene2Ko);
-    my $uniqTigrfams   = countUniques(\%toiGene2Tigrfam);
-    my $uniqCassettes  = countUniques(\%toiGene2Cassette);
-    my $uniqKeggs      = countUniques(\%toiGene2Kegg);
+    #my $uniqCogs       = countUniques(\%toiGene2Cog);
+    #my $uniqEnzymes    = countUniques(\%toiGene2Enzyme);
+    #my $uniqPfams      = countUniques(\%toiGene2Pfam);
+    #my $uniqIprs       = countUniques(\%toiGene2Ipr);
+    #my $uniqKos        = countUniques(\%toiGene2Ko);
+    #my $uniqTigrfams   = countUniques(\%toiGene2Tigrfam);
+    #my $uniqCassettes  = countUniques(\%toiGene2Cassette);
+    #my $uniqKeggs      = countUniques(\%toiGene2Kegg);
+    my $uniqCogs        = scalar(@retrievedCogs);
+    my $uniqEnzymes     = scalar(@retrievedEnzymes);
+    my $uniqPfams       = scalar(@retrievedPfamIds);
+    my $uniqIprs        = scalar(@retrievedIprIds);
+    my $uniqKos         = scalar(@retrievedKoIds);
+    my $uniqTigrfams    = scalar(@retrievedTigrfamIds);
+    my $uniqCassettes   = scalar(@retrievedCassettes);
+    my $uniqKeggs       = scalar(@retrievedKeggs);
 
     my $tm               = time();
     my $cacheFile        = "phyloProfile.$tm.$$.tab.txt";
@@ -2324,9 +2393,9 @@ IMG
 
     my $classStr;
     if ($yui_tables) {
-	$classStr = "yui-dt-first img-hor-bgColor";
+    	$classStr = "yui-dt-first img-hor-bgColor";
     } else {
-	$classStr = "img";
+    	$classStr = "img";
     }
 
     # "Total number of genes"
@@ -2353,29 +2422,29 @@ IMG
     print "</tr>\n";
 
     my $rowIdx = 0; # keep track of table rows
-    if(exists $functionsHash{'COG'}) {
-    printChartRow( "COG", "c", $uniqCogs, $cogCount, $geneCount, $cacheFile, $rowIdx );
-    $rowIdx++;
+    if (exists $functionsHash{'COG'}) {
+        printChartRow( "COG", "c", $uniqCogs, $cogCount, $geneCount, $cacheFile, $rowIdx );
+        $rowIdx++;
     }
-    if(exists $functionsHash{'Enzyme'}) {
-    printStatRow( "Enzyme", "e", $uniqEnzymes, $enzymeCount, $geneCount, $cacheFile, $rowIdx );
-    $rowIdx++;
+    if (exists $functionsHash{'Enzyme'}) {
+        printStatRow( "Enzyme", "e", $uniqEnzymes, $enzymeCount, $geneCount, $cacheFile, $rowIdx );
+        $rowIdx++;
     }
-    if(exists $functionsHash{'Pfam'}) {
-    printChartRow( "Pfam", "p", $uniqPfams, $pfamCount, $geneCount, $cacheFile, $rowIdx );
-    $rowIdx++;
+    if (exists $functionsHash{'Pfam'}) {
+        printChartRow( "Pfam", "p", $uniqPfams, $pfamCount, $geneCount, $cacheFile, $rowIdx );
+        $rowIdx++;
     }
-    if(exists $functionsHash{'InterPro'}) {
-    printStatRow( "InterPro", "i", $uniqIprs, $iprCount, $geneCount, $cacheFile, $rowIdx );
-    $rowIdx++;
+    if (exists $functionsHash{'InterPro'}) {
+        printStatRow( "InterPro", "i", $uniqIprs, $iprCount, $geneCount, $cacheFile, $rowIdx );
+        $rowIdx++;
     }
-    if(exists $functionsHash{'KOTerm'}) {
-    printStatRow( "KO Term",  "k", $uniqKos, $koCount,  $geneCount, $cacheFile, $rowIdx );
-    $rowIdx++;
+    if (exists $functionsHash{'KOTerm'}) {
+        printStatRow( "KO Term",  "k", $uniqKos, $koCount,  $geneCount, $cacheFile, $rowIdx );
+        $rowIdx++;
     }
-    if(exists $functionsHash{'Tigrfam'}) {
-    printChartRow( "Tigrfam", "t", $uniqTigrfams, $tigrfamCount, $geneCount, $cacheFile, $rowIdx );
-    $rowIdx++;
+    if (exists $functionsHash{'Tigrfam'}) {
+        printChartRow( "Tigrfam", "t", $uniqTigrfams, $tigrfamCount, $geneCount, $cacheFile, $rowIdx );
+        $rowIdx++;
     }
 #    printStatRow( "No Functional Hit",
 #                  "nf", "", $noFuncHitCount, $geneCount, $cacheFile, $rowIdx );
@@ -2383,12 +2452,12 @@ IMG
 #    printStatRow( "Unique In IMG", "u", "", $uniqueCount, $geneCount, $cacheFile, $rowIdx)if !$img_lite;
 #    $rowIdx++ if !$img_lite;
     
-    if(exists $functionsHash{'Cassette'}) {
-    printStatRow( "Cassette", "ca", $uniqCassettes, $cassetteCount, $geneCount, $cacheFile, $rowIdx );
-    $rowIdx++;
+    if (exists $functionsHash{'Cassette'}) {
+        printStatRow( "Cassette", "ca", $uniqCassettes, $cassetteCount, $geneCount, $cacheFile, $rowIdx );
+        $rowIdx++;
     }
-    if(exists $functionsHash{'KEGGMap'}) {
-    printStatRow( "KEGG Map", "ke", $uniqKeggs, $keggCount, $geneCount, $cacheFile, $rowIdx );
+    if (exists $functionsHash{'KEGGMap'}) {
+        printStatRow( "KEGG Map", "ke", $uniqKeggs, $keggCount, $geneCount, $cacheFile, $rowIdx );
     }
     print "</table>\n";
     print "</div>\n" if $yui_tables;
@@ -2397,8 +2466,33 @@ IMG
     ## Print out table with button for more results.
     my $totalRows = $rowId;
     printPhyloProfileResultsPage( $cacheResultsFile, 0, $totalRows,
-                                  $doPercentage, \@neg_reference_oids, scalar(@pos_reference_oids), $functionsStr );
+                                  $doPercentage, \@neg_reference_oids, scalar(@pos_reference_oids), $functionsStr,
+                                  \%cogId2name_h, \%enzymeNum2name_h, 
+                                  \%pfamId2name_h, \%iprId2name_h, \%koId2name_h, \%tigrfamId2name_h );
 
+}
+
+############################################################################
+# retrieveUniques - Retrieve the unique of COGs, pfams, etc.
+#   Input:
+#     toiGene_hash - hash of gene_oid => function_id.
+#                   See %toiGene2Cog, %toiGene2Pfam, etc. in runJob() above
+############################################################################
+sub retrieveUniques {
+    my ($toiGene_hash) = @_;
+
+    my @uniques;
+    
+    for my $gene (keys %$toiGene_hash) {
+        # $toiGene_hash->{$gene} can have multiple IDs
+        # that are separated by space, so split them
+        # +BSJ 14/12/11
+        push @uniques, split(/ /, $toiGene_hash->{$gene});
+    }
+    my %hash = WebUtil::array2Hash(@uniques);
+    @uniques = keys(%hash);
+
+    return (@uniques);
 }
 
 ############################################################################
@@ -2409,16 +2503,18 @@ IMG
 ############################################################################
 sub countUniques {
     my ($toiGene_hash) = @_;
+
     my @uniques;
     
     for my $gene (keys %$toiGene_hash) {
-	# $toiGene_hash->{$gene} can have multiple IDs
-	# that are separated by space, so split them
-	# +BSJ 14/12/11
-	push @uniques, split(/ /, $toiGene_hash->{$gene});
+    	# $toiGene_hash->{$gene} can have multiple IDs
+    	# that are separated by space, so split them
+    	# +BSJ 14/12/11
+    	push @uniques, split(/ /, $toiGene_hash->{$gene});
     }
     my %hash = WebUtil::array2Hash(@uniques);
     @uniques = keys(%hash);
+
     return scalar(@uniques);
 }
 
@@ -4341,14 +4437,17 @@ sub printPhyloProfileResultStat {
 ############################################################################
 sub printPhyloProfileResultsPage {
     my ( $cacheFile, $startPos, $totalRows, $doPercentage,
-         $neg_reference_oids_aref, $showPercIdCol, $functionsStr )
+         $neg_reference_oids_aref, $showPercIdCol, $functionsStr,
+         $cogId2name_href, $enzymeNum2name_href, 
+         $pfamId2name_href, $iprId2name_href, $koId2name_href, $tigrfamId2name_href)
       = @_;
+      
     $cacheFile    = param("cf")           if $cacheFile    eq "";
     $startPos     = param("startPos")     if $startPos     eq "";
     $totalRows    = param("totalRows")    if $totalRows    eq "";
     $doPercentage = param("doPercentage") if $doPercentage eq "";
     $functionsStr = param('functionsStr') if $functionsStr eq "";
-    my @functions           = split(',', $functionsStr);
+    my @functions = split(',', $functionsStr);
     my %functionsHash;
     foreach my $f (@functions) {
         $functionsHash{$f} = $f;
@@ -4436,20 +4535,20 @@ sub printPhyloProfileResultsPage {
     $it->addColSpec("Select");
     
     $it->addColSpec( "Result",     "number asc", "right" );
-    $it->addColSpec( "Gene<br/>Object<br/>ID", "number asc", "right" );
+    $it->addColSpec( "Gene ID", "number asc", "right" );
     $it->addColSpec( "Locus Tag",   "char asc", "left" );
-    $it->addColSpec( "Gene Name",   "char asc", "left" );
+    $it->addColSpec( "Gene Name", "char asc", "left" );
     $it->addColSpec("Length", "number asc", "right" );
-    $it->addColSpec("COG") if exists $functionsHash{'COG'};
-    $it->addColSpec("Enzyme") if exists $functionsHash{'Enzyme'};
-    $it->addColSpec("Pfam") if exists $functionsHash{'Pfam'};
-    $it->addColSpec("InterPro") if exists $functionsHash{'InterPro'};
-    $it->addColSpec("KO Term") if exists $functionsHash{'KOTerm'};
-    $it->addColSpec("Tigrfam") if exists $functionsHash{'Tigrfam'};
-    $it->addColSpec("Gene Cassette ID") if exists $functionsHash{'Cassette'};
-    if(exists $functionsHash{'KEGGMap'}) {
-    $it->addColSpec("KEGG Map Name", "", "", "", "", "", (200,400));
-    $it->addColSpec("KEGG Module Name", "", "", "", "", "", (200,400));
+    $it->addColSpec("COG", "char asc", "left") if exists $functionsHash{'COG'};
+    $it->addColSpec("Enzyme", "char asc", "left") if exists $functionsHash{'Enzyme'};
+    $it->addColSpec("Pfam", "char asc", "left") if exists $functionsHash{'Pfam'};
+    $it->addColSpec("InterPro", "char asc", "left") if exists $functionsHash{'InterPro'};
+    $it->addColSpec("KO Term", "char asc", "left") if exists $functionsHash{'KOTerm'};
+    $it->addColSpec("Tigrfam", "char asc", "left") if exists $functionsHash{'Tigrfam'};
+    $it->addColSpec("Gene Cassette ID", "number asc", "right") if exists $functionsHash{'Cassette'};
+    if (exists $functionsHash{'KEGGMap'}) {
+        $it->addColSpec("KEGG Map Name", "char asc", "left", "", "", "", (200,400));
+        $it->addColSpec("KEGG Module Name", "char asc", "left", "", "", "", (200,400));
     }
     if ($doPercentage) {
         $it->addColSpec("With<br/>Homologs");
@@ -4499,7 +4598,7 @@ sub printPhyloProfileResultsPage {
         $locus_tag = "-" if blankStr($locus_tag);
         $r .= $locus_tag . $sd . $locus_tag . "\t";
 
-	$keggnames =~ s/<br><br>$//;
+    	$keggnames =~ s/<br><br>$//;
         $gene_display_name = "-" if blankStr($gene_display_name);
         $cogs      = "-" if blankStr($cogs);
         $enzymes   = "-" if blankStr($enzymes);
@@ -4513,16 +4612,16 @@ sub printPhyloProfileResultsPage {
 
         $r .= $gene_display_name . $sd . $gene_display_name . "\t";
         $r .= $aa_seq_length . $sd . $aa_seq_length . "\t";
-        $r .= $cogs . $sd . WebUtil::functionIdToUrl($cogs) . "\t" if exists $functionsHash{'COG'};
-        $r .= $enzymes . $sd . WebUtil::functionIdToUrl($enzymes) . "\t" if exists $functionsHash{'Enzyme'};
-        $r .= $pfams . $sd . WebUtil::functionIdToUrl($pfams) . "\t" if exists $functionsHash{'Pfam'};
-        $r .= $iprs . $sd . WebUtil::functionIdToUrl($iprs) . "\t" if exists $functionsHash{'InterPro'};
-        $r .= $kos . $sd . WebUtil::functionIdToUrl($kos, '', $gene_oid) . "\t" if exists $functionsHash{'KOTerm'};
-        $r .= $tigrfams . $sd . WebUtil::functionIdToUrl($tigrfams) . "\t" if exists $functionsHash{'Tigrfam'};
-        $r .= $cassettes . $sd . WebUtil::functionIdToUrl($cassettes, 'cassette') . "\t" if exists $functionsHash{'Cassette'};
-        if(exists $functionsHash{'KEGGMap'}) {
-        $r .= $keggnames . $sd . $keggnames . "\t";
-        $r .= $keggmodules . $sd . $keggmodules . "\t";
+        $r .= $cogs . $sd . functionIdToUrl($cogs, '', '', $cogId2name_href) . "\t" if exists $functionsHash{'COG'};
+        $r .= $enzymes . $sd . functionIdToUrl($enzymes, '', '', $enzymeNum2name_href) . "\t" if exists $functionsHash{'Enzyme'};
+        $r .= $pfams . $sd . functionIdToUrl($pfams, '', '', $pfamId2name_href) . "\t" if exists $functionsHash{'Pfam'};
+        $r .= $iprs . $sd . functionIdToUrl($iprs, '', '', $iprId2name_href) . "\t" if exists $functionsHash{'InterPro'};
+        $r .= $kos . $sd . functionIdToUrl($kos, '', $gene_oid, $koId2name_href) . "\t" if exists $functionsHash{'KOTerm'};
+        $r .= $tigrfams . $sd . functionIdToUrl($tigrfams, '', '', $tigrfamId2name_href) . "\t" if exists $functionsHash{'Tigrfam'};
+        $r .= $cassettes . $sd . functionIdToUrl($cassettes, 'cassette') . "\t" if exists $functionsHash{'Cassette'};
+        if (exists $functionsHash{'KEGGMap'}) {
+            $r .= $keggnames . $sd . $keggnames . "\t";
+            $r .= $keggmodules . $sd . $keggmodules . "\t";
         }
         if ($doPercentage) {
             $r .= $wHomologsPerc . $sd . $wHomologsPerc . "\t";
@@ -4551,6 +4650,75 @@ sub printPhyloProfileResultsPage {
     }
 
     print end_form();
+}
+
+#
+# convert a list of function ids to a url
+# the list is plain text separated by space
+# return string of html <a> tags
+# otherwise id is returned back
+#
+sub functionIdToUrl {
+    my ( $id, $type, $gene_oid, $id2name_href ) = @_;
+
+    my $ko_url = $ko_base_url . '&gene_oid=' . $gene_oid . '&ko_id=';
+    my $cassette_url  = $cassette_base_url . '&cassette_oid=';
+
+    my $urls;
+
+    # sometimes the id is the list of ids separate by a space
+    my @ids = split( /\s/, $id );
+    if ( $id =~ /^COG/i ) {
+        $urls = processIdToUrl( \@ids, $cog_base_url, $id2name_href );
+    } elsif ( $id =~ /^EC/i ) {
+        $urls = processIdToUrl( \@ids, $enzyme_base_url, $id2name_href );
+    } elsif ( $id =~ /^pfam/i ) {
+        $urls = processIdToUrl( \@ids, $pfam_base_url, $id2name_href, 1 );
+    } elsif ( $id =~ /^TIGR/i ) {
+        $urls = processIdToUrl( \@ids, $tigrfam_base_url, $id2name_href );
+    } elsif ( $id =~ /^IPR/i ) {
+        $urls = processIdToUrl( \@ids, $ipr_base_url, $id2name_href );
+    } elsif ( $id =~ /^KO/i ) {
+        $urls = processIdToUrl( \@ids, $ko_url, $id2name_href );
+    } elsif ( $type eq 'cassette' ) {
+        $urls = alink( $cassette_url . $id, $id );
+    }
+
+    if ( $urls ne '' ) {
+        return $urls;
+    } else {
+        return $id;
+    }
+}
+
+sub processIdToUrl {
+    my ( $ids_ref, $url, $id2name_href, $isPfam ) = @_;
+
+    my $urls;
+
+    my $cnt = 0;
+    foreach my $i (@$ids_ref) {
+        $cnt++;
+        my $name = $id2name_href->{$i};
+        if ( $name ) {
+            $name = ' - ' . $name;
+            if ( $cnt < scalar(@$ids_ref) ) {
+                $name .= "<br/>";
+            }
+        }
+        my $tmp;
+        if ( $isPfam ) {
+            my $o = $i;
+            $o =~ s/pfam/PF/;
+            $tmp = alink( $pfam_base_url . $o, $i );            
+        }
+        else {
+            $tmp = alink( $url . $i, $i );
+        }
+        $urls .= " $tmp" . $name;
+    }
+        
+    return $urls;
 }
 
 

@@ -1,7 +1,7 @@
 #
 #
 #
-# $Id: ScaffoldSearch.pm 34267 2015-09-16 20:47:08Z jinghuahuang $
+# $Id: ScaffoldSearch.pm 35780 2016-06-15 20:41:20Z klchu $
 
 package ScaffoldSearch;
 use POSIX qw(ceil floor); 
@@ -127,10 +127,14 @@ sub printResults {
             #if ( $scaffoldId ne '' ) {
             #    $scaffoldId =~ s/\s+|,/ /g;
             #    @scaffoldOids = split( / /, $scaffoldId );
-            #    #print "printResults() scaffold Ids: @scaffoldOids<br>\n";
             #}
+            #print "printResults() scaffold Ids: @scaffoldOids<br>\n";
+
+            my @taxonOids     = param("selectedGenome1");
+            my $data_type     = param('q_data_type');
+
             ( $searchResults_ref, $trunc ) 
-                = processIdSearchResults( $dbh, \@scaffoldOids );
+                = processIdSearchResults( $dbh, \@scaffoldOids, \@taxonOids, $data_type );
         }
         elsif ( $searchFilter eq 'scaffoldName' ) {
             WebUtil::processSearchTermCheck($searchTerm, 'Scaffold Name');
@@ -276,7 +280,7 @@ sub printResults {
 }
 
 sub processIdSearchResults {
-    my ( $dbh, $scaffoldOids_ref ) = @_;
+    my ( $dbh, $scaffoldOids_ref, $taxonOids_ref, $data_type ) = @_;
 
     my @searchResults;
     my $trunc = 0;
@@ -339,41 +343,75 @@ sub processIdSearchResults {
             }
         }
     }
-    
+
     if ( !$trunc 
         && (scalar(@notFoundOids) > 0 || scalar(@$metaOids_ref) > 0) ) {
         my @metaOids;
         push(@metaOids, @notFoundOids) if ( scalar(@notFoundOids) > 0 );
         push(@metaOids, @$metaOids_ref) if ( scalar(@$metaOids_ref) > 0 );
-        #print "processIdSearchResults() metaOids: @metaOids, size=" . scalar(@metaOids) . "<br>\n";
-
-        my ($taxonDataType2metaOids_href, $taxons_href) 
-            = findMetaScaf2TaxonMap( $dbh, @metaOids );
-
-        my @taxonOids = keys %$taxons_href;
-        my ( $taxon_name_href, $genome_type_href ) 
-            = QueryUtil::fetchTaxonOid2NameGenomeTypeHash( $dbh, \@taxonOids );
+        #print "processIdSearchResults() 1 metaOids: @metaOids, size=" . scalar(@metaOids) . "<br>\n";
 
         timeout( 60 * $merfs_timeout_mins ); 
-        my $start_time  = time();
-        my $timeout_msg = ""; 
-    
         printStartWorkingDiv(); 
 
-        foreach my $taxon_oid_data_type (keys %$taxonDataType2metaOids_href) {
-            #print "processIdSearchResults() taxon_oid_data_type=$taxon_oid_data_type<br>\n";
-            if ( ! $trunc ) {
-                my $meta_oids_ref = $taxonDataType2metaOids_href->{$taxon_oid_data_type};
-                my ( $taxon_oid, $data_type ) = split( / /, $taxon_oid_data_type );
-                ($trunc, $count) = processScaffoldMetagenome( $dbh, 
-                    $taxon_oid, $data_type, $taxon_name_href, $genome_type_href, $meta_oids_ref,
-                    \@searchResults, $maxGeneListResults, $trunc, $count, $start_time );                
+        if (scalar(@$taxonOids_ref) > 0 ) {
+            my ( $taxon_name_href, $genome_type_href ) 
+                = QueryUtil::fetchTaxonOid2NameGenomeTypeHash( $dbh, $taxonOids_ref );
+    
+            my %foundOids_h;
+            my $start_time  = time();
+            foreach my $taxon_oid (@$taxonOids_ref) {
+                #print "processIdSearchResults() taxon_oid=$taxon_oid<br>\n";
+                if ( ! $trunc ) {
+                    ($trunc, $count) = processScaffoldMetagenome( $dbh, 
+                        $taxon_oid, $data_type, $taxon_name_href, $genome_type_href, 
+                        \@metaOids, \%foundOids_h, 
+                        \@searchResults, $maxGeneListResults, $trunc, $count, $start_time );                
+                }
+            } # end for loop
+    
+            if ( scalar(keys %foundOids_h) < scalar(@metaOids) ) {
+                @notFoundOids = ();
+                foreach my $oid (@metaOids) {
+                    if ( $oid && (! $foundOids_h{$oid}) ) {
+                        push(@notFoundOids, $oid);
+                    }
+                }
+                @metaOids = @notFoundOids;
             }
-        } # end for loop
+            else {
+                @notFoundOids = ();
+                @metaOids = ();
+            }
+        }
+
+        if ( !$trunc && scalar(@metaOids) > 0 ) {
+            #print "processIdSearchResults() 2 metaOids: @metaOids, size=" . scalar(@metaOids) . "<br>\n";
+    
+            my ($taxonDataType2metaOids_href, $taxons_href) 
+                = findMetaScaf2TaxonMap( $dbh, @metaOids );
+    
+            my @taxonOids = keys %$taxons_href;
+            my ( $taxon_name_href, $genome_type_href ) 
+                = QueryUtil::fetchTaxonOid2NameGenomeTypeHash( $dbh, \@taxonOids );
+    
+            my %foundOids_h;
+            my $start_time  = time();
+            foreach my $taxon_oid_data_type (keys %$taxonDataType2metaOids_href) {
+                #print "processIdSearchResults() taxon_oid_data_type=$taxon_oid_data_type<br>\n";
+                if ( ! $trunc ) {
+                    my $meta_oids_ref = $taxonDataType2metaOids_href->{$taxon_oid_data_type};
+                    my ( $taxon_oid, $data_type ) = split( / /, $taxon_oid_data_type );
+                    ($trunc, $count) = processScaffoldMetagenome( $dbh, 
+                        $taxon_oid, $data_type, $taxon_name_href, $genome_type_href, 
+                        $meta_oids_ref, \%foundOids_h, 
+                        \@searchResults, $maxGeneListResults, $trunc, $count, $start_time );                
+                }
+            } # end for loop
+        }
 
         printEndWorkingDiv(); 
     }
-    
 
     return ( \@searchResults, $trunc );
 }
@@ -456,7 +494,8 @@ sub findMetaScaf2TaxonMap {
 
 
 sub processScaffoldMetagenome {
-    my ( $dbh, $taxon_oid, $data_type, $taxon_name_href, $genome_type_href, $oids_ref,
+    my ( $dbh, $taxon_oid, $data_type, $taxon_name_href, $genome_type_href, 
+        $oids_ref, $foundOids_href,
         $results_aref, $max_rows, $trunc, $count, $start_time,
         $readDepthLow, $readDepthHigh, 
         $lineagePercentLow, $lineagePercentHigh, $lineagePerClause, $has_lineage_cond, 
@@ -698,6 +737,10 @@ sub processScaffoldMetagenome {
                                     next;
                                 }
                             }
+                            
+                            if ( $foundOids_href && defined($foundOids_href)) {
+                                $foundOids_href->{$scaffold_oid} = 1;
+                            }
                         
                             my $workspace_id = "$taxon_oid $data_type $scaffold_oid";
                             my $scaffold_name = $scaffold_oid;
@@ -783,6 +826,10 @@ sub processScaffoldMetagenome {
                         if ( ! $lin_res ) {
                             next;
                         }
+                    }
+
+                    if ( $foundOids_href && defined($foundOids_href)) {
+                        $foundOids_href->{$scaffold_oid} = 1;
                     }
                         
                     my $workspace_id = "$taxon_oid $data_type $scaffold_oid";
@@ -1061,24 +1108,26 @@ sub printResultPage {
         if ( ! WebUtil::isInt($workspace_id) ) {
             my ($t2, $d2, $g2) = split(/ /, $workspace_id);
             $scaffold_oid = $g2;
-            $url2 = "$main_cgi?section=MetaDetail" 
+            $url2 = "$main_cgi?section=MetaScaffoldDetail" 
                 . "&page=metaScaffoldDetail" 
                 . "&scaffold_oid=$scaffold_oid" 
                 . "&taxon_oid=$t2&data_type=$d2";
-            $url3 = "$main_cgi?section=MetaDetail" 
+            $url3 = "$main_cgi?section=MetaScaffoldDetail" 
                 . "&page=metaScaffoldGenes" 
                 . "&scaffold_oid=$scaffold_oid" 
                 . "&taxon_oid=$t2&data_type=$d2";
             $scaf_len_url = "$main_cgi?section=MetaScaffoldGraph" 
                 . "&page=metaScaffoldGraph" 
                 . "&scaffold_oid=$scaffold_oid" 
-                . "&taxon_oid=$t2&data_type=$d2";
+                . "&taxon_oid=$t2&data_type=$d2"
+                . "&start_coord=1&end_coord=$seq_length"
+                . "&seq_length=$seq_length";
         }
         else {
             $scaffold_oid = $workspace_id;
-            $url2 = "$main_cgi?section=ScaffoldCart" 
+            $url2 = "$main_cgi?section=ScaffoldDetail" 
                 . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
-            $url3 = "$main_cgi?section=ScaffoldCart" 
+            $url3 = "$main_cgi?section=ScaffoldDetail" 
                 . "&page=scaffoldGenes&scaffold_oid=$scaffold_oid";
             $scaf_len_url = "$main_cgi?section=ScaffoldGraph"
                 . "&page=scaffoldGraph&scaffold_oid=$scaffold_oid"
@@ -1240,7 +1289,8 @@ sub findScaffoldMerfs {
         foreach my $taxon_oid (@$taxonOids_aref) {
             if ( ! $trunc ) {
                 ($trunc, $count) = processScaffoldMetagenome( $dbh, 
-                    $taxon_oid, $data_type, $taxon_name_href, $genome_type_href, '',
+                    $taxon_oid, $data_type, $taxon_name_href, $genome_type_href, 
+                    '', '',
                     $results_aref, $max_rows, $trunc, $count, $start_time,
                     $readDepthLow, $readDepthHigh, 
                     $lineagePercentLow, $lineagePercentHigh, $lineagePerClause, $has_lineage_cond, 
@@ -1594,7 +1644,7 @@ sub printSearchForm {
     my $template = HTML::Template->new( filename => "$base_dir/ScaffoldSearch.html" );
     my $searchNote = qq{
         <p>
-        Find scaffolds in selected genomes.  It's required to add selections into "<b>Selected Genomes</b>" unless blocked.
+        Find scaffolds in selected genomes.  It's required to add selections into "<b>Selected Genomes</b>" when 'Scaffold Statistics Parameters' selected.
     };
     if ($include_metagenomes) {
         $searchNote .= qq{
@@ -1717,36 +1767,80 @@ sub printJavaScript {
             showOrHideArray[0][1] = "scaffoldName";
             showOrHideArray[0][2] = "extAccession"; 
 
+            var hideAreaArray_scaffoldId = ["statPramTableRow"];
+            var showAreaArray_scaffoldId = ["keywordTableRow", "genomeFilterArea"];
             var hideAreaArray = ["statPramTableRow", "genomeFilterArea"];
             var showAreaArray = ["keywordTableRow"];
 
             YAHOO.util.Event.on("toHide", "change", function(e) {
-                for (var i=0; i <hideAreaArray.length; i++) {
-                    var hideArea = hideAreaArray[i];
-                    if ( hideArea != undefined && hideArea != null && hideArea != '' ) {
-                        determineHideDisplayType('toHide', hideArea);
+
+                var obj = document.getElementById('toHide');
+                if ( obj != undefined && obj != null ) {
+                    var selectedVal = obj.options[obj.selectedIndex].value;
+                    if ( selectedVal != undefined && selectedVal != null && selectedVal === "scaffoldId" ) {
+                        for (var i=0; i <hideAreaArray_scaffoldId.length; i++) {
+                            var hideArea = hideAreaArray_scaffoldId[i];
+                            if ( hideArea != undefined && hideArea != null && hideArea != '' ) {
+                                determineHideDisplayType('toHide', hideArea);
+                            }
+                        }
+                        for (var i=0; i <showAreaArray_scaffoldId.length; i++) {
+                            var showArea = showAreaArray_scaffoldId[i];
+                            if ( showArea != undefined && showArea != null && showArea != '' ) {
+                                determineShowDisplayType('toHide', showArea);
+                            }
+                        }
                     }
-                }
-                for (var i=0; i <showAreaArray.length; i++) {
-                    var showArea = showAreaArray[i];
-                    if ( showArea != undefined && showArea != null && showArea != '' ) {
-                        determineShowDisplayType('toHide', showArea);
+                    else {
+                        for (var i=0; i <hideAreaArray.length; i++) {
+                            var hideArea = hideAreaArray[i];
+                            if ( hideArea != undefined && hideArea != null && hideArea != '' ) {
+                                determineHideDisplayType('toHide', hideArea);
+                            }
+                        }
+                        for (var i=0; i <showAreaArray.length; i++) {
+                            var showArea = showAreaArray[i];
+                            if ( showArea != undefined && showArea != null && showArea != '' ) {
+                                determineShowDisplayType('toHide', showArea);
+                            }
+                        }
                     }
                 }
             });
 
             window.onload = function() {
                 //window.alert("window.onload");
-                for (var i=0; i <hideAreaArray.length; i++) {
-                    var hideArea = hideAreaArray[i];
-                    if ( hideArea != undefined && hideArea != null && hideArea != '' ) {
-                        determineHideDisplayType('toHide', hideArea);
+
+                var obj = document.getElementById('toHide');
+                if ( obj != undefined && obj != null ) {
+                    var selectedVal = obj.options[obj.selectedIndex].value;
+                    if ( selectedVal != undefined && selectedVal != null && selectedVal === "scaffoldId" ) {
+                        for (var i=0; i <hideAreaArray_scaffoldId.length; i++) {
+                            var hideArea = hideAreaArray_scaffoldId[i];
+                            if ( hideArea != undefined && hideArea != null && hideArea != '' ) {
+                                determineHideDisplayType('toHide', hideArea);
+                            }
+                        }
+                        for (var i=0; i <showAreaArray_scaffoldId.length; i++) {
+                            var showArea = showAreaArray_scaffoldId[i];
+                            if ( showArea != undefined && showArea != null && showArea != '' ) {
+                                determineShowDisplayType('toHide', showArea);
+                            }
+                        }
                     }
-                }
-                for (var i=0; i <showAreaArray.length; i++) {
-                    var showArea = showAreaArray[i];
-                    if ( showArea != undefined && showArea != null && showArea != '' ) {
-                        determineShowDisplayType('toHide', showArea);
+                    else {
+                        for (var i=0; i <hideAreaArray.length; i++) {
+                            var hideArea = hideAreaArray[i];
+                            if ( hideArea != undefined && hideArea != null && hideArea != '' ) {
+                                determineHideDisplayType('toHide', hideArea);
+                            }
+                        }
+                        for (var i=0; i <showAreaArray.length; i++) {
+                            var showArea = showAreaArray[i];
+                            if ( showArea != undefined && showArea != null && showArea != '' ) {
+                                determineShowDisplayType('toHide', showArea);
+                            }
+                        }
                     }
                 }
             }

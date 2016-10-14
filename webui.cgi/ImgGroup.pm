@@ -817,6 +817,7 @@ sub showGroupMemberSection {
     if ( $can_update || $my_role ) {
 	print "<h4>Share Genomes with Group Members</h4>\n";
 	print "<p><b>Note:</b> This option is for new sharings only. It does <u>not</u> revoke previousely granted access permissions. Contact us if you wish to revoke any access permission.\n";
+	print "<p><input type='checkbox' name='share_with_owner' value='Yes' /> Share with owner?\t";
 	print "<p>Please enter IMG OIDs (separated by ,): \n"; 
 	print nbsp(3); 
 	print "<input type='text' name='img_taxons' value='' size='80' maxLength='400'/>\n"; 
@@ -1837,6 +1838,16 @@ sub shareGenomesWithMembers {
 
     ## check users
     my @members = param('member_oid');
+    my $share_with_owner = param('share_with_owner');
+    if ( $share_with_owner eq 'Yes' ) {
+	my $sql = "select lead from img_group where group_id = ?";
+	my $cur = execSql( $dbh, $sql, $verbose, $group_id );
+	my ($group_lead) = $cur->fetchrow();
+	$cur->finish();
+	if ( $group_lead ) {
+	    push @members, ( $group_lead );
+	}
+    }
     if ( scalar(@members) == 0 ) {
 	WebUtil::webError("No members have been selected for sharing.");
 	return;
@@ -1883,6 +1894,47 @@ sub shareGenomesWithMembers {
 	    if ( $contact_oid == $submitter ) {
 		## ok, submitter
 		next;
+	    }
+
+	    ## check the new GOLD AP users table
+	    if ( $ap_id ) {
+		$sql = "select email, caliban_id " .
+		    "from contact c " .
+		    "where contact_oid = ? ";
+		$cur = execSql( $dbh, $sql, $verbose, $contact_oid );
+		my ($my_email, $my_caliban_id) = $cur->fetchrow();
+		$cur->finish();
+		if ( ! $my_caliban_id ) {
+		    $my_caliban_id = 0;
+		}
+		if ( $my_email ) {
+		    $my_email = lc($my_email);
+		}
+		else {
+		    $my_email = "error: no email";
+		}
+		$sql = "select gold_id, role " .
+		    "from gold_analysis_project_users\@imgsg_dev " .
+		    "where gold_id = ? " .
+		    "and (lower(email) = ? " .
+		    "or caliban_id = ? ) ";
+		$cur = execSql( $dbh, $sql, $verbose, $ap_id,
+				$my_email, $my_caliban_id);
+		my $can_grant = 0;
+		for (;;) {
+		    my ($gid2, $role2) = $cur->fetchrow();
+		    last if ! $gid2;
+
+		    if ( lc($role2) eq 'pi' ||
+			 lc($role2) eq 'submitter' ) {
+			$can_grant = 1;
+		    }
+		}
+		$cur->finish();
+
+		if ( $can_grant ) {
+		    next;
+		}
 	    }
 
 	    ## check PI

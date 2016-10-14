@@ -3,7 +3,6 @@ package IMG::Views::Links;
 use IMG::Util::Base;
 use IMG::Views::ExternalLinks;
 use IMG::App::Role::ErrorMessages qw( err );
-use URI;
 use utf8;
 
 our (@ISA, @EXPORT_OK);

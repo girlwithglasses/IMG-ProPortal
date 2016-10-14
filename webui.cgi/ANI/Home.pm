@@ -47,7 +47,7 @@ sub dispatch {
 	Utils::Cache::start_caching() or return;
 
     my $tmpl_app = IMG::App->new( config => $env );
-	my $output = $tmpl_app->render_template( 'ani_home.tt', { data => get_ani_stats() } );
+	my $output = $tmpl_app->render_template({ tmpl => 'ani_home.tt', tmpl_data => { data => get_ani_stats() } });
 	print $output;
 	Utils::Cache::stop_caching();
 	return;

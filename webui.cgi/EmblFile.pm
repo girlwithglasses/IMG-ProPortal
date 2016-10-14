@@ -11,6 +11,7 @@ use Time::localtime;
 use Data::Dumper;
 use WebUtil;
 use WebConfig;
+use QueryUtil;
 
 $| = 1;
 
@@ -105,7 +106,7 @@ sub writeScaffold2EmblFile {
     $imgTermOverride = 1 if $imgTermOverride eq "on";
 
     my $dbh = dbLogin();
-    checkScaffoldPerm( $dbh, $scaffold_oid );
+    WebUtil::checkScaffoldPerm( $dbh, $scaffold_oid );
     my $wfh = newAppendFileHandle( $outFile, "writeScaffold2EmblFile" );
 
     #my $cur = execSql( $dbh, "select sysdate from dual", $verbose );
@@ -113,7 +114,7 @@ sub writeScaffold2EmblFile {
     #$cur->finish( );
     my $sysdate = getSysDate();
 
-    my $ext_accession = scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
+    my $ext_accession = QueryUtil::scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
     print "<p>\n"                                                  if ( !$notPrint );
     print "Process scaffold $ext_accession information ...<br/>\n" if ( !$notPrint );
     ## We kludge chromosome for historical reasons since this value
@@ -123,18 +124,18 @@ sub writeScaffold2EmblFile {
     my $imgClause = WebUtil::imgClause('tx');
 
     my $sql = qq{
-	select scf.ext_accession, ss.seq_length, 
-	   scf.mol_type, scf.mol_topology,
-	   scf.scaffold_name, tx.taxon_oid, tx.ncbi_taxon_id,
-	   tx.taxon_display_name, tx.domain, tx.phylum,
-	   tx.ir_class, tx.ir_order, tx.family, tx.genus, tx.species,
-	   tx.strain
-	from scaffold scf, taxon tx, scaffold_stats ss
-	where scf.scaffold_oid = ?
-	and scf.scaffold_oid = ss.scaffold_oid
-	and scf.taxon = tx.taxon_oid
-	$rclause
-	$imgClause
+    	select scf.ext_accession, ss.seq_length, 
+    	   scf.mol_type, scf.mol_topology,
+    	   scf.scaffold_name, tx.taxon_oid, tx.ncbi_taxon_id,
+    	   tx.taxon_display_name, tx.domain, tx.phylum,
+    	   tx.ir_class, tx.ir_order, tx.family, tx.genus, tx.species,
+    	   tx.strain
+    	from scaffold scf, taxon tx, scaffold_stats ss
+    	where scf.scaffold_oid = ?
+    	and scf.scaffold_oid = ss.scaffold_oid
+    	and scf.taxon = tx.taxon_oid
+    	$rclause
+    	$imgClause
     };
     my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
     my (
@@ -170,60 +171,18 @@ sub writeScaffold2EmblFile {
     };
     printFeature( $wfh, "source", $h );
 
-    ## Enzymes
-    print "Process enzymes ...<br/>\n" if ( !$notPrint );
-    my %geneEnzymes;
-
     my $rclause   = WebUtil::urClause('g.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
 
-    my $sql = qq{
-    	select g.gene_oid, g.enzymes
-    	from gene_ko_enzymes g
-    	where g.scaffold = ?
-    	$rclause
-    	$imgClause
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $gene_oid, $enzyme ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $geneEnzymes{$gene_oid} .= "$enzyme ";
-    }
-    $cur->finish();
+    ## Enzymes
+    print "Process enzymes ...<br/>\n" if ( !$notPrint );
+    my %geneEnzymes;
+    QueryUtil::fetchGeneKoEnzymesHash( $dbh, $scaffold_oid, \%geneEnzymes);    
 
     ## IMG term override
     print "Process IMG terms ...<br/>\n" if ( !$notPrint );
     my %geneImgTerms;
-    my $rclause   = WebUtil::urClause('g.taxon');
-    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
-
-    #    my $sql = qq{
-    #    	select g.gene_oid, it.term, g.f_order
-    #    	from gene_img_functions g, dt_img_term_path dtp, img_term it
-    #    	where g.scaffold = ?
-    #    	and g.function = dtp.map_term
-    #        and dtp.term_oid = it.term_oid
-    #        $rclause
-    #        $imgClause
-    #    	order by g.gene_oid, g.f_order
-    #    };
-    my $sql = qq{
-        select g.gene_oid, it.term, g.f_order
-        from gene_img_functions g, img_term it
-        where g.scaffold = ?
-        and g.function = it.term_oid
-        $rclause
-        $imgClause
-        order by g.gene_oid, g.f_order
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $gene_oid, $term, $f_order ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $geneImgTerms{$gene_oid} .= "$term\n";
-    }
-    $cur->finish();
+    QueryUtil::fetchGeneImgFunctionsHash( $dbh, $scaffold_oid, \%geneImgTerms, $rclause, $imgClause);    
 
     ## Iterate through genes
     print "Process genes ...<br/>\n" if ( !$notPrint );
@@ -298,25 +257,11 @@ sub writeScaffold2EmblFile {
 
     ## Get the sequence
     print "Process scaffold DNA sequence ...<br/>\n" if ( !$notPrint );
-
-    my $rclause   = WebUtil::urClause('scf.taxon');
-    my $imgClause = WebUtil::imgClauseNoTaxon('scf.taxon');
-
-    my $sql = qq{
-	select scf.taxon, scf.ext_accession
-	from scaffold scf
-	where scf.scaffold_oid = ?
-	$rclause
-	$imgClause
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    my ( $taxon_oid, $scf_ext_accession ) = $cur->fetchrow();
-    $cur->finish();
+    my ( $taxon_oid, $scf_ext_accession ) = QueryUtil::fetchSingleScaffoldTaxon( $dbh, $scaffold_oid);
     printScaffoldSequence( $wfh, $taxon_oid, $scf_ext_accession, $scf_seq_length );
     print $wfh "//\n";
     close $wfh;
 
-    #$dbh->disconnect();
     print "</p>\n" if ( !$notPrint );
 }
 

@@ -3,7 +3,7 @@
 #   results in a matrix.
 #        --es 3/20/2006
 #
-# $Id: GeneProfilerStor.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: GeneProfilerStor.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package GeneProfilerStor;
 my $section = "GeneProfilerStor";
@@ -322,17 +322,14 @@ sub processResults {
                 "$usearch_bin --query $taxon1Faa --db $taxon2Faa "
               . "--accel 0.8 --quiet --trunclabels --iddef 4 "
               . "--evalue 1e-1 --blast6out $tmpFile";
-            #my $cmd =
-            #    "$usearch_bin --query $taxon1Faa --db $taxon2Faa "
-            #  . "--accel 0.8 --quiet --trunclabels --iddef 4 --maxaccepts 20 --maxrejects 20 "
-            #  . "--evalue 1e-1 --blast6out $tmpFile";
-            #print "$cmd<br/>\n";
-            #webLog("+ $cmd\n");
             my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+            Command::startDotThread();
             my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
             if ( $stdOutFile == -1 ) {
+                Command::killDotThread();
                 next;
             }
+            Command::killDotThread();
 
             my $rfh = newReadFileHandle( $tmpFile, "processResults" );
             loadCells( $dbh,           $rfh,            $workspace_id_str, $taxon_oid,    $includeWholeTaxon,

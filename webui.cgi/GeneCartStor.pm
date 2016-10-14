@@ -16,7 +16,7 @@
 #    12: scaffold read depth
 #    --es 03/22/2007
 #
-# $Id: GeneCartStor.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: GeneCartStor.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ############################################################################
 package GeneCartStor;
 my $section = "GeneCartStor";
@@ -40,6 +40,7 @@ use WorkspaceUtil;
 use HTML::Template;
 use HtmlUtil;
 use CartUtil;
+use GeneDataUtil;
 
 my $env         = getEnv();
 my $main_cgi    = $env->{main_cgi};
@@ -77,23 +78,11 @@ my $content_list = $env->{content_list};
 
 my $max_genome_selections = 1000;
 my $max_gene_batch        = 900;
-my $maxGeneCartGenes      = 1000;
+my $maxGeneCartGenes      = $env->{cart_max_szie};
 my $maxProfileOccurIds    = 100;
-if ( $env->{max_gene_cart_genes} ne "" ) {
-    $maxGeneCartGenes = $env->{max_gene_cart_genes};
-}
 
-my $maxGeneListResults = 1000;
-if ( getSessionParam("maxGeneListResults") ne "" ) {
-    $maxGeneListResults = getSessionParam("maxGeneListResults");
-}
-
-my $dDelim = "===";
-my $fDelim = "<<>>";
-
-#old original cols saved
-#my $origColIDs = "gene_oid,locus_tag,desc,desc_orig,aa_seq_length,taxon_oid,taxon_display_name,batch_id,scaffold_oid,scf_ext_accession,scaffold_name,scf_seq_length,scf_gc_percent,scf_read_depth,";
-my $fixedColIDs = "gene_oid,locus_tag,desc,desc_orig,taxon_oid,taxon_display_name,batch_id,scaffold_oid,";
+#my $fixedColIDs = "gene_oid,locus_tag,desc,desc_orig,taxon_oid,taxon_display_name,batch_id,scaffold_oid,";
+my $fixedColIDs = GeneTableConfiguration::getDefaultFixedColIDs();
 
 my $merfs_timeout_mins = $env->{merfs_timeout_mins};
 if ( !$merfs_timeout_mins ) {
@@ -102,13 +91,14 @@ if ( !$merfs_timeout_mins ) {
 
 my $GENE_FOLDER = "gene";
 
-sub getPageTitle {
-        if ( WebUtil::paramMatch("addFunctionCart") ne "" ) {
-            WebUtil::setSessionParam( "lastCart", "funcCart" );
-        } else {
-            WebUtil::setSessionParam( "lastCart", "geneCart" );
-        }
+my $tool = "geneCart";
 
+sub getPageTitle {
+    if ( WebUtil::paramMatch("addFunctionCart") ne "" ) {
+        WebUtil::setSessionParam( "lastCart", "funcCart" );
+    } else {
+        WebUtil::setSessionParam( "lastCart", $tool );
+    }
     
     return 'Gene Cart';
 }
@@ -139,8 +129,8 @@ sub dispatch {
 
     my $page = param("page");
 
-    if ( $page eq "geneCart" ) {
-        setSessionParam( "lastCart", "geneCart" );
+    if ( $page eq $tool ) {
+        setSessionParam( "lastCart", $tool );
         my $gc = new GeneCartStor();
         $gc->printGeneCartForm();
     } elsif ( $page eq "upload" ) {
@@ -172,7 +162,7 @@ sub dispatch {
               || paramMatch("addToGeneCart")      ne ""
               || paramMatch("deleteAllCartGenes") ne "" )
     {
-        setSessionParam( "lastCart", "geneCart" );
+        setSessionParam( "lastCart", $tool );
         my $gc = new GeneCartStor();
         if ( paramMatch("addToGeneCart") ne "" ) {
             $gc->printGeneCartForm("add");
@@ -181,11 +171,11 @@ sub dispatch {
         }
 
     } elsif ( paramMatch("uploadGeneCart") ne "" ) {
-        setSessionParam( "lastCart", "geneCart" );
+        setSessionParam( "lastCart", $tool );
         my $gc = new GeneCartStor();
         $gc->printGeneCartForm("upload");
     } elsif ( paramMatch("setGeneOutputCol") ne "" ) {
-        setSessionParam( "lastCart", "geneCart" );
+        setSessionParam( "lastCart", $tool );
         my $gc = new GeneCartStor();
         $gc->printGeneCartForm("configure");
     } elsif ( paramMatch("geneOccurProfiles") ne "" ) {
@@ -242,7 +232,7 @@ sub printValidationJS {
 sub printTab3 {
     my ($self) = @_;
 
-    setSessionParam( "lastCart", "geneCart" );
+    setSessionParam( "lastCart", $tool );
     my $recs = readCartFile();
 
     my $count = scalar( keys(%$recs) );
@@ -441,18 +431,26 @@ sub printUploadSection {
     printUploadGeneCartFormContent('Yes');
 }
 
-# upload and export
+# upload and export and Save
 #
 sub printTab2 {
     my ($self) = @_;
 
-    setSessionParam( "lastCart", "geneCart" );
+    setSessionParam( "lastCart", $tool );
     printUploadSection();
+
+    my $recs  = readCartFile();
+    my $count = scalar( keys(%$recs) );
+    printExportSave($count);
+}
+
+sub printExportSave {
+    my ($count) = @_;
 
     print "<h2>Export Genes</h2>";
     GenerateArtemisFile::printDataExportHint($GENE_FOLDER);
     print "<p>\n";
-    print "You may select genes from the cart to export " . "in one of the following export formats.\n";
+    print "You may select genes to export in one of the following export formats.\n";
     print "</p>\n";
 
     print "<p>\n";
@@ -468,32 +466,29 @@ sub printTab2 {
     print "bp downstream\n";
     print "<br/>\n";
 
-    my $recs  = readCartFile();
-    my $count = scalar( keys(%$recs) );
     if ( $count == 0 ) {
         print "<p>You have 0 genes to export.</p>\n";
     } else {
         print "<input type='radio' name='exportType' value='excel' />\n";
-        print "Gene information in tab-delimited format to Excel "
-	    . "<b>(Gene Cart uploadable format)</b><br/>\n";
+        print "Gene data in tab-delimited format to Excel " 
+        . "<b>(Gene Cart uploadable format)</b><br/>\n";
         print "</p>\n";
 
         ## enter email address
         GenerateArtemisFile::printEmailInputTable( '', $GENE_FOLDER );
 
         my $name = "exportGenes";
-#        print submit(
-#                      -name    => $name,
-#                      -value   => "Show in Export Format",
-#                      -class   => "medbutton",
-#                      -onclick => "return validateSelection(1);"
-#        );
+        #print submit(
+        #              -name    => $name,
+        #              -value   => "Show in Export Format",
+        #              -class   => "medbutton",
+        #              -onclick => "return validateSelection(1);"
+        #);
         my $contact_oid = WebUtil::getContactOid();
         my $str = HtmlUtil::trackEvent("Export", $contact_oid, "img button $name", "return validateSelection(1);");
         print qq{
 <input class='meddefbutton' name='$name' type="submit" value="Show in Export Format" $str>
         };
-
 
         WorkspaceUtil::printSaveGeneToWorkspace('gene_oid');
     }
@@ -515,8 +510,9 @@ sub new {
 # webConfigureGenes - Configure gene cart display.
 ############################################################################
 sub webConfigureGenes {
-    my ( $self,
-         $outColClause,   $taxonJoinClause,    $scfJoinClause,      $ssJoinClause,
+    my ( $self,           $outColClause,   
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
       )
@@ -539,12 +535,14 @@ sub webConfigureGenes {
             my @fields = split( /\t/, $rec );
             $goid2BatchIds{$gene_oid} = $fields[6]; #6 for batch_id
         }
-        my $colIDsNew = flushGeneBatch(
-            $recs, $dbh, \@dbOids, \%goid2BatchIds, '',
-            $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
+        my $colIDsNew = GeneDataUtil::flushGeneBatch(
+            $fixedColIDs,    $recs, $dbh, 
+            \@dbOids, \%goid2BatchIds, '',  $outColClause,   
+            $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+            $get_gene_tmh,   $get_gene_sig,
             $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
             $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
-            $projectMetadataCols_ref, $outputCol_ref
+            $projectMetadataCols_ref, $outputCol_ref, 1
         );
         if ($colIDsNew) {
             $colIDs = $colIDsNew;
@@ -557,33 +555,37 @@ sub webConfigureGenes {
             my @fields = split( /\t/, $rec );
             $goid2BatchIds{$mOid} = $fields[6];     #6 for batch_id
         }
-        my $colIDsNew = flushMetaGeneBatch(
-            $recs, $dbh, \@metaOids, \%goid2BatchIds, '',
-            $projectMetadataCols_ref, $outputCol_ref
+        my $colIDsNew = GeneDataUtil::flushMetaGeneBatch( 
+            $fixedColIDs, $recs, $dbh, 
+            \@metaOids, \%goid2BatchIds, '', 
+            $projectMetadataCols_ref, $outputCol_ref, 
+            '', 1, 1 
         );
         if ($colIDsNew) {
             $colIDs = $colIDsNew;
         }
     }
 
+    GeneTableConfiguration::writeColIdFile($colIDs, $tool);
     writeCartFile($recs);
-    GeneTableConfiguration::writeColIdFile($colIDs, "geneCart");
 }
 
 ############################################################################
 # webAddGenes - Load gene cart from selections.
 ############################################################################
 sub webAddGenes {
-    my ( $self,
-         $outColClause,   $taxonJoinClause,    $scfJoinClause,      $ssJoinClause,
+    my ( $self,           $outColClause,   
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
       )
       = @_;
     my @gene_oids = param("gene_oid");
     #print "webAddGenes() gene_oids: @gene_oids<br/>\n";
-    $self->addGeneBatch( \@gene_oids,
-         $outColClause,   $taxonJoinClause,    $scfJoinClause,      $ssJoinClause,
+    $self->addGeneBatch( \@gene_oids, $outColClause,   
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
     );
@@ -604,8 +606,9 @@ sub addGenes {
 ############################################################################
 sub addGeneBatch {
     my (
-         $self,           $gene_oids_ref,
-         $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
+         $self,           $gene_oids_ref,   $outColClause,   
+         $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
          $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
          $projectMetadataCols_ref, $outputCol_ref, $workingDivNotNeeded
@@ -625,12 +628,14 @@ sub addGeneBatch {
     {
 	    my @rest;
         (
-           $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
-           $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
-           $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
+           $outColClause,   
+           $taxonJoinClause,$scfJoinClause, $ssJoinClause, 
+           $get_gene_tmh,   $get_gene_sig,
+           $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+           $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
            $projectMetadataCols_ref, $outputCol_ref,  @rest
           )
-          = GeneTableConfiguration::getOutputColClauses($fixedColIDs, "geneCart");
+          = GeneTableConfiguration::getOutputColClauses($fixedColIDs, $tool);
     }
 
     my $colIDs = '';
@@ -650,9 +655,11 @@ sub addGeneBatch {
         if ( scalar(@dbOids) > 0 ) {
             #not working using QueryUtil::fetchValidGeneOids
             #@dbOids = QueryUtil::fetchValidGeneOids( $dbh, @dbOids );
-            my $colIDsNew = flushGeneBatch
-            ( $recs, $dbh,     \@dbOids, '', $batch_id,
-              $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
+            my $colIDsNew = GeneDataUtil::flushGeneBatch
+            ( $fixedColIDs,    $recs, $dbh,     
+              \@dbOids, '', $batch_id, $outColClause,   
+              $taxonJoinClause,$scfJoinClause, $ssJoinClause, 
+              $get_gene_tmh,   $get_gene_sig,
               $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
               $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
               $projectMetadataCols_ref, $outputCol_ref
@@ -674,9 +681,11 @@ sub addGeneBatch {
                 push( @metaOidsValid, $mOid );
             }
             if ( scalar(@metaOidsValid) > 0 ) {
-                my $colIDsNew = flushMetaGeneBatch
-            ( $recs, $dbh, \@metaOidsValid, '', $batch_id,
-              $projectMetadataCols_ref, $outputCol_ref, $workingDivNotNeeded );
+                my $colIDsNew = GeneDataUtil::flushMetaGeneBatch
+                    ( $fixedColIDs, $recs, $dbh, 
+                      \@metaOidsValid, '', $batch_id, 
+                      $projectMetadataCols_ref, $outputCol_ref, 
+                      $workingDivNotNeeded, 0, 1 );
                 if ($colIDsNew) {
                     $colIDs = $colIDsNew;
                 }
@@ -684,664 +693,10 @@ sub addGeneBatch {
         }
     }
 
+    GeneTableConfiguration::writeColIdFile($colIDs, $tool);
     writeCartFile($recs);
-    GeneTableConfiguration::writeColIdFile($colIDs, "geneCart");
 }
 
-############################################################################
-# flushGeneBatch  - Flush one batch.
-############################################################################
-sub flushGeneBatch {
-    my (
-         $recs, $dbh, $batch_gene_oids_ref, $goid2BatchIds_ref, $batch_id_new,
-         $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
-         $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
-         $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
-         $projectMetadataCols_ref, $outputCol_ref
-      )
-      = @_;
-
-    my $recsNum = scalar(keys %$recs);
-    #print "flushGeneBatch() 0 recsNum=$recsNum<br/>\n";
-    if ( $recsNum && $recsNum >= CartUtil::getMaxDisplayNum() ) {
-        return '';
-    }
-
-    if ( ! $batch_gene_oids_ref || scalar(@$batch_gene_oids_ref) == 0 ) {
-        return '';
-    }
-
-    webLog "flushGeneBatch() " . currDateTime() . "\n" if $verbose >= 1;
-
-    my $gidInClause = OracleUtil::getIdClause( $dbh, 'gtt_num_id', '', $batch_gene_oids_ref );
-
-    my $gene2cogs_href = GeneTableConfiguration::getGene2Cog
-    	($dbh, $batch_gene_oids_ref, $cogQueryClause, $gidInClause);
-
-    my $gene2pfams_href = GeneTableConfiguration::getGene2Pfam
-    	($dbh, $batch_gene_oids_ref, $pfamQueryClause, $gidInClause);
-
-    my $gene2tigrfams_href = GeneTableConfiguration::getGene2Tigrfam
-    	($dbh, $batch_gene_oids_ref, $tigrfamQueryClause, $gidInClause);
-
-    my $gene2ecs_href = GeneTableConfiguration::getGene2Ec
-    	($dbh, $batch_gene_oids_ref, $ecQueryClause, $gidInClause);
-
-    my $gene2kos_href = GeneTableConfiguration::getGene2Ko
-    	($dbh, $batch_gene_oids_ref, $koQueryClause, $gidInClause);
-
-    my $gene2imgTerms_href = GeneTableConfiguration::getGene2Term
-    	($dbh, $batch_gene_oids_ref, $imgTermQueryClause, $gidInClause);
-
-    my ($gene2taxonInfo_href, $taxon2metaInfo_href)
-        = GeneTableConfiguration::getGene2TaxonInfo($dbh, $batch_gene_oids_ref, $gidInClause);
-
-    my $taxon_metadata_href;
-    if ( $projectMetadataCols_ref && scalar(@$projectMetadataCols_ref) > 0 ) {
-        $taxon_metadata_href = GeneTableConfiguration::getTaxon2projectMetadataInfo($taxon2metaInfo_href);
-        $gidInClause = OracleUtil::getIdClause( $dbh, 'gtt_num_id', '', $batch_gene_oids_ref );
-    }
-
-    webLog "gene query " . currDateTime() . "\n" if $verbose >= 1;
-
-    my $scf_ext_accession_idx = -1;
-    my @outCols               = ();
-    if ( $outputCol_ref ne '' ) {
-        @outCols = @$outputCol_ref;
-        for ( my $i = 0 ; $i < scalar(@outCols) ; $i++ ) {
-            if ( $outCols[$i] eq 'ext_accession' ) {
-                $scf_ext_accession_idx = $i;
-                last;
-            }
-        }
-    }
-
-    my %scaffold2Bin;
-    if ( $scf_ext_accession_idx >= 0 ) {
-        my $sql = qq{
-            select distinct bs.scaffold, b.bin_oid, b.display_name
-            from gene g, bin_scaffolds bs, bin b
-            where g.gene_oid $gidInClause
-            and g.scaffold = bs.scaffold
-            and bs.bin_oid = b.bin_oid
-            order by bs.scaffold, b.display_name
-        };
-        my $cur = execSql( $dbh, $sql, $verbose );
-        for ( ; ; ) {
-            my ( $scaffold, $bin_oid, $bin_display_name ) = $cur->fetchrow();
-            last if !$scaffold;
-            $scaffold2Bin{$scaffold} .= " $bin_display_name;";
-        }
-        $cur->finish();
-    }
-
-    my $sql = qq{
-        select distinct g.gene_oid, g.locus_type, g.locus_tag,
-            g.gene_symbol, g.gene_display_name, g.scaffold
-            $outColClause
-        from gene g
-        $taxonJoinClause
-        $scfJoinClause
-        $ssJoinClause
-        where g.gene_oid $gidInClause
-        order by g.gene_oid
-    };
-    my $cur = execSql( $dbh, $sql, $verbose );
-
-    for ( ; ; ) {
-        my (
-             $gene_oid, $locus_type, $locus_tag, $gene_symbol, $gene_display_name,
-             $scaffold, @outColVals
-          )
-          = $cur->fetchrow();
-        last if !$gene_oid;
-
-        my $batch_id = $batch_id_new;
-        if ( $batch_id eq '' && $goid2BatchIds_ref ne '' ) {
-            $batch_id = $goid2BatchIds_ref->{$gene_oid};
-        }
-
-        my $desc = $gene_display_name;
-        $desc = "($locus_type $gene_symbol)" if $locus_type =~ /RNA/;
-        my $desc_orig = $desc;
-
-        my $r = "$gene_oid\t";
-        $r .= "$locus_tag\t";
-        $r .= "$desc\t";
-        $r .= "$desc_orig\t";
-
-        my $taxon_info = $gene2taxonInfo_href->{$gene_oid};
-        my ($taxon_oid, $taxon_display_name) = split(/\t/, $taxon_info);
-        $r .= "$taxon_oid\t";
-        $r .= "$taxon_display_name\t";
-
-        $r .= "$batch_id\t";
-        $r .= "$scaffold\t";
-
-        for ( my $j = 0 ; $j < scalar(@outColVals) ; $j++ ) {
-            if ( $scf_ext_accession_idx >= 0 && $scf_ext_accession_idx == $j ) {
-                my $scf_ext_accession = $outColVals[$j];
-                my $bin_display_names = $scaffold2Bin{$scaffold};
-                chop $bin_display_names;
-                $scf_ext_accession .= " (bin(s):$bin_display_names)"
-                  if $bin_display_names ne "";
-                $r .= "$scf_ext_accession\t";
-            } else {
-                $r .= "$outColVals[$j]\t";
-            }
-        }
-
-        if ($cogQueryClause) {
-            my $val = $gene2cogs_href->{$gene_oid};
-            $r .= "$val\t\t";
-        }
-
-        if ($pfamQueryClause) {
-            my $val = $gene2pfams_href->{$gene_oid};
-            $r .= "$val\t\t";
-        }
-
-        if ($tigrfamQueryClause) {
-            my $val = $gene2tigrfams_href->{$gene_oid};
-            $r .= "$val\t\t";
-        }
-
-        if ($ecQueryClause) {
-            my $val = $gene2ecs_href->{$gene_oid};
-            $r .= "$val\t\t";
-        }
-
-        if ($koQueryClause) {
-            my $val = $gene2kos_href->{$gene_oid};
-            $r .= "$val\t\t\t";
-        }
-
-        if ($imgTermQueryClause) {
-            my $val = $gene2imgTerms_href->{$gene_oid};
-            $r .= "$val\t";
-        }
-
-        #project metadata
-        if ( $projectMetadataCols_ref && scalar(@$projectMetadataCols_ref) > 0 ) {
-            my $sub_href = $taxon_metadata_href->{$taxon_oid};
-            foreach my $col (@$projectMetadataCols_ref) {
-                my $val = $sub_href->{$col};
-                $val = GenomeList::cellValueEscape($val);
-                $r .= "$val\t";
-            }
-        }
-
-        $recs->{$gene_oid} = $r;
-        $recsNum = scalar(keys %$recs);
-        if ( $recsNum >= CartUtil::getMaxDisplayNum() ) {
-            last;
-        }
-    }
-
-    OracleUtil::truncTable( $dbh, "gtt_num_id" )
-      if ( $gidInClause =~ /gtt_num_id/i );
-    webLog "gene query done " . currDateTime() . "\n" if $verbose >= 1;
-    #print "flushGeneBatch() 1 recsNum=$recsNum<br/>\n";
-
-    my $colIDs = $fixedColIDs;
-    foreach my $col (@outCols) {
-        $colIDs .= "$col,";
-    }
-
-    return $colIDs;
-}
-
-############################################################################
-# flushMetaGeneBatch  - Flush one batch.
-############################################################################
-sub flushMetaGeneBatch {
-    my ( $recs, $dbh, $meta_gene_oids_ref, $goid2BatchIds_ref, $batch_id_new,
-        $projectMetadataCols_ref, $outputCol_ref, $workingDivNotNeeded ) = @_;
-
-    my $recsNum = scalar(keys %$recs);
-    #print "flushMetaGeneBatch() 0 recsNum=$recsNum<br/>\n";
-    if ( $recsNum && $recsNum >= CartUtil::getMaxDisplayNum() ) {
-        return '';
-    }
-
-    if ( scalar(@$meta_gene_oids_ref) == 0 ) {
-        return '';
-    }
-
-    #test use
-    #print "GeneCartStor::flushMetaGeneBatch() meta_gene_oids_ref: @$meta_gene_oids_ref<br/>\n";
-    #print "GeneCartStor::flushMetaGeneBatch() outputCol_ref: @$outputCol_ref<br/>\n";
-
-    #print "GeneCartStor::flushMetaGeneBatch() workingDivNotNeeded: $workingDivNotNeeded<br/>\n";
-    if ( !$workingDivNotNeeded ) {
-        printStartWorkingDiv();
-    }
-
-    #webLog "GeneCartStor::flushMetaGeneBatch() start " . currDateTime() . "\n" if $verbose >= 1;
-    #print "GeneCartStor::flushMetaGeneBatch() 0 " . currDateTime() . "<br/>\n";
-
-    my %genes_h;
-    my %taxon_oid_h;
-
-    #my $k = 0;
-    for my $workspace_id (@$meta_gene_oids_ref) {
-        $genes_h{$workspace_id} = 1;
-
-        my @vals = split( / /, $workspace_id );
-        if ( scalar(@vals) >= 3 ) {
-            $taxon_oid_h{ $vals[0] } = 1;
-
-            #$k++;
-            #if ( $k > $maxGeneListResults ) {
-            #   last;
-            #}
-        }
-    }
-    my @taxonOids = keys(%taxon_oid_h);
-
-    my $taxon_name_href;
-    my $taxon_genome_type_href;
-    my $taxon_metaInfo_href;
-    if ( scalar(@taxonOids) > 0 ) {
-        ( $taxon_name_href, $taxon_genome_type_href, $taxon_metaInfo_href ) =
-          QueryUtil::fetchTaxonMetaInfo( $dbh, \@taxonOids );
-    }
-    #print "flushMetaGeneBatch() taxon2metaInfo: <br/>\n";
-    #print Dumper($taxon_metaInfo_href);
-    #print "<br/>\n";
-
-    my $get_taxon_public = 0;
-    my $get_taxon_oid = 0;
-    my $get_gene_info    = 0;
-    my $get_gene_faa     = 0;
-    my $get_scaf_info    = 0;
-    my $get_gene_cog     = 0;
-    my $get_gene_pfam    = 0;
-    my $get_gene_tigrfam = 0;
-    my $get_gene_ec      = 0;
-    my $get_gene_ko      = 0;
-
-    my @outCols;
-    if ( $outputCol_ref ) {
-        @outCols = @$outputCol_ref;
-        foreach my $outCol ( @outCols ) {
-            if ( $outCol eq 'is_public' ) {
-                $get_taxon_public = 1;
-            } elsif ( $outCol eq 'taxon_oid' ) {
-                $get_taxon_oid = 1;
-            } elsif (    $outCol eq 'locus_type'
-                      || $outCol eq '$start_coord'
-                      || $outCol eq '$end_coord'
-                      || $outCol eq '$strand'
-                      || $outCol eq 'dna_seq_length'
-                      || $outCol eq 'scaffold_oid' )
-            {
-                $get_gene_info = 1;
-            } elsif ( $outCol eq 'aa_seq_length' ) {
-                $get_gene_faa = 1;
-            } elsif (    $outCol eq 'seq_length'
-                      || $outCol eq 'gc_percent'
-                      || $outCol eq 'read_depth' )
-            {
-                $get_gene_info = 1;
-                $get_scaf_info = 1;
-            } elsif ( $outCol =~ /cog_id/i ) {
-                $get_gene_cog = 1;
-            } elsif ( $outCol =~ /pfam_id/i ) {
-                $get_gene_pfam = 1;
-            } elsif ( $outCol =~ /tigrfam_id/i ) {
-                $get_gene_tigrfam = 1;
-            } elsif ( $outCol =~ /ec_number/i ) {
-                $get_gene_ec = 1;
-            } elsif ( $outCol =~ /ko_id/i ) {
-                $get_gene_ko = 1;
-            }
-        }
-    }
-    #print "GeneCartStor::flushMetaGeneBatch() outCols=@outCols<br/>\n";
-    #print "GeneCartStor::flushMetaGeneBatch() outCols size=" . @outCols . "<br/>\n";
-
-    my %taxon_public_h;
-    if ( $get_taxon_public && scalar(@taxonOids) > 0 ) {
-        %taxon_public_h = QueryUtil::fetchTaxonOid2PublicHash( $dbh, \@taxonOids );
-    }
-
-    my %taxon_genes = MetaUtil::getOrganizedTaxonGenes(@$meta_gene_oids_ref);
-
-    my %gene_name_h;
-    MetaUtil::getAllMetaGeneNames( \%genes_h, $meta_gene_oids_ref, \%gene_name_h, \%taxon_genes, 1 );
-
-    #print "GeneCartStor::flushMetaGeneBatch() 0b " . currDateTime() . "<br/>\n";
-
-    my %gene_info_h;
-    my %scaf_id_h;
-    if ( $get_gene_info && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneInfo( \%genes_h, $meta_gene_oids_ref, \%gene_info_h, \%scaf_id_h, \%taxon_genes, 1, 0, 1 );
-        #print "GeneCartStor::flushMetaGeneBatch() getAllMetaGeneInfo() called " . currDateTime() . "<br/>\n";
-        #print Dumper(\%scaf_id_h);
-    }
-
-    # gene-faa
-    my %gene_faa_h;
-    if ( $get_gene_faa && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFaa( \%genes_h, $meta_gene_oids_ref, \%gene_faa_h, \%taxon_genes, 1 );
-    }
-
-    my %scaffold_h;
-    if ( $get_scaf_info && scalar( keys %scaf_id_h ) > 0 ) {
-        MetaUtil::getAllScaffoldInfo( \%scaf_id_h, \%scaffold_h );
-        #print Dumper(\%scaffold_h);
-        #print "GeneCartStor::flushMetaGeneBatch() getAllScaffoldInfo() called " . currDateTime() . "<br/>\n";
-    }
-
-    # gene-cog
-    my %gene_cog_h;
-    my %cog_name_h;
-    if ( $get_gene_cog && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFuncs( 'cog', $meta_gene_oids_ref, \%genes_h, \%gene_cog_h );
-        #Todo: should use gene_cog_h results
-        QueryUtil::fetchAllCogIdNameHash( $dbh, \%cog_name_h );
-        #print Dumper(\%gene_cog_h);
-        #print "<br/>\n";
-        #print "GeneCartStor::flushMetaGeneBatch() getAllMetaGeneFuncs() called " . currDateTime() . "<br/>\n";
-    }
-
-    # gene-pfam
-    my %gene_pfam_h;
-    my %pfam_name_h;
-    if ( $get_gene_pfam && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFuncs( 'pfam', $meta_gene_oids_ref, \%genes_h, \%gene_pfam_h );
-        #Todo: should use gene_pfam_h results
-        QueryUtil::fetchAllPfamIdNameHash( $dbh, \%pfam_name_h );
-    }
-
-    # gene-tigrfam
-    my %gene_tigrfam_h;
-    my %tigrfam_name_h;
-    if ( $get_gene_tigrfam && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFuncs( 'tigr', $meta_gene_oids_ref, \%genes_h, \%gene_tigrfam_h );
-        #print "flushMetaGeneBatch() gene_tigrfam_h:<br/>\n";
-        #print Dumper(\%gene_tigrfam_h);
-        #print "<br/>\n";
-        #Todo: should use gene_tigrfam_h results
-        QueryUtil::fetchAllTigrfamIdNameHash( $dbh, \%tigrfam_name_h );
-    }
-
-    # gene-ec
-    my %gene_ec_h;
-    my %ec_name_h;
-    if ( $get_gene_ec && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFuncs( 'ec', $meta_gene_oids_ref, \%genes_h, \%gene_ec_h );
-        #print "flushMetaGeneBatch() gene_ec_h:<br/>\n";
-        #print Dumper(\%gene_ec_h);
-        #print "<br/>\n";
-        #Todo: should use gene_ec_h results
-        QueryUtil::fetchAllEnzymeNumberNameHash( $dbh, \%ec_name_h );
-    }
-
-    # gene-ko
-    my %gene_ko_h;
-    my %ko_name_h;
-    my %ko_def_h;
-    if ( $get_gene_ko && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFuncs( 'ko', $meta_gene_oids_ref, \%genes_h, \%gene_ko_h );
-        #Todo: should use gene_ko_h results
-        QueryUtil::fetchAllKoIdNameDefHash( $dbh, \%ko_name_h, \%ko_def_h );
-    }
-
-    my $taxon_metadata_href;
-    if ( $projectMetadataCols_ref && scalar(@$projectMetadataCols_ref) > 0 ) {
-        $taxon_metadata_href = GeneTableConfiguration::getTaxon2projectMetadataInfo($taxon_metaInfo_href);
-    }
-    #print "flushMetaGeneBatch() taxon_metadata_href: <br/>\n";
-    #print Dumper($taxon_metadata_href);
-    #print "<br/>\n";
-
-    #print "GeneCartStor::flushMetaGeneBatch 2 " . currDateTime() . "<br/>\n";
-
-    my $trunc      = 0;
-    my $gene_count = 0;
-    for my $workspace_id (@$meta_gene_oids_ref) {
-        my $batch_id = $batch_id_new;
-        if ( $batch_id eq '' && $goid2BatchIds_ref ne '' ) {
-            $batch_id = $goid2BatchIds_ref->{$workspace_id};
-        }
-
-        my ( $taxon_oid, $data_type, $gene_oid ) = split( / /, $workspace_id );
-        if ( !exists( $taxon_name_href->{$taxon_oid} ) ) {
-
-            #$taxon_oid not in hash, probably due to permission
-            webLog("GeneCartStor flushMetaGeneBatch:: $taxon_oid not retrieved from database, probably due to permission.");
-            next;
-        }
-
-        my ( $locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaffold_oid, $tid2, $dtype2 );
-        if ( exists( $gene_info_h{$workspace_id} ) ) {
-            ( $locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaffold_oid, $tid2, $dtype2 )
-              = split( /\t/, $gene_info_h{$workspace_id} );
-        } else {
-            $locus_tag = $gene_oid;
-        }
-
-        if ( !$taxon_oid && $tid2 ) {
-            $taxon_oid = $tid2;
-            if ( !exists( $taxon_name_href->{$taxon_oid} ) ) {
-                my $taxon_name = QueryUtil::fetchSingleTaxonName( $dbh, $taxon_oid );
-
-                # save taxon display name to prevent repeat retrieving
-                $taxon_name_href->{$taxon_oid} = $taxon_name;
-            }
-        }
-
-        # taxon
-        my $taxon_display_name = $taxon_name_href->{$taxon_oid};
-        my $genome_type = $taxon_genome_type_href->{$taxon_oid};
-        $taxon_display_name .= " (*)"
-          if ( $genome_type eq "metagenome" );
-
-        if ( $gene_name_h{$workspace_id} ) {
-            $gene_display_name = $gene_name_h{$workspace_id};
-        }
-        if ( !$gene_display_name ) {
-            $gene_display_name = 'hypothetical protein';
-        }
-        my $desc      = $gene_display_name;
-        my $desc_orig = $desc;
-
-        # scaffold
-        my $scaf_len;
-        my $scaf_gc;
-        my $scaf_gene_cnt;
-        my $scaf_depth;
-        if ( $data_type eq 'assembled' && $scaffold_oid && scalar( keys %scaffold_h ) > 0 ) {
-            my $ws_scaf_id = "$taxon_oid $data_type $scaffold_oid";
-            ( $scaf_len, $scaf_gc, $scaf_gene_cnt, $scaf_depth ) = split( /\t/, $scaffold_h{$ws_scaf_id} );
-            if ( !$scaf_depth ) {
-                $scaf_depth = 1;
-            }
-            $scaf_gc = sprintf( "%.2f", $scaf_gc );
-        }
-
-        my $r = "$workspace_id\t";
-        $r .= "$locus_tag\t";
-        $r .= "$desc\t";
-        $r .= "$desc_orig\t";
-        $r .= "$taxon_oid\t";
-        $r .= "$taxon_display_name\t";
-        $r .= "$batch_id\t";
-        $r .= "$scaffold_oid\t";
-
-        foreach my $outCol ( @outCols ) {
-            #print "flushMetaGeneBatch() outCol=$outCol<br/>\n";
-            if ( $outCol eq 'dna_seq_length' ) {
-                my $dna_seq_length = $end_coord - $start_coord + 1;
-                $r .= "$dna_seq_length\t";
-            } elsif ( $outCol eq 'aa_seq_length' ) {
-                #takes too long for getGeneFaa(), get Kosta's permission for the division in metagenome
-                #my $aa_seq_length = $dna_seq_length / 3;
-                my $faa           = $gene_faa_h{$workspace_id};
-                my $aa_seq_length = length($faa);
-                $r .= "$aa_seq_length\t";
-            } elsif ( $outCol eq 'start_coord' ) {
-                $r .= "$start_coord\t";
-            } elsif ( $outCol eq 'end_coord' ) {
-                $r .= "$end_coord\t";
-            } elsif ( $outCol eq 'strand' ) {
-                $r .= "$strand\t";
-            } elsif ( $outCol eq 'locus_type' ) {
-                $r .= "$locus_type\t";
-            } elsif ( $outCol eq 'is_public' ) {
-                my $is_public = $taxon_public_h{$taxon_oid};
-                $r .= "$is_public\t";
-            } elsif ( $outCol eq 'taxon_oid' ) {
-                $r .= "$taxon_oid\t";
-            } elsif ( $outCol eq 'scaffold_oid' ) {
-                $r .= "$scaffold_oid\t";
-            } elsif ( $outCol eq 'scaffold_name' ) {
-                $r .= "$scaffold_oid\t";
-            } elsif ( $outCol eq 'seq_length' ) {
-                $r .= "$scaf_len\t";
-            } elsif ( $outCol eq 'gc_percent' ) {
-                $r .= "$scaf_gc\t";
-            } elsif ( $outCol eq 'read_depth' ) {
-                $r .= "$scaf_depth\t";
-            } elsif ( $outCol =~ /cog_id/i ) {
-                my @cog_recs;
-                my $cogs = $gene_cog_h{$workspace_id};
-                if ($cogs) {
-                    @cog_recs = split( /\t/, $cogs );
-                }
-
-                my $cog_all;
-                for my $cog_id (@cog_recs) {
-                    my $cog_name = $cog_name_h{$cog_id};
-                    if ($cog_all) {
-                        $cog_all .= "$fDelim$r";
-                    }
-                    $cog_all = $cog_id . $dDelim . $cog_name;
-                }
-                $r .= "$cog_all\t\t";
-
-            } elsif ( $outCol =~ /pfam_id/i ) {
-                my @pfam_recs;
-                my $pfams = $gene_pfam_h{$workspace_id};
-                if ($pfams) {
-                    @pfam_recs = split( /\t/, $pfams );
-                }
-
-                my $pfam_all;
-                for my $pfam_id (@pfam_recs) {
-                    my $pfam_name = $pfam_name_h{$pfam_id};
-                    if ($pfam_all) {
-                        $pfam_all .= "$fDelim$r";
-                    }
-                    $pfam_all = $pfam_id . $dDelim . $pfam_name;
-                }
-                $r .= "$pfam_all\t\t";
-
-            } elsif ( $outCol =~ /tigrfam_id/i ) {
-                my @tigrfam_recs;
-                my $tigrfams = $gene_tigrfam_h{$workspace_id};
-                if ($tigrfams) {
-                    @tigrfam_recs = split( /\t/, $tigrfams );
-                }
-
-                my $tigrfam_all;
-                for my $tigrfam_id (@tigrfam_recs) {
-                    my $tigrfam_name = $tigrfam_name_h{$tigrfam_id};
-                    if ($tigrfam_all) {
-                        $tigrfam_all .= "$fDelim$r";
-                    }
-                    $tigrfam_all = $tigrfam_id . $dDelim . $tigrfam_name;
-                }
-                $r .= "$tigrfam_all\t\t";
-
-            } elsif ( $outCol =~ /ec_number/i ) {
-                my @ec_recs;
-                my $ecs = $gene_ec_h{$workspace_id};
-                if ($ecs) {
-                    @ec_recs = split( /\t/, $ecs );
-                }
-
-                my $ec_all;
-                for my $ec_id (@ec_recs) {
-                    my $ec_name = $ec_name_h{$ec_id};
-                    if ($ec_all) {
-                        $ec_all .= "$fDelim$r";
-                    }
-                    $ec_all = $ec_id . $dDelim . $ec_name;
-                }
-                $r .= "$ec_all\t\t";
-
-            } elsif ( $outCol =~ /ko_id/i ) {
-                my @ko_recs;
-                my $kos = $gene_ko_h{$workspace_id};
-                if ($kos) {
-                    @ko_recs = split( /\t/, $kos );
-                }
-
-                my $ko_all;
-                for my $ko_id (@ko_recs) {
-                    my $ko_name = $ko_name_h{$ko_id};
-                    my $ko_def  = $ko_def_h{$ko_id};
-                    if ($ko_all) {
-                        $ko_all .= "$fDelim$r";
-                    }
-                    $ko_all = $ko_id . $dDelim . $ko_name . $dDelim . $ko_def;
-                }
-                $r .= "$ko_all\t\t\t";
-            } elsif ( $projectMetadataCols_ref
-                && scalar(@$projectMetadataCols_ref) > 0
-                && GenomeList::isProjectMetadataAttr($outCol) ) {
-                #to be applied later, ProjectMetadataAttr must be listed as last group
-                last;
-            } else {
-                $r .= "\t";
-            }
-        }
-
-        #project metadata
-        if ( $projectMetadataCols_ref && scalar(@$projectMetadataCols_ref) > 0 ) {
-            my $sub_href = $taxon_metadata_href->{$taxon_oid};
-            foreach my $col (@$projectMetadataCols_ref) {
-                my $val = $sub_href->{$col};
-                $val = GenomeList::cellValueEscape($val);
-                $r .= "$val\t";
-            }
-        }
-
-        $recs->{$workspace_id} = $r;
-        #print "flushMetaGeneBatch() r: $r<br/>\n";
-        #my @splitColVals  = split( /\t/, $r );
-        #print "flushMetaGeneBatch() splitColVals size: " . scalar(@splitColVals) . "<br/>\n";
-        #print "flushMetaGeneBatch() splitColVals: @splitColVals<br/>\n";
-        $recsNum = scalar(keys %$recs);
-        if ( $recsNum >= CartUtil::getMaxDisplayNum() ) {
-            last;
-        }
-    }
-
-    #test use
-    #foreach my $key (keys %{$recs}) {
-    #    my $rec = $recs -> {$key};
-    #    print "flushMetaGeneBatch 1 record for $key:<br/>\n$rec<br/>\n";
-    #}
-
-    if ( !$workingDivNotNeeded ) {
-        printEndWorkingDiv();
-    }
-
-    #webLog "GeneCartStor::flushMetaGeneBatch done " . currDateTime() . "\n" if $verbose >= 1;
-    #print "GeneCartStor::flushMetaGeneBatch 3 " . currDateTime() . "<br/>\n";
-    #print "flushMetaGeneBatch() 1 recsNum=$recsNum<br/>\n";
-
-    my $colIDs = $fixedColIDs;
-    foreach my $col (@outCols) {
-        $colIDs .= "$col,";
-    }
-
-    return $colIDs;
-}
 
 ############################################################################
 # webRemoveGenes - Remove genes from web selections.
@@ -1476,49 +831,59 @@ sub printGeneCartForm {
     my $from = param("from");
 
     my $geneStr = param("genes");
-    if ( $geneStr ne "" ) {
+    if ( $geneStr ) {
         $self->addGenes($geneStr);
     }
+    #print "printGeneCartForm() geneStr: $geneStr<br/>\n";
 
     if (    $load eq "upload"
          || $load eq "add"
          || $load eq "configure" )
     {
         my (
-             $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
-             $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
-             $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
+             $outColClause,   
+             $taxonJoinClause, $scfJoinClause, $ssJoinClause, 
+             $get_gene_tmh,   $get_gene_sig,
+             $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+             $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
              $projectMetadataCols_ref, $outputCol_ref,  @rest
           )
-          = GeneTableConfiguration::getOutputColClauses($fixedColIDs, "geneCart");
+          = GeneTableConfiguration::getOutputColClauses($fixedColIDs, $tool);
+        #print "printGeneCartForm() outputCol_ref: @$outputCol_ref<br/>\n";
 
         printStatusLine( "Loading ...", 1 );
 
         if ( $load eq "upload" ) {
             $self->uploadGeneCart(
-                $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
-                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
-                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
+                $outColClause,   
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $get_gene_tmh,   $get_gene_sig,
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
                 $projectMetadataCols_ref, $outputCol_ref
             );
         } elsif ( $load eq "add" ) {
             $self->webAddGenes(
-                $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
-                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
-                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
+                $outColClause,   
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $get_gene_tmh,   $get_gene_sig,
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
                 $projectMetadataCols_ref, $outputCol_ref
             );
         } elsif ( $load eq "configure" ) {
             $self->webConfigureGenes(
-                $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
-                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
-                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
+                $outColClause,   
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $get_gene_tmh,   $get_gene_sig,
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
                 $projectMetadataCols_ref, $outputCol_ref
             );
         }
     }
 
-    setSessionParam( "lastCart", "geneCart" );
+    setSessionParam( "lastCart", $tool );
 
     #print "printGeneCartForm() needGenomeJson: $needGenomeJson<br/>\n";
     if ( $needGenomeJson ) {
@@ -1553,8 +918,6 @@ sub printGeneCartForm {
         print end_form();
         return;
     }
-
-    my $colIDs = GeneTableConfiguration::readColIdFile("geneCart");
 
     print "<p>\n$count gene(s) in cart\n</p>\n";
     printValidationJS();
@@ -1607,11 +970,15 @@ sub printGeneCartForm {
     $it->addColSpec( "Gene ID",           "asc", "center" );
     $it->addColSpec( "Locus Tag",         "asc", "center" );
     $it->addColSpec( "Gene Product Name", "asc", "left" );
-    $it->addColSpec( "Genome",            "asc", "left" );
+    $it->addColSpec( "Genome ID",         "asc", "left" ); 
+    $it->addColSpec( "Genome Name",            "asc", "left" );
     $it->addColSpec( "Batch<sup>1</sup>", "asc", "right" );
 
+    my $colIDs = GeneTableConfiguration::readColIdFile($tool);
+    #print "printGeneCartForm() colIDs: $colIDs<br/>\n";
     $colIDs =~ s/$fixedColIDs//i;
     my @outCols = WebUtil::processParamValue($colIDs);
+    #print "printGeneCartForm() outCols size: " . scalar(@outCols) . "<br/>\n";
     GeneTableConfiguration::addColIDs($it, \@outCols);
 
     #my @sortedRecs;
@@ -1621,7 +988,6 @@ sub printGeneCartForm {
     #sortedRecsArray( $recs, $sortIdx, \@sortedRecs, $sortType );
     #for my $r (@sortedRecs) {
     for my $r ( values %$recs ) {
-
         #print "printGeneCartForm() r: $r<br/>\n";
         #my @splitColVals  = split( /\t/, $r );
         #print "printGeneCartForm() splitColVals size: " . scalar(@splitColVals) . "<br/>\n";
@@ -1630,7 +996,6 @@ sub printGeneCartForm {
         my ( $workspace_id, $locus_tag, $desc, $desc_orig, $taxon_oid,
 	     $orgName, $batch_id, $scaffold_oid, @outColVals ) =
           split( /\t/, $r );
-
         #print "printGeneCartForm() outColVals size: " . scalar(@outColVals) . "<br/>\n";
         #print "printGeneCartForm() outColVals: @outColVals<br/>\n";
 
@@ -1669,6 +1034,7 @@ sub printGeneCartForm {
             $orgName = HtmlUtil::appendMetaTaxonNameWithDataType( $orgName, $data_type );
         }
 
+        $row .= $taxon_oid . $sd . $taxon_oid . "\t";
         $row .= $orgName . $sd . alink( $taxon_url, $orgName ) . "\t";
         $row .= $batch_id . $sd . $batch_id . "\t";
 
@@ -1731,7 +1097,7 @@ sub printGeneCartForm {
         <option value='tigrfam' > TIGRfam </option>
         <option value='ec' > EC Numbers </option>
         <option value='ipr' > InterPro </option>
-        <option value='tc' > Transporter Classification </option>
+        <!-- <option value='tc' > Transporter Classification </option> -->
         <option value='ko' > KEGG KO </option>
         <option value='metacyc' > MetaCyc </option>
         $interproText
@@ -1813,9 +1179,9 @@ sub printGeneCartForm {
 sub printGeneCartButtons {
     my $name = "_section_GenomeCart_addGeneGenome";
     print submit(
-                  -name  => $name,
-                  -value => "Add Genomes of Selected Genes to Cart",
-                  -class => 'lgbutton'
+          -name  => $name,
+          -value => "Add Genomes of Selected Genes to Cart",
+          -class => 'lgbutton'
     );
     print nbsp(1);
     print "\n";
@@ -1823,9 +1189,9 @@ sub printGeneCartButtons {
     if ($scaffold_cart) {
         $name = "_section_ScaffoldCart_addGeneScaffold";
         print submit(
-                      -name  => $name,
-                      -value => "Add Scaffolds of Selected Genes to Cart",
-                      -class => 'lgbutton'
+              -name  => $name,
+              -value => "Add Scaffolds of Selected Genes to Cart",
+              -class => 'lgbutton'
         );
         print nbsp(1);
         print "<br>\n";
@@ -1911,8 +1277,9 @@ sub printUploadGeneCartFormContent {
 #   Make this so it's more responsive to the user.
 ############################################################################
 sub uploadGeneCart {
-    my ( $self,
-         $outColClause,   $taxonJoinClause,    $scfJoinClause,      $ssJoinClause,
+    my ( $self,           $outColClause,   
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
       )
@@ -1926,7 +1293,7 @@ sub uploadGeneCart {
         webError($errmsg);
     }
 
-    if ( scalar(@gene_oids) > $maxGeneCartGenes ) {
+    if ( scalar(@gene_oids) > CartUtil::getMaxDisplayNum() ) {
         printStatusLine( "Error.", 2 );
         webError( "Import to gene cart exceeded $maxGeneCartGenes genes. " . "Please import a smaller set." );
     }
@@ -1968,8 +1335,9 @@ sub uploadGeneCart {
         push( @finalOids, @metaOids );
     }
 
-    $self->addGeneBatch( \@finalOids,
-         $outColClause,   $taxonJoinClause, $scfJoinClause, $ssJoinClause,
+    $self->addGeneBatch( \@finalOids, $outColClause,   
+         $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
          $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
          $projectMetadataCols_ref, $outputCol_ref
@@ -2163,390 +1531,6 @@ sub printMyImgAnnotation {
                   -class   => "medbutton",
                   -onclick => "return validateSelection(1);"
     );
-}
-
-############################################################################
-# printGenesToExcelLarge - Print gene table for exporting to excel,
-#   large table version.
-############################################################################
-sub printGenesToExcelLarge {
-    my ($gene_oids_ref) = @_;
-
-    if ( 0 == scalar @$gene_oids_ref ) {
-        webError("You must select at least one gene to export.");
-		return;
-	}
-
-#    return if ( scalar(@$gene_oids_ref) == 0 );
-
-    print "gene_oid\t";
-    print "Locus Tag\t";
-    print "Gene Symbol\t";
-    print "Product Name\t";
-    print "DNA Seq Length\t";
-    print "AA Seq Length\t";
-    print "Genome\t";
-    print "Enzymes\t";
-    print "COGs\t";
-    print "COG Categories\t";
-    print "Pfams\t";
-    print "TIGRfams\t";
-    print "Signal Peptide\t";
-    print "Transmembrane Helices\t";
-    print "Genome ID\n";
-
-    my $dbh = dbLogin();
-
-    my ( $dbOids_ref, $metaOids_ref ) = MerFsUtil::splitDbAndMetaOids(@$gene_oids_ref);
-    my @dbOids   = @$dbOids_ref;
-    my @metaOids = @$metaOids_ref;
-
-    if ( scalar(@dbOids) > 0 ) {
-        my @batch;
-        my @genes_oids = sort(@dbOids);
-        for my $gene_oid (@genes_oids) {
-            if ( scalar(@batch) > 500 ) {
-                flushGenesToExcelLarge( $dbh, \@batch );
-                @batch = ();
-            }
-            push( @batch, $gene_oid );
-        }
-        flushGenesToExcelLarge( $dbh, \@batch );
-    }
-
-    if ( scalar(@metaOids) > 0 ) {
-        flushMetaGenesToExcelLarge( $dbh, \@metaOids );
-    }
-
-    #$dbh->disconnect();
-}
-
-############################################################################
-# flushGenesToExcelLarge - Print values from the database to the browser
-#   to be opened by Excel.
-############################################################################
-sub flushGenesToExcelLarge {
-    my ( $dbh, $batch_gene_oids_ref ) = @_;
-
-    return if ( scalar(@$batch_gene_oids_ref) == 0 );
-
-    #my $bindTokens = '?,' x @$batch_gene_oids_ref;
-    #chop $bindTokens;
-
-    # use gtt instead
-    OracleUtil::truncTable( $dbh, "gtt_num_id" );
-    OracleUtil::insertDataArray( $dbh, "gtt_num_id", $batch_gene_oids_ref );
-
-    my $sql = qq{
-       select ge.gene_oid, ge.enzymes
-       from gene_ko_enzymes ge
-       where ge.gene_oid in( select id from gtt_num_id )
-       order by ge.gene_oid, ge.enzymes
-    };
-    my %geneOid2Enzymes;
-    loadFuncIds( $dbh, $sql, \%geneOid2Enzymes );
-
-    my $sql = qq{
-       select gcg.gene_oid, gcg.cog
-       from gene_cog_groups gcg
-       where gcg.gene_oid in( select id from gtt_num_id )
-       order by gcg.gene_oid, gcg.cog
-    };
-    my %geneOid2Cogs;
-    loadFuncIds( $dbh, $sql, \%geneOid2Cogs );
-
-    my $sql = qq{
-       select gcg.gene_oid, cf.functions
-       from gene_cog_groups gcg, cog_functions cf
-       where gcg.gene_oid in( select id from gtt_num_id )
-       and gcg.cog = cf.cog_id
-       order by gcg.gene_oid, gcg.cog
-    };
-    my %geneOid2CogFunctions;
-    loadFuncIds( $dbh, $sql, \%geneOid2CogFunctions );
-
-    my $sql = qq{
-       select distinct gpf.gene_oid, gpf.pfam_family
-       from gene_pfam_families gpf
-       where gpf.gene_oid in( select id from gtt_num_id )
-       order by gpf.gene_oid, gpf.pfam_family
-    };
-    my %geneOid2Pfams;
-    loadFuncIds( $dbh, $sql, \%geneOid2Pfams );
-
-    my $sql = qq{
-       select gt.gene_oid, gt.ext_accession
-       from gene_tigrfams gt
-       where gt.gene_oid in( select id from gtt_num_id )
-    };
-    my %geneOid2Tigrfams;
-    loadFuncIds( $dbh, $sql, \%geneOid2Tigrfams );
-
-    my $sql = qq{
-       select gsp.gene_oid, count( distinct gsp.feature_type )
-       from gene_sig_peptides gsp
-       where gsp.gene_oid in( select id from gtt_num_id )
-       and gsp.feature_type = ?
-       group by gsp.gene_oid
-       order by gsp.gene_oid
-    };
-    my @binds;
-    push( @binds, 'cleavage' );
-
-    my %geneOid2SpCount;
-    loadGeneOid2Count( $dbh, $sql, \%geneOid2SpCount, @binds );
-
-    my $sql = qq{
-       select gtm.gene_oid, count( gtm.feature_type )
-       from gene_tmhmm_hits gtm
-       where gtm.gene_oid in( select id from gtt_num_id )
-       and gtm.feature_type = ?
-       group by gtm.gene_oid
-       order by gtm.gene_oid
-    };
-    my @binds;
-    push( @binds, 'TMhelix' );
-
-    my %geneOid2TmCount;
-    loadGeneOid2Count( $dbh, $sql, \%geneOid2TmCount, @binds );
-
-    my ($rclause) = WebUtil::urClause('tx');
-    my $imgClause = WebUtil::imgClause('tx');
-    my $sql       = qq{
-        select g.gene_oid, g.gene_display_name,
-          g.locus_type, g.locus_tag, g.gene_symbol, g.dna_seq_length, g.aa_seq_length,
-          tx.taxon_oid, tx.ncbi_taxon_id, tx.taxon_display_name
-        from taxon tx, gene g
-        where g.taxon = tx.taxon_oid
-        and g.gene_oid in ( select id from gtt_num_id )
-        $rclause
-        $imgClause
-        order by tx.taxon_display_name, g.gene_oid
-    };
-
-    my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ; ; ) {
-        my (
-             $gene_oid,       $gene_display_name, $locus_type, $locus_tag,     $gene_symbol,
-             $dna_seq_length, $aa_seq_length,     $taxon_oid,  $ncbi_taxon_id, $taxon_display_name
-          )
-          = $cur->fetchrow();
-        last if !$gene_oid;
-
-        $gene_display_name = " ( $locus_type ) " if $locus_type ne "CDS";
-        my $enzymes = $geneOid2Enzymes{$gene_oid};
-        chop $enzymes;
-        my $cogs = $geneOid2Cogs{$gene_oid};
-        chop $cogs;
-        my $cogFunctions = $geneOid2CogFunctions{$gene_oid};
-        chop $cogFunctions;
-        my $pfams = $geneOid2Pfams{$gene_oid};
-        chop $pfams;
-        my $tigrfams = $geneOid2Tigrfams{$gene_oid};
-        chop $tigrfams;
-        my $spCount = $geneOid2SpCount{$gene_oid};
-        my $tmCount = $geneOid2TmCount{$gene_oid};
-        my $sp      = "No";
-        $sp = "Yes" if $spCount > 0;
-        my $tm = "No";
-        $tm = "Yes" if $tmCount > 0;
-        print "$gene_oid\t";
-        print "$locus_tag\t";
-        print "$gene_symbol\t";
-        print "$gene_display_name\t";
-        print "$dna_seq_length\t";
-        print "$aa_seq_length\t";
-        print "$taxon_display_name\t";
-        print "$enzymes\t";
-        print "$cogs\t";
-        print "$cogFunctions\t";
-        print "$pfams\t";
-        print "$tigrfams\t";
-        print "$sp\t";
-        print "$tm\t";
-        print "$taxon_oid\n";
-    }
-    $cur->finish();
-    OracleUtil::truncTable( $dbh, "gtt_num_id" );
-}
-
-############################################################################
-# flushMetaGenesToExcelLarge - Print values from the file to the browser
-#   to be opened by Excel.
-############################################################################
-sub flushMetaGenesToExcelLarge {
-    my ( $dbh, $meta_gene_oids_ref ) = @_;
-
-    return if ( scalar(@$meta_gene_oids_ref) == 0 );
-
-    my %genes_h;
-    my %taxon_oid_h;
-
-    #my $k = 0;
-    for my $workspace_id (@$meta_gene_oids_ref) {
-        $genes_h{$workspace_id} = 1;
-        my @vals = split( / /, $workspace_id );
-        if ( scalar(@vals) >= 3 ) {
-            $taxon_oid_h{ $vals[0] } = 1;
-
-            #$k++;
-            #if ( $k > $maxGeneListResults ) {
-            #   last;
-            #}
-        }
-    }
-    my @taxonOids = keys(%taxon_oid_h);
-
-    my $taxon_name_href;
-    my $taxon_genome_type_href;
-    my $taxon_metaInfo_href;
-    if ( scalar(@taxonOids) > 0 ) {
-        ( $taxon_name_href, $taxon_genome_type_href, $taxon_metaInfo_href ) =
-          QueryUtil::fetchTaxonMetaInfo( $dbh, \@taxonOids );
-    }
-
-    my %gene_name_h;
-    my %gene_info_h;
-    MetaUtil::getAllGeneNames( \%genes_h, \%gene_name_h, 0 );
-    MetaUtil::getAllGeneInfo( \%genes_h, \%gene_info_h );
-
-    my $get_gene_cog  = 1;
-    my $get_gene_pfam = 1;
-
-    # gene-cog
-    my %gene_cog_h;
-    my %cog_name_h;
-    if ( $get_gene_cog && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFuncs( 'cog', $meta_gene_oids_ref, \%genes_h, \%gene_cog_h );
-    }
-
-    # gene-pfam
-    my %gene_pfam_h;
-    my %pfam_name_h;
-    if ( $get_gene_pfam && scalar( keys %genes_h ) > 0 ) {
-        MetaUtil::getAllMetaGeneFuncs( 'pfam', $meta_gene_oids_ref, \%genes_h, \%gene_pfam_h );
-    }
-
-    my $gene_count = 0;
-    for my $workspace_id (@$meta_gene_oids_ref) {
-        my ( $taxon_oid, $data_type, $gene_oid ) = split( / /, $workspace_id );
-        if ( !exists( $taxon_name_href->{$taxon_oid} ) ) {
-
-            #$taxon_oid not in hash, probably due to permission
-            webLog(
-"GeneCartStor flushMetaGenesToExcelLarge:: $taxon_oid not retrieved from database, probably due to permission." );
-        }
-
-        my ( $locus_type, $locus_tag, $gene_display_name, $start_coord,
-	     $end_coord, $strand, $scaffold_oid, $tid2, $dtype2 )
-	    = split( /\t/, $gene_info_h{$workspace_id} );
-        if ( !$taxon_oid && $tid2 ) {
-            $taxon_oid = $tid2;
-            if ( !exists( $taxon_name_href->{$taxon_oid} ) ) {
-                my $taxon_name = QueryUtil::fetchSingleTaxonName( $dbh, $taxon_oid );
-
-                # save taxon display name to prevent repeat retrieving
-                $taxon_name_href->{$taxon_oid} = $taxon_name;
-            }
-        }
-
-        # taxon
-        my $taxon_display_name = $taxon_name_href->{$taxon_oid};
-
-        if ( $gene_name_h{$workspace_id} ) {
-            $gene_display_name = $gene_name_h{$workspace_id};
-        }
-        if ( !$gene_display_name ) {
-            $gene_display_name = 'hypothetical protein';
-        }
-
-        my $dna_seq_length = $end_coord - $start_coord + 1;
-
-        my $faa           = MetaUtil::getGeneFaa( $gene_oid, $taxon_oid, $data_type );
-        my $aa_seq_length = length($faa);
-
-        my @cog_recs;
-        my $cogs = $gene_cog_h{$workspace_id};
-        if ($cogs) {
-            @cog_recs = split( /\t/, $cogs );
-        }
-
-        my $cog_ids;
-        for my $cog_id (@cog_recs) {
-            if ($cog_ids) {
-                $cog_ids .= "; " . $cog_id;
-            } else {
-                $cog_ids = $cog_id;
-            }
-        }
-
-        my @pfam_recs;
-        my $pfams = $gene_pfam_h{$workspace_id};
-        if ($pfams) {
-            @pfam_recs = split( /\t/, $pfams );
-        }
-
-        my $pfam_ids;
-        for my $pfam_id (@pfam_recs) {
-            if ($pfam_ids) {
-                $pfam_ids .= "; " . $pfam_id;
-            } else {
-                $pfam_ids = $pfam_id;
-            }
-        }
-
-        print "$workspace_id\t";
-        print "$locus_tag\t";
-        print "\t";    #gene symbol
-        print "$gene_display_name\t";
-        print "$dna_seq_length\t";
-        print "$aa_seq_length\t";
-        print "$taxon_display_name\t";
-        print "\t";    #enzymes
-        print "$cog_ids\t";
-        print "\t";    #COG Categories
-        print "$pfam_ids\t";
-        print "\t";    #tigrfams
-        print "\t";    #Signal Peptide
-        print "\t";    #Transmembrane Helices
-        print "$taxon_oid\n";
-    }
-}
-
-############################################################################
-# loadFuncIds - Load function ids for a batch of genes.
-############################################################################
-sub loadFuncIds {
-    my ( $dbh, $sql, $geneOid2FuncIds_href, @binds ) = @_;
-
-    my $cur = execSql( $dbh, $sql, $verbose, @binds );
-    my $count = 0;
-    for ( ; ; ) {
-        my ( $gene_oid, $func_id ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $count++;
-        $geneOid2FuncIds_href->{$gene_oid} .= "$func_id ";
-    }
-    $cur->finish();
-    webLog("$count rows retrieved\n");
-}
-
-############################################################################
-# loadGeneOid2Count - Load counts for gene_oid.
-############################################################################
-sub loadGeneOid2Count {
-    my ( $dbh, $sql, $geneOid2Count_href, @binds ) = @_;
-
-    my $cur = execSql( $dbh, $sql, $verbose, @binds );
-    my $count = 0;
-    for ( ; ; ) {
-        my ( $gene_oid, $cnt ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $count++;
-        $geneOid2Count_href->{$gene_oid} = $cnt;
-    }
-    $cur->finish();
-    webLog("$count rows retrieved\n");
 }
 
 ############################################################################
@@ -2855,6 +1839,7 @@ sub writeSelectedFile {
 
 sub getFile {
     my ($fileNameEnd) = @_;
+    
     my ( $cartDir, $sessionId ) = WebUtil::getCartDir();
     my $sessionFile = "$cartDir/geneCart.$sessionId." . $fileNameEnd;
     return $sessionFile;
@@ -2862,6 +1847,7 @@ sub getFile {
 
 sub readFromFile {
     my ($file) = @_;
+    
     my %records;
     my $res = newReadFileHandle( $file, "runJob", 1 );
     if ( !$res ) {

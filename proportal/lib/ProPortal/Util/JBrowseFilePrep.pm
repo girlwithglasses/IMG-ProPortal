@@ -20,10 +20,6 @@ use Bio::JBrowse::Cmd::FlatFileToJson;
 use Bio::JBrowse::Cmd::FormatSequences;
 use Bio::JBrowse::Cmd::IndexNames;
 
-# use AnyEvent;
-# use Promises backend => ['AE'], qw[ deferred collect ];
-# use AnyEvent::IO;
-
 has 'taxon_oid' => (
 	is => 'rwp',
 	lazy => 1,

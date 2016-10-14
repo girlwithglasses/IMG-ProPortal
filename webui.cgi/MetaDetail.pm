@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 34797 2015-11-26 05:08:21Z jinghuahuang $
+# $Id: MetaDetail.pm 36207 2016-09-22 19:30:10Z klchu $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -39,6 +39,8 @@ use WorkspaceUtil;
 use CombinedSample;
 use PhyloUtil;
 use AnalysisProject;
+use QueryUtil;
+use ScaffoldDataUtil;
 
 $| = 1;
 
@@ -82,6 +84,7 @@ my $img_pheno_rule        = $env->{img_pheno_rule};
 my $img_pheno_rule_saved  = $env->{img_pheno_rule_saved};
 my $snp_enabled           = $env->{snp_enabled};
 my $enable_biocluster     = $env->{enable_biocluster};
+my $virus                 = $env->{virus};
 
 my $kegg_cat_file               = $env->{kegg_cat_file};
 my $include_taxon_phyloProfiler = $env->{include_taxon_phyloProfiler};
@@ -624,7 +627,7 @@ sub printCrisprDetails {
     my $taxon_name = WebUtil::taxonOid2Name( $dbh, $taxon_oid, 1 );
     HtmlUtil::printMetaTaxonName( $taxon_oid, $taxon_name );
 
-    my @recs = QueryUtil::getTaxonCrisprList( $dbh, $taxon_oid );
+    my @recs = ScaffoldDataUtil::getTaxonCrisprList( $dbh, $taxon_oid );
 
     my $it = new InnerTable( 1, "Crispr$$", "Crispr", 0 );
     my $sd = $it->getSdDelim();    # sort delimiter
@@ -2326,16 +2329,7 @@ END_MAP
         }
     }
 
-    #    if ( -e $scaffold_stats_file ) {
-    #        # html bookmark 4 - export section
-    #        print WebUtil::getHtmlBookmark( "export",
-    #            "<h2>Export Genome Data</h2>" );
-    #        print "\n";
-    #        printExportLinks( $taxon_oid, $is_big_euk, $jgi_portal_url_str );
-    #        printHint( "Right click on link to see menu for "
-    #              . "saving link contents to target file.<br/>\n"
-    #              . "Please be patient during download.<br/>" );
-    #    }
+
 
     if ( $proteincount > 0 || $rnaseqcount > 0 ) {
         print WebUtil::getHtmlBookmark ( "expression", "<h2>Expression Studies</h2>" );
@@ -2362,67 +2356,6 @@ END_MAP
         print buttonUrl( $url, "RNASeq Differenital Expression Data", "lgbutton" );
     }
 
-    #print end_form();
-    #return;
-
-    #    print WebUtil::getHtmlBookmark ( "compare",
-    #        "<h2>Compare Gene Annotations</h2>" );
-    #    print "\n";
-    #
-    #    my $url =
-    #        "$main_cgi?section=GeneAnnotPager"
-    #      . "&page=viewGeneAnnotations&taxon_oid=$taxon_oid";
-    #    print "<div class='lgbutton'>\n";
-    #    print alink( $url, "Compare Gene Annotations" );
-    #    print "</div>\n";
-    #    print "<p>\n";
-    #    print "Gene annotation values are precomputed and stored ";
-    #    print "in a tab delimited file<br/>";
-    #    print "also viewable in Excel.<br/>\n";
-    #    print "</p>\n";
-
-    #    print WebUtil::getHtmlBookmark( "geneInfo",
-    #        "<h2>Download Gene Information</h2>" );
-    #    print "\n";
-    #
-    #    my $url =
-    #        "$main_cgi?section=GeneInfoPager"
-    #      . "&page=viewGeneInformation&taxon_oid=$taxon_oid";
-    #    print "<div class='lgbutton'>\n";
-    #    print alink( $url, "Download Gene Information" );
-    #    print "</div>\n";
-    #    print "<p>\n";
-    #    print "Gene information is precomputed and stored ";
-    #    print "in a tab delimited file<br/>";
-    #    print "also viewable in Excel.<br/>\n";
-    #    print "</p>\n";
-
-    # Show links and search only for genomes that have scaffold/DNA data.
-    # Do not show for proxy gene (protein) data only.
-    # --es 07/05/08
-    #    if ( hasNucleotideData( $dbh, $taxon_oid ) ) {
-    #        # html bookmark 4 - export section
-    #        print WebUtil::getHtmlBookmark( "export",
-    #            "<h2>Export Genome Data</h2>" );
-    #        print "\n";
-    #        printExportLinks( $taxon_oid, $is_big_euk, $jgi_portal_url_str );
-##        printHint( "Right click on link to see menu for "
-##              . "saving link contents to target file.<br/>\n"
-##              . "Please be patient during download.<br/>" );
-    #        if ($include_metagenomes) {
-    #            printScaffoldSearchForm($taxon_oid);
-    #        }
-    #    }
-    #    else {
-    #        # html bookmark 4 - export section
-    #        print WebUtil::getHtmlBookmark( "export",
-    #            "<h2>Export Genome Data</h2>" );
-    #        print "\n";
-    #        printProxyGeneExportLinks( $taxon_oid, $is_big_euk );
-##        printHint( "Right click on link to see menu for "
-##              . "saving link contents to target file.<br/>\n"
-##              . "Please be patient during download.<br/>" );
-    #    }
 
     if ( $genome_type eq "metagenome" && $has_unassembled && !$has_assembled ) {
 
@@ -3274,11 +3207,11 @@ sub taxonHasBins {
 sub printScaffoldSearchForm {
     my ($taxon_oid) = @_;
 
-    print start_form(
-        -action => "$section_cgi&searchScaffolds=1",
-        -method => "post",
-        -name   => "searchScaffoldForm"
-    );
+#    print start_form(
+#        -action => "$section_cgi&searchScaffolds=1",
+#        -method => "post",
+#        -name   => "searchScaffoldForm"
+#    );
 
     print WebUtil::getHtmlBookmark ( "information", "<h2>Scaffold Search (assembled)</h2>" );
     print "<p>\n";
@@ -3329,7 +3262,7 @@ sub printScaffoldSearchForm {
     );
     print nbsp(1);
     print reset( -class => "smbutton" );
-    print end_form();
+    #print end_form();
 }
 
 ############################################################################
@@ -3823,7 +3756,7 @@ sub printScaffoldSearchResults {
         $it->addColSpec( "Select" );
     }
     $it->addColSpec( "Scaffold",                 "asc",  "left" );
-    $it->addColSpec( "Sequence Length<br/>(bp)", "desc", "right" );
+    $it->addColSpec( "Sequence Length(bp)", "desc", "right" );
     $it->addColSpec( "GC Content",               "desc", "right" );
     $it->addColSpec( "Read Depth",               "desc", "right" );
     my $trunc = 0;
@@ -4044,6 +3977,18 @@ sub printScaffolds {
     }
 
     printMainForm();
+
+    if ( $virus ) {
+	## show viral scaffold count
+	require Viral;
+	my $viral_scaf_cnt = Viral::getViralScafCount($taxon_oid);
+        my $v_url = "$main_cgi?section=Viral&page=viralScaffoldList" .
+	    "&taxon_oid=" . $taxon_oid;
+	if ( $viral_scaf_cnt ) {
+	    print "<h6>Viral Scaffold Count: " .
+		alink($v_url, $viral_scaf_cnt) . "</h6>\n";
+	}
+    }
 
     print hiddenVar( "taxon_oid", $taxon_oid );
     if ($dist_type) {
@@ -4474,7 +4419,7 @@ sub printScaffoldReadDistribution {
                 $it->addColSpec( "Select" );
             }
             $it->addColSpec( "Scaffold",                 "asc",  "left" );
-            $it->addColSpec( "Sequence Length<br/>(bp)", "desc", "right" );
+            $it->addColSpec( "Sequence Length(bp)", "desc", "right" );
             $it->addColSpec( "GC Content",               "desc", "right" );
             $it->addColSpec( "Gene Count",               "desc", "right" );
             $it->addColSpec( "Read Depth",               "desc", "right" );
@@ -4850,7 +4795,7 @@ sub printScaffoldsByLengthCount {
     }
     $it->addColSpec( "Scaffold",                 "asc",  "left" );
     $it->addColSpec( "Topology",                 "asc",  "left" );
-    $it->addColSpec( "Sequence Length<br/>(bp)", "desc", "right" );
+    $it->addColSpec( "Sequence Length(bp)", "desc", "right" );
     $it->addColSpec( "GC Content",               "desc", "right" );
     if ($include_metagenomes) {
         $it->addColSpec( "Read Depth",         "asc", "right" );
@@ -5052,7 +4997,7 @@ sub printScaffoldsByGeneCount {
     }
     $it->addColSpec( "Scaffold",                 "asc",  "left" );
     $it->addColSpec( "Topology",                 "asc",  "left" );
-    $it->addColSpec( "Sequence Length<br/>(bp)", "desc", "right" );
+    $it->addColSpec( "Sequence Length(bp)", "desc", "right" );
     $it->addColSpec( "GC Content",               "desc", "right" );
     if ($include_metagenomes) {
         $it->addColSpec( "Read Depth",         "asc", "right" );
@@ -5224,7 +5169,7 @@ sub listScaffolds {
         $it->addColSpec( "Select" );
     }
     $it->addColSpec( "Scaffold",                 "asc",  "left" );
-    $it->addColSpec( "Sequence Length<br/>(bp)", "desc", "right" );
+    $it->addColSpec( "Sequence Length(bp)", "desc", "right" );
     $it->addColSpec( "GC Content",               "desc", "right" );
     $it->addColSpec( "Topology",                 "asc",  "left" );
     $it->addColSpec( "Gene Count",               "desc", "right" );
@@ -5355,7 +5300,7 @@ sub _printScaffoldsByCount {
         $it->addColSpec( "Select" );
     }
     $it->addColSpec( "Scaffold",                 "asc",  "left" );
-    $it->addColSpec( "Sequence Length<br/>(bp)", "desc", "right" );
+    $it->addColSpec( "Sequence Length(bp)", "desc", "right" );
     $it->addColSpec( "GC Content",               "desc", "right" );
     $it->addColSpec( "Type",                     "asc",  "left" );
     $it->addColSpec( "Topology",                 "asc",  "left" );
@@ -6543,7 +6488,7 @@ sub printRnas {
                 }
 
                 my $dna_seq_length = $len;
-                $row .= $dna_seq_length . $sd . "${dna_seq_length}bp\t";
+                $row .= $dna_seq_length . $sd . "${dna_seq_length}\t";
 
                 if ($include_metagenomes) {
                     $row .= $scaffold_oid . $sd . $scaffold_oid . "\t";
@@ -6575,7 +6520,7 @@ sub printRnas {
                         $scaffold_depth{$sc_id} = $scf_read_depth;
                     }
 
-                    $row .= $scf_seq_length . $sd . "${scf_seq_length}bp\t";
+                    $row .= $scf_seq_length . $sd . "${scf_seq_length}\t";
                     $row .= $scf_gc_percent . $sd . $scf_gc_percent . "\t";
                     $row .= $scf_read_depth . $sd . $scf_read_depth . "\t";
                 }
@@ -14117,9 +14062,34 @@ sub printMetaScaffoldDetail {
         printAttrRow( "Read Depth", "$scaf_depth" );
 
         my ( $lineage, $percentage, $rank ) = MetaUtil::getScaffoldLineage( $taxon_oid, $data_type, $scaffold_oid );
+
+	if ( $virus ) {
+	    my $v_sql = qq{
+                select domain, phylum, ir_class, ir_order,
+                       family, subfamily, genus, species
+                from dt_mvc_taxonomy\@core_v400_musk
+                where mvc = ?
+                };
+
+	    my $mvc_id = $taxon_oid . "_____" . $scaffold_oid;
+	    my $v_cur = execSql( $dbh, $v_sql, $verbose, $mvc_id );
+	    my ($v_dom, $v_phy, $v_cla, $v_ord, $v_fam,
+		$v_sub_fam, $v_gen, $v_spe) = $v_cur->fetchrow();
+	    $v_cur->finish();
+	    if ( $v_dom ) {
+		$lineage = "$v_dom;$v_phy;$v_cla;$v_ord;$v_fam";
+		if ( $v_sub_fam && $v_sub_fam ne 'unclassified' ) {
+		    $lineage .= "(" . $v_sub_fam . ")";
+		}
+		$lineage .= ";$v_gen;$v_spe";
+	    }
+	}
+
         if ($lineage) {
             printAttrRow( "Lineage",            "$lineage" );
-            printAttrRow( "Lineage Percentage", "$percentage" );
+	    if ( $percentage ) {
+		printAttrRow( "Lineage Percentage", "$percentage" );
+	    }
         }
     }
 
@@ -14129,6 +14099,68 @@ sub printMetaScaffoldDetail {
         printAttrRowRaw( "Gene Count", alink( $g_url, $scf_gene_cnt ) );
     } else {
         printAttrRowRaw( "Gene Count", $scf_gene_cnt );
+    }
+
+    ## ecosystem
+    my $sql = qq{
+           select g.ecosystem, g.ecosystem_category,
+                  g.ecosystem_type, g.ecosystem_subtype,
+                  g.specific_ecosystem
+           from gold_sequencing_project\@imgsg_dev g, taxon t
+           where t.taxon_oid = ?
+           and t.sequencing_gold_id = g.gold_id
+           };
+    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
+    my ($ecosystem, $eco_category, $eco_type, $eco_subtype,
+        $specific_eco) =
+	    $cur->fetchrow();
+    $cur->finish();
+
+    if ( $ecosystem ) {
+        printAttrRow( "Ecosystem", $ecosystem );
+    }
+    if ( $eco_category ) {
+        printAttrRow( "Ecosystem Category", $eco_category );
+    }
+    if ( $eco_type ) {
+        printAttrRow( "Ecosystem Type", $eco_type );
+    }
+    if ( $eco_subtype ) {
+        printAttrRow( "Ecosystem Subtype", $eco_subtype );
+    }
+    if ( $specific_eco ) {
+        printAttrRow( "Specific Ecosystem", $specific_eco );
+    }
+
+    ## habitat
+    $sql = qq{
+           select g.habitat
+           from gold_sp_habitat\@imgsg_dev g, taxon t
+           where t.taxon_oid = ?
+           and t.sequencing_gold_id = g.gold_id
+           and g.habitat is not null
+           order by 1
+           };
+    $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
+    my $habitat = "";
+    for (;;) {
+        my ($h2) = $cur->fetchrow();
+        last if ! $h2;
+        if ( $habitat ) {
+            $habitat .= "; " . $h2;
+        }
+        else {
+            $habitat = $h2;
+        }
+    }
+    $cur->finish();
+    if ( $habitat ) {
+        printAttrRow( "Habitat", $habitat );
+    }
+
+    if ( $virus ) {
+	require Viral;
+	Viral::printViralScafInfo($dbh, $taxon_oid, $scaffold_oid);
     }
     print "</table>\n";
 

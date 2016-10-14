@@ -3,7 +3,7 @@
 #   cumulative statistics.  Formerly taxonStatsRdbms.pl
 #      --es 07/07/2005
 #
-# $Id: CompareGenomes.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: CompareGenomes.pm 35977 2016-08-08 20:14:36Z klchu $
 ############################################################################
 package CompareGenomes;
 my $section = "CompareGenomes";
@@ -137,12 +137,7 @@ sub printStatsForOneTaxon {
     my @taxon_oids;
     push( @taxon_oids, $taxon_oid );
     my $dbh = dbLogin();
-    #if ( validProxyGeneReads( $dbh, $taxon_oid ) ) {
-    #    printStatsWithReads( $dbh, \@taxon_oids );
-    #} else {
     printStats( $dbh, \@taxon_oids );
-    #}
-    #$dbh->disconnect();
 }
 
 ############################################################################
@@ -372,9 +367,6 @@ sub printTaxonBreakdownGenStats {
         "pseudo_genes_pc",
         "uncharacterized_genes",
         "uncharacterized_genes_pc",
-
-        #"dubious_genes",
-        #"dubious_genes_pc",
         "genes_w_func_pred",
         "genes_w_func_pred_pc",
         "genes_wo_func_pred_sim",
@@ -385,8 +377,6 @@ sub printTaxonBreakdownGenStats {
         "genes_in_enzymes",
         "genes_in_enzymes_pc",
 
-        "genes_in_tc",
-        "genes_in_tc_pc",
 
         "genes_in_kegg",
         "genes_in_kegg_pc",
@@ -409,19 +399,10 @@ sub printTaxonBreakdownGenStats {
         "genes_in_pfam",
         "genes_in_pfam_pc",
 
-        #"genes_in_tigrfam",
-        #"genes_in_tigrfam_pc",
         "genes_signalp",
         "genes_signalp_pc",
         "genes_transmembrane",
         "genes_transmembrane_pc",
-#        "genes_in_ipr",
-#        "genes_in_ipr_pc",
-
-        #"genes_in_img_terms",
-        #"genes_in_img_terms_pc",
-        #"genes_in_img_pways",
-        #"genes_in_img_pways_pc",
         "genes_obsolete",
         "genes_obsolete_pc",
         "genes_revised",
@@ -438,8 +419,6 @@ sub printTaxonBreakdownGenStats {
         "gc_percent",
         "total_bases",
         "total_coding_bases",
-        "genes_in_eggnog",
-        "genes_in_eggnog_pc"
 
     );
     my @a_lite = (
@@ -475,8 +454,7 @@ sub printTaxonBreakdownGenStats {
         "genes_wo_func_pred_no_sim_pc",
         "genes_in_enzymes",
         "genes_in_enzymes_pc",
-        "genes_in_tc",
-        "genes_in_tc_pc",
+
         "genes_in_kegg",
         "genes_in_kegg_pc",
         "genes_not_in_kegg",
@@ -499,13 +477,6 @@ sub printTaxonBreakdownGenStats {
         "genes_signalp_pc",
         "genes_transmembrane",
         "genes_transmembrane_pc",
-#        "genes_in_ipr",
-#        "genes_in_ipr_pc",
-
-        #"genes_in_img_terms",
-        #"genes_in_img_terms_pc",
-        #"genes_in_img_pways",
-        #"genes_in_img_pways_pc",
         "genes_obsolete",
         "genes_obsolete_pc",
         "genes_revised",
@@ -520,8 +491,6 @@ sub printTaxonBreakdownGenStats {
         "gc_percent",
         "total_bases",
         "total_coding_bases",
-        "genes_in_eggnog",
-        "genes_in_eggnog_pc"
 
     );
     my @a = @a_full;
@@ -557,7 +526,7 @@ sub printTaxonBreakdownGenStats {
     push( @a, "fusion_components" );
     push( @a, "fusion_components_pc" );
 
-    # TODO added cassettes columns - ken
+    #  added cassettes columns - ken
     if ( $enable_cassette ) {
         # need to wait for taxon_stats to update column
         # this is only for 2.6
@@ -576,16 +545,7 @@ sub printTaxonBreakdownGenStats {
     push( @a, "genes_not_in_metacyc" );
     push( @a, "genes_not_in_metacyc_pc" );
 
-    push( @a, "genes_in_sp" );
-    push( @a, "genes_in_sp_pc" );
-    push( @a, "genes_not_in_sp" );
-    push( @a, "genes_not_in_sp_pc" );
 
-    # seed
-#    push( @a, "genes_in_seed" );
-#    push( @a, "genes_in_seed_pc" );
-#    push( @a, "genes_not_in_seed" );
-#    push( @a, "genes_not_in_seed_pc" );
 
     $cts->loadColNames( \@a );
 
@@ -630,8 +590,6 @@ sub printTaxonBreakdownGenStats {
     $x->{genes_wo_func_pred_no_sim_pc} = "Genes without function prediction without similarity (percentage)";
     $x->{genes_in_enzymes}             = "Number of genes assigned to enzymes";
     $x->{genes_in_enzymes_pc}          = "Genes assigned to enzymes (percentage)";
-    $x->{genes_in_tc}                  = "Number of genes assigned to Transporter Classification";
-    $x->{genes_in_tc_pc}               = "Genes assigned to Transporter Classification (percentage)";
     $x->{genes_in_kegg}                = "Number of genes in KEGG";
     $x->{genes_in_kegg_pc}             = "Genes in KEGG (percentage)";
     $x->{genes_not_in_kegg}            = "Number of genes not in KEGG";
@@ -651,7 +609,7 @@ sub printTaxonBreakdownGenStats {
     $x->{fusion_components}            = "Number of genes involved as fusion components";
     $x->{fusion_components_pc}         = "Genes involved as fusion components (percentage)";
 
-    # TODO cassettes - ken
+    # cassettes - ken
     $x->{genes_in_cassettes}    = "Number of genes in chromosomal cassette";
     $x->{genes_in_cassettes_pc} = "Genes in chromosomal cassette (percentage)";
     $x->{total_cassettes}       = "Number of chromosomal cassettes";
@@ -666,15 +624,6 @@ sub printTaxonBreakdownGenStats {
     $x->{genes_not_in_metacyc}    = "Number of genes not in MetaCyc";
     $x->{genes_not_in_metacyc_pc} = "Genes not in MetaCyc (percentage)";
 
-    $x->{genes_in_sp}        = "Number of genes in SwissProt Protein Product";
-    $x->{genes_in_sp_pc}     = "Genes in SwissProt Protein Product (percentage)";
-    $x->{genes_not_in_sp}    = "Number of genes not in SwissProt Protein Product";
-    $x->{genes_not_in_sp_pc} = "Genes not in SwissProt Protein Product (percentage)";
-
-#    $x->{genes_in_seed}        = "Number of genes in SEED";
-#    $x->{genes_in_seed_pc}     = "Genes in SEED (percentage)";
-#    $x->{genes_not_in_seed}    = "Number of genes not in SEED";
-#    $x->{genes_not_in_seed_pc} = "Genes not in SEED (percentage)";
 
     $x->{genes_in_cog}            = "Number of genes in COG";
     $x->{genes_in_cog_pc}         = "Genes in COG (percentage)";
@@ -718,8 +667,6 @@ if($enable_interpro) {
     $x->{genes_obsolete_pc}       = "Obsolete genes (percentage)";
     $x->{genes_revised}           = "Revised genes";
     $x->{genes_revised_pc}        = "Revised genes (percentage)";
-    $x->{genes_in_eggnog}         = "EggNOG genes";
-    $x->{genes_in_eggnog_pc}      = "EggNOG genes (percentage)";
 
     my $x = $cts->colNamesAutoSelected();
     $x->{total_gene_count} = 1;
@@ -750,8 +697,6 @@ if($enable_interpro) {
         print end_form();
         printStatusLine( $cts->{ genomeCount } . " genome(s) loaded.", 2 );
     }
-
-    #$dbh->disconnect();
 
 }
 
@@ -2480,7 +2425,7 @@ sub getMetagenomeKeggCategoryGeneCount {
                         $hash{$cat}      = $gene_count;
                         $results_href->{$t_oid} = \%hash;
                     } else {
-                        #Todo: in-accurate with below addition of gene_count
+                        # in-accurate with below addition of gene_count
                         $href->{$cat} += $gene_count;
                     }
                     #if ($cat eq 'Amino acid metabolism') {
@@ -3456,20 +3401,20 @@ sub printStats {
         }
     }
 
-    # swissprot
-    my $title = "Protein coding genes connected to SwissProt Protein Product";
-    my $url;
-    if ( $nTaxons == 1 && !$isTaxonInFile ) {
-        $url = "$oneTaxonBaseUrl&page=swissprot&taxon_oid=$taxon_oid";
-    }
-    printCountPercRow( 1, $title, $url, \%stats, "genes_in_sp", $nTaxons );
-
-    # no swissprot
-    my $title = "not connected to SwissProt Protein Product";
-    my $url;
-    $url = "$oneTaxonBaseUrl&page=noswissprot&taxon_oid=$taxon_oid"
-      if ( $nTaxons == 1 && !$isTaxonInFile );
-    printCountPercRow( 2, $title, $url, \%stats, "genes_not_in_sp", $nTaxons );
+#    # swissprot
+#    my $title = "Protein coding genes connected to SwissProt Protein Product";
+#    my $url;
+#    if ( $nTaxons == 1 && !$isTaxonInFile ) {
+#        $url = "$oneTaxonBaseUrl&page=swissprot&taxon_oid=$taxon_oid";
+#    }
+#    printCountPercRow( 1, $title, $url, \%stats, "genes_in_sp", $nTaxons );
+#
+#    # no swissprot
+#    my $title = "not connected to SwissProt Protein Product";
+#    my $url;
+#    $url = "$oneTaxonBaseUrl&page=noswissprot&taxon_oid=$taxon_oid"
+#      if ( $nTaxons == 1 && !$isTaxonInFile );
+#    printCountPercRow( 2, $title, $url, \%stats, "genes_not_in_sp", $nTaxons );
 
 
     # enzymes
@@ -3491,12 +3436,6 @@ sub printStats {
     printCountPercRow( 1, $title, $url, \%stats,
         "genes_wo_ez_w_ko", $nTaxons, 0 );
 
-    # tc
-    my $title = "Protein coding genes connected to Transporter Classification";
-    my $url;
-    $url = "$oneTaxonBaseUrl&page=tc&taxon_oid=$taxon_oid"
-      if ( $nTaxons == 1 && !$isTaxonInFile );
-    printCountPercRow( 1, $title, $url, \%stats, "genes_in_tc", $nTaxons );
 
     # kegg
     my $title = "Protein coding genes connected to KEGG pathways";
@@ -3648,16 +3587,6 @@ sub printStats {
         printCountPercRow( 2, $title, $url, \%stats, "genes_in_ipr", $nTaxons );
     }
 
-    if ($img_internal) {
-        # eggnog
-        my $title = "with EggNOG";
-        my $url;
-        if ( $nTaxons == 1 && !$isTaxonInFile ) {
-            $url =
-              "$main_cgi?section=EggNog&page=genelist&taxon_oid=$taxon_oid";
-        }
-        printCountPercRow( 2, $title, $url, \%stats, "genes_in_eggnog", $nTaxons );
-    }
 
 
     if ($include_img_terms) {
@@ -3752,7 +3681,7 @@ sub printStats {
 
 
     if ( $nTaxons == 1 ) {
-        # TODO Cassette stats here
+        # Cassette stats here
         if ( $enable_cassette ) {
             my $total   = $stats{total_gene_count};
             my $cgcount =
@@ -4217,25 +4146,25 @@ sub printStats {
     print "<br/>\n";
     print "<b>Notes</b>:<br/>\n";
     print "<p>\n";
-    print "<a name='ref1' id='ref1'></a>1</sup> - ";
+    print "<a name='ref1' id='ref1'></a>1 - ";
     print "GC percentage shown as count of G's and C's divided ";
     print "by the total number of bases.<br/> ";
     print nbsp(3);
     print "The total number of bases is not necessarily synonymous ";
     print "with a total number of G's, C's, A's, and T's.";
     print "<br/>\n";
-    print "<a name='ref2' id='ref2'></a>2</sup> - ";
+    print "<a name='ref2' id='ref2'></a>2 - ";
     print "Pseudogenes may also be counted as protein coding "
       . "or RNA genes, so is not additive under total gene count.";
     print "<br/>\n";
 
     if ($chart_exe) {
-        print "<a name='ref3' id='ref3'></a>3</sup> - ";
+        print "<a name='ref3' id='ref3'></a>3 - ";
         print "Graphical view available." . "<br/>\n";
     }
 
     if ( $uncharCnt > 0 ) {
-        print "<a name='ref4' id='ref4'></a>4</sup> - ";
+        print "<a name='ref4' id='ref4'></a>4 - ";
         print "Uncharacterized genes are genes that are not classified ";
         print "as CDS, a type of RNA, or pseudogene,<br/>\n";
         print nbsp(3);
@@ -4674,7 +4603,7 @@ sub accumulateStats {
               sum( dubious_genes ),
 
               sum( genes_in_enzymes ),
-              sum( genes_in_tc ),
+
               sum( genes_in_kegg ),
               sum( genes_not_in_kegg ),
               sum( genes_in_ko ),
@@ -4689,9 +4618,6 @@ sub accumulateStats {
               $cassetteCol
               $bioCol
               $metacycCol
-
-              sum( genes_in_sp ),
-              sum( genes_not_in_sp ),
 
 
 
@@ -4721,16 +4647,14 @@ sub accumulateStats {
               sum( genes_in_parts_list ),
               sum( genes_in_myimg ),
               sum( genes_obsolete ),
-              sum( genes_revised ),
-              sum( genes_in_eggnog )
+              sum( genes_revised )
        from taxon_stats dts
        where 1 = 1
        $selClause
        $rclause
        $imgClause
     };
-    #print "accumulateStats() sql: $sql<br/>\n";
-    #print "accumulateStats() binds: @binds<br/>\n";
+
     my $cur = execSql( $dbh, $sql, $verbose, @binds );
     (
        $stats_ref->{total_gene_count},
@@ -4753,7 +4677,7 @@ sub accumulateStats {
        $stats_ref->{dubious_genes},
 
        $stats_ref->{genes_in_enzymes},
-       $stats_ref->{genes_in_tc},
+
        $stats_ref->{genes_in_kegg},
        $stats_ref->{genes_not_in_kegg},
        $stats_ref->{genes_in_ko},
@@ -4765,7 +4689,7 @@ sub accumulateStats {
        $stats_ref->{fused_genes},
        $stats_ref->{fusion_components},
 
-       # TODO - cassette - ken
+       #  cassette - ken
        $stats_ref->{genes_in_cassettes},
        $stats_ref->{genes_in_cassettes_pc},
        $stats_ref->{total_cassettes},
@@ -4777,12 +4701,6 @@ sub accumulateStats {
        # metagcyc
        $stats_ref->{genes_in_metacyc},
        $stats_ref->{genes_not_in_metacyc},
-
-       $stats_ref->{genes_in_sp},
-       $stats_ref->{genes_not_in_sp},
-
-#       $stats_ref->{genes_in_seed},
-#       $stats_ref->{genes_not_in_seed},
 
        $stats_ref->{genes_in_cog},
        $stats_ref->{genes_in_kog},
@@ -4811,7 +4729,7 @@ sub accumulateStats {
        $stats_ref->{genes_in_myimg},
        $stats_ref->{genes_obsolete},
        $stats_ref->{genes_revised},
-       $stats_ref->{genes_in_eggnog},
+
       )
       = $cur->fetchrow();
     $cur->finish();
@@ -4831,11 +4749,6 @@ sub accumulateStats {
     $stats_ref->{kog_total}             = $tmpc;
     $stats_ref->{tigrfam_total}         = $tmpt;
     $stats_ref->{ortholog_groups_total} = $tmpb;
-
-#    $stats_ref->{pfam_total}            = getPfamTotal($dbh);
-#    $stats_ref->{cog_total}             = getCogTotal($dbh);
-#    $stats_ref->{tigrfam_total}         = getTigrfamTotal($dbh);
-#    $stats_ref->{ortholog_groups_total} = getOrthologGroupsTotal($dbh);
 
     if ( $stats_ref->{total_gene_count} > 0 ) {
         my $mul = ( 1 / $stats_ref->{total_gene_count} ) * 100;
@@ -4875,8 +4788,7 @@ sub accumulateStats {
           sprintf( "%.2f%%", $stats_ref->{dubious_genes} * $mul );
         $stats_ref->{genes_in_enzymes_pc} =
           sprintf( "%.2f%%", $stats_ref->{genes_in_enzymes} * $mul );
-        $stats_ref->{genes_in_tc_pc} =
-          sprintf( "%.2f%%", $stats_ref->{genes_in_tc} * $mul );
+
         $stats_ref->{genes_in_kegg_pc} =
           sprintf( "%.2f%%", $stats_ref->{genes_in_kegg} * $mul );
         $stats_ref->{genes_not_in_kegg_pc} =
@@ -4898,23 +4810,11 @@ sub accumulateStats {
         $stats_ref->{fusion_components_pc} =
           sprintf( "%.2f%%", $stats_ref->{fusion_components} * $mul );
 
-        # TODO cassette pc - ken
-        #$stats_ref->{genes_in_cassettes_pc} =
-        #  sprintf( "%.2f%%", $stats_ref->{genes_in_cassettes_pc}  );
         $stats_ref->{genes_in_metacyc_pc} =
           sprintf( "%.2f%%", $stats_ref->{genes_in_metacyc} * $mul );
         $stats_ref->{genes_not_in_metacyc_pc} =
           sprintf( "%.2f%%", $stats_ref->{genes_not_in_metacyc} * $mul );
 
-        $stats_ref->{genes_in_sp_pc} =
-          sprintf( "%.2f%%", $stats_ref->{genes_in_sp} * $mul );
-        $stats_ref->{genes_not_in_sp_pc} =
-          sprintf( "%.2f%%", $stats_ref->{genes_not_in_sp} * $mul );
-
-#        $stats_ref->{genes_in_seed_pc} =
-#          sprintf( "%.2f%%", $stats_ref->{genes_in_seed} * $mul );
-#        $stats_ref->{genes_not_in_seed_pc} =
-#          sprintf( "%.2f%%", $stats_ref->{genes_not_in_seed} * $mul );
 
         $stats_ref->{genes_in_cog_pc} =
           sprintf( "%.2f%%", $stats_ref->{genes_in_cog} * $mul );
@@ -4946,8 +4846,6 @@ sub accumulateStats {
           sprintf( "%.2f%%", $stats_ref->{genes_obsolete} * $mul );
         $stats_ref->{genes_revised_pc} =
           sprintf( "%.2f%%", $stats_ref->{genes_revised} * $mul );
-        $stats_ref->{genes_in_eggnog_pc} =
-          sprintf( "%.2f%%", $stats_ref->{genes_in_eggnog} * $mul );
     }
     if ( $stats_ref->{total_bases} > 0 ) {
         my $mul = ( 1 / $stats_ref->{total_bases} ) * 100;
@@ -6231,12 +6129,12 @@ sub printStatsWithReads {
     print "so is not additive under total gene count.<br/>\n";
 
     if ($chart_exe) {
-        print "<a name='ref3' id='ref3'></a>3</sup> - ";
+        print "<a name='ref3' id='ref3'></a>3 - ";
         print "Graphical view available." . "<br/>\n";
     }
 
     if ( $uncharCnt > 0 ) {
-        print "<a name='ref4' id='ref4'></a>4</sup> - ";
+        print "<a name='ref4' id='ref4'></a>4 - ";
         print "Uncharacterized genes are genes that are not classified ";
         print "as CDS, a type of RNA, or pseudogene,<br/>\n";
         print nbsp(3);
@@ -6251,23 +6149,11 @@ sub printStatsWithReads {
 #
 sub getCRISPRCount {
     my ( $dbh, $taxon_oid ) = @_;
-#    my $imgClause = WebUtil::imgClauseNoTaxon('ss.taxon');
-#    my $sql = qq{
-#        select ss.taxon, count(*)
-#        from scaffold_stats ss
-#        where ss.taxon = ?
-#        $imgClause
-#        and exists (select 1 from scaffold_repeats sr
-#                    where sr.scaffold_oid = ss.scaffold_oid
-#                    and sr.type = ?)
-#        group by ss.taxon
-#    };
-#
 
     my $sql = qq{
-      select CRISPR_COUNT
-from taxon_stats
-where taxon_oid = ?
+        select CRISPR_COUNT
+        from taxon_stats
+        where taxon_oid = ?
     };
 
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid);

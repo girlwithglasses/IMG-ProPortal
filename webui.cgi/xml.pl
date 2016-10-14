@@ -3,11 +3,12 @@
 # It follows the same logic as main.pl and inner.pl
 # see xml.cgi
 #
-# $Id: xml.pl 34697 2015-11-12 21:25:00Z klchu $
+# $Id: xml.pl 35757 2016-06-13 18:08:02Z klchu $
 ############################################################################
 use strict;
 use CGI qw( :standard );
 use CGI::Session qw/-ip-match/;    # for security - ken
+use CGI::Carp qw( carpout set_message fatalsToBrowser );
 use perl5lib;
 use Data::Dumper;
 use FileHandle;
@@ -17,6 +18,7 @@ use WebUtil;
 $| = 1;
 
 my $env                  = getEnv();
+my $top_base_dir         = $env->{top_base_dir};
 my $base_dir             = $env->{base_dir};
 my $default_timeout_mins = $env->{default_timeout_mins};
 $default_timeout_mins = 5 if $default_timeout_mins eq "";
@@ -32,24 +34,23 @@ timeout( 60 * $default_timeout_mins );
 my $cgi     = WebUtil::getCgi();
 my $section = param("section");
 
-#if ( $section eq "tooltip" ) {
-#    my $filename = param('filename');
-#    print header( -type => "text/html" );
-#
-#    my $file = $base_dir . '/doc/tooltips/' . $filename;
-#    if ( -e $file ) {
-#        my $str = file2Str($file);
-#        print $str;
-#    }
-#
-#} els
-if ( $section eq "yuitracker" ) {
+if ( $section eq "tooltip" ) {
+    my $filename = param('filename');
+    print header( -type => "text/html" );
+
+    my $file = $top_base_dir . '/docs/tooltips/' . $filename;
+    if ( -e $file ) {
+        my $str = file2Str($file);
+        print $str;
+    }
+
+} elsif ( $section eq "yuitracker" ) {
     print header( -type => "text/html" );
     my $file = $env->{yui_export_tracker_log};
     my $afh = newAppendFileHandle( $file, "yui", 1 );
 
     my $text = param('text');
-    my $s = dateTimeStr() . ' ' . getContactOid() . " $text\n";
+    my $s    = dateTimeStr() . ' ' . getContactOid() . " $text\n";
     print $afh $s;
     close $afh;
 
@@ -68,36 +69,42 @@ if ( $section eq "yuitracker" ) {
     print header( -type => "text/plain" );
     print Dumper $env;
 
-} elsif ($section eq 'ProPortal') {
+} elsif ( $section eq 'AutoRefresh' ) {
+        require AutoRefresh;
+        AutoRefresh::dispatch();
+} elsif ( $section eq 'ProPortal' ) {
+
     # text/html
     print header( -type => "text/html" );
 
     require ProPortal;
     ProPortal::dispatch();
 
-} elsif($section eq 'MeshTree') {
+} elsif ( $section eq 'MeshTree' ) {
 
     require MeshTree;
     MeshTree::dispatch();
 
-} elsif($section eq 'ANI') {
+} elsif ( $section eq 'ANI' ) {
 
     my $page = param('page');
-    if ($page eq "selectFiles" ) {
-    # xml header
-    print header( -type => "text/xml" );
+    if ( $page eq "selectFiles" ) {
+
+        # xml header
+        print header( -type => "text/xml" );
     } else {
-    print header( -type => "application/json", -expires=>'-1d' );
+        print header( -type => "application/json", -expires => '-1d' );
     }
     require ANI;
     ANI::dispatch();
 
-} elsif($section eq 'GenomeListJSON') {
+} elsif ( $section eq 'GenomeListJSON' ) {
 
     my $page = param('page');
     if ( $page eq 'json' ) {
+
         # Stop IE ajax caching
-        print header( -type => "application/json", -expires=>'-1d' );
+        print header( -type => "application/json", -expires => '-1d' );
     } else {
         print header( -type => "text/plain" );
     }
@@ -306,42 +313,76 @@ if ( $section eq "yuitracker" ) {
 
     # test
     unsetEnvPath();
-    print $ENV{PATH} . "\n";
+    print "PATH:\n";
+    print $ENV{PATH} . "\n\n";
+    print "LD_LIBRARY_PATH:\n";
+    print $ENV{LD_LIBRARY_PATH} . "\n\n";
 
-    #delete @ENV{ 'IFS', 'CDPATH', 'ENV', 'BASH_ENV' };
-    my $scriptEnv = $env->{scriptEnv_script};
-    if ( $scriptEnv ne '' ) {
-        my $cmd1 = "java -version";
-        print "$cmd1\n";
-        # $cfh = new FileHandle("PATH=/bin:/usr/bin:/usr/local/bin; IFS=''; CDPATH=''; ENV=''; BASH_ENV=''; $cmd 2>\&1 |");
-        #my $fh = newCmdFileHandle( $cmd1, '', 1 );
-        my $fh =  new FileHandle("$cmd1 2>\&1 |");
-        if ($fh) {
-            while ( my $line = $fh->getline() ) {
-                chomp $line;
-                print "Status: $line\n";
-            }
-            close $fh;
-        }
 
-        my $cmd2 = "$scriptEnv java -version";
-        print "\n\n$cmd2\n";
-        #my $fh = newCmdFileHandle($cmd2);
-        my $fh = new FileHandle("$cmd2 2>\&1 |");
-        while ( my $line = $fh->getline() ) {
-            chomp $line;
-            print "Status: $line\n";
-        }
-        close $fh;
-    } else {
-        print "hello world\n";
-    }
+    my $cmd1 = "perl -version";
+    testCmd($cmd1);
+
+    my $cmd1 = "python -V";
+    testCmd($cmd1);
+
+
+    my $cmd1 = "java -version";
+    testCmd($cmd1);
+
+    my $cmd1 = "R --version";
+    testCmd($cmd1);
+    
+    my $cmd1 = "/usr/bin/which neighbor";
+    testCmd($cmd1);    
+
+    my $cmd1 = "which gs";
+    testCmd($cmd1);
+
     print "\n\nTest Done\n";
 
+    print "\n ip: " . WebUtil::getIpAddress() . " " . $ENV{SERVER_NAME};
+    print "\n";
+    print "webutil " . WebUtil::getHostname(); 
+    print "\n";
+    
+    print "HTTP_X_FORWARDED_FOR " . $ENV{HTTP_X_FORWARDED_FOR};
+    print "\n";
+
+#    
+#    foreach my $key (%ENV) {
+#        print "$key => " . $ENV{$key} . "\n";
+#    }
+#    
+} elsif ( $section eq 'fitnessblast' ) {
+    my $gene_oid = param('gene_oid');
+    my $dbh = WebUtil::dbLogin();
+    my $aa_residue = WebUtil::geneOid2AASeq($dbh, $gene_oid);
+    my $url = "http://fit.genomics.lbl.gov/cgi-bin/seqservice.cgi?html=1&seq=$aa_residue";
+    WebUtil::webLog("\n$url\n");
+    my $content = WebUtil::urlGet($url);
+    print header( -type => "text/html" );
+    print $content;
 } else {
     print header( -type => "text/plain" );
     print "Unknown section='$section'\n";
 }
 
 WebUtil::webExit(0);
+
+sub testCmd {
+    my($cmd1) = @_;
+    
+    print "\nTesting command:\n    $cmd1\n";
+    my $fh = new FileHandle("$cmd1 2>\&1 |");
+
+    if ($fh) {
+        while ( my $line = $fh->getline() ) {
+            chomp $line;
+            print "Status: $line\n";
+        }
+        close $fh;
+    }
+    
+    
+}
 

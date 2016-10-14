@@ -1,7 +1,7 @@
 ############################################################################
 # TaxonTableConfiguration.pm - share use
 #
-# $Id: TaxonTableConfiguration.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: TaxonTableConfiguration.pm 35309 2016-02-24 21:23:18Z jinghuahuang $
 ############################################################################
 package TaxonTableConfiguration;
 
@@ -29,7 +29,7 @@ my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
 my $include_kog              = $env->{include_kog};
 ### optional genome field columns to configuration and display 
-my @gOptCols = getGenomeFieldAttrs();
+my @gOptCols = TaxonSearchUtil::getGenomeFieldAttrs();
 my $top_base_url = $env->{top_base_url};
 # TODO
 #push(@gOptCols,'sample_oid');
@@ -339,7 +339,7 @@ my %colName2Label_s = (
     total_cassettes    => "Chromosomal Cassette Count",
 );
 
-my %colName2Label_g = getColName2Label_g();
+my %colName2Label_g = TaxonSearchUtil::getColName2Label_g();
 my %colName2Label_m = DataEntryUtil::getGoldAttrDisplay();
 my %colName2Label = (%colName2Label_g, %colName2Label_m, %colName2Label_s);
 
@@ -631,10 +631,10 @@ my %colName2Align_s = (
     total_cassettes    => "num asc right",
 );
 
-my %colName2Align = getColName2Align_g();
+my %colName2Align = TaxonSearchUtil::getColName2Align_g();
 %colName2Align = (%colName2Align, %colName2Align_m, %colName2Align_s);
 
-my %colName2SortQual = getColName2SortQual_g();
+my %colName2SortQual = TaxonSearchUtil::getColName2SortQual_g();
 
 ############################################################################
 # findColType - Find col belonging to which type

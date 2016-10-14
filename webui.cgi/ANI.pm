@@ -1,4 +1,4 @@
-# $Id: ANI.pm 34815 2015-12-02 19:15:49Z jinghuahuang $
+# $Id: ANI.pm 36260 2016-09-29 19:36:01Z klchu $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -19,6 +19,8 @@ use WebUtil;
 use GenomeListJSON;
 use JSON;
 use GraphViz;
+use HtmlUtil;
+use Command;
 
 $| = 1;
 
@@ -42,8 +44,9 @@ my $tmp_dir                  = $env->{tmp_dir};
 my $tmp_url                  = $env->{tmp_url};
 my $YUI                      = $env->{yui_dir_28};
 my $include_metagenomes      = $env->{include_metagenomes};
-my $top_base_url = $env->{top_base_url};
+
 my $max_pairwise = 100;
+my $img_ken = $env->{img_ken};
 
 sub getPageTitle {
     return 'ANI';
@@ -77,20 +80,30 @@ sub dispatch {
     my $page = param("page");
 
     if ($page eq "overview") {
+        HtmlUtil::cgiCacheInitialize($section, '', '', 1);
+        HtmlUtil::cgiCacheStart() or return;
         printOverview();
+        HtmlUtil::cgiCacheStop();
     } elsif ($page eq "pairwise") {
         printPairwise($numTaxon);
     } elsif ($page eq "doPairwise") {
-        doPairwise();
-    } elsif ($page eq "doQuickPairwise" ||
-	     paramMatch("doQuickPairwise") ne "") {
+        HtmlUtil::cgiCacheInitialize($section, '', '', 1);
+        HtmlUtil::cgiCacheStart() or return;
+	doPairwise();
+        HtmlUtil::cgiCacheStop();        
+    } elsif ($page eq "doQuickPairwise" || paramMatch("doQuickPairwise") ne "") {
+        HtmlUtil::cgiCacheInitialize($section, '', '', 1);
+        HtmlUtil::cgiCacheStart() or return;        
         doQuickPairwise();
+        HtmlUtil::cgiCacheStop();
     } elsif ($page eq "doSameSpeciesPlot") {
         doSameSpeciesPlot();
     } elsif ($page eq "doPairwiseWithUpload") {
+        HtmlUtil::cgiCacheInitialize($section, '', '', 1);
+        HtmlUtil::cgiCacheStart() or return;
         doPairwiseWithUpload();
-    } elsif ($page eq "plotSameSpeciesPairwise" ||
-	     paramMatch("plotSameSpeciesPairwise") ne "") {
+        HtmlUtil::cgiCacheStop();
+    } elsif ($page eq "plotSameSpeciesPairwise" || paramMatch("plotSameSpeciesPairwise") ne "") {
         plotSameSpeciesPairwise();
     } elsif ($page eq "sameSpeciesPairwise") {
         printSameSpeciesPairwiseForm();	# for testing...
@@ -138,6 +151,11 @@ sub printLandingPage {
     my $touchFileTime = fileAtime($filename);
     $touchFileTime = Date::Format::time2str("%a %b %e %Y", $touchFileTime);
 
+    # more stats
+    my $filename2 = $ani_stats_dir . 'anistats-3.stor';
+    my $href2 = retrieve($filename2);
+    
+
     my $template = HTML::Template->new(filename => "$base_dir/aniLanding.html");
     $template->param(xcount => Number::Format::format_number($href->{xcount}));
     $template->param(ycount => Number::Format::format_number($href->{ycount}));
@@ -147,6 +165,17 @@ sub printLandingPage {
     $template->param(ccount => Number::Format::format_number($href->{ccount}));
     $template->param(dcount => Number::Format::format_number($href->{dcount}));
     $template->param(ecount => Number::Format::format_number($href->{ecount}));
+
+
+    $template->param(unique_species_names => Number::Format::format_number($href2->{unique_species_names}));
+    $template->param(clique_cnt => Number::Format::format_number($href2->{clique}));
+    $template->param(clique_group_cnt => Number::Format::format_number($href2->{'clique-group'}));
+    $template->param(singleton_cnt => Number::Format::format_number($href2->{singleton}));
+
+    $template->param(strain_clique_cnt => Number::Format::format_number($href2->{'strain_clique'}));
+    $template->param(strain_clique_group_cnt => Number::Format::format_number($href2->{'strain_clique-group'}));
+    $template->param(strain_singleton_cnt => Number::Format::format_number($href2->{'strain_singleton'}));
+
 
     $template->param(date     => $touchFileTime);
     $template->param(base_url => $base_url);
@@ -249,7 +278,7 @@ sub drawCliqueGroups {
         my $imageUrl = getImage($clq, $count, \@oids, \%pairs, $zoom, $isdetail);
         my $cliqueUrl = "$section_cgi&page=cliqueDetails&clique_id=$clq";
         print "<a href='$cliqueUrl' target='_blank'>" if !$isdetail;
-        print "<image src='$imageUrl' title='$clq' border='0' />";
+        print "<img src='$imageUrl' title='$clq' border='0' />";
         print "</a>" if !$isdetail;
         print "&nbsp;&nbsp;";
     }
@@ -632,7 +661,7 @@ sub selectFiles {
         -action => "$main_cgi",
    );
 
-    WorkspaceUtil::printShareMainTableNoFooter("WorkspaceGenomeSet", $workspace_dir, $sid, $folder, \@files, 0, 1);
+    WorkspaceUtil::printShareMainTableNoFooter("WorkspaceGenomeSet", $workspace_dir, $sid, $folder, \@files, '', 0, 1);
     print end_form();
 
     print qq {
@@ -652,6 +681,7 @@ sub printAdvancedSearchForm {
 		     -action => "$main_cgi");
     print "<p><font color='#003366'>"
 	. "Please select up to $max_pairwise genomes:"
+	. "<br/><u>Note:</u> This limit is lower for private genomes that do not get precomputed for the computation is then <i>on demand</i>."
 	. "</font>";
 
     my $template = getSearchTemplate("$base_dir/genomeJsonTwoDiv.html");
@@ -662,6 +692,7 @@ sub printAdvancedSearchForm {
     $template->param(localfile1           => 1); # to allow selection of local file
     $template->param(maxSelected1         => $max_pairwise);
     $template->param(maxSelected2         => $max_pairwise);
+    $template->param( from                 => 'isolate' );
     $template->param(selectedGenome1Title => 'Pairwise 1:');
     $template->param(selectedGenome2Title => 'Pairwise 2:');
     print "<script src='$top_base_url/js/imgDialog.js'></script>\n";
@@ -995,6 +1026,8 @@ sub computePairwiseANI {
     my @oids1 = @$oids1_aref;
     my @oids2 = @$oids2_aref;
 
+    timeout( 60 * 20 );     # timeout in 20 mins (from main.pl)
+
     # data in taxon_ani_matrix is stored in 1 row
     # for both tx1->tx2 and tx2->tx1, so need to run
     # same query flipping genome1 and genome2
@@ -1012,7 +1045,7 @@ sub computePairwiseANI {
     my %precomputed;
 
     printStartWorkingDiv();
-    print "<p>Querying for precomputed...";
+    print "<p>Querying for precomputed...<br>\n";
 
     foreach my $tx1 (@oids1) {
         my $cur = execSql($dbh, $sql, $verbose, $tx1);
@@ -1069,26 +1102,45 @@ sub computePairwiseANI {
 	    next if $tx1 eq $tx2;
             next if exists $precomputed{ $tx1 . "," . $tx2 };
             next if exists $precomputed{ $tx2 . "," . $tx1 };
-            print "<br/>Computing on demand $tx1 vs $tx2...";
+            print "<br/>Computing on demand $tx1 vs $tx2...<br>\n";
 
             $tx1 = checkPath($tx1);
             $tx2 = checkPath($tx2);
 
-            my $tmp_out_file = "$tmp_dir/ANI_output_" . $tx1 . $tx2 . "$$.txt";
-            my $work_dir     = "/scratch/ani.work.$$.dir";
+	    my $dir = "/global/projectb/scratch/img/www-data/service/tmp/ANI";
+            my $tmp_out_file = "$dir/ANI_output_" . $tx1 . '-' . $tx2 . '-' . "$$.txt";
+            my $work_dir = '/global/projectb/scratch/img/www-data/service/tmp/ANI'; # TODO ken cache test
+            #my $tmp_out_file = "$tmp_dir/ANI_output_" . $tx1 . $tx2 . "$$.txt";
+            #my $work_dir = "$cgi_tmp_dir/ani.work.$$.dir";
+            #my $work_dir = '/webfs/scratch/img/ANI'; # TODO ken cache test
 
             WebUtil::unsetEnvPath();
 
+            # TODO afther workshop move this to a common bin dir along with Evan's abc scripts
             my $cmd =
-                "$cgi_dir/bin/calculateANI.img.pl "
+                "/global/homes/k/klchu/Dev/svn/webUI/webui.cgi/bin/calculateANI.img.pl "
+                #"$cgi_dir/bin/calculateANI.img.pl "
               . "-taxon1    $tx1 "
               . "-taxon2    $tx2 "
               . "-directory $work_dir "
               . "-o         $tmp_out_file ";
-            my $perl_bin = $env->{perl_bin};
-            my $st = runCmdNoExit("$perl_bin -I `pwd`  $cmd");
-
-            webLog("\ncalculateANI: + $cmd\n");
+            #my $perl_bin = $env->{perl_bin};
+	    #my $st = runCmdNoExit("$perl_bin -I `pwd`  $cmd");
+	    
+	    my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile( $cmd, $work_dir );           
+	    Command::startDotThread();
+	    
+	    my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
+	    if ( $stdOutFile == -1 ) {		
+                Command::killDotThread();
+                # close working div but do not clear the data
+                printEndWorkingDiv( '', 1 );
+                printStatusLine( "Error.", 2 );
+                WebUtil::webExit(-1);
+            }
+            Command::killDotThread();
+    
+	    webLog("\ncalculateANI: + $cmd\n");
             WebUtil::resetEnvPath();
 
             if (!(-e $tmp_out_file)) {
@@ -1101,17 +1153,19 @@ sub computePairwiseANI {
                 chomp $s;
                 $count++;
 
-                my ($genome1x,    $genome2x,    $size1,     $size2,     $csize,    $total_bbh, $valid_bbh,
-                    $genome1_bbh, $genome2_bbh, $bbh_size1, $bbh_size2, $aligned1, $aligned2,  $caligned,
-                    $ani1x,       $ani2x,       $af1x,      $af2x,      $cani,     $final_ani, $final_af)
-		    = split(/\t/, $s) if $count == 2;
-                $genome1 = $genome1x;
-                $genome2 = $genome2x;
-                $ani1    = $ani1x;
-                $ani2    = $ani2x;
-                $af1     = $af1x;
-                $af2     = $af2x;
-                $bbh_cnt = $total_bbh;
+		if ($count == 2) {
+		    my ($genome1x,    $genome2x,    $size1,     $size2,     $csize,    $total_bbh, $valid_bbh,
+			$genome1_bbh, $genome2_bbh, $bbh_size1, $bbh_size2, $aligned1, $aligned2,  $caligned,
+			$ani1x,       $ani2x,       $af1x,      $af2x,      $cani,     $final_ani, $final_af)
+			= split(/\t/, $s);
+		    $genome1 = $genome1x;
+		    $genome2 = $genome2x;
+		    $ani1    = $ani1x;
+		    $ani2    = $ani2x;
+		    $af1     = $af1x;
+		    $af2     = $af2x;
+		    $bbh_cnt = $total_bbh;
+		}
             }
 
             my $rec = $genome1 . "\t" . $genome2 . "\t"
@@ -1120,7 +1174,12 @@ sub computePairwiseANI {
         }
     }
 
-    printEndWorkingDiv();
+    if ($img_ken) {
+        printEndWorkingDiv('', 1);
+    } else {
+        printEndWorkingDiv();
+    }
+
     return (\@dataRecs, \%precomputed);
 }
 
@@ -1189,25 +1248,43 @@ sub computePairwiseANIWithUpload {
     foreach my $fh (@$fh_aref) {
         my $tmp_upload_file = @$upload_files_aref[$idx];
         $tmp_upload_file = checkPath($tmp_upload_file);
+	close $fh; # close upload file handle
 
         foreach my $tx (@oids) {
             print "<br/>Computing on demand $fh vs $tx...";
 
             $tx = checkPath($tx);
 
+            #my $dir = "/global/projectb/scratch/img/www-data/service/tmp/ANI";
+            #my $tmp_out_file = "$dir/ANI_output_" . $idx . '-' . $tx . '-' . "$$.txt";
+            #my $work_dir = '/global/projectb/scratch/img/www-data/service/tmp/ANI';
             my $tmp_out_file = "$tmp_dir/ANI_output_" . $idx . $tx . "$$.txt";
-            my $work_dir     = "/scratch/ani.work.$$.dir";
+            my $work_dir = "$cgi_tmp_dir/ani.work.$$.dir";
 
             WebUtil::unsetEnvPath();
 
             my $cmd =
+                #"/global/homes/k/klchu/Dev/svn/webUI/webui.cgi/bin/calculateANI.img.pl "
                 "$cgi_dir/bin/calculateANI.img.pl "
               . "-seq1      $tmp_upload_file "
               . "-taxon2    $tx "
               . "-directory $work_dir "
               . "-o         $tmp_out_file ";
             my $perl_bin = $env->{perl_bin};
-            my $st       = runCmdNoExit("$perl_bin -I `pwd`  $cmd");
+            my $st = runCmdNoExit("$perl_bin -I `pwd`  $cmd");
+
+            #my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile( $cmd, $work_dir );
+	    #Command::startDotThread();
+
+            #my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
+            #if ( $stdOutFile == -1 ) {
+                # close working div but do not clear the data
+            #    printEndWorkingDiv( '', 1 );
+	    #    Command::killDotThread();
+            #    printStatusLine( "Error.", 2 );
+	    #    WebUtil::webExit(-1);
+            #}
+	    #Command::killDotThread();
 
             webLog("\ncalculateANI with upload: + $cmd\n");
             WebUtil::resetEnvPath();
@@ -1222,17 +1299,19 @@ sub computePairwiseANIWithUpload {
                 chomp $s;
                 $count++;
 
-                my ($genome1x,    $genome2x,    $size1,     $size2,     $csize,    $total_bbh, $valid_bbh,
-                    $genome1_bbh, $genome2_bbh, $bbh_size1, $bbh_size2, $aligned1, $aligned2,  $caligned,
-                    $ani1x,       $ani2x,       $af1x,      $af2x,      $cani,     $final_ani, $final_af)
-		    = split(/\t/, $s) if $count == 2;
-                $genome1 = $genome1x;
-                $genome2 = $genome2x;
-                $ani1    = $ani1x;
-                $ani2    = $ani2x;
-                $af1     = $af1x;
-                $af2     = $af2x;
-                $bbh_cnt = $total_bbh;
+		if ($count == 2) {
+		    my ($genome1x,    $genome2x,    $size1,     $size2,     $csize,    $total_bbh, $valid_bbh,
+			$genome1_bbh, $genome2_bbh, $bbh_size1, $bbh_size2, $aligned1, $aligned2,  $caligned,
+			$ani1x,       $ani2x,       $af1x,      $af2x,      $cani,     $final_ani, $final_af)
+			= split(/\t/, $s);
+		    $genome1 = $genome1x;
+		    $genome2 = $genome2x;
+		    $ani1    = $ani1x;
+		    $ani2    = $ani2x;
+		    $af1     = $af1x;
+		    $af2     = $af2x;
+		    $bbh_cnt = $total_bbh;
+		}
             }
 
             my $rec = $genome1 . "\t" . $genome2 . "\t"
@@ -1343,20 +1422,18 @@ sub uploadLocalFile {
         }
         close $wfh;
 
-        # bug fix for Natalia and Windows 7, tell browser to close upload file handle - ken
-        close $fh;
-        #print $seq;
-
         if ($file_size < 1) {
             $error .= "File $fh has no contents to upload. ";
         }
-        if (!$seq !~ tr/acgtACGT//c) {
+        if (!$seq !~ tr/acgtnACGTN//c) {
             $error .= "File $fh is not in a FASTA nucleotide format. ";
         }
-        if ($seq !~ tr/acgtACGT//c && $file_size > 0) {
+        if ($seq !~ tr/acgtnACGTN//c && $file_size > 0) {
             push @myfhs, $fh;
             push @myupload_files, $tmp_upload_file;
-        }
+        } else {
+	    close $fh;
+	}
 
         $idx++;
     }
@@ -1485,7 +1562,7 @@ sub plotSameSpeciesPairwise {
 
     print encode_json(\@array);
 
-    # TODO: plot the data
+    # plot the data
 }
 
 sub printAllCliques {

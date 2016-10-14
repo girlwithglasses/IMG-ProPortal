@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGenomeSet.pm
-# $Id: WorkspaceGenomeSet.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
+# $Id: WorkspaceGenomeSet.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package WorkspaceGenomeSet;
 
@@ -181,23 +181,23 @@ sub dispatch {
     {
         printGenomePairwiseANI(1);
     }
-    elsif ( paramMatch("submitFuncProfile") ne ""
-        || $page eq "submitFuncProfile" )
+    elsif ( $page eq "submitFuncProfile" 
+        || paramMatch("submitFuncProfile") ne "" )
     {
         Workspace::submitFuncProfile($GENOME_FOLDER);
     }
-    elsif ( paramMatch("submitBlast") ne ""
-        || $page eq "submitBlast" )
+    elsif ( $page eq "submitBlast" 
+        || paramMatch("submitBlast") ne "" )
     {
         submitJob('Blast');
     }
-    elsif ( paramMatch("submitPairwiseANI") ne ""
-        || $page eq "submitPairwiseANI" )
+    elsif ( $page eq "submitPairwiseANI" 
+        || paramMatch("submitPairwiseANI") ne "" )
     {
         submitJob('Pairwise ANI');
     }
-    elsif ( paramMatch("submitSaveFuncGene") ne ""
-        || $page eq "submitSaveFuncGene" )
+    elsif ( $page eq "submitSaveFuncGene" 
+        || paramMatch("submitSaveFuncGene") ne "" )
     {
         Workspace::submitSaveFuncGene($GENOME_FOLDER);
     }
@@ -247,7 +247,11 @@ sub printGenomeSetMainForm {
     printCartDiv($numTaxon);
 
     print "<h2>Genome Sets List</h2>";
-    
+
+    my $groupSharingDisplay = getSessionParam("groupSharingDisplay");
+    #print "printGenomeSetMainForm() groupSharingDisplay=$groupSharingDisplay<br>\n";
+    WorkspaceUtil::printShareMsg( $groupSharingDisplay );
+        
     print qq{
         <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
@@ -272,14 +276,13 @@ sub printGenomeSetMainForm {
     TabHTML::printTabDiv( "genomesetTab", \@tabIndex, \@tabNames );
 
     print "<div id='genomesettab1'>";
-    WorkspaceUtil::printShareMainTable( $section, $workspace_dir, $sid, $folder, \@files );
+    my $names_href = WorkspaceUtil::printShareMainTable( $section, $workspace_dir, $sid, $folder, \@files, $groupSharingDisplay );
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 
     print "<div id='genomesettab2'>";
-
     # Import/Export
-    Workspace::printImportExport($folder);
+    Workspace::printImportExport($folder, $groupSharingDisplay);
     print "</div>\n";
 
     print "<div id='genomesettab3'>";
@@ -354,7 +357,8 @@ sub printGenomeSetMainForm {
 
     print "<div id='genomesettab7'>";
     # conflict in genome sets
-    Workspace::printSetOperation( $folder, $sid, 'workspacefilename2' );
+    Workspace::printSetOperation( $folder, $sid, 'workspacefilename2', $names_href );
+    Workspace::printBreakLargeSet($sid, $folder);
     print "</div>\n";
 
     TabHTML::printTabDivEnd();
@@ -367,22 +371,53 @@ sub printGenomeSetMainForm {
 ###############################################################################
 sub printGenomeSetDetail {
 
-    my $owner    = param("owner");
     my $filename = param("filename");
     my $folder   = param("folder");
 
     printMainForm();
+
+    my $sid = getContactOid();
+    my $dir_id = $sid;
+
+    my $owner = param("owner");
+    $owner = $sid if(!$owner);
+    my $owner_name = ""; 
+    if ( $owner && $owner != $sid ) { 
+        ## not my own data set
+        ## check permission
+        my $can_view = 0; 
+        my %share_h = WorkspaceUtil::getShareFromGroups($folder, $filename); 
+        for my $k (keys %share_h) { 
+            my ($c_oid, $data_set_name) = WorkspaceUtil::splitOwnerFileset( $sid, $k ); 
+            my ($g_id, $g_name, $c_name) = split(/\t/, $share_h{$k}); 
+ 
+            if ( $c_oid == $owner && $data_set_name eq $filename ) { 
+                $can_view = 1; 
+                $owner_name = $c_name; 
+                $dir_id = $owner;
+                last; 
+            } 
+        } 
+
+        if ( ! $can_view ) { 
+            print "<h1>My Workspace - Genome Sets - Individual Genome Set</h1>"; 
+            print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
+            webError("Genome set does not exist.");
+            return; 
+        }
+    } 
+
     print "<h1>My Workspace - Genome Sets - Individual Genome Set</h1>";
     print "<h2>Set Name: <i>" . escapeHTML($filename) . "</i></h2>\n";
+    if ( $owner_name ) {
+        print "<p><u>Owner</u>: <i>$owner_name</i></p>"; 
+    } 
+    #WorkspaceUtil::printMaxNumMsg('genomes');
 
     print hiddenVar( "owner",  $owner ) if ( $owner );
     print hiddenVar( "directory", "$folder" );
     print hiddenVar( "folder",    $folder );
     print hiddenVar( "filename",  $filename );
-
-    if ( ! $owner ) {
-        $owner = WebUtil::getContactOid();
-    }
 
     # check filename
     if ( $filename eq "" ) {
@@ -991,7 +1026,7 @@ sub printGenomeFuncProfileTable {
     }
 
     if ($timeout_msg) {
-        printMessage("<font color='red'>Warning: $timeout_msg</font>");
+        WebUtil::printMessage("<font color='red'>Warning: $timeout_msg</font>");
     }
 
     my $it =
@@ -1055,6 +1090,7 @@ sub printGenomeFuncProfileTable {
             for my $x2 (@$all_files_ref) {
                 my $cnt = $taxonOrset2cnt_href->{$x2};
                 if ($cnt) {
+                    # show sets
                     my $url = $cntLinkBase
                       . "&input_file=$x2&func_id=$select_id";
                     $url .= "&data_type=$data_type" if ( $data_type );
@@ -1070,6 +1106,7 @@ sub printGenomeFuncProfileTable {
                     for my $taxon_oid (@$input_taxon_oids_ref) {
                         my $cnt2 = $taxonOrset2cnt_href->{$taxon_oid};
                         if ($cnt2) {
+                            # show indivial genomes in the set
                             my $url = $cntLinkBase
                               . "&input_file=$x2&func_id=$select_id"
                               . "&taxon_oid=$taxon_oid";

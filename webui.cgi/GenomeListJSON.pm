@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeListJSON.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: GenomeListJSON.pm 36089 2016-08-31 21:38:02Z klchu $
 #
 # issues to fix
 # 1. list name is static to genomeFilterSelection, tree view can be dynamic
@@ -372,6 +372,29 @@ where nvl(total_cassettes, 0) > 0
     }
 }
 
+
+sub getOnlyIsolates {
+    my ( $dbh, $goodTaxons_href ) = @_;
+    my $urClause  = urClause("t.taxon_oid");
+    my $imgClause = WebUtil::imgClause('t');
+    
+    my $sql = qq{
+select t.taxon_oid
+from taxon t
+where t.genome_type = 'isolate'
+$urClause
+$imgClause
+    };
+    my $cur = execSql( $dbh, $sql, $verbose );
+    for ( ; ; ) {
+        my ($taxon_oid) = $cur->fetchrow();
+        last if ( !$taxon_oid );
+        $goodTaxons_href->{$taxon_oid} = $taxon_oid;
+    }
+
+}
+
+
 sub getOnlyMetagenomes {
     my ( $dbh, $goodTaxons_href ) = @_;
     my $urClause  = urClause("t.taxon_oid");
@@ -464,6 +487,8 @@ sub printJSONFile {
         getOnlyDistanceGenomes($dbh, \%goodTaxons);
     } elsif ($from eq 'ScaffoldSearch') {
         getOnlyScaffoldSearchGenomes($dbh, \%goodTaxons);
+    } elsif ($from eq 'isolate') {
+        getOnlyIsolates($dbh, \%goodTaxons);
     }
 
     my $super_user = getSuperUser();
@@ -916,7 +941,7 @@ sub printAutoComplete {
 
     my $autocomplete_url = getMyAutoCompleteUrl();
     if ($autocomplete_url eq "") {
-	my $top_base_url  = $env->{top_base_url};
+    	my $top_base_url  = $env->{top_base_url};
         $autocomplete_url = "$top_base_url" . "api/";
         if ($include_metagenomes) {
             $autocomplete_url .= 'autocompleteAll.php';
@@ -928,32 +953,32 @@ sub printAutoComplete {
     }
 
     print qq{
-    <script type="text/javascript">
-    YAHOO.util.Event.addListener(window, "load", function() {
-        YAHOO.example.BasicRemote = function() {
-            // Use an XHRDataSource
-            var oDS = new YAHOO.util.XHRDataSource("$autocomplete_url");
-            // Set the responseType
-            oDS.responseType = YAHOO.util.XHRDataSource.TYPE_TEXT;
-            // Define the schema of the delimited results
-            oDS.responseSchema = {
-                  recordDelim: "\\n",
-                  fieldDelim: "\\t"
-            };
-            // Enable caching
-            oDS.maxCacheEntries = 5;
-
-            // Instantiate the AutoComplete
-            var oAC = new YAHOO.widget.AutoComplete
-                ("$myinput", "$mycontainer", oDS);
-
-            return {
-              oDS: oDS,
-              oAC: oAC
-            };
-        }();
-    });
-    </script>
+        <script type="text/javascript">
+        YAHOO.util.Event.addListener(window, "load", function() {
+            YAHOO.example.BasicRemote = function() {
+                // Use an XHRDataSource
+                var oDS = new YAHOO.util.XHRDataSource("$autocomplete_url");
+                // Set the responseType
+                oDS.responseType = YAHOO.util.XHRDataSource.TYPE_TEXT;
+                // Define the schema of the delimited results
+                oDS.responseSchema = {
+                      recordDelim: "\\n",
+                      fieldDelim: "\\t"
+                };
+                // Enable caching
+                oDS.maxCacheEntries = 5;
+    
+                // Instantiate the AutoComplete
+                var oAC = new YAHOO.widget.AutoComplete
+                    ("$myinput", "$mycontainer", oDS);
+    
+                return {
+                  oDS: oDS,
+                  oAC: oAC
+                };
+            }();
+        });
+        </script>
     };
 }
 

@@ -1,7 +1,7 @@
 ############################################################################
 # GeneNeighborhood - Print gene neighborhoods for multiple orthologs
 #  or for selected genes.
-# $Id: GeneNeighborhood.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: GeneNeighborhood.pm 36202 2016-09-21 22:14:59Z aratner $
 ############################################################################
 package GeneNeighborhood;
 my $section = "GeneNeighborhood";
@@ -18,6 +18,8 @@ use GeneUtil;
 use GeneCassette;
 use MetaUtil;
 use OracleUtil;
+use ScaffoldDataUtil;
+
 
 my $env              = getEnv();
 my $main_cgi         = $env->{main_cgi};
@@ -81,11 +83,9 @@ sub dispatch {
         $show_checkbox_remove = 1;
         printSelectedNeighborhoods();
     } elsif ( $page eq "neighborhoodCart" ) {
-
         # show selected neighborhoods
         printCartNeighborhoods();
     } elsif ( $page eq "neigFile" ) {
-
         # next button pressed on neighhood viewer
         printNextNeighborhoods();
     } else {
@@ -105,41 +105,22 @@ sub printOrthologNeighborhoods {
 
     my $genome_type = "metagenome";
     if ( isInt($gene_oid) ) {
-        my $dbh          = dbLogin();
+        my $dbh = dbLogin();
         my $genome_type2 = geneOid2GenomeType( $dbh, $gene_oid );
-
-        #$dbh->disconnect();
         $genome_type = $genome_type2 if ($genome_type2);
     }
 
     my $use_bbh_lite = param("use_bbh_lite");
-
-    #    if ($img_lite) {
-
     if ( $use_bbh_lite && $genome_type eq "isolate" ) {
         printOrthologNeighborhoodsBBHLite($gene_oid);
     } else {
         if ( $data_type eq 'assembled' || $data_type eq 'unassembled' ) {
             my $workspace_id = "$taxon_oid $data_type $gene_oid";
-
-            #webLog("here 2 ================= \n");
-            #printOrthologNeighborhoodsCog($workspace_id);
-
             printOrthologNeighborhoodsCog_new_merfs( $taxon_oid, $data_type, $gene_oid );
         } else {
-
-            #webLog("here 3 ================= \n");
             printOrthologNeighborhoodsCog_new($gene_oid);
-
-            #printOrthologNeighborhoodsCog($gene_oid);
         }
     }
-
-    #    } elsif ( !$img_lite && $include_bbh_lite ) {
-    #        printOrthologNeighborhoodsBBHLite($gene_oid);
-    #    } else {
-    #        printOrthologNeighborhoodsGo($gene_oid);
-    #    }
 }
 
 ###
@@ -194,9 +175,9 @@ sub printOrthologNeighborhoodsGo {
     my $file     = "neig" . "$$" . "_" . $sid;
     my $path     = "$cgi_tmp_dir/$file";
     my $fh       = newWriteFileHandle($path);
-    my $shownext = 0;                            # show next button
+    my $shownext = 0;      # show next button
 
-    for ( ; ; ) {
+    for ( ;; ) {
         my ( $gene_oid, $ortholog, $strand1, $strand2, undef ) = $cur->fetchrow();
 
         $shownext = 1 if $count > $maxNeighborhoods;
@@ -204,7 +185,6 @@ sub printOrthologNeighborhoodsGo {
 
         $count++;
         if ( $count == 1 ) {
-
             # this is ref gene - initial gene
             my $rec = "$gene_oid\t+";
             push( @recs, $rec );
@@ -220,16 +200,14 @@ sub printOrthologNeighborhoodsGo {
 
     if ( $count == 0 ) {
         printStatusLine( "Loaded.", 2 );
-
-        #$dbh->disconnect();
         printEndWorkingDiv();
-        webError( "No orthologs for other gene neighborhoods found " . "for roughly the same sized gene." );
+        webError( "No orthologs for other gene neighborhoods found for roughly the same sized gene." );
         return;
     }
     printEndWorkingDiv();
 
     print "<p>\n";
-    print "Neighborhoods of roughly same sized orthologs " . "in user-selected genomes are shown below.<br/>";
+    print "Neighborhoods of roughly same sized orthologs in user-selected genomes are shown below.<br/>";
     print "Genes of the same color (except light yellow) ";
     print "are from the same orthologous group (top COG hit).";
     print "</p>\n";
@@ -241,12 +219,10 @@ sub printOrthologNeighborhoodsGo {
     printTrackerDiv( $cog_color, $gene_oid );
     printNeighborhoodPanels( $dbh, "orth", \@recs, $count );
 
-    #$dbh->disconnect();
-
     if ($shownext) {
-
         # Next button
-        my $url = "$section_cgi&page=neigFile&index=2&file=$file" . "&cog_color=$cog_color&show_checkbox=$show_checkbox";
+        my $url = "$section_cgi&page=neigFile&index=2&file=$file"
+	    . "&cog_color=$cog_color&show_checkbox=$show_checkbox";
         print qq{
             <input class='smbutton'
                    type="button"
@@ -298,7 +274,7 @@ sub printOrthologNeighborhoodsBBHLite {
     };
     my %validTaxons;
     my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ; ; ) {
+    for ( ;; ) {
         my ($taxon_oid) = $cur->fetchrow();
         last if !$taxon_oid;
         $validTaxons{$taxon_oid} = 1;
@@ -317,7 +293,8 @@ sub printOrthologNeighborhoodsBBHLite {
     my @recs;
     my @bbhRows = WebUtil::getBBHLiteRows( $gene_oid, \%validTaxons );
     foreach my $r (@bbhRows) {
-        my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
+        my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps,
+	     $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
           split( /\t/, $r );
         my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
         my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid );
@@ -344,16 +321,15 @@ sub printOrthologNeighborhoodsBBHLite {
 
     if ( $count == 0 ) {
         printStatusLine( "Loaded.", 2 );
-
-        #$dbh->disconnect();
         printEndWorkingDiv();
-        webError( "No orthologs for other gene neighborhoods found " . "for roughly the same sized gene." );
+        webError( "No orthologs for other gene neighborhoods found for roughly the same sized gene." );
         return;
     }
     printEndWorkingDiv();
 
     print "<p>\n";
-    print "Neighborhoods of roughly same sized orthologs " . "in user-selected genomes are shown below.<br/>";
+    print "Neighborhoods of roughly same sized orthologs "
+	. "in user-selected genomes are shown below.<br/>";
     print "</p>\n";
 
     printHint(   "Mouse over a gene to see details (once page has loaded)."
@@ -363,12 +339,10 @@ sub printOrthologNeighborhoodsBBHLite {
     printTrackerDiv( $cog_color, $gene_oid );
     printNeighborhoodPanels( $dbh, "orth", \@recs, $count );
 
-    #$dbh->disconnect();
-
     if ($shownext) {
-
         # Next button
-        my $url = "$section_cgi&page=neigFile&index=2&file=$file" . "&cog_color=$cog_color&show_checkbox=$show_checkbox";
+        my $url = "$section_cgi&page=neigFile&index=2&file=$file"
+	    . "&cog_color=$cog_color&show_checkbox=$show_checkbox";
         print qq{
             <input class='smbutton'
                    type="button"
@@ -385,12 +359,9 @@ sub printOrthologNeighborhoodsCog_new_merfs {
     my $workspace_id = "$taxon_oid $data_type $gene_oid";
 
     my $dbh = dbLogin();
-
     checkTaxonPerm( $dbh, $taxon_oid );
-
     printStatusLine("Loading ...");
 
-    # html print
     printMainForm();
     print "<h1>Gene Neighborhoods</h1>\n";
 
@@ -406,11 +377,12 @@ sub printOrthologNeighborhoodsCog_new_merfs {
     $num_neighborhoods = $maxNeighborhoods if ( $num_neighborhoods eq "" );
 
 
-    my ( $gene_oid2, $locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaffold ) =
-      MetaUtil::getGeneInfo( $gene_oid, $taxon_oid, $data_type );
+    my ( $gene_oid2, $locus_type, $locus_tag, $gene_display_name, 
+	 $start_coord, $end_coord, $strand, $scaffold ) =
+	     MetaUtil::getGeneInfo( $gene_oid, $taxon_oid, $data_type );
     print "Top Isolate Hits<br/>\n";
 
-    my $fasta               = MetaUtil::getGeneFaa( $gene_oid, $taxon_oid, $data_type );
+    my $fasta = MetaUtil::getGeneFaa( $gene_oid, $taxon_oid, $data_type );
     my $query_aa_seq_length = length($fasta);
 
     if ( blankStr($fasta) ) {
@@ -422,7 +394,7 @@ sub printOrthologNeighborhoodsCog_new_merfs {
     my $seq;
     my @lines = split( /\n/, $fasta );
     my $seq_id = "query";
-    for my $line (@lines) {
+    foreach my $line (@lines) {
         if ( $line =~ /^>/ ) {
             $line =~ s/>//g;
             if ( length($line) > 240 ) {
@@ -451,20 +423,18 @@ sub printOrthologNeighborhoodsCog_new_merfs {
     my $img_iso_blastdb = $env->{img_iso_blastdb};
     my $db              = $img_lid_blastdb;
     $db = $img_iso_blastdb
-      if $img_iso_blastdb ne ""
-      && param("homologs") eq "topIsolates";
+	if $img_iso_blastdb ne "" && param("homologs") eq "topIsolates";
     $db =~ /([a-zA-Z0-9_\-]+)/;
     my $dbFile = "$blast_data_dir/$db";
 
     webLog( ">>> loadHomologOtfBlast get sequence gene_oid='$gene_oid' " . currDateTime() . "\n" );
 
-    #    my $aa_seq_length = geneOid2AASeqLength( $dbh, $gene_oid );
     my $aa_seq_length = length($seq);
     my @homologRecs;
     print "Calculating top hits<br>\n";
-    require OtfBlast;
 
-    my $filterType   = OtfBlast::genePageTopHits( $dbh, $workspace_id, \@homologRecs, "", 0, 1, '', '', $seq );
+    require OtfBlast;
+    my $filterType = OtfBlast::genePageTopHits( $dbh, $workspace_id, \@homologRecs, "", 0, 1, '', '', $seq );
 
     print "Done calculating top hits<br>\n";
 
@@ -552,10 +522,8 @@ sub printOrthologNeighborhoodsCog_new_merfs {
     my $aa = MetaUtil::getGeneFaa( $gene_oid, $taxon_oid, $data_type );
     $aa_seq_length1 = length($aa);
     my ( $gene_oid2, $locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaffold ) =
-      MetaUtil::getGeneInfo( $gene_oid, $taxon_oid, $data_type );
+	MetaUtil::getGeneInfo( $gene_oid, $taxon_oid, $data_type );
     $strand1 = $strand;
-
-
 
     my $rclause   = WebUtil::urClause('g.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
@@ -573,7 +541,7 @@ sub printOrthologNeighborhoodsCog_new_merfs {
     my $cur = execSql( $dbh, $sql, $verbose );
     my %strands;
     my %geneOid2Len;
-    for ( ; ; ) {
+    for ( ;; ) {
         my ( $gene_oid2, $strand, $aa_seq_length ) = $cur->fetchrow();
         last if !$gene_oid2;
         $strands{$gene_oid2} = $strand;
@@ -605,7 +573,6 @@ sub printOrthologNeighborhoodsCog_new_merfs {
         last if !$gene_oid2;
 
         if ( $count == 0 ) {
-
             # add the ref gene:
             $count++;
             my $rec = "$workspace_id\t+";
@@ -620,20 +587,11 @@ sub printOrthologNeighborhoodsCog_new_merfs {
         my $rec         = "$ortholog\t$panelStrand";
 
         if ( $count > $num_neighborhoods ) {
-
             # do nothing
         } else {
             push( @recs, $rec );
         }
-
     }
-
-#    my $x1 = $#homologRecsVaild;
-#    webLog("======= size 1 = $x1\n");
-#    my $x1 = $#recs;
-#    webLog("======= size 2 = $x1\n");
-#    my $x1 = $#srecs;
-#    webLog("======= size 3 = $x1\n");
 
     # in case user entered a value that is too high:
     $num_neighborhoods = $count if ( $num_neighborhoods > $count );
@@ -642,7 +600,6 @@ sub printOrthologNeighborhoodsCog_new_merfs {
         printStatusLine( "Loaded.", 2 );
         print end_form();
 
-        #$dbh->disconnect();
         my $errMsg = qq{
             No homolog for other gene neighborhoods found
             for roughly the same sized gene.
@@ -699,7 +656,7 @@ sub printOrthologNeighborhoodsCog_new_merfs {
                . "<br/>Light yellow = no COG assignment, "
                . "<font color='red'>Red</font> = marker gene" );
 
-    printTrackerDiv( "yes", $gene_oid );
+    printTrackerDiv( "yes", $workspace_id );
     printNeighborhoodPanels( $dbh, "orth", \@recs, $count );
 
     printStatusLine( "Loaded.", 2 );
@@ -857,7 +814,7 @@ sub printOrthologNeighborhoodsCog_new {
     my $cur = execSql( $dbh, $sql, $verbose );
     my %strands;
     my %geneOid2Len;
-    for ( ; ; ) {
+    for ( ;; ) {
         my ( $gene_oid2, $strand, $aa_seq_length ) = $cur->fetchrow();
         last if !$gene_oid2;
         $strands{$gene_oid2} = $strand;
@@ -890,7 +847,6 @@ sub printOrthologNeighborhoodsCog_new {
         last if !$gene_oid2;
 
         if ( $count == 0 ) {
-
             # add the ref gene:
             $count++;
             my $rec = "$gene_oid2\t+";
@@ -902,12 +858,10 @@ sub printOrthologNeighborhoodsCog_new {
         my $rec         = "$ortholog\t$panelStrand";
 
         if ( $count > $num_neighborhoods ) {
-
             # do nothing
         } else {
             push( @recs, $rec );
         }
-
     }
 
     # in case user entered a value that is too high:
@@ -991,7 +945,7 @@ sub getGenesCog {
         and gcg.gene_oid in (select * from gtt_num_id)
     };
     my $cur = execSql( $dbh, $sql, $verbose, $query_cog );
-    for ( ; ; ) {
+    for ( ;; ) {
         my ($id) = $cur->fetchrow();
         last if !$id;
         $validGenes{$id} = $id;
@@ -1047,8 +1001,6 @@ sub printOrthologNeighborhoodsCog {
     }
 
     if ( !$taxon_oid ) {
-
-        #$dbh->disconnect();
         return;
     }
     checkTaxonPerm( $dbh, $taxon_oid );
@@ -1160,7 +1112,7 @@ sub printOrthologNeighborhoodsCog {
     my $cur = execSql( $dbh, $sql, $verbose );
     my %strands;
     my %geneOid2Len;
-    for ( ; ; ) {
+    for ( ;; ) {
         my ( $gene_oid2, $strand, $aa_seq_length ) = $cur->fetchrow();
         last if !$gene_oid2;
         $strands{$gene_oid2} = $strand;
@@ -1283,8 +1235,6 @@ sub printOrthologNeighborhoodsCog {
     printNeighborhoodPanels( $dbh, "orth", \@recs, $count );
 
     printStatusLine( "Loaded.", 2 );
-
-    #$dbh->disconnect();
     print end_form();
 }
 
@@ -1326,11 +1276,20 @@ sub printSelectedNeighborhoods {
     my $index              = param("index");                # for next page
     $index = 1 if ( $index eq "" );
 
-    my $geneCart             = new GeneCartStor();
+    my $geneCart = new GeneCartStor();
     my $gene_cart_genes_href = $geneCart->getGeneOids();
 
-    my @sorted = sort { $a <=> $b } @gene_oids;             # numerical sort
-    @gene_oids = @sorted;
+    #my @sorted = sort { $a <=> $b } @gene_oids;             # numerical sort
+    # keep genes in original order as in gene cart, so users 
+    # can view neighborhoods in their prefered order:
+    #@gene_oids = @sorted; 
+
+    printMainForm();
+
+    foreach my $id (@gene_oids) {
+        # print original list of genes in original order
+        print hiddenVar( "gene_oid", $id );
+    }
 
     my $temp = getSessionParam("maxNeighborhoods");
     $maxNeighborhoods = $temp if $temp ne "";
@@ -1347,13 +1306,11 @@ sub printSelectedNeighborhoods {
     }
 
     my $gene_oids_ref = \@gene_oids;
-    my $nGenes        = @$gene_oids_ref;
+    my $nGenes = @$gene_oids_ref;
     if ( $nGenes == 0 ) {
         webError("Please select some genes to display neighborhoods.");
         return;
     }
-
-    printMainForm();
 
     my $folder = param('directory');
     if ($folder) {
@@ -1399,11 +1356,6 @@ sub printSelectedNeighborhoods {
     my @allgroups;     # make groups of genes
     my $items = 0;
 
-    foreach my $id (@sorted) {
-        # print original list of genes
-        print hiddenVar( "gene_oid", $id );
-    }
-
     foreach my $id (@gene_oids) {
         if ( !isInt($id) ) {
             next;
@@ -1446,7 +1398,7 @@ sub printSelectedNeighborhoods {
     	};
 
         my $cur = execSql( $dbh, $sql, $verbose );
-        for ( ; ; ) {
+        for ( ;; ) {
             my ($gene_oid) = $cur->fetchrow();
             last if !$gene_oid;
             push( @bad_gene_oids, $gene_oid );
@@ -1477,7 +1429,7 @@ sub printSelectedNeighborhoods {
                . "<br/>Light yellow = no COG assignment, "
                . "<font color='red'>Red</font> = selected gene(s)" );
 
-    printTrackerDiv( $cog_color, $sorted[0] );
+    printTrackerDiv( $cog_color, $gene_oids[0] );
     printStatusLine("Loading ...");
 
     my @recs;
@@ -1502,8 +1454,7 @@ sub printSelectedNeighborhoods {
 
             #print "printSelectedNeighborhoods sql: ".$sql."<br/>\n";
             my $cur = execSql( $dbh, $sql, $verbose );
-
-            for ( ; ; ) {
+            for ( ;; ) {
                 my ( $gene_oid, $strand, $taxon ) = $cur->fetchrow();
                 last if !$gene_oid;
 
@@ -1537,11 +1488,8 @@ sub printSelectedNeighborhoods {
 
     printNeighborhoodPanels( $dbh, "gCart$alignGenes", \@recs, $count, $gene_cart_genes_href );
 
-    #$dbh->disconnect();
-
     if ( $count > $maxNeighborhoods ) {
         if ( $index > 1 ) {
-
             # print Prev button
             print qq{
 		<input class='smbutton'
@@ -1561,7 +1509,6 @@ sub printSelectedNeighborhoods {
 	};
     } else {
         if ( $index > 1 ) {
-
             # print Prev button
             print qq{
                 <input class='smbutton'
@@ -1859,7 +1806,7 @@ sub printOneNeighborhood {
                tx_url                  => "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid"
     };
 
-    my $sp          = new ScaffoldPanel($args);
+    my $sp = new ScaffoldPanel($args);
     my $color_array = $sp->{color_array};
     my %currGene;
 
@@ -1880,7 +1827,7 @@ sub printOneNeighborhood {
                 }
             }
             my $cur = execSql( $dbh, $sql, $verbose, @mybinds );
-            for ( ; ; ) {
+            for ( ;; ) {
                 my (
                      $gene_oid, $gene_symbol, $gene_display_name,
                      $locus_type, $locus_tag, $start_coord, $end_coord,
@@ -1912,8 +1859,10 @@ sub printOneNeighborhood {
 
         my @coordLines = GeneUtil::getMultFragCoords( $dbh, $gene_oid, $cds_frag_coord );
 
-        my $label = $gene_symbol;
-        $label = $locus_tag       if $label eq "";
+        #my $label = $gene_symbol;
+        #$label = $locus_tag       if $label eq "";
+	my $label = $locus_tag;
+        $label .= " [".$gene_symbol."]" if $gene_symbol ne "";
         $label = "gene $gene_oid" if $label eq "";
         $label .= " : $gene_display_name";
         $label .= " $start_coord..$end_coord";
@@ -1926,7 +1875,7 @@ sub printOneNeighborhood {
             $label .= "(${len}bp)";
         }
         my $group_color_idx = $groupColors_ref->{$cluster_id};
-        my $color           = $sp->{color_yellow};
+        my $color = $sp->{color_yellow};
         $color = @$color_array[$group_color_idx]
           if $group_color_idx ne ""
           && !blankStr($cluster_id);
@@ -2011,9 +1960,9 @@ sub printOneNeighborhood {
     }
 
     if ( isInt($scaffold_oid) ) {
-        WebUtil::addNxFeatures( $dbh, $scaffold_oid, $sp, $panelStrand, $left_flank, $right_flank );
-        WebUtil::addRepeats( $dbh, $scaffold_oid, $sp, $panelStrand, $left_flank, $right_flank );
-        WebUtil::addIntergenic( $dbh, $scaffold_oid, $sp, $panelStrand, $left_flank, $right_flank );
+        ScaffoldDataUtil::addNxFeatures( $dbh, $scaffold_oid, $sp, $panelStrand, $left_flank, $right_flank );
+        ScaffoldDataUtil::addCrisprRepeats( $dbh, $scaffold_oid, $sp, $panelStrand, $left_flank, $right_flank );
+        ScaffoldDataUtil::addIntergenic( $dbh, $scaffold_oid, $sp, $panelStrand, $left_flank, $right_flank );
     }
 
     my $s = $sp->getMapHtml("overlib");
@@ -2119,7 +2068,7 @@ sub getColors {
         my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid, $left_flank, $right_flank );
         my %cluster2Scaffold;
 
-        for ( ; ; ) {
+        for ( ;; ) {
             my ( $gene_oid, $cluster_id ) = $cur->fetchrow();
             last if !$gene_oid;
             next if blankStr($cluster_id);
@@ -2243,7 +2192,6 @@ sub printCartNeighborhoods {
 
     my $cog_color = param("cog_color");
 
-    #  used to get the strand
     my $subj_gene_oid = param("subj_gene_oid");
     my $workspace_id  = $subj_gene_oid;
     my ( $t2, $d2, $g2 ) = split( / /, $workspace_id );
@@ -2274,8 +2222,9 @@ sub printCartNeighborhoods {
         ($firststrand) = $cur->fetchrow();
         $cur->finish();
     } else {
-        my ( $gene_oid2, $locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaf_oid ) =
-          MetaUtil::getGeneInfo( $g2, $t2, $d2 );
+        my ( $gene_oid2, $locus_type, $locus_tag, $gene_display_name, 
+	     $start_coord, $end_coord, $strand, $scaf_oid ) =
+		 MetaUtil::getGeneInfo( $g2, $t2, $d2 );
         $firststrand = $strand;
         $firststrand = "+" if $strand eq "";
     }
@@ -2299,7 +2248,7 @@ sub printCartNeighborhoods {
 
     if ( $gstr ne "" ) {
         my $cur = execSql( $dbh, $sql, $verbose );
-        for ( ; ; ) {
+        for ( ;; ) {
             my ( $gene_oid, $strand ) = $cur->fetchrow();
             last if !$gene_oid;
 
@@ -2316,8 +2265,9 @@ sub printCartNeighborhoods {
 
     foreach my $id2 (@fslist) {
         my ( $t3, $d3, $g3 ) = split( / /, $id2 );
-        my ( $gene_oid2, $locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaf_oid ) =
-          MetaUtil::getGeneInfo( $g3, $t3, $d3 );
+        my ( $gene_oid2, $locus_type, $locus_tag, $gene_display_name,
+	     $start_coord, $end_coord, $strand, $scaf_oid ) =
+		 MetaUtil::getGeneInfo( $g3, $t3, $d3 );
 
         if ( $firststrand eq $strand ) {
             $pstrand = "+";
@@ -2336,7 +2286,8 @@ sub printCartNeighborhoods {
     }
 
     print "<p>\n";
-    print "Neighborhoods of roughly same sized orthologs " . "in user-selected genomes are shown below.<br/>";
+    print "Neighborhoods of roughly same sized orthologs "
+	. "in user-selected genomes are shown below.<br/>";
     print "Genes of the same color (except light yellow) ";
     print "are from the same orthologous group (top COG hit).";
     print "</p>\n";
@@ -2349,7 +2300,6 @@ sub printCartNeighborhoods {
     printTrackerDiv( $cog_color, $subj_gene_oid );
     printNeighborhoodPanels( $dbh, "orth", \@recs, 0 );
 
-    #$dbh->disconnect();
     print end_form();
 }
 
@@ -2381,7 +2331,6 @@ sub printNextNeighborhoods {
     while ( my $line = $res->getline() ) {
         chomp $line;
         if ( $count == 0 ) {
-
             # always add the first gene / ref gene oid
             push( @recs, $line );
         }
@@ -2389,7 +2338,6 @@ sub printNextNeighborhoods {
         $count++;
         next if ( $count < $start );
         if ( $count >= $end ) {
-
             # just count the number of lines
             last;
         } else {
@@ -2400,7 +2348,8 @@ sub printNextNeighborhoods {
     close $res;
 
     print "<p>\n";
-    print "Neighborhoods of roughly same sized orthologs " . "in user-selected genomes are shown below.<br/>";
+    print "Neighborhoods of roughly same sized orthologs ";
+    print "in user-selected genomes are shown below.<br/>";
     print "Genes of the same color (except light yellow) ";
     print "are from the same orthologous group (top COG hit).";
     print "</p>\n";
@@ -2412,11 +2361,8 @@ sub printNextNeighborhoods {
     printTrackerDiv($cog_color);
     printNeighborhoodPanels( $dbh, "orth", \@recs, 0 );
 
-    #$dbh->disconnect();
-
     if ( $count >= $end ) {
         if ( $index > 1 ) {
-
             # print Prev button
             print qq{
             <input class='smbutton'
@@ -2429,8 +2375,8 @@ sub printNextNeighborhoods {
         $index++;
 
         # Next button
-        my $url =
-          "$section_cgi&page=neigFile&index=$index&file=$file" . "&cog_color=$cog_color&show_checkbox=$show_checkbox";
+        my $url = "$section_cgi&page=neigFile&index=$index&file=$file"
+	    . "&cog_color=$cog_color&show_checkbox=$show_checkbox";
         print qq{
             <input class='smbutton'
                    type="button"
@@ -2542,9 +2488,9 @@ sub printTrackerDiv {
         } else {
             my $name = "_section_GeneCartStor_deleteSelectedCartGenesNeigh";
             print submit(
-                          -name  => $name,
-                          -value => "Remove Selected",
-                          -class => 'smdefbutton'
+		-name  => $name,
+		-value => "Remove Selected",
+		-class => 'smdefbutton'
             );
             print "<p>";
         }

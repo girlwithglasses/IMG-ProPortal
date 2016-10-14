@@ -590,7 +590,7 @@ sub printMpwPwayDetail {
 	    print $wfh $im->png; 
 	    close $wfh; 
 
-	    print '<image src="' . $tmpPngUrl . '"' . "/>\n";
+	    print '<img src="' . $tmpPngUrl . '"' . "/>\n";
 	}
 	else {
 	    print "<p>Cannot create file from " . $image_file . "</p>\n";

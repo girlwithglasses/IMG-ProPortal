@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. web utility functions for file system
-# $Id: MetaUtil.pm 34858 2015-12-08 18:48:04Z klchu $
+# $Id: MetaUtil.pm 36009 2016-08-17 17:28:50Z klchu $
 ############################################################################
 package MetaUtil;
 require Exporter;
@@ -8866,9 +8866,11 @@ sub parseMetaGeneOid {
 
     if ( isMetaGene($gene_oid) ) {
         my $dtype_goid;
-        ( $toid,  $dtype_goid ) = split( /\./, $gene_oid );
+        # bug fix - ken 
+        # " , 2 " on the split is needed for one split ion first '.'
+        ( $toid,  $dtype_goid ) = split( /\./, $gene_oid, 2 );
         ( $dtype, $goid )       = split( /:/,  $dtype_goid );
-        if ( $dtype eq 'a' ) {
+        if ( $dtype eq 'a' || $dtype == 'assembled') {
             $dtype = 'assembled';
         } else {
             $dtype = 'unassembled';
@@ -8876,8 +8878,53 @@ sub parseMetaGeneOid {
     }
     my @v = ( $goid, $dtype, $toid );
     return @v;
+}
+
+# eg 3300000547.3300000547.a:PR_CR_10_Liq_2_inCRDRAFT_1000001
+sub parseMetaScaffoldOid {
+    my ($scaffold_oid) = @_;
+    my ( $soid, $dtype, $toid, $extid );
+   
+    if ( isMetaGene($scaffold_oid) ) {
+    
+        # i should test to see if its 
+        # 3300000547.3300000547.a:PR_CR_10_Liq_2_inCRDRAFT_1000001
+        # or
+        # 3300000547.a:PR_CR_10_Liq_2_inCRDRAFT_1000001
+        # - ken
+        #
+        my ($test1, $junk) = split( /:/,  $scaffold_oid );
+        my @test2 = split(/\./, $test1);
+        my $dotcnt = $#test2 + 1;
+#print "dot cnt  == $dotcnt === $scaffold_oid, $test1<br>\n"; 
+        if($dotcnt == 2) {
+            # two items means 1 dot
+            # - ken
+            return parseMetaGeneOid($scaffold_oid);
+        }
+
+
+         my $dtype_goid;
+        ( $toid, $extid,  $dtype_goid ) = split( /\./, $scaffold_oid, 3 );
+        
+#print "here 2 $toid, $extid,  $dtype_goid<br>\n";
+        
+        ( $dtype, $soid )       = split( /:/,  $dtype_goid );
+        
+        
+        if ( $dtype eq 'a' || $dtype == 'assembled') {
+            $dtype = 'assembled';
+        } else {
+            $dtype = 'unassembled';
+        }
+    }
+    my @v = ( $soid, $dtype, $toid );
+
+ #print "here 3 @v<br>\n";   
+    return @v;
 
 }
+
 ###############################################################################
 # getMetaGeneOid
 ###############################################################################
@@ -9131,6 +9178,203 @@ sub getPercentClause {
 
     return $percentClause;
 }
+
+############################################################################
+#  getMetaTaxonCrisprList
+############################################################################
+sub getMetaTaxonCrisprList {
+    my ( $taxon_oid, $data_type, $scaffolds_ref ) = @_;
+        
+    my @recs;
+
+    $taxon_oid = sanitizeInt($taxon_oid);
+    my $file_name_base = $mer_data_dir . "/" . $taxon_oid . "/";
+
+    my @type_list = getDataTypeList($data_type);
+    for my $t2 (@type_list) {
+        # check sqlite
+        my $sdb_name = $file_name_base . $t2 . "/crispr.sdb";
+        #my $sdb_name = $file_name_base . $t2 . "/taxon_crispr_summary.sdb";
+        #print "getMetaTaxonCrisprList() sdb_name: $sdb_name<br/>\n";
+        if ( -e $sdb_name && -s $sdb_name > $MIN_FILE_SIZE ) {
+            my $dbh2 = WebUtil::sdbLogin($sdb_name)
+              or next;
+
+            my $sql2 = "select contig_id, start_coord, end_coord, crispr_no from taxon_crispr_summary ";
+            if ( $scaffolds_ref && scalar(@$scaffolds_ref) > 0 ) {
+                $sql2 .= " where contig_id in ( '" . join( "', '", @$scaffolds_ref ) . "' ) ";
+            }
+            #print "getMetaTaxonCrisprList() sql2: $sql2<br/>\n";
+            my $sth = $dbh2->prepare($sql2);
+            $sth->execute();
+
+            for ( ; ; ) {
+                my ( $contig_id, $start, $end, $crispr_no ) = $sth->fetchrow();
+                last if !$contig_id;
+                
+                my $rec;
+                $rec .= "$contig_id\t";
+                $rec .= "$start\t";
+                $rec .= "$end\t";
+                $rec .= "$crispr_no";
+                push( @recs, $rec );
+            }
+            $sth->finish();
+            $dbh2->disconnect();
+        }
+    }
+
+    return (@recs);
+}
+
+############################################################################
+#  getMetaScaffoldCrisprList
+############################################################################
+sub getMetaScaffoldCrisprList {
+    my ( $taxon_oid, $data_type, $scaffold_oid, $scf_start_coord, $scf_end_coord ) = @_;
+        
+    my @recs;
+
+    $taxon_oid = sanitizeInt($taxon_oid);
+    my $file_name_base = $mer_data_dir . "/" . $taxon_oid . "/";
+
+    my @type_list = getDataTypeList($data_type);
+    for my $t2 (@type_list) {
+        # check sqlite
+        my $sdb_name = $file_name_base . $t2 . "/crispr.sdb";
+        #print "getMetaTaxonCrisprList() sdb_name: $sdb_name<br/>\n";
+        if ( -e $sdb_name && -s $sdb_name > $MIN_FILE_SIZE ) {
+            my $dbh2 = WebUtil::sdbLogin($sdb_name)
+              or next;
+
+            my $sth;
+            if ( $scf_start_coord || $scf_end_coord ) {
+                my $sql2 = qq{
+                    select distinct contig_id, start_coord, end_coord, crispr_no
+                    from taxon_crispr_summary
+                    where contig_id = ?
+                    and ( end_coord - start_coord ) > 50
+                    and( ( start_coord > $scf_start_coord and
+                           end_coord < $scf_end_coord ) or
+                        ( $scf_start_coord <= start_coord and
+                       start_coord <= $scf_end_coord ) or
+                        ( $scf_start_coord <= end_coord and
+                       end_coord <= $scf_end_coord )
+                    )
+                };
+                #print "getMetaScaffoldCrisprList() in range sql2: $sql2<br/>\n";
+                $sth = $dbh2->prepare($sql2);
+                $sth->execute($scaffold_oid);
+            }
+            else {
+                my $sql2 = qq{
+                    select distinct contig_id, start_coord, end_coord, crispr_no
+                    from taxon_crispr_summary
+                    where contig_id = ?
+                };
+                #print "getMetaScaffoldCrisprList() sql2: $sql2<br/>\n";
+                $sth = $dbh2->prepare($sql2);
+                $sth->execute($scaffold_oid);
+            }
+
+            for ( ; ; ) {
+                my ( $contig_id, $start, $end, $crispr_no ) = $sth->fetchrow();
+                last if !$contig_id;
+                
+                my $rec;
+                $rec .= "$contig_id\t";
+                $rec .= "$start\t";
+                $rec .= "$end\t";
+                $rec .= "$crispr_no";
+                push( @recs, $rec );
+            }
+            $sth->finish();
+            $dbh2->disconnect();
+        }
+    }
+
+    return (@recs);
+}
+
+############################################################################
+#  getMetaScaffoldCrisprDetail
+############################################################################
+sub getMetaScaffoldCrisprDetail {
+    my ( $taxon_oid, $data_type, $scaffold_oid, $scf_start_coord, $scf_end_coord ) = @_;
+        
+    my @recs;
+
+    $taxon_oid = sanitizeInt($taxon_oid);
+    my $file_name_base = $mer_data_dir . "/" . $taxon_oid . "/";
+
+    my @type_list = getDataTypeList($data_type);
+    for my $t2 (@type_list) {
+        # check sqlite
+        my $sdb_name = $file_name_base . $t2 . "/crispr.sdb";
+        #print "getMetaTaxonCrisprList() sdb_name: $sdb_name<br/>\n";
+        if ( -e $sdb_name && -s $sdb_name > $MIN_FILE_SIZE ) {
+            my $dbh2 = WebUtil::sdbLogin($sdb_name)
+              or next;
+
+            my $sth;
+            if ( $scf_start_coord || $scf_end_coord ) {
+                my $sql2 = qq{
+                    select distinct tcs.contig_id, tcs.crispr_no, tcs.start_coord, tcs.end_coord, tcd.pos, tcd.repeat_seq, tcd.spacer_seq
+                    from taxon_crispr_summary tcs, taxon_crispr_details tcd
+                    where tcs.contig_id = ?
+                    and tcs.contig_id = tcd.contig_id
+                    and tcs.crispr_no = tcd.crispr_no
+                    and ( tcs.end_coord - tcs.start_coord ) > 50
+                    and( ( tcs.start_coord > $scf_start_coord and
+                           tcs.end_coord < $scf_end_coord ) or
+                        ( $scf_start_coord <= tcs.start_coord and
+                       tcs.start_coord <= $scf_end_coord ) or
+                        ( $scf_start_coord <= tcs.end_coord and
+                       tcs.end_coord <= $scf_end_coord )
+                    )
+                    order by tcs.contig_id, tcs.crispr_no, tcd.pos
+                };
+                #print "getMetaScaffoldCrisprDetail() in range sql2: $sql2<br/>\n";
+                $sth = $dbh2->prepare($sql2);
+                $sth->execute($scaffold_oid);
+            }
+            else {
+                my $sql2 = qq{
+                    select distinct tcs.contig_id, tcs.crispr_no, tcs.start_coord, tcs.end_coord, tcd.pos, tcd.repeat_seq, tcd.spacer_seq
+                    from taxon_crispr_summary tcs, taxon_crispr_details tcd
+                    where tcs.contig_id = ?
+                    and tcs.contig_id = tcd.contig_id
+                    and tcs.crispr_no = tcd.crispr_no
+                    order by tcs.contig_id, tcs.crispr_no, tcd.pos
+                };
+                #print "getMetaScaffoldCrisprDetail() sql2: $sql2<br/>\n";
+                $sth = $dbh2->prepare($sql2);
+                $sth->execute($scaffold_oid);
+            }
+
+            for ( ; ; ) {
+                my ( $contig_id, $crispr_no, $start_coord, $end_coord, $pos, $repeat_seq, $spacer_seq ) =
+                  $sth->fetchrow();
+                last if !$contig_id;
+        
+                my $rec;
+                $rec .= "$contig_id\t";
+                $rec .= "$crispr_no\t";
+                $rec .= "$start_coord\t";
+                $rec .= "$end_coord\t";
+                $rec .= "$pos\t";
+                $rec .= "$repeat_seq\t";
+                $rec .= "$spacer_seq";
+                push(@recs, $rec);
+            }
+            $sth->finish();
+            $dbh2->disconnect();
+        }
+    }
+
+    return (@recs);
+}
+
 
 ###############################################################################
 # getDataTypeList

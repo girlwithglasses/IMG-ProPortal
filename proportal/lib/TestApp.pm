@@ -1,9 +1,7 @@
 package TestApp;
 use IMG::Util::Base;
 
-#use AnyEvent;
 use AE;
-
 use Dancer2;
 use Dancer2::Plugin::Ajax;
 use AnyEvent;

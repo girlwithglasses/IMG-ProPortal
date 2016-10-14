@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: CartUtil.pm 33638 2015-06-24 08:38:01Z jinghuahuang $
+# $Id: CartUtil.pm 35760 2016-06-13 21:41:33Z klchu $
 ############################################################################
 package CartUtil;
 
@@ -23,8 +23,9 @@ my $YUI      = $env->{yui_dir_28};
 my $in_file  = $env->{in_file};
 my $user_restricted_site = $env->{user_restricted_site};
 my $enable_biocluster    = $env->{enable_biocluster};
+my $user_restricted_site   = $env->{user_restricted_site};
 
-my $max_display_num = 20000;
+my $max_display_num = $env->{cart_max_szie};
 
 ############################################################################
 # getMaxDisplayNum
@@ -37,9 +38,21 @@ sub getMaxDisplayNum {
 sub printMaxNumMsg {
     my ( $type ) = @_;
         
-    print "<p>\n";
-    print "Only a maximum of $max_display_num $type can be in cart.\n";
-    print "</p>\n";
+    if(!$user_restricted_site) {
+        # public site
+        
+        my $url = WebUtil::alink('https://img.jgi.doe.gov/cgi-bin/mer/main.cgi', 'IMG/M ER');
+        print qq{
+        <p>
+        Public IMG has a maximum of $max_display_num $type in a cart. Please use $url for a larger maximum. 
+        </p>
+        };
+        
+    } else {
+        print "<p>\n";
+        print "Only a maximum of $max_display_num $type can be in cart.\n";
+        print "</p>\n";         
+    }
 }
 
 ############################################################################
@@ -556,7 +569,7 @@ sub callGeneCartToAdd {
     require GeneCartStor;
     my $gc = new GeneCartStor();
     if ($endWorkingDivNeeded) {
-        $gc->addGeneBatch( $genes_ref, '', '', '', '', '', '', '', '', '', '', '', '', 1 );
+        $gc->addGeneBatch( $genes_ref, '', '', '', '', '', '', '', '', '', '', '', '', '', '', 1 );
         printEndWorkingDiv();        
     }
     else {

@@ -2,7 +2,7 @@
 # DataEntryUtil.pm - Commmon data entry utility code.
 #   imachen 10/03/2006
 #
-# $Id: DataEntryUtil.pm 33190 2015-04-17 23:20:02Z jinghuahuang $
+# $Id: DataEntryUtil.pm 36196 2016-09-20 18:51:00Z aratner $
 ############################################################################
 package DataEntryUtil;
 require Exporter;
@@ -57,6 +57,7 @@ my @goldSingleAttrs = (
     'cultured',
     'culture_type',
     'uncultured_type',      
+    'depth',
     'ecosystem',
     'ecosystem_category',
     'ecosystem_type',
@@ -94,6 +95,11 @@ my @goldSingleAttrs = (
     'temp_optimum',
     'funding_program',
     'type_strain',
+    'pmo_project_id',
+    'its_spid',
+    'its_proposal_id',
+    'gpts_proposal_id',    
+    
 );
 
 my @goldSampleSingleAttrs = (
@@ -156,24 +162,6 @@ my %goldSetAttr2TableNameAlias = (
     seq_center => 'tnl',
 );
 
-my %goldSetAttr2TableName = (
-    cell_arrangement => 'project_info_cell_arrangement',
-    body_product => 'project_info_body_products',
-    diseases => 'project_info_diseases',
-    energy_source => 'project_info_energy_source',
-    habitat => 'project_info_habitat',
-    metabolism => 'project_info_metabolism',
-    phenotypes => 'project_info_phenotypes',
-    project_relevance => 'project_info_project_relevance',
-    sample_body_site => 'project_info_body_sites',
-    sample_body_subsite => 'project_info_body_sites',
-    seq_method => 'project_info_seq_method',
-
-    #need special treatment for sql
-    funding_agency => 1,
-    seq_center => 1,
-);
-
 my @goldCondAttrs = (
     'altitude',
     'biotic_rel',
@@ -182,6 +170,7 @@ my @goldCondAttrs = (
     'cultured',
     'culture_type',
     'uncultured_type',          
+    'depth',
     'diseases',
     'ecosystem',
     'ecosystem_category',
@@ -214,6 +203,10 @@ my @goldCondAttrs = (
     'project_info',
     'contact_name', 
     'contact_email', 
+    'pmo_project_id',
+    'its_spid',
+    'its_proposal_id',
+    'gpts_proposal_id',    
 );
 
 # see FindGenomesByMetadata::printOrgCategoryResults_ImgGold and FindGenomesByMetadata::printCategoryContent
@@ -236,6 +229,7 @@ my %goldAttr2Display = (
     cultured        => "Cultured",
     culture_type    => "Culture Type",
     uncultured_type => 'Uncultured Type',
+    depth           => 'Depth',
     disease         => "Disease",
     diseases        => "Diseases",
     ecosystem       => "Ecosystem",
@@ -292,7 +286,11 @@ my %goldAttr2Display = (
     sample_oid      => "IMG Sample ID",
     project_info    => 'IMG Project ID',  
     contact_name    => 'Contact Name', 
-    contact_email   => 'Contact Email', 
+    contact_email   => 'Contact Email',
+    pmo_project_id => 'PMO Project Id',
+    its_spid  => 'ITS PID',
+    its_proposal_id => 'ITS Proposal Id',
+    gpts_proposal_id => 'GPTS Proposal Id',
 );
 
 my %goldAttr2CVTable = (
@@ -326,6 +324,7 @@ my %goldAttr2CVTable = (
 my %goldAttr2UseDistinctData = (
     altitude        => 1,
     biotic_rel      => 1,
+    depth           => 1,
     gram_stain      => 1,
     host_name       => 1,
     host_gender     => 1,
@@ -365,7 +364,8 @@ sub getGoldSampleSingleAttr {
                   'host_health_condition', 'geo_location',
                   'longitude',             'latitude',
                   'altitude',              'seq_status',
-                  'mrn', 'date_collected', 'sample_oid', 'project_info'
+                  'mrn',                   'sample_oid',
+	          'project_info',          'depth'
     );
 
     return @attrs;
@@ -409,6 +409,8 @@ sub getGoldSampleAttrDisplayName {
         return 'Latitude';
     } elsif ( $attr eq 'altitude' ) {
         return 'Altitude';
+    } elsif ( $attr eq 'depth' ) {
+        return 'Depth';
     } elsif ( $attr eq 'comments' ) {
         return 'Comments';
     } elsif ( $attr eq 'sampling_strategy' ) {
@@ -731,7 +733,14 @@ sub db_getImgGroup {
     #$dbh->disconnect();
 
     if ( !$grp ) {
-        return "";
+	$sql = "select img_group from contact_img_groups where contact_oid = ?";
+	$cur = execSql( $dbh, $sql, $verbose, $contact_oid );
+	($grp) = $cur->fetchrow();
+	$cur->finish();
+
+	if ( !$grp ) {
+	    return "";
+	}
     }
 
     return $grp;
@@ -1100,6 +1109,7 @@ sub getGoldAttrSection {
               || $attr eq 'longitude'
               || $attr eq 'latitude'
               || $attr eq 'altitude'
+              || $attr eq 'depth'
               || $attr eq 'cultured'        
               || $attr eq 'culture_type'    
               || $attr eq 'uncultured_type' 
@@ -3870,7 +3880,7 @@ sub evalPhenotypeRule {
             }
 
             if ( $res != 0 ) {
-                if ( $r_res = -1 ) {
+                if ( $r_res == -1 ) {
                     $res = -1;
                 }
             }

@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: AbundanceProfileSearch.pm 34538 2015-10-20 17:43:00Z klchu $
+# $Id: AbundanceProfileSearch.pm 36199 2016-09-20 22:03:31Z aratner $
 # Abundance Profile search / Conditional Function Profile
 ############################################################################
 package AbundanceProfileSearch;
@@ -180,9 +180,9 @@ sub printAbundanceProfileForm {
 
     if ($include_metagenomes) {
         $template->param( include_metagenomes => 1 );
-        $template->param( selectedAssembled1  => 1 );
-        $template->param( selectedAssembled2  => 1 );
-        $template->param( selectedAssembled3  => 1 );
+        $template->param( selectedAssembled1  => 1 ); # only use one data_type for all for now...
+        #$template->param( selectedAssembled2  => 1 );
+        #$template->param( selectedAssembled3  => 1 );
     }
 
     my $s = "";
@@ -349,8 +349,8 @@ sub printAbundanceProfileRun {
     my @referenceGenomes3 = param("selectedGenome3");
 
     my $q_data_type  = param("q_data_type");
-    my $r_data_type2 = param("r_data_type2");
-    my $r_data_type3 = param("r_data_type3");
+    #my $r_data_type2 = param("r_data_type2");
+    #my $r_data_type3 = param("r_data_type3");
 
     # these should be numbers or blank / null
     my $over             = getOverCutOff();
@@ -358,6 +358,8 @@ sub printAbundanceProfileRun {
     my $func_type        = param("cluster");
     my $data_type        = param("data_type");
     my $clusterMatchText = param("clusterMatchText");
+
+    $data_type = $q_data_type if ($data_type eq "");
 
     printStatusLine( "Loading ...", 1 );
 
@@ -660,7 +662,7 @@ sub printAbundanceProfileRun {
         printAbundanceProfileResultsPage($cacheResultsFile);
     } else {
         printStatusLine( "No rows loaded.", 2 );
-        printMessage("There are no results that match your search criteria.");
+        WebUtil::printMessage("There are no results that match your search criteria.");
     }
 }
 

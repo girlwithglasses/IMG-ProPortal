@@ -1,6 +1,6 @@
 ###########################################################################
 # DistanceTree.pm - draws a radial phylogenetic tree
-# $Id: DistanceTree.pm 34863 2015-12-08 19:37:59Z aratner $
+# $Id: DistanceTree.pm 36281 2016-10-05 19:19:09Z aratner $
 ############################################################################
 package DistanceTree;
 my $section = "DistanceTree";
@@ -48,7 +48,7 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my ($self) = @_;
-    require GenomeListJSON;
+
     my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
     $template->param( base_url => $base_url );
     $template->param( YUI      => $YUI );
@@ -83,7 +83,7 @@ sub dispatch {
 	WebUtil::printHeaderWithInfo
 	    ("Distance Tree", $description,
 	     "show description for this tool",
-	     "Distance Tree Info", 0, "DistanceTree.pdf", "", "java");
+	     "Distance Tree Info", 0, "DistanceTree.pdf", "");
 
 	printMainForm();
 
@@ -149,12 +149,12 @@ sub printForm {
     $template->param( xml_cgi      => $xml_cgi );
     $template->param( prefix       => '' );
     $template->param( maxSelected1 => -1 );
-    $template->param( from        => 'DistanceTree' );
+    $template->param( from         => 'DistanceTree' );
 
     if ( $include_metagenomes ) {
 	$template->param( selectedGenome1Title => 'Isolates or Metagenomes (not both)' );
 	$template->param( include_metagenomes => 1 );
-	$template->param( selectedAssembled1  => 1 );
+	#$template->param( selectedAssembled1  => 1 ); # not one of the params
     }
 
     my $s = "";
@@ -308,7 +308,7 @@ sub runTree {
         WebUtil::printHeaderWithInfo
             ($title, $description,
              "show info for this tool",
-             "Distance Tree Info", 0, "DistanceTree.pdf", "", "java");
+             "Distance Tree Info", 0, "DistanceTree.pdf", "");
     }
 
     print "<p style='width: 650px;'>";
@@ -611,8 +611,8 @@ sub runTree {
     require TabHTML;
     TabHTML::printTabAPILinks("treeTab");
 
-    my @tabIndex = ("#treetab1", "#treetab2", "#treetab3");
-    my @tabNames = ("Radial Phylogram", "Rectangular Phylogram", "Aptx Tree");
+    my @tabIndex = ("#treetab1", "#treetab2");
+    my @tabNames = ("Radial Phylogram", "Rectangular Phylogram");
     TabHTML::printTabDiv("treeTab", \@tabIndex, \@tabNames);
 
     print "<div id='treetab1'>";
@@ -620,76 +620,126 @@ sub runTree {
     print "</div>";    # end treetab1
 
     print "<div id='treetab2'>";
-    printRectangularPhylogram($newick_str, $data);
-    #configurePhylogram($newick_str, $data, "rectangular");
+    configurePhylogram($newick_str, $data, "rectangular");
     print "</div>";    # end treetab2
-
-    print "<div id='treetab3'>";
-    my $url = "http://www.phylosoft.org/archaeopteryx/";
-    print "<p>The tree below is generated using the ".alink($url, "Archaeopteryx")." applet<br/>";
-    print "<font color='red'><b><u>PLEASE NOTE</u></font>:</b> Use of java in most browsers is deprecated.</p>";
-    printAptxApplet("decorated$$.txt");
-    print "</div>";    # end treetab3
 
     TabHTML::printTabDivEnd();
 }
 
 sub configurePhylogram {
-    my ($newick_str, $data, $type) = @_;
+    my ($newick_str, $data, $type, $tree_type) = @_;
     $type = "radial" if (!$type || $type eq "");
+
+    my $svgelement = "phylotreesvg";
+    if ($type eq "radial") {
+	$svgelement = "phylotreesvg";
+    } elsif ($type eq "rectangular") {
+	$svgelement = "phylogramsvg";
+    }
+
     print qq{
         <script language='JavaScript' type='text/javascript'> 
-        function showView(type) {
-        if (type == 'svg') {
-            document.getElementById('canvasview').style.display = 'none';
-            document.getElementById('svgview').style.display = 'block';
+        function showView(view, type) {
+        if (view == 'svg') {
+            document.getElementById('canvasview_'+type).style.display = 'none';
+            document.getElementById('svgview_'+type).style.display = 'block';
         } else {
-            refreshCanvas();
-            document.getElementById('canvasview').style.display = 'block';
-            document.getElementById('svgview').style.display = 'none';
+            refreshCanvas(type);
+            document.getElementById('canvasview_'+type).style.display = 'block';
+            document.getElementById('svgview_'+type).style.display = 'none';
         }
         }
         </script>                      
     };
 
-    print "<div id='svgview' style='display: block;'>";
+    printPNGscript();
+    print "<div id='svgview_$type' style='display: block;'>";
     print "<input type='button' class='medbutton' name='view'"
 	. " value='View as PNG'"
-	. " onclick='showView(\"png\")' />";
-    print "<br/>";
+	. " onclick='showView(\"png\", \"".$type."\")' />";
+    print "<p>The phylogram can be repositioned using mouse-drag and zoomed using mouse-wheel.</p>";
+
     if ($type eq "radial") {
 	printD3Phylogram($newick_str, $data);
-    #} elsif ($type eq "rectangular") {
-	#printRectangularPhylogram($newick_str, $data);
+    } elsif ($type eq "rectangular") {
+	printRectangularPhylogram($newick_str, $data, $tree_type);
     }
     print "</div>";
 
-    print "<div id='canvasview' style='font: 12px sans-serif; display: none;'>";
+    print "<div id='canvasview_$type' style='font: 12px sans-serif; display: none;'>";
     print "<input type='button' class='medbutton' name='view'"
 	. " value='Back to SVG'"
-	. " onclick='showView(\"svg\")' />";
+	. " onclick='showView(\"svg\", \"".$type."\")' />";
     print "<p>";
     print "To save the PNG, right-click and select \"<i>Save image as...</i>\"</p>";
-    showAsPNG($type);
+    showAsPNG($svgelement);
     print "</div>";
 }
 
 sub printRectangularPhylogram {
-    my( $newick_str, $data ) = @_;
+    my( $newick_str, $data, $tree_type ) = @_;
+    $tree_type = "genomes" if !$tree_type || $tree_type eq "";
+    # Note: tree_type can be "genomes", "domains", "genes"
+
+    my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
+    my $gurl = "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=";
+    my $gcurl = "$main_cgi?section=GeneCartStor&page=showGeneCart&genes=";
+    my $txcurl = "$main_cgi?section=GenomeCart&page=genomeCart&genomes=";
+
+    my $url = $txurl;
+    $url = $gurl if $tree_type eq "domains" || $tree_type eq "genes";
 
     my $div_id = "phylogram";
-    my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
-    #my $js_dir = "$base_url";
     my $js_dir = "$top_base_url/js";
+    my $css_dir = "$top_base_url/css";
+
+    if ($tree_type eq "domains") {
+	my $hint = "Mouseover a feature to see its details."
+	    . "<br/>Mouseover the scaffold line to see all features for that gene."
+	    . "<br/>Click on the gene name to go to the gene details page.";
+	printHint($hint);
+	print qq{
+        <p>
+        Select a feature to display:&nbsp;
+        <label><input type="radio" onclick="changeDomain(this)" name="domain_type" value="All" checked>All</label>
+        <label><input type="radio" onclick="changeDomain(this)" name="domain_type" value="COG">COG</label>
+        <label><input type="radio" onclick="changeDomain(this)" name="domain_type" value="Pfam">Pfam</label>
+        <label><input type="radio" onclick="changeDomain(this)" name="domain_type" value="TMH">TMH [transmembrane helices]</label>
+        <label><input type="radio" onclick="changeDomain(this)" name="domain_type" value="SP">SP [signal peptides]</label>
+        <br/>
+        };
+
+    } else {
+	print "<p>";
+    }
+
+    if ($tree_type eq "domains" || $tree_type eq "genes") {
+    print qq{
+    Select a label to display:&nbsp;
+        <label><input type="checkbox" onclick="changeLabel('$tree_type')" id="gene_name" checked>Gene Name</label>
+        <label><input type="checkbox" onclick="changeLabel('$tree_type')" id="gene_id">Gene ID</label>
+        <label><input type="checkbox" onclick="changeLabel('$tree_type')" id="locus_tag">Locus Tag</label>
+        <label><input type="checkbox" onclick="changeLabel('$tree_type')" id="genome">Genome</label>
+    </p>
+    };
+    }
 
     # do not import d3.min.js twice, else it messes up the zoom! -Anna
     print qq{
+      <link rel="stylesheet" type="text/css" href="$css_dir/d3phylotree.css" />
       <span id="ruler"></span>
       <div id="$div_id"></div>
       <script src="$js_dir/d3phylogram.js"></script>
       <script>
-          window.onload = drawPhylogram("$newick_str", "$div_id", "$txurl", $data);
+          window.onload = drawPhylogram("$newick_str", "$div_id", "$url", $data, "$tree_type");
       </script>
+    };
+}
+
+sub printImports {
+    print qq{
+      <script src="$top_base_url/js/d3.min.js"></script>
+      <script src="$top_base_url/js/newick.js"></script>
     };
 }
 
@@ -981,8 +1031,6 @@ sub printD3Phylogram {
     my $div_id = "phylotree";
 
     my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
-    #my $js_dir = "$base_url";
-    #my $css_dir = "$base_url";
     my $js_dir = "$top_base_url/js";
     my $css_dir = "$top_base_url/css";
 
@@ -1001,25 +1049,72 @@ sub printD3Phylogram {
 sub showAsPNG {
     my ($type) = @_;
     print qq{
-    <canvas id="canvas" width="1500" height="1500"></canvas>
-    <div id="png-container"></div>
-
-    <script language='JavaScript' type='text/javascript'>
-    var svg_str = new XMLSerializer().serializeToString(document.querySelector('svg'));
-
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
-    var img = new Image();
-    var imgsrc = 'data:image/svg+xml;base64,'+ btoa(svg_str);
-    img.src = imgsrc;
-
-    img.onload = function() {
-        context.drawImage(img, 0, 0);
-        var canvasdata = canvas.toDataURL("image/png");
-        var pngimg = '<img src="'+canvasdata+'">'; 
-        d3.select("#png-container").html(pngimg);
+    <canvas id="canvas-$type" width="1500" height="1500"></canvas>
     };
+}
+
+sub printPNGscript {
+    print qq{
+    <script language='JavaScript' type='text/javascript'>
+    function refreshCanvas(type) {
+        var svgelement = "phylotreesvg";
+        if (type == "radial") {
+	    svgelement = "phylotreesvg";
+        } else if (type == "rectangular") {
+    	    svgelement = "phylogramsvg";
+        }
+
+        var el = document.getElementById(svgelement);
+        var el2 = el.getElementsByTagName("g")[0];
+        var t = d3.transform(d3.select("#"+svgelement).select("g").attr("transform"));
+        var myscale = t.scale;
+        var mytranslate = t.translate;
+        var el_width = el2.getBBox().width * myscale[0];
+        var el_height = el2.getBBox().height * myscale[1];
+
+        var canvas = document.getElementById("canvas-"+svgelement);
+        var context = canvas.getContext("2d");
+
+        var mysvg = d3.select(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
+	.attr("xmlns", "http://www.w3.org/2000/svg")
+	.attr("xmlns:xmlns:xlink", "http://www.w3.org/1999/xlink")
+        .attr("transform", "translate(0,0)")
+        .attr("width", el_width)
+        .attr("height", el_height);
+        
+        var t = mysvg.append("g");
+        if (type == "radial") {
+	    t.attr("transform", "translate("+el_width/2+","+el_height/2+") scale("+myscale+")");
+        } else if (type == "rectangular") {
+            t.attr("transform", "translate(20,20) scale("+myscale+")");
+        }
+        t.html(el2.innerHTML);
+
+        var mysvg_el = mysvg.node();
+        var svg_str = new XMLSerializer().serializeToString(mysvg_el);
+        console.log(mysvg_el);
+
+        // clear the previous image in canvas:
+        context.clearRect(0,0,canvas.width,canvas.height);
+
+        canvas.width = el_width;
+        canvas.height = el_height;
+
+        context.fillStyle = "white";
+        context.fillRect(0,0,canvas.width,canvas.height);
+
+        var img = new Image();
+        var DOMURL = self.URL || self.webkitURL || self;
+        var svg = new Blob([svg_str], {type: "image/svg+xml;charset=utf-8"});
+        var url = DOMURL.createObjectURL(svg);
+
+        img.onload = function() {
+            context.drawImage(img, 0, 0);
+  	    var png = canvas.toDataURL("image/png");
+	    DOMURL.revokeObjectURL(png);
+        };
+        img.src = url;
+    }
     </script>
     };
 }
@@ -1048,7 +1143,7 @@ sub printAptxApplet {
     my $afh = newAppendFileHandle( $configFile, "runTree" );
     #print $afh "\nweb_link: ".$url1."\timg\timg\n";
 
-    if ($type eq "domains") {
+    if ($type eq "domains") { # aa alignment
 	print $afh "\n#  Additional parameters for IMG domains:\n";
 	print $afh "#  --------------------------------------\n";
 	print $afh "web_link: ".$url2."\timgDomains\timgDomains\n";
@@ -1060,7 +1155,7 @@ sub printAptxApplet {
 	print $afh "show_taxonomy_code:            display   yes\n";
 	print $afh "show_taxonomy_names:           display   no\n";
 	print $afh "display_color:                 background   0x000000\n";
-    } elsif ($type eq "genes") {
+    } elsif ($type eq "genes") { # dna alignment
         print $afh "\n#  Additional parameters for IMG genes:\n";
         print $afh "#  --------------------------------------\n";
 	print $afh "web_link: ".$url2."\timgDomains\timgDomains\n";

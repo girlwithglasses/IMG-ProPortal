@@ -3,7 +3,7 @@
 #  Indexed file in pages for comparative gene information file which
 #  is precomputed.
 #      --es 06/10/09
-# $Id: GeneInfoPager.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: GeneInfoPager.pm 35676 2016-05-23 21:58:44Z klchu $
 ############################################################################
 package GeneInfoPager;
 my $section = "GeneInfoPager";
@@ -29,7 +29,7 @@ my $tigrfam_base_url = $env->{tigrfam_base_url};
 my $enzyme_base_url  = $env->{enzyme_base_url};
 my $show_myimg_login = $env->{show_myimg_login};
 my $verbose          = $env->{verbose};
-
+my $enable_download                   = $env->{enable_download};
 my $img_internal = $env->{img_internal};
 
 my $forceNewFile = 1;
@@ -323,8 +323,12 @@ sub printFooter {
         "$main_cgi?section=TaxonDetail"
       . "&downloadTaxonInfoFile=1&taxon_oid=$taxon_oid&noHeader=1";
       my $contact_oid = WebUtil::getContactOid();
+
+    if($enable_download) {
     my $fileName_link = alink( $url, $fileName, '', '', '', "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link downloadTaxonInfoFile']);" );
     print "Pages for download file $fileName_link: ";
+    }
+    
     my $nPages     = @$pages_ref;
     my $lastPageNo = $pages_ref->[ $nPages - 1 ];
     for my $pageNo (@$pages_ref) {

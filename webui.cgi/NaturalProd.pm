@@ -1,6 +1,6 @@
 ############################################################################
 # NaturalProd.pm
-# $Id: NaturalProd.pm 34217 2015-09-09 20:28:14Z klchu $
+# $Id: NaturalProd.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ############################################################################
 package NaturalProd;
 my $section = "NaturalProd";
@@ -1069,9 +1069,9 @@ sub printNPBioClusterList {
 
     print "<h1>SM Biosynthetic Cluster List</h1>";
 
-    printMainForm();
+    #printMainForm();
     if ( !$compound_oid ) {
-        print end_form();
+        #print end_form();
         return;
     }
 
@@ -1110,49 +1110,55 @@ sub printNPBioClusterList {
     };
     my $cur = execSql( $dbh, $sql, $verbose, $compound_oid );
 
-    my $it = new InnerTable( 1, "NPlist$$", "NPlist", 1 );
+#    my $it = new InnerTable( 1, "NPlist$$", "NPlist", 1 );
 
     #$it->addColSpec( "Selection" );
-    $it->addColSpec( "Cluster ID", "asc", "left" );
-    $it->addColSpec( "Genome",     "asc", "left" );
-    $it->addColSpec( "Evidence",   "asc", "left" );
-    $it->addColSpec( "Gene Count", "asc", "right" );
-    my $sd = $it->getSdDelim();
+#    $it->addColSpec( "Cluster ID", "asc", "left" );
+#    $it->addColSpec( "Genome",     "asc", "left" );
+#    $it->addColSpec( "Evidence",   "asc", "left" );
+#    $it->addColSpec( "Gene Count", "asc", "right" );
+#    my $sd = $it->getSdDelim();
 
     my $cnt = 0;
+    my @cids;
     for ( ; ; ) {
         my ( $bc_id, $taxon_oid, $taxon_name, $gene_cnt ) = $cur->fetchrow();
         last if !$bc_id;
 
-        my $r = "";
+        push(@cids, $bc_id);
 
-        my $url = "$main_cgi?section=BiosyntheticDetail"
-	    . "&page=cluster_detail&taxon_oid=$taxon_oid&cluster_id=$bc_id";
-        $r .= $bc_id . $sd . alink( $url, $bc_id ) . "\t";
-
-        my $url2 = "$main_cgi?section=TaxonDetail" 
-	    . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        $r .= $taxon_name . $sd . alink( $url2, $taxon_name ) . "\t";
-
-	my $attr_val = $bc2evidence{ $bc_id };
-	$r .= $attr_val . $sd . $attr_val . "\t";
-        if ($gene_cnt) {
-            $r .= $gene_cnt . $sd . alink( $url, $gene_cnt ) . "\t";
-        } else {
-            $r .= "0" . $sd . "0" . "\t";
-        }
-
-        $it->addRow($r);
+#        my $r = "";
+#
+#        my $url = "$main_cgi?section=BiosyntheticDetail"
+#	    . "&page=cluster_detail&taxon_oid=$taxon_oid&cluster_id=$bc_id";
+#        $r .= $bc_id . $sd . alink( $url, $bc_id ) . "\t";
+#
+#        my $url2 = "$main_cgi?section=TaxonDetail" 
+#	    . "&page=taxonDetail&taxon_oid=$taxon_oid";
+#        $r .= $taxon_name . $sd . alink( $url2, $taxon_name ) . "\t";
+#
+#	my $attr_val = $bc2evidence{ $bc_id };
+#	$r .= $attr_val . $sd . $attr_val . "\t";
+#        if ($gene_cnt) {
+#            $r .= $gene_cnt . $sd . alink( $url, $gene_cnt ) . "\t";
+#        } else {
+#            $r .= "0" . $sd . "0" . "\t";
+#        }
+#
+#        $it->addRow($r);
         $cnt++;
     }
     $cur->finish();
 
     print "<h2>Biosynthetic Cluster List</h2>\n";
-    $it->hideAll() if $cnt < 50;
-    $it->printOuterTable(1);
-
-    print end_form();
-    printStatusLine( "$cnt clusters loaded.", 2 );
+    
+    BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
+    
+#    $it->hideAll() if $cnt < 50;
+#    $it->printOuterTable(1);
+#
+#    print end_form();
+#    printStatusLine( "$cnt clusters loaded.", 2 );
 }
 
 #######################################################################
@@ -1274,9 +1280,12 @@ sub printTaxonNP {
         print hiddenVar( 'cluster_id', $cluster_id );
     }
 
-    my $gene_tab = "Genes in Genome";
+    my $gene_tab;
     if ($cluster_id) {
         $gene_tab = "Genes in Cluster";
+    }
+    else {
+        $gene_tab = "Genes in Genome";
     }
 
     use TabHTML;
@@ -1483,12 +1492,12 @@ sub printTaxonGeneList {
     my $pfam_base_url = $env->{pfam_base_url};
     my %gene_pfam_h;
     my $sql = qq{                                                             
-            select distinct gpf.gene_oid,
-                   gpf.pfam_family, pf.description                             
-            from pfam_family pf,                     
-                 gene_pfam_families gpf                                        
-            where gpf.taxon = ?
-            and gpf.pfam_family = pf.ext_accession                             
+        select distinct gpf.gene_oid,
+               gpf.pfam_family, pf.description                             
+        from pfam_family pf,                     
+             gene_pfam_families gpf                                        
+        where gpf.taxon = ?
+        and gpf.pfam_family = pf.ext_accession                             
     };
 
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
@@ -1511,10 +1520,10 @@ sub printTaxonGeneList {
     getTaxonBestHit_bbh( $dbh, $taxon_oid, \%bbh_gene, \%bbh_taxon, \%taxon_name_h );
 
     my $sql = qq{
-          select g.gene_oid, g.locus_tag, g.gene_display_name
-          from gene g
-          where g.taxon = ?
-          };
+        select g.gene_oid, g.locus_tag, g.gene_display_name
+        from gene g
+        where g.taxon = ?
+    };
 
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
     my $row = 0;

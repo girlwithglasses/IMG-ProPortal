@@ -1,12 +1,12 @@
 ############################################################################
 # WorkspaceUtil.pm
-# $Id: WorkspaceUtil.pm 34815 2015-12-02 19:15:49Z jinghuahuang $
+# $Id: WorkspaceUtil.pm 35805 2016-06-21 18:31:50Z klchu $
 ############################################################################
 package WorkspaceUtil;
 
 use strict;
 use CGI qw( :standard );
-
+use System::Command;
 use Data::Dumper;
 use DBI;
 use WebConfig;
@@ -32,12 +32,16 @@ my $workspace_dir        = $env->{workspace_dir};
 my $img_group_share = $env->{img_group_share};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $top_base_url = $env->{top_base_url};
-my $GENE_FOLDER   = "gene";
-my $FUNC_FOLDER   = "function";
-my $SCAF_FOLDER   = "scaffold";
+
+my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
+
 my $GENOME_FOLDER = "genome";
+my $GENE_FOLDER   = "gene";
+my $SCAF_FOLDER   = "scaffold";
+my $FUNC_FOLDER   = "function";
+my $BC_FOLDER     = "bc";
 my $RULE_FOLDER   = "rule";
-my @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER );
+my @subfolders = ( $GENOME_FOLDER, $GENE_FOLDER, $SCAF_FOLDER, $FUNC_FOLDER, $BC_FOLDER );
 
 my $max_workspace_view = 20000;
 
@@ -45,6 +49,7 @@ my $filename_size      = 25;
 my $filename_len       = 60;
 
 my $ownerFilesetDelim = "|";
+my $ownerFilesetDelim_FromFormat = "____";
 my $ownerFilesetDelim_message = "::::";
 
 ############################################################################
@@ -55,12 +60,62 @@ sub getMaxWorkspaceView {
     return $max_workspace_view;
 }
 
+sub printMaxNumMsg {
+    my ( $type ) = @_;
+        
+    print "<p>\n";
+    print "Only a maximum of $max_workspace_view $type can be displayed.\n";
+    print "</p>\n";
+}
+
+# get number of lines in file
+# number of oids
+# wc
+sub getFileLineCount {
+    my($workspace_dir, $sid, $folder, $file) = @_;
+    
+    my $cnt = 0;
+    my $filePath = "$workspace_dir/$sid/$folder/$file";
+    if ($filePath =~ /^(.*)$/) { $filePath = $1; } # untaint
+     
+    # the original way
+#    open( FH, $filePath ) or webError("File size - file error $file");
+#    while (<FH>) {
+#        $cnt++ if ( !/^\s+?$/ && /[a-zA-Z0-9]+/ );
+#    }
+#    close FH;
+#    return $cnt;    
+    
+    # http://docstore.mik.ua/orelly/perl/cookbook/ch08_03.htm
+    # Here's the fastest solution, assuming your line terminator really is "\n" :
+    my $count = 0;
+    open( FILE, $filePath ) or webError("File size - file error $file");
+    $count += tr/\n/\n/ while sysread(FILE, $_, 2 ** 16);
+    close FILE;
+    return $count;  
+    
+    # the best but `` does not work with -T
+    #my $lines;
+    #$lines = `/usr/bin/wc -l $filePath`;
+    #chomp $lines;    
+    #return $lines;
+    #
+    # so try this
+#    my $cfh = WebUtil::newCmdFileHandle( "/usr/bin/wc -l $filePath" );
+#    my $s = $cfh->getline();
+#    chomp $s;
+#    close $cfh;
+#    my ($cnt, $junk) = split(/\s+/, $s);
+#    return $cnt;
+}
+
 ############################################################################
 # printShareMainTable - prints the set table for main form
 #                       (with share option)
 ############################################################################
 sub printShareMainTableNoFooter {
-    my ( $section, $workspace_dir, $sid, $folder, $files_aref, $grpCnt, $staticOnly ) = @_;
+    my ( $section, $workspace_dir, $sid, $folder, $files_aref, 
+        $groupSharingDisplay, $grpCnt, $staticOnly ) = @_;
 
     my $section_cgi = "$main_cgi?section=$section";
 
@@ -80,12 +135,14 @@ sub printShareMainTableNoFooter {
     $it->addColSpec( "Number of $whats<br>(click the link to each individual set)",
 			 "desc", "right", "", "", "wrap" );
     $it->addColSpec( "File Size", "", "right", "", "", "wrap" );
-    if ( $grpCnt && $grpCnt > 0 ) {
+    if ( ($groupSharingDisplay && $groupSharingDisplay ne 'No') 
+        || ( $grpCnt && $grpCnt > 0) ) {
         $it->addColSpec( "Owner", "asc",  "left",  "", "", "wrap" );
         $it->addColSpec( "Shared with Group", "asc",  "left",  "", "", "wrap" );        
     }
 
     my $set_cnt = 0;
+    my %names_h;
 
     ## print my own first
     if ( scalar(@$files_aref) > 0 ) {
@@ -94,36 +151,35 @@ sub printShareMainTableNoFooter {
             %share_h = getShareToGroups($folder);
         }
         
-        #foreach my $x ( sort @$files_aref ) {
         foreach my $x ( @$files_aref ) {
         	next if ( $x eq "." || $x eq ".." || $x =~ /~$/ );
         	my $escX = WebUtil::massageToUrl2($x);
+            $names_h{$x} = $x;
         
         	# get number of lines in file
-        	my $cnt = 0;
-        	my $filePath = "$workspace_dir/$sid/$folder/$x";
-        	open( FH, $filePath )
-        	    or webError("File size - file error $x");
-        	while (<FH>) {
-        	    $cnt++ if ( !/^\s+?$/ && /[a-zA-Z0-9]+/ );
-        	}
-        	close FH;
+        	my $cnt = getFileLineCount($workspace_dir, $sid, $folder, $x);
+            my $filePath = "$workspace_dir/$sid/$folder/$x";        
         
         	my $row =
         	    $sd . "<input type='checkbox' name='filename' value='$escX'/>\t";
         	$row .= $x . $sd . $x . "\t";
 
-#           my $cnt2 = $cnt;
-#           if ( $cnt2 || $folder eq 'rule' ) {
-#               $cnt2 =
-#               "<a href='$section_cgi&page=showDetail"
-#               . "&filename=$escX&folder=$folder'>$cnt2</a>";
-#           }
-            my $cnt_url;
-            if ( $cnt || $folder eq 'rule' ) {
-                $cnt_url = "$section_cgi&page=showDetail&filename=$escX&folder=$folder";
-            }        
-        	$row .= $cnt . $sd . alink( $cnt_url, $cnt ) . "\t";
+            #my $cnt2 = $cnt;
+            #if ( $cnt2 || $folder eq 'rule' ) {
+            #    $cnt2 =
+            #    "<a href='$section_cgi&page=showDetail"
+            #    . "&filename=$escX&folder=$folder'>$cnt2</a>";
+            #}
+            if ( !$cnt || $cnt <= 0 ) {
+                $row .= $cnt . $sd . $cnt . "\t";                
+            }
+            else {
+                my $cnt_url;
+                if ( $cnt || $folder eq 'rule' ) {
+                    $cnt_url = "$section_cgi&page=showDetail&filename=$escX&folder=$folder";
+                }        
+                $row .= $cnt . $sd . alink( $cnt_url, $cnt ) . "\t";                
+            }
     
             my $size = WebUtil::fileSize($filePath);
             my $display_size = getDisplaySize($size);
@@ -157,40 +213,34 @@ sub printShareMainTableNoFooter {
     }
     
     ## show share
-    if ( $grpCnt && $grpCnt > 0 ) {
-        my %share_from_h = getShareFromGroups($folder);
+    if ( $groupSharingDisplay && $groupSharingDisplay ne 'No' ) {
+        my %share_from_h = getShareFromGroups($folder, '', $groupSharingDisplay);
         for my $k (keys %share_from_h) {
             my ($c_oid, $data_set_name) = splitOwnerFileset( $sid, $k );
             my ($g_id, $g_name, $c_name) = split(/\t/, $share_from_h{$k});
         
-            my $escX = WebUtil::massageToUrl2($data_set_name);
-        
+            my $escX = WebUtil::massageToUrl2($data_set_name);        
             if ( ! $escX ) {
                 next;
             }
+            $names_h{$k} = $data_set_name . " (owner: $c_name)";
         
             my $row =
                 $sd . "<input type='checkbox' name='share_filename' value='$c_oid|$escX'/>\t";
             $row .= $data_set_name . "\t";
         
             # get number of lines in file
-            my $cnt = 0;
+            my $cnt = getFileLineCount($workspace_dir, $c_oid, $folder, $data_set_name);
             my $filePath = "$workspace_dir/$c_oid/$folder/$data_set_name";
-            open( FH, $filePath )
-                or webError("File size - file error $data_set_name");
-            while (<FH>) {
-                $cnt++ if ( !/^\s+?$/ && /[a-zA-Z0-9]+/ );
-            }
-            close FH;
         
-#            my $cnt2 = $cnt;
-#            if ($cnt2) {
-#                $cnt2 =
-#                "<a href='$section_cgi&page=showDetail"
-#                . "&owner=$c_oid"
-#                . "&filename=$escX&folder=$folder'>$cnt2</a>";
-#            }
-#            $row .= $cnt2 . "\t";
+            #my $cnt2 = $cnt;
+            #if ($cnt2) {
+            #    $cnt2 =
+            #    "<a href='$section_cgi&page=showDetail"
+            #    . "&owner=$c_oid"
+            #    . "&filename=$escX&folder=$folder'>$cnt2</a>";
+            #}
+            #$row .= $cnt2 . "\t";
             my $cnt_url;
             if ( $cnt || $folder eq 'rule' ) {
                 $cnt_url = "$section_cgi&page=showDetail&owner=$c_oid&filename=$escX&folder=$folder";
@@ -219,38 +269,64 @@ sub printShareMainTableNoFooter {
     	print "<h5>No workspace $folder sets.</h5>\n";
     }
 
-    return $set_cnt;
+    return ($set_cnt, \%names_h);
 }
 
+############################################################################
+# printShareMainTable - prints the set table for main form
+#                       (with share option)
+############################################################################
+sub printShareMsg {
+    my ( $groupSharingDisplay ) = @_;
+
+    my $s;
+    if ( $groupSharingDisplay && $groupSharingDisplay ne 'No' ) {
+        if ( $groupSharingDisplay eq 'All' ) {
+            $s = "Set(s) shared from all groups are displayed.\n"; 
+        }
+        else {
+            $s = "Set(s) shared from group $groupSharingDisplay are displayed.\n";             
+        }
+    }
+    else {
+        $s = "Group sharing is not displayed.\n";        
+    }
+    $s .= " Please go to " . alink( $preferences_url, "Preferences" ) 
+        . " to change the sharing display options.\n";
+    print "<p>$s</p>";
+}
 
 #####################################################################
 # printShareMainTable: set main table with share
 #####################################################################
 sub printShareMainTable {
-    my ( $section, $workspace_dir, $sid, $folder, $files_ref, $noGrpCheck ) = @_;
+    my ( $section, $workspace_dir, $sid, $folder, $files_ref, $groupSharingDisplay ) = @_;
 
+    my ($set_cnt, $names_href);
+    
     if ( scalar(@$files_ref) > 0 ) {
         my $what = ucfirst( lc($folder) );
         if (scalar(@$files_ref) > 10) {
             printSetMainTableButtons( $section, $folder, $what );
         }
 
-        if ( $noGrpCheck ) {
-            printShareMainTableNoFooter( $section, $workspace_dir, $sid, $folder, $files_ref );
-        }
-        else {
+        if ( $groupSharingDisplay && $groupSharingDisplay ne 'No' ) {
             my $grpCnt = getContactImgGroupCnt();
-            printShareMainTableNoFooter( $section, $workspace_dir, $sid, $folder, $files_ref, $grpCnt );
+            ($set_cnt, $names_href) = printShareMainTableNoFooter( $section, $workspace_dir, $sid, $folder, $files_ref, $groupSharingDisplay, $grpCnt );
             if ( $grpCnt && $grpCnt > 0 ) {
                 print "<p><b>(Note: You can only share or delete your own datasets.)</b><br/>\n";
                 printGroupShareButtons( $section, $folder );
                 print "<p>\n";
             }
         }
+        else {
+            ($set_cnt, $names_href) = printShareMainTableNoFooter( $section, $workspace_dir, $sid, $folder, $files_ref );
+        }
 
         printSetMainTableButtons( $section, $folder, $what );
     }
     
+    return $names_href;
 }
 
 #####################################################################
@@ -265,23 +341,24 @@ sub printGroupShareButtons {
     print nbsp(1); 
     print "<select name='group_share' class='img' size='1'>\n";
     for my $k (keys %group_h) {
-	print "  <option value='$k'>" . $group_h{$k} .
-	    "</option>\n";
+    	print "  <option value='$k'>" . $group_h{$k} .
+    	    "</option>\n";
     }
     print "</select>\n";
     print nbsp(2); 
 
     print submit(
-	-name    => "_section_Workspace_addSharing",
-	-value   => "Share Selected Set(s) with Group",
-	-class   => 'medbutton',
-	-onClick => "return checkSets('$folder');"
+    	-name    => "_section_Workspace_addSharing",
+    	-value   => "Share Selected Set(s) with Group",
+    	-class   => 'medbutton',
+    	-onClick => "return checkSets('$folder');"
 	);
     print nbsp(4);
     print submit(
         -name    => "_section_Workspace_removeSharing",
         -value   => 'Remove Sharing of Selected Set(s)',
         -class   => 'medbutton'
+        -onClick => "return checkSets('$folder');"
     );
 }
 
@@ -292,17 +369,18 @@ sub printSetMainTableButtons {
     my ( $section, $folder, $what ) = @_;
 
     ## Amy: limit the folder type, because I am adding rule sets
-    if ( $folder eq $GENE_FOLDER ||
-	 $folder eq $FUNC_FOLDER ||
-	 $folder eq $SCAF_FOLDER ||
-	 $folder eq $GENOME_FOLDER ) {
-	print submit(
-	    -name    => "_section_Workspace_wpload_noHeader",
-	    -value   => "Add Selected to $what Cart",
-	    -class   => 'meddefbutton',
-	    -onClick => "return checkSetsIncludingShare('$folder');"
-	    );
-	print nbsp(1);
+    if ( $folder eq $GENE_FOLDER 
+        || $folder eq $FUNC_FOLDER 
+        || $folder eq $SCAF_FOLDER 
+        || $folder eq $GENOME_FOLDER 
+        || $folder eq $BC_FOLDER) {
+    	 print submit(
+    	     -name    => "_section_Workspace_wpload_noHeader",
+    	     -value   => "Add Selected to $what Cart",
+    	     -class   => 'meddefbutton',
+    	     -onClick => "return checkSetsIncludingShare('$folder');"
+    	     );
+    	 print nbsp(1);
     }
     WebUtil::printButtonFooterInLine();
     print nbsp(1);
@@ -418,13 +496,19 @@ sub getShareSetName {
 # fetchShareSetName: data set name with owner stripped
 ############################################################
 sub fetchShareSetName {
-    my ( $dbh, $c_oid, $name, $sid ) = @_;
+    my ( $dbh, $c_oid, $name, $sid, $fromFormat ) = @_;
 
     my $new_str;
     if ( WebUtil::isInt($c_oid) && $c_oid != $sid ) {
         #print "fetchShareSetName() owner=$c_oid, name=$name, sid=$sid<br/>\n";
         my $owner_name = getOwnerName( $dbh, $c_oid );
-        $new_str = "$name (owner: $owner_name)";        
+        if ( $fromFormat ) {
+            $owner_name =~ s/\W+/_/g;
+            $new_str = $name . $ownerFilesetDelim_FromFormat . $owner_name;
+        }
+        else {
+            $new_str = "$name (owner: $owner_name)";
+        }
     }
     else {
         $new_str = $name;        
@@ -432,6 +516,7 @@ sub fetchShareSetName {
 
     return $new_str;
 }
+
 
 #############################################################################
 # getShareSetNames
@@ -443,15 +528,15 @@ sub getShareSetNames {
     if ($isSet) {
         # genome sets
         for my $x2 (@$all_files_ref) { 
-            my ($owner, $x) = WorkspaceUtil::splitOwnerFileset( $sid, $x2 ); 
-            my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
+            my ($owner, $x) = splitOwnerFileset( $sid, $x2 ); 
+            my $share_set_name = fetchShareSetName( $dbh, $owner, $x, $sid );
             $ownerSetName2shareSetName{$x2} = $share_set_name;
         }
     }
     else {
         if ( $fileFullname ) {
-            my ($owner, $x) = WorkspaceUtil::splitOwnerFileset( $sid, $fileFullname ); 
-            my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $x, $sid );
+            my ($owner, $x) = splitOwnerFileset( $sid, $fileFullname ); 
+            my $share_set_name = fetchShareSetName( $dbh, $owner, $x, $sid );
             $ownerSetName2shareSetName{$fileFullname} = $share_set_name;            
         }
     }
@@ -565,7 +650,7 @@ sub catalogOidsFromFile {
     my @fs_oids = ();
     my @displayIds = ();
     for my $input_file (@input_files) {
-        my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
+        my ( $owner, $x ) = splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
         open( FH, "$workspace_dir/$owner/$folder/$x" )
             or webError("File size - file error $input_file");
 
@@ -660,21 +745,34 @@ sub catalogOidsFromFile2 {
 sub getOidsFromFile {
     my ($workspace_dir, $sid, $folder, @input_files) = @_;
 
-    my %oids_hash;
-    for my $input_file (@input_files) {
-        open( FH, "$workspace_dir/$sid/$folder/$input_file" )
-            or webError("File size - file error $input_file");
+    my $dbh = dbLogin();
 
+    my %file2oids;
+    my %file2owner;
+    for my $input_file (@input_files) {
+        my ( $owner, $x ) = splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
+        my $share_set_name = fetchShareSetName( $dbh, $owner, $x, $sid, 1 );
+        $file2owner{$share_set_name} = $owner;
+
+        open( FH, "$workspace_dir/$owner/$folder/$x" )
+            or webError("File size - file error $input_file");
         while ( my $line = <FH> ) {
             #print "line: $line<br/>\n";
             chomp($line);
-            $oids_hash{$line} = 1;
+            my $oids_ref = $file2oids{$share_set_name};
+            if ( $oids_ref ) {
+                push(@$oids_ref, $line);
+            }
+            else {
+                my @oids = ($line);
+                $file2oids{$share_set_name} = \@oids;
+            }
         }
 
         close FH;
     }
     
-    return (%oids_hash);
+    return (\%file2oids, \%file2owner);
 }
 
 sub printSaveSelectedGenomeToWorkspace {
@@ -1410,6 +1508,10 @@ sub printCartSaveToWorkspace {
         {
             $folder = $SCAF_FOLDER;
         }
+        elsif ($saveSelectedName eq "_section_Workspace_saveBcCart" )
+        {
+            $folder = $BC_FOLDER;
+        }
 
         if ($alterNameFolder) {
             $folder = $alterNameFolder;
@@ -1417,7 +1519,12 @@ sub printCartSaveToWorkspace {
 
         my $what = '';
         if ($folder) {
-            $what = ucfirst( lc($folder) ) . 's ';
+            if ( $folder eq $BC_FOLDER ) {
+                $what = uc($folder) . 's ';                
+            }
+            else {
+                $what = ucfirst( lc($folder) ) . 's ';                
+            }
         }
 
         my $workspacefilename = 'workspacefilename';
@@ -1490,7 +1597,9 @@ sub printCartSaveToWorkspace {
                 print "Replacing the following $folder set: <br/>\n";
                 print nbsp(5);
                 print "<select name='$selectedwsfilename'>\n";
-                for my $x (@existing_sets) {
+                
+                my @sorted_existing_sets = sort @existing_sets;
+                for my $x (@sorted_existing_sets) {
                     print "<option value='$x'>$x</option>\n";
                 }
                 print "</select>\n";
@@ -1680,6 +1789,23 @@ sub printExtFuncGeneSaveToWorkspace {
     }
 }
 
+##################################################################
+# printSaveBcToWorkspace
+##################################################################
+sub printSaveBcToWorkspace {
+    my ( $select_id_name ) = @_;
+
+    ## save to workspace
+    if ($user_restricted_site) {
+        printCartSaveToWorkspace(
+            "Save <b>selected BC IDs</b> to",
+            "_section_Workspace_saveBcCart", 
+            '', '', '', '', 
+            $select_id_name
+        );
+    }
+}
+
 
 
 ##################################################################
@@ -1726,13 +1852,14 @@ sub getContactImgGroups {
     	return %group_h;
     }
 
-    my $dbh = dbLogin();
     my $sql = qq{
         select g.group_id, g.group_name 
         from img_group\@imgsg_dev g, contact_img_groups\@imgsg_dev cig 
         where cig.contact_oid = ? 
         and g.group_id = cig.img_group
     };
+
+    my $dbh = dbLogin();
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
     for (;;) { 
         my ( $group_id, $group_name ) = $cur->fetchrow();
@@ -1743,6 +1870,18 @@ sub getContactImgGroups {
     $cur->finish();
 
     return %group_h;
+}
+
+sub getContactImgGroupsOptions {
+
+    my %group_h = getContactImgGroups();
+    my @group_names = values %group_h;
+    my @workspaceSharingVals = ();
+    push(@workspaceSharingVals, 'No');
+    push(@workspaceSharingVals, 'All');
+    push(@workspaceSharingVals, @group_names);
+
+    return (\@workspaceSharingVals);
 }
 
 ######################################################################
@@ -1762,8 +1901,6 @@ sub getShareToGroups {
     	return %share_h;
     }
 
-    my $dbh = dbLogin();
-
     my $sql = qq{
         select g.group_id, g.group_name, w.data_set_name 
         from img_group\@imgsg_dev g, contact_workspace_group\@imgsg_dev w 
@@ -1771,7 +1908,10 @@ sub getShareToGroups {
         and w.data_set_type = ? 
         and w.group_id = g.group_id 
     };
-    my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $ws_type );
+    my @bindList = ( $contact_oid, $ws_type );
+
+    my $dbh = dbLogin();
+    my $cur = execSql( $dbh, $sql, $verbose, @bindList );
     for (;;) { 
         my ( $group_id, $group_name, $data_set_name ) = $cur->fetchrow();
         last if ! $group_id;
@@ -1797,7 +1937,7 @@ sub getShareToGroups {
 #    value: group_id \t group_name \t contact_name
 ##################################################################
 sub getShareFromGroups {
-    my ($ws_type, $delim) = @_;
+    my ($ws_type, $dataset_name, $groupSharingDisplay, $delim) = @_;
 
     my %share_h;
 
@@ -1806,7 +1946,19 @@ sub getShareFromGroups {
 	   return %share_h;
     }
 
-    my $dbh = dbLogin();
+    my @bindList = ( $contact_oid, $ws_type );
+
+    my $datasetNameClause;
+    if ( $dataset_name ) {
+        $datasetNameClause = " and w.data_set_name = ? ";
+        push(@bindList, $dataset_name);
+    }
+
+    my $groupSharingClause;
+    if ( $groupSharingDisplay && $groupSharingDisplay ne 'No' && $groupSharingDisplay ne 'All') {
+        $groupSharingClause = " and g.group_name = ? ";
+        push(@bindList, $groupSharingDisplay);
+    }
 
     my $sql = qq{
         select g.group_id, g.group_name, w.data_set_name,
@@ -1820,8 +1972,12 @@ sub getShareFromGroups {
         and w.data_set_type = ?
         and w.group_id = g.group_id
         and w.contact_oid = c.contact_oid
+        $datasetNameClause
+        $groupSharingClause
     };
-    my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $ws_type );
+
+    my $dbh = dbLogin();
+    my $cur = execSql( $dbh, $sql, $verbose, @bindList );
     for (;;) { 
         my ( $group_id, $group_name, $data_set_name, $c_oid, $c_name )
 	    = $cur->fetchrow();
@@ -1869,7 +2025,7 @@ sub validateOwnerFileset {
         $delim = $ownerFilesetDelim  if ( !$delim  );
         ## check permission
         my $k = $owner . $delim . $file_set_name;
-        my %share_h = getShareFromGroups($folder, $delim);
+        my %share_h = getShareFromGroups($folder, $file_set_name, '', $delim);
         if ( ! $share_h{$k} ) {
             WebUtil::webError("No permission to access $k");
             return; 
@@ -1927,7 +2083,7 @@ sub getAllInputFiles {
     } 
     my @share_filenames = param('share_filename');
     for my $ownerFilename (@share_filenames) {
-        my ($c_oid, $filename) = WorkspaceUtil::splitOwnerFileset( '', $ownerFilename );
+        my ($c_oid, $filename) = splitOwnerFileset( '', $ownerFilename );
         if ( ! $c_oid || ! WebUtil::isInt($c_oid) || ! $filename ) {
             next;
         }

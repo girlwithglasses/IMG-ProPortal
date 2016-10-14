@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id: MerFsUtil.pm 32574 2015-01-16 21:06:34Z klchu $
+# $Id: MerFsUtil.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ###########################################################################
 package MerFsUtil;
 
@@ -228,14 +228,16 @@ sub splitDbAndMetaOids {
 
     my @dbOids;
     my @metaOids;
-    for my $oid (@oids) {
-        $oid = WebUtil::strTrim($oid);
-        if ( WebUtil::isInt($oid) ) {
-            push( @dbOids, $oid );
-        }
-        else {
-            push( @metaOids, $oid );                    
-        }
+    if ( scalar(@oids) > 0 ) {
+        for my $oid (@oids) {
+            $oid = WebUtil::strTrim($oid);
+            if ( WebUtil::isInt($oid) ) {
+                push( @dbOids, $oid );
+            }
+            else {
+                push( @metaOids, $oid );                    
+            }
+        }        
     }
 
     return (\@dbOids, \@metaOids);    
@@ -316,6 +318,7 @@ sub hasElviz {
     # hasElviz=1
     return 0;
 }
+
 
 
 1;

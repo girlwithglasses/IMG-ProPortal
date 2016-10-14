@@ -1,13 +1,14 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 34770 2015-11-20 22:56:04Z klchu $
+# $Id: Help.pm 35086 2016-01-21 22:04:10Z klchu $
 ############################################################################
 package Help;
 use strict;
 use CGI qw( :standard );
 use DBI;
 use Data::Dumper;
+use JSON;
 use WebConfig;
 use WebUtil;
 
@@ -61,7 +62,9 @@ sub dispatch {
     my $page = param('page');
 
     if ( $page eq "sitemap" ) {
-        printSiteMap();
+        #printSiteMap();
+        printSiteMap2();
+        
     } elsif ( $page eq "ftppolicy" ) {
         printFtpPolicy();
     } elsif ( $page eq "ftpreadme" ) {
@@ -210,6 +213,107 @@ sub printFtpPolicy {
 </div>        
     };
 }
+
+
+sub printSiteMap2 {
+    
+    # menu file json data
+    my $menuFile = "menu.json";
+    
+    # read file
+    my $content = WebUtil::file2Str("$base_dir/$menuFile");
+    
+    my $aref = decode_json($content);
+    
+    print qq{
+      <table class='img'>
+      <tr class='img'>
+      <th class='img'>Name</th>
+      <th class='img'>Description</th>
+      <th class='img'>Not available<br>in Data Mart</th>
+      </tr>  
+    };
+    
+    printMenuRow($aref);
+    
+    print "</table>\n";
+    
+    
+     printComponentPages();
+}
+
+sub printMenuRow {
+    my($aref) = @_;
+    return if ($aref eq '');
+
+    my $subarrowRight = "<img class='subarrow' src='../../images/ArrowNav.gif'/>";
+    my $subarrowLeft = "<img class='subarrow_left' src='../../images/ArrowNav_left.gif'/>";
+
+    foreach my $menutop_href (@$aref) {
+        
+        print "<tr class='img'>";
+        
+        my $name = $menutop_href->{'name'};
+        my $level = $menutop_href->{'level'};
+        my $title = $menutop_href->{'title'};
+        my $url = $menutop_href->{'url'};
+        my $icon = $menutop_href->{'icon'};
+        my $arrow = $menutop_href->{'arrow'};
+        my $not_avaiable_href = $menutop_href->{'not avaiable'};
+        my $submenu_aref = $menutop_href->{'submenu'};
+        my $onClick = $menutop_href->{'onClick'};
+
+        if($onClick) {
+            $onClick = "onClick=\"$onClick\"";
+        }
+
+        if($icon) {
+            $icon = "<img class='menuimg' src='../../images/$icon'/>";
+        }
+
+        if($url) {
+            if($arrow eq 'right') {
+                $name = "<a href='$url' $onClick>$icon $name $subarrowRight</a>";                
+            } elsif($arrow eq 'left') {
+                #$name = "<a href='$url' $onClick>$subarrowLeft $icon $name</a>";
+                $name = "<a href='$url' $onClick>$icon $name</a>";
+            } else {
+                $name = "<a href='$url' $onClick>$icon $name</a>";
+            }
+        }
+
+        
+        # indent
+        my $x = 4 * ($level) + 1;
+        my $nbsp = WebUtil::nbsp($x);
+        
+        if($level == 0) {
+            print "<td class='img'>$nbsp<b>$name</b></td><td class='img'>$title</td>";
+        } else {
+            print "<td class='img'>$nbsp $name</td><td class='img'>$title</td>";    
+        }
+        
+        
+        print "<td class='img'>";
+        my $size = keys %$not_avaiable_href;
+        if($size > 0) {
+            foreach my $key (sort keys %$not_avaiable_href) {
+                print "$key -- ";
+            }
+        
+        }
+        print "</td>";
+        if($submenu_aref ne '') {
+            print "</tr>\n";
+            printMenuRow($submenu_aref);
+        } else {
+            print "</tr>\n";        
+        }
+    }
+    
+}
+
+
 
 sub printSiteMap {
     print qq{

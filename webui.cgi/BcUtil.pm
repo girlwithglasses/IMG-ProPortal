@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: BcUtil.pm 30115 2014-02-17 06:15:54Z jinghuahuang $
+# $Id: BcUtil.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ############################################################################
 package BcUtil;
 
@@ -23,7 +23,28 @@ my $YUI      = $env->{yui_dir_28};
 my $user_restricted_site = $env->{user_restricted_site};
 my $enable_biocluster    = $env->{enable_biocluster};
 my $img_internal         = $env->{img_internal};
+my $img_ken              = $env->{img_ken};
+my $abc                      = $env->{abc};
 
+
+############################################################################
+# printSetDetailFooter
+############################################################################
+sub printSetDetailFooter {
+
+    print submit(
+          -name  => '_section_WorkspaceBcSet_addToBcBuffer',
+          -value => 'Add Selected to BC Cart',
+          -class => 'meddefbutton',
+          -onclick => "return validateBCSelection(1, \"mainForm\");"
+    );    
+    print nbsp(1);
+    WebUtil::printButtonFooter();
+}
+
+############################################################################
+# printTableFooter
+############################################################################
 sub printTableFooter {
     my ( $myform ) = @_;
     my $buttonLabel = "View Selected Neighborhoods";
@@ -32,7 +53,7 @@ sub printTableFooter {
 
     print "<div style='width: 2000px;'>\n";
 
-    if($img_internal) {
+    if($abc || $img_ken) {
         my $workspace = 0;
        if($workspace) {
           # add to workspace - new file, an existing file or buffer / cart if no file given - ken 
@@ -66,6 +87,9 @@ sub printTableFooter {
     print "</div>\n";
 }
 
+############################################################################
+# printAddToCartFooter
+############################################################################
 sub printAddToCartFooter {
     my ( $cart_type, $myform ) = @_;
     
@@ -86,6 +110,9 @@ sub printAddToCartFooter {
     );
 }
 
+############################################################################
+# addSelectedToScaffoldCart
+############################################################################
 sub addSelectedToScaffoldCart {
     my @bc_ids = param("bc_id");
     if ( scalar(@bc_ids) <= 0 ) {
@@ -142,6 +169,9 @@ sub addSelectedToScaffoldCart {
 }
 
 
+############################################################################
+# addSelectedToGeneCart
+############################################################################
 sub addSelectedToGeneCart {
     my @bc_ids = param("bc_id");
     if ( scalar(@bc_ids) <= 0 ) {
@@ -192,6 +222,9 @@ sub addSelectedToGeneCart {
     CartUtil::callGeneCartToAdd( \@genes, 1 );
 }
 
+############################################################################
+# getBcId2taxonInfo
+############################################################################
 sub getBcId2taxonInfo {
     my ( $dbh, $bcIds_ref, $bcIds_str ) = @_;
 
@@ -226,6 +259,9 @@ sub getBcId2taxonInfo {
     return ( \%bc2taxonInfo );
 }
 
+############################################################################
+# getBcId2evidProb
+############################################################################
 sub getBcId2evidProb {
     my ( $dbh, $bcIds_ref, $bcIds_str ) = @_;
 

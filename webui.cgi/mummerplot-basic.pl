@@ -11,7 +11,7 @@
 #               promer, and show-tiling alignments.
 #
 #   modified for running in IMG without using gnuplot 
-#   $Id: mummerplot-basic.pl 29739 2014-01-07 19:11:08Z klchu $
+#   $Id: mummerplot-basic.pl 35611 2016-05-08 21:22:50Z klchu $
 ###############################################################################
 use strict;
 use IO::Socket;
@@ -19,9 +19,11 @@ use WebConfig;
 
 my $env = getEnv();
 my $BIN_DIR = $env->{ mummer_dir };
-my $SCRIPT_DIR = "$BIN_DIR/scripts";
+#my $SCRIPT_DIR = "/global/dna/projectdirs/microbial/img/tools/MUMmer3.21/scripts";
+#use lib "$SCRIPT_DIR";
+# I've copied the Foundation.pm file from old jgi dir to img webui.cgi
 
-use lib "$SCRIPT_DIR";
+use lib "/global/common/genepool_sl6/jgi/aligners/mummer/build/MUMmer3.23/scripts";
 use Foundation;
 
 $| = 1;
@@ -113,7 +115,7 @@ my $HELP = qq~
 
 my @DEPEND =
     (
-     "$SCRIPT_DIR/Foundation.pm",
+     "Foundation.pm",
      "$BIN_DIR/delta-filter",
      "$BIN_DIR/show-coords",
      "$BIN_DIR/show-snps",
@@ -1183,6 +1185,10 @@ sub RunGP ( )
     }
 
     my $cmd = "/usr/local/bin/gnuplot";
+    if(!-e $cmd) {
+        $cmd = "/usr/common/jgi/math/gnuplot/4.2.2/bin/gnuplot";
+    }
+    
     $cmd .= " $OPT_Gfile";
 
     system ($cmd)
@@ -1341,7 +1347,11 @@ sub ParseOptions ( )
     }
 
     #-- Check that status of gnuplot
-    $OPT_gpstatus = system ("/usr/bin/gnuplot --version");
+    my $cmd = '/usr/bin/gnuplot';
+    if(!-e $cmd) {
+      $cmd = '/usr/common/jgi/math/gnuplot/4.2.2/bin/gnuplot';
+    }
+    $OPT_gpstatus = system ("$cmd --version");
 
     if ( $OPT_gpstatus == -1 ) {
         print STDERR

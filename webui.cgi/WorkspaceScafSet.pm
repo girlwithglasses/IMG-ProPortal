@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceScafSet.pm
-# $Id: WorkspaceScafSet.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
+# $Id: WorkspaceScafSet.pm 36296 2016-10-10 06:43:29Z jinghuahuang $
 ###########################################################################
 package WorkspaceScafSet;
 
@@ -148,8 +148,10 @@ sub dispatch {
         || paramMatch("showScafSetFuncProfile") )
     {
         my $profile_type = param('ws_profile_type');
+        #print "ws_profile_type=$profile_type<br/>\n";
         if ( $profile_type eq 'func_category' ) {
             my $functype = param('functype');
+            #print "functype=$functype<br/>\n";
 
             if (   $functype eq 'COG_Category'
                 || $functype eq 'COG_Pathway'
@@ -320,6 +322,11 @@ sub printScafSetMainForm {
     printCartDiv();
 
     print "<h2>Scaffold Sets List</h2>";
+
+    my $groupSharingDisplay = getSessionParam("groupSharingDisplay");
+    WorkspaceUtil::printShareMsg( $groupSharingDisplay );
+
+
     print qq{
         <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
@@ -340,22 +347,17 @@ sub printScafSetMainForm {
     TabHTML::printTabDiv( "scafsetTab", \@tabIndex, \@tabNames );
 
     print "<div id='scafsettab1'>";
-    WorkspaceUtil::printShareMainTable( $section, $workspace_dir, $sid, $folder, \@files );
+    my $names_href = WorkspaceUtil::printShareMainTable( $section, $workspace_dir, $sid, $folder, \@files, $groupSharingDisplay );
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 
     print "<div id='scafsettab2'>";
     # Import/Export
-    Workspace::printImportExport($folder);
+    Workspace::printImportExport($folder, $groupSharingDisplay);
 
     print "<h2>Data Export</h2>\n";
     GenerateArtemisFile::printDataExportHint($folder);
-    my $extra_text = "";
-    my $grpCnt = WorkspaceUtil::getContactImgGroupCnt();
-    if ( $grpCnt > 0 ) {
-    	$extra_text = "<u>your own</u>";
-    }
-    print "<p>You may export data from $extra_text selected scaffold set(s).\n";
+    print "<p>You may export data from the selected scaffold set(s).\n";
     print "<p>\n";
 
     ## enter email address
@@ -366,7 +368,7 @@ sub printScafSetMainForm {
         -name    => $name,
         -value   => 'Fasta Nucleic Acid File',
         -class   => 'meddefbutton',
-        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSets('$folder');"
+        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSetsIncludingShare('$folder');"
     );
     print nbsp(1);
     $name = "_section_Workspace_exportScaffoldData_noHeader";
@@ -374,10 +376,18 @@ sub printScafSetMainForm {
         -name    => $name,
         -value   => 'Scaffold Data in Excel',
         -class   => 'medbutton',
-        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSets('$folder');"
+        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSetsIncludingShare('$folder');"
     );
+
+    # make my scaffold set public
+    require WorkspacePublicSet;
+    WorkspacePublicSet::printMakeScaffoldSetPublic();
+
     print "</div>\n";
 
+
+
+    # Genomes and Genes tab
     print "<div id='scafsettab3'>";
     print "<h2>View Genomes</h2>";
     print "<p>You can view genomes of scaffolds in the selected scaffold set(s).<br/>";
@@ -486,7 +496,7 @@ sub printScafSetMainForm {
     print "</div>\n";
 
     print "<div id='scafsettab8'>";
-    Workspace::printSetOperation( $folder, $sid );
+    Workspace::printSetOperation( $folder, $sid, '', $names_href );
     Workspace::printBreakLargeSet($sid, $folder);
     print "</div>\n";
 
@@ -572,8 +582,7 @@ sub printDetailForSets {
 # printScafSetDetail
 ###############################################################################
 sub printScafSetDetail {
-    my ($filename0, $folder0, $selected_scfs_aref, $show_title) = @_;
-    $show_title = 1 if $show_title eq "";
+    my ($filename0, $folder0, $selected_scfs_aref) = @_;
 
     my $filename = param("filename");
     my $folder   = param("folder");
@@ -597,7 +606,7 @@ sub printScafSetDetail {
     	## not my own data set
     	## check permission
     	my $can_view = 0;
-    	my %share_h = WorkspaceUtil::getShareFromGroups($folder);
+    	my %share_h = WorkspaceUtil::getShareFromGroups($folder, $filename);
     	for my $k (keys %share_h) {
     	    my ($c_oid, $data_set_name) = WorkspaceUtil::splitOwnerFileset( $sid, $k );
     	    my ($g_id, $g_name, $c_name) = split(/\t/, $share_h{$k});
@@ -627,18 +636,12 @@ sub printScafSetDetail {
 		     -name   => "mainForm",
 		     -action => "$main_cgi" );
 
-    if ($show_title) {
-        print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";
-        print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
-    } else {
-    	my $url0 = "$main_cgi?section=WorkspaceScafSet"
-    	    . "&page=showDetail&filename=$filename&folder=scaffold";
-    	my $link = alink($url0, $filename, "_blank");
-    	print "<p><u>File Name</u>: <i>$link</i></p>";
-    }
+    print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";
+    print "<h2>Set Name: <i>" . escapeHTML($filename) . "</i></h2>\n";
     if ( $owner_name ) {
     	print "<p><u>Owner</u>: <i>$owner_name</i></p>";
     }
+    #WorkspaceUtil::printMaxNumMsg('scaffolds');
 
     print hiddenVar( "directory", "$folder" );
     print hiddenVar( "folder",    $folder );
@@ -829,11 +832,11 @@ sub printScafSetDetail {
             my ( $t1, $d1, $g1 ) = split( / /, $id );
             if ( !$g1 && isInt($t1) ) {
                 $display_id = $id;
-                $url = "$main_cgi?section=ScaffoldCart"
+                $url = "$main_cgi?section=ScaffoldDetail"
 		          . "&page=scaffoldDetail&scaffold_oid=$t1";
             } else {
                 $display_id = $g1;
-                $url = "$main_cgi?section=MetaDetail&page=metaScaffoldDetail"
+                $url = "$main_cgi?section=MetaScaffoldDetail&page=metaScaffoldDetail"
 		          . "&taxon_oid=$t1&scaffold_oid=$g1&data_type=$d1";
             }
 
@@ -875,13 +878,13 @@ sub printScafSetDetail {
                 my $url3;
                 if ( !$g1 && isInt($t1) ) {
                     $url3 =
-                        "$main_cgi?section=ScaffoldCart"
+                        "$main_cgi?section=ScaffoldDetail"
                       . "&page=scaffoldGenes"
                       . "&scaffold_oid=$display_id";
                 }
                 else {
                     $url3 =
-                        "$main_cgi?section=MetaDetail"
+                        "$main_cgi?section=MetaScaffoldDetail"
                       . "&page=metaScaffoldGenes&scaffold_oid=$display_id"
                       . "&taxon_oid=$t_oid";
                 }                    
@@ -911,7 +914,7 @@ sub printScafSetDetail {
                     $scaf_len_url =
                     "$main_cgi?section=MetaScaffoldGraph" .
                     "&page=metaScaffoldGraph&scaffold_oid=$display_id" .
-                    "&taxon_oid=$t_oid" .
+                    "&taxon_oid=$t_oid&data_type=$d1" .
                     "&start_coord=1&end_coord=$seq_length" .
                     "&seq_length=$seq_length";
                 }                    
@@ -981,7 +984,7 @@ sub printScafSetDetail {
     if ($trunc) {
         $load_msg .= " (additional rows truncated)";
     }
-    $load_msg = "Loaded" if !$show_title;
+    $load_msg = "Loaded";
 
     WebUtil::printScaffoldCartFooterInLineWithToggle($tblname);
     #WebUtil::printScaffoldCartFooterInLine($tblname);
@@ -990,11 +993,11 @@ sub printScafSetDetail {
     	## don't allow delete
     }
     else {
-	print submit(
-	    -name    => "_section_Workspace_removeAndSaveScaffolds",
-	    -value   => "Remove Selected and Resave",
-	    -class   => "medbutton",
-	    -onclick => "return checkSets('$folder');"
+    	print submit(
+    	    -name    => "_section_Workspace_removeAndSaveScaffolds",
+    	    -value   => "Remove Selected and Resave",
+    	    -class   => "medbutton",
+    	    -onclick => "return checkSets('$folder');"
 	    );
     }
     
@@ -1245,7 +1248,7 @@ sub showScafGenes {
             $r .= $gid . $sd . alink( $url, $gid ) . "\t";
             $r .= $gene_name . $sd . $gene_name . "\t";
 
-            my $s_url = "$main_cgi?section=ScaffoldCart" 
+            my $s_url = "$main_cgi?section=ScaffoldDetail" 
                 . "&page=scaffoldDetail&scaffold_oid=$scaf_id";
             $r .= $scaf_id . $sd . alink( $s_url, $scaf_id ) . "\t";
 
@@ -1290,12 +1293,15 @@ sub showScafGenes {
                 my $workspace_id = "$t2 $d2 $gid";
                 $r = $sd . "<input type='checkbox' name='$select_id_name' value='$workspace_id' checked /> \t";
                 my $url =
-                  "$main_cgi?section=MetaGeneDetail" . "&page=metaGeneDetail&gene_oid=$gid" . "&taxon_oid=$t2&data_type=$d2";
+                  "$main_cgi?section=MetaGeneDetail" 
+                  . "&page=metaGeneDetail&gene_oid=$gid" 
+                  . "&taxon_oid=$t2&data_type=$d2";
                 $r .= $workspace_id . $sd . alink( $url, $gid ) . "\t";
                 my ( $gene_prod_name, $prod_src ) = MetaUtil::getGeneProdNameSource( $gid, $t2, $d2 );
                 $r .= $gene_prod_name . $sd . $gene_prod_name . "\t";
                 my $s_url =
-                  "$main_cgi?section=MetaDetail&page=metaScaffoldDetail" . "&taxon_oid=$t2&scaffold_oid=$s2&data_type=$d2";
+                  "$main_cgi?section=MetaScaffoldDetail&page=metaScaffoldDetail" 
+                  . "&taxon_oid=$t2&scaffold_oid=$s2&data_type=$d2";
                 $r .= $s2 . $sd . alink( $s_url, $s2 ) . "\t";
                 my $t_url = "$main_cgi?section=MetaDetail" . "&page=metaDetail&taxon_oid=$t2";
                 my ( $domain, $seq_status, $taxon_name ) = split( /\t/, $taxon_info_h{$t2} );
@@ -1312,7 +1318,7 @@ sub showScafGenes {
     }
 
     if ($trunc) {
-        printMessage("<font color='red'>There are too many genes -- only $gene_cnt genes are listed.</font>");
+        WebUtil::printMessage("<font color='red'>There are too many genes -- only $gene_cnt genes are listed.</font>");
     }
 
     $it->printOuterTable(1);
@@ -1512,7 +1518,7 @@ sub showScafFuncSetProfile {
     }
 
     if ($timeout_msg) {
-        printMessage("<font color='red'>Warning: $timeout_msg</font>");
+        WebUtil::printMessage("<font color='red'>Warning: $timeout_msg</font>");
     }
 
     my $it = new InnerTable( 1, "scafFuncSet$$", "scafFuncSet", 1 );
@@ -2844,8 +2850,8 @@ sub showScafFunctionProfile {
         print "<h1>Scaffold Set Function Profile ($functype)</h1>\n";
         print "<p>Profile is based on scaffold set(s).  Counts in the data table are gene counts.<br/>\n";
         print "Selected scaffold set(s): ";
-	WorkspaceUtil::printShareSetName($dbh, $sid, @all_files);
-	print "<br/>\n";
+    	WorkspaceUtil::printShareSetName($dbh, $sid, @all_files);
+    	print "<br/>\n";
         HtmlUtil::printMetaDataTypeSelection( $data_type, 2 );
         print "</p>";
     } else {
@@ -2998,11 +3004,15 @@ sub showScafFunctionProfile {
     }    #end for x
     print "\n";
 
+    #print "showScafFunctionProfile() gene_func_list: <br/>\n";
+    #print Dumper(\%gene_func_list);
+    #print "<br/>\n";
+
     # store all func_id that has count
     my %func_key_hash;
 
-    # store "func_id scaffold_oid" -> count
-    my %func_scaf_hash;
+    # store "func_id scaffold_oid" -> gene
+    my %func_scaf_gene_hash;
 
     # database
     # we query database to get count for (func_id scaffold_oid) pair
@@ -3024,10 +3034,13 @@ sub showScafFunctionProfile {
 
             if ( $s_oid && $func_id ) {
                 my $k2 = "$func_id $s_oid";
-                if ( !( defined $func_scaf_hash{$k2} ) ) {
-                    $func_scaf_hash{$k2} = 1;
+                if ( !( defined $func_scaf_gene_hash{$k2} ) ) {
+                    my %hash2;
+                    $hash2{$gene_oid} = 1;
+                    $func_scaf_gene_hash{$k2} = \%hash2;
                 } else {
-                    $func_scaf_hash{$k2} += 1;
+                    my $h_ref = $func_scaf_gene_hash{$k2};
+                    $h_ref->{$gene_oid} = 1;
                 }
             }
 
@@ -3091,10 +3104,13 @@ sub showScafFunctionProfile {
                         my @funcs = split( / /, $gene_func_list{$workspace_id} );
                         for my $func_id ( ( sort @funcs ) ) {
                             my $k2 = "$func_id $line";
-                            if ( !( defined $func_scaf_hash{$k2} ) ) {
-                                $func_scaf_hash{$k2} = 1;
+                            if ( !( defined $func_scaf_gene_hash{$k2} ) ) {
+                                my %hash2;
+                                $hash2{$gene_oid} = 1;
+                                $func_scaf_gene_hash{$k2} = \%hash2;
                             } else {
-                                $func_scaf_hash{$k2} += 1;
+                                my $h_ref = $func_scaf_gene_hash{$k2};
+                                $h_ref->{$gene_oid} = 1;
                             }
 
                             if ( !defined $func_key_hash{$func_id} ) {
@@ -3122,6 +3138,10 @@ sub showScafFunctionProfile {
 
     printEndWorkingDiv();
 
+    #print "showScafFunctionProfile() func_scaf_gene_hash: <br/>\n";
+    #print Dumper(\%func_scaf_gene_hash);
+    #print "<br/>\n";
+
     if ( $sid == 312 || $sid == 107 || $sid == 100546 ) {
         print "<p>*** time2: " . currDateTime() . "<br/>\n";
     }
@@ -3143,11 +3163,11 @@ sub showScafFunctionProfile {
 
     if ($isSet) {
         for my $x (@all_files) {
-	    my $x_name = WorkspaceUtil::getShareSetName($dbh, $x, $sid);
-	    my ($n1, $n2) = split(/ /, $x_name, 2);
-	    if ( $n2 ) {
-		$x_name = $n1 . "<br/>" . $n2;
-	    }
+    	    my $x_name = WorkspaceUtil::getShareSetName($dbh, $x, $sid);
+    	    my ($n1, $n2) = split(/ /, $x_name, 2);
+    	    if ( $n2 ) {
+        		$x_name = $n1 . "<br/>" . $n2;
+    	    }
             $it->addColSpec( $x_name, "number asc", "right" );
         }
     } else {
@@ -3182,7 +3202,8 @@ sub showScafFunctionProfile {
             my $h_ref = $file_scaf_hash{$x};
             for my $k2 ( keys %$h_ref ) {
                 my $k3   = "$k $k2";
-                my $cnt3 = $func_scaf_hash{$k3};
+                my $h_hash = $func_scaf_gene_hash{$k3};
+                my $cnt3 = keys %$h_hash;
                 if ($isSet) {
                     if ($cnt3) {
                         $cnt2 += $cnt3;
@@ -3222,7 +3243,7 @@ sub showScafFunctionProfile {
     }
 
     if ($timeout_msg) {
-        printMessage("<font color='red'>Warning: $timeout_msg</font>");
+        WebUtil::printMessage("<font color='red'>Warning: $timeout_msg</font>");
     }
 
     $it->printOuterTable(1);
@@ -3439,12 +3460,18 @@ sub showScafFuncCategoryProfile {
         close FH;
     }    #end for x
     print "\n";
+    #print "showScafFuncCategoryProfile() gene_func_list: <br/>\n";
+    #print Dumper(\%gene_func_list);
+    #print "<br/>\n";
+    #print "showScafFuncCategoryProfile() file_scaf_hash: <br/>\n";
+    #print Dumper(\%file_scaf_hash);
+    #print "<br/>\n";
 
     # store all func_id that has count
     my %func_key_hash;
 
-    # store "func_id scaffold_oid" -> count
-    my %func_scaf_hash;
+    # store "func_id scaffold_oid" -> gene
+    my %func_scaf_gene_hash;
 
     # database
     # we query database to get count for (func_id scaffold_oid) pair
@@ -3466,10 +3493,13 @@ sub showScafFuncCategoryProfile {
 
                 if ( $s_oid && $func_id ) {
                     my $k2 = "$func_id $s_oid";
-                    if ( !( defined $func_scaf_hash{$k2} ) ) {
-                        $func_scaf_hash{$k2} = 1;
+                    if ( !( defined $func_scaf_gene_hash{$k2} ) ) {
+                        my %hash2;
+                        $hash2{$gene_oid} = 1;
+                        $func_scaf_gene_hash{$k2} = \%hash2;
                     } else {
-                        $func_scaf_hash{$k2} += 1;
+                        my $h_ref = $func_scaf_gene_hash{$k2};
+                        $h_ref->{$gene_oid} = 1;
                     }
                 }
 
@@ -3544,10 +3574,13 @@ sub showScafFuncCategoryProfile {
 
                         for my $func_id ( ( sort @funcs ) ) {
                             my $k2 = "$func_id $line";
-                            if ( !( defined $func_scaf_hash{$k2} ) ) {
-                                $func_scaf_hash{$k2} = 1;
+                            if ( !( defined $func_scaf_gene_hash{$k2} ) ) {
+                                my %hash2;
+                                $hash2{$gene_oid} = 1;
+                                $func_scaf_gene_hash{$k2} = \%hash2;
                             } else {
-                                $func_scaf_hash{$k2} += 1;
+                                my $h_ref = $func_scaf_gene_hash{$k2};
+                                $h_ref->{$gene_oid} = 1;
                             }
 
                             if ( !defined $func_key_hash{$func_id} ) {
@@ -3575,6 +3608,10 @@ sub showScafFuncCategoryProfile {
     }    # end for x
 
     printEndWorkingDiv();
+
+    #print "showScafFuncCategoryProfile() func_scaf_gene_hash: <br/>\n";
+    #print Dumper(\%func_scaf_gene_hash);
+    #print "<br/>\n";
 
     if ( $sid == 312 || $sid == 107 || $sid == 100546 ) {
         print "<p>*** time2: " . currDateTime() . "<br/>\n";
@@ -3642,7 +3679,8 @@ sub showScafFuncCategoryProfile {
             my $h_ref = $file_scaf_hash{$x};
             for my $k2 ( keys %$h_ref ) {
                 my $k3   = "$k $k2";
-                my $cnt3 = $func_scaf_hash{$k3};
+                my $h_hash = $func_scaf_gene_hash{$k3};
+                my $cnt3 = keys %$h_hash;
                 if ($isSet) {
                     if ($cnt3) {
                         $cnt2 += $cnt3;
@@ -4404,13 +4442,13 @@ sub processScafPhyloDist {
     
     if ( $timeout_msg ) {
         printEndWorkingDiv();
-        printMessage($timeout_msg);
+        WebUtil::printMessage($timeout_msg);
         return;
     }
 
     if ( $ct30 + $ct60 + $ct90 == 0 && $dt30 + $dt60 + $dt90 == 0 ) {
         printEndWorkingDiv();
-        printMessage("No phylogenetic distribution has been computed here.");
+        WebUtil::printMessage("No phylogenetic distribution has been computed here.");
         printStatusLine( "Loaded.", 2 );
         return;
     }
@@ -5079,19 +5117,19 @@ sub printScafPhyloDistScaffoldLink {
         my $scaffold_id = $keys[0];
         my $isMeta;
         if ( $scaffolds_href->{$scaffold_id} == 1 ) {
-            my $scaffold_url = "$main_cgi?section=ScaffoldCart"
+            my $scaffold_url = "$main_cgi?section=ScaffoldDetail"
              . "&page=scaffoldDetail&scaffold_oid=$scaffold_id";
             $scaffold_link = alink( $scaffold_url, $scaffold_id );
         } else {
             my $scaffold_url;
             my ( $toid, $data_type, $scaf_id ) = split( / /, $scaffold_id );
             if ( $data_type eq 'database' ) {
-                $scaffold_url = "$main_cgi?section=ScaffoldCart"
+                $scaffold_url = "$main_cgi?section=ScaffoldDetail"
                  . "&page=scaffoldDetail&scaffold_oid=$scaf_id";
                  $isMeta = 1;
             }
             else {
-                $scaffold_url = "$main_cgi?section=MetaDetail"
+                $scaffold_url = "$main_cgi?section=MetaScaffoldDetail"
                   . "&page=metaScaffoldDetail&scaffold_oid=$scaf_id"
                   . "&taxon_oid=$toid&data_type=$data_type";                
             }

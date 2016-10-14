@@ -1,6 +1,6 @@
 #
 #
-# $Id: NaturalProductSearch.pm 31620 2014-08-27 04:30:27Z jinghuahuang $
+# $Id: NaturalProductSearch.pm 35780 2016-06-15 20:41:20Z klchu $
 #
 package NaturalProductSearch;
 

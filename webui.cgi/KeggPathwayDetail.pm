@@ -1,7 +1,7 @@
 ############################################################################
 # KeggPathwayDetail.pm - Show detail page for kegg pathway.
 #   --es 07/08/2005
-# $Id: KeggPathwayDetail.pm 34567 2015-10-23 18:38:30Z imachen $
+# $Id: KeggPathwayDetail.pm 35903 2016-07-20 20:45:44Z klchu $
 ############################################################################
 package KeggPathwayDetail;
 my $section = "KeggPathwayDetail";
@@ -33,6 +33,7 @@ use QueryUtil;
 use GenomeListJSON;
 use KeggMap;
 use HTML::Template;
+use Date::Format;
 
 my $env                  = getEnv();
 my $main_cgi             = $env->{main_cgi};
@@ -742,7 +743,12 @@ sub printKoModGeneList {
 sub printKoList {
     my $stats = param('stats');
 
-    print "<h1>KO Term List</h1>\n";
+    if ( $stats ) {
+        print "<h1>KO Term List with Statistics</h1>\n";
+    }
+    else {
+        print "<h1>KO Term List</h1>\n";
+    }
 
     printStatusLine( "Loading ...", 1 ); 
     printMainForm(); 
@@ -752,102 +758,29 @@ sub printKoList {
  
     my $dbh = dbLogin();
     if ($stats) { 
-        printStartWorkingDiv();
-
-        print "<p>Counting isolate genomes ...\n";
- 
-        my $rclause   = urClause("gt.taxon_oid");
-        my $imgClause = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 1 );
-        my $sql       = qq{
-           select /*+ result_cache */ gt.ko_term, count(distinct gt.taxon_oid)
-           from mv_taxon_ko_stat gt
-           where 1 = 1
-           $rclause
-           $imgClause
-           group by gt.ko_term
-           }; 
-
-	my $cur = execSql( $dbh, $sql, $verbose);
-        for ( ; ; ) { 
-            my ( $ko_id, $cnt ) = $cur->fetchrow();
-            last if !$ko_id; 
-            $ko_cnts{$ko_id} = $cnt; 
-        } 
-        $cur->finish(); 
- 
-        if ($include_metagenomes) { 
-            print "<p>Counting metagenomes ...\n"; 
- 
-            my $imgClause = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 2 ); 
-            $sql = qq{                                                      
-                select /*+ result_cache */ gt.ko_term, 
-                       count(distinct gt.taxon_oid)
-                from mv_taxon_ko_stat gt
-                where 1 = 1
-                $rclause
-                $imgClause
-                group by gt.ko_term
-            }; 
- 
-            $cur = execSql( $dbh, $sql, $verbose ); 
-            for ( ; ; ) { 
-                my ( $ko_id, $cnt ) = $cur->fetchrow(); 
-                last if !$ko_id; 
-                $m_ko_cnts{$ko_id} = $cnt; 
-            } 
-            $cur->finish(); 
- 
-            print "<p>Counting MER-FS metagenomes ...\n"; 
- 
-            if ($new_func_count) {
-                my $rclause2   = WebUtil::urClause('f.taxon_oid');
-                my $imgClause2 = WebUtil::imgClauseNoTaxon( 'f.taxon_oid', 2 );
- 
-                $sql = qq{
-                    select f.func_id, count(distinct f.taxon_oid)
-                    from taxon_ko_count f
-                    where f.gene_count > 0
-                    $rclause2
-                    $imgClause2
-                    group by f.func_id
-                }; 
- 
-                $cur = execSql( $dbh, $sql, $verbose );
-                for ( ; ; ) { 
-                    my ( $ko_id, $t_cnt ) = $cur->fetchrow();
-                    last if !$ko_id;
- 
-                    if ( $m_ko_cnts{$ko_id} ) { 
-                        $m_ko_cnts{$ko_id} += $t_cnt;
-                    } else { 
-                        $m_ko_cnts{$ko_id} = $t_cnt;
-                    } 
-                } 
-                $cur->finish(); 
-                print "<br/>\n"; 
-            } else { 
-                $sql = MerFsUtil::getTaxonsInFileSql(); 
-                $cur = execSql( $dbh, $sql, $verbose );
-                for ( ; ; ) {
-                    my ($t_oid) = $cur->fetchrow(); 
-                    last if !$t_oid; 
- 
-                    print "."; 
-                    my %funcs = MetaUtil::getTaxonFuncCount( $t_oid, 
-							     '', 'ko' ); 
-                    for my $ko_id ( keys %funcs ) { 
-                        if ( $m_ko_cnts{$ko_id} ) {
-                            $m_ko_cnts{$ko_id} += 1; 
-                        } else {
-                            $m_ko_cnts{$ko_id} = 1; 
-                        } 
-                     } 
-                } 
-                $cur->finish();
-                print "<br/>\n"; 
-            } 
-	}
-	printEndWorkingDiv();
+        my $touchFileTime = WebUtil::fileAtime($env->{ko_data_file});
+        $touchFileTime = Date::Format::time2str( "%a, %b %e %Y %l:%M %P", $touchFileTime );
+        my $tmp = '';
+        if($user_restricted_site) {
+            $tmp = '<br>Counts inculde private data sets.';
+        }
+        print qq{
+          <p>
+          <span style='font-size:12px;font-style:italic;'>
+          The statistics was last updated on: $touchFileTime 
+          $tmp
+          </span>
+          </p>
+        };
+        
+        my $rfh = WebUtil::newReadFileHandle($env->{ko_data_file});
+        while ( my $line = $rfh->getline() ) {
+            chomp $line;
+            next if ( $line eq "" );
+            my ( $id, $isocnt, $metacnt ) = split( /\t/, $line );
+            $ko_cnts{$id} = $isocnt;
+            $m_ko_cnts{$id} = $metacnt;
+        }
     }
 
     my $sql = "select ko_id, ko_name, definition from ko_term";
@@ -875,16 +808,16 @@ ht" );
         my ( $ko_id, $ko_name, $def ) = $cur->fetchrow();
         last if !$ko_id; 
 
-	if ( $ko_name ) {
-	    $def .= " (" . $ko_name . ")";
-	}
+    	if ( $ko_name ) {
+    	    $def .= " (" . $ko_name . ")";
+    	}
 
         $count++; 
         my $r; 
         $r .= $sd . "<input type='checkbox' name='$select_id_name' " . 
 	    "value='$ko_id' />" . "\t";
  
-	my $ko_base_url = $env->{kegg_orthology_url};
+    	my $ko_base_url = $env->{kegg_orthology_url};
         my $url = $ko_base_url;
         my $url = "main.cgi?section=KeggPathwayDetail&page=kodetail" .
             "&ko_id=" . $ko_id; 
@@ -892,25 +825,27 @@ ht" );
         $r .= $ko_id . $sd . alink( $url, $ko_id ) . "\t";
         $r .= $def . $sd . $def . "\t"; 
  
-        if($stats) { 
-	    my $cnt = $ko_cnts{$ko_id};
-	    if ($cnt) { 
-		my $url = "main.cgi?section=KeggPathwayDetail&page=kogenomelist" . "&gtype=isolate&ko_id=" . $ko_id;
-		$r .= $cnt . $sd . alink( $url, $cnt ) . "\t";
-	    } else { 
-		$r .= "0" . $sd . "0" . "\t";
-	    } 
+        if ($stats) { 
+    	    my $cnt = $ko_cnts{$ko_id};
+    	    if ($cnt) { 
+        		my $url = "main.cgi?section=KeggPathwayDetail&page=kogenomelist" 
+        		  . "&gtype=isolate&ko_id=" . $ko_id;
+        		$r .= $cnt . $sd . alink( $url, $cnt ) . "\t";
+    	    } else { 
+        		$r .= "0" . $sd . "0" . "\t";
+    	    } 
  
-	    if ($include_metagenomes) {
-		my $m_cnt = $m_ko_cnts{$ko_id}; 
-		if ($m_cnt) { 
-		    my $m_url = 
-			"main.cgi?section=KeggPathwayDetail&page=kogenomelist" . "&gtype=metagenome&ko_id=" . $ko_id;
-		    $r .= $m_cnt . $sd . alink( $m_url, $m_cnt ) . "\t"; 
-		} else { 
-		    $r .= "0" . $sd . "0" . "\t";
-		} 
-	    } 
+    	    if ($include_metagenomes) {
+        		my $m_cnt = $m_ko_cnts{$ko_id}; 
+        		if ($m_cnt) { 
+        		    my $m_url = 
+        			  "main.cgi?section=KeggPathwayDetail&page=kogenomelist" 
+        			  . "&gtype=metagenome&ko_id=" . $ko_id;
+        		    $r .= $m_cnt . $sd . alink( $m_url, $m_cnt ) . "\t"; 
+        		} else { 
+        		    $r .= "0" . $sd . "0" . "\t";
+        		} 
+    	    } 
         } 
         $it->addRow($r); 
     }
@@ -1113,7 +1048,7 @@ sub printKoDetail {
 
         my $url = "$main_cgi?section=TaxonDetail"
                 . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        if ( $in_file ) {
+        if ( $in_file eq 'Yes' ) {
             $url = "$main_cgi?section=MetaDetail"
 		 . "&page=metaDetail&taxon_oid=$taxon_oid";
         }
@@ -1357,7 +1292,7 @@ sub printParticipatingGenomesInPathway {
 
         my $url = "$main_cgi?section=TaxonDetail"
                 . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        if ( $in_file ) {
+        if ( $in_file eq 'Yes' ) {
             $url = "$main_cgi?section=MetaDetail"
 		 . "&page=metaDetail&taxon_oid=$taxon_oid";
         }
@@ -1512,7 +1447,7 @@ sub printPotentialGenomesWithMissingEnzymes {
 
         my $url = "$main_cgi?section=TaxonDetail"
                 . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        if ( $in_file ) {
+        if ( $in_file eq 'Yes' ) {
             $url = "$main_cgi?section=MetaDetail"
 		 . "&page=metaDetail&taxon_oid=$taxon_oid";
         }
@@ -1663,7 +1598,7 @@ sub printParticipatingGenomesInModule {
 
         my $url = "$main_cgi?section=TaxonDetail"
                 . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        if ( $in_file ) {
+        if ( $in_file eq 'Yes' ) {
             $url = "$main_cgi?section=MetaDetail"
 		 . "&page=metaDetail&taxon_oid=$taxon_oid";
         }
@@ -1817,7 +1752,7 @@ sub printPotentialGenomesWithMissingKOs {
 
         my $url = "$main_cgi?section=TaxonDetail"
                 . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        if ( $in_file ) {
+        if ( $in_file eq 'Yes' ) {
             $url = "$main_cgi?section=MetaDetail"
 		 . "&page=metaDetail&taxon_oid=$taxon_oid";
         }
@@ -1855,10 +1790,10 @@ sub printKeggModuleList {
     my $stats = param('stats');
 
     if ( $stats ) {
-	print "<h1>KEGG Module List with Statistics</h1>\n";
+    	print "<h1>KEGG Module List with Statistics</h1>\n";
     }
     else {
-	print "<h1>KEGG Module List</h1>\n";
+    	print "<h1>KEGG Module List</h1>\n";
     }
 
     printStatusLine( "Loading ...", 1 ); 
@@ -1869,103 +1804,29 @@ sub printKeggModuleList {
  
     my $dbh = dbLogin();
     if ($stats) { 
-        printStartWorkingDiv();
-
-        print "<p>Counting isolate genomes ...\n";
- 
-        my $rclause   = urClause("gt.taxon_oid");
-        my $imgClause = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 1 );
-        my $sql       = qq{
-           select /*+ result_cache */ gt.module_id, count(distinct gt.taxon_oid)
-           from mv_taxon_kegg_mod_stat gt
-           where 1 = 1
-           $rclause
-           $imgClause
-           group by gt.module_id
-           }; 
-
-	my $cur = execSql( $dbh, $sql, $verbose);
-        for ( ; ; ) { 
-            my ( $ko_id, $cnt ) = $cur->fetchrow();
-            last if !$ko_id; 
-            $ko_cnts{$ko_id} = $cnt; 
-        } 
-        $cur->finish(); 
- 
-        if ($include_metagenomes) { 
-            print "<p>Counting metagenomes ...\n"; 
- 
-            my $imgClause = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 2 ); 
-            $sql = qq{                                                      
-                select /*+ result_cache */ gt.module_id, 
-                       count(distinct gt.taxon_oid)
-                from mv_taxon_kegg_mod_stat gt
-                where 1 = 1
-                $rclause
-                $imgClause
-                group by gt.module_id
-            }; 
- 
-            $cur = execSql( $dbh, $sql, $verbose ); 
-            for ( ; ; ) { 
-                my ( $ko_id, $cnt ) = $cur->fetchrow(); 
-                last if !$ko_id; 
-                $m_ko_cnts{$ko_id} = $cnt; 
-            } 
-            $cur->finish(); 
- 
-            print "<p>Counting MER-FS metagenomes ...\n"; 
- 
-            if ($new_func_count) {
-                my $rclause2   = WebUtil::urClause('f.taxon_oid');
-                my $imgClause2 = WebUtil::imgClauseNoTaxon( 'f.taxon_oid', 2 );
- 
-                $sql = qq{
-                    select k.module_id, count(distinct f.taxon_oid)
-                    from taxon_ko_count f, kegg_module_ko_terms k
-                    where f.gene_count > 0
-                    and f.func_id = k.ko_terms
-                    $rclause2
-                    $imgClause2
-                    group by k.module_id
-                }; 
- 
-                $cur = execSql( $dbh, $sql, $verbose );
-                for ( ; ; ) { 
-                    my ( $ko_id, $t_cnt ) = $cur->fetchrow();
-                    last if !$ko_id;
- 
-                    if ( $m_ko_cnts{$ko_id} ) { 
-                        $m_ko_cnts{$ko_id} += $t_cnt;
-                    } else { 
-                        $m_ko_cnts{$ko_id} = $t_cnt;
-                    } 
-                } 
-                $cur->finish(); 
-                print "<br/>\n"; 
-            } else { 
-                $sql = MerFsUtil::getTaxonsInFileSql(); 
-                $cur = execSql( $dbh, $sql, $verbose );
-                for ( ; ; ) {
-                    my ($t_oid) = $cur->fetchrow(); 
-                    last if !$t_oid; 
- 
-                    print "."; 
-                    my %funcs = MetaUtil::getTaxonFuncCount( $t_oid, 
-							     '', 'ko' ); 
-                    for my $ko_id ( keys %funcs ) { 
-                        if ( $m_ko_cnts{$ko_id} ) {
-                            $m_ko_cnts{$ko_id} += 1; 
-                        } else {
-                            $m_ko_cnts{$ko_id} = 1; 
-                        } 
-                     } 
-                } 
-                $cur->finish();
-                print "<br/>\n"; 
-            } 
-	}
-	printEndWorkingDiv();
+        my $touchFileTime = WebUtil::fileAtime($env->{kegg_data_file});
+        $touchFileTime = Date::Format::time2str( "%a, %b %e %Y %l:%M %P", $touchFileTime );
+        my $tmp = '';
+        if($user_restricted_site) {
+            $tmp = '<br>Counts inculde private data sets.';
+        }
+        print qq{
+          <p>
+          <span style='font-size:12px;font-style:italic;'>
+          The statistics was last updated on: $touchFileTime 
+          $tmp
+          </span>
+          </p>
+        };
+        
+        my $rfh = WebUtil::newReadFileHandle($env->{kegg_data_file});
+        while ( my $line = $rfh->getline() ) {
+            chomp $line;
+            next if ( $line eq "" );
+            my ( $id, $isocnt, $metacnt ) = split( /\t/, $line );
+            $ko_cnts{$id} = $isocnt;
+            $m_ko_cnts{$id} = $metacnt;
+        }
     }
 
     my $sql = "select module_id, module_name, module_type, definition from kegg_module";
@@ -2087,17 +1948,17 @@ sub printKoGeneList {
     my ( $koname, $kodefn ) = $cur->fetchrow();
     $cur->finish();
 
-    my $taxonClause1 = WebUtil::txsClause( "t.taxon_oid", $dbh );
-    if ( $taxon_oid ne "" && isInt($taxon_oid) ) {
-        $taxonClause1 = " and t.taxon_oid = ? ";
-    }
-
     my $rclause1   = WebUtil::urClause("t.taxon_oid");
     my $imgClause1 = WebUtil::imgClauseNoTaxon("t.taxon_oid" );
     $imgClause1 = WebUtil::imgClauseNoTaxon("t.taxon_oid", 1)
         if ($gtype eq "isolate");
     $imgClause1 = WebUtil::imgClauseNoTaxon("t.taxon_oid", 2)
         if ($gtype eq "metagenome");
+
+    my $taxonClause1 = WebUtil::txsClause( "t.taxon_oid", $dbh );
+    if ( $taxon_oid && isInt($taxon_oid) ) {
+        $taxonClause1 = " and t.taxon_oid = ? ";
+    }
 
     my %taxon_info;
     my %mer_fs_taxons;
@@ -2110,7 +1971,7 @@ sub printKoGeneList {
         $imgClause1
     };
 
-    if ($taxon_oid ne "" && isInt($taxon_oid)) {
+    if ($taxon_oid && isInt($taxon_oid)) {
         $cur = execSql( $dbh, $sql1, $verbose, $taxon_oid );
     } else {
         $cur = execSql( $dbh, $sql1, $verbose );
@@ -2214,14 +2075,13 @@ sub printKoGeneList {
         }
     }
     $cur->finish();
-    #$dbh->disconnect();
 
     my $mer_fs_genes   = 0;
     my $skip_gene_name = 0;
     if ( !$trunc && scalar( keys %mer_fs_taxons ) > 0 
 	 && ($gtype eq "metagenome" || $gtype eq "all") ) {
 
-	timeout( 60 * $merfs_timeout_mins );
+    	timeout( 60 * $merfs_timeout_mins );
         print "<p>Retrieving genome information from MER-FS ... <br/>\n";
 
         foreach my $taxon_oid ( keys %mer_fs_taxons ) {
@@ -2244,11 +2104,11 @@ sub printKoGeneList {
                 my $name      = "";
                 if ( !$skip_gene_name ) {
                     my ( $value, $source ) = MetaUtil::getGeneProdNameSource
-			( $gene_oid, $taxon_oid, $data_type );
+            			( $gene_oid, $taxon_oid, $data_type );
                     $name = $value;
-		    if ( ! $name ) {
-			$name = 'hypothetical protein';
-		    }
+        		    if ( ! $name ) {
+            			$name = 'hypothetical protein';
+        		    }
                 }
                 my $url1 =
                     "$main_cgi?section=MetaGeneDetail"
@@ -2258,7 +2118,7 @@ sub printKoGeneList {
 		         . "&page=metaDetail&taxon_oid=$taxon_oid";
 
                 my $row = $sd . "<input type='checkbox' " 
-		    . "name='gene_oid' value='$workspace_id'/>\t";
+        		    . "name='gene_oid' value='$workspace_id'/>\t";
                 $row .= $workspace_id . $sd . alink( $url1, $gene_oid, "_blank" ) . "\t";
                 $row .= $locus_tag . $sd . $locus_tag . "\t";
                 $row .= $name . $sd . $name . "\t";
@@ -2823,7 +2683,7 @@ sub printGenomeList {
 
         my $url = "$main_cgi?section=TaxonDetail"
                 . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        if ( $in_file ) {
+        if ( $in_file eq 'Yes' ) {
             $url = "$main_cgi?section=MetaDetail"
 		 . "&page=metaDetail&taxon_oid=$taxon_oid";
         }
@@ -3015,6 +2875,7 @@ sub printKOtermDetail {
     	}
     }
     $cur->finish();
+    my @allKOs = keys %allKO;
 
     # For separate tables in multiple tabs, set the form id to be the
     # InnerTable table name (3rd argument) followed by "_frm" :
@@ -3063,31 +2924,34 @@ sub printKOtermDetail {
         $imgClause
         group by g.ko_term
     };
+    #print "<p>isolates sql=$sql\n";
 
     my $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
     for ( ; ; ) {
-	my ($id, $gene_cnt, $taxon_cnt) = $cur->fetchrow();
+    	my ($id, $gene_cnt, $taxon_cnt) = $cur->fetchrow();
         last if !$id;
-
-	if ( $ko_gene_cnt{$id} ) {
-	    $ko_gene_cnt{$id} += $gene_cnt;
-	} else {
-	    $ko_gene_cnt{$id} = $gene_cnt;
-	}
-
-	if ( $ko_genome_cnt{$id} ) {
-	    $ko_genome_cnt{$id} += $taxon_cnt;
-	} else {
-	    $ko_genome_cnt{$id} = $taxon_cnt;
-	}
+        #print "<p>isolates id=$id, gene_cnt=$gene_cnt, taxon_cnt=$taxon_cnt\n";
+    
+    	if ( $ko_gene_cnt{$id} ) {
+    	    $ko_gene_cnt{$id} += $gene_cnt;
+    	} else {
+    	    $ko_gene_cnt{$id} = $gene_cnt;
+    	}
+    
+    	if ( $ko_genome_cnt{$id} ) {
+    	    $ko_genome_cnt{$id} += $taxon_cnt;
+    	} else {
+    	    $ko_genome_cnt{$id} = $taxon_cnt;
+    	}
     }
     $cur->finish();
 
     if ($include_metagenomes) {
     	print "<p>Counting metagenomes ...\n";
 
-	my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon_oid", 2);
-	$sql = qq{
+        my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon_oid", 2);
+        #no metagenome data in mv_taxon_ko_stat
+        $sql = qq{
             select /*+ result_cache */ g.ko_term,
                    sum(g.gene_count),
                    count(distinct g.taxon_oid)
@@ -3100,59 +2964,73 @@ sub printKOtermDetail {
             $imgClause
             group by g.ko_term
         };
+        #print "<p>metagenomes sql=$sql\n";
+        
+        my $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
+        for ( ; ; ) {
+            my ($id, $gene_cnt, $taxon_cnt) = $cur->fetchrow();
+            last if !$id;
+            #print "<p>metagenomes id=$id, gene_cnt=$gene_cnt, taxon_cnt=$taxon_cnt\n";
+        
+            if ( $m_ko_gene_cnt{$id} ) {
+        		$m_ko_gene_cnt{$id} += $gene_cnt;
+            } else {
+        		$m_ko_gene_cnt{$id} = $gene_cnt;
+            }
+        
+            if ( $m_ko_genome_cnt{$id} ) {
+        		$m_ko_genome_cnt{$id} += $taxon_cnt;
+            } else {
+        		$m_ko_genome_cnt{$id} = $taxon_cnt;
+            }
+        }
+        $cur->finish();
 
-	my $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
-	for ( ; ; ) {
-	    my ($id, $gene_cnt, $taxon_cnt) = $cur->fetchrow();
-	    last if !$id;
-
-	    if ( $m_ko_gene_cnt{$id} ) {
-		$m_ko_gene_cnt{$id} += $gene_cnt;
-	    } else {
-		$m_ko_gene_cnt{$id} = $gene_cnt;
-	    }
-
-	    if ( $m_ko_genome_cnt{$id} ) {
-		$m_ko_genome_cnt{$id} += $taxon_cnt;
-	    } else {
-		$m_ko_genome_cnt{$id} = $taxon_cnt;
-	    }
-	}
-	$cur->finish();
-
+        print "<p>Counting MER-FS metagenomes ...\n"; 
     	if ( $new_func_count ) {
-	    $sql = qq{
+            my $idClause;
+            if ( scalar(@allKOs) > 0 ) {
+                my $funcIdsInClause = OracleUtil::getFuncIdsInClause( $dbh, @allKOs );
+                $idClause = " and g.func_id in ($funcIdsInClause) ";
+            }
+            
+    	    $sql = qq{
                 select g.func_id, sum(g.gene_count),
                        count(distinct g.taxon_oid)
                 from taxon_ko_count g
                 where g.gene_count > 0
+                $idClause
                 $rClause
                 $imgClause
                 $taxonClause
                 group by g.func_id
             };
-	    my $cur = execSql( $dbh, $sql, $verbose );
-	    for ( ; ; ) {
-		my ($ko_id, $gene_cnt, $taxon_cnt) = $cur->fetchrow();
-		last if !$ko_id;
-
-		if ( $m_ko_gene_cnt{$ko_id} ) {
-		    $m_ko_gene_cnt{$ko_id} += $gene_cnt;
-		} else {
-		    $m_ko_gene_cnt{$ko_id} = $gene_cnt;
-		}
-
-		if ( $m_ko_genome_cnt{$ko_id} ) {
-		    $m_ko_genome_cnt{$ko_id} += $taxon_cnt;
-		} else {
-		    $m_ko_genome_cnt{$ko_id} = $taxon_cnt;
-		}
+            #print "<p>inside new_func_count=$new_func_count sql=$sql\n";
+    	    
+    	    my $cur = execSql( $dbh, $sql, $verbose );
+    	    for ( ; ; ) {
+        		my ($ko_id, $gene_cnt, $taxon_cnt) = $cur->fetchrow();
+        		last if !$ko_id;
+                #print "<p>ko_id=$ko_id, gene_cnt=$gene_cnt, taxon_cnt=$taxon_cnt\n";
+        
+        		if ( $m_ko_gene_cnt{$ko_id} ) {
+        		    $m_ko_gene_cnt{$ko_id} += $gene_cnt;
+        		} else {
+        		    $m_ko_gene_cnt{$ko_id} = $gene_cnt;
+        		}
+        
+        		if ( $m_ko_genome_cnt{$ko_id} ) {
+        		    $m_ko_genome_cnt{$ko_id} += $taxon_cnt;
+        		} else {
+        		    $m_ko_genome_cnt{$ko_id} = $taxon_cnt;
+        		}
     	    }
     	    $cur->finish();
             print "<br/>\n";
-    	
-    	} else {
-	    my $taxonClause1 = WebUtil::txsClause("t.taxon_oid", $dbh);
+        	
+    	} 
+    	else {
+    	    my $taxonClause1 = WebUtil::txsClause("t.taxon_oid", $dbh);
             $sql = MerFsUtil::getTaxonsInFileSql($taxonClause1);
             $sql .= " and t.genome_type = 'metagenome' ";
             $cur = execSql( $dbh, $sql, $verbose );
@@ -3163,26 +3041,27 @@ sub printKOtermDetail {
                 print ". "; 
                 my %funcs = MetaUtil::getTaxonFuncCount( $t_oid, '', 'ko' );
 		
-		foreach my $id ( keys %funcs ) {
-		    my $gene_cnt = $funcs{$id};
-		    if ( $m_ko_gene_cnt{$id} ) {
-			$m_ko_gene_cnt{$id} += $gene_cnt;
-		    } else {
-			$m_ko_gene_cnt{$id} = $gene_cnt;
-		    }
-
-		    if ( $m_ko_genome_cnt{$id} ) {
-			$m_ko_genome_cnt{$id} += 1;
-		    } else {
-			$m_ko_genome_cnt{$id} = 1;
-		    }
-		}
+        		foreach my $id ( keys %funcs ) {
+        		    my $gene_cnt = $funcs{$id};
+        		    if ( $m_ko_gene_cnt{$id} ) {
+            			$m_ko_gene_cnt{$id} += $gene_cnt;
+        		    } else {
+            			$m_ko_gene_cnt{$id} = $gene_cnt;
+        		    }
+        
+        		    if ( $m_ko_genome_cnt{$id} ) {
+            			$m_ko_genome_cnt{$id} += 1;
+        		    } else {
+            			$m_ko_genome_cnt{$id} = 1;
+        		    }
+        		}
     	    } 
     	    $cur->finish();
     	    print "<br/>\n";
     	}
     }
 
+    print "<p>starting table\n";
     my $hasIsolates = scalar (keys %ko_genome_cnt) > 0 ? 1 : 0;
     my $hasMetagenomes = scalar (keys %m_ko_genome_cnt) > 0 ? 1 : 0;
 
@@ -3195,17 +3074,17 @@ sub printKOtermDetail {
     $it->addColSpec( "KO Module ID",   "asc",  "left"  );
     $it->addColSpec( "KO Module Name", "asc",  "left"  );
     if ($include_metagenomes) {
-	$it->addColSpec( "Isolate<br/>Gene Count", "desc", "right" )
-	    if $hasIsolates;
+    	$it->addColSpec( "Isolate<br/>Gene Count", "desc", "right" )
+    	    if $hasIsolates;
         $it->addColSpec( "Isolate<br/>Genome Count", "desc", "right" )
             if $hasIsolates;
-	$it->addColSpec( "Metagenome<br/>Gene Count", "desc", "right" )
-	    if $hasMetagenomes;
+    	$it->addColSpec( "Metagenome<br/>Gene Count", "desc", "right" )
+    	    if $hasMetagenomes;
         $it->addColSpec( "Metagenome<br/>Count", "asc",  "right" )
             if $hasMetagenomes;
     } else {
-	$it->addColSpec( "Gene Count", "desc", "right" )
-	    if $hasIsolates;
+    	$it->addColSpec( "Gene Count", "desc", "right" )
+    	    if $hasIsolates;
         $it->addColSpec( "Genome<br/>Count", "desc", "right" )
             if $hasIsolates;
     }
@@ -3213,64 +3092,64 @@ sub printKOtermDetail {
     my $select_id_name = "func_id";
     my $count = 0;
     my %distinct_koid;
-    foreach my $id ( sort keys %allKO ) {
-	my $name = "";
-	my $defn = "";
-
-	if ( $allKO{$id} ) {
-	    ($name, $defn) = split(/\t/, $allKO{$id});
-	}
-	else {
-	    next;
-	}
-
-	$distinct_koid{$id} = 1;
-
-	my @kegg_mods = split(/\t/, $ko_term_2_module_h{$id});
-	if ( scalar(@kegg_mods) == 0 ) {
-	    ## not linked to kegg module
-	    my $r;
-	    $r .= $sd . "<input type='checkbox' name='$select_id_name' " . "value='$id' />\t";
-	    my $tmp = $id;
-	    $tmp =~ s/KO://;
-	    my $url = $kegg_orthology_url . $tmp;
-	    $url = alink( $url, $id );
-	    $r .= $id . $sd . $url . "\t";
-	    $r .= $name . $sd . $name . "\t";
-	    $r .= $defn . $sd . $defn . "\t";
-
-	    $r .= "zzzzz" . $sd . "&nbsp;" . "\t";
-	    $r .= "zzzzz" . $sd . "&nbsp;" . "\t";
-
-	    # gene count
-	    my $gene_cnt = $ko_gene_cnt{$id};
-	    if ($hasIsolates) {
-		if ($gene_cnt) {
-		    my $url = "$section_cgi&page=kogenelist";
-		    $url .= "&pathway_id=$pathway_oid";
-		    $url .= "&ko_id=$id&gtype=isolate";
-		    $url = alink( $url, $gene_cnt );
-		    $r .= $gene_cnt . $sd . $url . "\t";
-		} else {
-		    $r .= "0" . $sd . "0" . "\t";
-		}
-	    }
-
-	    # genome count
-	    my $taxon_cnt = $ko_genome_cnt{$id};
-	    if ($hasIsolates) {
-		if ($taxon_cnt) {
-		    my $url = "$section_cgi&page=kogenomelist";
-		    $url .= "&pathway_id=$pathway_oid";
-		    $url .= "&ko_id=$id&gtype=isolate";
-		    $url = alink( $url, $taxon_cnt );
-		    $r .= $taxon_cnt . $sd . $url . "\t";
-		} else {
-		    $r .= "0" . $sd . "0" . "\t";
-		}
-	    }
-
-	    if ($include_metagenomes) {
+    foreach my $id ( sort @allKOs ) {
+    	my $name = "";
+    	my $defn = "";
+    
+    	if ( $allKO{$id} ) {
+    	    ($name, $defn) = split(/\t/, $allKO{$id});
+    	}
+    	else {
+    	    next;
+    	}
+    
+    	$distinct_koid{$id} = 1;
+    
+    	my @kegg_mods = split(/\t/, $ko_term_2_module_h{$id});
+    	if ( scalar(@kegg_mods) == 0 ) {
+    	    ## not linked to kegg module
+    	    my $r;
+    	    $r .= $sd . "<input type='checkbox' name='$select_id_name' " . "value='$id' />\t";
+    	    my $tmp = $id;
+    	    $tmp =~ s/KO://;
+    	    my $url = $kegg_orthology_url . $tmp;
+    	    $url = alink( $url, $id );
+    	    $r .= $id . $sd . $url . "\t";
+    	    $r .= $name . $sd . $name . "\t";
+    	    $r .= $defn . $sd . $defn . "\t";
+    
+    	    $r .= "zzzzz" . $sd . "&nbsp;" . "\t";
+    	    $r .= "zzzzz" . $sd . "&nbsp;" . "\t";
+    
+    	    # gene count
+    	    my $gene_cnt = $ko_gene_cnt{$id};
+    	    if ($hasIsolates) {
+        		if ($gene_cnt) {
+        		    my $url = "$section_cgi&page=kogenelist";
+        		    $url .= "&pathway_id=$pathway_oid";
+        		    $url .= "&ko_id=$id&gtype=isolate";
+        		    $url = alink( $url, $gene_cnt );
+        		    $r .= $gene_cnt . $sd . $url . "\t";
+        		} else {
+        		    $r .= "0" . $sd . "0" . "\t";
+        		}
+    	    }
+    
+    	    # genome count
+    	    my $taxon_cnt = $ko_genome_cnt{$id};
+    	    if ($hasIsolates) {
+        		if ($taxon_cnt) {
+        		    my $url = "$section_cgi&page=kogenomelist";
+        		    $url .= "&pathway_id=$pathway_oid";
+        		    $url .= "&ko_id=$id&gtype=isolate";
+        		    $url = alink( $url, $taxon_cnt );
+        		    $r .= $taxon_cnt . $sd . $url . "\t";
+        		} else {
+        		    $r .= "0" . $sd . "0" . "\t";
+        		}
+    	    }
+    
+    	    if ($include_metagenomes) {
                 my $m_gene_cnt = $m_ko_gene_cnt{$id};
                 if ($hasMetagenomes) {
                     if ($m_gene_cnt) {
@@ -3283,55 +3162,55 @@ sub printKOtermDetail {
                         $r .= "0" . $sd . "0" . "\t";
                     }
                 }
-
-		my $m_taxon_cnt = $m_ko_genome_cnt{$id};
-		if ($hasMetagenomes) {
-		    if ($m_taxon_cnt) {
-			my $m_url = "$section_cgi&page=kogenomelist";
-			$m_url .= "&pathway_id=$pathway_oid";
-			$m_url .= "&ko_id=$id&gtype=metagenome";
-			$m_url = alink( $m_url, $m_taxon_cnt );
-			$r .= $m_taxon_cnt . $sd . $m_url . "\t";
-		    } else {
-			$r .= "0" . $sd . "0" . "\t";
-		    }
-		}
-	    }
-
-	    $it->addRow($r);
-	    $count++;
-	    next;
-	}
-
-	foreach my $modid ( @kegg_mods ) {
-	    my $r;
-	    $r .= $sd . "<input type='checkbox' name='$select_id_name' " . "value='$id' />\t";
-	    my $tmp = $id;
-	    $tmp =~ s/KO://;
-	    my $url = $kegg_orthology_url . $tmp;
-	    $url = alink( $url, $id );
-	    $r .= $id . $sd . $url . "\t";
-	    $r .= $name . $sd . $name . "\t";
-	    $r .= $defn . $sd . $defn . "\t";
-
-	    if ( $modid eq "" ) {
-		$r .= "zzzzz" . $sd . "&nbsp;" . "\t";
-	    } else {
-		my $url = $kegg_module_url . $modid;
-		$url = alink( $url, $modid );
-		$r .= $modid . $sd . $url . "\t";
-	    }
-
-	    my $modname = $kegg_mod_h{$modid};
-	    if ( ! $modname || $modname eq "" ) {
-		$r .= "zzzzz" . $sd . "&nbsp;" . "\t";
-	    } else {
-		my $url = $section_cgi . "&page=komodule" 
-		    . "&pathway_id=$pathway_oid&module_id=$modid";
-		$url = alink( $url, $modname );
-		$r .= $modname . $sd . $url . "\t";
-	    }
-
+    
+        		my $m_taxon_cnt = $m_ko_genome_cnt{$id};
+        		if ($hasMetagenomes) {
+        		    if ($m_taxon_cnt) {
+            			my $m_url = "$section_cgi&page=kogenomelist";
+            			$m_url .= "&pathway_id=$pathway_oid";
+            			$m_url .= "&ko_id=$id&gtype=metagenome";
+            			$m_url = alink( $m_url, $m_taxon_cnt );
+            			$r .= $m_taxon_cnt . $sd . $m_url . "\t";
+        		    } else {
+            			$r .= "0" . $sd . "0" . "\t";
+        		    }
+        		}
+    	    }
+    
+    	    $it->addRow($r);
+    	    $count++;
+    	    next;
+    	}
+    
+    	foreach my $modid ( @kegg_mods ) {
+    	    my $r;
+    	    $r .= $sd . "<input type='checkbox' name='$select_id_name' " . "value='$id' />\t";
+    	    my $tmp = $id;
+    	    $tmp =~ s/KO://;
+    	    my $url = $kegg_orthology_url . $tmp;
+    	    $url = alink( $url, $id );
+    	    $r .= $id . $sd . $url . "\t";
+    	    $r .= $name . $sd . $name . "\t";
+    	    $r .= $defn . $sd . $defn . "\t";
+    
+    	    if ( $modid eq "" ) {
+        		$r .= "zzzzz" . $sd . "&nbsp;" . "\t";
+    	    } else {
+        		my $url = $kegg_module_url . $modid;
+        		$url = alink( $url, $modid );
+        		$r .= $modid . $sd . $url . "\t";
+    	    }
+    
+    	    my $modname = $kegg_mod_h{$modid};
+    	    if ( ! $modname || $modname eq "" ) {
+        		$r .= "zzzzz" . $sd . "&nbsp;" . "\t";
+    	    } else {
+        		my $url = $section_cgi . "&page=komodule" 
+        		    . "&pathway_id=$pathway_oid&module_id=$modid";
+        		$url = alink( $url, $modname );
+        		$r .= $modname . $sd . $url . "\t";
+    	    }
+    
             # gene count
             my $gene_cnt = $ko_gene_cnt{$id};
             if ($hasIsolates) {
@@ -3345,7 +3224,7 @@ sub printKOtermDetail {
                     $r .= "0" . $sd . "0" . "\t";
                 }
             }
-
+    
             # genome count
             my $taxon_cnt = $ko_genome_cnt{$id};
             if ($hasIsolates) {
@@ -3359,7 +3238,7 @@ sub printKOtermDetail {
                     $r .= "0" . $sd . "0" . "\t";
                 }
             }
-
+    
             if ($include_metagenomes) {
                 my $m_gene_cnt = $m_ko_gene_cnt{$id};
                 if ($hasMetagenomes) {
@@ -3373,7 +3252,7 @@ sub printKOtermDetail {
                         $r .= "0" . $sd . "0" . "\t";
                     }
                 }
-
+    
                 my $m_taxon_cnt = $m_ko_genome_cnt{$id};
                 if ($hasMetagenomes) {
                     if ($m_taxon_cnt) {
@@ -3387,10 +3266,10 @@ sub printKOtermDetail {
                     }
                 }
             }
-
-	    $it->addRow($r);
-	    $count++;
-	}
+    
+    	    $it->addRow($r);
+    	    $count++;
+    	}
     }
     $cur->finish();
 
@@ -3893,7 +3772,6 @@ sub printKeggPathwayDetail {
         and irkt.ko_terms = kte.ko_id
         and kte.enzymes = ez.ec_number
     };
-    print "printKeggPathwayDetail() 0 sql: $sql<br/>";
     $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
     for ( ; ; ) {
         my ( $ec_number, $ec_name ) = $cur->fetchrow();
@@ -3919,7 +3797,6 @@ sub printKeggPathwayDetail {
         $imgClause
         group by g.enzyme
     };
-    print "printKeggPathwayDetail() 1 sql: $sql<br/>";
     my $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
     for ( ; ; ) {
         my ( $ec_number, $cnt ) = $cur->fetchrow();
@@ -3945,7 +3822,6 @@ sub printKeggPathwayDetail {
             $imgClause
             group by g.enzyme
         };
-        print "printKeggPathwayDetail() 2 sql: $sql<br/>";
 
         $cur = execSql( $dbh, $sql, $verbose, $pathway_oid );
         for ( ; ; ) {
@@ -3954,6 +3830,8 @@ sub printKeggPathwayDetail {
             $m_ec_cnts{$ec_number} = $cnt;
         }
         $cur->finish();
+
+        print "<p>Counting MER-FS metagenomes ...\n"; 
 
         if ( $new_func_count ) { 
             my $rclause2   = WebUtil::urClause( "f.taxon_oid" );
@@ -4144,8 +4022,14 @@ sub printKeggModulePathway {
     printStatusLine( "Loading ...", 1 );
     my $dbh = dbLogin();
 
-    my $count_module = printModuleComponent( $dbh, $ko_id, $gene_oid );
-    my $count_pathway = printPathwayComponent( $dbh, $ko_id, $gene_oid, $taxon_oid );
+    my $isTaxonInFile;
+    if ( $taxon_oid && isInt($taxon_oid) ) {
+        $isTaxonInFile = MerFsUtil::isTaxonInFile( $dbh, $taxon_oid );
+    }
+    #print "printKeggModulePathway() taxon_oid=$taxon_oid isTaxonInFile=$isTaxonInFile<br/>\n";
+
+    my $count_module = printModuleComponent( $dbh, $ko_id, $gene_oid, $taxon_oid, $isTaxonInFile );
+    my $count_pathway = printPathwayComponent( $dbh, $ko_id, $gene_oid, $taxon_oid, $isTaxonInFile );
 
     if ( $count_module == 0 && $count_pathway == 0 ) {
         print "<p>\n";
@@ -4158,20 +4042,37 @@ sub printKeggModulePathway {
 }
 
 sub printModuleComponent {
-    my ( $dbh, $ko_id, $gene_oid ) = @_;
+    my ( $dbh, $ko_id, $gene_oid, $taxon_oid, $isTaxonInFile ) = @_;
 
-    my $sql = qq{
-        select distinct gk.ko_terms, km.module_id, 
-               km.module_name, km.module_type
-        from gene_ko_terms gk, kegg_module_ko_terms kmkt, kegg_module km
-        where gk.gene_oid  = ?
-        and gk.ko_terms  = ?
-        and gk.ko_terms = kmkt.ko_terms
-        and kmkt.module_id = km.module_id
-        order by km.module_id
-    };
+    my $sql;
+    my @bindList;
+    if ( $isTaxonInFile ) {
+        $sql = qq{
+            select distinct gk.ko_terms, km.module_id, 
+                   km.module_name, km.module_type
+            from gene_ko_terms gk, kegg_module_ko_terms kmkt, kegg_module km
+            where gk.ko_terms  = ?
+            and gk.ko_terms = kmkt.ko_terms
+            and kmkt.module_id = km.module_id
+            order by km.module_id
+        };        
+        @bindList = ( $ko_id );
+    }
+    else {
+        $sql = qq{
+            select distinct gk.ko_terms, km.module_id, 
+                   km.module_name, km.module_type
+            from gene_ko_terms gk, kegg_module_ko_terms kmkt, kegg_module km
+            where gk.gene_oid  = ?
+            and gk.ko_terms  = ?
+            and gk.ko_terms = kmkt.ko_terms
+            and kmkt.module_id = km.module_id
+            order by km.module_id
+        };        
+        @bindList = ( $gene_oid, $ko_id );
+    }
+    #print "printModuleComponent() sql: $sql<br/>\n";
 
-    my @bindList = ( $gene_oid, $ko_id );
     my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
 
     my @recs;
@@ -4222,22 +4123,41 @@ sub printModuleComponent {
 }
 
 sub printPathwayComponent {
-    my ( $dbh, $ko_id, $gene_oid, $taxon_oid ) = @_;
+    my ( $dbh, $ko_id, $gene_oid, $taxon_oid, $isTaxonInFile ) = @_;
 
-    my $sql = qq{
-        select distinct gk.ko_terms, pw.pathway_oid, pw.image_id,
-	       pw.ko_pathway_id, pw.category, pw.pathway_name
-        from gene_ko_terms gk, image_roi_ko_terms irk,
-             image_roi iroi, kegg_pathway pw
-        where gk.gene_oid  = ?
-        and gk.ko_terms  = ?
-        and gk.ko_terms = irk.ko_terms
-        and irk.roi_id = iroi.roi_id
-        and iroi.pathway = pw.pathway_oid
-        order by pw.category, pw.pathway_name
-    };
+    my $sql;
+    my @bindList;
+    if ( $isTaxonInFile ) {
+        $sql = qq{
+            select distinct gk.ko_terms, pw.pathway_oid, pw.image_id,
+               pw.ko_pathway_id, pw.category, pw.pathway_name
+            from gene_ko_terms gk, image_roi_ko_terms irk,
+                 image_roi iroi, kegg_pathway pw
+            where gk.ko_terms  = ?
+            and gk.ko_terms = irk.ko_terms
+            and irk.roi_id = iroi.roi_id
+            and iroi.pathway = pw.pathway_oid
+            order by pw.category, pw.pathway_name
+        };
+        @bindList = ( $ko_id );
+    }
+    else {
+        $sql = qq{
+            select distinct gk.ko_terms, pw.pathway_oid, pw.image_id,
+               pw.ko_pathway_id, pw.category, pw.pathway_name
+            from gene_ko_terms gk, image_roi_ko_terms irk,
+                 image_roi iroi, kegg_pathway pw
+            where gk.gene_oid  = ?
+            and gk.ko_terms  = ?
+            and gk.ko_terms = irk.ko_terms
+            and irk.roi_id = iroi.roi_id
+            and iroi.pathway = pw.pathway_oid
+            order by pw.category, pw.pathway_name
+        };
+        @bindList = ( $gene_oid, $ko_id );
+    }
+    #print "printPathwayComponent() sql: $sql<br/>\n";
 
-    my @bindList = ( $gene_oid, $ko_id );
     my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
 
     my @recs;
@@ -4466,8 +4386,12 @@ sub printViewModuleImageForm {
 	$in_file = $in_file2;
 	$cur->finish();
 
-	my $url = "$main_cgi?section=MetaDetail"
-	    . "&page=metaDetail&taxon_oid=$taxon_oid";
+	my $url = "$main_cgi?section=TaxonDetail"
+	    . "&page=taxonDetail&taxon_oid=$taxon_oid";
+	if ( $in_file2 eq 'Yes' ) {
+	    $url = "$main_cgi?section=MetaDetail"
+		. "&page=metaDetail&taxon_oid=$taxon_oid";
+	}
 	print "<h4>Genome: " . alink( $url, $taxon_display_name ) . "</h4>\n";
 
 	print "<h5>Module Definition: $def</h5>\n";
@@ -4627,7 +4551,7 @@ sub printViewModuleImageForm {
 	KeggMap::applyCoords($im, \@purpleRec, 'purple');
 
 	print "<p>\n";
-        print "<image src='$base_url/images/purple-square.gif' "
+        print "<img src='$base_url/images/purple-square.gif' "
             . "width='10' height='10' />\n";
 	print "Genes in this cluster"; 
 	print "<br/>\n";
@@ -4636,7 +4560,7 @@ sub printViewModuleImageForm {
     if ( scalar(@blueRec) > 0 ) {
 	KeggMap::applyCoords($im, \@blueRec, 'blue');
 
-	print "<image src='$base_url/images/intaxon.gif' "
+	print "<img src='$base_url/images/intaxon.gif' "
 	    . "width='10' height='10' />\n";
 	print "Genes in this genome";
 	print "<br/>\n"; 
@@ -4646,7 +4570,7 @@ sub printViewModuleImageForm {
 	KeggMap::applyCoords($im, \@greenRec, 'green');
 
 	print "<p>\n";
-        print "<image src='$base_url/images/green-square.gif' "
+        print "<img src='$base_url/images/green-square.gif' "
             . "width='10' height='10' />\n";
 	print "Potential Genes with KO"; 
 	print "<br/>\n";
@@ -4660,7 +4584,7 @@ sub printViewModuleImageForm {
     print $wfh $im->png; 
     close $wfh;
 
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
  
     print "<map name='mapdata'>\n"; 
 
@@ -4802,7 +4726,7 @@ sub printViewModuleImageMultipleTaxons {
 
 	    my $url = "$main_cgi?section=TaxonDetail"
                 . "&page=taxonDetail&taxon_oid=$taxon_oid";
-	    if ( $in_file ) {
+	    if ( $in_file eq 'Yes' ) {
 		$url = "$main_cgi?section=MetaDetail"
 		    . "&page=metaDetail&taxon_oid=$taxon_oid";
 	    }
@@ -4867,30 +4791,30 @@ sub printViewModuleImageMultipleTaxons {
 
     print "<p>"; 
     print "$nTaxons genomes selected<br/>\n"; 
-    print "<image src='$base_url/images/blue-square.gif' " 
+    print "<img src='$base_url/images/blue-square.gif' " 
         . "width='10' height='10' />\n"; 
     print "Genes found in all selected genomes"; 
     print "<br/>\n"; 
  
-    print "<image src='$base_url/images/yellow-square.gif' " 
+    print "<img src='$base_url/images/yellow-square.gif' " 
         . "width='10' height='10' />\n"; 
-    print "<image src='$base_url/images/peach-square.gif' " 
+    print "<img src='$base_url/images/peach-square.gif' " 
         . "width='10' height='10' />\n"; 
-    print "<image src='$base_url/images/pink-square.gif' " 
+    print "<img src='$base_url/images/pink-square.gif' " 
         . "width='10' height='10' />\n"; 
-    print "<image src='$base_url/images/purple-square.gif' " 
+    print "<img src='$base_url/images/purple-square.gif' " 
         . "width='10' height='10' />\n"; 
     print "Genes found in some of the selected genomes [for up to 25%"; 
-    print "<image src='$base_url/images/yellow-square.gif' " 
+    print "<img src='$base_url/images/yellow-square.gif' " 
         . "width='10' height='10' />\n"; 
     print ">25%"; 
-    print "<image src='$base_url/images/peach-square.gif' " 
+    print "<img src='$base_url/images/peach-square.gif' " 
         . "width='10' height='10' />\n"; 
     print ">50%"; 
-    print "<image src='$base_url/images/pink-square.gif' " 
+    print "<img src='$base_url/images/pink-square.gif' " 
         . "width='10' height='10' />\n"; 
     print ">75%"; 
-    print "<image src='$base_url/images/purple-square.gif' " 
+    print "<img src='$base_url/images/purple-square.gif' " 
         . "width='10' height='10' />\n"; 
     print "]"; 
     print "<br/>\n"; 
@@ -4955,7 +4879,7 @@ sub printViewModuleImageMultipleTaxons {
     print $wfh $im->png; 
     close $wfh;
 
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
  
     print "<map name='mapdata'>\n"; 
     print "</map>\n";

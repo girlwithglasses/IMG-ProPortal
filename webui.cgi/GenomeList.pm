@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeList.pm 34752 2015-11-19 21:29:51Z klchu $
+# $Id: GenomeList.pm 36206 2016-09-22 19:13:34Z jinghuahuang $
 ############################################################################
 package GenomeList;
 
@@ -17,6 +17,7 @@ use Data::Dumper;
 use TabHTML;
 use TaxonSearchUtil;
 use AnalysisProject;
+use TabHTML;
 
 my $section                   = 'GenomeList';
 my $env                       = getEnv();
@@ -47,7 +48,8 @@ my $myTaxonPrefs              = 'myTaxonPrefs';                      # filename
 my $myProjectPrefs            = 'myProjectPrefs';                    # filename
 my $mySamplePrefs             = 'mySamplePrefs';                     # filename
 my $myTaxonStatsPrefs         = 'myTaxonStatsPrefs';                 # filename
-my $top_base_url = $env->{top_base_url};
+my $top_base_url              = $env->{top_base_url};
+
 #my $projectMetadataDir                 = "/webfs/scratch/img/gold/";
 #my $project_info_project_relevanceFile = $projectMetadataDir . 'project_info_project_relevance';
 #my $project_info_cell_arrangementFile  = $projectMetadataDir . 'project_info_cell_arrangement';
@@ -61,7 +63,7 @@ my $top_base_url = $env->{top_base_url};
 #my $sample_body_subsiteFile            = $projectMetadataDir . 'sample_body_subsite';
 
 my $cacheDir = "/webfs/scratch/img/gold/";
-my $database = $cacheDir . "projectInfo2.db"; # see ../preComputedData/ProjectMetadata3.pl
+my $database = $cacheDir . "projectInfo2.db";    # see ../preComputedData/ProjectMetadata3.pl
 
 #$dir .= "/$section";
 #if ( !( -e "$dir" ) ) {
@@ -87,11 +89,12 @@ sub getGenomeListDir {
 # for the stats columns you have to make exceptions in the uncheck since the id has been used for count and percent
 # - thus the check is in the javascript code - genomeConfig.js
 my %alwaysChecked = (
-    't.proposal_name'          => "id='always_checked' checked disabled",
-    't.taxon_display_name'     => "id='always_checked' checked disabled",
-    't.domain'                 => "id='always_checked' checked disabled",
-    't.seq_center'             => "id='always_checked' checked disabled",
-    't.seq_status'             => "id='always_checked' checked disabled",
+    't.proposal_name'          => "checked disabled",
+    't.taxon_display_name'     => "checked disabled",
+    't.domain'                 => "checked disabled",
+    't.seq_center'             => "checked disabled",
+    't.seq_status'             => "checked disabled",
+    't.taxon_oid'              => "checked disabled",
     'ts.total_bases'           => "checked disabled",
     'ts.total_gene_count'      => "checked disabled",
     'sum(ts.total_bases)'      => "checked disabled",
@@ -109,14 +112,14 @@ my %alwaysChecked = (
 #
 my %columnAsUrl = (
     't.taxon_display_name' => 'main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=',
-    't.study_gold_id'            => $gold_base_url,
+    't.study_gold_id'      => $gold_base_url,
 
     't.sequencing_gold_id' => $gold_base_url,
-    't.submission_id'                  => 'xxxxx',
-    't.ncbi_taxon_id'                  => $taxonomy_base_url,
-    't.gbk_project_id'                  => 'http://www.ncbi.nlm.nih.gov/bioproject/',
-    't.refseq_project_id'              => $ncbi_project_id_base_url,
-    'p.project_oid'                    => $img_er_submit_project_url,
+    't.submission_id'      => 'xxxxx',
+    't.ncbi_taxon_id'      => $taxonomy_base_url,
+    't.gbk_project_id'     => 'http://www.ncbi.nlm.nih.gov/bioproject/',
+    't.refseq_project_id'  => $ncbi_project_id_base_url,
+    'p.project_oid'        => $img_er_submit_project_url,
 
     'ts.total_biosynthetic' => 'main.cgi?section=BiosyntheticDetail&page=biosynthetic_clusters&taxon_oid=',
     'p.ncbi_project_id'     => $ncbi_project_id_base_url,
@@ -138,15 +141,16 @@ my %columnAsUrl = (
 my @genomeColumnsOrder = (
     't.domain',                              't.seq_status',
     't.proposal_name',                       't.taxon_display_name',
-    't.seq_center',                          't.phylum',
-    't.ir_class',                            't.ir_order',
-    't.family',                              't.genus',
-    't.species',                             't.taxon_oid',
+    't.seq_center',                          't.taxon_oid',
+    't.phylum',                              't.ir_class',
+    't.ir_order',                            't.family',
+    't.genus',                               't.species',
     't.ncbi_taxon_id',                       't.refseq_project_id',
     't.gbk_project_id',                      't.submission_id',
     't.jgi_project_id',                      't.study_gold_id',
-    't.sequencing_gold_id',      't.analysis_project_id',
-    'gap.gold_analysis_project_type',        'gap.is_gene_primp',  'gap.submission_type', 'gap.assembly_method',
+    't.sequencing_gold_id',                  't.analysis_project_id',
+    'gap.gold_analysis_project_type',        'gap.is_gene_primp',
+    'gap.submission_type',                   'gap.assembly_method',
     't.strain',                              't.funding_agency',
     't.is_public',                           't.comments',
     't.img_version',                         't.img_product_flag',
@@ -192,19 +196,19 @@ my %genomeColumns = (
     't.submission_id'                          => 'IMG Submission ID',
     't.proposal_name'                          => 'Study Name',
     't.study_gold_id'                          => 'GOLD Study ID',
-    't.sequencing_gold_id'                     => 'GOLD Project ID',
+    't.sequencing_gold_id'                     => 'GOLD Sequencing Project ID',
     't.seq_status'                             => 'Status',
     't.combined_sample_flag'                   => 'Combined Sample',
-    't.jgi_project_id'                         => 'JGI Project ID',
+    't.jgi_project_id'                         => 'JGI Project ID / ITS PID',
     't.comments'                               => 'Comments',
     't.high_quality_flag'                      => 'High Quality',
     "to_char(t.distmatrix_date, 'yyyy-mm-dd')" => 'Distance Matrix Calc. Date',
     't.analysis_project_id'                    => 'GOLD Analysis Project ID',
     'gap.gold_analysis_project_type'           => 'GOLD Analysis Project Type',
     'gap.submission_type'                      => 'Submission Type',
-    'gap.is_gene_primp'                      => 'Gene Model QC',
-    'gap.assembly_method' => 'Assembly Method',
-    't.genome_completion' => 'Genome Completeness %',
+    'gap.is_gene_primp'                        => 'Gene Model QC',
+    'gap.assembly_method'                      => 'Assembly Method',
+    't.genome_completion'                      => 'Genome Completeness %',
 );
 
 if ($user_restricted_site) {
@@ -218,7 +222,7 @@ if ($user_restricted_site) {
 if ( getSuperUser() eq 'Yes' ) {
     $genomeColumns{'c.submittername'} = 'Submitter Name*';
     $genomeColumns{'t.in_file'}       = 'In File*';
-    $genomeColumns{'t.is_nr'}       = 'Is NR*';
+    $genomeColumns{'t.is_nr'}         = 'Is NR*';
 }
 
 # how to align data in the display table
@@ -245,13 +249,13 @@ my %genomeColumnsAlign = (
     't.img_product_flag'                       => 'char asc left',
     't.submission_id'                          => 'num asc right',
     't.proposal_name'                          => 'char asc left',
-    't.study_gold_id'                                => 'char asc left',
+    't.study_gold_id'                          => 'char asc left',
     't.sequencing_gold_id'                     => 'char asc left',
     't.seq_status'                             => 'char asc left',
     'c.username'                               => 'char asc left',
     'c.submittername'                          => 'char asc left',
     't.in_file'                                => 'char asc left',
-    't.is_nr'                                => 'char asc left',
+    't.is_nr'                                  => 'char asc left',
     't.combined_sample_flag'                   => 'char asc left',
     't.jgi_project_id'                         => 'num asc right',
     't.comments'                               => 'char asc left',
@@ -260,10 +264,10 @@ my %genomeColumnsAlign = (
     't.analysis_project_id'                    => 'char asc left',
     'gap.gold_analysis_project_type'           => 'char asc left',
     'gap.submission_type'                      => 'char asc left',
-    'gap.is_gene_primp'                      => 'char asc left',
+    'gap.is_gene_primp'                        => 'char asc left',
     'gap.assembly_method'                      => 'char asc left',
-    't.genome_completion' => 'char asc left',
-    
+    't.genome_completion'                      => 'char asc left',
+
 );
 
 # ------------------------------------------------------------------------------------------------------
@@ -283,80 +287,112 @@ my %genomeColumnsAlign = (
 # t.release_date
 
 my %projectMetadataColumns = (
-'p.MOTILITY' => 'Motility',  
-'p.TEMP_RANGE' => 'Temperature Range',  
-'p.SALINITY' => 'Salinity',  
-'p.SEQ_STATUS' => 'Seq Status',  
-'p.ISO_COUNTRY' => 'Isolation Country',  
-'p.DATE_COLLECTED' => 'Sample Collection Date ',  
-'p.GEO_LOCATION' => 'Geographic Location', 
-'p.LATITUDE' => 'Latitude',  
-'p.LONGITUDE' => 'Longitude',  
-'p.ALTITUDE' => 'Altitude',  
-'p.GRAM_STAIN' => 'Gram Staining',  
-'p.HOST_NAME' => 'Host Name',  
-'p.HOST_GENDER' => 'Host Gender',      
-'p.BIOTIC_REL' => 'Biotic Relationships',  
-'p.HMP_ID' => 'HMP ID',     
-'p.FUNDING_PROGRAM' => 'Funding Program',  
-'p.TYPE_STRAIN' => 'Type Strain',   
-'p.ECOSYSTEM' => 'Ecosystem',  
-'p.ECOSYSTEM_CATEGORY' => 'Ecosystem Category',  
-'p.ECOSYSTEM_TYPE' => 'Ecosystem Type',  
-'p.ECOSYSTEM_SUBTYPE' => 'Ecosystem Subtype',  
-'p.SPECIFIC_ECOSYSTEM' => 'Specific Ecosystem',  
-'p.SAMPLE_BODY_SITE' => 'Sample Body Site',  
-'p.SAMPLE_BODY_SUBSITE' => 'Sample Body Subsite',  
-'p.MRN' => 'Medical Record Number',         
-'p.VISIT_NUM' => 'Visits',         
-'p.REPLICATE_NUM' => 'Replicate',         
-'p.PMO_PROJECT_ID' => 'PMO ID',     
-'p.CULTURED' => 'Cultured',   
-'p.UNCULTURED_TYPE' => 'Uncultured Type',   
-'p.CULTURE_TYPE' => 'Culture Type',   
-'p.BIOPROJECT_ACCESSION' => 'Bioproject Accession',   
-'p.BIOSAMPLE_ACCESSION' => 'Biosample Accession',  
-'p.ITS_SPID' => 'ITS PID',         
-'p.PI_EMAIL' => 'Contact Email',  
-'p.PI_NAME' => 'Contact Name',
-'p.name' => 'Alt. Contact Name', 
-'p.email' => 'Alt. Contact Email',
-'p.cell_shape'           => 'Cell Shape',
-'p.ISOLATION'            => 'Isolation',
-'p.oxygen_req'           => 'Oxygen Requirement',
-'p.SPORULATION'          => 'Sporulation',
-'p.DISPLAY_NAME'         => 'Project / Study Name',
-'p.depth'                => 'Depth',
+    'p.MOTILITY'             => 'Motility',
+    'p.TEMP_RANGE'           => 'Temperature Range',
+    'p.SALINITY'             => 'Salinity',
+    'p.SEQ_STATUS'           => 'Seq Status',
+    'p.ISO_COUNTRY'          => 'Isolation Country',
+    'p.DATE_COLLECTED'       => 'Sample Collection Date ',
+    'p.GEO_LOCATION'         => 'Geographic Location',
+    'p.LATITUDE'             => 'Latitude',
+    'p.LONGITUDE'            => 'Longitude',
+    'p.ALTITUDE'             => 'Altitude',
+    'p.GRAM_STAIN'           => 'Gram Staining',
+    'p.HOST_NAME'            => 'Host Name',
+    'p.HOST_GENDER'          => 'Host Gender',
+    'p.BIOTIC_REL'           => 'Biotic Relationships',
+    'p.HMP_ID'               => 'HMP ID',
+    'p.FUNDING_PROGRAM'      => 'Funding Program',
+    'p.TYPE_STRAIN'          => 'Type Strain',
+    'p.ECOSYSTEM'            => 'Ecosystem',
+    'p.ECOSYSTEM_CATEGORY'   => 'Ecosystem Category',
+    'p.ECOSYSTEM_TYPE'       => 'Ecosystem Type',
+    'p.ECOSYSTEM_SUBTYPE'    => 'Ecosystem Subtype',
+    'p.SPECIFIC_ECOSYSTEM'   => 'Specific Ecosystem',
+    'p.SAMPLE_BODY_SITE'     => 'Sample Body Site',
+    'p.SAMPLE_BODY_SUBSITE'  => 'Sample Body Subsite',
+    'p.MRN'                  => 'Medical Record Number',
+    'p.VISIT_NUM'            => 'Visits',
+    'p.REPLICATE_NUM'        => 'Replicate',
+    'p.PMO_PROJECT_ID'       => 'PMO ID',
+    'p.CULTURED'             => 'Cultured',
+    'p.UNCULTURED_TYPE'      => 'Uncultured Type',
+    'p.CULTURE_TYPE'         => 'Culture Type',
+    'p.BIOPROJECT_ACCESSION' => 'Bioproject Accession',
+    'p.BIOSAMPLE_ACCESSION'  => 'Biosample Accession',
+    'p.ITS_SPID'             => 'ITS PID',
+    'p.PI_EMAIL'             => 'Contact Email',
+    'p.PI_NAME'              => 'Contact Name',
+    'p.name'                 => 'Alt. Contact Name',
+    'p.email'                => 'Alt. Contact Email',
 
-'p.clade' => 'Clade',
-'p.ecotype' => 'Ecotype',
-'p.longhurst_code' => 'Longhurst Code',
-'p.longhurst_description' => 'Longhurst Description',
+    'p.gold_names'  => 'Alt2. Contact Names (GOLD)',
+    'p.gold_emails' => 'Alt2. Contact Emails (GOLD)',
 
-'p.SEQUENCING_STRATEGY' => 'GOLD Sequencing Strategy',
-'p.SEQUENCING_QUALITY' =>'GOLD Sequencing Quality',
-'p.SEQUENCING_DEPTH' => 'GOLD Sequencing Depth',
+    'p.cell_shape'   => 'Cell Shape',
+    'p.ISOLATION'    => 'Isolation',
+    'p.oxygen_req'   => 'Oxygen Requirement',
+    'p.SPORULATION'  => 'Sporulation',
+    'p.DISPLAY_NAME' => 'Project / Study Name',
+    'p.depth'        => 'Depth',
 
-    'p.seq_method' => 'Sequencing Method',
+    'p.clade'                 => 'Clade',
+    'p.ecotype'               => 'Ecotype',
+    'p.longhurst_code'        => 'Longhurst Code',
+    'p.longhurst_description' => 'Longhurst Description',
+
+    'p.SEQUENCING_STRATEGY' => 'GOLD Sequencing Strategy',
+    'p.SEQUENCING_QUALITY'  => 'GOLD Sequencing Quality',
+    'p.SEQUENCING_DEPTH'    => 'GOLD Sequencing Depth',
+
+    'p.PROPORT_OCEAN'                => 'Proportal Ocean',
+    'p.PROPORT_ISOLATION'            => 'Proportal Isolation',
+    'p.PROPORT_STATION'              => 'Proportal Station',
+    'p.PROPORT_WOA_TEMPERATURE'      => 'Proportal WOA Temperature',
+    'p.PROPORT_WOA_SALINITY'         => 'Proportal WOA Salinity',
+    'p.PROPORT_WOA_DISSOLVED_OXYGEN' => 'Proportal WOA Dissolved Oxygen',
+    'p.PROPORT_WOA_SILICATE'         => 'Proportal WOA Silicate',
+    'p.PROPORT_WOA_PHOSPHATE'        => 'Proportal WOA Phosphate',
+    'p.PROPORT_WOA_NITRATE'          => 'Proportal WOA Nitrate',
+
+    'p.GPTS_PROPOSAL_ID' => 'GPTS Proposal Id',
+    'p.ITS_PROPOSAL_ID'  => 'ITS Proposal Id',
+
+    'p.sample_collect_temp'       => 'Sample Collection Temperature',
+    'p.pressure'                  => 'Pressure',
+    'p.chlorophyll_concentration' => 'Chlorophyll concentration',
+    'p.oxygen_concentration'      => 'Oxygen concentration',
+    'p.salinity_concentration'    => 'Salinity Concentration',
+    'p.nitrate_concentration'     => 'Nitrate Concentration',
+    'p.ph'                        => 'pH',
+
+    'p.seq_method'        => 'Sequencing Method',
     'p.project_relevance' => 'Relevance',
-    'p.phenotypes' => 'Phenotype',
-    'p.metabolism' => 'Metabolism',
-    'p.habitat' => 'Habitat',
-    'p.energy_source'        => 'Energy Source',
-    'p.cell_arrangement' => 'Cell Arrangement',
-    'p.diseases'             => 'Diseases',
+    'p.phenotypes'        => 'Phenotype',
+    'p.metabolism'        => 'Metabolism',
+    'p.habitat'           => 'Habitat',
+    'p.energy_source'     => 'Energy Source',
+    'p.cell_arrangement'  => 'Cell Arrangement',
+    'p.diseases'          => 'Diseases',
 );
 
 # value sorted
-my @projectMetadataColumnsOrder = sort { $projectMetadataColumns{$a} cmp $projectMetadataColumns{$b} } keys %projectMetadataColumns;
+my @projectMetadataColumnsOrder =
+  sort { uc( $projectMetadataColumns{$a} ) cmp uc( $projectMetadataColumns{$b} ) } keys %projectMetadataColumns;
 
 # default is     'p.biotic_rel'           => 'char asc left',
 my %projectMetadataColumnsAlign = (
-    'p.hmp_id'               => 'num asc right',
-    'p.its_spid'             => 'num asc right',
-    'p.pmo_project_id'       => 'num asc right',
-);
+    'p.hmp_id'                       => 'num asc right',
+    'p.its_spid'                     => 'num asc right',
+    'p.pmo_project_id'               => 'num asc right',
+    'p.PROPORT_WOA_TEMPERATURE'      => 'num asc right',
+    'p.PROPORT_WOA_SALINITY'         => 'num asc right',
+    'p.PROPORT_WOA_DISSOLVED_OXYGEN' => 'num asc right',
+    'p.PROPORT_WOA_SILICATE'         => 'num asc right',
+    'p.PROPORT_WOA_PHOSPHATE'        => 'num asc right',
+    'p.PROPORT_WOA_NITRAT'           => 'num asc right',
 
+);
 
 # ------------------------------------------------------------------------------------------------------
 #
@@ -368,36 +404,34 @@ my $total_coding_bases_npd_pc = 'round(ts.total_coding_bases_npd  * 100 / decode
 my $gene_wo_func_pred         = 'ts.cds_genes - ts.genes_w_func_pred';
 my $gene_wo_func_pred_pc      = "round(($gene_wo_func_pred)  * 100 / ts.total_gene_count, 2)";
 my @statsColumnsOrder         = (
-    'ts.total_bases',              'ts.total_gene_count',
-    'ts.n_scaffolds',              'ts.crispr_count',
-    'ts.total_gc',                 'ts.gc_percent',
-    'ts.total_coding_bases',       $total_coding_bases_pc,
-    'ts.total_coding_bases_npd',   $total_coding_bases_npd_pc,
-    'ts.cds_genes',                'ts.cds_genes_pc',
-    'ts.rna_genes',                'ts.rna_genes_pc',
-    'ts.rrna_genes',               'ts.rrna5s_genes',
-    'ts.rrna16s_genes',            'ts.rrna18s_genes',
-    'ts.rrna23s_genes',            'ts.rrna28s_genes',
-    'ts.trna_genes',               'ts.other_rna_genes',
-    'ts.pseudo_genes',             'ts.pseudo_genes_pc',
-    'ts.uncharacterized_genes',    'ts.uncharacterized_genes_pc',
-    'ts.dubious_genes',            'ts.dubious_genes_pc',
-    'ts.genes_w_func_pred',        'ts.genes_w_func_pred_pc',
-    $gene_wo_func_pred,            $gene_wo_func_pred_pc,
-    'ts.genes_in_orthologs',       'ts.genes_in_orthologs_pc',
-    'ts.genes_in_paralogs',        'ts.genes_in_paralogs_pc',
-    'ts.genes_obsolete',           'ts.genes_obsolete_pc',
-    'ts.genes_revised',            'ts.genes_revised_pc',
-    'ts.fused_genes',              'ts.fused_genes_pc',
-    'ts.fusion_components',        'ts.fusion_components_pc',
-    'ts.genes_in_sp',              'ts.genes_in_sp_pc',
-    'ts.genes_not_in_sp',          'ts.genes_not_in_sp_pc',
-    'ts.genes_in_cog',             'ts.genes_in_cog_pc',
-    'ts.genes_in_kog',             'ts.genes_in_kog_pc',
-    'ts.genes_in_pfam',            'ts.genes_in_pfam_pc',
-    'ts.genes_in_tigrfam',         'ts.genes_in_tigrfam_pc',
-    'ts.genes_in_enzymes',         'ts.genes_in_enzymes_pc',
-    'ts.genes_in_tc',              'ts.genes_in_tc_pc',
+    'ts.total_bases',            'ts.total_gene_count',
+    'ts.n_scaffolds',            'ts.crispr_count',
+    'ts.total_gc',               'ts.gc_percent',
+    'ts.total_coding_bases',     $total_coding_bases_pc,
+    'ts.total_coding_bases_npd', $total_coding_bases_npd_pc,
+    'ts.cds_genes',              'ts.cds_genes_pc',
+    'ts.rna_genes',              'ts.rna_genes_pc',
+    'ts.rrna_genes',             'ts.rrna5s_genes',
+    'ts.rrna16s_genes',          'ts.rrna18s_genes',
+    'ts.rrna23s_genes',          'ts.rrna28s_genes',
+    'ts.trna_genes',             'ts.other_rna_genes',
+    'ts.pseudo_genes',           'ts.pseudo_genes_pc',
+    'ts.uncharacterized_genes',  'ts.uncharacterized_genes_pc',
+    'ts.dubious_genes',          'ts.dubious_genes_pc',
+    'ts.genes_w_func_pred',      'ts.genes_w_func_pred_pc',
+    $gene_wo_func_pred,          $gene_wo_func_pred_pc,
+    'ts.genes_in_orthologs',     'ts.genes_in_orthologs_pc',
+    'ts.genes_in_paralogs',      'ts.genes_in_paralogs_pc',
+    'ts.genes_obsolete',         'ts.genes_obsolete_pc',
+    'ts.genes_revised',          'ts.genes_revised_pc',
+    'ts.fused_genes',            'ts.fused_genes_pc',
+    'ts.fusion_components',      'ts.fusion_components_pc',
+    'ts.genes_in_cog',           'ts.genes_in_cog_pc',
+    'ts.genes_in_kog',           'ts.genes_in_kog_pc',
+    'ts.genes_in_pfam',          'ts.genes_in_pfam_pc',
+    'ts.genes_in_tigrfam',       'ts.genes_in_tigrfam_pc',
+    'ts.genes_in_enzymes',       'ts.genes_in_enzymes_pc',
+
     'ts.genes_in_kegg',            'ts.genes_in_kegg_pc',
     'ts.genes_not_in_kegg',        'ts.genes_not_in_kegg_pc',
     'ts.genes_in_ko',              'ts.genes_in_ko_pc',
@@ -421,6 +455,9 @@ my @statsColumnsOrder         = (
     'ts.genes_in_biosynthetic_pc', 'ts.total_biosynthetic',
 
 );
+
+#    'ts.genes_in_sp',              'ts.genes_in_sp_pc',
+#    'ts.genes_not_in_sp',          'ts.genes_not_in_sp_pc',
 
 if ($enable_interpro) {
     push( @statsColumnsOrder, 'ts.genes_in_ipr' );
@@ -472,10 +509,11 @@ my %statsColumns = (
     'ts.fused_genes_pc'           => 'Fused % (Percentage of fused genes)',
     'ts.fusion_components'        => 'Fusion Component Count (Number of genes involved as fusion components)',
     'ts.fusion_components_pc'     => 'Fusion component % (Genes involved as fusion components percentage)',
-    'ts.genes_in_sp'              => 'SwissProt Count (Number of genes in SwissProt protein product)',
-    'ts.genes_in_sp_pc'           => 'SwissProt % (Percentage of genes in SwissProt protein product)',
-    'ts.genes_not_in_sp'          => 'Not SwissProt Count (Number of genes not in SwissProt protein product)',
-    'ts.genes_not_in_sp_pc'       => 'Not SwissProt % (Percentage of genes not in SwissProt protein product)',
+
+    #    'ts.genes_in_sp'              => 'SwissProt Count (Number of genes in SwissProt protein product)',
+    #    'ts.genes_in_sp_pc'           => 'SwissProt % (Percentage of genes in SwissProt protein product)',
+    #    'ts.genes_not_in_sp'          => 'Not SwissProt Count (Number of genes not in SwissProt protein product)',
+    #    'ts.genes_not_in_sp_pc'       => 'Not SwissProt % (Percentage of genes not in SwissProt protein product)',
     'ts.genes_in_cog'             => 'COG Count (Number of genes in COG)',
     'ts.genes_in_cog_pc'          => 'COG % (Percentage of genes in COG)',
     'ts.genes_in_kog'             => 'KOG Count (Number of genes in KOG)',
@@ -486,8 +524,6 @@ my %statsColumns = (
     'ts.genes_in_tigrfam_pc'      => 'TIGRfam % (Percentage of genes in TIGRfam)',
     'ts.genes_in_enzymes'         => 'Enzyme Count (Number of genes assigned to enzymes)',
     'ts.genes_in_enzymes_pc'      => 'Enzyme % (Percentage of genes assigned to enzymes)',
-    'ts.genes_in_tc'              => 'TC Count (Number of genes assigned to Transporter Classification)',
-    'ts.genes_in_tc_pc'           => 'TC % (Percentage of genes assigned to Transporter Classification)',
     'ts.genes_in_kegg'            => 'KEGG Count (Number of genes in KEGG)',
     'ts.genes_in_kegg_pc'         => 'KEGG % (Percentage of genes in KEGG)',
     'ts.genes_not_in_kegg'        => 'Not KEGG Count (Number of genes not in KEGG)',
@@ -629,10 +665,10 @@ my @phylumStatsColumnsOrder  = (
     'sum(ts.genes_in_orthologs)',    'sum(ts.genes_in_paralogs)',
     'sum(ts.genes_obsolete)',        'sum(ts.genes_revised)',
     'sum(ts.fused_genes)',           'sum(ts.fusion_components)',
-    'sum(ts.genes_in_sp)',           'sum(ts.genes_not_in_sp)',
-    'sum(ts.genes_in_cog)',          'sum(ts.genes_in_kog)',
-    'sum(ts.genes_in_pfam)',         'sum(ts.genes_in_tigrfam)',
-    'sum(ts.genes_in_enzymes)',      'sum(ts.genes_in_tc)',
+
+    'sum(ts.genes_in_cog)',  'sum(ts.genes_in_kog)',
+    'sum(ts.genes_in_pfam)', 'sum(ts.genes_in_tigrfam)',
+    'sum(ts.genes_in_enzymes)',
     'sum(ts.genes_in_kegg)',         'sum(ts.genes_not_in_kegg)',
     'sum(ts.genes_in_ko)',           'sum(ts.genes_not_in_ko)',
     'sum(ts.genes_in_metacyc)',      'sum(ts.genes_not_in_metacyc)',
@@ -647,6 +683,8 @@ my @phylumStatsColumnsOrder  = (
     'sum(ts.total_cassettes)',       'sum(ts.genes_in_biosynthetic)',
     'sum(ts.total_biosynthetic)',
 );
+
+#     'sum(ts.genes_in_sp)',           'sum(ts.genes_not_in_sp)',
 
 my %phylumStatsColumns = (
     'sum(ts.n_scaffolds)'            => 'Scaffold Count (Number of scaffolds)',
@@ -677,39 +715,40 @@ my %phylumStatsColumns = (
     'sum(ts.genes_revised)'          => 'Revised Count (Number of revised genes)',
     'sum(ts.fused_genes)'            => 'Fused Count (Number of fused genes)',
     'sum(ts.fusion_components)'      => 'Fusion Component Count (Number of genes involved as fusion components)',
-    'sum(ts.genes_in_sp)'            => 'SwissProt Count (Number of genes in SwissProt protein product)',
-    'sum(ts.genes_not_in_sp)'        => 'Not SwissProt Count (Number of genes not in SwissProt protein product)',
-    'sum(ts.genes_in_cog)'           => 'COG Count (Number of genes in COG)',
-    'sum(ts.genes_in_kog)'           => 'KOG Count (Number of genes in KOG)',
-    'sum(ts.genes_in_pfam)'          => 'Pfam Count (Number of genes in Pfam)',
-    'sum(ts.genes_in_tigrfam)'       => 'TIGRfam Count (Number of genes in TIGRfam)',
-    'sum(ts.genes_in_enzymes)'       => 'Enzyme Count (Number of genes assigned to enzymes)',
-    'sum(ts.genes_in_tc)'            => 'TC Count (Number of genes assigned to Transporter Classification)',
-    'sum(ts.genes_in_kegg)'          => 'KEGG Count (Number of genes in KEGG)',
-    'sum(ts.genes_not_in_kegg)'      => 'Not KEGG Count (Number of genes not in KEGG)',
-    'sum(ts.genes_in_ko)'            => 'KO Count (Number of genes in KEGG Orthology (KO))',
-    'sum(ts.genes_not_in_ko)'        => 'Not KO Count (Number of genes not in KEGG Orthology (KO))',
-    'sum(ts.genes_in_metacyc)'       => 'MetaCyc Count (Number of genes in MetaCyc)',
-    'sum(ts.genes_not_in_metacyc)'   => 'Not MetaCyc Count (Number of genes not in MetaCyc)',
-    'sum(ts.genes_in_img_terms)'     => 'IMG Term Count (Number of genes with IMG terms)',
-    'sum(ts.genes_in_img_pways)'     => 'IMG Pathwawy Count (Number of genes in IMG pathwawys)',
-    'sum(ts.genes_in_parts_list)'    => 'IMG Parts List Count (Number of genes in IMG parts list)',
-    'sum(ts.genes_in_myimg)'         => 'MyIMG Annotation Count',
-    'sum(ts.genes_signalp)'          => 'Signal Peptide Count (Number of genes coding signal peptides)',
-    'sum(ts.genes_transmembrane)'    => 'Transmembrane Count (Number of genes coding transmembrane proteins)',
-    'sum(ts.genes_hor_transfer)'     => 'Horizontally Transferred Count',
-    'sum(ts.genes_in_genome_prop)'   => 'Genome Property Count (Number of genes in Genome Properties)',
-    'sum(ts.ortholog_groups)'        => 'Ortholog Group Count',
-    'sum(ts.paralog_groups)'         => 'Paralog Group Count',
-    'sum(ts.cog_clusters)'           => 'COG Cluster Count (Number of COG clusters)',
-    'sum(ts.kog_clusters)'           => 'KOG Cluster Count (Number of KOG clusters)',
-    'sum(ts.pfam_clusters)'          => 'Pfam Cluster Count (Number of Pfam clusters)',
-    'sum(ts.tigrfam_clusters)'       => 'TIGRfam Cluster Count (Number of TIGRfam clusters)',
-    'sum(ts.genes_in_img_clusters)'  => 'IMG Cluster Count',
-    'sum(ts.genes_in_cassettes)'     => 'Chromosomal Cassette Gene Count',
-    'sum(ts.total_cassettes)'        => 'Chromosomal Cassette Count',
-    'sum(ts.genes_in_biosynthetic)'  => 'Biosynthetic Cluster Gene Count',
-    'sum(ts.total_biosynthetic)'     => 'Biosynthetic Cluster Count',
+
+    #    'sum(ts.genes_in_sp)'            => 'SwissProt Count (Number of genes in SwissProt protein product)',
+    #    'sum(ts.genes_not_in_sp)'        => 'Not SwissProt Count (Number of genes not in SwissProt protein product)',
+    'sum(ts.genes_in_cog)'     => 'COG Count (Number of genes in COG)',
+    'sum(ts.genes_in_kog)'     => 'KOG Count (Number of genes in KOG)',
+    'sum(ts.genes_in_pfam)'    => 'Pfam Count (Number of genes in Pfam)',
+    'sum(ts.genes_in_tigrfam)' => 'TIGRfam Count (Number of genes in TIGRfam)',
+    'sum(ts.genes_in_enzymes)' => 'Enzyme Count (Number of genes assigned to enzymes)',
+
+    'sum(ts.genes_in_kegg)'         => 'KEGG Count (Number of genes in KEGG)',
+    'sum(ts.genes_not_in_kegg)'     => 'Not KEGG Count (Number of genes not in KEGG)',
+    'sum(ts.genes_in_ko)'           => 'KO Count (Number of genes in KEGG Orthology (KO))',
+    'sum(ts.genes_not_in_ko)'       => 'Not KO Count (Number of genes not in KEGG Orthology (KO))',
+    'sum(ts.genes_in_metacyc)'      => 'MetaCyc Count (Number of genes in MetaCyc)',
+    'sum(ts.genes_not_in_metacyc)'  => 'Not MetaCyc Count (Number of genes not in MetaCyc)',
+    'sum(ts.genes_in_img_terms)'    => 'IMG Term Count (Number of genes with IMG terms)',
+    'sum(ts.genes_in_img_pways)'    => 'IMG Pathwawy Count (Number of genes in IMG pathwawys)',
+    'sum(ts.genes_in_parts_list)'   => 'IMG Parts List Count (Number of genes in IMG parts list)',
+    'sum(ts.genes_in_myimg)'        => 'MyIMG Annotation Count',
+    'sum(ts.genes_signalp)'         => 'Signal Peptide Count (Number of genes coding signal peptides)',
+    'sum(ts.genes_transmembrane)'   => 'Transmembrane Count (Number of genes coding transmembrane proteins)',
+    'sum(ts.genes_hor_transfer)'    => 'Horizontally Transferred Count',
+    'sum(ts.genes_in_genome_prop)'  => 'Genome Property Count (Number of genes in Genome Properties)',
+    'sum(ts.ortholog_groups)'       => 'Ortholog Group Count',
+    'sum(ts.paralog_groups)'        => 'Paralog Group Count',
+    'sum(ts.cog_clusters)'          => 'COG Cluster Count (Number of COG clusters)',
+    'sum(ts.kog_clusters)'          => 'KOG Cluster Count (Number of KOG clusters)',
+    'sum(ts.pfam_clusters)'         => 'Pfam Cluster Count (Number of Pfam clusters)',
+    'sum(ts.tigrfam_clusters)'      => 'TIGRfam Cluster Count (Number of TIGRfam clusters)',
+    'sum(ts.genes_in_img_clusters)' => 'IMG Cluster Count',
+    'sum(ts.genes_in_cassettes)'    => 'Chromosomal Cassette Gene Count',
+    'sum(ts.total_cassettes)'       => 'Chromosomal Cassette Count',
+    'sum(ts.genes_in_biosynthetic)' => 'Biosynthetic Cluster Gene Count',
+    'sum(ts.total_biosynthetic)'    => 'Biosynthetic Cluster Count',
 );
 
 # merfs phylum
@@ -758,27 +797,34 @@ sub getPageTitle {
     my $pageTitle = "Genome List";
     if ( param("setTaxonFilter") ne "" ) {
         my @taxon_filter_oid = param("taxon_filter_oid");
-        if ( $#taxon_filter_oid > -1) {
+        if ( $#taxon_filter_oid > -1 ) {
             $pageTitle = "Genome Cart";
         } else {
             $pageTitle = "Genome Selection Message";
         }
-    } 
+    }
     return $pageTitle;
 }
 
 sub getAppHeaderData {
     my ($self) = @_;
 
+    #   <meta name="viewport" content="width=device-width, initial-scale=1">
+    #    my $js = qq{
+    #  <link rel="stylesheet"  type="text/css" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    #  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    #  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    #    };
+
     my @a = ('FindGenomes');
     if ( param("setTaxonFilter") ne "" ) {
         my @taxon_filter_oid = param("taxon_filter_oid");
-        if ( $#taxon_filter_oid > -1) {
+        if ( $#taxon_filter_oid > -1 ) {
             @a = ('AnaCart');
         } else {
             @a = ('FindGenomes');
         }
-    } 
+    }
     return @a;
 }
 
@@ -786,11 +832,11 @@ sub dispatch {
     my ( $self, $numTaxon ) = @_;
     my $page = param('page');
 
-
     if ( param("setTaxonFilter") ne "" ) {
+
         # this must be first
         my @taxon_filter_oid = param("taxon_filter_oid");
-        if ( $#taxon_filter_oid > -1) {
+        if ( $#taxon_filter_oid > -1 ) {
 
             #
             # Exception case 2 - Ken
@@ -816,26 +862,28 @@ sub dispatch {
 
         }
 
-
     } elsif ( $page eq 'genomeList' ) {
+
         # redisplay
         my $from = param('from');
-        param( -name => 'from', -value => 'orgsearch2' ) 
-	    if ( $from eq 'orgsearch' );
+        param( -name => 'from', -value => 'orgsearch2' )
+          if ( $from eq 'orgsearch' );
         printRedisplay();
     } elsif ( $page eq 'phylumList' ) {
         printPhylumList2();
     } elsif ( $page eq 'phylumGenomeList' ) {
         printPhylumGenomeList();
     } elsif ( $page eq 'phylumCartList' ) {
+
         # genome cart group by phyla
         printCartPhylumList();
     } elsif ( $page eq 'phylumCartGenomeList' ) {
+
         # genome cart group by phyla
         printCartPhylumGenomeList();
-       
-        
+
     } else {
+
         #  test
         #  my $dbh = WebUtil::dbLogin();
         #  printGenomes( $dbh, 'Genome Browser', "and t.domain = '*Microbiome' and rownum < 25" );
@@ -891,8 +939,8 @@ sub printRedisplay {
 
             my @taxonColumns           = param('genome_field_col');
             my @projectMetadataColumns = param('metadata_col');
-           
-            my @statsColumns           = param('stats_col');
+
+            my @statsColumns = param('stats_col');
 
             #my %allCols;
             my %h = WebUtil::array2Hash(@taxonColumns);
@@ -927,9 +975,10 @@ sub printRedisplay {
 }
 
 sub getTaxonsFromGenomeListFile {
-    my ( $filename ) = @_;
+    my ($filename) = @_;
 
     my $genomeListFilename = "$cgi_tmp_dir/$filename";
+
     #print "getTaxonsFromGenomeListFile() genomeListFilename=$genomeListFilename<br/>\n";
     if ( !-e $genomeListFilename ) {
         webError('Your session has expired.');
@@ -944,7 +993,6 @@ sub getTaxonsFromGenomeListFile {
 
     return @taxon_oids;
 }
-
 
 ################################################################
 # print genomes from "quick search" tool
@@ -968,8 +1016,8 @@ sub printQuickSearchGenomes {
         foreach my $c (@$selectedCols_aref) {
 
             # assuming that searchTerm is only search against genome fields
-            if($c eq "to_char(t.add_date, 'yyyy-mm-dd')") {
-                push( @selectedCols,  $c );
+            if ( $c eq "to_char(t.add_date, 'yyyy-mm-dd')" ) {
+                push( @selectedCols, $c );
             } else {
                 push( @selectedCols, 't.' . $c );
             }
@@ -1084,7 +1132,7 @@ sub printGenomes {
     my @taxonColumns           = param('genome_field_col');
     my @projectMetadataColumns = param('metadata_col');
 
-    my @statsColumns           = param('stats_col');
+    my @statsColumns = param('stats_col');
 
     #  save and load user preferred columns
     if ($user_restricted_site) {
@@ -1092,24 +1140,54 @@ sub printGenomes {
 
         if ( $genomeListColPrefs eq 'Yes' ) {
             require Workspace;
+
+            # TODO check to see if all the keys are valid
+            my $good = 1;
             my $href = Workspace::loadUserPreferences($myTaxonPrefs);
-            my @a    = hashKeyToArray($href);
-            @taxonColumns = @a;
+            foreach my $x ( keys %$href ) {
+                if ( !exists $genomeColumns{$x} ) {
+                    $good = 0;
+                    last;
+                }
+            }
+            if ($good) {
+                my @a = hashKeyToArray($href);
+                @taxonColumns = @a;
+            }
 
-            $href                   = Workspace::loadUserPreferences($myProjectPrefs);
-            @a                      = hashKeyToArray($href);
-            @projectMetadataColumns = @a;
+            # TODO check to see if all the keys are valid
+            my $good = 1;
+            my $href = Workspace::loadUserPreferences($myProjectPrefs);
+            foreach my $x ( keys %$href ) {
+                if ( !exists $projectMetadataColumns{$x} ) {
+                    $good = 0;
+                    last;
+                }                
+            }
+            if ($good) {
+                my @a = hashKeyToArray($href);
+                @projectMetadataColumns = @a;
+            }
 
-            $href         = Workspace::loadUserPreferences($myTaxonStatsPrefs);
-            @a            = hashKeyToArray($href);
-            @statsColumns = @a;
-            
+            # TODO check to see if all the keys are valid
+            my $good = 1;
+            my $href = Workspace::loadUserPreferences($myTaxonStatsPrefs);
+            foreach my $x ( keys %$href ) {
+                if ( !exists $statsColumns{$x} ) {
+                    $good = 0;
+                    last;
+                }                
+            }
+            if ($good) {
+                my @a = hashKeyToArray($href);
+                @statsColumns = @a;
+            }
         }
     }
 
     # columns always displayed
     # - I need to put this since its disabled in ui and its not on param
-    my @defaults = ( 't.domain', 't.seq_status', 't.proposal_name', 't.taxon_display_name', 't.seq_center' );
+    my @defaults = ( 't.domain', 't.seq_status', 't.proposal_name', 't.taxon_display_name', 't.seq_center', 't.taxon_oid' );
     push( @defaults, @taxonColumns );
 
     # additional columns where search term is found
@@ -1140,46 +1218,107 @@ sub printGenomes {
       getTaxonTableData( $dbh, $sql_clause, \@taxonColumns2, $bindList_aref );
 
     # get metadata
-    webLog("try to connect to gold db\n");
-    #my $dbh_gold = WebUtil::dbGoldLogin();
-    webLog("done connect to gold db\n");
     if ( $#projectMetadataColumns > -1 ) {
-        getProjectMetadata($taxon_data_href, $goldId_href  );
+        getProjectMetadata( $taxon_data_href, $goldId_href );
     }
-
 
     # get combined samples
     my $combinedSamples_href;    # = getCombinedSamples($dbh_gold);
-
-    #$dbh_gold->disconnect();
 
     if ( $from eq 'genomeCart' ) {
 
         # do not print button
     } else {
-        # table of contents
-print qq{
-    <ul style="padding-left:1.2em;list-style-type:circle">
-            <li><a href="#Configuration">Table Configuration</a></li>
-            
-};
-if($user_restricted_site) {
-    print qq{
-        <li><a href="#Save2Workspace">Save to Workspace</a></li>
-    };
-}
 
-print qq{
-        </ul>
-};     
-        
+        # table of contents
+
+        print qq{
+<ul style="padding-left:1.2em;list-style-type:circle">
+        };
+
+        if ( $from eq 'TaxonList' && $img_ken ) {
+
+            # not not print
+        } else {
+            print qq{
+            <li><a href="#Configuration">Table Configuration</a></li>
+            };
+        }
+
+        if ($user_restricted_site) {
+            print qq{
+        <li><a href="#Save2Workspace">Save to Workspace</a></li>
+            };
+        }
+
+        print qq{
+</ul>
+        };
+
+        # note for Nikso about Data Stats about metagenomes
+        # show assembled data
+        my $note = qq{
+             <b>Data Statistics with *</b> [assembled, unassembled, both] means metagenomes counts or percentages
+            only use assembled data or unassembled data or both (assembled data and unassembled data) for its calculations.
+            This does not apply to isolates. The [assembled, unassembled, both] pick list is avaiable under the Table Configuration Data Statistics.
+            <b>The default is assembled data.</b>
+        };
+
+        WebUtil::printHint( $note, 850 ) if ($include_metagenomes);
+
         TaxonSearchUtil::printButtonFooter("taxontable");
         print nbsp(1);
     }
+
     printTreeButton($from);
 
-    printTaxonList( \@taxonColumns, \@projectMetadataColumns, \@statsColumns, $taxon_data_href,
-        $combinedSamples_href, $taxon_public_href );
+    if ( $from eq 'TaxonList' && $img_ken ) {
+        print qq{
+  <div style="white-space: nowrap;">  
+};
+
+# input type="image - return false to stop from submitting the form - ken
+#
+# <input type="image" name='_section_${section}_genomeList'  src="$base_url/images/reload_small.png" style="vertical-align: middle;"/>
+#
+        print qq{
+    <br>
+<input id='configHideShow' title='Hide/Show Attribute Selection' type="image" src="$base_url/images/arrow_left_all.png"  
+onclick="configShow('configtab', '$base_url'); return false;" 
+style="vertical-align: middle;"
+/> &nbsp;&nbsp;&nbsp;&nbsp;
+<input type="submit" class='smdefbutton' name='_section_${section}_genomeList' value='Redisplay' title='Redisplay genomes with selected attributes' />
+    <br>
+  <div id='configtab'>  
+};
+
+        printConfigDivTab( \@taxonColumns, \@projectMetadataColumns, \@statsColumns );
+
+        # end div configtab
+        print qq{
+  </div>  
+};
+
+        print qq{
+  <div style="display:inline-block; white-space: normal;">  
+};
+    }
+
+    printTaxonList( \@taxonColumns, \@projectMetadataColumns, \@statsColumns, $taxon_data_href, $combinedSamples_href,
+        $taxon_public_href );
+
+    if ( $from eq 'TaxonList' && $img_ken ) {
+
+        # end div style="display:inline-block; white-space: normal;"
+        print qq{
+  </div>  
+};
+
+        # end div style="white-space: nowrap;"
+        print qq{
+  </div>  
+};
+    }
 
     my $count = keys %$taxon_data_href;
 
@@ -1192,23 +1331,38 @@ print qq{
     }
     printTreeButton($from);
 
-    print "<h2><a href='#' name='Configuration' >Table Configuration</a></h2>";
     my $name = "_section_${section}_genomeList";
-    print submit(
-        -id    => "moreGo",
-        -name  => $name,
-        -value => "Display Genomes Again",
-        -class => "meddefbutton"
-    );
+    if ( $from eq 'TaxonList' && $img_ken ) {
 
-    printConfigDiv( \@taxonColumns, \@projectMetadataColumns,  \@statsColumns );
+        # do nothing for now
 
-    print submit(
-        -id    => "moreGo",
-        -name  => $name,
-        -value => "Display Genomes Again",
-        -class => "meddefbutton"
-    );
+    } else {
+        print "<h2><a href='#' name='Configuration' >Table Configuration</a></h2>";
+
+        print submit(
+            -id    => "moreGo",
+            -name  => $name,
+            -value => "Redisplay",
+            -class => "smdefbutton",
+            -title => "Redisplay genomes with selected attributes"
+        );
+
+    }
+
+    if ( $from eq 'TaxonList' && $img_ken ) {
+
+        # do nothing for now
+
+    } else {
+        printConfigDiv( \@taxonColumns, \@projectMetadataColumns, \@statsColumns );
+        print submit(
+            -id    => "moreGo",
+            -name  => $name,
+            -value => "Redisplay",
+            -class => "smdefbutton",
+            -title => "Redisplay genomes with selected attributes"
+        );
+    }
 
     # save taxon oids as a file for redisplay
     #
@@ -1240,12 +1394,16 @@ print qq{
     }
 
     if ( $from eq 'genomeCart' ) {
+
+        # do nothing for now
+
     } else {
+
         #WorkspaceUtil::printSaveGenomeToWorkspace($select_id_name);
         print qq{
             <a href='#' name='Save2Workspace'></a>
         };
-        WorkspaceUtil::printSaveGenomeToWorkspace_withAllBrowserGenomeList($select_id_name);            
+        WorkspaceUtil::printSaveGenomeToWorkspace_withAllBrowserGenomeList($select_id_name);
         print end_form();
     }
 
@@ -1263,8 +1421,8 @@ print qq{
 #
 # $taxon_public_href - is genome public
 sub printTaxonList {
-    my ( $taxonColumns_aref, $projectMetadataColumns_aref, $statsColumns_aref, $taxon_data_href,
-        $combinedSamples_href, $taxon_public_href )
+    my ( $taxonColumns_aref, $projectMetadataColumns_aref, $statsColumns_aref, $taxon_data_href, $combinedSamples_href,
+        $taxon_public_href )
       = @_;
 
     my $txTableName = "taxontable";
@@ -1280,7 +1438,6 @@ sub printTaxonList {
         printTaxonListColumnHeader( $it, $projectMetadataColumns_aref, \%projectMetadataColumns,
             \%projectMetadataColumnsAlign );
     }
-
 
     if ( $#$statsColumns_aref > -1 ) {
         printTaxonListColumnHeader( $it, $statsColumns_aref, \%statsColumns, \%statsColumnsAlign );
@@ -1364,7 +1521,7 @@ sub printTaxonList {
                 if ( $searchTerm ne '' && lc($match) eq lc($searchTerm) ) {
                     $match2 .= '<font color="green"><b>' . $match . "</b></font>";
 
-                } elsif ( $searchTerm ne '' && $match =~ /$searchTerm/ig ) {
+                } elsif ( $searchTerm ne '' && $match =~ /\Q$searchTerm\E/ig ) {
                     my @match_split = split /$searchTerm/i, $match;
 
                     if ( scalar(@match_split) eq 1 ) {
@@ -1389,11 +1546,6 @@ sub printTaxonList {
                 my $colVal2 = $value;
                 $colVal2 =~ s/$match/$match2/;
                 $row .= $value . $sd . $colVal2 . "\t";
-
-                #if ($rownum < 10) {
-                #    print "printTaxonList() searchTerm=$searchTerm; match=$match; match2=$match2;<br/>\n";
-                #    print "printTaxonList() value=$value; colVal2=$colVal2<br/>\n";
-                #}
 
             } elsif ( $value eq '' || blankStr($value) ) {
                 my $tmp = $genomeColumnsAlign{$col};
@@ -1435,8 +1587,8 @@ sub printTaxonList {
             $value = cellValueEscape($value);
             if ( $value eq '' || blankStr($value) ) {
                 my $tmp = $projectMetadataColumnsAlign{$col};
-                
-                if ($tmp eq ''  || $tmp =~ /^char/ ) {
+
+                if ( $tmp eq '' || $tmp =~ /^char/ ) {
                     $row .= 'zzz' . $sd . '_' . "\t";
                 } else {
                     $row .= '0' . $sd . '_' . "\t";
@@ -1472,8 +1624,6 @@ sub printTaxonList {
 
         }
         $it->addRow($row);
-
-        #$rownum++;
     }
 
     $it->printOuterTable(1);
@@ -1510,6 +1660,10 @@ sub cellValueEscape {
 sub printTaxonListColumnHeader {
     my ( $it, $aref, $colLable_href, $sortAlign_href ) = @_;
 
+    # can be assembled unassembled both
+    my $dataType = param('merfs_data_type');
+    $dataType = 'assembled' if ( !$dataType );
+
     foreach my $key (@$aref) {
         my $value = $colLable_href->{$key};
         my $title;
@@ -1520,6 +1674,13 @@ sub printTaxonListColumnHeader {
             $title = $value;
             $value = substr( $value, 0, $i );
         }
+
+        # show a * for merfs stats
+        if ( $include_metagenomes && exists $statsColumnsMerfs{$key} ) {
+            $title = $title . '<br> * ' . $dataType . ' (applies only for metagenomes: assembled, unassembled, both)';
+            $value = $value . '<br> * ' . $dataType;
+        }
+
         my $str = $sortAlign_href->{$key};
         if ( $str ne '' ) {
             my @a = split( /\s+/, $str );
@@ -1580,10 +1741,6 @@ where ss1.submission_id in (
 sub getUsernameAccess {
     my ( $dbh, $taxon_data_href ) = @_;
 
-    #my @oids    = keys %$taxon_data_href;
-    #my $oid_str = OracleUtil::getTaxonIdsInClause( $dbh, @oids );
-    #my $tclause = "and tx.taxon_oid in ($oid_str)";
-
     my $contact_oid = getContactOid();
     my $super_user  = getSuperUser();
     my $clause;
@@ -1628,9 +1785,6 @@ sub getUsernameAccess {
         }
     }
     $cur->finish();
-
-    #    OracleUtil::truncTable( $dbh, "gtt_taxon_oid" )
-    #      if ( $oid_str =~ /gtt_taxon_oid/i );
 }
 
 sub getSubmitter {
@@ -1662,7 +1816,6 @@ sub getSubmitter {
     }
 }
 
-
 # get data from gap table
 # replaces getGeneModelQc, getSubmissionType, getProjectType
 # add assembly_method
@@ -1685,7 +1838,7 @@ and t.OBSOLETE_FLAG = 'No'
     my %data;
     foreach my $inner_aref (@$list_aref) {
         my ( $gaId, $submission_id, $qc, $submission_type, $project_type, $assembly_method ) = @$inner_aref;
-        my @a = ($submission_id, $qc, $submission_type, $project_type, $assembly_method);
+        my @a = ( $submission_id, $qc, $submission_type, $project_type, $assembly_method );
         $data{$gaId} = \@a;
     }
 
@@ -1694,102 +1847,16 @@ and t.OBSOLETE_FLAG = 'No'
         my $gaId     = $sub_href->{'t.analysis_project_id'};
         if ( $gaId ne '' ) {
             my $aref = $data{$gaId};
-            next if($aref eq '' || $#$aref < 0);
-            my($submission_id, $qc, $submission_type, $project_type, $assembly_method) = @$aref;
-            $sub_href->{'gap.is_gene_primp'} = $qc if ( $qc ne '' );
-            $sub_href->{'gap.submission_type'} = $submission_type if ( $submission_type ne '' );
-            $sub_href->{'gap.gold_analysis_project_type'} = $project_type if ( $project_type ne '' );
-            $sub_href->{'gap.assembly_method'} = $assembly_method if ( $assembly_method ne '' );
+            next if ( $aref eq '' || $#$aref < 0 );
+            my ( $submission_id, $qc, $submission_type, $project_type, $assembly_method ) = @$aref;
+            $sub_href->{'gap.is_gene_primp'}              = $qc              if ( $qc              ne '' );
+            $sub_href->{'gap.submission_type'}            = $submission_type if ( $submission_type ne '' );
+            $sub_href->{'gap.gold_analysis_project_type'} = $project_type    if ( $project_type    ne '' );
+            $sub_href->{'gap.assembly_method'}            = $assembly_method if ( $assembly_method ne '' );
         }
     }
-    
-}
 
-#sub getGeneModelQc {
-#    my ( $dbh, $taxon_data_href ) = @_;
-#    my $sql = qq{
-#select gap.gold_id, t.submission_id, nvl(gap.is_gene_primp, 'No')
-#from gold_analysis_project gap, taxon t
-#where gap.gold_id = t.analysis_project_id
-#and gap.gold_id is not null
-#   };
-#
-#    my $list_aref = OracleUtil::execSqlCached( $dbh, $sql, 'GenomeListgetGeneModelQc' . $urlTag );
-#    my %data;
-#    foreach my $inner_aref (@$list_aref) {
-#        my ( $gaId, $submission_id, $qc ) = @$inner_aref;
-#        $data{$gaId} = $qc;
-#    }
-#
-#    foreach my $taxon_oid ( keys %$taxon_data_href ) {
-#        my $sub_href = $taxon_data_href->{$taxon_oid};
-#        my $gaId     = $sub_href->{'t.analysis_project_id'};
-#        if ( $gaId ne '' ) {
-#            my $name = $data{$gaId};
-#            if ( $name ne '' ) {
-#                $sub_href->{'gap.is_gene_primp'} = $name;
-#            }
-#        }
-#    }
-#}
-#
-#
-#sub getSubmissionType {
-#    my ( $dbh, $taxon_data_href ) = @_;
-#    my $sql = qq{
-#select gap.gold_id, t.submission_id, gap.submission_type, gap.gold_analysis_project_type
-#from gold_analysis_project gap, taxon t
-#where gap.gold_id = t.analysis_project_id
-#and gap.gold_id is not null
-#   };
-#
-#    my $list_aref = OracleUtil::execSqlCached( $dbh, $sql, 'GenomeListgetSubmissionType2' . $urlTag );
-#    my %data;
-#    foreach my $inner_aref (@$list_aref) {
-#        my ( $gaId, $submission_id, $submission_type, $project_type ) = @$inner_aref;
-#        $data{$gaId} = $submission_type;
-#    }
-#
-#    foreach my $taxon_oid ( keys %$taxon_data_href ) {
-#        my $sub_href = $taxon_data_href->{$taxon_oid};
-#        my $gaId     = $sub_href->{'t.analysis_project_id'};
-#        if ( $gaId ne '' ) {
-#            my $name = $data{$gaId};
-#            if ( $name ne '' ) {
-#                $sub_href->{'gap.submission_type'} = $name;
-#            }
-#        }
-#    }
-#}
-#
-#sub getProjectType {
-#    my ( $dbh, $taxon_data_href ) = @_;
-#    my $sql = qq{
-#select gap.gold_id, t.submission_id, gap.submission_type, gap.gold_analysis_project_type
-#from gold_analysis_project gap, taxon t
-#where gap.gold_id = t.analysis_project_id
-#and gap.gold_id is not null
-#    };
-#
-#    my $list_aref = OracleUtil::execSqlCached( $dbh, $sql, 'GenomeListgetSubmissionType2' . $urlTag );
-#    my %data;
-#    foreach my $inner_aref (@$list_aref) {
-#        my ( $gaId, $submission_id, $submission_type, $project_type ) = @$inner_aref;
-#        $data{$gaId} = $project_type;
-#    }
-#
-#    foreach my $taxon_oid ( keys %$taxon_data_href ) {
-#        my $sub_href = $taxon_data_href->{$taxon_oid};
-#        my $gaId     = $sub_href->{'t.analysis_project_id'};
-#
-#        if ( $gaId ne '' ) {
-#            my $name = $data{$gaId};
-#            if ( $name ne '' ) {
-#                $sub_href->{'gap.gold_analysis_project_type'} = $name;
-#            }
-#        }
-#    }
-#}
+}
 
 #
 # metadata is in a sqlite file which is a flatten out Gp to all metadata available
@@ -1800,23 +1867,24 @@ sub dbLoginProject {
     my $dsn      = "DBI:$driver:dbname=$database";
     my $userid   = "";
     my $password = "";
-    my $dbh      = DBI->connect( $dsn, $userid, $password, { RaiseError => 1 } ) or die $DBI::errstr;  
-    return $dbh;  
+    my $dbh      = DBI->connect( $dsn, $userid, $password, { RaiseError => 1 } ) or die $DBI::errstr;
+    return $dbh;
 }
 
 #
 # gets all project metadata - cache data for each session - expires after 90min
 #
 sub getProjectMetadata {
-    my ( $taxon_data_href, $goldId_href) = @_;
-    
+    my ( $taxon_data_href, $goldId_href ) = @_;
+
     my $gid2projectMetadata_href = getGid2ProjectMetadata( $goldId_href, \@projectMetadataColumnsOrder );
 
-    foreach my $taxon_oid (keys %$taxon_data_href) {
-        my $href = $taxon_data_href->{$taxon_oid};
-        my $gold_id = $href->{gold_id};
-        my $cols_aref = $gid2projectMetadata_href->{$gold_id};        
-        #webLog("$gold_id ==== \n");        
+    foreach my $taxon_oid ( keys %$taxon_data_href ) {
+        my $href      = $taxon_data_href->{$taxon_oid};
+        my $gold_id   = $href->{gold_id};
+        my $cols_aref = $gid2projectMetadata_href->{$gold_id};
+
+        #webLog("$gold_id ==== \n");
         getProjectMetadataHelper( $taxon_data_href, $taxon_oid, \@projectMetadataColumnsOrder, $cols_aref );
     }
 }
@@ -1829,11 +1897,10 @@ sub getGid2ProjectMetadata {
         select gold_id, $columns
         from project_info p
     };
-    #where p.gold_id in ($str)  
-    
-    if ( $goldId_href ) {
+
+    if ($goldId_href) {
         my @goldOids = keys %$goldId_href;
-        if ( scalar( @goldOids ) > 0 ) {
+        if ( scalar(@goldOids) > 0 ) {
             my $str = WebUtil::joinSqlQuoted( ',', @goldOids );
             $sql .= qq{
                 where p.gold_id in ($str)                  
@@ -1842,29 +1909,27 @@ sub getGid2ProjectMetadata {
     }
     if ( $noNullVal && scalar(@$cols_aref) == 1 ) {
         my $col = $cols_aref->[0];
-        if ( ! $goldId_href ) {
+        if ( !$goldId_href ) {
             $sql .= qq{
                 where 
-            };        
+            };
         }
         $sql .= qq{
             $col is not null            
         };
-    }    
+    }
     if ( $col_val && scalar(@$cols_aref) == 1 ) {
         my $col = $cols_aref->[0];
-        if ( ! $goldId_href ) {
+        if ( !$goldId_href ) {
             $sql .= qq{
                 where 
-            };        
+            };
         }
         $sql .= qq{
             $col = '$col_val'
         };
-    }    
-    #webLog("$sql\n");
-    #print "getGid2ProjectMetadata() sql=$sql<br/>\n";
-    
+    }
+
     my $dbh = dbLoginProject();
     my $cur = $dbh->prepare($sql);
     $cur->execute();
@@ -1878,9 +1943,8 @@ sub getGid2ProjectMetadata {
     $cur->finish();
     $dbh->disconnect();
 
-    return (\%gid2projectMetadata);
+    return ( \%gid2projectMetadata );
 }
-
 
 sub getProjectMetadataHelper {
     my ( $taxon_data_href, $taxon_oid, $all_columns_aref, $cols_aref ) = @_;
@@ -1892,6 +1956,7 @@ sub getProjectMetadataHelper {
         my $value = $cols_aref->[$i];
         next if ( blankStr($value) );
         if ( exists $sub_href->{$key} ) {
+
             #Unmatched ( in regex; marked by <-- HERE  fix
             next if ( $sub_href->{$key} =~ /\Q$value\E/ );
             $sub_href->{$key} = $sub_href->{$key} . ", $value";
@@ -1930,9 +1995,9 @@ sub getTaxonTableData {
           if ( $x ne 'c.username'
             && $x ne 'c.submittername'
             && $x ne 'gap.gold_analysis_project_type'
-            && $x ne 'gap.submission_type' 
-            && $x ne 'gap.is_gene_primp' 
-            && $x ne 'gap.assembly_method');
+            && $x ne 'gap.submission_type'
+            && $x ne 'gap.is_gene_primp'
+            && $x ne 'gap.assembly_method' );
     }
     push( @all_columns, @statsColumnsOrder );
 
@@ -1954,85 +2019,39 @@ sub getTaxonTableData {
     my %goldId_data;          # gold id => hash of taxon_oid
     my %taxon_public_data;    # taxon_oid => Yes or No for is public
 
-    if ( -e "$cgi_tmp_dir/$filename" && HtmlUtil::isCgiCacheEnable() ) {
-        webLog("reading cache file $filename\n");
+    # bug fix - disabled for now bug in cache genome size 0 when taxon oid is picked - ken
+    my $forceSql = !HtmlUtil::isCgiCacheEnable();
+    my $list_aref;
 
-        #print "getTaxonTableData() taxon_data cache file=$cgi_tmp_dir/$filename<br/>\n";
-
-        # read cache file and do not query
-        my $rfh = newReadFileHandle("$cgi_tmp_dir/$filename");
-        while ( my $line = $rfh->getline() ) {
-            chomp $line;
-            my ( $taxon_oid, $gold_id, $is_public, @cols ) = split( /\t/, $line );
-
-            $taxon_public_data{$taxon_oid}         = $is_public;
-
-            my %hash;
-            $hash{gold_id} = $gold_id;
-
-            for ( my $i = 0 ; $i <= $#all_columns ; $i++ ) {
-                my $key   = $all_columns[$i];
-                my $value = $cols[$i];
-                $hash{$key} = $value;
-            }
-            $taxon_data{$taxon_oid} = \%hash;
-
-            if ( $gold_id ne '' ) {
-                if ( exists $goldId_data{$gold_id} ) {
-                    my $href = $goldId_data{$gold_id};
-                    $href->{$taxon_oid} = 1;
-                } else {
-                    my %h = ( $taxon_oid => 1 );
-                    $goldId_data{$gold_id} = \%h;
-                }
-            }
-        }
-        close $rfh;
-
+    if ( $bindList_aref eq '' ) {
+        $list_aref = OracleUtil::execSqlCached( $dbh, $sql, $filename, $forceSql );
     } else {
-        my $wfh = newWriteFileHandle("$cgi_tmp_dir/$filename");
+        $list_aref = OracleUtil::execSqlCached( $dbh, $sql, $filename, $forceSql, @$bindList_aref );
+    }
 
-        my $cur;
-        if ( $bindList_aref eq '' ) {
-            $cur = execSql( $dbh, $sql, $verbose );
-        } else {
-            $cur = execSql( $dbh, $sql, $verbose, @$bindList_aref );
+    foreach my $inner_aref (@$list_aref) {
+        my ( $taxon_oid, $gold_id, $is_public, @cols ) = @$inner_aref;
+        $taxon_public_data{$taxon_oid} = $is_public;
+
+        my %hash;
+        $hash{gold_id} = $gold_id;
+
+        for ( my $i = 0 ; $i <= $#all_columns ; $i++ ) {
+            my $key   = $all_columns[$i];
+            my $value = $cols[$i];
+            $hash{$key} = $value;
         }
-        for ( ; ; ) {
-            my ( $taxon_oid, $gold_id, $is_public, @cols ) = $cur->fetchrow();
-            last if !$taxon_oid;
-            print $wfh "$taxon_oid\t$gold_id\t$is_public\t";
-            my $i = 0;
-            foreach my $x (@cols) {
-                print $wfh "$x\t";
-                $i++;
-            }
-            print $wfh "\n";
+        $taxon_data{$taxon_oid} = \%hash;
 
-            $taxon_public_data{$taxon_oid}         = $is_public;
-
-            my %hash;
-            $hash{gold_id} = $gold_id;
-            
-            for ( my $i = 0 ; $i <= $#all_columns ; $i++ ) {
-                my $key = $all_columns[$i];
-                my $value = $cols[$i];
-                $hash{$key} = $value;
-            }
-            $taxon_data{$taxon_oid} = \%hash;
-
-            if ( $gold_id ne '' ) {
-                if ( exists $goldId_data{$gold_id} ) {
-                    my $href = $goldId_data{$gold_id};
-                    $href->{$taxon_oid} = 1;
-                } else {
-                    my %h = ( $taxon_oid => 1 );
-                    $goldId_data{$gold_id} = \%h;
-                }
+        if ( $gold_id ne '' ) {
+            if ( exists $goldId_data{$gold_id} ) {
+                my $href = $goldId_data{$gold_id};
+                $href->{$taxon_oid} = 1;
+            } else {
+                my %h = ( $taxon_oid => 1 );
+                $goldId_data{$gold_id} = \%h;
             }
         }
-        close $wfh;
-        $cur->finish();
     }
 
     if ($user_restricted_site) {
@@ -2046,28 +2065,28 @@ sub getTaxonTableData {
                 #last;
             } elsif ( $x eq 'c.submittername' ) {
                 getSubmitter( $dbh, \%taxon_data );
-            } elsif (!$done && $x eq 'gap.submission_type' ) {
+            } elsif ( !$done && $x eq 'gap.submission_type' ) {
                 getGapData( $dbh, \%taxon_data );
                 $done = 1;
-            } elsif (!$done && $x eq 'gap.gold_analysis_project_type' ) {
+            } elsif ( !$done && $x eq 'gap.gold_analysis_project_type' ) {
                 getGapData( $dbh, \%taxon_data );
                 $done = 1;
-            } elsif(!$done && ($x eq 'gap.is_gene_primp' || $x eq 'gap.assembly_method')) {
-                getGapData($dbh, \%taxon_data);
+            } elsif ( !$done && ( $x eq 'gap.is_gene_primp' || $x eq 'gap.assembly_method' ) ) {
+                getGapData( $dbh, \%taxon_data );
                 $done = 1;
-            } 
+            }
         }
     } else {
         my $done = 0;
         foreach my $x (@$taxonColumns_aref) {
-            if (!$done &&  $x eq 'gap.submission_type' ) {
+            if ( !$done && $x eq 'gap.submission_type' ) {
                 getGapData( $dbh, \%taxon_data );
                 $done = 1;
-            } elsif (!$done &&  $x eq 'gap.gold_analysis_project_type' ) {
+            } elsif ( !$done && $x eq 'gap.gold_analysis_project_type' ) {
                 getGapData( $dbh, \%taxon_data );
                 $done = 1;
-            } elsif(!$done &&  ($x eq 'gap.is_gene_primp'|| $x eq 'gap.assembly_method')) {
-                getGapData($dbh, \%taxon_data);
+            } elsif ( !$done && ( $x eq 'gap.is_gene_primp' || $x eq 'gap.assembly_method' ) ) {
+                getGapData( $dbh, \%taxon_data );
                 $done = 1;
             }
         }
@@ -2105,14 +2124,14 @@ sub getMetagenomeStats {
         $orderByClause  = 'order by t.taxon_oid';
     }
 
-    my @taxons   = keys %$taxon_data_href;
-    
-    return if($#taxons < 0); # no taxon oids - obsolete genome set - ken
-    
+    my @taxons = keys %$taxon_data_href;
+
+    return if ( $#taxons < 0 );    # no taxon oids - obsolete genome set - ken
+
     my $taxonStr = OracleUtil::getTaxonIdsInClause( $dbh, @taxons );
 
     my @columns = keys %statsColumnsMerfs;
-    my $colStr  = join( ',', @columns );
+    my $colStr = join( ',', @columns );
 
     my $sql = qq{
 select t.taxon_oid, $colStr
@@ -2124,21 +2143,21 @@ and t.genome_type = 'metagenome'
 $orderByClause
     };
 
-    if($dataType eq 'both') {
-#    my $sql = qq{
-#select t.taxon_oid, $colStr
-#from taxon t left join taxon_stats ts 
-#on t.taxon_oid = ts.taxon_oid
-#where t.taxon_oid in ($taxonStr)
-#and t.genome_type = 'metagenome'
-#$orderByClause
-#    };        
+    if ( $dataType eq 'both' ) {
 
-        return; # just return on both taxon_stats is both
+        #    my $sql = qq{
+        #select t.taxon_oid, $colStr
+        #from taxon t left join taxon_stats ts
+        #on t.taxon_oid = ts.taxon_oid
+        #where t.taxon_oid in ($taxonStr)
+        #and t.genome_type = 'metagenome'
+        #$orderByClause
+        #    };
+
+        return;    # just return on both taxon_stats is both
     }
 
-
-    my %data;    # taxon oid => col => value
+    my %data;      # taxon oid => col => value
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ; ; ) {
         my ( $taxon_oid, @cols ) = $cur->fetchrow();
@@ -2176,15 +2195,198 @@ $orderByClause
     }
 }
 
+sub printTaxonAttributes {
+    my ($taxonColumnsChecked_aref) = @_;
+
+    # taxon attributes have a pre-defined sort order
+    my $count = 0;
+    foreach my $key (@genomeColumnsOrder) {
+        my $value   = $genomeColumns{$key};
+        my $str     = $alwaysChecked{$key};
+        my $id      = 'genome_field_col' . $count;
+        my $labelid = 'label_' . $id;
+
+        if ( $str eq '' ) {
+
+            # checked to see if it was checked before
+            $str = existsInArray( $key, $taxonColumnsChecked_aref );
+        }
+        my $bold = ( $str eq '' ? 'normal' : 'bold' );
+
+        print qq{
+            <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');" value="$key" name="genome_field_col" $str /> 
+            <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');"  style="font-weight: $bold;" title="$value">$value</label> 
+            <br/>
+        };
+        $count++;
+    }
+
+}
+
+sub printProjectAttributes {
+    my ($projectMetadataColumnsChecked_aref) = @_;
+    my $count = 0;
+    foreach my $key (@projectMetadataColumnsOrder) {
+        my $value   = $projectMetadataColumns{$key};
+        my $str     = $alwaysChecked{$key};
+        my $id      = 'metadata_col' . $count;
+        my $labelid = 'label_' . $id;
+
+        if ( $str eq '' ) {
+
+            # checked to see if it was checked before
+            $str = existsInArray( $key, $projectMetadataColumnsChecked_aref );
+        }
+        my $bold = ( $str eq '' ? 'normal' : 'bold' );
+
+        print qq{
+            <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');"  value="$key" name="metadata_col" $str /> 
+            <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');" style="font-weight: $bold;" title="$value">$value</label> 
+            <br/>
+        };
+        $count++;
+    }
+}
+
+sub printTaxonStatsAttributes {
+    my ($statsColumnsChecked_aref) = @_;
+
+    # stats have a pre-defined sort order
+    my $count = 0;
+    foreach my $key (@statsColumnsOrder) {
+        my $value = $statsColumns{$key};
+        my $id    = 'count' . $count;
+        $id = 'percent' . $count if ( $value =~ /\%/ );
+        my $str = $alwaysChecked{$key};
+
+        my $labelid = 'label_' . $id;
+
+        if ( $str eq '' ) {
+
+            # checked to see if it was checked before
+            $str = existsInArray( $key, $statsColumnsChecked_aref );
+        }
+        my $bold = ( $str eq '' ? 'normal' : 'bold' );
+
+        my $star;
+        if ( $include_metagenomes && exists $statsColumnsMerfs{$key} ) {
+            $star = '*';
+        }
+
+        print qq{ 
+          <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');" value="$key" name="stats_col" $str />
+          <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');" style="font-weight: $bold;" title="$value">$star $value</label>
+          <br/>
+        };
+
+        $count++;
+    }
+}
+
+#
+# tab version
+#
+sub printConfigDivTab {
+    my ( $taxonColumnsChecked_aref, $projectMetadataColumnsChecked_aref, $statsColumnsChecked_aref ) = @_;
+
+    my $fileTime = fileAtime($database);
+
+    # Date format: ddd, mmm d yyyy hh:mm am/pm (LC_DATE locale format)
+    $fileTime = Date::Format::time2str( "%b %e %Y", $fileTime );
+
+    print qq{
+          <script type='text/javascript' src='$top_base_url/js/genomeConfig.js'></script>
+    };
+
+    TabHTML::printTabAPILinks("genomeListTab");
+    my @tabIndex = ( "#genomelisttab1", "#genomelisttab2", "#genomelisttab3" );
+    my @tabNames = ( "Genome Field",    "Metadata",        "Data Statistics" );
+    TabHTML::printTabDiv( "genomeListTab", \@tabIndex, \@tabNames );
+
+    # "Genome Field Div"
+    print qq{ 
+              <div id='genomelisttab1' style="overflow: auto;">
+                <input type="button" value="All"   onclick="selectObject(1, 'genome_field_col')">
+                <input type="button" value="Clear" onclick="selectObject(0, 'genome_field_col')">
+                <br/>
+    };
+
+    # taxon attributes have a pre-defined sort order
+    printTaxonAttributes($taxonColumnsChecked_aref);
+
+    print qq{
+              </div>
+    };    # end of "Genome Field Div"
+
+    # "Project Metadata Div"
+    print qq{
+              <div id='genomelisttab2' style="overflow: auto; ">
+                <input type="button" value="All" onclick="selectObject(1, 'metadata_col')">
+                <input type="button" value="Clear" onclick="selectObject(0, 'metadata_col')">
+                (<i>Updated $fileTime</i>)
+                <br/>
+    };
+
+    # sort by the label not the keys
+    printProjectAttributes($projectMetadataColumnsChecked_aref);
+
+    print qq{
+              </div>
+    };    # end of "Project Metadata Div"
+
+    # "Data Statistics Div"
+    print qq{
+              <div id='genomelisttab3' style="overflow: auto; ">
+                <input type="button" value="All" onclick="selectCount(1);selectPercent(1);">
+                <input type="button" value="Clear" onclick="selectCount(0);selectPercent(0);">
+                <br>
+                <input type="button" value="Select Counts" onclick="selectCount(1)">
+                <input type="button" value="Select Percentage" onclick="selectPercent(1)" >
+    };
+
+    if ($include_metagenomes) {
+        my $dataType = param('merfs_data_type');
+        my $chk1     = '';
+        my $chk2     = '';
+        my $chk3     = '';
+
+        if ( $dataType eq 'unassembled' ) {
+            $chk2 = 'selected';
+        } elsif ( $dataType eq 'both' ) {
+            $chk3 = 'selected';
+        } else {
+            $chk1 = 'selected';
+        }
+
+        print qq{
+        <br>
+<select name="merfs_data_type" title='Applies only to metagenomes'>
+            <option value="assembled" $chk1>* Assembled (Metagenomes)</option>
+            <option value="unassembled" $chk2>* Unassembled</option>
+             <option value="both" $chk3>* Both</option>
+</select>
+};
+    }
+
+    print qq{                
+              <br/>
+    };
+
+    #    # stats have a pre-defined sort order
+    printTaxonStatsAttributes($statsColumnsChecked_aref);
+
+    print qq{
+              </div>
+    };    # end of "Data Statistics Div"
+
+    TabHTML::printTabDivEnd();
+}
+
 #
 # prints table column configuration section
 #
 sub printConfigDiv {
-    my (
-        $taxonColumnsChecked_aref,          $projectMetadataColumnsChecked_aref,
-        $statsColumnsChecked_aref
-      )
-      = @_;
+    my ( $taxonColumnsChecked_aref, $projectMetadataColumnsChecked_aref, $statsColumnsChecked_aref ) = @_;
 
     my $fileTime = fileAtime($database);
 
@@ -2211,7 +2413,6 @@ sub printConfigDiv {
             </td>
     };
 
-
     print qq{
             <td style='width:550px;'>
               <span class='hand' id='plus_minus_span4' onclick="javascript:showFilter(4, '$base_url')">
@@ -2233,19 +2434,21 @@ sub printConfigDiv {
     };
 
     # taxon attributes have a pre-defined sort order
-    foreach my $key (@genomeColumnsOrder) {
-        my $value = $genomeColumns{$key};
-        my $str   = $alwaysChecked{$key};
+    #    foreach my $key (@genomeColumnsOrder) {
+    #        my $value = $genomeColumns{$key};
+    #        my $str   = $alwaysChecked{$key};
+    #
+    #        if ( $str eq '' ) {
+    #
+    #            # checked to see if it was checked before
+    #            $str = existsInArray( $key, $taxonColumnsChecked_aref );
+    #        }
+    #        print qq{
+    #            <input type="checkbox" value="$key" name="genome_field_col" $str> $value <br/>
+    #        };
+    #    }
+    printTaxonAttributes($taxonColumnsChecked_aref);
 
-        if ( $str eq '' ) {
-
-            # checked to see if it was checked before
-            $str = existsInArray( $key, $taxonColumnsChecked_aref );
-        }
-        print qq{
-            <input type="checkbox" value="$key" name="genome_field_col" $str> $value <br/>
-        };
-    }
     print qq{
               </div>
             </td>
@@ -2262,26 +2465,26 @@ sub printConfigDiv {
     };
 
     # sort by the label not the keys
-    foreach my $key (@projectMetadataColumnsOrder) {
-        my $value = $projectMetadataColumns{$key};
-        my $str   = $alwaysChecked{$key};
-
-        if ( $str eq '' ) {
-
-            # checked to see if it was checked before
-            $str = existsInArray( $key, $projectMetadataColumnsChecked_aref );
-        }
-
-        print qq{
-            <input type="checkbox" value="$key" name="metadata_col" $str > $value <br/>
-        };
-    }
+    #    foreach my $key (@projectMetadataColumnsOrder) {
+    #        my $value = $projectMetadataColumns{$key};
+    #        my $str   = $alwaysChecked{$key};
+    #
+    #        if ( $str eq '' ) {
+    #
+    #            # checked to see if it was checked before
+    #            $str = existsInArray( $key, $projectMetadataColumnsChecked_aref );
+    #        }
+    #
+    #        print qq{
+    #            <input type="checkbox" value="$key" name="metadata_col" $str > $value <br/>
+    #        };
+    #    }
+    printProjectAttributes($projectMetadataColumnsChecked_aref);
 
     print qq{
               </div>
             </td>
     };    # end of "Project Metadata Div"
-
 
     # "Data Statistics Div"
     print qq{
@@ -2321,27 +2524,28 @@ sub printConfigDiv {
     };
 
     # stats have a pre-defined sort order
-    foreach my $key (@statsColumnsOrder) {
-        my $value = $statsColumns{$key};
-        my $id    = 'count';
-        $id = 'percent' if ( $value =~ /\%/ );
-        my $str = $alwaysChecked{$key};
-
-        if ( $str eq '' ) {
-
-            # checked to see if it was checked before
-            $str = existsInArray( $key, $statsColumnsChecked_aref );
-        }
-
-        my $star;
-        if ( $include_metagenomes && exists $statsColumnsMerfs{$key} ) {
-            $star = '*';
-        }
-
-        print qq{ 
-          <input id='$id' type="checkbox" value="$key" name="stats_col" $str />$star $value <br/>
-        };
-    }
+    #    foreach my $key (@statsColumnsOrder) {
+    #        my $value = $statsColumns{$key};
+    #        my $id    = 'count';
+    #        $id = 'percent' if ( $value =~ /\%/ );
+    #        my $str = $alwaysChecked{$key};
+    #
+    #        if ( $str eq '' ) {
+    #
+    #            # checked to see if it was checked before
+    #            $str = existsInArray( $key, $statsColumnsChecked_aref );
+    #        }
+    #
+    #        my $star;
+    #        if ( $include_metagenomes && exists $statsColumnsMerfs{$key} ) {
+    #            $star = '*';
+    #        }
+    #
+    #        print qq{
+    #          <input id='$id' type="checkbox" value="$key" name="stats_col" $str />$star $value <br/>
+    #        };
+    #    }
+    printTaxonStatsAttributes($statsColumnsChecked_aref);
 
     print qq{
               </div>
@@ -2667,6 +2871,7 @@ EOF
         $row .= $genomeCnt . $sd . $url2 . "\t";
 
         foreach my $col (@statsColumns) {
+
             #my $displayName = $phylumStatsColumns{$col};
             my $value = $href->{$col};
             $row .= $value . $sd . $value . "\t";
@@ -2807,7 +3012,7 @@ sub getPhylumData2 {
 
     if ($include_metagenomes) {
         my @all_columns_merfs = keys %phylumStatsColumnsMerfs;
-        my $columns           = join( ',', @all_columns_merfs );
+        my $columns = join( ',', @all_columns_merfs );
 
         my $sql = qq{
         select $column1, count(*),  $columns
@@ -3311,7 +3516,7 @@ group by $column1
 
     if ($include_metagenomes) {
         my @all_columns_merfs = keys %phylumStatsColumnsMerfs;
-        my $columns           = join( ',', @all_columns_merfs );
+        my $columns = join( ',', @all_columns_merfs );
 
         my $sql = qq{
 select $column1, count(*),  $columns
@@ -3415,7 +3620,6 @@ $domain $phylum $ir_class $ir_order $family $genus $species
 
 }
 
-
 sub getProjectMetadataAttrs {
 
     # remove 'gap.gold_analysis_project_type', 'gap.submission_type'
@@ -3435,11 +3639,10 @@ sub getProjectMetadataColName {
     return $projectMetadataColumns{$col};
 }
 
-
 sub getProjectMetadataColAlign {
     my ($col) = @_;
-    my $x = $projectMetadataColumnsAlign{$col}; 
-    
+    my $x = $projectMetadataColumnsAlign{$col};
+
     $x = 'char asc left' if $x eq '';
     return $x;
 }
@@ -3456,9 +3659,10 @@ sub getColAsUrl {
 sub isProjectMetadataAttr {
     my ($col) = @_;
 
-    if (exists $projectMetadataColumns{$col}) {
+    if ( exists $projectMetadataColumns{$col} ) {
         return 1;
     }
+
     #if ( grep $_ eq $col, @projectMetadataColumnsOrder ) {
     #    return 1;
     #}
@@ -3478,31 +3682,33 @@ sub getMetadataCategoryTaxonCount {
         return %dist_count;
     }
 
-    my @metadataCols = ( $category );
+    my @metadataCols = ($category);
     my $gid2projectMetadata_href = getGid2ProjectMetadata( '', \@metadataCols, '', 1 );
+
     #print "getMetadataCategoryTaxonCount() gid2projectMetadata_href: <br/>\n";
     #print Dumper($gid2projectMetadata_href);
     #print "<br/>\n";
 
     my @gids = keys %$gid2projectMetadata_href;
-    my $taxon_gidInfo_href = QueryUtil::getTaxonForGids( $dbh, \@gids, $domain );    
+    my $taxon_gidInfo_href = QueryUtil::getTaxonForGids( $dbh, \@gids, $domain );
 
-    foreach my $taxon_oid (keys $taxon_gidInfo_href) {
-        my $gold_id = $taxon_gidInfo_href->{$taxon_oid};
+    foreach my $taxon_oid ( keys $taxon_gidInfo_href ) {
+        my $gold_id   = $taxon_gidInfo_href->{$taxon_oid};
         my $cols_aref = $gid2projectMetadata_href->{$gold_id};
+
         #print "getMetadataCategoryTaxonCount() gold_id=$gold_id, cols_aref=@$cols_aref<br/>\n";
 
         #my %sub_h;
-        for ( my $i = 0 ; $i < scalar(@metadataCols); $i++ ) {
-            my $key = @metadataCols[$i];
+        for ( my $i = 0 ; $i < scalar(@metadataCols) ; $i++ ) {
+            my $key = $metadataCols[$i];
             my $val = $cols_aref->[$i];
+
             #print "getMetadataCategoryTaxonCount() key=$key, val=$val<br/>\n";
             next if ( WebUtil::blankStr($val) );
             if ( $key eq $category ) {
                 if ( $dist_count{$val} ) {
                     $dist_count{$val} += 1;
-                }
-                else {
+                } else {
                     $dist_count{$val} = 1;
                 }
             }
@@ -3518,6 +3724,7 @@ sub getMetadataCategoryTaxonCount {
 
         }
     }
+
     #print "getMetadataCategoryTaxonCount() dist_count: <br/>\n";
     #print Dumper(\%dist_count);
     #print "<br/>\n";
@@ -3537,15 +3744,15 @@ sub getMetadataCategoryGids {
         return @gids;
     }
 
-    my @metadataCols = ( $category );
+    my @metadataCols = ($category);
     my $gid2projectMetadata_href = getGid2ProjectMetadata( '', \@metadataCols, $categoryVal );
+
     #print "getMetadataCategoryTaxonCount() gid2projectMetadata_href: <br/>\n";
     #print Dumper($gid2projectMetadata_href);
     #print "<br/>\n";
-    
+
     @gids = keys %$gid2projectMetadata_href;
     return @gids;
 }
-
 
 1;

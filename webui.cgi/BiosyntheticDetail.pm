@@ -1,6 +1,6 @@
 ############################################################################
 # BiosyntheticDetail - detail page for biosynthetic clusters
-# $Id: BiosyntheticDetail.pm 34697 2015-11-12 21:25:00Z klchu $
+# $Id: BiosyntheticDetail.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package BiosyntheticDetail;
 my $section = "BiosyntheticDetail";
@@ -51,6 +51,9 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
 my $maxGeneProfileIds = 100;
 my $flank_length      = 25000;
 my $NA                = "na";
+my $img_ken              = $env->{img_ken};
+my $abc                      = $env->{abc};
+
 
 #    } elsif ( $section eq 'BiosyntheticDetail' ) {
 #        require BiosyntheticDetail;
@@ -287,6 +290,17 @@ sub printBioClusterDetail {
     print " (assembled)" if $in_file eq "Yes";
     my $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
     print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
+    
+    if($abc || $img_ken) {
+        print qq{
+            <br>
+<input type='button' class='smdefbutton' 
+ name='Add to BC Cart' value='Add to BC Cart'
+ onclick='window.open("main.cgi?section=WorkspaceBcSet&page=addToBcBuffer&bc_id=$cluster_id", "_self")'
+ >
+        };
+    }
+    
     print "</p>";
 
     $sql = qq{
@@ -373,10 +387,10 @@ sub printBioClusterDetail {
     }
     GeneDetail::printAttrRowRaw( "GOLD ID", $gold_link );
 
-    my $s_url = "$main_cgi?section=ScaffoldCart"
+    my $s_url = "$main_cgi?section=ScaffoldDetail"
 	      . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
     if ( $in_file eq 'Yes' ) {
-        $s_url = "$main_cgi?section=MetaDetail"
+        $s_url = "$main_cgi?section=MetaScaffoldDetail"
 	       . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid"
 	       . "&scaffold_oid=$scaffold_oid";
     }
@@ -517,7 +531,7 @@ sub printBioClusterDetail {
 
     print "<div id='biodetailtab2'>";
     print "<h2>Genes in Cluster</h2>";
-    if($pfam_count > 0) {
+    if ($pfam_count > 0) {
         printBioClusterGeneList( $taxon_oid, $cluster_id );
     } else {
         # no pfams
@@ -726,26 +740,23 @@ sub exportClusterGenes {
 sub exportClusterGenbankFile {
     my ( $taxon_oid, $cluster_id, $genes_aref ) = @_;
 
-    my $dbh        = dbLogin();
+    my $dbh = dbLogin();
     my $taxon_name = QueryUtil::fetchTaxonName( $dbh, $taxon_oid );
 
-    #Get cluster boundaries
+    # Get cluster boundaries
     my $sql = qq{
-        select a.attribute_value, b.attribute_value 
-        from bio_cluster_data a, bio_cluster_data b 
-        where a.cluster_id= ? 
-        AND b.cluster_id= ?
-        AND a.attribute_type ='START_ON_CHROMOSOME' 
-        AND b.attribute_type='END_ON_CHROMOSOME'
+        select bc.start_coord, bc.end_coord
+        from bio_cluster_new bc
+        where bc.cluster_id = ?
     };
-    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $cluster_id );
+    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
     my ( $low, $high ) = $cur->fetchrow();
     $cur->finish();
 
     #print "exportClusterGenbankFile() $low $high<br/>\n";
 
     my $gene_oid_str = OracleUtil::getNumberIdsInClause( $dbh, @$genes_aref );
-    my $sql          = qq{
+    my $sql = qq{
         select g.gene_oid, g.gene_display_name, g.locus_tag, 
             g.start_coord, g.end_coord, g.strand, g.cds_frag_coord, 
             g.scaffold, s.ext_accession, g.taxon
@@ -806,9 +817,9 @@ sub exportClusterGenbankFile {
     #print "exportClusterGenbankFile() scaf2geneData=<br/>\n";
     #print Dumper(\%scaf2geneData) . "<br/>\n";
 
-    print "<h1>Export Biosynthetic Cluster Genebank File</h1>\n";
+    print "<h1>Export Biosynthetic Cluster Genbank File</h1>\n";
     print "<p style='width: 650px;'>";
-    my $url1 = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url1 = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     print "Genome: " . alink( $url1, $taxon_name );
     my $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
     print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
@@ -869,6 +880,7 @@ sub getBioClusterGeneList {
 ##########################################################################
 sub printBioClusterGeneList {
     my ( $taxon_oid, $cluster_id, $gene_aref, $show_title ) = @_;
+
     $taxon_oid  = param("taxon_oid")  if $taxon_oid  eq "";
     $cluster_id = param("cluster_id") if $cluster_id eq "";
 
@@ -898,10 +910,8 @@ sub printBioClusterGeneList {
         print "</p>";
     }
 
-    my $sql = "select genome_type, in_file from taxon where taxon_oid = ?";
-    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
-    my ( $genome_type, $in_file ) = $cur->fetchrow();
-    $cur->finish();
+    my ($taxon_name, $in_file, $genome_type)
+        = QueryUtil::fetchSingleTaxonNameGenomeType( $dbh, $taxon_oid );
 
     my %bbh_gene;
     my %bbh_taxon;
@@ -924,7 +934,8 @@ sub printBioClusterGeneList {
           . "</font></b>.<br/>";
 
         # get best hit later in the code
-    } elsif ($use_phylo_dist) {
+    } 
+    elsif ($use_phylo_dist) {
         my $phyloDist_date = PhyloUtil::getPhyloDistDate( $dbh, $taxon_oid );
         $hint = ""    #"<b><font color='red'>PLEASE NOTE</font></b>: <br/>"
           . "Best hit gene information is based on data that was "
@@ -934,36 +945,72 @@ sub printBioClusterGeneList {
 
         getBcBestHit_phylodist( $dbh, $taxon_oid, $cluster_id, \%bbh_gene, \%bbh_taxon, \%taxon_name_h );
     } else {
-        getBcBestHit_bbh( $dbh, $taxon_oid, $cluster_id, \%bbh_gene, \%bbh_taxon, \%taxon_name_h );
+        if ( WebUtil::isInt($cluster_id) ) {
+            getBcBestHit_bbh( $dbh, $taxon_oid, $cluster_id, \%bbh_gene, \%bbh_taxon, \%taxon_name_h );
+        }
+        else {
+            $taxon_name_h{$taxon_oid} = $taxon_name;
+        }
     }
 
     ## predicted or experimental?
-    my $sql         = "select evidence from bio_cluster_data_new " . "where cluster_id = ? ";
-    my $cur         = execSql( $dbh, $sql, $verbose, $cluster_id );
-    my ($evid_type) = $cur->fetchrow();
-    $cur->finish();
+    my ($evid_type);
+    if ( WebUtil::isInt($cluster_id) ) {
+        my $sql      = "select evidence from bio_cluster_data_new " . "where cluster_id = ? ";
+        my $cur      = execSql( $dbh, $sql, $verbose, $cluster_id );
+        ($evid_type) = $cur->fetchrow();
+        $cur->finish();
+    }
+    else {
+        ($evid_type) = 'ClusterScout';
+    }
 
     $hint .= "Pfam Info is based on <font color='darkgreen'>Pfams associated with genes</font> in this cluster.";
 
     printHint($hint);
     print "<br/>";
 
-    ## get gene-pfam for isolates, not infile:
     my %gene_pfam_h;
-    my $sql = qq{
-        select distinct gpf.gene_oid, 1, 1,
-               gpf.pfam_family, pf.description
-        from bio_cluster_features_new bcg, pfam_family pf,
-             gene_pfam_families gpf
-        where bcg.cluster_id = ?
-        and bcg.feature_type = 'gene'
-        and bcg.gene_oid = gpf.gene_oid
-        and gpf.pfam_family = pf.ext_accession
-    };
-
-    # for $infile, get genes for the cluster, then look in files:
-    if ( !$isTaxonInFile ) {
-        my $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+    if ( $isTaxonInFile ) {
+        # for $infile, get genes for the cluster, then look in files:
+    }
+    else {
+        ## get gene-pfam for isolates, not infile
+        my $cur;
+        if ( WebUtil::isInt($cluster_id) ) {
+            my $sql = qq{
+                select distinct gpf.gene_oid, 1, 1, gpf.pfam_family, pf.description
+                from bio_cluster_features_new bcg, pfam_family pf, gene_pfam_families gpf
+                where bcg.cluster_id = ?
+                and bcg.feature_type = 'gene'
+                and bcg.gene_oid = gpf.gene_oid
+                and gpf.pfam_family = pf.ext_accession
+            };
+            $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+        }
+        else {
+            #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+            #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+            #to make sure that the genes that starts below the starting range but ends within the range, 
+            #or starts below the ending range but ends beyond the ending range, get in
+            my $sql = qq{
+                select distinct gpf.gene_oid, 1, 1, gpf.pfam_family, pf.description
+                from scaffold s, gene g, pfam_family pf, gene_pfam_families gpf
+                where s.scaffold_oid = ?
+                and g.scaffold = s.scaffold_oid
+                and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+                and g.start_coord > 0 
+                and g.end_coord > 0
+                and g.obsolete_flag = 'No'
+                and g.gene_oid = gpf.gene_oid
+                and g.taxon = gpf.taxon
+                and gpf.pfam_family = pf.ext_accession
+                and s.ext_accession is not null
+            };
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+            $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                $start_coord, $end_coord, $start_coord, $end_coord );            
+        }
         for ( ;; ) {
             my ( $feature_id, $start_coord, $prob, $pfam_id, $pfam_name ) = $cur->fetchrow();
             last if ( !$feature_id );
@@ -978,9 +1025,9 @@ sub printBioClusterGeneList {
         $cur->finish();
     }
 
-    my $sql;
+    my $cur;
     if ($isTaxonInFile) {
-        $sql = qq{
+        my $sql = qq{
             select distinct bcg.feature_id, bcg.feature_id, bcg.feature_id
             from bio_cluster_features_new bcg, bio_cluster_new bc
             where bcg.cluster_id = ?
@@ -988,15 +1035,40 @@ sub printBioClusterGeneList {
             and bc.cluster_id = bcg.cluster_id
             and bcg.feature_type = 'gene'
         };
-    } else {
-        $sql = qq{
-            select distinct bcg.feature_id, g.locus_tag, g.gene_display_name
-            from bio_cluster_features_new bcg, gene g
-            where bcg.cluster_id = ?
-            and g.taxon = ?
-            and bcg.feature_id = g.gene_oid
-            and bcg.feature_type = 'gene'
-        };
+        $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid );
+    } 
+    else {
+        if ( WebUtil::isInt($cluster_id) ) {
+            my $sql = qq{
+                select distinct bcg.feature_id, g.locus_tag, g.gene_display_name
+                from bio_cluster_features_new bcg, gene g
+                where bcg.cluster_id = ?
+                and g.taxon = ?
+                and bcg.feature_id = g.gene_oid
+                and bcg.feature_type = 'gene'
+            };
+            $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid );
+        }
+        else {
+            #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+            #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+            #to make sure that the genes that starts below the starting range but ends within the range, 
+            #or starts below the ending range but ends beyond the ending range, get in
+            my $sql = qq{
+                select distinct g.gene_oid, g.locus_tag, g.gene_display_name
+                from scaffold s, gene g
+                where s.scaffold_oid = ?
+                and g.scaffold = s.scaffold_oid
+                and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+                and g.start_coord > 0 
+                and g.end_coord > 0
+                and g.obsolete_flag = 'No'
+                and s.ext_accession is not null
+            };
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+            $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                $start_coord, $end_coord, $start_coord, $end_coord );            
+        }
     }
 
     print start_form(
@@ -1020,7 +1092,6 @@ sub printBioClusterGeneList {
     $it->addColSpec( "Best Hit Gene",     "asc", "right" );
     $it->addColSpec( "Best Hit Genome",   "asc", "left" );
 
-    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id, $taxon_oid );
     my $row = 0;
     for ( ;; ) {
         my ( $gene_oid, $locus_tag, $gene_name ) = $cur->fetchrow();
@@ -1560,11 +1631,11 @@ sub getBcBestHit_bbh {
 
     my %public_taxons;
     my $sql = qq{
-	select taxon_oid, taxon_display_name
+    	select taxon_oid, taxon_display_name
         from taxon
-	where is_public = 'Yes'
-	and obsolete_flag = 'No' 
-	and genome_type = 'isolate'
+    	where is_public = 'Yes'
+    	and obsolete_flag = 'No' 
+    	and genome_type = 'isolate'
     };
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ;; ) {
@@ -1596,8 +1667,8 @@ sub getBcBestHit_bbh {
         while ( my $s = $rfh->getline() ) {
             chomp $s;
             my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps,
-		 $qstart, $qend, $sstart, $send, $evalue, $bitScore )
-		= split( /\t/, $s );
+        		 $qstart, $qend, $sstart, $send, $evalue, $bitScore )
+        		= split( /\t/, $s );
             my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
             my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid );
 
@@ -1670,6 +1741,7 @@ sub getBioClusterPfamCount {
 ###############################################################################
 sub printBioClusterPfamList {
     my ( $taxon_oid, $cluster_id ) = @_;
+
     if ( !$taxon_oid || !$cluster_id ) {
         return;
     }
@@ -1693,7 +1765,16 @@ sub printBioClusterPfamList {
     my $url1 = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
     print "Genome: " . alink( $url1, $taxon_name );
     print " (assembled)" if $in_file eq "Yes";
-    my $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+    my $url2;
+    if ( WebUtil::isInt($cluster_id) ) {
+        $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+    }
+    else {
+        my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+        $url2 = "$main_cgi?section=ScaffoldGraph&page=scaffoldGraph" 
+            . "&scaffold_oid=$scaffold_oid&start_coord=$start_coord&end_coord=$end_coord" 
+            . "&color=pfam";
+    }
     print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
     print "</p>";
 
@@ -1753,19 +1834,49 @@ sub printBioClusterPfamList {
             $count++;
         }
 
-    } else {
-        my $sql = qq{
-            select distinct gpf.pfam_family,
-                   pf.description, count(distinct gpf.gene_oid)
-            from bio_cluster_features_new bcg, pfam_family pf,
-                 gene_pfam_families gpf
-            where bcg.cluster_id = ?
-            and bcg.feature_type = 'gene'
-            and bcg.gene_oid = gpf.gene_oid
-            and gpf.pfam_family = pf.ext_accession
-            group by gpf.pfam_family, pf.description
-        };
-        my $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+    } 
+    else {
+        my $cur;
+        if ( WebUtil::isInt($cluster_id) ) {
+            my $sql = qq{
+                select distinct gpf.pfam_family,
+                       pf.description, count(distinct gpf.gene_oid)
+                from bio_cluster_features_new bcg, pfam_family pf,
+                     gene_pfam_families gpf
+                where bcg.cluster_id = ?
+                and bcg.feature_type = 'gene'
+                and bcg.gene_oid = gpf.gene_oid
+                and gpf.pfam_family = pf.ext_accession
+                group by gpf.pfam_family, pf.description
+            };
+            $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+        }
+        else {
+            #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+            #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+            #to make sure that the genes that starts below the starting range but ends within the range, 
+            #or starts below the ending range but ends beyond the ending range, get in
+            my $sql = qq{
+                select distinct gpf.pfam_family,
+                       pf.description, count(distinct gpf.gene_oid)
+                from scaffold s, gene g, pfam_family pf, gene_pfam_families gpf
+                where s.scaffold_oid = ?
+                and g.scaffold = s.scaffold_oid
+                and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+                and g.start_coord > 0 
+                and g.end_coord > 0
+                and g.obsolete_flag = 'No'
+                and g.gene_oid = gpf.gene_oid
+                and g.taxon = gpf.taxon
+                and gpf.pfam_family = pf.ext_accession
+                and s.ext_accession is not null
+                group by gpf.pfam_family, pf.description
+            };
+
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+            $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                $start_coord, $end_coord, $start_coord, $end_coord );
+        }
         for ( ;; ) {
             my ( $pfam_id, $pfam_name, $gene_count ) = $cur->fetchrow();
             last if !$pfam_id;
@@ -1808,7 +1919,7 @@ sub printBCPfamGeneList {
     printStatusLine( "Loading ...", 1 );
 
     my $dbh = dbLogin();
-    my ( $taxon_oid, $isTaxonInFile, $pfam_ids_ref,
+    my ( $taxon_oid, $isTaxonInFile, $cluster_id, $pfam_ids_ref,
 	 $funcId2Name_href, $gene_oids_ref ) = getBCPfamGeneList($dbh);
 
     my $count = scalar(@$gene_oids_ref);
@@ -1833,11 +1944,23 @@ sub printBCPfamGeneList {
     my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     print "Genome: " . alink( $url, $taxon_name );
     print " (assembled)" if $isTaxonInFile;
+    my $url2;
+    if ( WebUtil::isInt($cluster_id) ) {
+        $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+    }
+    else {
+        my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+        $url2 = "$main_cgi?section=ScaffoldGraph&page=scaffoldGraph" 
+            . "&scaffold_oid=$scaffold_oid&start_coord=$start_coord&end_coord=$end_coord" 
+            . "&color=pfam";
+    }
+    print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
     print "<br/>Pfam: ";
+    print "<br/>" if (scalar(@$pfam_ids_ref) > 1);
     foreach my $pfam_id (@$pfam_ids_ref) {
         my $funcName = $funcId2Name_href->{$pfam_id};
         print $pfam_id . ", <i><u>" . $funcName . "</u></i><br/>\n";
-    }
+    }        
     print "</p>";
 
     my $it = new InnerTable( 1, "sorttaxon$$", "sorttaxon", 1 );
@@ -1938,16 +2061,44 @@ sub getBCPfamGeneList {
     } else {
         my $funcIdsInClause = TaxonDetailUtil::fetchPfamId2NameHash( $dbh, \@pfam_ids, \%funcId2Name, 1 );
 
-        my $sql = qq{
-            select distinct gpf.gene_oid
-            from bio_cluster_features_new bcg,
-                 gene_pfam_families gpf
-            where bcg.cluster_id = ?
-            and bcg.feature_type = 'gene'
-            and bcg.gene_oid = gpf.gene_oid
-            and gpf.pfam_family in ($funcIdsInClause)
-        };
-        my $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+        my $cur;
+        if ( WebUtil::isInt($cluster_id) ) {
+            my $sql = qq{
+                select distinct gpf.gene_oid
+                from bio_cluster_features_new bcg,
+                     gene_pfam_families gpf
+                where bcg.cluster_id = ?
+                and bcg.feature_type = 'gene'
+                and bcg.gene_oid = gpf.gene_oid
+                and gpf.pfam_family in ($funcIdsInClause)
+            };
+            $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+        }
+        else {
+            #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+            #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+            #to make sure that the genes that starts below the starting range but ends within the range, 
+            #or starts below the ending range but ends beyond the ending range, get in
+            my $sql = qq{
+                select distinct gpf.gene_oid
+                from scaffold s, gene g, gene_pfam_families gpf
+                where s.scaffold_oid = ?
+                and g.scaffold = s.scaffold_oid
+                and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+                and g.start_coord > 0 
+                and g.end_coord > 0
+                and g.obsolete_flag = 'No'
+                and g.gene_oid = gpf.gene_oid
+                and g.taxon = gpf.taxon
+                and gpf.pfam_family in ($funcIdsInClause)
+                and s.ext_accession is not null
+            };
+
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+            $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                $start_coord, $end_coord, $start_coord, $end_coord );
+        }
+
         my %done;
         for ( ;; ) {
             my ($gene_oid) = $cur->fetchrow();
@@ -1962,7 +2113,7 @@ sub getBCPfamGeneList {
           if ( $funcIdsInClause =~ /gtt_func_id/i );
     }
 
-    return ( $taxon_oid, $isTaxonInFile, \@pfam_ids, \%funcId2Name, \@gene_oids );
+    return ( $taxon_oid, $isTaxonInFile, $cluster_id, \@pfam_ids, \%funcId2Name, \@gene_oids );
 }
 
 ###############################################################################
@@ -1970,7 +2121,7 @@ sub getBCPfamGeneList {
 ###############################################################################
 sub addBCPfamGeneListToCart {
     my $dbh = dbLogin();
-    my ( $taxon_oid, $isTaxonInFile, $pfam_ids_ref,
+    my ( $taxon_oid, $isTaxonInFile, $cluster_id, $pfam_ids_ref,
 	 $funcId2Name_href, $gene_oids_ref ) = getBCPfamGeneList($dbh);
 
     require CartUtil;
@@ -2364,11 +2515,20 @@ sub printNeighborhoodPanels {
 
         print "<table>";
 
-        my $clurl = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+        my $clurl;
+        if ( WebUtil::isInt($cluster_id) ) {
+            $clurl = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+        }
+        else {
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+            $clurl = "$main_cgi?section=ScaffoldGraph&page=scaffoldGraph" 
+                . "&scaffold_oid=$scaffold_oid&start_coord=$start_coord&end_coord=$end_coord" 
+                . "&color=pfam";
+        }
         my $cluster_link = alink( $clurl, $cluster_id );
 
-	my $additional_info = param("$cluster_id");
-	$additional_info = ":" if !$additional_info;
+    	my $additional_info = param("$cluster_id");
+    	$additional_info = ":" if !$additional_info;
 
         print "<p>Neighborhood for Cluster ID $cluster_link".$additional_info."</p>";
         if ( ( $maxend - $minstart ) > 2 * $flank_length ) {
@@ -2378,17 +2538,17 @@ sub printNeighborhoodPanels {
             for ( my $i = 0 ; $i < $n ; $i++ ) {
                 $tmp_end = $tmp_start + 2 * $flank_length + 1;
                 printOneNeighborhood
-		    ($dbh, $g, \%color_hash, $tmp_start,  $tmp_end, $strand0,
-		     $scf, $scaffold_name, $topology, $scf_length, \@recs, $cluster_id,
-		     $tx, $g2pfam_ref, "", $colorBy);
+    		    ($dbh, $g, \%color_hash, $tmp_start,  $tmp_end, $strand0,
+    		     $scf, $scaffold_name, $topology, $scf_length, \@recs, $cluster_id,
+    		     $tx, $g2pfam_ref, "", $colorBy);
                 $tmp_start = $tmp_end;
             }
 
         } else {
             printOneNeighborhood
-		($dbh, $g, \%color_hash, $minstart, $maxend, $strand0,
-		 $scf, $scaffold_name, $topology, $scf_length, \@recs,  $cluster_id,
-		 $tx, $g2pfam_ref, "", $colorBy);
+        		($dbh, $g, \%color_hash, $minstart, $maxend, $strand0,
+        		 $scf, $scaffold_name, $topology, $scf_length, \@recs,  $cluster_id,
+        		 $tx, $g2pfam_ref, "", $colorBy);
         }
         print "</table>";
 
@@ -2492,7 +2652,7 @@ sub printOneNeighborhood {
 
     my $min = 0; my $max = 0;
     if ($cluster_id0 ne "") {
-	($min, $max) = getBioClusterMinMax($dbh, $cluster_id0);
+    	($min, $max) = getBioClusterMinMax($dbh, $cluster_id0);
     }
 
     my $clusterid;
@@ -2518,20 +2678,20 @@ sub printOneNeighborhood {
         }
 
         my $sql = qq{
-        select distinct g.gene_oid, g.gene_symbol, g.gene_display_name,
-        g.locus_type, g.locus_tag, g.start_coord, g.end_coord, g.strand,
-        g.aa_seq_length, bcf.cluster_id, g.scaffold, g.is_pseudogene,
-        g.cds_frag_coord, dt.cog
-        from gene g
-        left join bio_cluster_features_new bcf
-        on g.gene_oid = bcf.gene_oid and bcf.feature_type = 'gene'
-        left join gene_cog_groups dt
-        on g.gene_oid = dt.gene_oid
-        where g.scaffold = ?
-        and (( g.start_coord >= ? and g.end_coord <= ? )
-           or (( g.end_coord + g.start_coord ) / 2 >= ?
-           and ( g.end_coord + g.start_coord ) / 2 <= ? ))
-        order by g.start_coord, g.end_coord, bcf.cluster_id $myOrder
+            select distinct g.gene_oid, g.gene_symbol, g.gene_display_name,
+            g.locus_type, g.locus_tag, g.start_coord, g.end_coord, g.strand,
+            g.aa_seq_length, bcf.cluster_id, g.scaffold, g.is_pseudogene,
+            g.cds_frag_coord, dt.cog
+            from gene g
+            left join bio_cluster_features_new bcf
+            on g.gene_oid = bcf.gene_oid and bcf.feature_type = 'gene'
+            left join gene_cog_groups dt
+            on g.gene_oid = dt.gene_oid
+            where g.scaffold = ?
+            and (( g.start_coord >= ? and g.end_coord <= ? )
+               or (( g.end_coord + g.start_coord ) / 2 >= ?
+               and ( g.end_coord + g.start_coord ) / 2 <= ? ))
+            order by g.start_coord, g.end_coord, bcf.cluster_id $myOrder
         };
 
         if ( $colorBy eq "pfam" ) {
@@ -2558,11 +2718,11 @@ sub printOneNeighborhood {
         my %gene2info;
         my @genes;
         for ( ;; ) {
-	    my ($gene_oid, $gene_symbol, $gene_display_name, 
-		$locus_type, $locus_tag, $start_coord, $end_coord, $strand,
-		$aa_seq_length, $cluster_id, $scaffold,
-		$is_pseudogene, $cds_frag_coord, $func_id) = $cur->fetchrow();
-	    last if !$gene_oid;
+    	    my ($gene_oid, $gene_symbol, $gene_display_name, 
+    		$locus_type, $locus_tag, $start_coord, $end_coord, $strand,
+    		$aa_seq_length, $cluster_id, $scaffold,
+    		$is_pseudogene, $cds_frag_coord, $func_id) = $cur->fetchrow();
+    	    last if !$gene_oid;
 	    
             if ( !exists $gene2info{$gene_oid} ) {
                 push @genes, $gene_oid;
@@ -2668,9 +2828,9 @@ sub printOneNeighborhood {
 	  . "&cluster_id=$cluster_id0" if $cluster_id0 ne "";
 
     my $tx_url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
-    my $scf_url = "$main_cgi?section=ScaffoldCart&page=scaffoldDetail"
+    my $scf_url = "$main_cgi?section=ScaffoldDetail&page=scaffoldDetail"
 	        . "&scaffold_oid=$scaffold_oid&taxon_oid=$taxon_oid";
-    $scf_url = "$main_cgi?section=MetaDetail"
+    $scf_url = "$main_cgi?section=MetaScaffoldDetail"
 	     . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid"
 	     . "&scaffold_oid=$scaffold_oid" if $infile;
 
@@ -2856,14 +3016,23 @@ sub printOneNeighborhood {
 
 sub getBioClusterMinMax {
     my ( $dbh, $cluster_id ) = @_;
-    my $sql = qq{
-        select bc.start_coord, bc.end_coord
-        from bio_cluster_new bc
-        where bc.cluster_id = ?
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
-    my ( $min, $max ) = $cur->fetchrow();
-    $cur->finish();
+
+    my ( $min, $max );
+    if ( WebUtil::isInt($cluster_id) ) {
+        my $sql = qq{
+            select bc.start_coord, bc.end_coord
+            from bio_cluster_new bc
+            where bc.cluster_id = ?
+        };
+        my $cur = execSql( $dbh, $sql, $verbose, $cluster_id );
+        ( $min, $max ) = $cur->fetchrow();
+        $cur->finish();
+    }
+    else {
+        my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id ); 
+        $min = $start_coord;
+        $max = $end_coord;
+    }
 
     return ( $min, $max );
 }
@@ -3028,6 +3197,7 @@ sub printBiosyntheticCassette {
 
 sub printBioClusterViewer {
     my ( $taxon_oid, $cluster_id, $mygene, $colorBy ) = @_;
+
     if ( $taxon_oid eq "" ) {
         $taxon_oid = param("taxon_oid");
         $cluster_id = param("cluster_id");
@@ -3067,10 +3237,10 @@ sub printBioClusterViewer {
         if ( !$gid || $gid ne $mygene ) {
             # gene not in cluster, redirect to gene page:
             if ( $in_file eq "Yes" ) {
-                use MetaGeneDetail;
+                require MetaGeneDetail;
                 MetaGeneDetail::printGeneDetail("$taxon_oid assembled $mygene");
             } else {
-                use GeneDetail;
+                require GeneDetail;
                 GeneDetail::printGeneDetail($mygene);
             }
         }
@@ -3083,7 +3253,16 @@ sub printBioClusterViewer {
     print " (assembled)" if $in_file eq "Yes";
 
     if ($cluster_id) {
-        my $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+        my $url2;
+        if ( WebUtil::isInt($cluster_id) ) {
+            $url2 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+        }
+        else {
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+            $url2 = "$main_cgi?section=ScaffoldGraph&page=scaffoldGraph" 
+                . "&scaffold_oid=$scaffold_oid&start_coord=$start_coord&end_coord=$end_coord" 
+                . "&color=pfam";
+        }
         print "<br/>Cluster ID: " . alink( $url2, $cluster_id );
         print "</p>";
     } else {
@@ -6410,10 +6589,11 @@ sub printBiosyntheticClusters {
 ###########################################################################
 # processBiosyntheticClusters
 # input either ($taxon_id and/or $cluster_ids_ref) or $clusterId2taxons_href
+# $fromcart - if 1 just print the table
 ###########################################################################
 sub processBiosyntheticClusters {
     my ( $dbh, $taxon_id, $cluster_ids_ref, $clusterId2taxons_href,
-	 $title, $subTitle ) = @_;
+	 $title, $subTitle, $frombccart ) = @_;
 
     if ( !$taxon_id && $cluster_ids_ref eq '' &&
          $clusterId2taxons_href eq '' ) {
@@ -6428,14 +6608,15 @@ sub processBiosyntheticClusters {
 
     my $taxon_clause;
     my @binds;
-    my %validateTaxon2;
+    #my %validateTaxon2;
 
     if ($taxon_id) {
         $taxon_clause = " and g.taxon = ? ";
         push( @binds, $taxon_id );
-        $validateTaxon2{$taxon_id} = $taxon_id;
+        #$validateTaxon2{$taxon_id} = $taxon_id;
 
-    } elsif ($clusterId2taxons_href) {
+    } 
+    elsif ($clusterId2taxons_href) {
         #print "processBiosyntheticClusters() clusterId2taxons_href=<br/>\n";
         #print Dumper($clusterId2taxons_href) . "<br/>\n";
         my @taxon_ids;
@@ -6443,7 +6624,7 @@ sub processBiosyntheticClusters {
             my $taxons_ref = $clusterId2taxons_href->{$key};
             push( @taxon_ids, @$taxons_ref ) if ($taxons_ref);
         }
-        %validateTaxon2 = WebUtil::array2Hash(@taxon_ids);
+        #%validateTaxon2 = WebUtil::array2Hash(@taxon_ids);
     }
 
     if ($clusterId2taxons_href) {
@@ -6451,34 +6632,16 @@ sub processBiosyntheticClusters {
         $cluster_ids_ref = \@clusterIds;
     }
 
-    my $cluster_ids_clause;
-    if ( $cluster_ids_ref && scalar(@$cluster_ids_ref) > 0 ) {
-        my $cluster_ids_str = OracleUtil::getFuncIdsInClause( $dbh, @$cluster_ids_ref );
-        $cluster_ids_clause = " and g.cluster_id in ($cluster_ids_str) ";
+    my ( $dbClusterIds_ref, $metaClusterIds_ref );
+    if ( $cluster_ids_ref ) {
+        ( $dbClusterIds_ref, $metaClusterIds_ref ) = MerFsUtil::splitDbAndMetaOids(@$cluster_ids_ref);        
     }
 
-    print "<br/>Getting gene count per cluster...<br/>\n";
-    my $cacheFile01 = "allGeneCountPerCluster01";
-    my $sql = qq{
-        select g.cluster_id, g.taxon, g.scaffold, 
-               count(distinct bcf.feature_id)
-        from bio_cluster_features_new bcf, bio_cluster_new g
-        where bcf.feature_type = 'gene'
-        and g.cluster_id = bcf.cluster_id
-        $cluster_ids_clause
-        $taxon_clause
-        $rclause
-        $imgClause
-        group by g.cluster_id, g.taxon, g.scaffold
-    };
-
-    my %validateTaxons = WebUtil::getAllTaxonsHashed($dbh);
-
-    my %validateClusters;
-    if ( $cluster_ids_ref ne '' ) {
-        %validateClusters = WebUtil::array2Hash(@$cluster_ids_ref);
+    my $db_cluster_ids_clause;
+    if ( $dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0 ) {
+        my $cluster_ids_str = OracleUtil::getFuncIdsInClause( $dbh, @$dbClusterIds_ref );
+        $db_cluster_ids_clause = " and g.cluster_id in ($cluster_ids_str) ";
     }
-    my $aref = OracleUtil::execSqlCached( $dbh, $sql, 'allGeneCountPerCluster01', 1, @binds );
 
     my %taxons_h;
     my %bcid2taxon;
@@ -6486,31 +6649,107 @@ sub processBiosyntheticClusters {
     my %bcid2geneCnt;
     my %bcid2pfamCnt;
 
-    foreach my $inner_aref (@$aref) {
-        my ( $cluster_id, $taxon_oid, $scaffold_oid, $gene_count ) = @$inner_aref;
-        last if !$cluster_id;
+    my %bcid2startCoord;
+    my %bcid2endCoord;
+    my %bcid2evidence;
 
-        next if ( $taxon_id ne '' && $taxon_id ne $taxon_oid );
-        next if ( $cluster_ids_ref ne ''
-            && !exists $validateClusters{$cluster_id} );
-        next if ( $clusterId2taxons_href ne ''
-            && !exists $clusterId2taxons_href->{$cluster_id} );
-        next if ( !exists $validateTaxons{$taxon_oid} );
+    print "<br/>Getting gene count per cluster...<br/>\n";
+    if ( $taxon_id || $clusterId2taxons_href || ($dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0) ) {
 
-        # TODO validate taxons
+        my $cacheFile01 = "allGeneCountPerCluster01";
+	    my $sql = qq{
+            select g.cluster_id, g.taxon, g.scaffold, 
+                   count(distinct bcf.feature_id)
+            from bio_cluster_features_new bcf, bio_cluster_new g
+            where bcf.feature_type = 'gene'
+            and g.cluster_id = bcf.cluster_id
+            $db_cluster_ids_clause
+            $taxon_clause
+            $rclause
+            $imgClause
+            group by g.cluster_id, g.taxon, g.scaffold
+        };
 
-        #if ( $clusterId2taxons_href ) {
-        #    my $taxons_ref = $clusterId2taxons_href->{$cluster_id};
-        #    next if ( !WebUtil::inArray($taxon_oid, @$taxons_ref) );
-        #}
+        #my %validateTaxons = WebUtil::getAllTaxonsHashed($dbh);
 
-        $bcid2taxon{$cluster_id}    = $taxon_oid;
-        $taxons_h{$taxon_oid}       = 1;
-        $bcid2scaffold{$cluster_id} = $scaffold_oid;
-        $bcid2geneCnt{$cluster_id}  = $gene_count;
+        my %validateClusters;
+        if ( $dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0 ) {
+            %validateClusters = WebUtil::array2Hash(@$dbClusterIds_ref);
+        }
+    
+        my $aref = OracleUtil::execSqlCached( $dbh, $sql, 'allGeneCountPerCluster01', 1, @binds );
 
-        #$bcid2pfamCnt{$cluster_id} = $pfam_count;
+        foreach my $inner_aref (@$aref) {
+            my ( $cluster_id, $taxon_oid, $scaffold_oid, $gene_count ) = @$inner_aref;
+            last if !$cluster_id;
+    
+            next if ( $taxon_id ne '' && $taxon_id ne $taxon_oid );
+    
+            next if ( $dbClusterIds_ref ne ''
+                && !exists $validateClusters{$cluster_id} );
+    
+            next if ( $clusterId2taxons_href ne ''
+                && !exists $clusterId2taxons_href->{$cluster_id} );
+    
+     
+            # we do not need this since the query is restricting via taxon           
+            #next if ( !exists $validateTaxons{$taxon_oid} );
+            
+            #print "$cluster_id, $taxon_oid, $scaffold_oid, $gene_count<br>\n";
+    
+            $taxons_h{$taxon_oid}       = 1;
+            $bcid2taxon{$cluster_id}    = $taxon_oid;
+            $bcid2scaffold{$cluster_id} = $scaffold_oid;
+            $bcid2geneCnt{$cluster_id}  = $gene_count;
+            #$bcid2pfamCnt{$cluster_id} = $pfam_count;
+        }
     }
+
+    if ( $metaClusterIds_ref && scalar(@$metaClusterIds_ref) > 0 ) {
+
+        #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+        #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+        #to make sure that the genes that starts below the starting range but ends within the range, 
+        #or starts below the ending range but ends beyond the ending range, get in
+        my $sql = qq{
+            select g.taxon, count(distinct g.gene_oid)
+            from scaffold s, gene g
+            where s.scaffold_oid = ?
+            and g.scaffold = s.scaffold_oid
+            and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+            and g.start_coord > 0 
+            and g.end_coord > 0
+            and g.obsolete_flag = 'No'
+            and s.ext_accession is not null
+            group by g.taxon
+        };
+        
+        for my $metaId (@$metaClusterIds_ref) {
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $metaId );
+
+            my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                $start_coord, $end_coord, $start_coord, $end_coord );
+            my ($taxon_oid, $gene_count) = $cur->fetchrow();
+            $cur->finish();
+
+            $taxons_h{$taxon_oid}   = 1;
+            $bcid2taxon{$metaId}    = $taxon_oid;
+            $bcid2scaffold{$metaId} = $scaffold_oid;
+            $bcid2geneCnt{$metaId}  = $gene_count;
+
+            $bcid2startCoord{$metaId} = $start_coord;
+            $bcid2endCoord{$metaId}   = $end_coord;
+            $bcid2evidence{$metaId}   = 'ClusterScout';
+        }
+        
+    }
+    
+    if ( scalar( keys %taxons_h ) < 1) {
+        printEndWorkingDiv();
+        WebUtil::webError("You have no access.");
+    }
+    # bug abc/main.cgi?section=MeshTree&page=ecClusterList&ecId=EC:1.1.4.1
+    # no vaild taxons
 
     my @taxon_oids = keys %taxons_h;
     my ( $taxon2name_href, $taxon_in_file_href, $taxon_db_href, $taxon_oids_str )
@@ -6518,110 +6757,146 @@ sub processBiosyntheticClusters {
 
     print "Getting pfam count per cluster (isolate taxons) ...<br/>\n";
     ## count experimental
-    $sql = qq{
-        select g.cluster_id, count(distinct gpf.pfam_family)
-        from bio_cluster_new g, bio_cluster_features_new bcf,
-             gene_pfam_families gpf
-        where g.cluster_id = bcf.cluster_id
-        and bcf.gene_oid = gpf.gene_oid
-        and g.taxon = gpf.taxon
-        $cluster_ids_clause
-        $taxon_clause
-        $rclause
-        $imgClause
-        group by g.cluster_id
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, @binds );
-    for ( ;; ) {
-        my ( $bc_id, $cnt ) = $cur->fetchrow();
-        last if !$bc_id;
-        $bcid2pfamCnt{$bc_id} = $cnt;
+    if ( $taxon_id || $clusterId2taxons_href || ($dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0) ) {
+        my $sql = qq{
+            select g.cluster_id, count(distinct gpf.pfam_family)
+            from bio_cluster_new g, bio_cluster_features_new bcf,
+                 gene_pfam_families gpf
+            where g.cluster_id = bcf.cluster_id
+            and bcf.gene_oid = gpf.gene_oid
+            and g.taxon = gpf.taxon
+            $db_cluster_ids_clause
+            $taxon_clause
+            $rclause
+            $imgClause
+            group by g.cluster_id
+        };
+        my $cur = execSql( $dbh, $sql, $verbose, @binds );
+        for ( ;; ) {
+            my ( $bc_id, $cnt ) = $cur->fetchrow();
+            last if !$bc_id;
+            $bcid2pfamCnt{$bc_id} = $cnt;
+        }
+        $cur->finish();
     }
-    $cur->finish();
 
-    print "Getting biosynthetic cluster attributes...<br/>\n";
+    if ( $metaClusterIds_ref && scalar(@$metaClusterIds_ref) > 0 ) {
 
-    $sql = qq{
-        select bcd.cluster_id, bcd.genbank_acc, bcd.probability,
-               bcd.evidence, bcd.bc_type, g.start_coord, g.end_coord
-        from bio_cluster_data_new bcd, bio_cluster_new g
-        where bcd.cluster_id = g.cluster_id
-        $cluster_ids_clause
-        $taxon_clause
-        $rclause
-        $imgClause
-    };
+        #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+        #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+        #to make sure that the genes that starts below the starting range but ends within the range, 
+        #or starts below the ending range but ends beyond the ending range, get in
+        my $sql = qq{
+            select g.scaffold, count(distinct gpf.pfam_family)
+            from scaffold s, gene g, gene_pfam_families gpf
+            where s.scaffold_oid = ?
+            and g.scaffold = s.scaffold_oid
+            and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+            and g.start_coord > 0 
+            and g.end_coord > 0
+            and g.obsolete_flag = 'No'
+            and g.gene_oid = gpf.gene_oid
+            and g.taxon = gpf.taxon
+            and s.ext_accession is not null
+            group by g.scaffold
+        };
+        
+        for my $metaId (@$metaClusterIds_ref) {
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $metaId );
+
+            my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                $start_coord, $end_coord, $start_coord, $end_coord );
+            my ($scaffold_oid, $cnt) = $cur->fetchrow();
+            $cur->finish();
+            $bcid2pfamCnt{$metaId} = $cnt;
+        }
+        
+    }
 
     my %bcid2genbankAcc;
     my %bcid2bcType;
-    my %bcid2evidence;
     my %bcid2prob;
-    my %bcid2startCoord;
-    my %bcid2endCoord;
-
-    my $cur = execSql( $dbh, $sql, $verbose, @binds );
-    for ( ;; ) {
-        my ( $bc_id, $acc2, $prob2, $evid2, $bc_type2, $start2, $end2 ) = $cur->fetchrow();
-        last if !$bc_id;
-
-        $bcid2genbankAcc{$bc_id} = $acc2;
-        $bcid2bcType{$bc_id}     = $bc_type2;
-        $bcid2prob{$bc_id}       = sprintf( "%.2f", $prob2 );
-        $bcid2evidence{$bc_id}   = $evid2;
-        $bcid2startCoord{$bc_id} = $start2;
-        $bcid2endCoord{$bc_id}   = $end2;
+    
+    print "Getting biosynthetic cluster attributes...<br/>\n";
+    if ( $taxon_id || $clusterId2taxons_href || ($dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0) ) {
+        my $sql = qq{
+            select bcd.cluster_id, bcd.genbank_acc, bcd.probability,
+                   bcd.evidence, bcd.bc_type, g.start_coord, g.end_coord
+            from bio_cluster_data_new bcd, bio_cluster_new g
+            where bcd.cluster_id = g.cluster_id
+            $db_cluster_ids_clause
+            $taxon_clause
+            $rclause
+            $imgClause
+        };
+    
+        my $cur = execSql( $dbh, $sql, $verbose, @binds );
+        for ( ;; ) {
+            my ( $bc_id, $acc2, $prob2, $evid2, $bc_type2, $start2, $end2 ) = $cur->fetchrow();
+            last if !$bc_id;
+    
+            $bcid2genbankAcc{$bc_id} = $acc2;
+            $bcid2bcType{$bc_id}     = $bc_type2;
+            $bcid2prob{$bc_id}       = sprintf( "%.2f", $prob2 );
+            $bcid2evidence{$bc_id}   = $evid2;
+            $bcid2startCoord{$bc_id} = $start2;
+            $bcid2endCoord{$bc_id}   = $end2;
+        }
+        $cur->finish();
     }
-    $cur->finish();
-
-    print "Getting secondary metabolites ...<br/>\n";
-    $sql = qq{
-        select distinct np.compound_oid, np.cluster_id, np.ncbi_acc, c.compound_name
-        from np_biosynthesis_source np, img_compound c, bio_cluster_new g
-        where np.cluster_id = g.cluster_id
-        and np.compound_oid = c.compound_oid
-        $cluster_ids_clause
-        $taxon_clause
-        $rclause
-        $imgClause
-    };
 
     my %bcid2np;
     my %genbankId2np;
     my %npId2name;
-    my $cur = execSql( $dbh, $sql, $verbose, @binds );
-    for ( ;; ) {
-        my ( $np_id, $bc_id, $genbank_id, $np_name ) = $cur->fetchrow();
-        last if !$np_id;
 
-        if ($bc_id) {
-            my $nps_ref = $bcid2np{$bc_id};
-            if ($nps_ref) {
-                push( @$nps_ref, $np_id );
-            } else {
-                my @nps = ($np_id);
-                $bcid2np{$bc_id} = \@nps;
+    print "Getting secondary metabolites ...<br/>\n";
+    if ( $taxon_id || $clusterId2taxons_href || ($dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0) ) {
+        my $sql = qq{
+            select distinct np.compound_oid, np.cluster_id, np.ncbi_acc, c.compound_name
+            from np_biosynthesis_source np, img_compound c, bio_cluster_new g
+            where np.cluster_id = g.cluster_id
+            and np.compound_oid = c.compound_oid
+            $db_cluster_ids_clause
+            $taxon_clause
+            $rclause
+            $imgClause
+        };
+    
+        my $cur = execSql( $dbh, $sql, $verbose, @binds );
+        for ( ;; ) {
+            my ( $np_id, $bc_id, $genbank_id, $np_name ) = $cur->fetchrow();
+            last if !$np_id;
+    
+            if ($bc_id) {
+                my $nps_ref = $bcid2np{$bc_id};
+                if ($nps_ref) {
+                    push( @$nps_ref, $np_id );
+                } else {
+                    my @nps = ($np_id);
+                    $bcid2np{$bc_id} = \@nps;
+                }
             }
-        }
-        if ($genbank_id) {
-            my $nps_ref = $genbankId2np{$genbank_id};
-            if ($nps_ref) {
-                push( @$nps_ref, $np_id );
-            } else {
-                my @nps = ($np_id);
-                $genbankId2np{$genbank_id} = \@nps;
+            if ($genbank_id) {
+                my $nps_ref = $genbankId2np{$genbank_id};
+                if ($nps_ref) {
+                    push( @$nps_ref, $np_id );
+                } else {
+                    my @nps = ($np_id);
+                    $genbankId2np{$genbank_id} = \@nps;
+                }
             }
+            $npId2name{$np_id} = $np_name;
         }
-        $npId2name{$np_id} = $np_name;
+        $cur->finish();
     }
-    $cur->finish();
 
     #print "Getting IMG Pathways ...<br/>\n";
     #my %bcid2pwids = getBcPathwayList
-    #( $dbh, $cluster_ids_clause, $taxon_clause,
+    #( $dbh, $db_cluster_ids_clause, $taxon_clause,
     #  \@binds, $rclause, $imgClause );
 
     OracleUtil::truncTable( $dbh, "gtt_func_id" )
-	if ( $cluster_ids_clause =~ /gtt_func_id/i );
+	if ( $db_cluster_ids_clause =~ /gtt_func_id/i );
 
     printEndWorkingDiv();
 
@@ -6629,12 +6904,12 @@ sub processBiosyntheticClusters {
         -id     => "processbc_frm",
         -name   => "mainForm",
         -action => "$main_cgi"
-    );
+    ) if (!$frombccart);
 
     print "<h1>$title</h1>" if $title;
 
     my $hideTaxonCol = 0;
-    if ( scalar(@taxon_oids) == 1 ) {
+    if ( scalar(@taxon_oids) == 1 && !$frombccart) {
         my $taxon_oid  = @taxon_oids[0];
         my $taxon_name = $taxon2name_href->{$taxon_oid};
         if ( $taxon_in_file_href->{$taxon_oid} ) {
@@ -6655,7 +6930,7 @@ sub processBiosyntheticClusters {
         "Click on a \"Cluster ID\" to see cluster details.<br/>"
       . "Click on a \"Gene Count\" to see the gene neighborhood "
       . "for the cluster.";
-    printHint($hint);
+    printHint($hint) if (!$frombccart);
     print "<br/>";
 
     print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
@@ -6702,8 +6977,17 @@ sub processBiosyntheticClusters {
         my $tmp = "<input type='checkbox' name='bc_id' value='$cluster_id' />\n";
         $r .= $sd . $tmp . "\t";
 
-        my $url1 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
-        $r .= $cluster_id . $sd . alink( $url1, $cluster_id ) . "\t";
+        my $url1;
+        if ( WebUtil::isInt($cluster_id) ) {
+            $url1 = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+        }
+        else {
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );
+            $url1 = "$main_cgi?section=ScaffoldGraph&page=scaffoldGraph" 
+                . "&scaffold_oid=$scaffold_oid&start_coord=$start_coord&end_coord=$end_coord" 
+                . "&color=pfam";
+        }
+        $r .= $cluster_id . $sd . alink( $url1, $cluster_id ) . "\t";            
 
         my $taxon_oid = $bcid2taxon{$cluster_id};
         if ( !$taxon_oid && $clusterId2taxons_href ) {
@@ -6736,14 +7020,14 @@ sub processBiosyntheticClusters {
                 $t_url = "$main_cgi?section=MetaDetail&taxon_oid=$taxon_oid";
             }
             $s_url =
-                "$main_cgi?section=MetaDetail"
+                "$main_cgi?section=MetaScaffoldDetail"
               . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid"
               . "&scaffold_oid=$scaffold_oid";
         } else {
             if ( !$hideTaxonCol ) {
                 $t_url = "$main_cgi?section=TaxonDetail&taxon_oid=$taxon_oid";
             }
-            $s_url = "$main_cgi?section=ScaffoldCart"
+            $s_url = "$main_cgi?section=ScaffoldDetail"
 		   . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
         }
         if ( !$hideTaxonCol ) {
@@ -6822,20 +7106,20 @@ sub processBiosyntheticClusters {
         $it->addRow($r);
     }
 
-    if ( $cnt > 10 ) {
+    if ( !$frombccart) {
         BcUtil::printTableFooter("processbc");
     }
     $it->printOuterTable(1);
-    BcUtil::printTableFooter("processbc");
+    BcUtil::printTableFooter("processbc") if (!$frombccart);
 
-    print end_form();
-    printStatusLine( "$cnt Biosynthetic Clusters retrieved.", 2 );
+    print end_form() if (!$frombccart);
+    printStatusLine( "$cnt Biosynthetic Clusters retrieved.", 2 ) if (!$frombccart);
 
     return $cnt;
 }
 
 sub getBcPathwayList {
-    my ( $dbh, $cluster_ids_clause, $taxon_clause, $binds_ref, $rclause, $imgClause ) = @_;
+    my ( $dbh, $db_cluster_ids_clause, $taxon_clause, $binds_ref, $rclause, $imgClause ) = @_;
 
     #if ( ! $rclause ) {
     #    $rclause   = WebUtil::urClause('g.taxon');
@@ -6851,7 +7135,7 @@ sub getBcPathwayList {
         where g.cluster_id = bcf.cluster_id
         and bcf.feature_type = 'gene'
         and bcf.gene_oid = gif.gene_oid
-        $cluster_ids_clause
+        $db_cluster_ids_clause
         $taxon_clause
     };
 
@@ -7314,12 +7598,6 @@ sub printSimilarBCGF {
 
     my $clusterClause = " where bcd.cluster_id $cluster_str ";
     my $sql = qq{
-        select bcd.cluster_id, bcd.attribute_type, bcd.attribute_value
-        from bio_cluster_data_new bcd
-        $clusterClause
-    };
-
-    $sql = qq{
         select bcd.cluster_id, bcd.genbank_acc, bcd.probability,
                bcd.evidence, bcd.bc_type
         from bio_cluster_data_new bcd
@@ -7625,6 +7903,7 @@ sub addBCScaffoldsToCart {
 }
 
 sub viewNeighborhoodsForSelectedClusters {
+
     my @bc = param("bc_id");
     if ( scalar(@bc) == 0 ) {
         WebUtil::webError("No clusters have been selected.");
@@ -7635,10 +7914,10 @@ sub viewNeighborhoodsForSelectedClusters {
 
     print "<h1>Neighborhoods for Selected Biosynthetic Clusters</h1>";
     if ($from && $from eq "pairwise_similarity") {
-	my $cluster_id = param("query_cluster");
-	my $clurl = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
-	my $cluster_link = alink( $clurl, $cluster_id );
-	print "<p>Neighborhoods displayed below are selected from a list of similar clusters for BC: $cluster_link </p>";
+    	my $cluster_id = param("query_cluster");
+    	my $clurl = "$section_cgi&page=cluster_detail&cluster_id=$cluster_id";
+    	my $cluster_link = alink( $clurl, $cluster_id );
+    	print "<p>Neighborhoods displayed below are selected from a list of similar clusters for BC: $cluster_link </p>";
     }
 
     my $hint = "Mouse over a gene to see details (once page has loaded).<br>";
@@ -7652,40 +7931,68 @@ sub viewNeighborhoodsForSelectedClusters {
     printHint($hint);
     print "<script src='$top_base_url/js/overlib.js'></script>\n";
 
-    my $dbh = dbLogin();
-    my $bc_str = OracleUtil::getNumberIdsInClause( $dbh, @bc );
-    #my $bc_str = WebUtil::joinSqlQuoted( ",", @bc );
-    my $bc_cnt = scalar @bc;
+    my ( $dbClusterIds_ref, $metaClusterIds_ref );
+    if ( scalar(@bc) > 0 ) {
+        ( $dbClusterIds_ref, $metaClusterIds_ref ) = MerFsUtil::splitDbAndMetaOids(@bc);        
+    }
 
     print "<div style='width: 950px;'>";
-    my $sql = qq{
-        select bc.cluster_id, tx.taxon_oid, tx.in_file
-        from taxon tx, bio_cluster_new bc
-        where bc.cluster_id in ($bc_str)
-        and bc.taxon = tx.taxon_oid
-    };
-    my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ;; ) {
-        my ($cluster_id, $taxon_oid, $in_file) = $cur->fetchrow();
-        last if !$cluster_id;
-        my ($clustergenes, $cluster_h, $scaffold_info)
-	    = getAllInfoForCluster($dbh, $cluster_id, $taxon_oid, $in_file);
 
-        printNeighborhoodPanels
-	    ($dbh, $clustergenes, "", $cluster_h, $scaffold_info,
-	     "", $cluster_id, "", "", "", "pfam", "nolink");
+    my $dbh = dbLogin();    
+    if ( $dbClusterIds_ref && scalar(@$dbClusterIds_ref) > 0 ) {
+        my $bc_str = OracleUtil::getNumberIdsInClause( $dbh, @$dbClusterIds_ref );
+        #my $bc_str = WebUtil::joinSqlQuoted( ",", @bc );
+    
+        my $sql = qq{
+            select bc.cluster_id, tx.taxon_oid, tx.in_file
+            from taxon tx, bio_cluster_new bc
+            where bc.cluster_id in ($bc_str)
+            and bc.taxon = tx.taxon_oid
+        };
+        my $cur = execSql( $dbh, $sql, $verbose );
+        for ( ;; ) {
+            my ($cluster_id, $taxon_oid, $in_file) = $cur->fetchrow();
+            last if !$cluster_id;
+            my ($clustergenes, $cluster_h, $scaffold_info)
+            = getAllInfoForCluster($dbh, $cluster_id, $taxon_oid, $in_file);
+    
+            printNeighborhoodPanels
+            ($dbh, $clustergenes, "", $cluster_h, $scaffold_info,
+             "", $cluster_id, "", "", "", "pfam", "nolink");
+        }
+        $cur->finish();
+        OracleUtil::truncTable( $dbh, "gtt_num_id" )
+            if ( $bc_str =~ /gtt_num_id/i );
     }
-    $cur->finish();
-    OracleUtil::truncTable( $dbh, "gtt_num_id" )
-        if ( $bc_str =~ /gtt_num_id/i );
-    print "</div>";
 
+    if ( $metaClusterIds_ref && scalar(@$metaClusterIds_ref) > 0 ) {
+        my $sql = QueryUtil::getSingleScaffoldTaxonSql();
+        
+        for my $metaId (@$metaClusterIds_ref) {
+            my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $metaId );
+            my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+            my ( $taxon_oid, $in_file, $scf_ext_accession ) = $cur->fetchrow();
+            $cur->finish();
+
+            my ($clustergenes, $cluster_h, $scaffold_info)
+            = getAllInfoForCluster($dbh, $metaId, $taxon_oid, $in_file);
+
+            printNeighborhoodPanels
+            ($dbh, $clustergenes, "", $cluster_h, $scaffold_info,
+             "", $metaId, "", "", "", "pfam", "nolink");
+        }
+        
+    }
+
+    print "</div>";
+    
     print end_form();
-    printStatusLine( $bc_cnt . " cluster neighborhoods.", 2 );
+    printStatusLine( scalar(@bc) . " cluster neighborhoods.", 2 );
 }
 
 sub getAllInfoForCluster {
     my ( $dbh, $cluster_id, $taxon_oid, $in_file ) = @_;
+
     my %scaffold_info;
     my %cluster_h;
     my %cluster_genes;
@@ -7718,7 +8025,7 @@ sub getAllInfoForCluster {
             my $scf_gene_str = $scf2genes{$scf};
             my @scfgenes = split( /\t/, $scf_gene_str );
             my ( $scf_length, $gc, $n_genes )
-		= getScaffoldStats( $taxon_oid, "assembled", $scf );
+        		= getScaffoldStats( $taxon_oid, "assembled", $scf );
 
             my @genes_on_s = MetaUtil::getScaffoldGenes( $taxon_oid, "assembled", $scf );
             my $topology   = "linear";
@@ -7726,7 +8033,7 @@ sub getAllInfoForCluster {
             foreach my $line (@genes_on_s) {
                 my ( $gene_oid, $locus_type, $locus_tag, $gene_display_name,
                      $start_coord, $end_coord, $strand, $seq_id, $source )
-		    = split( /\t/, $line );
+    		    = split( /\t/, $line );
 
                 my $found = 0;
                 CLUSTER: foreach my $g (@scfgenes) {
@@ -7745,36 +8052,63 @@ sub getAllInfoForCluster {
         }
 
     } else {
-        my $id2 = $cluster_id;
-        my $sql = qq{
-            select g.gene_oid, g.start_coord, g.end_coord, g.scaffold
-            from gene g
-            left join bio_cluster_features_new bcg on g.gene_oid = bcg.feature_id
-            where bcg.feature_type = 'gene'
-            and bcg.cluster_id = ?
-        };
-        if ( !$cluster_id ) {
-            $id2 = $taxon_oid;
-            $sql = qq{
+        my $cur;
+        if ( $cluster_id ) {
+            if ( WebUtil::isInt($cluster_id) ) {
+                my $id2 = $cluster_id;
+                my $sql = qq{
+                    select g.gene_oid, g.start_coord, g.end_coord, g.scaffold
+                    from gene g
+                    left join bio_cluster_features_new bcg on g.gene_oid = bcg.feature_id
+                    where bcg.feature_type = 'gene'
+                    and bcg.cluster_id = ?
+                };
+                $cur = execSql( $dbh, $sql, $verbose, $id2 );
+            }
+            else {
+                #use: "and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))"
+                #instead of "and g.start_coord >= ? and g.end_coord <= ?"
+                #to make sure that the genes that starts below the starting range but ends within the range, 
+                #or starts below the ending range but ends beyond the ending range, get in
+                my $sql = qq{
+                    select g.gene_oid, g.start_coord, g.end_coord, g.scaffold
+                    from scaffold s, gene g
+                    where s.scaffold_oid = ?
+                    and g.scaffold = s.scaffold_oid
+                    and ((g.end_coord > ? and g.end_coord <= ?) or (g.start_coord >= ? and g.start_coord < ?))
+                    and g.start_coord > 0 
+                    and g.end_coord > 0
+                    and g.obsolete_flag = 'No'
+                    and s.ext_accession is not null
+                };
+
+                my ( $scaffold_oid, $start_coord, $end_coord ) = split( / /, $cluster_id );    
+                $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid,
+                    $start_coord, $end_coord, $start_coord, $end_coord );
+            }
+        }
+        else {
+            my $id2 = $taxon_oid;
+            my $sql = qq{
                select g.gene_oid, g.start_coord, g.end_coord, g.scaffold
                from gene g
                where g.taxon = ?
             };
+            $cur = execSql( $dbh, $sql, $verbose, $id2 );
         }
-        my $cur = execSql( $dbh, $sql, $verbose, $id2 );
 
         for ( ;; ) {
             my ( $gene_oid, $start_coord, $end_coord, $scaffold ) = $cur->fetchrow();
             last if !$gene_oid;
 
             my ( $scaffold_oid, $scaffold_name, $topology, $scf_length, 
-		 $start_coord, $end_coord, $strand )
-		= getScaffoldInfo( $dbh, $gene_oid );
+        		 $start_coord, $end_coord, $strand )
+        		= getScaffoldInfo( $dbh, $gene_oid );
             next if !$scaffold_oid;
 
             my $item = "$gene_oid\t$start_coord\t$end_coord\t+";
             $scaffold_info{$scaffold_oid}
-	    = $scaffold_name . "\t" . $taxon_oid . "\t" . $topology . "\t" . $scf_length;
+        	    = $scaffold_name . "\t" . $taxon_oid . "\t" . $topology . "\t" . $scf_length;
             push @{ $cluster_h{$scaffold} }, $item;
             $cluster_genes{$gene_oid} = 1;
         }

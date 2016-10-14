@@ -2,14 +2,14 @@
 # TigrBrowser.pm - TIGRfam browser.
 #   --es 03/22/2006
 #
-# $Id: TigrBrowser.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: TigrBrowser.pm 35903 2016-07-20 20:45:44Z klchu $
 ############################################################################
 package TigrBrowser;
 my $section = "TigrBrowser";
 use strict;
 use CGI qw( :standard );
 use Data::Dumper;
-use CachedTable;
+#use CachedTable;
 use GeneDetail;
 use PhyloTreeMgr;
 use WebConfig;
@@ -20,6 +20,7 @@ use MetaUtil;
 use MetaGeneTable;
 use MerFsUtil;
 use WorkspaceUtil;
+use Date::Format;
 
 my $env                  = getEnv();
 my $main_cgi             = $env->{main_cgi};
@@ -337,8 +338,10 @@ sub printTigrRoleDetail {
     my $hasIsolates = scalar (keys %tigr_cnts) > 0 ? 1 : 0;
     my $hasMetagenomes = scalar (keys %m_tigr_cnts) > 0 ? 1 : 0;
 
-    my $ct = new CachedTable( "tigrfam$role_id", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+
+    
+    my $ct = new InnerTable( 1, "tigrfam$$", "tigrfam", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     $ct->addColSpec( "Select" );
     $ct->addColSpec( "TIGRfam ID",    "asc", "left" );
     $ct->addColSpec( "Expanded Name", "asc", "left" );
@@ -477,8 +480,8 @@ sub printTigrRoleDetail2 {
 
     my $baseUrl = "$section_cgi&page=tigrRoleDetail&role_id=$role_id";
 
-    my $ct = new CachedTable( "tigrfam$role_id", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $ct = new InnerTable(1,  "tigrfam$$", "tigrfam", 1 );
+    my $sdDelim = $ct->getSdDelim();
     $ct->addColSpec( "Select" );
     $ct->addColSpec( "TIGRfam ID",    "asc", "left" );
     $ct->addColSpec( "Expanded Name", "asc", "left" );
@@ -629,8 +632,9 @@ sub printTigrRoleGenomeList {
     $baseUrl .= "&role_id=$role_id";
     $baseUrl .= "&tigrfam_id=$tigrfam_id";
 
-    my $ct = new CachedTable( "tigrGenomes$tigrfam_id", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $txTableName = "tigrGenomes";
+    my $ct = new InnerTable( 1, "${txTableName}${tigrfam_id}$$", "$txTableName", 1 );
+    my $sdDelim = $ct->getSdDelim();
     $ct->addColSpec( "Select" );
     $ct->addColSpec( "Domain", "asc", "center", "",
 "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses"
@@ -821,7 +825,6 @@ sub printTigrRoleGenomeGeneList {
     my $show_gene_name = 1;
     my $trunc          = 0;
 
-    require InnerTable;
     my $it = new InnerTable( 1, "tigrGenes$$", "tigrGenes", 1 );
     my $sd = $it->getSdDelim();
 
@@ -1163,112 +1166,29 @@ sub printTigrfamList {
     my $dbh  = dbLogin();
 
     if ($stats) {
-	printStartWorkingDiv();
-	print "<p>Counting isolate genomes ...\n";
-
-	my $rclause   = WebUtil::urClause('gt.taxon_oid');
-	my $imgClause = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 1 );
-
-	my $sql = qq{
-        select /*+ result_cache */ gt.ext_accession, 
-        count(distinct gt.taxon_oid)
-        from mv_taxon_tfam_stat gt
-        where 1 = 1 
-        $rclause
-        $imgClause
-        group by gt.ext_accession
+        my $touchFileTime = WebUtil::fileAtime($env->{tigrfam_data_file});
+        $touchFileTime = Date::Format::time2str( "%a, %b %e %Y %l:%M %P", $touchFileTime );
+        my $tmp = '';
+        if($user_restricted_site) {
+            $tmp = '<br>Counts inculde private data sets.';
+        }
+        print qq{
+          <p>
+          <span style='font-size:12px;font-style:italic;'>
+          The statistics was last updated on: $touchFileTime 
+          $tmp
+          </span>
+          </p>
         };
-
-
-	my $cur = execSql( $dbh, $sql, $verbose );
-	for ( ; ; ) {
-	    my ( $ext_accession, $genome_cnt ) = $cur->fetchrow();
-	    last if !$ext_accession;
-	    $tigr_cnts{$ext_accession} = $genome_cnt;
-	}
-	$cur->finish();
-
-	if ($include_metagenomes) {
-	    print "<p>Counting metagenomes ...\n";
-
-	    my $rclause3   = WebUtil::urClause('gt.taxon_oid');
-	    my $imgClause3 = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 2 );
-	    my $sql       = qq{
-            select /*+ result_cache */ gt.ext_accession, 
-            count(distinct gt.taxon_oid)
-            from mv_taxon_tfam_stat gt
-            where 1 = 1
-            $rclause3
-            $imgClause3
-            group by gt.ext_accession
-        };
-
-	    #print "printTigrfamList metagenome \$sql: $sql<br/>\n";
-
-	    my $cur = execSql( $dbh, $sql, $verbose );
-	    for ( ; ; ) {
-		my ( $ext_accession, $genome_cnt ) = $cur->fetchrow();
-		last if !$ext_accession;
-		$m_tigr_cnts{$ext_accession} = $genome_cnt;
-	    }
-	    $cur->finish();
-
-	    print "<p>Counting MER-FS metagenomes ...\n";
-	    if ( $new_func_count ) {
-		my $rclause2 = WebUtil::urClause('f.taxon_oid');
-		my $imgClause2 = WebUtil::imgClauseNoTaxon('f.taxon_oid', 2);
-
-		$sql = qq{ 
-                select f.func_id, count(distinct f.taxon_oid)
-                from taxon_tigr_count f
-                where f.gene_count > 0
-                $rclause2 
-                $imgClause2
-                group by f.func_id 
-                }; 
-		
-		$cur = execSql( $dbh, $sql, $verbose );
-		for ( ; ; ) {
-		    my ( $tigr_id, $t_cnt ) = $cur->fetchrow();
-		    last if ! $tigr_id; 
-
-		    if ( $m_tigr_cnts{$tigr_id} ) { 
-			$m_tigr_cnts{$tigr_id} += $t_cnt;
-		    } 
-		    else { 
-			$m_tigr_cnts{$tigr_id} = $t_cnt;
-		    } 
-		}
-		$cur->finish();
-		print "<br/>\n";
-	    
-	    } else {
-		$sql  = MerFsUtil::getTaxonsInFileSql();
-		$sql .= " and t.genome_type = 'metagenome' ";
-		$cur  = execSql( $dbh, $sql, $verbose );
-
-		for ( ; ; ) { 
-		    my ($t_oid) = $cur->fetchrow(); 
-		    last if !$t_oid;
-
-		    print ". ";
-
-		    my %funcs = MetaUtil::getTaxonFuncCount( $t_oid, '', 'tigr' );
-		    foreach my $tigr_id ( keys %funcs ) {
-			if ( $m_tigr_cnts{$tigr_id} ) {
-			    $m_tigr_cnts{$tigr_id} += 1;
-			} 
-			else {
-			    $m_tigr_cnts{$tigr_id} = 1;
-			}
-		    }
-		}
-		$cur->finish();
-		print "<br/>\n";
-	    }
-	}
-
-	printEndWorkingDiv();
+        
+        my $rfh = WebUtil::newReadFileHandle($env->{tigrfam_data_file});
+        while ( my $line = $rfh->getline() ) {
+            chomp $line;
+            next if ( $line eq "" );
+            my ( $id, $isocnt, $metacnt ) = split( /\t/, $line );
+            $tigr_cnts{$id} = $isocnt;
+            $m_tigr_cnts{$id} = $metacnt;
+        }
     }
     
     if ( $sid == 312 ) {

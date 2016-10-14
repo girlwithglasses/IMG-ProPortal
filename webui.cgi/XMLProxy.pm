@@ -176,7 +176,7 @@ sub prepare_xml_dispatch {
 			my $file = $base_dir . '/doc/tooltips/' . $filename;
 			if ( -e $file ) {
 				local $@;
-				my $str = eval { IMG::Util::File::slurp($file) };
+				my $str = eval { IMG::Util::File::file_slurp($file) };
 				return $str if ! $@;
 				warn $@;
 			}
@@ -200,7 +200,7 @@ sub prepare_xml_dispatch {
 			$hdrs = { type => 'text/html' };
 			if ( $env->{message_file} && -e $env->{message_file} ) {
 				local $@;
-				my $str = eval { IMG::Util::File::slurp( $env->{message_file} ) };
+				my $str = eval { IMG::Util::File::file_slurp( $env->{message_file} ) };
 				return $str if ! $@;
 				warn $@;
 			}
@@ -211,7 +211,7 @@ sub prepare_xml_dispatch {
 			my $message_file = '/webfs/scratch/img/proPortal/news.txt';
 			if ( $message_file && -e $message_file ) {
 				local $@;
-				my $str = eval { IMG::Util::File::slurp($message_file) };
+				my $str = eval { IMG::Util::File::file_slurp($message_file) };
 				return $str if ! $@;
 				warn $@;
 			}

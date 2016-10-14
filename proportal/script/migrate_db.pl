@@ -1,4 +1,6 @@
 #!/usr/bin/env perl
+## NOT IN USE!
+
 
 use strict;
 use warnings;
@@ -12,7 +14,7 @@ use File::Basename;
 use DBI;
 use DBIC::IMG_Core;
 use DataModel::IMG_Core;
-use Util::DB;
+use IMG::Util::DB;
 use File::Path qw( make_path );
 
 my $base = dirname( $Bin );

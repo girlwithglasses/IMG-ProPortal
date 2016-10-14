@@ -6,7 +6,7 @@
 #  from the statistics page.
 #      --es 09/17/2004
 #
-# $Id: TaxonDetail.pm 34797 2015-11-26 05:08:21Z jinghuahuang $
+# $Id: TaxonDetail.pm 35983 2016-08-09 21:29:10Z aratner $
 ############################################################################
 package TaxonDetail;
 my $section = "TaxonDetail";
@@ -90,7 +90,9 @@ my $scaffold_cart                     = $env->{scaffold_cart};
 my $in_file                           = $env->{in_file};
 #my $in_file                           = $env->{in_file};
 my $img_edu                           = $env->{img_edu};
-my $enable_genbank                    = 1;
+my $enable_download                   = $env->{enable_download};
+
+my $enable_genbank                    = 0;
 my $top_base_url = $env->{top_base_url};
 # Inner table sort delimiter
 my $sortDelim = InnerTable::getSdDelim();
@@ -196,25 +198,37 @@ sub dispatch {
         #        downloadTaxonAltFaaFile();
         WebUtil::webExit(0);
     } elsif ( paramMatch("downloadTaxonAnnotFile") ne "" ) {
-
+        if($enable_download) {
         checkAccess();
         downloadTaxonAnnotFile();
         WebUtil::webExit(0);
+        } else {
+            WebUtil::webErrorHeader("This features requires an account. Please use <a href='https://img.jgi.doe.gov/cgi-bin/mer/main.cgi'>IMG/M ER</a>", 1);
+        }
 
     } elsif ( $img_edu && paramMatch("downloadTaxonGenesFile") ne "" ) {
 
+        if($enable_download) {
         checkAccess();
         downloadTaxonGenesFile();
         WebUtil::webExit(0);
+        } else {
+            WebUtil::webErrorHeader("This features requires an account. Please use <a href='https://img.jgi.doe.gov/cgi-bin/mer/main.cgi'>IMG/M ER</a>", 1);
+        }
 
     } elsif ( paramMatch("downloadTaxonInfoFile") ne "" ) {
 
       # from gneome detail page
       # eg
       # https://img-stage.jgi-psf.org/cgi-bin/er/main.cgi?section=GeneInfoPager&page=viewGeneInformation&taxon_oid=2547132422
+      if($enable_download) {
         checkAccess();
         downloadTaxonInfoFile();
         WebUtil::webExit(0);
+        } else {
+            WebUtil::webErrorHeader("This features requires an account. Please use <a href='https://img.jgi.doe.gov/cgi-bin/mer/main.cgi'>IMG/M ER</a>", 1);
+        }
+
     } elsif ( $page eq "taxonDetail" ) {
 
         HtmlUtil::cgiCacheInitialize($section);
@@ -451,12 +465,12 @@ sub dispatch {
         printSeed();
     } elsif ( $page eq "noseed" ) {
         printNoSeed();
-    } elsif ( $page eq "tcGenes"
-        || paramMatch("tcGenes") ne "" )
-    {
-        printTcGenes();
-    } elsif ( $page eq "tc" ) {
-        printTc();
+#    } elsif ( $page eq "tcGenes"
+#        || paramMatch("tcGenes") ne "" )
+#    {
+#        printTcGenes();
+#    } elsif ( $page eq "tc" ) {
+#        printTc();
     } elsif ( $page eq "koGenes"
         || paramMatch("koGenes") ne "" )
     {
@@ -614,9 +628,9 @@ sub printPlasmidDetails {
     printStatusLine( "$count Loaded.", 2 );
 }
 
-#
+############################################################################
 # plasmid list
-#
+############################################################################
 sub printPlasmidGeneList {
     my $taxon_oid    = param("taxon_oid");
     my $scaffold_oid = param("scaffold_oid");
@@ -667,9 +681,9 @@ sub printPlasmidGeneList {
 
 }
 
-#
+############################################################################
 #  genomes Crispr list
-#
+############################################################################
 sub printCrisprDetails {
     my $taxon_oid = param("taxon_oid");
 
@@ -687,17 +701,17 @@ sub printCrisprDetails {
 
     my $rclause   = WebUtil::urClause('s.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
-    my $sql       = qq{
-    	select s.scaffold_oid, s.scaffold_name ,sr.start_coord, sr.end_coord
-    	from scaffold_repeats sr, scaffold_stats ss, scaffold s
-    	where sr.scaffold_oid = ss.scaffold_oid
-    	and ss.taxon = ?
-    	and sr.type = 'CRISPR'
-    	and s.scaffold_oid = sr.scaffold_oid
+    my $sql = qq{
+        select s.scaffold_oid, s.scaffold_name, tcs.start_coord, tcs.end_coord
+        from taxon_crispr_summary tcs, scaffold s
+        where tcs.taxon_oid = s.taxon
+        and tcs.CONTIG_ID = s.EXT_ACCESSION
+        and s.taxon = ?
         $rclause
         $imgClause
     };
-
+    #print "printCrisprDetails() sql: $sql<br/>\n";
+    
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
 
     my $it = new InnerTable( 1, "Crispr$$", "Crispr", 0 );
@@ -1260,13 +1274,13 @@ sub printTaxonDetail_ImgGold {
         title="BLAST Genome"><span>BLAST Genome</span></a>
     };
     print nbsp(4);
-    if ( $jgi_portal_url ne "" ) {
+    if ($enable_download && $jgi_portal_url ne "" ) {
         print qq{
         <a class="genome-btn download-btn" href="$jgi_portal_url"
         onClick="_gaq.push(['_trackEvent', 'Download Data', 'JGI Portal', '$taxon_oid']);"
         title="Download Data"><span>Download Data</span></a>
-    };
-    }
+        };
+    } else {}
 
     my $nbsp4 = "&nbsp;" x 4;
 
@@ -1449,7 +1463,7 @@ sub printTaxonDetail_ImgGold {
         print "<th class='subhead'>\n";
         print "GOLD ID in IMG Database";
         print "</th>\n";
-        print "</td>\n";
+        #print "</td>\n";
         print "<td class='img'>\n";
         if ( !blankStr($study_gold_id) ) {
             my $url = HtmlUtil::getGoldUrl($study_gold_id);
@@ -1476,7 +1490,7 @@ sub printTaxonDetail_ImgGold {
         print "<th class='subhead'>\n";
         print "GOLD Analysis Project Id";
         print "</th>\n";
-        print "</td>\n";
+        #print "</td>\n";
         print "<td class='img'>\n";
         print alink($url, $analysis_project_id);
         print "</td>\n";
@@ -1824,8 +1838,8 @@ END_MAP
             next if ($colName eq 'p.PI_NAME');
             next if ($colName eq 'p.name');
             next if ($colName eq 'p.DISPLAY_NAME');
-            next if ($colName eq 'p.ITS_SPID');
-            next if ($colName eq 'p.PMO_PROJECT_ID');
+            next if ($colName eq 'p.gold_names');
+            #next if ($colName eq 'p.PMO_PROJECT_ID');
             if (exists $h{$colName}) {
                 my $name = $projectMetadataColumns{$colName};
                 my $value = $h{$colName};
@@ -1956,7 +1970,7 @@ END_MAP
             require ANI;
             print qq{
             </div>
-            <div id='ani_right'style='max-width: 600px'>
+            <div id='ani_right' style='max-width: 600px'>
             };
 	    ANI::printCliqueInfoForGenome($taxon_oid);
             print qq{
@@ -2025,7 +2039,7 @@ END_MAP
 
         my $url = "$main_cgi?section=Artemis"
 	        . "&page=form&taxon_oid=$taxon_oid";
-        print buttonUrl( $url, "Web Artemis", "lgbutton" );
+        print buttonUrl( $url, "Create Artemis Data File", "lgbutton" );
     }
 
     my $prodege = WebUtil::hasProdege($taxon_oid);
@@ -2201,7 +2215,7 @@ END_MAP
         print "</div>\n";
     }
 
-    if ( $genome_type eq 'isolate' ) {
+    if ($enable_download && $genome_type eq 'isolate' ) {
         print WebUtil::getHtmlBookmark ( "geneInfo", "<h2>Export Gene Information</h2>" );
         print "\n";
 
@@ -2232,26 +2246,10 @@ END_MAP
             printExportLinks( $taxon_oid, $is_big_euk, $jgi_portal_url_str );
         }
 
-        #if ($include_metagenomes) {
         printScaffoldSearchForm($taxon_oid);
-
-        #}
     }
 
-    # else {
-    #        # html bookmark 4 - export section
-    #        print WebUtil::getHtmlBookmark( "export", "<h2>Export Genome Data</h2>" );
-    #        #print "\n";
-    #        printProxyGeneExportLinks( $taxon_oid, $is_big_euk );
-##        printHint(   "Right click on link to see menu for "
-##                   . "saving link contents to target file.<br/>\n"
-##                   . "Please be patient during download.<br/>" );
-    #    }
-    ### end download data/export bookmark
-
     printStatusLine( "Loaded.", 2 );
-
-    #$dbh->disconnect();
     print end_form();
 }
 
@@ -2373,11 +2371,11 @@ sub taxonHasBins {
 sub printScaffoldSearchForm {
     my ($taxon_oid) = @_;
 
-    print start_form(
-        -action => "$section_cgi&searchScaffolds=1",
-        -method => "post",
-        -name   => "searchScaffoldForm"
-    );
+#    print start_form(
+#        -action => "$section_cgi&searchScaffolds=1",
+#        -method => "post",
+#        -name   => "searchScaffoldForm"
+#    );
 
     print WebUtil::getHtmlBookmark ( "information", "<h2>Scaffold Search</h2>" );
     print "<p>\n";
@@ -2419,7 +2417,7 @@ sub printScaffoldSearchForm {
     );
     print nbsp(1);
     print reset( -class => "smbutton" );
-    print end_form();
+#    print end_form();
 }
 
 ############################################################################
@@ -4312,7 +4310,7 @@ sub printDbScaffoldGenes {
     my $taxon_name = WebUtil::taxonOid2Name( $dbh, $taxon_oid );
     HtmlUtil::printTaxonName( $taxon_oid, $taxon_name );
 
-    my $scf_url = "$main_cgi?section=ScaffoldCart"
+    my $scf_url = "$main_cgi?section=ScaffoldDetail"
           . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
     print "<p>Scaffold: " . alink($scf_url, $scaffold_oid) . "</p>\n";
 
@@ -6126,14 +6124,15 @@ sub printTaxonCKog {
         and g.taxon = ?
         and g.locus_type = 'CDS'
         and g.obsolete_flag = 'No'
-        and c.${og}_name not like ?
         $rclause
         $imgClause
         group by c.${og}_name, c.${og}_id
         having count(distinct gcg.gene_oid) > 0
         order by lower( c.${og}_name ), c.${og}_id
     };
-    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, 'Uncharacterized%' );
+#         and c.${og}_name not like ?
+#    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, 'Uncharacterized%' );
+        my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
     my $count = 0;
     webLog "Get results " . currDateTime() . "\n" if $verbose >= 1;
 
@@ -8040,23 +8039,7 @@ sub printTaxonTIGRfamCat {
     print "<h1>TIGRfam Roles</h1>\n";
     printStatusLine( "Loading ...", 1 );
 
-    #### PREPARE THE PIECHART ######
-    my $chart = newPieChart();
-    $chart->WIDTH(300);
-    $chart->HEIGHT(300);
-    $chart->INCLUDE_LEGEND("no");
-    $chart->INCLUDE_TOOLTIPS("yes");
-    $chart->INCLUDE_URLS("yes");
-    $chart->ITEM_URL($url2);
-    $chart->INCLUDE_SECTION_URLS("yes");
-    $chart->URL_SECTION_NAME("role");
-    my @chartseries;
-    my @chartcategories;
-    my @roles;
-    my @chartdata;
-    #################################
-
-    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     print "<p>\n";
     print alink( $url, $taxon_name );
     print "<br/><br/>\n";
@@ -8076,9 +8059,9 @@ sub printTaxonTIGRfamCat {
     TabHTML::printTabDiv( "tigrfamcatTab", \@tabIndex, \@tabNames );
 
     print "<div id='tigrfamcattab1'>";
-    my $rclause1   = WebUtil::urClause('g.taxon');
+    my $rclause1 = WebUtil::urClause('g.taxon');
     my $imgClause1 = WebUtil::imgClauseNoTaxon('g.taxon');
-    my $sql        = qq{
+    my $sql = qq{
         select $nvl(tr.main_role, '_'),
               count(distinct gtf.gene_oid)
         from gene g, gene_tigrfams gtf
@@ -8090,113 +8073,90 @@ sub printTaxonTIGRfamCat {
         $rclause1
         $imgClause1
         group by tr.main_role
+        order by tr.main_role
     };
 
-    my $cur                = execSql( $dbh, $sql, $verbose, $taxon_oid );
-    my $count              = 0;
+    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
+    my $count = 0;
     my $unclassified_count = 0;
     my $unclassified_url;
 
+    my @chartcategories;
+    my @roles;
+    my @chartdata;
     my %categoryHash;
-    for ( ; ; ) {
+    my $gene_count_total = 0;
+
+    for ( ;; ) {
         my ( $name, $gene_count ) = $cur->fetchrow();
         last if !$name;
         $count++;
 
         if ( $name eq "_" ) {
-            $name               = "unclassified";
+            $name = "unclassified";
             $unclassified_count = $gene_count;
-            $unclassified_url   = "$section_cgi&page=tigrfamGeneList"
-		                . "&taxon_oid=$taxon_oid"
-				. "&cat=cat" . "&role=_";
+            $unclassified_url = "$section_cgi&page=tigrfamGeneList"
+		              . "&taxon_oid=$taxon_oid"
+		      	      . "&cat=cat" . "&role=_";
             next;
         }
 
-        push @roles,           "$name";
+        push @roles, "$name";
         push @chartcategories, "$name";
-        push @chartdata,       $gene_count;
+        push @chartdata, $gene_count;
+
         $categoryHash{$name} = $gene_count;
+        $gene_count_total += $gene_count;
     }
     $cur->finish();
 
-    push @chartseries, "count";
-    $chart->SERIES_NAME( \@chartseries );
-    $chart->CATEGORY_NAME( \@chartcategories );
-    $chart->URL_SECTION( \@roles );
-    my $datastr = join( ",", @chartdata );
-    my @datas = ($datastr);
-    $chart->DATA( \@datas );
-
     printHint("Click on an <u>icon</u> for a given role to view genes by individual TIGRfam IDs for that role. <br/>Click on the <u>gene count</u> for a given role or on a pie slice to view all the genes for that role.");
 
-    print "<table width=800 border=0>\n";
-    print "<tr>";
-    print "<td valign=top>\n";
-
     # TIGRfam Roles table next to pie chart:
-    my $it = new InnerTable( 1, "tigrfamcategories$$", "tigrfamcategories", 0 );
-    my $sd = $it->getSdDelim();
-    $it->hideAll();
-    $it->addColSpec( "TIGRfam Roles", "asc",  "left",  "", "", "wrap" );
-    $it->addColSpec( "Gene Count",    "desc", "right", "", "", "wrap" );
-
-    my $st = -1;
-    if ( $env->{chart_exe} ne "" ) {
-        $st = generateChart($chart);
-    }
-
     my $idx = 0;
+    my $d3data = "";
     foreach my $category1 (@chartcategories) {
         last if !$category1;
 
-        my $url1 = "$section_cgi&page=cateTigrfamList";
-	$url1 .= "&taxon_oid=$taxon_oid";
-	$url1 .= "&cat=cat&role=$roles[$idx]";
+        my $percent = 100 * $chartdata[$idx] / $gene_count_total;
+        $percent = sprintf( "%.2f", $percent );
 
-	my $url2 = "$section_cgi&page=tigrfamGeneList";
-	$url2 .= "&taxon_oid=$taxon_oid";
-	$url2 .= "&cat=cat&role=$roles[$idx]";
-
-        my $row;
-        if ( $st == 0 ) {
-            my $imageref = "<img src='$tmp_url/" . $chart->FILE_PREFIX
-		. "-color-" . $idx . ".png' border=0>";
-            $row = escHtml($category1) . $sd . alink($url1, $imageref, "", 1);
-            $row .= "&nbsp;&nbsp;";
+        if ($d3data) {
+            $d3data .= ",";
+        } else {
+            $d3data = "[";
         }
-        $row .= escHtml($category1) . "\t";
-        $row .= $chartdata[$idx] . $sd . alink($url2, $chartdata[$idx]) . "\t";
-        $it->addRow($row);
+        $d3data .= "{" .
+            "\"id\": \"" . escHtml($category1) .
+            "\", \"count\": " . $chartdata[$idx] .
+            ", \"name\": \"" . escHtml($category1) .
+            "\", \"urlfragm\": \"" . $roles[$idx] .
+            "\", \"percent\": " .
+            sprintf("%.2f", $percent) . "}";
+
         $idx++;
     }
 
-    # add the unclassified row:
-    my $row = "xunclassified" . $sd . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;unclassified\t";
-    $row .= $unclassified_count . $sd . alink( $unclassified_url, $unclassified_count ) . "\t";
-    $it->addRow($row);
+    if ( $d3data ) {
+    	$d3data .= ",";
+    	$d3data .= "{" .
+    	    "\"id\": \"" . "unclassified" .
+    	    "\", \"count\": " . $unclassified_count .
+    	    ", \"name\": \"" . "unclassified" .
+    	    "\", \"urlfragm\": \"" . "" .
+    	    "\", \"percent\": " . 0 .
+    	    "}";
 
-    $it->{blockDatatableCss} = $blockDatatableCss;
-    $it->printOuterTable(1);
+        $d3data .= "]";
 
-    print "<td valign=top align=left>\n";
-    if ( $env->{chart_exe} ne "" ) {
-        if ( $st == 0 ) {
-            print "<script src='$top_base_url/js/overlib.js'></script>\n";
-            my $FH = newReadFileHandle
-		( $chart->FILEPATH_PREFIX . ".html", "printTIGRfam", 1 );
-            while ( my $s = $FH->getline() ) {
-                print $s;
-            }
-            close($FH);
-            print "<img src='$tmp_url/".$chart->FILE_PREFIX.".png' BORDER=0 ";
-            print " width=" . $chart->WIDTH . " HEIGHT=" . $chart->HEIGHT;
-            print " USEMAP='#" . $chart->FILE_PREFIX . "'>\n";
-        }
+        my $url1 = "$section_cgi&page=cateTigrfamList&taxon_oid=$taxon_oid&cat=cat";
+	my $url2 = "$section_cgi&page=tigrfamGeneList&taxon_oid=$taxon_oid&cat=cat";
+
+    	D3ChartUtil::printPieChart
+            ($d3data, $url1."&role=", $url2."&role=", "", 0, 1,
+             "[\"color\", \"name\", \"count\", \"percent\"]", 500, 400);
     }
-    webLog "Done " . currDateTime() . "\n" if $verbose >= 1;
-    print "<p>\n";
-    print "</td></tr>\n";
-    print "</table>\n";
+
     printStatusLine( "$count TIGRfam roles retrieved.", 2 );
     print "</div>";    # end tigrfamcattab1
 
@@ -8210,19 +8170,16 @@ sub printTaxonTIGRfamCat {
 
     my @columns = param("outputCol");
     if ( $#columns < 0 ) {
-
         # add default columns
         push( @columns, "Total TIGRfam Genes" );
     }
 
-    my ( $seq_status, $domain, $phylum, $ir_class, $ir_order, $family, $genus, $species ) =
-      QueryUtil::fetchSingleTaxonRank( $dbh, $taxon_oid );
-
-    #$dbh->disconnect();
+    my ( $seq_status, $domain, $phylum, $ir_class, $ir_order, $family, $genus, $species )
+	= QueryUtil::fetchSingleTaxonRank( $dbh, $taxon_oid );
 
     print "<h2>Statistics by TIGRfam Roles</h2>\n";
     print "<p>";
-    print "You may add or remove columns from the statistics table " . "using the configuration table below.";
+    print "You may add or remove columns from the statistics table using the configuration table below.";
     print "</p>";
 
     my $it = new StaticInnerTable();
@@ -8805,26 +8762,6 @@ sub printConfigTable {
 ############################################################################
 sub printKeggCategories {
     my $taxon_oid = param("taxon_oid");
-    my $url2      = "$section_cgi&page=keggCategoryGenes&taxon_oid=$taxon_oid";
-
-    InnerTable::loadDatatableCss();
-    my $blockDatatableCss = 1;    # datatable.css should be loaded for the first table on page
-
-    #### PREPARE THE PIECHART ######
-    my $chart = newPieChart();
-    $chart->WIDTH(300);
-    $chart->HEIGHT(300);
-    $chart->INCLUDE_LEGEND("no");
-    $chart->INCLUDE_TOOLTIPS("yes");
-    $chart->INCLUDE_URLS("yes");
-    $chart->ITEM_URL($url2);
-    $chart->INCLUDE_SECTION_URLS("no");
-    $chart->URL_SECTION_NAME("category");
-    my @chartseries;
-    my @chartcategories;
-    my @chartdata;
-    #################################
-
     my $dbh = dbLogin();
 
     # get the total
@@ -8896,90 +8833,57 @@ sub printKeggCategories {
     my $count = 0;
     webLog "Get results " . currDateTime() . "\n" if $verbose >= 1;
 
-    print "<table width=800 border=0>\n";
-    print "<tr>";
-    print "<td valign=top>\n";
-
-    # KEGG categories table next to pie chart:
-    my $it = new InnerTable( 1, "keggcategories$$", "keggcategories", 0 );
-    my $sd = $it->getSdDelim();
-    $it->hideAll();
-    $it->addColSpec( "KEGG Categories", "asc",  "left",  "", "", "wrap" );
-    $it->addColSpec( "Gene Count",      "desc", "right", "", "", "wrap" );
-
     my %categoryHash;
-    for ( ; ; ) {
+    my @chartcategories;
+    my @chartdata;
+    my $gene_count_total = 0;
+
+    for ( ;; ) {
         my ( $category, $gene_count ) = $cur->fetchrow();
         last if !$category;
         $count++;
 
         push @chartcategories, "$category";
         push @chartdata,       $gene_count;
+
         $categoryHash{$category} = $gene_count;
+        $gene_count_total += $gene_count;
     }
     $cur->finish();
 
-    push @chartseries, "count";
-    $chart->SERIES_NAME( \@chartseries );
-    $chart->CATEGORY_NAME( \@chartcategories );
-    my $datastr = join( ",", @chartdata );
-    my @datas = ($datastr);
-    $chart->DATA( \@datas );
-
-    my $st = -1;
-    if ( $env->{chart_exe} ne "" ) {
-        $st = generateChart($chart);
-    }
-
     my $idx = 0;
+    my $d3data = "";
     foreach my $category1 (@chartcategories) {
         last if !$category1;
 
-        my $catUrl = massageToUrl($category1);
-        my $url    = "$section_cgi&page=keggCategoryGenes";
-        $url .= "&category=$catUrl";
-        $url .= "&taxon_oid=$taxon_oid";
+        my $percent = 100 * $chartdata[$idx] / $gene_count_total;
+        $percent = sprintf( "%.2f", $percent );
 
-        my $row;
-        if ( $st == 0 ) {
-            my $imageref = "<img src='$tmp_url/" . $chart->FILE_PREFIX
-		. "-color-" . $idx . ".png' border=0>";
-            if ( lc($category1) eq "unknown" ) {
-                $row = "xunknown";
-            } else {
-                $row = escHtml($category1);
-            }
-            $row .= $sd . alink( $url, $imageref, "", 1 );
-            $row .= "&nbsp;&nbsp;";
+        if ($d3data) {
+            $d3data .= ",";
+        } else {
+            $d3data = "[";
         }
-        $row .= escHtml($category1) . "\t";
-        $row .= $chartdata[$idx] . $sd . alink($url, $chartdata[$idx]) . "\t";
-        $it->addRow($row);
+        $d3data .= "{" .
+            "\"id\": \"" . escHtml($category1) .
+            "\", \"count\": " . $chartdata[$idx] .
+            ", \"name\": \"" . escHtml($category1) .
+            "\", \"urlfragm\": \"" . escHtml($category1) .
+            "\", \"percent\": " .
+            sprintf("%.2f", $percent) . "}";
+
         $idx++;
     }
 
-    $it->{blockDatatableCss} = $blockDatatableCss;
-    $it->printOuterTable(1);
+    if ( $d3data ) {
+        $d3data .= "]";
 
-    print "<td valign=top align=left>\n";
-    if ( $env->{chart_exe} ne "" ) {
-        if ( $st == 0 ) {
-            print "<script src='$top_base_url/js/overlib.js'></script>\n";
-            my $FH = newReadFileHandle
-		($chart->FILEPATH_PREFIX . ".html", "printKeggCategories", 1);
-            while ( my $s = $FH->getline() ) {
-                print $s;
-            }
-            close($FH);
-            print "<img src='$tmp_url/".$chart->FILE_PREFIX.".png' BORDER=0 ";
-            print " width=" . $chart->WIDTH . " HEIGHT=" . $chart->HEIGHT;
-            print " USEMAP='#" . $chart->FILE_PREFIX . "'>\n";
-        }
+        my $url1 = "$section_cgi&page=keggCategoryGenes&taxon_oid=$taxon_oid";
+	D3ChartUtil::printPieChart
+            ($d3data, $url1."&category=", $url1."&category=", "", 0, 1,
+             "[\"color\", \"name\", \"count\", \"percent\"]", 500, 400);
     }
-    webLog "Done " . currDateTime() . "\n" if $verbose >= 1;
-    print "<p>\n";
-    print "</td></tr>\n";
-    print "</table>\n";
+
     printStatusLine( "$count KEGG category retrieved.", 2 );
     print "</div>";    # end keggcattab1
 
@@ -9073,8 +8977,11 @@ sub printKeggCategories {
             }
         }
     }
-    $it->addRow($row);
 
+    InnerTable::loadDatatableCss();
+    my $blockDatatableCss = 1;    # datatable.css should be loaded for the first table on page
+
+    $it->addRow($row);
     $it->{blockDatatableCss} = $blockDatatableCss;
     $it->printOuterTable(1);
 

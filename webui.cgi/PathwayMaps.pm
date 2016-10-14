@@ -1,6 +1,6 @@
 ###########################################################################
 # PathwayMaps.pm - for display of pathway maps
-# $Id: PathwayMaps.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: PathwayMaps.pm 35066 2016-01-20 19:25:21Z klchu $
 ############################################################################
 package PathwayMaps;
 my $section = "PathwayMaps";
@@ -540,7 +540,7 @@ sub showMapForFunctions {
     printHint($hintstr);
     print "<br/>";
 
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
     print "<map name='mapdata'>\n";
     printMapCoordsForFuncs( \@fnRecs, $map_id, $fn_str );
 
@@ -717,30 +717,30 @@ sub showMapForTaxons {
 
     print "<p>";
     print "$nTaxons genomes selected<br/>\n";
-    print "<image src='$base_url/images/blue-square.gif' "
+    print "<img src='$base_url/images/blue-square.gif' "
 	. "width='10' height='10' />\n";
     print "Genes found in all selected genomes";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/yellow-square.gif' "
+    print "<img src='$base_url/images/yellow-square.gif' "
 	. "width='10' height='10' />\n";
-    print "<image src='$base_url/images/peach-square.gif' "
+    print "<img src='$base_url/images/peach-square.gif' "
 	. "width='10' height='10' />\n";
-    print "<image src='$base_url/images/pink-square.gif' "
+    print "<img src='$base_url/images/pink-square.gif' "
 	. "width='10' height='10' />\n";
-    print "<image src='$base_url/images/purple-square.gif' "
+    print "<img src='$base_url/images/purple-square.gif' "
 	. "width='10' height='10' />\n";
     print "Genes found in some of the selected genomes [for up to 25%";
-    print "<image src='$base_url/images/yellow-square.gif' "
+    print "<img src='$base_url/images/yellow-square.gif' "
 	. "width='10' height='10' />\n";
     print ">25%";
-    print "<image src='$base_url/images/peach-square.gif' "
+    print "<img src='$base_url/images/peach-square.gif' "
 	. "width='10' height='10' />\n";
     print ">50%";
-    print "<image src='$base_url/images/pink-square.gif' "
+    print "<img src='$base_url/images/pink-square.gif' "
 	. "width='10' height='10' />\n";
     print ">75%";
-    print "<image src='$base_url/images/purple-square.gif' "
+    print "<img src='$base_url/images/purple-square.gif' "
 	. "width='10' height='10' />\n";
     print "]";
     print "<br/>\n";
@@ -1030,7 +1030,7 @@ sub showMapForTaxons {
     print $wfh $im->png;
     close $wfh;
 
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
     print "<map name='mapdata'>\n";
     printImageMapCoords( \@blueRecs,   $map_id, $taxon_oid_str );
     printImageMapCoords( \@orangeRecs, $map_id, $taxon_oid_str );
@@ -1083,29 +1083,29 @@ sub showMapForSamples {
     if ($clusterFileName eq "") {
 	print "<p>";
 	print "$nSamples samples selected ($sample_oid_str)<br/>\n";
-	print "<image src='$base_url/images/blue-square.gif' "
+	print "<img src='$base_url/images/blue-square.gif' "
 	    . "width='10' height='10' />\n";
 	print "Genes found in all selected samples";
 	print "<br/>\n";
 
-	print "<image src='$base_url/images/yellow-square.gif' "
+	print "<img src='$base_url/images/yellow-square.gif' "
 	    . "width='10' height='10' />\n";
-	print "<image src='$base_url/images/peach-square.gif' "
+	print "<img src='$base_url/images/peach-square.gif' "
 	    . "width='10' height='10' />\n";
-	print "<image src='$base_url/images/pink-square.gif' "
+	print "<img src='$base_url/images/pink-square.gif' "
 	    . "width='10' height='10' />\n";
-	print "<image src='$base_url/images/purple-square.gif' "
+	print "<img src='$base_url/images/purple-square.gif' "
 	    . "width='10' height='10' />\n";
 	print "Genes found in some of the selected samples [for up to 25%";
-	print "<image src='$base_url/images/yellow-square.gif' "
+	print "<img src='$base_url/images/yellow-square.gif' "
 	    . "width='10' height='10' />\n";
 	print ">25%";
-	print "<image src='$base_url/images/peach-square.gif' "
+	print "<img src='$base_url/images/peach-square.gif' "
 	    . "width='10' height='10' />\n";
 	print ">50%";
-	print "<image src='$base_url/images/pink-square.gif' "
+	print "<img src='$base_url/images/pink-square.gif' "
 	    . "width='10' height='10' />\n";	print ">75%";
-	print "<image src='$base_url/images/purple-square.gif' "
+	print "<img src='$base_url/images/purple-square.gif' "
 	    . "width='10' height='10' />\n";
 	print "]";
 	print "<br/>\n";
@@ -1673,7 +1673,7 @@ sub showMapForSamples {
             close $wfh;
 
             print "<br/>";
-            print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+            print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
             print "<map id='mapdata' name='mapdata'>\n";
             my $url_fragm = "&page=keggMapSamples"
                           . "&study=$study&samples=$sample_oid_str";
@@ -1901,10 +1901,10 @@ sub showMapForSamples {
 
 	print qq{
 	    <p>Selecting a gene, finds it on the map and marks it with
-	       <image src='$base_url/images/roi-marker.jpg' /><br/>
+	       <img src='$base_url/images/roi-marker.jpg' /><br/>
 	       Gene expression data coloring is based on
 	       red (high) to green (low) expression.<br/>
-	       <image src='$base_url/images/colorstrip.80.png'
+	       <img src='$base_url/images/colorstrip.80.png'
 	       width='300' height='10' /></p>
 	};
 
@@ -2057,7 +2057,7 @@ sub showMapForSamples {
 
     # position just the image of the pathway in the layer underneath
     print "<div style='position: relative; z-index: 8'>";
-    print "<image src='$tmpPngUrl' border='0' />\n";
+    print "<img src='$tmpPngUrl' border='0' />\n";
 
     # add an overlay of same size as the image for the marker canvas
     print "<div style='display: block; left: 0px; top: 0px; "
@@ -2082,7 +2082,7 @@ sub showMapForSamples {
     print $wfh2 $im2->png;
     close $wfh2;
 
-    print "<image src='$tmpPngUrl2' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl2' usemap='#mapdata' border='0' />\n";
     print "<map id='mapdata' name='mapdata'>\n";
     printMapCoordsForSamples
 	( \@blueRecs,   $map_id, $sample_oid_str, $study, \%ko2genes );
@@ -2365,7 +2365,7 @@ sub showMapForOneSample {
     print "<br/>(red-high to green-low expression)";
     print "</p>";
 
-    print "<image src='$base_url/images/colorstrip.80.png' "
+    print "<img src='$base_url/images/colorstrip.80.png' "
 	. "width='300' height='10' />\n";
 
     my $hintstr .=
@@ -2756,7 +2756,7 @@ sub showMapForOneSample {
     print $wfh $im->png;
     close $wfh;
 
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
     print "<map name='mapdata'>\n";
     printMapCoordsForOneSample
 	( \@allRecs, $map_id, \%roi2gene, $sample_oid, $study );

@@ -1,6 +1,6 @@
 ###########################################################################
 # GenomeCart.pm
-# $Id: GenomeCart.pm 34421 2015-10-05 18:08:05Z klchu $
+# $Id: GenomeCart.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ############################################################################
 package GenomeCart;
 
@@ -225,9 +225,9 @@ sub printTaxonUploadFormContent {
     );
 
     if ($user_restricted_site) {
-	print nbsp(1);
-	my $url = "$main_cgi?section=WorkspaceGenomeSet&page=home";
-	print buttonUrl( $url, "Upload from Workspace", "medbutton" );
+    	print nbsp(1);
+    	my $url = "$main_cgi?section=WorkspaceGenomeSet&page=home";
+    	print WebUtil::buttonUrl( $url, "Upload from Workspace", "medbutton" );
     }
 
     print "</p>\n";
@@ -277,17 +277,16 @@ sub printCartTab2 {
         print "<p>You have 0 genomes to export.</p>\n";
     } else {
         my $name = "_section_${section}_exportGenomes_noHeader";
-#        print submit(
-#                      -name  => $name,
-#                      -value => "Export Genomes",
-#                      -class => "medbutton"
-#        );
+        #print submit(
+        #              -name  => $name,
+        #              -value => "Export Genomes",
+        #              -class => "medbutton"
+        #);
 
-
- my $str = HtmlUtil::trackEvent("Export", $contact_oid, "img button $name");
-print qq{
-   <input class='medbutton' name='$name' type="submit" value="Export Genomes" $str>
- };
+        my $str = HtmlUtil::trackEvent("Export", $contact_oid, "img button $name", "return validateSelection(1);");
+        print qq{
+            <input class='medbutton' name='$name' type="submit" value="Export Genomes" $str>
+        };
 
         WorkspaceUtil::printSaveGenomeToWorkspace('taxon_filter_oid');
     }
@@ -318,6 +317,8 @@ sub printGenomeCart_new {
     # TODO bug can't disconnect here since the gtt_taxon_oid temp is used
     ##$dbh->disconnect();
 
+    printValidationJS();
+
     printCartTab1Start();
 
     # TODO genomelist
@@ -340,6 +341,43 @@ sub printGenomeCart_new {
 
     TabHTML::printTabDivEnd();
 }
+
+############################################################################
+# printValidationJS
+############################################################################
+sub printValidationJS {
+    print qq{
+        <script language='JavaScript' type='text/javascript'>
+        function validateSelection(num) {
+            var startElement = document.getElementById("genomecarttab1");
+            var els = startElement.getElementsByTagName('input');
+
+            var count = 0;
+            for (var i = 0; i < els.length; i++) {
+                var e = els[i];
+
+                if (e.type == "checkbox" &&
+                    e.name == "taxon_filter_oid" &&
+                    e.checked == true) {
+                    count++;
+                }
+            }
+
+            if (count < num) {
+                if (num == 1) {
+                    alert("Please select some genomes");
+                } else {
+                    alert("Please select at least "+num+" genomes");
+                }
+                return false;
+            }
+
+            return true;
+        }
+        </script>
+    };
+}
+
 
 sub printGenomeCart {
     my ( $dbh, @taxon_filter_oid ) = @_;
@@ -1277,7 +1315,8 @@ sub getGenomeOidsFromScaffoldOids {
     my %foundIds;
 
     if ( scalar(@dbOids) > 0 ) {
-        %foundIds = QueryUtil::fetchScaffoldGenomeOidsHash( $dbh, @dbOids );
+        my ($goid_href, $s2goid_href) = QueryUtil::fetchScaffoldGenomeOidsHash( $dbh, @dbOids );
+        %foundIds = %$goid_href;
     }
 
     if ( scalar(@metaOids) > 0 ) {
@@ -1290,6 +1329,7 @@ sub getGenomeOidsFromScaffoldOids {
 
     return \%foundIds;
 }
+
 
 
 1;

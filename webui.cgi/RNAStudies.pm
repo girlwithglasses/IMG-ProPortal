@@ -1,6 +1,6 @@
 ############################################################################
 # RNAStudies.pm - displays rna expression data
-# $Id: RNAStudies.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: RNAStudies.pm 35781 2016-06-15 23:37:33Z aratner $
 ############################################################################
 package RNAStudies;
 my $section = "RNAStudies";
@@ -27,23 +27,22 @@ use QueryUtil;
 
 $| = 1;
 
-my $env           = getEnv();
-my $cgi_dir       = $env->{cgi_dir};
-my $cgi_url       = $env->{cgi_url};
-my $cgi_tmp_dir   = $env->{cgi_tmp_dir};
-my $tmp_url       = $env->{tmp_url};
-my $tmp_dir       = $env->{tmp_dir};
-my $main_cgi      = $env->{main_cgi};
-my $section_cgi   = "$main_cgi?section=RNAStudies";
-my $verbose       = $env->{verbose};
-my $base_url      = $env->{base_url};
-my $top_base_url      = $env->{top_base_url};
-my $cluster_bin   = $env->{cluster_bin};
-my $r_bin         = $env->{r_bin};
-my $R             = "R"; # $env->{r_bin};
-my $nvl           = getNvl();
-my $img_er        = $env->{img_er};
+my $env          = getEnv();
+my $cgi_dir      = $env->{cgi_dir};
+my $cgi_url      = $env->{cgi_url};
+my $cgi_tmp_dir  = $env->{cgi_tmp_dir};
+my $tmp_url      = $env->{tmp_url};
+my $tmp_dir      = $env->{tmp_dir};
+my $main_cgi     = $env->{main_cgi};
+my $section_cgi  = "$main_cgi?section=RNAStudies";
+my $verbose      = $env->{verbose};
+my $base_url     = $env->{base_url};
 my $top_base_url = $env->{top_base_url};
+my $cluster_bin  = $env->{cluster_bin};
+
+my $R = $env->{r_bin};
+my $nvl = getNvl();
+my $img_er = $env->{img_er};
 my $user_restricted_site  = $env->{user_restricted_site};
 my $color_array_file = $env->{large_color_array_file};
 my $include_metagenomes = $env->{include_metagenomes};
@@ -59,21 +58,20 @@ if ( getSessionParam("maxGeneListResults") ne "" ) {
 }
 
 sub getPageTitle {
-        my $pageTitle = "RNASeq Expression Studies";
-        if ( WebUtil::paramMatch("samplePathways") ne "" ) {
-            $pageTitle = "RNASeq Studies: Pathways";
-        } elsif ( WebUtil::paramMatch("describeSamples") ne "" ) {
-            $pageTitle = "RNASeq Studies: Describe";
-        }
-        return $pageTitle;
+    my $pageTitle = "RNASeq Expression Studies";
+    if ( WebUtil::paramMatch("samplePathways") ne "" ) {
+	$pageTitle = "RNASeq Studies: Pathways";
+    } elsif ( WebUtil::paramMatch("describeSamples") ne "" ) {
+	$pageTitle = "RNASeq Studies: Describe";
+    }
+    return $pageTitle;
 }
 
 sub getAppHeaderData {
     my ($self) = @_;
-
     my @a = ();
-    if(param("noHeader") eq "") {
-        @a = ( "RNAStudies", '', '', '', '', "RNAStudies.pdf" );
+    if (param("noHeader") eq "") {
+        @a = ("RNAStudies", '', '', '', '', "RNAStudies.pdf");
     }
     return @a;
 }
@@ -85,9 +83,6 @@ sub dispatch {
     if ($page eq "rnastudies" ||
 	paramMatch("rnastudies") ne "") {
         printOverview();
-    }
-    elsif ($page eq "experiments") {
-	printExperiments();
     }
     elsif (paramMatch("setGeneOutputCol") ne "") {
 	printDataForSample(1);
@@ -680,6 +675,7 @@ sub printSamplesForProposal {
             #print "<br/>> encoded tx: $tx"; ## anna for configuring gbrowse
             $gbrowseUrl .= $tx;
 
+	    #my $jbrowseUrl = "http://img-jbrowse-test.jgi.doe.gov/".$taxon_oid;
             print qq{
             <p><a href=$gbrowseUrl target="_blank">
             <img src="$base_url/images/GBrowse-win.jpg" width="320" height="217" border="0" style="border:2px #99CCFF solid;" alt="View in GBrowse" title="View gene coverage for samples in GBrowse"/>
@@ -1289,6 +1285,7 @@ sub printGeneCartFooter {
 ############################################################################
 sub printDataForSample {
     my ($configureCols) = @_;
+
     my $sample = param("sample");
     my $normalization = param("normalization");
 
@@ -1299,7 +1296,7 @@ sub printDataForSample {
     my $sql = qq{
         select distinct dts.gold_id, gsp.display_name,
                dts.reference_taxon_oid, tx.taxon_display_name,
-               tx.genome_type
+               tx.genome_type, tx.in_file
         from rnaseq_dataset dts, taxon tx,
              gold_sequencing_project\@imgsg_dev gsp
         where dts.dataset_oid = ?
@@ -1307,8 +1304,9 @@ sub printDataForSample {
         and dts.reference_taxon_oid = tx.taxon_oid
         $datasetClause
     };
+
     my $cur = execSql($dbh, $sql, $verbose, $sample);
-    my ($gold_id, $sample_desc, $taxon_oid, $taxon_name, $genome_type)
+    my ($gold_id, $sample_desc, $taxon_oid, $taxon_name, $genome_type, $in_file)
 	= $cur->fetchrow();
     $cur->finish();
 
@@ -1321,7 +1319,7 @@ sub printDataForSample {
     WebUtil::printHeaderWithInfo
 	("RNASeq Expression Data", "", "", "", 0, "RNAStudies.pdf");
 
-    if ($genome_type eq "metagenome") {
+    if ( $in_file eq 'Yes' ) {
         my $url1 = "$main_cgi?section=MetaDetail"
 	    . "&page=geneCountScaffoldDist"
 	    . "&taxon_oid=$taxon_oid&study=$study&sample=$sample";
@@ -1331,10 +1329,6 @@ sub printDataForSample {
 	    . "&page=seqLengthScaffoldDist"
 	    . "&taxon_oid=$taxon_oid&study=$study&sample=$sample";
         print buttonUrl( $url2, "Scaffolds by Sequence Length", "smbutton" );
-
-        #$url = "$main_cgi?section=MetaDetail&page=scaffolds"
-        #. "&taxon_oid=$taxon_oid"
-        #. "&study=$study&sample=@sample_oids[0]";
 
     } else {
         my $url = "$main_cgi?section=TaxonDetail&page=scaffolds"
@@ -1348,69 +1342,68 @@ sub printDataForSample {
     print "<p><u>Sample</u>: $sample_desc";
     if ( !blankStr($gold_id) ) {
         my $url = HtmlUtil::getGoldUrl($gold_id);
-	print " [".alink($url, $gold_id, "_blank")."]";
+    	print " [".alink($url, $gold_id, "_blank")."]";
     }
     print "<br/><u>Genome</u>: " . alink( $url, $taxon_name, "_blank" );
     print "</p>\n";
 
-    printMainForm();
+    my $fixedColIDs;
+    my $tool = $study;
 
-    my $it = new InnerTable( 1, "rnasampledata$$", "rnasampledata", 5 );
-    my $sd = $it->getSdDelim();
-    $it->addColSpec( "Select" );
-    $it->addColSpec( "Gene ID",            "asc",  "right" );
-    $it->addColSpec( "Locus Tag",          "asc",  "left" );
-    $it->addColSpec( "Product Name",       "asc",  "left" );
-    $it->addColSpec( "DNA Seq<br/>Length", "desc", "right" );
-    $it->addColSpec( "Reads<br/>Count",    "desc", "right" );
-    $it->addColSpec( "Normalized Coverage<sup>1</sup><br/> * 10<sup>9</sup>",
-		     "desc", "right" );
-
-    # for gene table configuration:
-    my $fixedColIDs;    # = "gene_oid,locus_tag,desc,dna_seq_length,";
-    my $colIDs = GeneTableConfiguration::readColIdFile($study);
-    #my @fixedCols = WebUtil::processParamValue($fixedColIDs);
-    #foreach my $c (@fixedCols) {
-    #    $colIDs  =~ s/$c//i;
-    #}
-    my @outCols = WebUtil::processParamValue($colIDs);
-    if ( $configureCols ne "" ) {
-        my $outputCol_ref =
-	    GeneTableConfiguration::getOutputCols($fixedColIDs, $study);
-        @outCols = @$outputCol_ref;
-    }
-    GeneTableConfiguration::addColIDs($it, \@outCols);
-
-    my $count = 0;
     my $trunc = 0;
+    my $outputCol_ref0;
+    my $recs_href;
+    my @rowRecs;
 
     # reads and genes are now in sdb
     my ($total_gene_cnt, $total_read_cnt) =
-	MetaUtil::getCountsForRNASeqSample( $sample, $taxon_oid );
+    	MetaUtil::getCountsForRNASeqSample( $sample, $taxon_oid );
 
     if ($total_gene_cnt > 0) { # found
-        my %gene2info =
-	    MetaUtil::getGenesForRNASeqSample( $sample, $taxon_oid );
+        my %gene2info = MetaUtil::getGenesForRNASeqSample( $sample, $taxon_oid );
         my @genes = keys %gene2info;
 
-        my %recs;
-        if ($configureCols ne "" || scalar @outCols > 0) {
-            my $recs_href =
-		GeneTableConfiguration::getOutputColValues
-		($fixedColIDs, $study, \@genes, $taxon_oid, "assembled");
-            %recs = %$recs_href;
+        if ($configureCols) {
+            my @workspace_ids;
+            if ($in_file eq 'Yes') {
+                foreach my $gene (@genes) {
+                    push(@workspace_ids, "$taxon_oid assembled $gene");
+                }   
+            } else {
+                @workspace_ids = @genes;
+            }
+
+            my (
+                 $outColClause,   
+                 $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                 $get_gene_tmh,   $get_gene_sig, 
+                 $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+                 $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+                 $projectMetadataCols_ref, $outputCol_ref,  @rest
+              )
+              = GeneTableConfiguration::getOutputColClauses($fixedColIDs, $tool);
+            $outputCol_ref0 = $outputCol_ref;
+	    
+            ($trunc, $recs_href) = webConfigureGenes(
+                \@workspace_ids, $tool, $fixedColIDs, $outColClause,   
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $get_gene_tmh,   $get_gene_sig,  
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+                $projectMetadataCols_ref, $outputCol_ref
+            );
         }
 
         my %prodNames;
-        if ($genome_type eq "metagenome") {
-            %prodNames =
-		MetaUtil::getGeneProdNamesForTaxon($taxon_oid, "assembled");
+        if ( $in_file eq 'Yes' ) {
+            %prodNames = MetaUtil::getGeneProdNamesForTaxon($taxon_oid, 'assembled');
         } else {
             my $gene2prod = getGeneProductNames($dbh, $taxon_oid, \@genes);
             %prodNames = %$gene2prod;
         }
 
-        foreach my $gene (keys %gene2info) {
+        my $count = 0;
+        foreach my $gene (@genes) {
             last if $trunc;
 
             my $line = $gene2info{$gene};
@@ -1421,7 +1414,7 @@ sub printDataForSample {
             # mediana stdeva exp_id sample_oid
             my ($geneid, $locus_type, $locus_tag, $strand,
                 $scaffold_oid, $dna_seq_length, $reads_cnt, @rest)
-		= split( "\t", $line );
+    		= split( "\t", $line );
             #next if $readsCount == 0;
 
             my $product = $prodNames{$gene};
@@ -1432,44 +1425,17 @@ sub printDataForSample {
                 $coverage = ($reads_cnt / $dna_seq_length / $total_read_cnt);
             }
 
-            my $url1 = "$main_cgi?section=GeneDetail"
-		. "&page=geneDetail&gene_oid=$gene";
-            my $genelink = $gene;
-            if ($genome_type eq "metagenome") {
-                $url1 = "$main_cgi?section=MetaGeneDetail"
-		    . "&page=metaGeneDetail&gene_oid=$gene"
-		    . "&data_type=assembled&taxon_oid=$taxon_oid";
-                $genelink = "$taxon_oid assembled $gene";
+            my $workspace_id;
+            if ( $in_file eq 'Yes' ) {
+                $workspace_id = "$taxon_oid assembled $gene";
+            }
+            else {
+                $workspace_id = $gene;
             }
 
-            my $row = $sd . "<input type='checkbox' "
-		. "name='gene_oid' value='$genelink'/>\t";
-            $row .= $gene . $sd . alink( $url1, $gene, "_blank" ) . "\t";
-            $row .= $locus_tag . "\t";
-            $row .= $product . "\t";
-            $row .= $dna_seq_length . "\t";
-            $row .= $reads_cnt . $sd . "\t";
-            $row .= sprintf( "%.3f", $coverage * 10**9 ) . "\t";
-
-            if ($configureCols ne "" || scalar @outCols > 0) {
-                my $data_type = "assembled";
-                my $gene_oid;
-                if (WebUtil::isInt($gene)) {
-                    $data_type = "database";
-                    $gene_oid  = $gene;
-                } else {
-                    #my @vals = split(/ /, $gene);
-                    $data_type = "assembled";
-                    $gene_oid  = "$taxon_oid assembled $gene";
-                }
-
-                my (@outColVals) = split( "\t", $recs{$gene_oid} );
-                $row = GeneTableConfiguration::addCols2Row
-                    ($gene, $data_type, $taxon_oid, "",    #$scaffold_oid,
-		     $row, $sd, \@outCols, \@outColVals);
-            }
-
-            $it->addRow($row);
+            my $r = $workspace_id."\t".$locus_tag."\t".$product."\t";
+            $r .= $dna_seq_length . "\t" . $reads_cnt . "\t" . $coverage;
+            push(@rowRecs, $r);
 
             $count++;
             if ($count >= $maxGeneListResults) {
@@ -1507,78 +1473,120 @@ sub printDataForSample {
         };
         my $cur = execSql( $dbh, $sql, $verbose, $sample );
 
-        my @rowRecs;
         my @genes;
         for ( ;; ) {
             my ($gene, $gene_name, $locus_tag, $product,
                 $dna_seq_length, $readsCount, $coverage)
-		= $cur->fetchrow();
+    		= $cur->fetchrow();
             last if !$gene;
-            push @genes, $gene;
-            my $r = $gene."\t".$gene_name."\t".$locus_tag."\t".$product."\t";
+            push(@genes, $gene);
+            my $r = $gene."\t".$locus_tag."\t".$product."\t";
             $r .= $dna_seq_length . "\t" . $readsCount . "\t" . $coverage;
-            push @rowRecs, $r;
+            push(@rowRecs, $r);
         }
 
-        my %recs;
-        if ($configureCols ne "" || scalar @outCols > 0) {
-            my $recs_href =
-		GeneTableConfiguration::getOutputColValues
-		($fixedColIDs, $study, \@genes);
-            %recs = %$recs_href;
+        if ( $configureCols ) {
+            my (
+                 $outColClause,   
+                 $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                 $get_gene_tmh,   $get_gene_sig, 
+                 $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+                 $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+                 $projectMetadataCols_ref, $outputCol_ref,  @rest
+              )
+              = GeneTableConfiguration::getOutputColClauses($fixedColIDs, $tool);
+            $outputCol_ref0 = $outputCol_ref;
+
+            ($trunc, $recs_href) = webConfigureGenes(
+                \@genes, $tool, $fixedColIDs, $outColClause,   
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $get_gene_tmh,   $get_gene_sig,  
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+                $projectMetadataCols_ref, $outputCol_ref
+            );
+        }
+    }
+
+    printMainForm();
+
+    my $it = new InnerTable( 1, "rnasampledata$$", "rnasampledata", 5 );
+    my $sd = $it->getSdDelim();
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Gene ID",            "asc",  "right" );
+    $it->addColSpec( "Locus Tag",          "asc",  "left" );
+    $it->addColSpec( "Product Name",       "asc",  "left" );
+    $it->addColSpec( "DNA Seq<br/>Length (Exp)", "desc", "right" );
+    $it->addColSpec( "Reads<br/>Count",    "desc", "right" );
+    $it->addColSpec( "Normalized Coverage<sup>1</sup><br/> * 10<sup>9</sup>",
+		     "desc", "right" );
+
+    # for gene table configuration:
+    my @outCols;
+    if ( $configureCols ) {
+        my $colIDs = GeneTableConfiguration::readColIdFile($tool);
+        @outCols = WebUtil::processParamValue($colIDs);        
+    }
+    GeneTableConfiguration::addColIDs($it, \@outCols);
+
+    my $count = 0;
+    foreach my $item (@rowRecs) {
+        my ($workspace_id, $locus_tag, $product, $dna_seq_length, $reads_cnt, $coverage)
+	    = split( "\t", $item );
+
+        my ($taxon_oid0, $data_type, $gene);
+        my $url1;
+        if ( $in_file eq 'Yes' && $total_gene_cnt > 0 ) {
+            ($taxon_oid0, $data_type, $gene) = split( / /, $workspace_id );
+            $url1 = "$main_cgi?section=MetaGeneDetail"
+               . "&page=metaGeneDetail&gene_oid=$gene"
+               . "&data_type=assembled&taxon_oid=$taxon_oid";
+        } else {
+            $data_type = 'database';
+            $gene = $workspace_id;
+            $url1 = "$main_cgi?section=GeneDetail"
+            . "&page=geneDetail&gene_oid=$gene";
         }
 
-        foreach my $item (@rowRecs) {
-            my ($gene, $gene_name, $locus_tag, $product,
-                $dna_seq_length, $readsCount, $coverage)
-		= split( "\t", $item );
+        $product = "hypothetical protein" if $product eq "";
 
-            my $url1 = "$main_cgi?section=GeneDetail"
-		. "&page=geneDetail&gene_oid=$gene";
-            $product = "hypothetical protein" if $product eq "";
+        my $row = $sd . "<input type='checkbox' "
+           . "name='gene_oid' value='$workspace_id'/>\t";
+        $row .= $gene . $sd . alink( $url1, $gene, "_blank" ) . "\t";
+        $row .= $locus_tag . "\t";
+        $row .= $product . "\t";
+        $row .= $dna_seq_length . "\t";
+        $row .= $reads_cnt . $sd . "\t";
+        $row .= sprintf( "%.3f", $coverage * 10**9 ) . "\t";
 
-            my $row;
-            my $row = $sd . "<input type='checkbox' "
-		. "name='gene_oid' value='$gene'/>\t";
-            $row .= $gene . $sd . alink( $url1, $gene, "_blank" ) . "\t";
-            $row .= $locus_tag . "\t";
-            $row .= $product . "\t";
-            $row .= $dna_seq_length . "\t";
-            $row .= $readsCount . $sd . "\t";
-            $row .= sprintf("%.3f", $coverage * 10**9) . "\t";
-
-            if ($configureCols ne "" || scalar @outCols > 0) {
-                my (@outColVals) = split("\t", $recs{$gene});
+        if ($configureCols || scalar(@outCols) > 0) {
+            if ( $recs_href ) {
+                my ( $workspace_id, $locus_tag, $desc, $desc_orig, $taxon_oid, 
+		     $orgName, $batch_id, $scaffold_oid, @outColVals )
+		    = split( /\t/, $recs_href->{$workspace_id} );
                 $row = GeneTableConfiguration::addCols2Row
-                    ($gene, "database", $taxon_oid, "",    #$scaffold_oid,
-		     $row, $sd, \@outCols, \@outColVals);
+                    ($gene, $data_type, $taxon_oid, "",   
+                     $row, $sd, \@outCols, \@outColVals);
             }
-
-            $it->addRow($row);
-            $count++;
         }
-        $cur->finish();
-    }
 
-    printGeneCartFooter();
+        $it->addRow($row);
+        $count++;
+    }
+    $cur->finish();
+
+    my $jsCall = "javascript:setParamsValueNull();";
+    WebUtil::printGeneCartFooter('', $jsCall) if ($count > 10);        
     $it->printOuterTable(1);
-    printGeneCartFooter();
-
-    my $colIDs = $fixedColIDs;
-    foreach my $col (@outCols) {
-        $colIDs .= "$col,";
-    }
-    GeneTableConfiguration::writeColIdFile($colIDs, $study);
+    WebUtil::printGeneCartFooter('', $jsCall); 
 
     ## Table Configuration
     print hiddenVar("sample", $sample);
     print hiddenVar("normalization", $normalization);
 
-    use GeneTableConfiguration;
-    my %outputColHash = WebUtil::array2Hash(@outCols);
+    my %outputColHash = WebUtil::array2Hash(@$outputCol_ref0);
     my $name = "_section_${section}_setGeneOutputCol";
-    GeneTableConfiguration::appendGeneTableConfiguration
-	(\%outputColHash, $name);
+    GeneTableConfiguration::appendGeneTableConfiguration(\%outputColHash, $name);
 
     print end_form();
     printNotes("samplegenes");
@@ -1591,6 +1599,64 @@ sub printDataForSample {
     } else {
         printStatusLine( "$count genes loaded.", 2 );
     }
+}
+
+############################################################################
+# webConfigureGenes - Configure gene data display.
+############################################################################
+sub webConfigureGenes {    
+    my ( $gene_oids_href, $tool,    $fixedColIDs,        $outColClause,   
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
+         $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
+         $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
+      )
+      = @_;
+
+    my ($trunc, $recs);
+
+    my @gene_oids = @$gene_oids_href;
+    my ($dbOids_ref, $metaOids_ref) = MerFsUtil::splitDbAndMetaOids(@gene_oids);
+    my @dbOids = @$dbOids_ref;
+    my @metaOids = @$metaOids_ref;
+
+    my $dbh = dbLogin();
+    my $colIDs = '';
+
+    if ( scalar(@dbOids) > 0 ) {
+        for my $gene_oid (@dbOids) {
+            my $rec    = $recs->{$gene_oid};
+            my @fields = split( /\t/, $rec );
+        }
+        my $colIDsNew = GeneDataUtil::flushGeneBatch(
+            $fixedColIDs,    $recs, $dbh, 
+            \@dbOids, '', '', $outColClause,   
+            $taxonJoinClause,$scfJoinClause, $ssJoinClause, 
+            $get_gene_tmh,   $get_gene_sig,
+            $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+            $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+            $projectMetadataCols_ref, $outputCol_ref, 1
+        );
+        if ($colIDsNew) {
+            $colIDs = $colIDsNew;
+        }
+    }
+
+    if ( scalar(@metaOids) > 0 ) {
+        foreach my $mOid (@metaOids) {
+            my $rec    = $recs->{$mOid};
+            my @fields = split( /\t/, $rec );
+        }
+        my $colIDsNew = GeneDataUtil::flushMetaGeneBatch
+            ( $fixedColIDs, $recs, $dbh, \@metaOids, '', '', 
+	      $projectMetadataCols_ref, $outputCol_ref, '', 1, 1 );
+        if ($colIDsNew) {
+            $colIDs = $colIDsNew;
+        }
+    }
+
+    GeneTableConfiguration::writeColIdFile($colIDs, $tool);
+    return ($trunc, $recs);
 }
 
 ############################################################################
@@ -4417,7 +4483,6 @@ sub printDescribeSamples {
 
 	if ($st != 0) {
 	    printEndWorkingDiv();
-	    #$dbh->disconnect();
 	    webError( "Problem running R script: $program." );
 	}
 
@@ -6076,24 +6141,6 @@ sub printClusterMap {
     my @allGenes = @$geneIds_ref;
     my $nGenes = @allGenes;
 
-    if ($sortId eq "") {
-	# call the Java TreeView applet:
-	my $archive = "$top_base_url/lib/TreeViewApplet.jar,"
-	             ."$top_base_url/lib/nanoxml-2.2.2.jar,"
-	             ."$top_base_url/lib/Dendrogram.jar";
-	print qq{
-	    <APPLET code="edu/stanford/genetics/treeview/applet/ButtonApplet.class"
-		archive="$archive"
-		width='250' height='50'>
-	    <PARAM name="cdtFile" value="$tmp_url/$cdtFileName.cdt">
-	    <PARAM name="cdtName" value="with Java TreeView">
-	    <PARAM name="jtvFile" value="$tmp_url/$cdtFileName.jtv">
-	    <PARAM name="styleName" value="linked">
-	    <PARAM name="plugins" value="edu.stanford.genetics.treeview.plugin.dendroview.DendrogramFactory">
-	    </APPLET>
-	};
-    }
-
     my $idx = 0;
     my $count = 0;
     print "<table border='0'>\n";
@@ -6581,7 +6628,7 @@ sub generateRDataFile {
     # keep it as example:
     #WebUtil::unsetEnvPath();
     #my $env = "PATH='/bin:/usr/bin'; export PATH";
-    #my $cmd = "$env; $r_bin --slave "
+    #my $cmd = "$env; $R --slave "
     #    . "--args '$inputFile' '$outputFile' < $program > /dev/null";
     #$cmd = each %{{$cmd,0}};  # untaint the variable to make it safe for Perl
     #my $st = system($cmd);

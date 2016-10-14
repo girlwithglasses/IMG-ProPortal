@@ -1,7 +1,7 @@
 ############################################################################
 # ProfileHeatMap.pm - Generate heat map drawing module for profiles.
 #    --es 10/02/2005
-# $Id: ProfileHeatMap.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: ProfileHeatMap.pm 35066 2016-01-20 19:25:21Z klchu $
 ############################################################################
 package ProfileHeatMap;
 my $section = "ProfileHeatMap";
@@ -192,7 +192,7 @@ sub drawSpecial {
     $upmargin = 0 if $upmargin eq "";
 
     my $md0; 
-    $md0 .= "<image src='$image_url' usemap='#$id' border='0' />\n"; 
+    $md0 .= "<img src='$image_url' usemap='#$id' border='0' />\n"; 
     $md0 .= "<map name='$id'>\n";
     my $md2; 
     my @md2Lines; 
@@ -409,7 +409,7 @@ sub draw {
     my $fname       = lastPathTok($image_file);
     my $image_url   = "$tmp_url/$fname";
     my $md0;
-    $md0 .= "<image src='$image_url' usemap='#$id' border='0' />\n";
+    $md0 .= "<img src='$image_url' usemap='#$id' border='0' />\n";
     $md0 .= "<map name='$id'>\n";
 
     my $nVals = @$data_ref;

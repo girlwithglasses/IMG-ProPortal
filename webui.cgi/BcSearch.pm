@@ -1,6 +1,6 @@
 #
 #
-# $Id: BcSearch.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: BcSearch.pm 36239 2016-09-28 04:43:47Z klchu $
 #
 package BcSearch;
 my $section = "BcSearch";
@@ -359,8 +359,8 @@ sub runCompareSearch {
 
     my $outputFilename = $dir . "/tmpO$$";
     my $errorFilename  = $dir . "/tmpE$$";
-    my $rscript        = '/global/common/genepool/usg/languages/R/3.0.1/bin/Rscript';
-    $rscript = 'Rscript';
+    my $rscript        = '/usr/common/usg/languages/R/3.1.2/bin/Rscript';
+    #$rscript = 'Rscript';
     my $cmd = "$rscript $comparisonRFilename >$outputFilename 2>$errorFilename";
 
     print "Running R....<br>\n";

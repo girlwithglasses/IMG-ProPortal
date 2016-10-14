@@ -4,7 +4,7 @@
 #  tandem in different ways.
 #     --es 09/07/2004
 #
-# $Id: ScaffoldPanel.pm 34103 2015-08-24 20:33:28Z klchu $
+# $Id: ScaffoldPanel.pm 35651 2016-05-17 00:17:48Z aratner $
 ############################################################################
 package ScaffoldPanel;
 use strict;
@@ -827,7 +827,7 @@ sub addNxBrackets {
 #   CRISPR = Cluster of regularly interspaced palidromic repeats.
 ############################################################################
 sub addCrispr {
-    my ( $self, $start_coord, $end_coord, $panelStrand, $n_copies ) = @_;
+    my ( $self, $start_coord, $end_coord, $panelStrand, $crispr_no ) = @_;
 
     my $im          = $self->{im};
     my $scale       = $self->{scale};
@@ -843,8 +843,8 @@ sub addCrispr {
     my $x2  = $self->coord2x($end_coord) - $gap;
     my $len = $x2 - $x1;
 
-    #my $n = $n_copies / 5;
-    #my $n = $n_copies / 2;
+    #my $n = $crispr_no / 5;
+    #my $n = $crispr_no / 2;
 
     #$incr = $len / $n if $n > 0;
 
@@ -874,10 +874,7 @@ sub addIntergenic {
     my $gap = 0;
     my $x1  = $self->coord2x($start_coord) + $gap;
     my $x2  = $self->coord2x($end_coord) - $gap;
-#    my $len = $x2 - $x1;
 
-    #my $n = $n_copies / 5;
-    #my $n = $n_copies / 2;
     my $incr = 5;
 
     #$incr = $len / $n if $n > 0;
@@ -1006,9 +1003,9 @@ sub makeMapString {
 	    . " coords='1,0,$len,15' href='$txurl' />";
     }
 
-    for my $r (@$gene_map) {
+    foreach my $r (@$gene_map) {
         my ( $gene_oid, $x1, $y1, $x2, $y2, $label ) =
-          split( /\t/, $r );
+	    split( /\t/, $r );
         $s .= "<area shape='rect' coords='$x1,$y1,$x2,$y2' "
 	    . "style='cursor:pointer; cursor:hand;' ";
 
@@ -1016,33 +1013,33 @@ sub makeMapString {
             # do nothing for now
         } else {
             if ($show_checkbox) {
-	      if ( isInt($gene_oid) ) {
-		  # cannot have a link to gene details in href here
-		  # this depends on whether user wants to link to gene page
-		  # or is using click to slect genes into cart
-		  #$s .= "href='$gene_page_base_url&gene_oid=$gene_oid' ";
-	      }
-	      else {
-		  my @vals = split(/ /, $gene_oid);
-		  $gene_oid = $vals[-1];
-		  $s .= "href='$meta_gene_page_base_url&gene_oid=$gene_oid' ";
-	      }
+		if ( isInt($gene_oid) ) {
+		    # cannot have a link to gene details in href here
+		    # this depends on whether user wants to link to gene page
+		    # or is using click to select genes into cart
+		    #$s .= "href='$gene_page_base_url&gene_oid=$gene_oid' ";
+		    
+		} else {
+		    #my @vals = split(/ /, $gene_oid);
+		    #$gene_oid = $vals[-1];
+		    #$s .= "href='$meta_gene_page_base_url&gene_oid=$gene_oid' ";
+		}
 
             } else {
-              if ( isInt($gene_oid) ) {
-		  $s .= "href='$gene_page_base_url&gene_oid=$gene_oid' ";
-	      } elsif ( $meta_gene_page_base_url ) {
-		  my @vals = split(/ /, $gene_oid);
-		  $gene_oid = $vals[-1];
-		  $s .= "href='$meta_gene_page_base_url&gene_oid=$gene_oid' ";
-	      } else {
-		  $s .= "href='#' ";
-	      }
+		if ( isInt($gene_oid) ) {
+		    $s .= "href='$gene_page_base_url&gene_oid=$gene_oid' ";
+		} elsif ( $meta_gene_page_base_url ) {
+		    my @vals = split(/ /, $gene_oid);
+		    $gene_oid = $vals[-1];
+		    $s .= "href='$meta_gene_page_base_url&gene_oid=$gene_oid' ";
+		} else {
+		    $s .= "href='#' ";
+		}
             }
         }
 
         my $twidth = length($label) * .05;
-        my $x      = "WIDTH=$twidth; FONTSIZE='8px'";
+        my $x = "WIDTH=$twidth; FONTSIZE='8px'";
         $label =~ s/'/ /g;
         my $label_esc = escHtml($label);
 
@@ -1054,23 +1051,33 @@ sub makeMapString {
             $s .= "onMouseOut=\"UnTip();\" ";
         }
         if ($show_checkbox) {
-            $s .= "onclick='addMyGeneCart(\"$gene_oid\")' ";
+	    my $gene_page_url;
+	    if ( isInt($gene_oid) ) {
+		$gene_page_url = "$gene_page_base_url&gene_oid=$gene_oid";
+	    } elsif ( $meta_gene_page_base_url ) {
+		$gene_page_url = "$meta_gene_page_base_url&gene_oid=$gene_oid";
+	    }
+            $s .= "onclick='addMyGeneCart(\"$gene_oid\", \"$gene_page_url\")' ";
         }
         $s .= " />\n";
     }
 
-    for my $r (@$mygene_map) {
+    foreach my $r (@$mygene_map) {
         my ( $gene_oid, $x1, $y1, $x2, $y2, $label ) =
-          split( /\t/, $r );
+	    split( /\t/, $r );
 
         $s .= "<area shape='rect' coords='$x1,$y1,$x2,$y2' ";
         if ( isInt($gene_oid) ) {
             $s .= "href='$mygene_page_base_url&gene_oid=$gene_oid' ";
+	} elsif ( $meta_gene_page_base_url ) {
+	    my @vals = split(/ /, $gene_oid);
+	    $gene_oid = $vals[-1];
+	    $s .= "href='$meta_gene_page_base_url&gene_oid=$gene_oid' ";
         } else {
             $s .= "href='#' ";
         }
         my $twidth = length($label) * .05;
-        my $x      = "WIDTH=$twidth; FONTSIZE='8px'";
+        my $x = "WIDTH=$twidth; FONTSIZE='8px'";
         $label =~ s/'/ /g;
         my $label_esc = escHtml($label);
         if ( $uselib eq "overlib" ) {
@@ -1083,9 +1090,8 @@ sub makeMapString {
         $s .= " />\n";
     }
 
-    for my $r (@$intergenic_map) {
-        my ( $scaffold_oid, $start_coord, $end_coord, $x1, $x2, $y1, $y2,
-             $label )
+    foreach my $r (@$intergenic_map) {
+        my ( $scaffold_oid, $start_coord, $end_coord, $x1, $x2, $y1, $y2, $label )
           = split( /\t/, $r );
         $s .= "<area shape='rect' coords='$x1,$y1,$x2,$y2' ";
 

@@ -1,6 +1,6 @@
 ############################################################################
 # Methylomics.pm - displays DNA methylation data
-# $Id: Methylomics.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: Methylomics.pm 35640 2016-05-13 01:05:18Z aratner $
 ############################################################################
 package Methylomics;
 my $section = "Methylomics";
@@ -18,20 +18,21 @@ use GD;
 
 $| = 1;
 
-my $env         = getEnv();
-my $cgi_dir     = $env->{ cgi_dir }; 
-my $cgi_url     = $env->{ cgi_url }; 
-my $cgi_tmp_dir = $env->{ cgi_tmp_dir }; 
-my $tmp_url     = $env->{ tmp_url };
-my $tmp_dir     = $env->{ tmp_dir };
-my $main_cgi    = $env->{ main_cgi };
-my $section_cgi = "$main_cgi?section=Methylomics";
-my $verbose     = $env->{ verbose };
-my $base_url    = $env->{ base_url };
-my $R           = $env->{ r_bin };
-my $nvl         = getNvl();
-my $top_base_url = $env->{top_base_url};
-my $user_restricted_site  = $env->{ user_restricted_site };
+my $env          = getEnv();
+my $cgi_dir      = $env->{ cgi_dir }; 
+my $cgi_url      = $env->{ cgi_url }; 
+my $cgi_tmp_dir  = $env->{ cgi_tmp_dir }; 
+my $tmp_url      = $env->{ tmp_url };
+my $tmp_dir      = $env->{ tmp_dir };
+my $main_cgi     = $env->{ main_cgi };
+my $section_cgi  = "$main_cgi?section=Methylomics";
+my $verbose      = $env->{ verbose };
+my $base_url     = $env->{ base_url };
+my $top_base_url = $env->{ top_base_url };
+
+my $R = $env->{ r_bin };
+my $nvl = getNvl();
+my $user_restricted_site = $env->{ user_restricted_site };
 my $batch_size = 40;
 my $YUI = $env->{yui_dir_28};
 
@@ -47,7 +48,6 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my ($self) = @_;
-
     my @a = ( "Methylomics", '', '', '', '', "Methylomics.pdf" );
     return @a;
 }
@@ -121,8 +121,7 @@ sub printOverview {
     } 
 
     my $sql = qq{ 
-        select distinct 
-               e.exp_oid,
+        select e.exp_oid,
                e.exp_name,
                $nvl(e.project_name, 'unknown'), 
                $nvl(e.chemistry_type, ''),
@@ -241,9 +240,8 @@ sub printOverview {
     my $exp_str = join(",", @exps);
 
     my $sql = qq{
-        select distinct
-               e.chemistry_type, mm.motif_string,
-               count(distinct mm.modification_oid)
+        select e.chemistry_type, mm.motif_string,
+               count(mm.modification_oid)
           from meth_experiment e, meth_modification mm
          where e.exp_oid = mm.experiment
            and e.chemistry_type is not NULL
@@ -932,7 +930,7 @@ sub printMethModificationChart {
         my ($sample, $motif_str, $fraction) = $cur->fetchrow();
         last if !$sample;
 
-        if ( exists $recs{$sample} ) {
+        if (exists $recs{$sample}) {
             push @{$recs{$sample}}, $motif_str."\t".$fraction;
         } else {
             $recs{$sample} = [ $motif_str."\t".$fraction ];
@@ -1004,7 +1002,7 @@ sub printMethModificationChart {
     close $wfh;
 
     WebUtil::unsetEnvPath();
-    my $cmd = "R --slave < $tmpRcmdFile > /dev/null";
+    my $cmd = "$R --slave < $tmpRcmdFile > /dev/null";
     my $st = system( $cmd );
     WebUtil::resetEnvPath();
 
@@ -1051,13 +1049,13 @@ sub printHeatMap {
     $row_idx = 0 if ($row_idx eq "");
     $col_idx = 0 if ($col_idx eq "");
 
-    my $expids_ref    = $state->{expids};
-    my $fnids_ref     = $state->{fnids};
-    my $fntype        = $state->{fntype};
-    my $fnrecs_ref    = $state->{fnrecs};
-    my $rowDict_ref   = $state->{rowDict};
-    my $colDict_ref   = $state->{colDict};
-    my $stateFile     = $state->{stateFile};
+    my $expids_ref  = $state->{expids};
+    my $fnids_ref   = $state->{fnids};
+    my $fntype      = $state->{fntype};
+    my $fnrecs_ref  = $state->{fnrecs};
+    my $rowDict_ref = $state->{rowDict};
+    my $colDict_ref = $state->{colDict};
+    my $stateFile   = $state->{stateFile};
 
     my $n_fns = scalar @$fnids_ref;
     my $n_exps = scalar @$expids_ref;
@@ -1090,14 +1088,14 @@ sub printHeatMap {
     use Storable;
     my $stateFile2 = "methexp_$fntype"."_${row_idx}_${col_idx}_heatMap$$";
     my $state2 = {
-	expids       => $expids_ref,
-	fnids        => \@myfns,
-	fntype       => $fntype,
-	table        => \%table,
-	normTable    => \%normTable,
-	rowDict      => $rowDict_ref,
-	colDict      => $colDict_ref,
-	stateFile    => $stateFile2,
+	expids    => $expids_ref,
+	fnids     => \@myfns,
+	fntype    => $fntype,
+	table     => \%table,
+	normTable => \%normTable,
+	rowDict   => $rowDict_ref,
+	colDict   => $colDict_ref,
+	stateFile => $stateFile2,
     };
     Storable::store( $state2, checkTmpPath("$cgi_tmp_dir/$stateFile2") );
     
@@ -1241,9 +1239,15 @@ sub printStatsByChemGraphicalView {
     my $nmotifs = scalar @unique_motifs;
 
     my @datas;
+
+    my $categories = "\"categories\": [".WebUtil::joinSqlQuoted(",", @unique_motifs)."]";
+    my $series = "\"series\": [";
+
     foreach my $ch (@chemistry_types) {
         my $chem_recs = $recs{ $ch };
         my $datastr;
+	my $item = "{ \"name\": \"".$ch."\", \"counts\": [";
+
         OUTER: foreach my $m (@unique_motifs) {
             my $cnt = 0;
 	    foreach my $r (@$chem_recs) {
@@ -1251,92 +1255,40 @@ sub printStatsByChemGraphicalView {
 		if ($m eq $motif_str) {
 		    $cnt = log($num_mods)/log(2); # use log2 ?
 		    #$cnt = $num_mods;
+
+		    $cnt = sprintf("%.3f", $cnt);
 		    $datastr .= $cnt.",";
+		    $item .= $num_mods.",";
 		    next OUTER;
 		}
 	    }
 	    $datastr .= $cnt.",";
+	    $item .= $cnt.",";
         }
         chop $datastr;
         push @datas, $datastr;
+
+	chop $item;
+	$item .= "]}";
+	$series .= $item . ",";
     }
 
-    my $width = $nmotifs * 12 * (scalar @chemistry_types);
-    my $table_width = $width + 100;
+    chop $series;
+    $series .= " ]";
+    my $d3data = "{".$categories.",".$series."}";
 
-    # PREPARE THE BAR CHART
-    #my $chart = newStackedChart();
-    use ChartUtil;
-    my $chart = ChartUtil::newBarChart();
-    $chart->WIDTH($width);
-    $chart->HEIGHT(700);
-    $chart->DOMAIN_AXIS_LABEL("Motif String");
-    $chart->RANGE_AXIS_LABEL("Log2(Motif Count)");
-    $chart->INCLUDE_TOOLTIPS("yes");
-    $chart->INCLUDE_LEGEND("yes");
-    $chart->ROTATE_DOMAIN_AXIS_LABELS("yes");
-    $chart->INCLUDE_URLS("no");
-    #$chart->DO_LOG("2");
-    $chart->SERIES_NAME( \@chemistry_types );
-    $chart->CATEGORY_NAME( \@unique_motifs );
-    $chart->DATA( \@datas );
+    my $svg_id = "chart";
+    print qq{
+      <link rel="stylesheet" type="text/css"
+            href="$top_base_url/css/d3barchart.css" />
 
-    my $st = -1;
-    if ( $env->{chart_exe} ne "" ) {
-        $st = generateChart($chart);
-    }
-
-    print "<table width=$table_width border=0>\n";
-    print "<tr>";
-    print "<td padding=0 valign=top align=left>\n";
-    ###########################
-    if ( $env->{chart_exe} ne "" ) {
-        if ( $st == 0 ) {
-            print "<script src='$top_base_url/js/overlib.js'></script>\n";
-            my $FH = newReadFileHandle( $chart->FILEPATH_PREFIX . ".html",
-                                        "statsByChemGraphical", 1 );
-            while ( my $s = $FH->getline() ) {
-                print $s;
-            }
-            close($FH);
-            print "<img src='$tmp_url/"
-              . $chart->FILE_PREFIX
-              . ".png' BORDER=0 ";
-            print " width=" . $chart->WIDTH . " HEIGHT=" . $chart->HEIGHT;
-            print " USEMAP='#" . $chart->FILE_PREFIX . "'>\n";
-        }
-    }
-    ###########################
-    print "</td>\n";
-    print "<td>\n";
-    print "<table border='0'>\n";
-
-    my $idx = 0;
-    foreach my $series1 (@chemistry_types) {
-        last if !$series1;
-
-        print "<tr>\n";
-        print
-          "<td align=left style='font-family: Calibri, Arial, Helvetica; "
-	  . "white-space: nowrap;'>\n";
-        if ( $st == 0 ) {
-            print "<img src='$tmp_url/"
-              . $chart->FILE_PREFIX
-              . "-color-"
-              . $idx
-              . ".png' border=0>";
-            print "&nbsp;&nbsp;";
-        }
-
-        print $series1;
-        print "</td>\n";
-        print "</tr>\n";
-        $idx++;
-    }
-
-    print "</table>\n";
-    print "</td></tr>\n";
-    print "</table>\n";
+      <script src="$top_base_url/js/d3.min.js"></script>
+      <svg id="$svg_id"></svg>
+      <script src="$top_base_url/js/d3barchart.js"></script>
+      <script>
+          window.onload = drawCategories("$svg_id", "", $d3data, "horizontal", 1, 1);
+      </script>
+    };
 }
 
 ############################################################################ 
@@ -1496,7 +1448,7 @@ sub printStudiesForGenome {
     my $rclause = urClause("tx");
     my $imgClause = WebUtil::imgClause('tx');
     my $sql = qq{ 
-        select distinct e.exp_oid, 
+        select e.exp_oid, 
                e.exp_name, count(s.sample_oid)
         from meth_experiment e, 
              meth_sample s, taxon tx 
@@ -1564,7 +1516,7 @@ sub printSelectOneSample {
     my $sql = qq{
         select s.IMG_taxon_oid, s.sample_oid,
                $nvl(s.description, 'unknown'),
-               count(distinct mm.modification_oid)
+               count(mm.modification_oid)
           from meth_sample s, meth_modification mm
          where s.IMG_taxon_oid = ?
            and s.sample_oid = mm.sample
@@ -1746,7 +1698,7 @@ sub printExperiments {
     my $sql = qq{
 	select s.IMG_taxon_oid, s.sample_oid, 
                $nvl(s.description, 'unknown'),
-               count(distinct m.motif_summ_oid)
+               count(m.motif_summ_oid)
 	from meth_sample s
         left join meth_motif_summary m 
         on s.sample_oid = m.sample and s.experiment = m.experiment

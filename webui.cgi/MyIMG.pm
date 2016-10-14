@@ -1,13 +1,13 @@
 ###########################################################################
 # MyImg.pm - Functions supporting MyIMG utilty.
 #    --es 04/16/2005
-# $Id: MyIMG.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: MyIMG.pm 36056 2016-08-25 18:03:20Z klchu $
 ############################################################################
 package MyIMG;
 my $section = "MyIMG";
 
 use strict;
-use CGI qw( :standard );
+use CGI qw( :standard :close_upload_files);
 use DBI;
 use Time::localtime;
 use Digest::MD5 qw( md5_base64 );
@@ -33,6 +33,7 @@ my $cgi_tmp_dir          = $env->{cgi_tmp_dir};
 my $base_dir             = $env->{base_dir};
 my $base_url             = $env->{base_url};
 my $img_internal         = $env->{img_internal};
+my $enable_workspace     = $env->{enable_workspace};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $include_plasmids     = $env->{include_plasmids};
 my $show_myimg_login     = $env->{show_myimg_login};
@@ -46,6 +47,7 @@ my $show_private         = $env->{show_private};
 my $annot_site_url       = $env->{annot_site_url};
 my $myimg_job            = $env->{myimg_job};
 my $cgi_cache_enable     = $env->{cgi_cache_enable};
+my $virus                = $env->{virus};
 my $rdbms                = WebUtil::getRdbms();
 my $imgAppTerm           = "IMG";
 my $oracle_config        = $env->{oracle_config};
@@ -59,7 +61,7 @@ my $max_gene_annotation_batch = 10000;
 my $max_upload_line_count = 10000;
 
 my $tabDelimErrMsg = qq{
-  (Also, please ensure that your file type is a
+  (Also, please make sure that your file type is a
    tab delimited file.)
 };
 
@@ -71,6 +73,14 @@ my $config_fname = WebUtil::lastPathTok($oracle_config);
 my ( $web0, $ora_db_user, $config0 ) = split( /\./, $config_fname );
 
 my $contact_oid = WebUtil::getContactOid();
+
+# windows 7 fix?
+# try this for CGI docs - ken
+#    1) use CGI qw(:close_upload_files)
+#    2) $CGI::close_upload_files(1);
+my $cgi = WebUtil::getCgi();
+$cgi->close_upload_files(1);
+
 
 sub getPageTitle {
     return 'My IMG';
@@ -760,6 +770,9 @@ sub printLoggedInPage {
         </p>\n
     };
 
+    printHint("Scroll right to find a 'book icon' to lead to the User Guide. For more information on MyIMG and Workspace, please refer to: " .
+	      alink("https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-016-2629-y",
+		    "BMC Genomics doi:10.1186/s12864-016-2629-y"));
     #$dbh->disconnect();
 
     ImgGroup::showAllGroups();
@@ -1772,6 +1785,7 @@ sub uploadAnnotationFile {
 
     my $fh = upload("uploadFile");
     if ( $fh && cgi_error() ) {
+        close $fh;
         WebUtil::webError( header( -status => cgi_error() ) );
     }
 
@@ -1785,6 +1799,7 @@ sub uploadAnnotationFile {
         if ( $file_size > $max_upload_size ) {
             WebUtil::webError("Maximum file size $max_upload_size bytes exceeded.");
             close $wfh;
+            close $fh;
             wunlink($tmpFile);
             return 0;
         }
@@ -2608,8 +2623,24 @@ sub printViewOneTaxonGroupAnnot {
     $it->addColSpec( "Annotated Gene Symbol", "char asc",  "left", "", "", "wrap" );
     $it->addColSpec( "Last Modified Date",    "char desc", "left", "", "", "wrap" );
 
-    my $grp      = $my_groups[0];
-    my $grp_cond = " and c.img_group = $grp";
+    my $grp_list = "";
+    for my $grp1 ( @my_groups ) {
+	my ($id1, $name1) = split(/\t/, $grp1);
+	if ( $grp_list ) {
+	    $grp_list .= ", " . $id1;
+	}
+	else {
+	    $grp_list = "(" . $id1;
+	}
+    }
+    if ( $grp_list ) {
+	$grp_list .= ")";
+    }
+    else {
+	$grp_list = "(0)";
+    }
+
+    my $grp_cond = " and c.contact_oid in (select p.contact_oid from contact_img_groups p where p.img_group in $grp_list ) ";
 
     my $dbh        = WebUtil::dbLogin();
     my $sortClause = " order by g.gene_oid, c.username";
@@ -2617,21 +2648,21 @@ sub printViewOneTaxonGroupAnnot {
     my $imgClause  = WebUtil::imgClauseNoTaxon('g.taxon');
     my $sql_part1  = qq{
 		select c.username, g.gene_oid,
-		    ann.product_name, ann.ec_number,
-		    ann.pubmed_id, ann.inference, ann.is_pseudogene,
-		    ann.notes, ann.gene_symbol, ann.obsolete_flag,
-		    g.product_name,
+	    ann.product_name, ann.ec_number,
+	    ann.pubmed_id, ann.inference, ann.is_pseudogene,
+	    ann.notes, ann.gene_symbol, ann.obsolete_flag,
+	    g.product_name,
 	};
     my $sql_part2 = qq{
 		from gene g, gene_myimg_functions ann, contact c
 		where g.gene_oid = ann.gene_oid
-		    and g.taxon = ?
-		    and g.obsolete_flag = 'No'
-		    and ann.modified_by = c.contact_oid
-                    $rclause
-                    $imgClause
-		    $grp_cond
-		    $user_cond
+	    and g.taxon = ?
+	    and g.obsolete_flag = 'No'
+	    and ann.modified_by = c.contact_oid
+        $rclause
+        $imgClause
+	    $grp_cond
+	    $user_cond
 		$sortClause
 	};
 
@@ -3674,8 +3705,8 @@ sub printGroupUserAnnotationForm {
         WebUtil::webError("You are not logged in.");
     }
 
-    my $grp = DataEntryUtil::db_getImgGroup($contact_oid);
-    if ( !$grp || blankStr($grp) || $grp == 0 ) {
+    my @my_groups = DataEntryUtil::db_getImgGroups($contact_oid);
+    if ( scalar(@my_groups) == 0 ) {
         WebUtil::webError("You do not belong to any IMG group.");
     }
 
@@ -3683,9 +3714,33 @@ sub printGroupUserAnnotationForm {
     my $taxon_cond = "";
 
     my $user_id  = param('user_id');
-    my $user_grp = "";
+    my @user_groups = ();
     if ( $user_id && isInt($user_id) ) {
-        $user_grp = DataEntryUtil::db_getImgGroup($user_id);
+	@user_groups = DataEntryUtil::db_getImgGroups($user_id);
+    }
+
+    ## check whether they are in the same group
+    my $same_group = 0;
+    my $grp_list = "";
+    for my $grp1 ( @my_groups ) {
+	my ($id1, $name1) = split(/\t/, $grp1);
+	if ( $grp_list ) {
+	    $grp_list .= ", " . $id1;
+	}
+	else {
+	    $grp_list = "(" . $id1;
+	}
+	for my $grp2 ( @user_groups ) {
+	    if ( $grp1 eq $grp2 ) {
+		$same_group = 1;
+	    }
+	}
+    }
+    if ( $grp_list ) {
+	$grp_list .= ")";
+    }
+    else {
+	$grp_list = "(0)";
     }
 
     my $user_cond = "";
@@ -3695,7 +3750,7 @@ sub printGroupUserAnnotationForm {
         my $taxon_name = DataEntryUtil::db_findVal( $dbh, 'TAXON', 'taxon_oid', $taxon_oid, 'taxon_name', "" );
 
         if ( !blankStr($user_id) ) {
-            if ( $grp ne $user_grp ) {
+            if ( ! $same_group ) {
                 WebUtil::webError("You cannot user IMG annotation by this user.");
             }
 
@@ -3807,7 +3862,7 @@ sub printGroupUserAnnotationForm {
     }
 
     # user -> gene cnt
-    my $grp_cond = " and c.img_group = $grp ";
+    my $grp_cond = " and c.contact_oid in (select p.contact_oid from contact_img_groups p where p.img_group in $grp_list ) ";
 
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
     my $sql       = qq{
@@ -3823,8 +3878,6 @@ sub printGroupUserAnnotationForm {
 		group by ann.modified_by
 		having count(*) > 0
 	};
-
-    print "<p>SQL: $sql</p>\n";
 
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ; ; ) {
@@ -5623,6 +5676,10 @@ sub getSessionParamHash {
     my $topHomologHideMetag       = getSessionParam("topHomologHideMetag");
 
     $hideViruses               = "Yes" if $hideViruses               eq "";
+    if($virus) {
+        $hideViruses = 'No';
+    }
+    
     $hidePlasmids              = "Yes" if $hidePlasmids              eq "";
     $hideGFragment             = "Yes" if $hideGFragment             eq "";
     $hideZeroStats             = "Yes" if $hideZeroStats             eq "";
@@ -5665,6 +5722,7 @@ sub getSessionParamHash {
 # printPreferences - Show preferences form.
 ############################################################################
 sub printPreferences {
+    
     my $maxOrthologGroups         = getSessionParam("maxOrthologGroups");
     my $maxParalogGroups          = getSessionParam("maxParalogGroups");
     my $maxGeneListResults        = getSessionParam("maxGeneListResults");
@@ -5692,7 +5750,12 @@ sub printPreferences {
     $maxProfileRows            = 1000  if $maxProfileRows            eq "";
     $minHomologPercentIdentity = 30    if $minHomologPercentIdentity eq "";
     $minHomologAlignPercent    = 10    if $minHomologAlignPercent    eq "";
+    
     $hideViruses               = "Yes" if $hideViruses               eq "";
+    if($virus) {
+        $hideViruses = 'No';
+    }
+    
     $hidePlasmids              = "Yes" if $hidePlasmids              eq "";
     $hideGFragment             = "Yes" if $hideGFragment             eq "";
     $newGenePageDefault        = "No"  if $newGenePageDefault        eq "";
@@ -5721,6 +5784,12 @@ sub printPreferences {
         $topHomologHideMetag = getSessionParam("topHomologHideMetag");
         $topHomologHideMetag = "No"
           if ( $topHomologHideMetag eq "" );    # it was never set
+    }
+
+    my $groupSharingDisplay;
+    if ( $enable_workspace ) {
+        $groupSharingDisplay = getSessionParam("groupSharingDisplay");
+        $groupSharingDisplay = "No" if ( !$groupSharingDisplay );
     }
 
     print pageAnchor("Preferences");
@@ -5903,6 +5972,7 @@ YUI
         $classStr = "img";
     }
 
+
     print "<tr class='$classStr' >\n";
     print "<td class='$classStr' >\n";
     print "<div class='yui-dt-liner'>" if $yui_tables;
@@ -5911,15 +5981,26 @@ YUI
     print "</td>\n";
     print "<td class='$classStr' >\n";
     print "<div class='yui-dt-liner'>" if $yui_tables;
+
+    if($virus) {
+    print popup_menu(
+        -name    => "hideViruses",
+        -values  => [ "No" ],
+        -default => "No"
+    );
+
+    } else {
     print popup_menu(
         -name    => "hideViruses",
         -values  => [ "Yes", "No" ],
         -default => "$hideViruses"
-    );
+    );        
+    }
     print "</div>\n" if $yui_tables;
     print "</td>\n";
     print "</tr>\n";
 
+    
     if ($include_plasmids) {
         $idx++;
         if ($yui_tables) {
@@ -6105,6 +6186,34 @@ YUI
         print "</tr>\n";
     }
 
+    if ( $enable_workspace ) {
+        $idx++;
+        if ($yui_tables) {
+            $classStr = !$idx ? "yui-dt-first " : "";
+            $classStr .= ( $idx % 2 == 0 ) ? "yui-dt-even" : "yui-dt-odd";
+        } else {
+            $classStr = "img";
+        }
+        print "<tr class='$classStr' >\n";
+        print "<td class='$classStr' >\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print "Workspace Group Sharing Display";
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
+        print "<td class='$classStr' >\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        require WorkspaceUtil;
+        my $workspaceSharingOptions = WorkspaceUtil::getContactImgGroupsOptions();
+        print popup_menu(
+            -name    => 'groupSharingDisplay',
+            -values  => $workspaceSharingOptions,
+            -default => "$groupSharingDisplay"
+        );
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
+        print "</tr>\n";        
+    }
+    
     print "</table>\n";
     print "</div>\n" if $yui_tables;
 
@@ -6201,6 +6310,12 @@ sub doSetPreferences {
         my $topHomologHideMetag = param("topHomologHideMetag");
         setSessionParam( "topHomologHideMetag", $topHomologHideMetag );
         $hashPrefs->{"topHomologHideMetag"} = $topHomologHideMetag;
+    }
+
+    if ( $enable_workspace ) {
+        my $groupSharingDisplay = param("groupSharingDisplay");
+        setSessionParam( "groupSharingDisplay", $groupSharingDisplay );
+        $hashPrefs->{"groupSharingDisplay"} = $groupSharingDisplay;
     }
 
     if ( $env->{user_restricted_site} ) {
@@ -6448,9 +6563,11 @@ sub uploadOidsFromFile {
 
     my $fh = upload("uploadFile");
     if ( $fh && cgi_error() ) {
+        close($fh);
         WebUtil::webError( header( -status => cgi_error() ) );
     }
-    my $mimetype = uploadInfo($fh);
+    
+    #my $mimetype = uploadInfo($fh);
 
     #webLog Dumper $mimetype;
     # Need line broken buffer through tmpFile.
@@ -6458,12 +6575,23 @@ sub uploadOidsFromFile {
     my $wfh       = newWriteFileHandle( $tmpFile, "uploadOidsFromFile" );
     my $file_size = 0;
     while ( my $s = <$fh> ) {
+        #WebUtil::webLog "uploadOidsFromFile() s='$s'\n";
+
         $s =~ s/\r/\n/g;
+        #$s =~ s/\r//g;  #use $s =~ s/\r/\n/g; to handel mac file which does not have '\n'
+        #$s =~ s/\r/\n/g; # ?? should it be s/\r//; http://www.seaglass.com/file-upload-pl.html     
+        # http://stackoverflow.com/questions/35055123/ie-11-lock-the-file-when-using-html-input-file-tag   
+        # - ken
+
         $file_size += length($s);
         if ( $file_size > $max_upload_size ) {
             $$errmsg_ref = "Maximum file size $max_upload_size bytes exceeded.";
+
+            # bug fix for Natalia and Windows 7, tell browser to close upload file handle - ken
+            close $fh;
             close $wfh;
             wunlink($tmpFile);
+
             return 0;
         }
         print $wfh $s;
@@ -6471,7 +6599,7 @@ sub uploadOidsFromFile {
     close $wfh;
 
     # bug fix for Natalia and Windows 7, tell browser to close upload file handle - ken
-    close $fh;
+    close($fh);
 
     if ( $file_size == 0 ) {
         $$errmsg_ref = "No contents were found to upload. (File: $tmpFile)";
@@ -6481,6 +6609,7 @@ sub uploadOidsFromFile {
     }
     my $rfh = newReadFileHandle( $tmpFile, "uploadOidsFromFile" );
     my $s = $rfh->getline();
+    #WebUtil::webLog "uploadOidsFromFile() tmpFile s='$s'\n";
     chomp $s;
     my (@fields) = split( /\t/, $s );
     my $nFields = @fields;
@@ -6526,7 +6655,7 @@ sub uploadOidsFromFile {
         }
         ## --es 05/05/2005 More notes on error message.
         my $x = $tabDelimErrMsg;
-        $$errmsg_ref = "The file requires a column header " . "with the keyword $oid_attrs_or.<br/>$x\n";
+        $$errmsg_ref = "The file requires a column header " . "with the keyword $oid_attrs_or.<br/>\n$x\n";
         return 0;
     }
 
@@ -6570,9 +6699,10 @@ sub uploadIdsFromFile {
 
     my $fh = upload("uploadFile");
     if ( $fh && cgi_error() ) {
+        close($fh);
         WebUtil::webError( header( -status => cgi_error() ) );
     }
-    my $mimetype = uploadInfo($fh);
+    #my $mimetype = uploadInfo($fh);
 
     #webLog Dumper $mimetype;
     # Need line broken buffer through tmpFile.
@@ -6580,10 +6710,17 @@ sub uploadIdsFromFile {
     my $wfh       = newWriteFileHandle( $tmpFile, "uploadOidsFromFile" );
     my $file_size = 0;
     while ( my $s = <$fh> ) {
+        #WebUtil::webLog "uploadIdsFromFile() s='$s'\n";
+        
         $s =~ s/\r/\n/g;
+        #$s =~ s/\r//g;  #use $s =~ s/\r/\n/g; to handel mac file which does not have '\n'
+        
         $file_size += length($s);
         if ( $file_size > $max_upload_size ) {
             $$errmsg_ref = "Maximum file size $max_upload_size bytes exceeded.";
+
+            # bug fix for Natalia and Windows 7, tell browser to close upload file handle - ken
+            close $fh;
             close $wfh;
             wunlink($tmpFile);
             return 0;
@@ -6593,7 +6730,7 @@ sub uploadIdsFromFile {
     close $wfh;
 
     # bug fix for Natalia and Windows 7, tell browser to close upload file handle - ken
-    close $fh;
+    close($fh);
 
 
     if ( $file_size == 0 ) {
@@ -6604,6 +6741,7 @@ sub uploadIdsFromFile {
     }
     my $rfh = newReadFileHandle( $tmpFile, "uploadIdsFromFile" );
     my $s = $rfh->getline();
+    #WebUtil::webLog "uploadIdsFromFile() tmpFile s='$s'\n";
     chomp $s;
     my (@fields) = split( /\t/, $s );
     my $nFields  = @fields;
@@ -6636,7 +6774,7 @@ sub uploadIdsFromFile {
         }
         ## --es 05/05/2005 More notes on error message.
         my $x = $tabDelimErrMsg;
-        $$errmsg_ref = "The file requires a column header " . "with the keyword $id_attrs_or.<br/>$x\n";
+        $$errmsg_ref = "The file requires a column header " . "with the keyword $id_attrs_or.<br/>\n$x\n";
         return 0;
     }
 
@@ -12977,6 +13115,31 @@ sub dbUpdateMissingGeneTerms {
     }
 }
 
+
+############################################################################
+# getUserGroup
+############################################################################
+sub getUserGroup {
+    my ( $dbh, $contact_oid ) = @_;
+
+    # get user's group
+    my $sql = qq{
+       select c.img_group
+       from contact c
+       where c.contact_oid = ?
+    };
+    my @a = ($contact_oid);
+    my $cur = WebUtil::execSqlBind( $dbh, $sql, \@a, $verbose );
+    my ($group) = $cur->fetchrow();
+    $cur->finish();
+
+    return $group;
+}
+
+
+############################################################################
+# Connect_IMG_EXT
+############################################################################
 sub Connect_IMG_EXT {
 
     # use IMG_EXT

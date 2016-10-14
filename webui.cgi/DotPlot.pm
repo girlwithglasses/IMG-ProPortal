@@ -1,6 +1,6 @@
 ###########################################################################
 # DotPlot.pm - Runs mummer for two genomes
-# $Id: DotPlot.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: DotPlot.pm 36089 2016-08-31 21:38:02Z klchu $
 ############################################################################
 package DotPlot;
 my $section = "DotPlot";
@@ -45,14 +45,11 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my ($self) = @_;
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
-    
-    
-    
+
+    my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
     my @a = (  "CompareGenomes", "Synteny Viewers", '', $js, '', 'Dotplot.pdf' );
     return @a;
 }
@@ -65,6 +62,7 @@ sub dispatch {
     
     my $page = param("page");
     timeout( 60 * 40 );    # timeout in 40 minutes (from main.pl)
+
     if ($page eq "plot") {
         printStatusLine("Loading ...", 1);
 
@@ -148,6 +146,7 @@ sub printForm {
     $template->param( xml_cgi      => $xml_cgi );
     $template->param( prefix       => '' );
     $template->param( maxSelected1 => 2 );
+    $template->param( from                 => 'isolate' );
     $template->param( selectedGenome1Title => 'Please select 2 genomes:' );
 
     my $s = "";
@@ -293,7 +292,6 @@ sub runPlot {
 	    (scalar @ext_accessions2 > 2 * $max_scaffolds)) {
 	    selectScaffolds($dbh, \@oids, $algorithm, $reference);
 	    printStatusLine( "Done.", 2 );
-	    #$dbh->disconnect();
 	    return;
 	}
     }
@@ -383,7 +381,6 @@ sub runPlot {
 
 #    if ($length1 > 536870908 || $length2 > 536870908) {
 #        printStatusLine( "Input file is too large.", 2 );
-#        #$dbh->disconnect();
 #	webError( "Input file length cannot exceed 536870908.<br/> $txt"
 #		. "<br/>Please select fewer scaffolds." );
 #    }
@@ -392,15 +389,12 @@ sub runPlot {
     print STDERR "\n\nDotPlot: $returnval\n";
     if ( $returnval == 0 ) {
         printStatusLine( "Cannot read sequence.", 2 );
-	#$dbh->disconnect();
-        webError( "Sequence file for taxon_oid=$oids[0] " .
-                  "is empty\n" );
+        webError( "Sequence file for taxon_oid=$oids[0] is empty\n" );
     }
     my $returnval = -s $tmpFile2;
     print STDERR "\n\nDotPlot: $returnval\n";
     if ( $returnval == 0 ) {
         printStatusLine( "Cannot read sequence.", 2 );
-	#$dbh->disconnect();
         webError( "Sequence file for taxon_oid=$oids[1] " .
                   "is empty\n" );
     }
@@ -484,7 +478,6 @@ sub runPlot {
     ### need to check if $alignsFile is empty ###
     if ($returnval == 0) {
     	printStatusLine( "No alignments.", 2 );
-	#$dbh->disconnect();
         webError( "No alignments found.<br/>\n" );
     }
 
@@ -524,6 +517,21 @@ sub runPlot {
     } else {
 	print "<h2>$name1 vs. <br/>$name2</h2>\n";
     }
+
+    # add hint
+    my $helplink = qq{                                       
+        <a href="$base_url/../docs/DotPlot.pdf" target="_help">           
+        <img width="20" height="16" border="0"
+         src="$base_url/images/help.gif" title="view help document"
+         style="cursor:pointer; cursor:hand;" /></a>
+    };
+
+    my $links = "View: "
+	.alink("$tmp_url/ref_qry$$.delta", "delta file", "_blank") . ", "
+	.alink("$tmp_url/ref_qry$$.aligns", "aligns file", "_blank") . ", or "
+	.alink("$tmp_url/ref_qry$$.coords", "coords file", "_blank") . " for this plot";
+    my $hint = "The dotplot consists of <font color='blue'>blue</font> points for regions of similarity found on parallel strands (fplot) and <font color='red'>red</font> points for regions of similarity found on antiparallel strands (rplot). The tooltip for each point shows which plot it is and the coordinates and scaffolds of the alignment. <u>Clicking on a point</u> brings up the chromosomal neighborhood of the alignment of the two genomes. <br/>$links";
+    printHint($hint);
 
     print "<p>Using <u>$method</u> to compare genomes:</p>";
 
@@ -568,7 +576,6 @@ sub runPlot {
 	$cur->finish();
     }
     close($FH);
-    #$dbh->disconnect();
 
     my $scaffolddatastr = join(",", @scaffolddata);
     push @chartscaffolds, $scaffolddatastr;
@@ -662,22 +669,25 @@ sub runPlot {
 	    print "<p>";
 	    my $pdf_url = "$tmp_url/".$chart->FILE_PREFIX.".pdf";
 	    my $contact_oid = WebUtil::getContactOid();
-	    print alink( $pdf_url, "Download PDF", '', '', '', "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link dot plot PDF']);" );
+	    print alink( $pdf_url, "Download PDF", '', '', '',
+	    "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link dot plot PDF']);" );
 	    print "<br/>";
+
             my $tiff_url = "$tmp_url/".$chart->FILE_PREFIX.".tiff";
-            print alink( $tiff_url, "Download TIFF", '', '', '', "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link dot plot TIFF']);" );
+            print alink( $tiff_url, "Download TIFF", '', '', '',
+	    "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img link dot plot TIFF']);" );
 	    print "</p>";
-        }
-	else {
+
+        } else {
 	    print "<font color='red'>Error getting chart</font>";
 	}
     }
 
     wunlink( $tmpFile1 );
     wunlink( $tmpFile2 );
-    wunlink( $deltaFile );
+    #wunlink( $deltaFile );
     #wunlink( $coordsFile );
-    wunlink( $alignsFile );
+    #wunlink( $alignsFile );
     wunlink( $filterFile );
     wunlink( $tmp_dir . "/ref_qry$$.cluster" );
     printStatusLine( "Done.", 2 );
@@ -692,7 +702,6 @@ sub runPlot {
         </script>
 	};
     print "</div>\n";
-
 }
 
 ############################################################################
@@ -783,7 +792,6 @@ sub selectScaffolds {
     }
 
     printStatusLine( "Loaded.", 2 );
-    #$dbh->disconnect();
 
     my $name = "_section_DotPlot_runPlot";
     print submit(

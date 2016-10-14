@@ -2,6 +2,9 @@ package UserPreferences;
 
 use IMG::Util::Base 'Class';
 
+require WorkspaceUtil;
+my $workspaceSharingOptions = WorkspaceUtil::getContactImgGroupsOptions();
+
 my $prefs = {
 	maxParalogGroups => {
 		label   => 'Maximum paralog groups',
@@ -70,11 +73,23 @@ my $prefs = {
 		condition => sub { return $env->{cgi_cache_enable}; },
 	},
 	genomeListColPrefs => {
-		label   => 'Save genome list column preferences',
-		values  => [ 'Yes', 'No' ],
+        label   => 'Save genome list column preferences',
+        values  => [ 'Yes', 'No' ],
 		default => 'No',
 		condition => sub { return $env->{user_restricted_site}; },
 	},
+    ColPrefs => {
+        label   => 'Save genome list column preferences',
+        values  => [ 'Yes', 'No' ],
+        default => 'No',
+        condition => sub { return $env->{user_restricted_site}; },
+    },
+    groupSharingDisplay => {
+        label   => 'Workspace Group Sharing Display',
+        values  => $workspaceSharingOptions,
+        default => 'No',
+        condition => sub { return $env->{enable_workspace}; },
+    },
 };
 
 
@@ -124,7 +139,11 @@ my $prefs = {
         $topHomologHideMetag = "No" if ( $topHomologHideMetag eq "" );    # it was never set
     }
 
-
+    my $groupSharingDisplay;
+    if ( $enable_workspace ) {
+        $groupSharingDisplay = getSessionParam("groupSharingDisplay") // 'No';
+        $groupSharingDisplay = "No" if ( ! $groupSharingDisplay );
+    }
 
 
 package MyIMG::Preferences;
@@ -243,6 +262,12 @@ sub printPreferences {
         $topHomologHideMetag = "No" if ( $topHomologHideMetag eq "" );    # it was never set
     }
 
+    my $groupSharingDisplay;
+    if ( $enable_workspace ) {
+        $groupSharingDisplay = getSessionParam("groupSharingDisplay") // 'No';
+        $groupSharingDisplay = "No" if ( ! $groupSharingDisplay );
+    }
+
     print pageAnchor("Preferences");
     print start_form( -name => "preferencesForm", -action => "$section_cgi" );
     print "<h2>Preferences</h2>\n";
@@ -343,6 +368,14 @@ sub printPreferences {
         );
     }
 
+    if ( $enable_workspace ) {
+            label => 'Workspace Group Sharing Display',
+            name    => "groupSharingDisplay",
+            values  => \@workspaceSharingVals,
+            default => "$groupSharingDisplay"
+        );
+    }
+
     #print WebUtil::hiddenVar( "page", "preferencesForm" );
     #print WebUtil::hiddenVar( "page", "message" );
     print WebUtil::hiddenVar( "message",       "Preferences saved." );
@@ -424,6 +457,12 @@ sub doSetPreferences {
         my $topHomologHideMetag = param("topHomologHideMetag");
         setSessionParam( "topHomologHideMetag", $topHomologHideMetag );
         $hashPrefs->{"topHomologHideMetag"} = $topHomologHideMetag;
+    }
+
+    if ( $enable_workspace ) {
+        my $groupSharingDisplay = param("groupSharingDisplay");
+        setSessionParam( "groupSharingDisplay", $groupSharingDisplay );
+        $hashPrefs->{"groupSharingDisplay"} = $groupSharingDisplay;
     }
 
     if ( $env->{user_restricted_site} ) {

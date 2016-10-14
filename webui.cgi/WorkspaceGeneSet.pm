@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGeneSet.pm
-# $Id: WorkspaceGeneSet.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
+# $Id: WorkspaceGeneSet.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ###########################################################################
 package WorkspaceGeneSet; 
  
@@ -30,6 +30,7 @@ use OracleUtil;
 use QueryUtil;
 use SequenceExportUtil;
 use FunctionAlignmentUtil;
+use GeneDataUtil;
  
 $| = 1; 
  
@@ -109,7 +110,6 @@ my $contact_oid;
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
 
-
 sub getPageTitle {
     return 'Workspace Gene Sets';
 }
@@ -159,6 +159,9 @@ sub dispatch {
     }
     elsif ($page eq "showDetail"  ) {
         printGeneSetDetail(); 
+    }
+    elsif (paramMatch("setGeneOutputCol") ne "") {
+        printGeneSetDetail(1); 
     }
     elsif ( paramMatch("exportSelectedGeneFasta") ne "" ||
            $page eq "exportselectedGeneFasta" ) {
@@ -248,7 +251,7 @@ sub dispatch {
     	printListProteinDomainResult();
     }
     else {
-    	printGeneSetMainForm();
+        printGeneSetMainForm();
     }
 }
 
@@ -293,10 +296,10 @@ sub printGeneSetMainForm {
 
     printCartDiv();
     
-    print qq{
-        <h2>Gene Sets List</h2>
-    };
+    print "<h2>Gene Sets List</h2>";
 
+    my $groupSharingDisplay = getSessionParam("groupSharingDisplay");
+    WorkspaceUtil::printShareMsg( $groupSharingDisplay );
 
     print qq{
         <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
@@ -321,17 +324,17 @@ sub printGeneSetMainForm {
     TabHTML::printTabDiv("genesetTab", \@tabIndex, \@tabNames);
 
     print "<div id='genesettab1'>";
-    WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files);
+    my $names_href = WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files, $groupSharingDisplay);
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 
     print "<div id='genesettab2'>";
     # Import/Export
-    Workspace::printImportExport($folder);
+    Workspace::printImportExport($folder, $groupSharingDisplay);
 
     print "<h2>Data Export</h2>\n"; 
     GenerateArtemisFile::printDataExportHint($folder);
-    print "<p>You may export data for selected gene set(s).\n"; 
+    print "<p>You may export data from the selected gene set(s).\n";
     print "<p>\n";
 
     ## enter email address
@@ -342,7 +345,7 @@ sub printGeneSetMainForm {
         -name  => $name, 
         -value => 'Fasta Nucleic Acid File', 
         -class => 'meddefbutton',
-        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSets('$folder');"
+        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSetsIncludingShare('$folder');"
     );
  
     print nbsp(1); 
@@ -351,7 +354,16 @@ sub printGeneSetMainForm {
         -name  => $name, 
         -value => 'Fasta Amino Acid File', 
         -class => 'meddefbutton',
-        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSets('$folder');"
+        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSetsIncludingShare('$folder');"
+    );
+    print nbsp(1);     
+    #$name = "_section_Workspace_exportGeneData_noHeader"; 
+    $name = "exportGeneData"; 
+    print submit( 
+        -name  => $name, 
+        -value => 'Gene Data In Excel', 
+        -class => 'meddefbutton',
+        -onClick => "_gaq.push(['_trackEvent', 'Export', '$contact_oid', 'img button $name']); return checkSetsIncludingShare('$folder');"
     );
     print nbsp(1);     
     print "</div>\n";
@@ -454,7 +466,7 @@ sub printGeneSetMainForm {
 =cut
 
     print "<div id='genesettab5'>";
-    Workspace::printSetOperation($folder, $sid);    
+    Workspace::printSetOperation($folder, $sid, '', $names_href);    
     Workspace::printBreakLargeSet($sid, $folder);
     print "</div>\n";
 
@@ -469,6 +481,8 @@ sub printGeneSetMainForm {
 # printGeneSetDetail
 ###############################################################################
 sub printGeneSetDetail { 
+    my ($configureCols) = @_;
+    
     my $filename = param("filename"); 
     my $folder   = param("folder"); 
  
@@ -476,13 +490,14 @@ sub printGeneSetDetail {
  
     my $sid = getContactOid();
     my $dir_id = $sid;
+
     my $owner = param("owner"); 
     my $owner_name = ""; 
     if ( $owner && $owner != $sid ) { 
         ## not my own data set
         ## check permission
         my $can_view = 0; 
-        my %share_h = WorkspaceUtil::getShareFromGroups($folder); 
+        my %share_h = WorkspaceUtil::getShareFromGroups($folder, $filename); 
         for my $k (keys %share_h) { 
             my ($c_oid, $data_set_name) = WorkspaceUtil::splitOwnerFileset( $sid, $k ); 
             my ($g_id, $g_name, $c_name) = split(/\t/, $share_h{$k}); 
@@ -490,7 +505,7 @@ sub printGeneSetDetail {
             if ( $c_oid == $owner && $data_set_name eq $filename ) { 
                 $can_view = 1; 
                 $owner_name = $c_name; 
-		$dir_id = $owner;
+        		$dir_id = $owner;
                 last; 
             } 
         } 
@@ -508,7 +523,9 @@ sub printGeneSetDetail {
     if ( $owner_name ) {
         print "<p><u>Owner</u>: <i>$owner_name</i></p>"; 
     } 
+    #WorkspaceUtil::printMaxNumMsg('genes');
 
+    print hiddenVar( "owner",  $owner ) if ( $owner );
     print hiddenVar( "directory", "$folder" );
     print hiddenVar( "folder",   $folder ); 
     print hiddenVar( "filename", $filename ); 
@@ -538,29 +555,38 @@ sub printGeneSetDetail {
     	print "<p>*** time1: " . currDateTime() . "\n";
     }
 
-    printStartWorkingDiv();
+    use GeneTableConfiguration;
+    my $fixedColIDs = GeneTableConfiguration::getDefaultFixedColIDs();
+    my $tool = "geneSet$filename";
+    
+    my (
+         $outColClause,   
+         $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig, 
+         $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+         $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+         $projectMetadataCols_ref, $outputCol_ref,  @rest
+      )
+      = GeneTableConfiguration::getOutputColClauses($fixedColIDs, $tool);
+    #print "printGeneSetDetail(configureCols=$configureCols) outputCol_ref=@$outputCol_ref<br/>\n";
 
-    my $dbh = dbLogin(); 
-    my ($taxon2name_href, $taxons_in_file_href) 
-        = QueryUtil::fetchAllTaxonsOidAndNameFile($dbh);
-
-    my %gene2toid;
-    my %tags;
-    my %names; 
-    my $trunc = getGeneSetGeneNames($dir_id, $filename, \%gene2toid, \%tags, 
-        \%names, $taxon2name_href, $maxGeneListResults, 1);
-    printEndWorkingDiv(); 
-
-    if ( $sid == 312 ) {
-    	print "<p>*** time2: " . currDateTime() . "\n";
-    	print "<p>genes: " . scalar(keys %gene2toid) . ", names: " .
-    	    scalar(keys %names) . "\n";
-    }
-
+    my ($trunc, $recs) = webConfigureGenes(
+        $full_path_name, $tool, $fixedColIDs, $outColClause,   
+        $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+        $get_gene_tmh,   $get_gene_sig,  
+        $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+        $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+        $projectMetadataCols_ref, $outputCol_ref
+    );
+         
     if ($trunc) { 
     	WebUtil::printMessage("There are too many genes. Only $maxGeneListResults genes are displayed.");
     	print "<p>\n";
     } 
+
+    if ( $sid == 312 ) {
+        print "<p>*** time2: " . currDateTime() . "<br/>\n";
+    }
 
 =pod
     TabHTML::printTabAPILinks("genesetTab"); 
@@ -569,119 +595,121 @@ sub printGeneSetDetail {
     TabHTML::printTabDiv("genesetTab", \@tabIndex, \@tabNames);
 =cut
 
+    TabHTML::printTabAPILinks("genesetTab"); 
+    my @tabIndex = ( "#genesettab1", "#genesettab2" );
+    my @tabNames = ( "Genes", "Export & Save" );
+    my $super_user_flag = getSuperUser(); 
+    if ( $super_user_flag eq 'Yes' ) {
+        push @tabIndex, "#genesettab3";
+        push @tabNames, "Proteins";
+    }
+    TabHTML::printTabDiv("genesetTab", \@tabIndex, \@tabNames);
+
     print "<div id='genesettab1'>";
 
-#    printHint("Gene names of large gene sets are not displayed. Use 'Expand Display' tab option to view detailed gene information.");
-
     my $it = new InnerTable( 1, "geneSet$$", "geneSet", 1 );
-    $it->addColSpec("Select");
-    $it->addColSpec( "Gene ID",   "char asc", "left" );
-    $it->addColSpec( "Locus tag",   "char asc", "left" );
-    $it->addColSpec( "Gene Product Name", "char asc", "left" ); 
-    $it->addColSpec( "Genome ID", "char asc", "left" ); 
-    $it->addColSpec( "Genome Name", "char asc", "left" ); 
-    my $sd = $it->getSdDelim(); 
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Gene ID",           "asc", "center" );
+    $it->addColSpec( "Locus Tag",         "asc", "center" );
+    $it->addColSpec( "Gene Product Name", "asc", "left" );
+    $it->addColSpec( "Genome ID",         "asc", "left" ); 
+    $it->addColSpec( "Genome Name",       "asc", "left" );
 
-    my $row   = 0;
-    my %taxon_h;
+    my $sd = $it->getSdDelim();
+
+    my $colIDs = GeneTableConfiguration::readColIdFile($tool);
+    #print "printGeneSetDetail() colIDs: $colIDs<br/>\n";
+    $colIDs =~ s/$fixedColIDs//i;
+    my @outCols = WebUtil::processParamValue($colIDs);
+    #print "printGeneSetDetail() outCols size: " . scalar(@outCols) . "<br/>\n";
+    GeneTableConfiguration::addColIDs($it, \@outCols);
+
     my $can_select = 0; 
-    for my $id (keys %gene2toid) { 
-        my $r; 
-        my $url; 
+    my $count = scalar( keys %$recs );
+    for my $id ( keys %$recs ) {
+        my $r = $recs->{$id};
+        #print "printGeneSetDetail() id=$id r: $r<br/>\n";
+        #my @splitColVals  = split( /\t/, $r );
+        #print "printGeneSetDetail() splitColVals size: " . scalar(@splitColVals) . "<br/>\n";
+        #print "printGeneSetDetail() splitColVals: @splitColVals<br/>\n";
 
-        # determine URL and validation of id
-        my $display_id;
+        my ( $workspace_id, $locus_tag, $desc, $desc_orig, $taxon_oid, 
+         $orgName, $batch_id, $scaffold_oid, @outColVals ) = split( /\t/, $r );
+        #print "printGeneSetDetail() outColVals size: " . scalar(@outColVals) . "<br/>\n";
+        #print "printGeneSetDetail() outColVals: @outColVals<br/>\n";
+
+        my $row;
+        $row .= $sd . "<input type='checkbox' name='gene_oid' " . "value='$workspace_id' checked />\t";
+
+        my $data_type = '';
+        my $gene_oid;
         my $notInDatabase;
-        my ( $t1, $d1, $g1 ) = split( / /, $id );
-        if ( !$g1 && isInt($t1) && isInt($id) ) {
-            $display_id = $id;
-            $url = "$main_cgi?section=GeneDetail"
-                . "&page=geneDetail&gene_oid=$t1";
-            if ( ! $names{$id} ) { 
+        if ( $workspace_id && WebUtil::isInt($workspace_id) ) {
+            $data_type = 'database';
+            $gene_oid  = $workspace_id;
+            if ( !$desc && !$taxon_oid ) { 
                 $notInDatabase = 1;
             }                
+        } else {
+            my @vals = split( / /, $workspace_id );
+            $data_type = $vals[1];
+            $gene_oid  = $vals[2];
         }
-        else {
-            $display_id = $g1; 
-            $url = "$main_cgi?section=MetaGeneDetail"
-                . "&page=metaGeneDetail&taxon_oid=$t1" 
-                . "&data_type=$d1&gene_oid=$g1";
-        } 
 
         if ( $notInDatabase ) { 
             # not in database
-            $r = $sd . " \t" . $id . $sd . $id . "\t" . "(not in this database)"
-                . $sd . "(not in this database)" . "\t";
+            $r = $sd . " \t" . $id . $sd . $id . "\t" 
+                . "(not in this database)" . $sd . "(not in this database)" . "\t";
             $r .= "-" . $sd . "-" . "\t";
         } 
         else { 
             $can_select++; 
-            $r = $sd . "<input type='checkbox' name='$select_id_name' value='$id' checked /> \t";
- 
-            # determine URL 
-            my $display_id;
-    	    my ( $t1, $d1, $g1 ) = split( / /, $id );
-    	    if ( !$g1 && isInt($t1) ) {
-    	        $display_id = $id;
-        		$url = "$main_cgi?section=GeneDetail"
-        		    . "&page=geneDetail&gene_oid=$t1";
-    	    }
-    	    else {
-        		$display_id = $g1; 
-        		$url = "$main_cgi?section=MetaGeneDetail"
-        		    . "&page=metaGeneDetail&taxon_oid=$t1" 
-        		    . "&data_type=$d1&gene_oid=$g1";
-    	    } 
 
-            if ($url) {
-                $r .= $id . $sd . alink( $url, $display_id ) . "\t";
-            } 
-            else { 
-                $r .= $id . $sd . $id . "\t";
-            } 
-
-            $r .= $tags{$id} . $sd . $tags{$id} . "\t";
- 
-            $r .= $names{$id} . $sd . $names{$id} . "\t";
- 
-    	    if ( $gene2toid{$id} ) { 
-        		my $t_oid = $gene2toid{$id}; 
-                $r .= $t_oid . $sd . $t_oid . "\t";
-
-        		my $taxon_url = "$main_cgi?section=TaxonDetail" .
-        		    "&page=taxonDetail&taxon_oid=$t_oid";
-        		if ( $taxons_in_file_href->{$t_oid} ) {
-        		    $taxon_url = "$main_cgi?section=MetaDetail" . 
-        			"&page=metaDetail&taxon_oid=$t_oid&";
-        		} 
-        		my $taxon_name = $taxon2name_href->{$t_oid};
-        		my $exported_taxon_name = $t_oid;
-        		if ( $taxon_name ) {
-                    $exported_taxon_name = $taxon_name;        		    
-        		}
-        		$r .= $exported_taxon_name . $sd . "<a href=\"$taxon_url\" >" . $taxon_name . "</a> \t";
-    	    } 
-    	    else {
-                $r .= "-" . $sd . "-" . "\t";
-        		$r .= "-" . $sd . "-" . "\t";
+            my $gene_url;
+            if ( $data_type eq 'database' ) {
+                $gene_url = "$main_cgi?section=GeneDetail" 
+                . "&page=geneDetail&gene_oid=$gene_oid";
+            } else {
+                $gene_url =
+                    "$main_cgi?section=MetaGeneDetail"
+                  . "&page=metaGeneDetail&data_type=$data_type"
+                  . "&taxon_oid=$taxon_oid&gene_oid=$gene_oid";
             }
-    	}
- 
-        $it->addRow($r); 
-        $row++;
+            $row .= $workspace_id . $sd . alink( $gene_url, $gene_oid ) . "\t";
+            $row .= $locus_tag . $sd . escHtml($locus_tag) . "\t";
+            $row .= $desc . $sd . escHtml($desc) . "\t";
+    
+            my $taxon_url;
+            if ( $data_type eq 'database' ) {
+                $taxon_url = "$main_cgi?section=TaxonDetail" 
+                    . "&page=taxonDetail&taxon_oid=$taxon_oid";
+            } else {
+                $taxon_url = "$main_cgi?section=MetaDetail" 
+                    . "&page=metaDetail&taxon_oid=$taxon_oid";
+                $orgName = HtmlUtil::appendMetaTaxonNameWithDataType( $orgName, $data_type );
+            }
+    
+            $row .= $taxon_oid . $sd . $taxon_oid . "\t";
+            $row .= $orgName . $sd . alink( $taxon_url, $orgName ) . "\t";    
+        }
+        $row = GeneTableConfiguration::addCols2Row
+            ($gene_oid, $data_type, $taxon_oid, $scaffold_oid, 
+             $row, $sd, \@outCols, \@outColVals);
+        #print "printGeneSetDetail() row: $row<br/>\n";
+
+        $it->addRow($row);
     }
  
-    if ($row > 10) {
-        WebUtil::printGeneCartFooter();        
-    }
- 
+    my $jsCall = "javascript:setParamsValueNull();";
+    WebUtil::printGeneCartFooter('', $jsCall) if ($count > 10);        
     $it->printOuterTable(1);
+    WebUtil::printGeneCartFooter('', $jsCall); 
   
     my $load_msg = "Loaded"; 
     if ( $can_select <= 0 ) { 
         $load_msg .= "; none in this database.";
     } 
-    elsif ( $can_select < $row ) { 
+    elsif ( $can_select < $count ) { 
         $load_msg .= "; only $can_select selectable.";
     } 
     else {
@@ -693,32 +721,43 @@ sub printGeneSetDetail {
         print end_form();
         return;
     }
-    
-    WebUtil::printGeneCartFooter(); 
+
+    my $colIDs = $fixedColIDs;
+    foreach my $col (@$outputCol_ref) {
+        $colIDs .= "$col,";
+    }
+    GeneTableConfiguration::writeColIdFile($colIDs, $tool);
+
+    ## Table Configuration
+    my %outputColHash = WebUtil::array2Hash(@$outputCol_ref);
+    my $name          = "_section_${section}_setGeneOutputCol";
+    GeneTableConfiguration::appendGeneTableConfiguration( \%outputColHash, $name, 1 );
     
     print "</div>\n";
-
-    my $super_user_flag = getSuperUser(); 
-    if ( $super_user_flag eq 'Yes' ) {
-	print "<div id='geneprotein'>";
-	print "<h2>Display Protein Domains of Selected Genes</h2>\n";
-	print "<p><font color='red'>This feature is available for super users only.</font>\n";
-	print "<p>Select 1 to $maxGeneProfileIds genes to view protein domains.<br/>\n";
-	my $name = "_section_WorkspaceGeneSet_viewProteinDomain"; 
-	print submit( 
-            -name  => $name, 
-            -value => 'View Protein Domains', 
-            -class => 'meddefbutton' 
-            ); 
-	print "<br/>\n";
-	print "</div>\n";
-    }
 
     print "<div id='genesettab2'>";
-    WorkspaceUtil::printSaveGeneToWorkspace($select_id_name);
+    use GeneCartStor;
+    GeneCartStor::printExportSave($count);
     print "</div>\n";
 
+    if ( $super_user_flag eq 'Yes' ) {
+        print "<div id='genesettab3'>";
+        #print "<div id='geneprotein'>";
+        print "<h2>Display Protein Domains of Selected Genes</h2>\n";
+        print "<p><font color='red'>This feature is available for super users only.</font>\n";
+        print "<p>Select 1 to $maxGeneProfileIds genes to view protein domains.<br/>\n";
+        my $name = "_section_WorkspaceGeneSet_viewProteinDomain"; 
+        print submit( 
+                -name  => $name, 
+                -value => 'View Protein Domains', 
+                -class => 'meddefbutton' 
+                ); 
+        print "<br/>\n";
+        print "</div>\n";
+    }
+
 =pod
+    print "<div id='genesettab2'>";
     print "<h2>Data Export</h2>\n"; 
     print "<p>You may export data for selected genes.\n"; 
     printHint("Export for large gene sets will be very slow.");
@@ -930,18 +969,135 @@ sub printGeneSetDetail {
 } 
 
 
+
+############################################################################
+# webConfigureGenes - Configure gene set display.
+############################################################################
+sub webConfigureGenes {    
+    my ( $file, $tool,    $fixedColIDs,        $outColClause,   
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+         $get_gene_tmh,   $get_gene_sig,
+         $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
+         $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
+      )
+      = @_;
+
+    my ($trunc, $recs);
+
+    #my ($cartDir, $sessionId) = WebUtil::getCartDir();
+    #print "webConfigureGenes() cartDir=$cartDir, sessionId=$sessionId<br/>\n";    
+    my $storFile = GeneTableConfiguration::getStorFile($tool);
+    if ( -e $storFile ) {
+        $recs = GeneTableConfiguration::readRecsFile($tool);        
+        #print "webConfigureGenes() done read $storFile<br/>\n";    
+    }
+    if ( !$recs || scalar(keys %$recs) <= 0 ) {
+        ($trunc, $recs) = readFromFile($file);      
+        #print "webConfigureGenes() done read $file<br/>\n";    
+    }
+    #print "webConfigureGenes() recs: <br/>\n";
+    #print Dumper($recs);
+    #print "<br/>\n";
+    my @gene_oids = keys(%$recs);
+    #print "webConfigureGenes() gene_oids=@gene_oids<br/>\n";    
+
+    my ( $dbOids_ref, $metaOids_ref ) = MerFsUtil::splitDbAndMetaOids(@gene_oids);
+    my @dbOids   = @$dbOids_ref;
+    my @metaOids = @$metaOids_ref;
+
+    my $dbh     = dbLogin();
+    my $colIDs  = '';
+
+    if ( scalar(@dbOids) > 0 ) {
+        for my $gene_oid (@dbOids) {
+            my $rec    = $recs->{$gene_oid};
+            my @fields = split( /\t/, $rec );
+        }
+        my $colIDsNew = GeneDataUtil::flushGeneBatch(
+            $fixedColIDs,    $recs, $dbh, 
+            \@dbOids, '', '', $outColClause,   
+            $taxonJoinClause,$scfJoinClause, $ssJoinClause, 
+            $get_gene_tmh,   $get_gene_sig,
+            $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
+            $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+            $projectMetadataCols_ref, $outputCol_ref, 1
+        );
+        if ($colIDsNew) {
+            $colIDs = $colIDsNew;
+        }
+        #print "webConfigureGenes() dbOids=@dbOids<br/>\n";    
+    }
+
+    if ( scalar(@metaOids) > 0 ) {
+        for my $mOid (@metaOids) {
+            my $rec    = $recs->{$mOid};
+            my @fields = split( /\t/, $rec );
+        }
+        my $colIDsNew = GeneDataUtil::flushMetaGeneBatch( 
+            $fixedColIDs, $recs, $dbh, 
+            \@metaOids, '', '', 
+            $projectMetadataCols_ref, $outputCol_ref, 
+            '', 1, 1 
+        );
+        if ($colIDsNew) {
+            $colIDs = $colIDsNew;
+        }
+        #print "webConfigureGenes() metaOids=@metaOids<br/>\n";    
+    }
+
+    GeneTableConfiguration::writeColIdFile($colIDs, $tool);
+    GeneTableConfiguration::writeRecsFile($recs, $tool);
+    
+    return ($trunc, $recs);
+}
+
+###########################################################################
+# readFromFile
+###########################################################################
+sub readFromFile {
+    my ($file, $max_count) = @_;
+    
+    my %records;
+    my $res = newReadFileHandle( $file, "runJob", 1 );
+    if ( !$res ) {
+        return \%records;
+    }
+    
+    my $row = 0;
+    my $trunc = 0;
+    while ( my $line = $res->getline() ) {
+        chomp $line;
+        next if ( $line eq "" );
+        my ( $oid, @junk ) = split( /\t/, $line );
+        $oid = WebUtil::strTrim($oid);
+        if ( $oid && WebUtil::hasAlphanumericChar($oid) ) {
+            $records{$oid} = $line;
+            #$row++; 
+            #if ( $max_count && $max_count > 0 && $row >= $max_count ) {
+            #    $trunc = 1;
+            #    last;
+            #}
+        }
+    }
+    close $res;
+
+    #print "readFromFile 2 oids: " . keys(%records) . "<br/><br/>\n\n";
+    return ($trunc, \%records);
+}
+
 ###########################################################################
 # getGeneSetGeneNames
+# no longer used
 ###########################################################################
 sub getGeneSetGeneNames {
     my ($sid, $filename, $gene2toid_href, $locus_tag_href, $gene_name_href, $taxon_href,
-	$max_count, $print_msg) = @_;
+    $max_count, $print_msg) = @_;
 
     if (-e "$workspace_dir/$sid/$GENE_FOLDER/$filename") {
-    	WebUtil::checkFileName($filename); 
+        WebUtil::checkFileName($filename); 
     }
     else {
-    	return 0;
+        return 0;
     }
 
     $filename = WebUtil::validFileName($filename);
@@ -954,22 +1110,22 @@ sub getGeneSetGeneNames {
     my $res   = newReadFileHandle("$workspace_dir/$sid/$GENE_FOLDER/$filename");
     while ( my $id = $res->getline() ) {
         if ( $row >= $max_count ) {
-	        $trunc = 1;
+            $trunc = 1;
             last;
         }
  
         chomp $id; 
-    	$id = WebUtil::strTrim($id);
+        $id = WebUtil::strTrim($id);
         next if ( $id eq "" );
         next if ( ! WebUtil::hasAlphanumericChar($id) );
  
         if ( isInt($id) ) { 
             push(@db_ids, $id);
         } 
-    	else {
+        else {
             push(@meta_ids, $id);
-    	    my ($t2, $d2, $g2) = split(/ /, $id);
-    	    my $key = "$t2 $d2";
+            my ($t2, $d2, $g2) = split(/ /, $id);
+            my $key = "$t2 $d2";
             if ( $taxon_genes{$key} ) {
                 my $oid_ref = $taxon_genes{$key};
                 push( @$oid_ref, $g2 );
@@ -979,19 +1135,19 @@ sub getGeneSetGeneNames {
                 $taxon_genes{$key} = \@oid;
             }
             $gene2toid_href->{$id} = $t2;
-    	}
+        }
         $row++; 
     } 
     close $res;
  
     if ( scalar(@db_ids) > 0 ) { 
-    	if ( $print_msg ) {
-    	    print "<p>Retrieving gene product names from database ... <br/>\n";
-    	}
+        if ( $print_msg ) {
+            print "<p>Retrieving gene product names from database ... <br/>\n";
+        }
 
-    	my $dbh = dbLogin();
+        my $dbh = dbLogin();
         my $oid_str = OracleUtil::getNumberIdsInClause( $dbh, @db_ids );
-    	
+        
         my $rclause = WebUtil::urClause('t');
         my $imgClause = WebUtil::imgClause('t');
 
@@ -1058,9 +1214,11 @@ sub getGeneSetGeneNames {
 
     }
 
-    print "<p>$trunc genes retrieved.<br/>\n";
+    print "<p>$row genes retrieved.<br/>\n";
     return $trunc;
 }
+
+
 
 ############################################################################
 # exportSelectedGeneFasta
@@ -1606,12 +1764,12 @@ sub viewGeneScaffolds {
     	my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     
     	if ( isInt($scaffold_oid) ) {
-    	    my $s_url = "$main_cgi?section=ScaffoldCart&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
+    	    my $s_url = "$main_cgi?section=ScaffoldDetail&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
     	    $r .= $scaffold_oid . $sd . alink($s_url, $scaffold_oid) . "\t";
     	}
     	else { 
     	    my ($t2, $d2, $s2) = split(/ /, $scaffold_oid);
-    	    my $s_url = "$main_cgi?section=MetaDetail&page=metaScaffoldDetail&scaffold_oid=$s2&taxon_oid=$t2&data_type=$d2";
+    	    my $s_url = "$main_cgi?section=MetaScaffoldDetail&page=metaScaffoldDetail&scaffold_oid=$s2&taxon_oid=$t2&data_type=$d2";
      	    $r .= $scaffold_oid . $sd . alink($s_url, $s2) . "\t";
     	} 
      
@@ -2019,7 +2177,7 @@ sub showGeneFuncCateProfile {
     }
 
     if ($timeout_msg) {
-        printMessage("<font color='red'>Warning: $timeout_msg</font>");
+        WebUtil::printMessage("<font color='red'>Warning: $timeout_msg</font>");
     }
 
     my $it = new InnerTable( 1, "WSFuncProfile$$", "WSFuncProfile", 1 );
@@ -2668,7 +2826,7 @@ sub showGeneFuncSetProfile {
     }
 
     if ($timeout_msg) {
-        printMessage("<font color='red'>Warning: $timeout_msg</font>");
+        WebUtil::printMessage("<font color='red'>Warning: $timeout_msg</font>");
     }
 
     my $it = new InnerTable( 1, "WSFuncSetProfile$$", "WSSetFuncProfile", 1 );
@@ -4134,7 +4292,7 @@ sub printPhyloOccurProfiles_otf {
 
     if ( scalar(@badGenes) > 0 ) {
     	my $s = join( ',', @badGenes ); 
-    	printMessage ("The following RNA genes are skipped: $s.");
+    	WebUtil::printMessage ("The following RNA genes are skipped: $s.");
     } 
 
     ## Print it out as an alignment.
@@ -4357,7 +4515,7 @@ sub printGeneChrViewerSelection {
     my $scaffold_str = join(":", @scaffold_oids);
 
     if ( $trunc ) {
-    	printMessage("<font color='red'>There are too many genes -- only $cnt genes are listed.</font>");
+    	WebUtil::printMessage("<font color='red'>There are too many genes -- only $cnt genes are listed.</font>");
     }
 
     my $it = new InnerTable(1, "chromMap$$", "chromMap", 0); 
@@ -4555,7 +4713,7 @@ sub printChromosomeViewerSelection {
     my $scaffold_str = join(":", @scaffold_oids);
 
     if ( $trunc ) {
-    	printMessage("<font color='red'>There are too many genes -- only $cnt genes are listed.</font>");
+    	WebUtil::printMessage("<font color='red'>There are too many genes -- only $cnt genes are listed.</font>");
     }
 
     my $it = new InnerTable(1, "chromMap$$", "chromMap", 0); 

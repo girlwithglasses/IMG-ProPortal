@@ -1,7 +1,7 @@
 ###########################################################################
 # Display kegg map and do appropriate highlighting.
 # --es  11/03/2004
-# $Id: KeggMap.pm 34545 2015-10-20 21:36:40Z klchu $
+# $Id: KeggMap.pm 35066 2016-01-20 19:25:21Z klchu $
 ###########################################################################
 package KeggMap;
 my $section = "KeggMap";
@@ -828,7 +828,7 @@ sub printKeggMapByGeneOid {
     my $taxon_filter_oid_str = WebUtil::getTaxonFilterOidStr();
     printGeneLegend( $taxon_name, $taxon_filter_oid_str, $myimg );
 
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
 
     print "<map name='mapdata'>\n";
     if ( ! $taxon_in_fs && isInt($gene_oid) ) {
@@ -1390,7 +1390,7 @@ sub printKeggMapByTaxonOid {
 
     my $taxon_filter_oid_str = WebUtil::getTaxonFilterOidStr();
     printTaxonLegend($taxon_name, $taxon_filter_oid_str, 0, 0, 0, $cluster_id);
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
 
     print "<map name='mapdata'>\n";
     if ( ! $taxon_in_fs ) {
@@ -1730,7 +1730,7 @@ sub printKeggMapMissingECByTaxonOid {
 
     my $taxon_filter_oid_str = WebUtil::getTaxonFilterOidStr();
     printTaxonLegend( $taxon_name, $taxon_filter_oid_str, 1, 1, 1 );
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
 
     print "<map name='mapdata'>\n";
     printMyIMGMapCoords( \@cyanRecs, $map_id, $taxon_oid );
@@ -1851,7 +1851,7 @@ sub printAbundanceByTaxonOid {
 
     my $taxon_filter_oid_str = WebUtil::getTaxonFilterOidStr();
     printAbundanceLegend();
-    print "<image src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
+    print "<img src='$tmpPngUrl' usemap='#mapdata' border='0' />\n";
 
     print "<map name='mapdata'>\n";
     printEcMapCoords( \@recs, $map_id, $taxon_oid );
@@ -1873,30 +1873,30 @@ sub printGeneLegend {
     print "<p>\n";
 
     if ( !$myimg ) {
-        print "<image src='$base_url/images/current.gif' "
+        print "<img src='$base_url/images/current.gif' "
           . "width='10' height='10' />\n";
         print "Current Gene\n";
         print "<br/>\n";
     }
 
-    print "<image src='$base_url/images/poscluster.gif' "
+    print "<img src='$base_url/images/poscluster.gif' "
       . "width='10' height='10' />\n";
     print "Positional Cluster Gene\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/intaxon.gif' "
+    print "<img src='$base_url/images/intaxon.gif' "
       . "width='10' height='10' />\n";
     print "Other genes in " . escHtml($taxon_display_name);
     print "<br/>\n";
 
-    print "<image src='$base_url/images/ecequiv.gif' "
+    print "<img src='$base_url/images/ecequiv.gif' "
       . "width='10' height='10' />\n";
 
     print "Genes found in other genomes";
     print "<br/>\n";
 
     if ($show_myimg_login) {
-        print "<image src='$base_url/images/myimg.gif' "
+        print "<img src='$base_url/images/myimg.gif' "
           . "width='10' height='10' />\n";
         print "MyIMG annotated EC numbers";
         print "<br/>\n";
@@ -1922,42 +1922,42 @@ sub printAbundanceLegend {
     print "<br/>\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-124-218-144.png' "
+    print "<img src='$base_url/images/rgb-124-218-144.png' "
       . "width='10' height='10' />\n";
     print "&lt;= 0.0\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-144-238-144.png' "
+    print "<img src='$base_url/images/rgb-144-238-144.png' "
       . "width='10' height='10' />\n";
     print "[ 0.0 - < 0.5 )\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-200-255-50.png' "
+    print "<img src='$base_url/images/rgb-200-255-50.png' "
       . "width='10' height='10' />\n";
     print "[ 0.5 - < 1.0 )\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-240-100-100.png' "
+    print "<img src='$base_url/images/rgb-240-100-100.png' "
       . "width='10' height='10' />\n";
     print "[ 1.0 - 1.5 )\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-255-100-100.png' "
+    print "<img src='$base_url/images/rgb-255-100-100.png' "
       . "width='10' height='10' />\n";
     print "[ 1.5 - 2.0 )\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-255-50-50.png' "
+    print "<img src='$base_url/images/rgb-255-50-50.png' "
       . "width='10' height='10' />\n";
     print "[ 2.0 - 2.5 )\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-255-20-20.png' "
+    print "<img src='$base_url/images/rgb-255-20-20.png' "
       . "width='10' height='10' />\n";
     print "[ 2.5 - 3.0 )\n";
     print "<br/>\n";
 
-    print "<image src='$base_url/images/rgb-255-10-10.png' "
+    print "<img src='$base_url/images/rgb-255-10-10.png' "
       . "width='10' height='10' />\n";
     print "&gt;= 3.0\n";
 
@@ -2015,41 +2015,41 @@ sub printTaxonLegend {
 
     print "<p>\n";
 
-    print "<image src='$base_url/images/intaxon.gif' "
+    print "<img src='$base_url/images/intaxon.gif' "
 	. "width='10' height='10' />\n";
     print "Genes in " . escHtml($taxon_display_name);
     print "<br/>\n";
 
     if ( !$hide_others ) {
-        print "<image src='$base_url/images/ecequiv.gif' "
+        print "<img src='$base_url/images/ecequiv.gif' "
 	    . "width='10' height='10' />\n";
         print "Genes found in other genomes";
         print "<br/>\n";
     }
 
     if ($show_myimg_login) {
-        print "<image src='$base_url/images/myimg.gif' "
+        print "<img src='$base_url/images/myimg.gif' "
 	    . "width='10' height='10' />\n";
         print "MyIMG annotated EC numbers";
         print "<br/>\n";
     }
 
     if ($has_ec) {
-        print "<image src='$base_url/images/green-square.gif' "
+        print "<img src='$base_url/images/green-square.gif' "
 	    . "width='10' height='10' />\n";
         print "Enzymes with KO hits";
         print "<br/>\n";
     }
 
     if ($missing) {
-        print "<image src='$base_url/images/yellow-square.gif' "
+        print "<img src='$base_url/images/yellow-square.gif' "
 	    . "width='10' height='10' />\n";
         print "Missing Enzymes";
         print "<br/>\n";
     }
 
     if ($in_cluster) {
-        print "<image src='$base_url/images/purple-square.gif' "
+        print "<img src='$base_url/images/purple-square.gif' "
 	    . "width='10' height='10' />\n";
         print "Genes in Cluster";
         print "<br/>\n";

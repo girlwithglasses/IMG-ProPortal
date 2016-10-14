@@ -1,19 +1,26 @@
 #!/usr/bin/env perl
 
-use FindBin qw/ $Bin /;
-use lib "$Bin/../lib";
+my $dir;
+my @dir_arr;
+
+BEGIN {
+	$ENV{'DANCER_ENVIRONMENT'} = 'testing';
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	$dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	@dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib proportal/t/lib );
+}
+
+use lib @dir_arr;
 use IMG::Util::Base 'NetTest';
-use File::Basename;
-my $base = dirname($Bin);
 
 use ProPortalPackage;
 use Test::More;
-use Plack::Test;
-use HTTP::Request::Common;
-use HTTP::Cookies;
-use Plack::Util;
 
-my $psgi = Plack::Util::load_psgi( "$base/bin/app.psgi" );
+my $psgi = Plack::Util::load_psgi( "$dir/proportal/bin/app.psgi" );
 
 my $pp = ProPortalPackage->to_app;
 is( ref $pp, 'CODE', 'Got app' );

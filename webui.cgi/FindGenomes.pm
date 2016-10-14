@@ -3,7 +3,7 @@
 #  Handle the options under the "Find Genomes" tab menu.
 #    --es 07/07/2005
 #
-# $Id: FindGenomes.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: FindGenomes.pm 36206 2016-09-22 19:13:34Z jinghuahuang $
 ############################################################################
 package FindGenomes;
 my $section = "FindGenomes";
@@ -49,9 +49,9 @@ my $img_mer_submit_url   = $env->{img_mer_submit_url};
 
 my $YUI = $env->{yui_dir_28};
 ### optional genome field columns to configuration and display 
-my @optCols = getGenomeFieldAttrs();
+my @optCols = TaxonSearchUtil::getGenomeFieldAttrs();
 
-my %colName2Label = getColName2Label_g();
+my %colName2Label = TaxonSearchUtil::getColName2Label_g();
 
 
 sub getPageTitle {
@@ -168,7 +168,7 @@ sub printFieldForm {
 ############################################################################
 sub printFoOptionList {
     print qq{
-       <option value="taxon_display_name">Genome Name</option>
+       <option value="taxon_display_name">Genome Name / Sample Name</option>
        <option value="proposal_name">Study Name</option>
        <option value="ncbi_taxon_id">NCBI Taxon ID (list)</option>
        <option value="refseq_project_id">RefSeq Project ID (list)</option>
@@ -177,7 +177,10 @@ sub printFoOptionList {
        <option value="scaffold_oid">Scaffold ID (list)</option>
        <option value="taxon_oid">IMG Genome ID (IMG Taxon ID) (list)</option>
        <option value="submission_id">IMG Submission ID (list)</option>
-       <option value="jgi_project_id">JGI Project ID (list)</option>
+       <option value="jgi_project_id">JGI Project ID / ITS PID (list)</option>
+       <option value="study_gold_id">GOLD Study ID (list)</option>
+       <option value="sequencing_gold_id">GOLD Sequencing Project ID (list)</option>
+       <option value="analysis_project_id">GOLD Analysis Project ID (list)</option>
        <option value="domain">Domain</option>
        <option value="phylum">Phylum</option>
        <option value="seq_status">Sequencing Status</option>
@@ -188,7 +191,6 @@ sub printFoOptionList {
     if ($img_internal) {
         print qq{
            <option value="is_public">Is Public</option>
-           <option value="jgi_project_id">JGI Project ID (list)</option>
            <option value="cog_id">COG ID (exact)</option>
            <option value="cog_name">COG Name</option>
            <option value="pfam_id">Pfam ID (exact)</option>
@@ -290,7 +292,7 @@ sub printFindGenomeResults {
     my @statsColumns           = param('stats_col');           # empty if not redisplay
 
     # add columns always displayed
-    #my @defaults = ( 'domain', 'seq_status', 'proposal_name', 'taxon_display_name', 'seq_center' );
+    #my @defaults = ( 'domain', 'seq_status', 'proposal_name', 'taxon_display_name', 'seq_center', 'taxon_oid' );
     #push( @taxonColumns, @defaults );
     my @defaults = ( 'total_bases', 'total_gene_count' );
     push( @statsColumns, @defaults );
@@ -382,6 +384,7 @@ sub printFindGenomeResults {
     else {
 	    my $whereClause = "";
         my @filter_types = ( "taxon_oid", "submission_id", "ncbi_taxon_id", "jgi_project_id" );
+        my @filter_types_txt = ( "study_gold_id", "sequencing_gold_id", "analysis_project_id" );
         if ( grep( /^$taxonSearchFilter$/, @filter_types ) ) {
 	        my $term_str;
 	        if ($taxonSearchFilter eq "taxon_oid") {
@@ -419,7 +422,11 @@ sub printFindGenomeResults {
 	            $whereClause .= "tx.$taxonSearchFilter in ( $term_str ) ";
 	        }
 	        $whereClause .= " )";
-	    } else {
+	    } elsif ( grep( /^$taxonSearchFilter$/, @filter_types_txt ) ) {
+            my $term_str;
+            $term_str = splitSearchTerm($taxonSearchTermLc, 0);
+            $whereClause = "and lower( tx.$taxonSearchFilter ) in ( $term_str ) ";
+        } else {
 	        $whereClause = "and lower( tx.$taxonSearchFilter ) like ? ";        
 	        push(@bindList, "%$taxonSearchTermLc%");
 	    }
@@ -599,10 +606,10 @@ sub printFindGenomeResults {
     my $sd = $it->getSdDelim();    # sort delimiter
     $it->addColSpec( "Select" );
 
-    my @myCols = ('domain', 'seq_status', 'taxon_display_name', 'proposal_name', 'seq_center');
+    my @myCols = ('domain', 'seq_status', 'taxon_display_name', 'proposal_name', 'seq_center', 'taxon_oid');
     $it->addColSpec( "Domain", "char asc", "center", "", $domain_explain );
     $it->addColSpec( "Status", "char asc", "center", "", $status_explain );
-    # always display proposal_name, taxon_display_name, seq_center columns even if it's not searched against
+    # always display proposal_name, taxon_display_name, seq_center, taxon_oid columns even if it's not searched against
     my $colLabel;    
     $colLabel = TaxonTableConfiguration::getColLabel("proposal_name");
     $it->addColSpec( "$colLabel", "char asc", "left" );
@@ -610,11 +617,14 @@ sub printFindGenomeResults {
     $it->addColSpec( "$colLabel", "char asc", "left" );
     $colLabel = TaxonTableConfiguration::getColLabel("seq_center");
     $it->addColSpec( "$colLabel", "char asc", "left" );
+    $colLabel = TaxonTableConfiguration::getColLabel("taxon_oid");
+    $it->addColSpec( "$colLabel", "number asc", "right" );
 
     # always display the column searched against if not in myCols
     if ( $taxonSearchFilter ne "proposal_name" 
         && $taxonSearchFilter ne "taxon_display_name" 
-        && $taxonSearchFilter ne "seq_center" ) {
+        && $taxonSearchFilter ne "seq_center"
+        && $taxonSearchFilter ne "taxon_oid" ) {
         $colLabel = TaxonTableConfiguration::getColLabel($taxonSearchFilter);
         $it->addColSpec( "$colLabel", "char asc", "left" );
         push( @myCols, $taxonSearchFilter);        
@@ -646,7 +656,7 @@ sub printFindGenomeResults {
     my $count = 0;
     my @taxon_oids =  ();
     for my $r (@recs) {
-        my ( $taxon_oid, $domain, $seq_status, $proposal_name, $taxon_display_name, $seq_center, 
+        my ( $taxon_oid, $domain, $seq_status, $proposal_name, $taxon_display_name, $seq_center,
             $fieldVal, @outColVals ) = split( /\t/, $r );
          if ( $mOutStartIdx >= 0 ) {
             my $mOutColVals_str = $tOids2Meta{$taxon_oid};
@@ -675,7 +685,7 @@ sub printFindGenomeResults {
         }
         if ( $taxonSearchFilter eq "proposal_name" ) {
             my $matchText = WebUtil::highlightMatchHTML2( $proposal_name, $taxonSearchTerm );
-           $row .= $proposal_name . $sd . $matchText . "\t";
+            $row .= $proposal_name . $sd . $matchText . "\t";
         } else {
             $row .= $proposal_name . $sd . $proposal_name . "\t";
         }
@@ -689,11 +699,9 @@ sub printFindGenomeResults {
         }
         $url .= "&taxon_oid=$taxon_oid";
     	my $link = alink( $url, $taxon_display_name );
-    	#$row .= $taxon_display_name . $sd . $link . "\t"
-    	#       if $taxonSearchFilter ne "taxon_display_name";
         if ( $taxonSearchFilter eq "taxon_display_name" ) {
             my $matchText = WebUtil::highlightMatchHTML2( $taxon_display_name, $taxonSearchTerm );
-           $row .= $taxon_display_name . $sd . alink( $url, $matchText, "", 1 ) . "\t";
+            $row .= $taxon_display_name . $sd . alink( $url, $matchText, "", 1 ) . "\t";
         } else {
             $row .= $taxon_display_name . $sd . $link . "\t";
         }
@@ -718,10 +726,20 @@ sub printFindGenomeResults {
             $row .= $seq_center . $sd . $seq_center2 . "\t";
         }
 
+        my $matchTaxonText;
+        if ( $taxonSearchFilter eq "taxon_oid" ) {
+            $matchTaxonText = "<font color='green'><b>" .$taxon_oid. "</b></font>";
+        } 
+        else {
+            $matchTaxonText = WebUtil::highlightMatchHTML2( $taxon_oid, $taxonSearchTerm );            
+        }
+        $row .= $taxon_oid . $sd . $matchTaxonText. "\t";
+
     	# display the field value
         if ( $taxonSearchFilter ne "taxon_display_name" 
             && $taxonSearchFilter ne "proposal_name" 
-            && $taxonSearchFilter ne "seq_center" ) {
+            && $taxonSearchFilter ne "seq_center"
+            && $taxonSearchFilter ne "taxon_oid" ) {
             my $matchText;
             my @filter_types = ( "taxon_oid", "submission_id", "ncbi_taxon_id", "jgi_project_id",
                   "refseq_project_id", "gbk_project_id", "ext_accession", "scaffold_oid" );
@@ -730,7 +748,7 @@ sub printFindGenomeResults {
             } else {
                 $matchText = WebUtil::highlightMatchHTML2( $fieldVal, $taxonSearchTerm );
             }        
-           $row .= $matchText . $sd . $matchText. "\t";
+            $row .= $fieldVal . $sd . $matchText. "\t";
         }
 
     	#print "printFindGenomeResults() outputCol : @outputCol <br/>\n";
@@ -805,27 +823,32 @@ sub printFindGenomeResults {
         -class => "meddefbutton"
     );
 
-
-    my %taxonColumns_hash           = map { substr $_, 1+index($_, ".") => 1 } @taxonColumns;
-    my %projectMetadataColumns_hash = map { substr $_, 1+index($_, ".") => 1 } @projectMetadataColumns;
-    my %sampleMetadataColumns_hash  = map { substr $_, 1+index($_, ".") => 1 } @sampleMetadataColumns;
-    my %statsColumns_hash           = map { substr $_, 1+index($_, ".") => 1 } @statsColumns;
-
-    if ( exists( $taxonColumns_hash{$taxonSearchFilter} ) ) {
-        push( @taxonColumns, $taxonSearchFilter );
-    } elsif ( exists( $projectMetadataColumns_hash{$taxonSearchFilter} ) ) {
-        push( @projectMetadataColumns, $taxonSearchFilter );
-    } elsif ( exists( $sampleMetadataColumns_hash{$taxonSearchFilter} ) ) {
-        push( @sampleMetadataColumns, $taxonSearchFilter );
-    } elsif ( exists( $statsColumns_hash{$taxonSearchFilter} ) ) {
-        push( @statsColumns, $taxonSearchFilter );
-    }
-
-    @taxonColumns = @defaults;
-    @defaults = ( 'ts.total_bases', 'ts.total_gene_count' );
-    push( @defaults, @statsColumns );
-    @statsColumns = @defaults;
-
+    #search fields are not channeled into the config label yet
+    #need to re-implement
+    #my %taxonColumns_hash           = map { substr $_, 1+index($_, ".") => 1 } @taxonColumns;
+    #my %projectMetadataColumns_hash = map { substr $_, 1+index($_, ".") => 1 } @projectMetadataColumns;
+    #my %sampleMetadataColumns_hash  = map { substr $_, 1+index($_, ".") => 1 } @sampleMetadataColumns;
+    #my %statsColumns_hash           = map { substr $_, 1+index($_, ".") => 1 } @statsColumns;
+    #
+    #if ( exists( $taxonColumns_hash{$taxonSearchFilter} ) ) {
+    #    push( @taxonColumns, $taxonSearchFilter );
+    #} elsif ( exists( $projectMetadataColumns_hash{$taxonSearchFilter} ) ) {
+    #    push( @projectMetadataColumns, $taxonSearchFilter );
+    #} elsif ( exists( $sampleMetadataColumns_hash{$taxonSearchFilter} ) ) {
+    #    push( @sampleMetadataColumns, $taxonSearchFilter );
+    #} elsif ( exists( $statsColumns_hash{$taxonSearchFilter} ) ) {
+    #    push( @statsColumns, $taxonSearchFilter );
+    #}
+    #
+    #my @defaults = ( 't.domain', 't.seq_status', 't.proposal_name', 't.taxon_display_name', 't.seq_center', 't.taxon_oid' );
+    #push( @defaults, @taxonColumns );
+    #@taxonColumns = @defaults;
+    #my @defaults = ( 'ts.total_bases', 'ts.total_gene_count' );
+    #push( @defaults, @statsColumns );
+    #@statsColumns = @defaults;
+    #print "printFindGenomeResults() taxonColumns: @taxonColumns<br/>\n";
+    #print "printFindGenomeResults() statsColumns: @statsColumns<br/>\n";
+    
     require GenomeList;
     GenomeList::printConfigDiv( \@taxonColumns, \@projectMetadataColumns,
                     \@sampleMetadataColumns, \@statsColumns );

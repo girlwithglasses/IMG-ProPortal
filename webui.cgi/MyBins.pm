@@ -2,7 +2,7 @@
 # MyBins - allow super users to save their scaffolds as a bin
 #
 # - ken
-# $Id: MyBins.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: MyBins.pm 35375 2016-03-08 21:18:46Z jinghuahuang $
 ############################################################################
 package MyBins;
 
@@ -15,6 +15,7 @@ use WebUtil;
 use InnerTable;
 use OracleUtil;
 use MerFsUtil;
+use QueryUtil;
 
 $| = 1;
 
@@ -1024,7 +1025,7 @@ sub insertBin {
     $cur->execute() or webDie("cannot execute: $DBI::errstr\n");
 
     # create bin with scaffolds
-    my $taxon_oid = scaffoldOid2TaxonOid( $dbh, $scaffold_oids_aref->[0] );
+    my $taxon_oid = QueryUtil::scaffoldOid2TaxonOid( $dbh, $scaffold_oids_aref->[0] );
     my $sql       = qq{
         insert into bin_scaffolds
         (bin_oid, scaffold, taxon)

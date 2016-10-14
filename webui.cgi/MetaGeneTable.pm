@@ -542,7 +542,7 @@ sub showExpandGeneTable {
                     $scaf_gc = sprintf( "%.2f", $scaf_gc );
 
                     my $scaf_url =
-                        "$main_cgi?section=ScaffoldGraph"
+                        "$main_cgi?section=ScaffoldDetail"
                       . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
                     my $scaf_link = alink( $scaf_url, $scaffold_oid );
                     $r .= $scaffold_oid . $sd . $scaf_link . "\t";
@@ -559,7 +559,7 @@ sub showExpandGeneTable {
                     $r .= $scaf_depth . $sd . $scaf_depth . "\t";
 
                     my $scaf_gene_url =
-                        "$main_cgi?section=ScaffoldGraph"
+                        "$main_cgi?section=ScaffoldDetail"
                       . "&page=scaffoldGenes&scaffold_oid=$scaffold_oid";
                     my $scaf_gene_link =
                       alink( $scaf_gene_url, $scaf_gene_cnt );
@@ -575,7 +575,7 @@ sub showExpandGeneTable {
                     $scaf_gc = sprintf( "%.2f", $scaf_gc );
 
                     my $scaf_url =
-                        "$main_cgi?section=MetaDetail"
+                        "$main_cgi?section=MetaScaffoldDetail"
                       . "&page=metaScaffoldDetail&scaffold_oid=$scaffold_oid"
                       . "&taxon_oid=$taxon_oid&data_type=$data_type";
                     my $scaf_link = alink( $scaf_url, $scaffold_oid );
@@ -584,7 +584,7 @@ sub showExpandGeneTable {
                     my $scaf_len_url =
                         "$main_cgi?section=MetaScaffoldGraph"
                       . "&page=metaScaffoldGraph&scaffold_oid=$scaffold_oid"
-                      . "&taxon_oid=$taxon_oid"
+                      . "&taxon_oid=$taxon_oid&data_type=$data_type"
                       . "&start_coord=1&end_coord=$scaf_len"
                       . "&marker_gene=$gene_oid&seq_length=$scaf_len";
                     my $scaf_len_link = alink( $scaf_len_url, $scaf_len );
@@ -593,7 +593,7 @@ sub showExpandGeneTable {
                     $r .= $scaf_depth . $sd . $scaf_depth . "\t";
 
                     my $scaf_gene_url =
-                        "$main_cgi?section=MetaDetail"
+                        "$main_cgi?section=MetaScaffoldDetail"
                       . "&page=metaScaffoldGenes&scaffold_oid=$scaffold_oid"
                       . "&taxon_oid=$taxon_oid";
                     my $scaf_gene_link =
@@ -1371,7 +1371,7 @@ sub printMetaGeneSearchSelect {
     print nbsp(1);
     print "Pfam Functions<br/>\n";
     print
-"<input type='checkbox' name=geneSearchDisplay' value='inc_gene_tigr' checked>\n";
+"<input type='checkbox' name='geneSearchDisplay' value='inc_gene_tigr' checked>\n";
     print nbsp(1);
     print "TIGRfam Functions<br/>\n";
     print
@@ -1702,7 +1702,7 @@ sub showGeneSearchResult {
                     my $scaf_depth =
                       getScaffoldDepth( $taxon_oid, $data_type, $scaffold_oid );
                     my $scaf_url =
-                        "$main_cgi?section=MetaDetail"
+                        "$main_cgi?section=MetaScaffoldDetail"
                       . "&page=metaScaffoldDetail&scaffold_oid=$scaffold_oid"
                       . "&taxon_oid=$taxon_oid&data_type=$data_type";
                     my $scaf_link = alink( $scaf_url, $scaffold_oid );
@@ -1711,7 +1711,7 @@ sub showGeneSearchResult {
                     my $scaf_len_url =
                         "$main_cgi?section=MetaScaffoldGraph"
                       . "&page=metaScaffoldGraph&scaffold_oid=$scaffold_oid"
-                      . "&taxon_oid=$taxon_oid"
+                      . "&taxon_oid=$taxon_oid&data_type=$data_type"
                       . "&start_coord=1&end_coord=$scaf_len"
                       . "&marker_gene=$gene_oid&seq_length=$scaf_len";
                     my $scaf_len_link = alink( $scaf_len_url, $scaf_len );
@@ -1720,7 +1720,7 @@ sub showGeneSearchResult {
                     $r .= $scaf_depth . $sd . $scaf_depth . "\t";
 
                     my $scaf_gene_url =
-                        "$main_cgi?section=MetaDetail"
+                        "$main_cgi?section=MetaScaffoldDetail"
                       . "&page=metaScaffoldGenes&scaffold_oid=$scaffold_oid"
                       . "&taxon_oid=$taxon_oid";
                     my $scaf_gene_link =

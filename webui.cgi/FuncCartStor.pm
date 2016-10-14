@@ -6,7 +6,7 @@
 #     1: func_name
 #     2: batch_id
 #    --es 01/06/2007
-# $Id: FuncCartStor.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: FuncCartStor.pm 35713 2016-06-01 19:44:22Z jinghuahuang $
 ############################################################################
 package FuncCartStor;
 my $section = "FuncCartStor";
@@ -761,7 +761,7 @@ sub webAddFuncs {
 }
 
 ############################################################################
-# addFuncBatch - Add genes in a batch.
+# addFuncBatch - Add funcs in a batch.
 ############################################################################
 sub addFuncBatch {
     my ( $self, $func_ids_ref ) = @_;
@@ -3640,7 +3640,7 @@ sub printAllGenes {
                           = split( /\t/, $gene_info_h{$workspace_id} );
 
                         my $scaffold_url =
-                            "$main_cgi?section=MetaDetail"
+                            "$main_cgi?section=MetaScaffoldDetail"
                           . "&page=metaScaffoldDetail&scaffold_oid=$scaffold_oid"
                           . "&taxon_oid=$t_oid&data_type=$data_type";
                         $scaffold_url = alink( $scaffold_url, $scaffold_oid );
@@ -3727,7 +3727,8 @@ sub execAllGenesSql {
             $r   .= "$gene_display_name\t";
             $r   .= "$symbToAdd$func_id\t";
 
-            my $scaffold_url = "$main_cgi?section=ScaffoldCart" . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
+            my $scaffold_url = "$main_cgi?section=ScaffoldDetail" 
+                . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
             $scaffold_url = alink( $scaffold_url, $scaffold_oid );
             $r .= $scaffold_oid . $sd . $scaffold_url . "\t";
 

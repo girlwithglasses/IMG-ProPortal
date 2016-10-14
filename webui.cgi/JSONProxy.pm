@@ -342,7 +342,7 @@ sub returnData {
 sub initArray {
 	my $file = shift;
 	local $@;
-	my $arrayStr = eval { IMG::Util::File::slurp($file) };
+	my $arrayStr = eval { IMG::Util::File::file_slurp($file) };
 	die $@ if $@;
 	# Prevent file from being purged by cgi purge timeout +BSJ 01/25/12
 	WebUtil::fileTouch( $file );

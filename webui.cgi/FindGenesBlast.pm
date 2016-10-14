@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 34593 2015-10-30 00:29:59Z jinghuahuang $
+# $Id: FindGenesBlast.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -76,6 +76,7 @@ my $blast_wrapper_script   = $env->{blast_wrapper_script};
 
 my $blast_max_genome = $env->{blast_max_genome};
 my $mer_data_dir     = $env->{mer_data_dir};
+my $virus     = $env->{virus};
 
 my $max_merfs_metagenome_selections = 20;
 
@@ -103,14 +104,28 @@ sub getAppHeaderData {
 ############################################################################
 sub dispatch {
     my ( $self, $numTaxon ) = @_;
+
     timeout( 60 * 40 );
 
     my $page = param("page");
     if ( $page eq "TrueSeqCoords" ) {
         getTrueSeqCoords();
     } elsif ( paramMatch("ffgGeneSearchBlast") ne "" ) {
+        if(!$user_restricted_site ) {
+            my $url = WebUtil::alink('https://img.jgi.doe.gov/cgi-bin/mer/main.cgi', 'IMG/M ER');
+            print "Generic IMG BLAST is only available with login. Please use $url";
+            return;
+        } 
+
         printGeneSearchBlastResults();
     } else {
+        # no general blast for public site - ken
+        if(!$user_restricted_site ) {
+            my $url = WebUtil::alink('https://img.jgi.doe.gov/cgi-bin/mer/main.cgi', 'IMG/M ER');
+            print "Generic IMG BLAST is only available with login. Please use $url";
+            return;
+        }        
+        
         printGeneSearchBlastForm($numTaxon);
     }
 }
@@ -1008,7 +1023,16 @@ sub printGeneSearchBlastResults {
     print "<p>\n";
     print "Program: " . $blast_program . "<br>\n";
     print "E-value: " . $evalue . "<br>\n";
-    if ($all) {
+    my $use_db = param('use_db');
+    if ( $use_db ) {
+        print qq{
+            <font color='green'>
+                Use Blast Database: $use_db
+            </font>
+            <br>\n
+        };
+    }
+    elsif ($all) {
         print qq{
             <font color='red'>
                 <u>All isolate genomes</u> in IMG (no selection or over $blast_max_genome genomes selected)
@@ -1081,51 +1105,6 @@ sub printGeneSearchBlastResults {
 }
 
 ############################################################################
-# flushRecs - Flush a batch of gene results
-#   Inputs:
-#     dbh - database handle
-#     gene_oid_str - gene object identifer string, comma separated
-#     blastRec_ref - reference to BLAST record results
-############################################################################
-sub flushRecs {
-    my ( $dbh, $gene_oid_str, $blastRec_ref ) = @_;
-    return if blankStr($gene_oid_str);
-
-    my ($rclause) = WebUtil::urClause('tx');
-    my $imgClause = WebUtil::imgClause('tx');
-    my $sql       = qq{
-        select g.gene_oid, g.locus_tag, g.gene_display_name,
-          tx.genus, tx.species
-        from gene g, taxon tx
-        where g.taxon = tx.taxon_oid
-        and g.gene_oid in( $gene_oid_str )
-        $rclause
-        $imgClause
-        order by g.gene_oid
-   };
-
-    my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ; ; ) {
-        my ( $gene_oid, $locus_tag, $gene_display_name, $genus, $species ) = $cur->fetchrow();
-        last if !$gene_oid;
-
-        my ( $percIdent, $evalue, $bitScore ) =
-          split( /\t/, $blastRec_ref->{$gene_oid} );
-        print "<input type='checkbox' name='gene_oid' value='$gene_oid' />\n";
-        my $url = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene_oid";
-        print alink( $url, $gene_oid ) . " ";
-        print "<font color='green'>\n";
-        print "evalue=$evalue ${percIdent}% score=$bitScore";
-        print "</font>\n";
-        print "<i>" . escHtml($locus_tag) . "</i> ";
-        print escHtml($gene_display_name) . " ";
-        print escHtml("\[$genus $species\]");
-        print "<br>\n";
-    }
-    $cur->finish();
-}
-
-############################################################################
 # printGeneSearchProteinBlastForAll - Run BLAST for all IMG genes,
 #   single database version.
 #     Inputs:
@@ -1134,14 +1113,23 @@ sub flushRecs {
 ############################################################################
 sub printGeneSearchProteinBlastForAll {
     my ($fasta) = @_;
+    
     if ( !defined($fasta) ) {
         $fasta = param("fasta");
+    }
+    $fasta =~ s/^\s+//;
+    $fasta =~ s/\s+$//;
+    if ( blankStr($fasta) ) {
+        webError("FASTA query sequence not specified.");
+        return;
     }
 
     my $evalue = param("blast_evalue");
     unless ( defined($evalue) ) {
         $evalue = param("maxEvalue");
     }
+    $evalue = checkEvalue($evalue);
+    
     my $blast_pgm = "blastp";
     $blast_pgm = "blastx" if param("blast_program") eq "blastx";
 
@@ -1153,48 +1141,21 @@ sub printGeneSearchProteinBlastForAll {
 
     ## --es 05/05/2005 Limit no. of BLAST jobs.
     WebUtil::blastProcCheck();
+    
     printStatusLine( "Loading...", 1 );
-    if ( blankStr($fasta) ) {
-        webError("FASTA query sequence not specified.");
-        return;
-    }
-    printStatusLine( "Loading...", 1 );
-
-    validateQuerySequenceType( $fasta, $blast_pgm );
-
     webLog "Start BLAST IMG DB process=$$ " . currDateTime() . "\n"
       if $verbose >= 1;
 
-    my $seq;
-    my @lines = split( /\n/, $fasta );
-    my $seq_id = "query";
-    for my $line (@lines) {
-        if ( $line =~ /^>/ ) {
-            $line =~ s/>//g;
-            if ( length($line) > 240 ) {
-                $seq_id = substr( $line, 0, 240 );
-            } else {
-                $seq_id = $line;
-            }
-            $seq_id =~ s/^\s+//;
-            $seq_id =~ s/\s+$//;
-            $seq_id =~ s/\r//g;
-            if ( $seq_id eq '' ) {
-                $seq_id = "query";
-            }
-        } else {
-            $seq .= "$line\n";
-        }
-    }
-    $fasta =~ s/^\s+//;
-    $fasta =~ s/\s+$//;
+    my ( $seq_id, $seq ) = extractQuerySequence( $fasta );    
+    #print "printGeneSearchProteinBlastForAll() seq=$seq<br>\n";
+    validateQuerySequenceType( $seq, $blast_pgm );
+
     my $fasta2 = $fasta;
     if ( $fasta !~ /^>/ ) {
         $fasta2 = ">query$$\n";
         $fasta2 .= "$fasta\n";
     }
 
-    #my $dbFile = checkPath( $all_faa_blastdb );
     $cgi_tmp_dir = Command::createSessionDir();    # change dir - ken
     my $tmpDbFile = "$cgi_tmp_dir/faaDb$$.pal";
     my $dbFile    = $tmpDbFile;
@@ -1209,7 +1170,6 @@ sub printGeneSearchProteinBlastForAll {
     ## Prepare for BLAST
     printMainForm();
     webLog "Start BLAST " . currDateTime() . "\n" if $verbose >= 1;
-    $evalue = checkEvalue($evalue);
 
     ## New BLAST
     my $cmd =
@@ -1257,31 +1217,24 @@ sub printGeneSearchProteinBlastForAll {
         $args{super_user}         = getSuperUser();
         $args{report_file}        = $reportFile if $reportFile ne "";
 
-        #print "printGeneSearchProteinBlastForAll() blastallm0_server_url: $blastallm0_server_url<br>\n";
-        #print Dumper(%args);
-        #print "<br>\n";
         webLog( ">>> Calling '$blastallm0_server_url' database='$database' "
               . "db='allFaa' pgm='$blast_pgm' reportFile='$reportFile'\n" );
         $cfh = new LwpHandle( $blastallm0_server_url, \%args );
     } else {
 
-        #webLog "+ $cmd\n" if $verbose >= 1;
-        #if ( $blast_wrapper_script ne "" ) {
-        #    $cmd = "$blast_wrapper_script $cmd";
-        #}
-        #$cfh = newCmdFileHandle( $cmd, "printGeneSearchBlastForAll" );
-        #my $img_ken = 1;
         print "Calling blast api<br>\n" if ($img_ken);
         my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        Command::startDotThread(120);
         my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
         if ( $stdOutFile == -1 ) {
-
+            Command::killDotThread();
             # close working div but do not clear the data
             printEndWorkingDiv( '', 1 );
-            ##$dbh->disconnect();
             printStatusLine( "Error.", 2 );
             WebUtil::webExit(-1);
         }
+        Command::killDotThread();
+        
         print "blast done<br>\n"                 if ($img_ken);
         print "Reading output $stdOutFile<br>\n" if ($img_ken);
         $cfh = WebUtil::newReadFileHandle($stdOutFile);
@@ -1486,57 +1439,41 @@ sub getPrivateTaxonOids {
 ############################################################################
 sub printGeneSearchDnaBlastForAll {
     my ($fasta) = @_;
+
     if ( !defined($fasta) ) {
         $fasta = param("fasta");
+    }
+    $fasta =~ s/^\s+//;
+    $fasta =~ s/\s+$//;
+    if ( blankStr($fasta) ) {
+        webError("FASTA query sequence not specified.");
+        return;
     }
 
     my $evalue = param("blast_evalue");
     unless ( defined($evalue) ) {
         $evalue = param("maxEvalue");
     }
+    $evalue = checkEvalue($evalue);
 
     my $blast_pgm = param("blast_program");
     $blast_pgm =~ /([a-zA-Z0-9_]+)/;
     $blast_pgm = $1;
 
+    ## Amy: add this option to select different blast database
+    my $use_db = param("use_db");
+
     ## --es 05/05/2005 Limit no. of BLAST jobs.
     WebUtil::blastProcCheck();
+
     printStatusLine( "Loading...", 1 );
-    if ( blankStr($fasta) ) {
-        webError("FASTA query sequence not specified.");
-        return;
-    }
-    $evalue = checkEvalue($evalue);
     webLog "Start BLAST IMG DB process=$$ " . currDateTime() . "\n"
       if $verbose >= 1;
 
-    #printStatusLine( "Loading...", 1 );
+    my ( $seq_id, $seq ) = extractQuerySequence( $fasta );
+    #print "printGeneSearchDnaBlastForAll() seq=$seq<br>\n";
+    validateQuerySequenceType( $seq, $blast_pgm );
 
-    validateQuerySequenceType( $fasta, $blast_pgm );
-
-    my $seq;
-    my @lines = split( /\n/, $fasta );
-    my $seq_id = "query";
-    for my $line (@lines) {
-        if ( $line =~ /^>/ ) {
-            $line =~ s/>//g;
-            if ( length($line) > 240 ) {
-                $seq_id = substr( $line, 0, 240 );
-            } else {
-                $seq_id = $line;
-            }
-            $seq_id =~ s/^\s+//;
-            $seq_id =~ s/\s+$//;
-            $seq_id =~ s/\r//g;
-            if ( $seq_id eq '' ) {
-                $seq_id = "query";
-            }
-        } else {
-            $seq .= "$line\n";
-        }
-    }
-    $fasta =~ s/^\s+//;
-    $fasta =~ s/\s+$//;
     my $fasta2 = $fasta;
     if ( $fasta !~ /^>/ ) {
         $fasta2 = ">query$$\n";
@@ -1563,6 +1500,7 @@ sub printGeneSearchDnaBlastForAll {
       . " -p $blast_pgm -d $dbFile $blast_a_flag -e $evalue -m 0 "
       . " -b 2000 -v 2000 -i $tmpFile "
       . " --path $blastall_bin ";
+    ##print "<p>cmd: $cmd\n";
 
     # --path is needed although fullpath of legacy_blast.pl is
     # specified in the beginning of command! ---yjlin 03/12/2013
@@ -1572,8 +1510,9 @@ sub printGeneSearchDnaBlastForAll {
 
     my $cfh;
     my $reportFile;
-    if ( $blastallm0_server_url ne "" ) {
 
+    if ( $blastallm0_server_url ne "" ) {
+	##print "<p>url: $blastallm0_server_url\n";
         # For security reasons, we don't put in the whole
         # path, but make some assumptions about the report
         # being in common_tmp_dir.
@@ -1581,6 +1520,10 @@ sub printGeneSearchDnaBlastForAll {
             my $sessionId = getSessionId();
             $reportFile = "blast.$sessionId.$$.m0.txt";
         }
+
+	if ( ! $use_db ) {
+	    $use_db = 'allFna';
+	}
 
         # --es 08/30/08
         # Heuristic to discover IMG (Oracle) database name.
@@ -1591,7 +1534,7 @@ sub printGeneSearchDnaBlastForAll {
         $args{seq}                = $seq;
         $args{mopt}               = "0";
         $args{eopt}               = $evalue;
-        $args{db}                 = "allFna";
+        $args{db}                 = $use_db;
         $args{database}           = $database;
         $args{top_n}              = 10000;
         $args{pgm}                = $blast_pgm;
@@ -1599,42 +1542,32 @@ sub printGeneSearchDnaBlastForAll {
         $args{super_user}         = getSuperUser();
         $args{report_file}        = $reportFile if $reportFile ne "";
 
-        #print "printGeneSearchDnaBlastForAll() blastallm0_server_url: $blastallm0_server_url<br>\n";
-        #print Dumper(%args);
-        #print "<br>\n";
-        #print ">>> Calling '$blastallm0_server_url' database='$database' "
-        #        . "db='allFna' pgm='$blast_pgm' reportFile='$reportFile'<br>\n";
         webLog( ">>> Calling '$blastallm0_server_url' database='$database' "
-              . "db='allFna' pgm='$blast_pgm' reportFile='$reportFile'\n" );
+              . "db='$use_db' pgm='$blast_pgm' reportFile='$reportFile'\n" );
         $cfh = new LwpHandle( $blastallm0_server_url, \%args );
     } else {
-
-        #if ( $blast_wrapper_script ne "" ) {
-        #    $cmd = "$blast_wrapper_script $cmd";
-        #}
-        #$cfh = newCmdFileHandle( $cmd, "printGeneSearchDnaBlastForAll" );
-        #print "Calling blast api<br>\n";
         my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        Command::startDotThread(120);
         my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
         if ( $stdOutFile == -1 ) {
-
+            Command::killDotThread();
             # close working div but do not clear the data
             printEndWorkingDiv( '', 1 );
-            ##$dbh->disconnect();
             printStatusLine( "Error.", 2 );
             WebUtil::webExit(-1);
         }
+        Command::killDotThread();
 
-        #print "blast done<br>\n";
-        #print "Reading output $stdOutFile<br>\n";
+        print "blast done<br>\n";
+        print "Reading output $stdOutFile<br>\n";
         $cfh = WebUtil::newReadFileHandle($stdOutFile);
-
     }
 
     if ( $reportFile ne "" ) {
         my $qFile;
         while ( my $s = $cfh->getline() ) {
             chomp $s;
+
             if ( $s =~ /^PID=/ ) {    # some genome/gene names might
                                       # contain PID. This has happened.
                                       # - yjlin 20130411
@@ -1661,7 +1594,6 @@ sub printGeneSearchDnaBlastForAll {
             waitForResults( $reportFile, $qFile );
         }
         webLog("Reading reportFile='$common_tmp_dir/$reportFile'\n");
-
         #print "Reading reportFile=$common_tmp_dir/$reportFile<br>\n";
         $cfh = newReadFileHandle( "$common_tmp_dir/$reportFile", "printGeneSearchDnaBlastForAll" );
     }
@@ -1672,6 +1604,7 @@ sub printGeneSearchDnaBlastForAll {
 
         #print "Reading reportFile s=$s<br>\n";
         chomp $s;
+
         if ( $s =~ /^PID=/ ) {    # some genome/gene names might
                                   # contain PID. This has happened.
                                   # - yjlin 20130411
@@ -1689,7 +1622,7 @@ sub printGeneSearchDnaBlastForAll {
     wunlink($tmpFile);
     wunlink($tmpDbFile);
 
-    if ($anyHits) {
+    if ($anyHits && $use_db ne 'viral_spacer' ) {
         print "</pre>\n";
         WebUtil::printScaffoldCartFooter();
         print "<pre>\n";
@@ -1705,13 +1638,19 @@ sub printGeneSearchDnaBlastForAll {
 
     if ($anyHits) {
         print "</pre>\n";
-        WebUtil::printScaffoldCartFooter();
-        ## save to workspace
-        WorkspaceUtil::printSaveScaffoldToWorkspace('scaffold_oid');
+	if ( $use_db ne 'viral_spacers' ) {
+	    WebUtil::printScaffoldCartFooter();
+	    ## save to workspace
+	    WorkspaceUtil::printSaveScaffoldToWorkspace('scaffold_oid');
+	}
         print "<pre>\n";
     }
 
     printStatusLine( "Loaded.", 2 );
+
+#    print "<p>$common_tmp_dir\n";
+#    print "<p>Report file: $reportFile\n";
+
     print end_form();
     webLog "BLAST Done for IMG DB process=$$ " . currDateTime() . "\n"
       if $verbose >= 1;
@@ -1779,6 +1718,8 @@ sub writeNalFile {
 sub printGeneSearchProteinBlastByTaxon {
     my ( $fasta, $evalue, $taxon_oid, $in_file ) = @_;
 
+    $fasta =~ s/^\s+//;
+    $fasta =~ s/\s+$//;
     if ( blankStr($fasta) ) {
         webError("FASTA query sequence not specified.");
         return;
@@ -1786,8 +1727,6 @@ sub printGeneSearchProteinBlastByTaxon {
 
     $evalue = checkEvalue($evalue);
 
-    $fasta =~ s/^\s+//;
-    $fasta =~ s/\s+$//;
     my $fasta2 = $fasta;
     if ( $fasta !~ /^>/ ) {
         $fasta2 = ">query$$\n";
@@ -1853,27 +1792,22 @@ sub printGeneSearchProteinBlastByTaxon {
     webLog "+ $cmd\n" if $verbose >= 1;
     WebUtil::unsetEnvPath();
 
-    #    if ( $blast_wrapper_script ne "" ) {
-    #        $cmd = "$blast_wrapper_script $cmd";
-    #    }
-
-    #print "printGeneSearchProteinBlastByTaxon() cmd: $cmd<br>\n";
     print "Calling blast api<br>\n" if ($img_ken);
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread(120);
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
     if ( $stdOutFile == -1 ) {
-
+        Command::killDotThread();
         # close working div but do not clear the data
         printEndWorkingDiv( '', 1 );
-        ##$dbh->disconnect();
         printStatusLine( "Error.", 2 );
         WebUtil::webExit(-1);
     }
+    Command::killDotThread();
     print "blast done<br>\n"                 if ($img_ken);
     print "Reading output $stdOutFile<br>\n" if ($img_ken);
     my $cfh = WebUtil::newReadFileHandle($stdOutFile);
 
-    #    my $cfh = newCmdFileHandle( $cmd, "printGeneSeachBlastByTaxon" );
     my @lines;
     while ( my $s = $cfh->getline() ) {
         chomp $s;
@@ -1914,19 +1848,15 @@ sub printGeneSearchDnaBlastByTaxon {
 
     # $assembled is only used if taxon_oid belongs to metagenome
 
+    $fasta =~ s/^\s+//;
+    $fasta =~ s/\s+$//;
     webError("FASTA query sequence not specified.")
       if ( blankStr($fasta) );
 
     $evalue = checkEvalue($evalue);
+
     ## --es 05/05/2005 Limit no. of BLAST jobs.
     WebUtil::blastProcCheck();
-    $fasta =~ s/^\s+//;
-    $fasta =~ s/\s+$//;
-    my $fasta2 = $fasta;
-    if ( $fasta !~ /^>/ ) {
-        $fasta2 = ">query$$\n";
-        $fasta2 .= "$fasta\n";
-    }
 
     my $blast_pgm = param("blast_program");
     $blast_pgm =~ /([a-zA-Z_]+)/;
@@ -1989,6 +1919,12 @@ sub printGeneSearchDnaBlastByTaxon {
         return ( \@query_coords, \@subjt_coords );
     }
 
+    my $fasta2 = $fasta;
+    if ( $fasta !~ /^>/ ) {
+        $fasta2 = ">query$$\n";
+        $fasta2 .= "$fasta\n";
+    }
+
     ## input file
     $cgi_tmp_dir = Command::createSessionDir();    # change dir - ken
 
@@ -2007,27 +1943,20 @@ sub printGeneSearchDnaBlastByTaxon {
     my $cmd = $cmd_part1 . " -m 0 " . $cmd_part2;
     webLog "+ $cmd\n" if $verbose >= 1;
 
-    #my $cmd2 = $cmd_part1 . " -m 8 " . $cmd_part2; # get tab-delimited output
-    #webLog "+ $cmd2\n" if $verbose >= 1;
-
-    #if ( $blast_wrapper_script ne "" ) {
-    #    $cmd  = "$blast_wrapper_script $cmd";
-    #}
-    #print "printGeneSearchDnaBlastByTaxon() cmd: $cmd<br>\n";
-    #print "printGeneSearchDnaBlastByTaxon() cmd2: $cmd2<br>\n";
-
     WebUtil::unsetEnvPath();
 
     #print "Calling blast api<br>\n";
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread(120);
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
     if ( $stdOutFile == -1 ) {
-
+        Command::killDotThread();
         # close working div but do not clear the data
         printEndWorkingDiv( '', 1 );
         printStatusLine( "Error.", 2 );
         WebUtil::webExit(-1);
     }
+    Command::killDotThread();
 
     #print "blast done<br>\n";
     #print "Reading output $stdOutFile<br>\n";
@@ -2093,6 +2022,9 @@ sub printGeneSearchBlastForTaxons {
     }
 
     my $fasta  = param("fasta");
+    $fasta =~ s/^\s+//;
+    $fasta =~ s/\s+$//;
+
     my $evalue = param("blast_evalue");
 
     # this is non null if from the missing gene
@@ -2101,9 +2033,11 @@ sub printGeneSearchBlastForTaxons {
     # from scaffold graph
     my $from         = param("from");
     my $scaffold_oid = param("scaffold_oid");
-    #print "printGeneSearchProteinBlastForAll() from: $from, scaffold_oid: $scaffold_oid<br>\n";
+    #print "printGeneSearchBlastForTaxons() from: $from, scaffold_oid: $scaffold_oid<br>\n";
 
-    validateQuerySequenceType( $fasta, $blast_program );
+    my ( $seq_id, $seq ) = extractQuerySequence( $fasta );    
+    #print "printGeneSearchBlastForTaxons() seq=$seq<br>\n";
+    validateQuerySequenceType( $seq, $blast_program );
 
     my $dbh = dbLogin();
     my ( $taxon2name_href, $taxon_in_file_href, $taxon_db_href, $taxon_oids_str ) =
@@ -2119,7 +2053,6 @@ sub printGeneSearchBlastForTaxons {
         }
         push( @recs, $taxon_oid );
     }
-
     #print "printGeneSearchBlastForTaxons() recs=@recs<br>\n";
 
     my $nRecs = scalar(@recs);
@@ -2331,6 +2264,38 @@ sub printEndingForm {
 }
 
 ############################################################################
+# extractQuerySequence
+############################################################################
+sub extractQuerySequence {
+    my ( $fasta ) = @_;
+
+    my $seq;
+    my @lines = split( /\n/, $fasta );
+    my $seq_id = "query";
+    for my $line (@lines) {
+        if ( $line =~ /^>/ ) {
+            $line =~ s/>//g;
+            if ( length($line) > 240 ) {
+                $seq_id = substr( $line, 0, 240 );
+            } else {
+                $seq_id = $line;
+            }
+            $seq_id =~ s/^\s+//;
+            $seq_id =~ s/\s+$//;
+            $seq_id =~ s/\r//g;
+            if ( $seq_id eq '' ) {
+                $seq_id = "query";
+            }
+        } else {
+            $seq .= "$line\n";
+        }
+    }
+
+    return ($seq_id, $seq);
+}
+
+
+############################################################################
 # validateQuerySequenceType
 ############################################################################
 sub validateQuerySequenceType {
@@ -2372,17 +2337,22 @@ sub printGenomeSelectionMessage {
         print qq{
             Find matches in genomes of selected genome sets.
             <br>
-            The total selection can not be more than <b>$blast_max_genome</b> genomes (including metagenomes).
+            The total selection can not be more than <b>$blast_max_genome</b> genomes / metagenomes.
             <br>
         };
     } else {
         print qq{
-            Find matches in genomes selected below.
-            <br>
-            <u>All isolate genomes</u> in IMG will be used if no selection.  This is equivalent to the old 'All IMG Genes - one large database' option.
-            <br>
-            <u>All isolate genomes</u> in IMG will also be used if the selection is more than <b>$blast_max_genome</b> genomes (including metagenomes).
-            <br>
+            <br>Find matches in genomes selected below.
+            <br><br>
+<span style="font-size: 14px; font-weight: bold;">All isolate genomes in IMG will be used: </span>
+(This was equivalent to the old 'All IMG Genes - one large database' option)
+    <ul style="font-size: 13px;">
+        <li> If there is no genome or metagenome selection. 
+        </li>
+        <li> If the selection is more than <b>$blast_max_genome</b> 
+             genomes / metagenomes.
+        </li>
+    </ul>
         };
     }
 }
@@ -2501,23 +2471,27 @@ sub printEnvBlast {
     my ( $imgBlastDb, $proteinFlag ) = @_;
 
     my $blast_pgm = param("blast_program");
+ 
     my $fasta     = param("fasta");
-
-    #my $imgBlastDb = param( "imgBlastDb" );
-    my $evalue = param("blast_evalue");
-
-    ## --es 05/05/2005 Limit no. of BLAST jobs.
-    WebUtil::blastProcCheck();
-    printStatusLine( "Loading...", 1 );
+    $fasta =~ s/^\s+//;
+    $fasta =~ s/\s+$//;
     if ( blankStr($fasta) ) {
         webError("FASTA query sequence not specified.");
         return;
     }
+
+    #my $imgBlastDb = param( "imgBlastDb" );
+    my $evalue = param("blast_evalue");
     $evalue = checkEvalue($evalue);
+
+    ## --es 05/05/2005 Limit no. of BLAST jobs.
+    WebUtil::blastProcCheck();
+    
+    printStatusLine( "Loading...", 1 );
+    
     webLog "Start BLAST IMG DB process=$$ " . currDateTime() . "\n"
       if $verbose >= 1;
-    $fasta =~ s/^\s+//;
-    $fasta =~ s/\s+$//;
+
     my $fasta2 = $fasta;
     if ( $fasta !~ /^>/ ) {
         $fasta2 = ">query$$\n";
@@ -2571,21 +2545,18 @@ sub printEnvBlast {
     webLog "+ $cmd\n" if $verbose >= 1;
     WebUtil::unsetEnvPath();
 
-    #    if ( $blast_wrapper_script ne "" ) {
-    #        $cmd = "$blast_wrapper_script $cmd";
-    #    }
-    #    my $cfh = newCmdFileHandle( $cmd, "printEnvBlast" );
     print "Calling blast api<br>\n" if ($img_ken);
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread(120);
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
     if ( $stdOutFile == -1 ) {
-
+        Command::killDotThread();
         # close working div but do not clear the data
         printEndWorkingDiv( '', 1 );
-        ##$dbh->disconnect();
         printStatusLine( "Error.", 2 );
         WebUtil::webExit(-1);
     }
+    Command::killDotThread();
     print "blast done<br>\n"                 if ($img_ken);
     print "Reading output $stdOutFile<br>\n" if ($img_ken);
     my $cfh = WebUtil::newReadFileHandle($stdOutFile);
@@ -2625,6 +2596,10 @@ sub printEnvBlast {
 sub processDnaSearchResult {
     my ( $dbh, $lines_ref, $taxon_oid, $in_file, $evalue ) = @_;
 
+    my $contact_oid = getContactOid();
+    my $super_user  = getSuperUser();
+    my $access_permission = 1;
+
     my %coords;
     my $coord1;
     my $coord2;
@@ -2632,6 +2607,8 @@ sub processDnaSearchResult {
     my %t_oids_h; 
     my %ext_accessions_h;
     my %curr_scaf_id2backup;
+
+    my $use_db = param('use_db');
 
     # Scan for coordinates in scaffolds
     if ( scalar(@$lines_ref) > 0 ) {
@@ -2641,9 +2618,12 @@ sub processDnaSearchResult {
         my $inSummary = 0;
         
         for my $s (@$lines_ref) {
+	    if ( $use_db eq 'viral_spacers' ) {
+		## spacers
+		next;
+	    }
+
             #webLog("$s\n");
-            #print "$s<br/>\n";
-    
             if ( $s =~ /^Sequences producing significant alignments/ ) {
                 $inSummary = 1;
             } 
@@ -2728,8 +2708,52 @@ sub processDnaSearchResult {
     my $inSummary = 0;
     my %someId2url;
 
+    my $p_sql = qq{
+         select count(*) from taxon
+          where taxon_oid = ?
+          and obsolete_flag = 'No'
+          and is_public = 'Yes' or
+           taxon_oid in (select taxon_oid from contact_taxon_permissions
+                         where taxon_permissions = ? and contact_oid = ?)
+        };
+
     for my $s (@$lines_ref) {
         chomp $s;
+
+	if ( $use_db eq 'viral_spacers' ) {
+	    ## spacers
+	    if ( $s =~ /^>/ ) {
+		my ($s1, $s2) = split(/\|/, $s);
+		my ($tid, $sid, $sp, $pos) = split(/\:/, $s2);
+		if ( $pos ) {
+		    ## new format
+		    my $spacer_id = strTrim($s2);
+		    my $url2 = $main_cgi . "?section=Viral" .
+			"&page=spacerDetail" .
+			"&spacer_id=$spacer_id";
+		    print $s1 . '|' . alink($url2, $s2, '_blank') . "\n";
+		}
+		else {
+		    ## old format
+		    my ($s3, $s4) = split(/\./, $sp);
+		    require Viral;
+		    my $spacer_id = Viral::getSpacerID($tid, $sid, $s3, $s4);
+		    if ( $spacer_id ) {
+			my $url2 = $main_cgi . "?section=Viral" .
+			    "&page=spacerDetail" .
+			    "&spacer_id=$spacer_id";
+			print $s1 . '|' . alink($url2, $s2, '_blank') . "\n";
+		    }
+		    else {
+			print "$s\n";
+		    }
+		}
+	    }
+	    else {
+		print "$s\n";
+	    }
+	    next;
+	}
 
         if ( $s =~ /^Sequences producing significant alignments/ ) {
             $inSummary = 1;
@@ -2743,10 +2767,63 @@ sub processDnaSearchResult {
 
             my $checkbox;
             my $url;
+
+	    $access_permission = 1;
+	    if ($use_db eq 'viruses' && $curr_scaf_id ) {
+		## genome or metagenome?
+		my $str2 = 'No';
+
+		##print "<p>curr_scaf_id: $curr_scaf_id\n";
+		my ($t_id, $s_id) = split(/\_\_\_\_\_/, $curr_scaf_id);
+		my $sql2 = "select in_file from taxon where taxon_oid = ?";
+		if ( $t_id && isInt($t_id) ) {
+		    my $cur2 = execSql( $dbh, $sql2, $verbose, $t_id );
+		    ($str2) = $cur2->fetchrow();
+		    $cur2->finish();
+		}
+		else {
+		    $t_id = 0;
+		    $s_id = 0;
+		}
+
+		## access permission
+		if ( $super_user eq 'Yes' ) {
+		    $access_permission = 1;
+		}
+		else {
+		    my $p_cur = execSql( $dbh, $p_sql, $verbose, 
+					 $t_id, $t_id, $contact_oid );
+		    ($access_permission) = $p_cur->fetchrow();
+		    $p_cur->finish();
+		}
+
+		if ( $str2 eq 'Yes' ) {
+		    # metagenome viral scaffold
+		    $in_file = 1;
+		}
+		else {
+		    # isolate virus
+		    $in_file = 0;
+		}
+	    }
+
+	    if ( ! $access_permission ) {
+		print "<p>No permission\n";
+		next;
+	    }
+
             if ($in_file) {
                 #metagenome
+                
                 my ( $t_oid,     $t_s_oid ) = split( /\./, $curr_scaf_id );
                 my ( $data_type, $s_oid )   = split( /\:/, $t_s_oid );
+
+		if ($use_db eq 'viruses' && $curr_scaf_id ) {
+		    ## Virus blast database has different format
+		    ( $t_oid, $s_oid ) = split( /\_\_\_\_\_/, $curr_scaf_id );
+		    $data_type = 'assembled';
+		}
+
                 my $start_coord = $coord1;
                 my $end_coord   = $coord2;
                 if ( $coord1 > $coord2 ) {
@@ -2757,7 +2834,7 @@ sub processDnaSearchResult {
                 $data_type = 'unassembled' if ( $data_type eq 'u' );
                 my $workspace_id = "$t_oid $data_type $s_oid";
                 $checkbox = "<input type='checkbox' name='scaffold_oid' value='$workspace_id'/>";
-                $url      = "$main_cgi?section=MetaDetail&page=metaScaffoldDetail&scaffold_oid=$s_oid"
+                $url      = "$main_cgi?section=MetaScaffoldDetail&page=metaScaffoldDetail&scaffold_oid=$s_oid"
                     . "&taxon_oid=$t_oid&data_type=$data_type";
                 $someId2url{$curr_scaf_id} = $url;
             } else {
@@ -2770,11 +2847,15 @@ sub processDnaSearchResult {
                         $sbjt_scaf_oid = $accession2scaf_href->{$curr_scaf_id_backup};
                         #print "processDnaSearchResult() curr_scaf_id_backup: $curr_scaf_id_backup; sbjt_scaf_oid: $sbjt_scaf_oid<br>\n";
                     }
+		    if ( $use_db eq 'viruses' ) {
+			my ($t_id, $s_id) = split(/\_\_\_\_\_/, $curr_scaf_id);
+			$sbjt_scaf_oid = $s_id;
+		    }
                 }
                 #print "processDnaSearchResult() curr_scaf_id: $curr_scaf_id; sbjt_scaf_oid: $sbjt_scaf_oid<br>\n";
                 $checkbox = "<input type='checkbox' " 
                     . "name='scaffold_oid' value='$sbjt_scaf_oid'/>";
-                $url      = "main.cgi?section=ScaffoldGraph&page=scaffoldDetail" 
+                $url      = "main.cgi?section=ScaffoldDetail&page=scaffoldDetail" 
                     . "&scaffold_oid=$sbjt_scaf_oid";
                 $someId2url{$curr_scaf_id} = $url;
             }
@@ -2787,6 +2868,29 @@ sub processDnaSearchResult {
             $inSummary = 0;
             ($curr_scaf_id, $curr_scaf_id_escaped, $curr_scaf_id_backup) = findID($s);
             #print "processDnaSearchResult() >line curr_scaf_id: $curr_scaf_id, curr_scaf_id_escaped: $curr_scaf_id_escaped, curr_scaf_id_backup: $curr_scaf_id_backup<br>\n";
+
+	    $access_permission = 1;
+	    if ($use_db eq 'viruses') {
+		my ($t_id, $s_id) = split(/\_\_\_\_\_/, $curr_scaf_id);
+		if ( ! $t_id && ! isInt($t_id) ) {
+		    $t_id = 0;
+		}
+		if ( $super_user eq 'Yes' ) {
+		    $access_permission = 1;
+		}
+		else {
+		    my $p_cur = execSql( $dbh, $p_sql, $verbose, 
+					 $t_id, $t_id, $contact_oid );
+		    ($access_permission) = $p_cur->fetchrow();
+		    $p_cur->finish();
+		}
+	    }
+
+	    if ( ! $access_permission ) {
+		print "<p>No permission\n";
+		next;
+	    }
+
             my $url = $someId2url{$curr_scaf_id};
             if ($url) {
                 my $x1 = "<a href='$url'>";
@@ -2795,6 +2899,10 @@ sub processDnaSearchResult {
             }
             print "$s\n";
         } elsif ( $curr_scaf_id && $s =~ /^Sbjct/ ) {
+	    if ( ! $access_permission ) {
+		next;
+	    }
+
             my $s2 = $s;
             $s2 =~ s/\s+/ /g;
             my ( $sbjct, $coord, @toks ) = split( / /, $s2 );
@@ -2802,7 +2910,7 @@ sub processDnaSearchResult {
             my $x = $coords{$k};
             if ( $x ne "" ) {
 
-                my ( $t_oid, $t_s_oid, $type, $s_oid );
+                my ( $t_oid, $t_s_oid, $data_type, $s_oid );
                 my ( $coord1, $coord2 ) = split( /:/, $x );
 
                 my $start_coord = $coord1;
@@ -2825,9 +2933,17 @@ sub processDnaSearchResult {
                     my $len;
                     if ($in_file) {
                         #metagenome
-                        ( $t_oid, $t_s_oid ) = split( /\./, $curr_scaf_id );
-                        ( $type,  $s_oid )   = split( /\:/, $t_s_oid );
-                        ( $len, undef ) = MetaUtil::getScaffoldStats( $t_oid, $type, $s_oid );
+                        
+                         ( $t_oid, $t_s_oid ) = split( /\./, $curr_scaf_id );
+                         ( $data_type,  $s_oid )   = split( /\:/, $t_s_oid );
+
+			 if ($use_db eq 'viruses' && $curr_scaf_id ) {
+			     ## Virus blast database has different format
+			     ( $t_oid, $s_oid ) = split( /\_\_\_\_\_/, $curr_scaf_id );
+			     $data_type = 'assembled';
+			 }
+                        
+                        ( $len, undef ) = MetaUtil::getScaffoldStats( $t_oid, $data_type, $s_oid );
                     } 
                     else {
                         #print "processDnaSearchResult() >line curr_scaf_id: $curr_scaf_id, curr_scaf_id_escaped: $curr_scaf_id_escaped, curr_scaf_id_backup: $curr_scaf_id_backup<br>\n"; 
@@ -2844,18 +2960,18 @@ sub processDnaSearchResult {
                 my $url;
                 if ($in_file) {
                     #webLog("here 5 $s\n");
-                    #webLog("here 5-1  $curr_scaf_id $t_oid, $type, $s_oid\n");
+                    #webLog("here 5-1  $curr_scaf_id $t_oid, $data_type, $s_oid\n");
 
                     # bug fix http://issues.jgi-psf.org/browse/IMGSUPP-127
 
                     if ( $t_oid eq '' ) {
                         ( $t_oid, $t_s_oid ) = split( /\./, $curr_scaf_id );
-                        ( $type,  $s_oid )   = split( /\:/, $t_s_oid );
+                        ( $data_type,  $s_oid )   = split( /\:/, $t_s_oid );
                     }
 
-                    #webLog("here 5-1a $t_oid, $type, $s_oid\n");
+                    #webLog("here 5-1a $t_oid, $data_type, $s_oid\n");
 
-                    my @genes_on_s = MetaUtil::getScaffoldGenes( $t_oid, $type, $s_oid );
+                    my @genes_on_s = MetaUtil::getScaffoldGenes( $t_oid, $data_type, $s_oid );
 
                     #webLog("here 5-2\n");
                     for my $g2 (@genes_on_s) {
@@ -2883,7 +2999,7 @@ sub processDnaSearchResult {
                     }
 
                     $url = "$main_cgi?section=MetaScaffoldGraph";
-                    $url .= "&page=metaScaffoldGraph&taxon_oid=$t_oid&scaffold_oid=$s_oid";
+                    $url .= "&page=metaScaffoldGraph&taxon_oid=$t_oid&data_type=$data_type&scaffold_oid=$s_oid";
                     $url .= "&start_coord=$start_coord&end_coord=$end_coord";
 
                 } 
@@ -2938,6 +3054,10 @@ sub processDnaSearchResult {
 
             print "$s\n";
         } else {
+	    if ( ! $access_permission ) {
+		next;
+	    }
+
             print "$s\n";
         }
 

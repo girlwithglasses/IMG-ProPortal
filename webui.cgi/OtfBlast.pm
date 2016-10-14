@@ -3,7 +3,7 @@
 #    from gene_oid specification.  Generate temp BLAST db dynamically.
 #   --es 12/03/2005
 #
-# $Id: OtfBlast.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: OtfBlast.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package OtfBlast;
 my $section = "OtfBlast";
@@ -89,11 +89,7 @@ sub dispatch {
     my $sid = getContactOid();
 
     if ( paramMatch("genePageGenomeBlast") ) {
-#        if($img_ken) {
             printGenePageGenomeBlastForm_new($numTaxon);
-#        } else {
-#            printGenePageGenomeBlastForm();
-#        }
     } elsif ( $page eq "genomeBlastResults" ) {
         if ($cgi_blast_cache_enable) {
             HtmlUtil::cgiCacheInitialize($section);
@@ -103,11 +99,7 @@ sub dispatch {
         printGenomeBlastResults();
         HtmlUtil::cgiCacheStop() if ($cgi_blast_cache_enable);
     } else {
-#        if($img_ken) {
         printGenePageGenomeBlastForm_new($numTaxon);
-#        } else {
-#            printGenePageGenomeBlastForm();
-#        }
     }
 }
 
@@ -179,8 +171,9 @@ sub genePageAlignments {
     my $cmd = "$formatdb_bin -i $tmpDbFile -o T -p T -l $logFile";
 
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread();
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
-
+    Command::killDotThread();
     #runCmd($cmd);
 
     runBlast( $tmpQueryFile, $tmpDbFile, $homologRecs_ref );
@@ -222,6 +215,7 @@ sub genePageTopHits {
     } elsif ( $blast_url eq ""
               || ( $use_app_lite_homologs && ( $isLite || $opType ne "" ) ) )
     {
+        #print "genePageTopHits: using AvaCache<br/>\n";
         webLog("genePageTopHits: using AvaCache\n");
 
         #return AvaCache::getHitsGenomePair(
@@ -270,8 +264,13 @@ sub genePageTopHits {
         opType   => $opType, # Ortholog or Paralog filter (optional)
     ];
 
-    print "Getting blast data<br/>\n" if ($vbose);
+    print "Getting blast data  $blast_url<br/>\n" if ($vbose);
     my $res = $ua->request($req);
+    if($img_ken) {
+        print( "res: <br/>\n" );
+        print Dumper($res);
+        print( "<br/>\n" );
+    }
     if ( $res->is_success() ) {
         my @lines = split( /\n/, $res->content );
         my $idx = 0;
@@ -280,6 +279,7 @@ sub genePageTopHits {
         my %done;
         for my $s (@lines) {
             if ( $s =~ /ERROR:/ ) {
+                #print "s: $s<br/>\n";
                 webError($s);
             }
             my (
@@ -399,8 +399,9 @@ sub geneCogHomologs {
     my $cmd = "$formatdb_bin -i $tmpDbFile -o T -p T -l $logFile";
 
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread();
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
-
+    Command::killDotThread();
     #runCmd($cmd);
 
     print "<p>Running BLAST ...\n";
@@ -602,20 +603,20 @@ sub runBlast {
     #    }
     print "Calling blast api<br/>\n" if ($img_ken);
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread(120);
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
     if ( $stdOutFile == -1 ) {
-
+        Command::killDotThread();
         # close working div but do not clear the data
         printEndWorkingDiv( '', 1 );
-        ##$dbh->disconnect();
         printStatusLine( "Error.", 2 );
         WebUtil::webExit(-1);
     }
+    Command::killDotThread();
     print "blast done<br/>\n"                 if ($img_ken);
     print "Reading output $stdOutFile<br/>\n" if ($img_ken);
     my $cfh = WebUtil::newReadFileHandle($stdOutFile);
 
-    #my $cfh = newCmdFileHandle( $cmd, "runBlast" );
     my %done;
     while ( my $s = $cfh->getline() ) {
         chomp $s;
@@ -1160,7 +1161,7 @@ sub printGenomeBlastResults {
         my $subj_id;
         if ( $blast_program eq 'blastn' ) {
             $subj_id = "$subj_taxon_oid.$homolog";
-
+            
             # homolog is ext_accession, which can not be used
             # to specify a scaffold without providing a taxon
         } else {
@@ -1168,6 +1169,9 @@ sub printGenomeBlastResults {
 
             # homolog is gene_oid, which is unique so taxon_oid is not needed.
         }
+        
+        
+        
         my $r = "$subj_id\t";
         $r .= "$percent_identity\t";
         $r .= "$evalue\t";
@@ -1179,6 +1183,10 @@ sub printGenomeBlastResults {
         $r .= "$align_length";
 
         my $key = "$subj_taxon_oid.$subj_data_type";
+        
+#  print "key $key<br>\n";
+#  print "r $r<br>\n";      
+        
         if ( $infile_h{$subj_taxon_oid} eq 1 ) {
             push( @recs_fs, $r );
             if ( exists $recs_fs_hash{$key} ) {
@@ -1219,6 +1227,7 @@ sub printGenomeBlastResults {
         $query_gene_oid_computeBBH = $query_gene_oid;
     }
 
+
     if ( $bbh && $blast_program eq 'blastp' ) {
         computeBBH( $dbh, $query_gene_oid_computeBBH, \%homologTaxon2Gene, \%orthologs, $maxEvalue, $minPercIdent,
                     \%infile_h );
@@ -1238,10 +1247,32 @@ sub printGenomeBlastResults {
 
         # get infor for hits from fs
         for my $key ( keys %recs_fs_hash ) {
-            my ( $toid, $dtype ) = split( /\./, $key );
+            
+            # bug fix ex. 2156126002.a:BMHB2_0077.00009620
+            my ( $toid, $t_g_oid ) = split( /\./, $key, 2 );
+            my ( $dtype, $g_oid ) = split( /\:/, $t_g_oid );
+
+#print "<br>$key, $toid, $t_g_oid   ===== $dtype, $g_oid  <br>";
+
+            if ( $dtype eq 'a' || $dtype == 'assembled') {
+                $dtype = 'assembled';
+            } else {
+                $dtype = 'unassembled';
+            }            
+            
+
+#print "$toid === datatype = $dtype<br>\n";
+#print "<br>";
+#print Dumper $recs_fs_hash{$key};
+#print "<br>";            
+            
+            
             my @tmp = MetaGeneDetail::getMetaGeneTaxonAttributes( $dbh, $toid, $dtype, $recs_fs_hash{$key} );
+
             for my $x (@tmp) {
                 my @x_parts = split( /\t/, $x, 2 );
+                
+                # 2156126002.a:BMHB2_0876.00008060
                 my @v2 = MetaUtil::parseMetaGeneOid( $x_parts[0] );
                 $x_parts[0] = $v2[2] . " " . $v2[1] . " " . $v2[0];
                 push( @recs, $x_parts[0] . "\t" . $x_parts[1] );
@@ -1271,6 +1302,11 @@ sub printGenomeBlastResults {
             my @recs2 = MetaScaffoldGraph::getMetaScaffoldAttributes( $dbh, \@recs_fs );
             push( @recs, $_ ) for (@recs2);
         }
+        
+#        print "<br>\n";
+#        print Dumper @recs;
+#        print "<br>\n";
+        
         printGenomeBlastnResultTable( $dbh, \@recs, $coord_href, $query_gene_oid, $query_seq_length, \@missingDb );
     }
 
@@ -1317,12 +1353,21 @@ sub printGenomeBlastnResultTable {
         my $scaffold_id_display  = $scaffold_oid;
         my $scaffold_id_sort     = $scaffold_oid;
         my $scaffold_url;
-        my ( $goid, $dtype, $toid ) = MetaUtil::parseMetaGeneOid($scaffold_oid);
+        
+#print "<br>here 0 scaffold_oid $scaffold_oid<br> \n";
+        
+        # the first id2 eg id1.id2.a:.... has been strip already - ken
+        # the parseMetaScaffoldOid will test of 1 or 2 dots before the ':'
+        #my ( $goid, $dtype, $toid ) = MetaUtil::parseMetaGeneOid($scaffold_oid);
+        my ( $goid, $dtype, $toid ) = MetaUtil::parseMetaScaffoldOid($scaffold_oid);
+        
+#print "here 1 $goid, $dtype, $toid  $scaffold_oid<br>\n";        
+        
         if ( $goid ne '' ) {    #gene is from MERFS
             $scaffold_id_display  = $goid;
             $scaffold_id_sort     = "$toid $goid";
             $input_checkbox_value = "$toid $dtype $goid";
-            $scaffold_url = "$main_cgi?section=MetaDetail&page=metaScaffoldDetail" 
+            $scaffold_url = "$main_cgi?section=MetaScaffoldDetail&page=metaScaffoldDetail" 
                 . "&taxon_oid=$toid&scaffold_oid=$goid&data_type=$dtype";
         } else {
             my $k = $taxon_oid . "." . $scf_ext_accession;
@@ -1828,15 +1873,16 @@ sub processGenomeBlast {
 
         print "Calling blast api<br/>\n" if ($img_ken);
         my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        Command::startDotThread(120);
         my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
         if ( $stdOutFile == -1 ) {
-
+            Command::killDotThread();
             # close working div but do not clear the data
             printEndWorkingDiv( '', 1 );
-            ##$dbh->disconnect();
             printStatusLine( "Error.", 2 );
             WebUtil::webExit(-1);
         }
+        Command::killDotThread();
         print "blast done<br/>\n"                 if ($img_ken);
         print "Reading output $stdOutFile<br/>\n" if ($img_ken);
         $cfh = WebUtil::newReadFileHandle($stdOutFile);
@@ -1917,9 +1963,7 @@ sub processGenomeBlast {
                       # safer to get it from blast output lines
         my $sid_oid;
         if ($taxon_oid eq 'all' && $blast_program eq 'blastn' ) {
-            # only all has a "dot" '.' between taxon and scaffold otherwise its a whitespace
-#print "sid: $sid<br>\n";            
-            
+            # only all has a "dot" '.' between taxon and scaffold otherwise its a whitespace            
             ( $taxon, $sid_oid ) = split( /\./, $sid, 2 );    #ext_accession
                                                               # format of sid: # taxon_oid dot ext_accession
                                                               # Note: ext_accession itself could contain underscore and dot
@@ -2051,15 +2095,16 @@ sub processReverseOrthologBlast {
 
     print "Calling blast api<br/>\n" if ($img_ken);
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread(120);
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
     if ( $stdOutFile == -1 ) {
-
+        Command::killDotThread();
         # close working div but do not clear the data
         printEndWorkingDiv( '', 1 );
-        ##$dbh->disconnect();
         printStatusLine( "Error.", 2 );
         WebUtil::webExit(-1);
     }
+    Command::killDotThread();
     print "blast done<br/>\n"                 if ($img_ken);
     print "Reading output $stdOutFile<br/>\n" if ($img_ken);
     my $cfh = WebUtil::newReadFileHandle($stdOutFile);

@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 34825 2015-12-03 21:37:06Z klchu $
+# $Id: main.pl 36297 2016-10-10 17:25:35Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -12,12 +12,16 @@ use CGI::Session qw/-ip-match/;    # for security - ken
 use CGI::Carp qw( carpout set_message fatalsToBrowser );
 use perl5lib;
 use HTML::Template;
+use JSON;
 use File::Path qw(remove_tree);
 use Number::Format;
 use WebConfig;
 use WebUtil;
+use HtmlUtil;
 use Template;
 use Module::Load;
+use Data::Dumper;
+use MainPageStats;
 
 $| = 1;
 
@@ -76,6 +80,9 @@ my $verbose                  = $env->{verbose};
 my $web_data_dir             = $env->{web_data_dir};
 my $webfs_data_dir           = $env->{webfs_data_dir};
 my $img_nr                   = $env->{img_nr};
+my $virus                    = $env->{virus};
+
+my $enable_carts             = $env->{enable_carts};
 
 $default_timeout_mins = 5 if $default_timeout_mins eq "";
 my $use_func_cart = 1;
@@ -85,6 +92,7 @@ $imgAppTerm = "IMG/ER"  if ($img_er);
 $imgAppTerm = "IMG"     if $include_metagenomes;
 $imgAppTerm = "IMG/ER"  if ( $include_metagenomes && $user_restricted_site );
 $imgAppTerm = "IMG/ABC" if ($abc);
+$imgAppTerm = "IMG" if ($virus);
 
 my $YUI = $env->{yui_dir_28};
 my $taxon_filter_oid_str;
@@ -93,7 +101,6 @@ my $taxon_filter_oid_str;
 # cookie name: jgi_return, value: url, domain: jgi.doe.gov
 my $sso_enabled     = $env->{sso_enabled};
 my $sso_url         = $env->{sso_url};
-my $sso_domain      = $env->{sso_domain};
 my $sso_cookie_name = $env->{sso_cookie_name};    # jgi_return cookie name
 
 my $jgi_return_url = "";
@@ -166,7 +173,7 @@ if ( -e $dblock_file && !$img_ken ) {
 #
 
 my $cgi   = WebUtil::getCgi();
-my $https = $cgi->https();       # if on its not null
+my $https = 1;                   #$cgi->https();       # if on its not null
 if ( ( $public_login || $user_restricted_site ) && $https eq '' && $env->{ssl_enabled} ) {
     my $REQUEST_METHOD = uc( $ENV{REQUEST_METHOD} );
     if ( $REQUEST_METHOD eq 'GET' ) {
@@ -183,28 +190,13 @@ if ( ( $public_login || $user_restricted_site ) && $https eq '' && $env->{ssl_en
     # POST - do nothing so far
 }
 
-## Set up session management.
-#
-# session and cookie expire after 90m
-#
-my $session = getSession();
 
-# +90m expire after 90 minutes
-# +24h - 24 hour cookie
-# +1d - one day
-# +6M   6 months from now
-# +1y   1 year from now
-#$session->expire("+1d");
-#
-# Can this be the problem with NAtalia always getting logged out - ken June 1, 2015 ???
-#resetContactOid();
-
-my $session_id  = $session->id();
 my $contact_oid = getContactOid();
+my $cookie = WebUtil::makeCookieSession();
 
-# see WebUtil.pm line CGI::Session->name($cookie_name); is called - ken
-my $cookie_name = WebUtil::getCookieName();
-my $cookie = cookie( $cookie_name => $session_id );
+if($virus) {
+    setSessionParam( "hideViruses", 'No' );
+}
 
 my $oldLogin = getSessionParam("oldLogin");
 $oldLogin = 0 if param('oldLogin') eq 'false';
@@ -216,12 +208,11 @@ if ( param('oldLogin') eq 'true' || $oldLogin ) {
     $oldLogin = 0;
 }
 
-
 if ( !$oldLogin && $sso_enabled ) {
     require Caliban;
     if ( !$contact_oid ) {
-        my $dbh_main = dbLogin();
-        my $ans      = Caliban::validateUser($dbh_main);
+        #my $dbh_main = dbLogin();
+        my $ans      = Caliban::validateUser();
 
         if ( !$ans ) {
             printAppHeader("login");
@@ -239,8 +230,11 @@ if ( !$oldLogin && $sso_enabled ) {
     # I have to fix and relogin
     my $ans = Caliban::isValidSession();
     if ( !$ans ) {
-        Caliban::logout( 0, 1 );
+
         printAppHeader("login");
+        Caliban::logout( 1, 1 );
+
+
         Caliban::printSsoForm();
         printContentEnd();
         printMainFooter(1);
@@ -295,7 +289,6 @@ if ( !$oldLogin && $sso_enabled ) {
         MyIMG::loadUserPreferences();
         setSessionParam( "oldLogin", 1 );
 
-        #if($img_ken) {
         $redirecturl =~ s/oldLogin=false/oldLogin=true/;
         Caliban::migrateImg2JgiSso($redirecturl);
 
@@ -343,16 +336,19 @@ touchCartFiles();
 # for w and m use the public autocomplete file
 #
 # create a private autocomplete file
-if ( $user_restricted_site && $enable_workspace ) {
-
-    # php files like the autocompleteAll.php
-    require GenomeListJSON;
-    my $myGenomesFile = GenomeListJSON::getMyAutoCompleteFile();
-
-    if ( !-e $myGenomesFile ) {
-        GenomeListJSON::myAutoCompleteGenomeList($myGenomesFile);
-    }
-}
+#
+# this feature is not used yet - ken
+#
+#if ( $user_restricted_site && $enable_workspace ) {
+#
+#    # php files like the autocompleteAll.php
+#    require GenomeListJSON;
+#    my $myGenomesFile = GenomeListJSON::getMyAutoCompleteFile();
+#
+#    if ( !-e $myGenomesFile ) {
+#        GenomeListJSON::myAutoCompleteGenomeList($myGenomesFile);
+#    }
+#}
 
 # remap the section param if required
 coerce_section();
@@ -369,6 +365,7 @@ if ( param() ) {
     # tries to enter a bad section name :) - ken
     # default is the home page
     my %validSections = (
+        ClusterScout                 => 'ClusterScout',
         WorkspaceBcSet               => 'WorkspaceBcSet',
         AbundanceProfileSearch       => 'AbundanceProfileSearch',
         GenomeList                   => 'GenomeList',
@@ -409,6 +406,7 @@ if ( param() ) {
         BcSearch                     => 'BcSearch',
         BiosyntheticStats            => 'BiosyntheticStats',
         BcNpIDSearch                 => 'BcNpIDSearch',
+        ClusterScout                 => 'ClusterScout',
         FindFunctions                => 'FindFunctions',
         FindFunctionMERFS            => 'FindFunctionMERFS',
         FindGenes                    => 'FindGenes',
@@ -474,6 +472,8 @@ if ( param() ) {
         MpwPwayBrowser               => 'MpwPwayBrowser',
         GenomeHits                   => 'GenomeHits',
         ScaffoldHits                 => 'ScaffoldHits',
+        ScaffoldDetail               => 'ScaffoldDetail',
+        MetaScaffoldDetail           => 'MetaScaffoldDetail',
         ScaffoldCart                 => 'ScaffoldCart',
         MetagenomeHits               => 'MetagenomeHits',
         MetaFileHits                 => 'MetaFileHits',
@@ -530,7 +530,10 @@ if ( param() ) {
         Messages                     => 'Messages',
         znormNote                    => 'Messages',
         CogDetail                    => 'CogDetail',
-        GeneInfoPager => 'GeneInfoPager',
+        Viral                        => 'Viral',
+        GeneInfoPager                => 'GeneInfoPager',
+        Export                       => 'Export',
+        WorkspacePublicSet           => 'WorkspacePublicSet',
     );
 
     # testing sections
@@ -539,19 +542,24 @@ if ( param() ) {
         $validSections{Portal}    = 'Portal';
     }
 
-    if ( exists $validSections{$section} || param("exportGenes") ne "" || param("setTaxonFilter") ne "") {
+    if (   exists $validSections{$section}
+        || param("exportGenes")    ne ""
+        || param("exportGeneData") ne ""
+        || param("setTaxonFilter") ne "" )
+    {
 
         # TODO a better section loader  - ken
         $section = $validSections{$section};    # we need to untaint the $section..so get it from valid hash
 
-        if ( param("exportGenes") ne "" ) {
+        if ( param("exportGenes") ne "" || param("exportGeneData") ne "" ) {
             $section = 'Export';
-        } elsif(param("setTaxonFilter") ne "") {
+        } elsif ( param("setTaxonFilter") ne "" ) {
             $section = 'GenomeList';
         }
 
         load $section;
         $pageTitle = $section->getPageTitle();
+
         my @appArgs = $section->getAppHeaderData();
         my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
         $section->dispatch($numTaxons);
@@ -635,6 +643,8 @@ sub printHTMLHead {
         my $logofile;
         if ($img_edu) {
             $logofile = 'logo-JGI-IMG-EDU.png';
+        } elsif ($virus) {
+            $logofile = 'logo-JGI-IMG-VR.png';
         } elsif ($img_hmp) {
             $logofile = 'logo-JGI-IMG-HMP.png';
         } elsif ($abc) {
@@ -653,6 +663,7 @@ sub printHTMLHead {
             $logofile = 'logo-JGI-IMG.png';
         } elsif ($img_nr) {
             $logofile = 'logo-JGI-IMG-NR.png';
+
         } else {
             $logofile = 'logo-JGI-IMG.png';
         }
@@ -678,6 +689,8 @@ sub printHTMLHead {
         my $logofile;
         if ($img_edu) {
             $logofile = 'logo-JGI-IMG-EDU.png';
+        } elsif ($virus) {
+            $logofile = 'logo-JGI-IMG-VR.png';
         } elsif ($img_hmp) {
             $logofile = 'logo-JGI-IMG-HMP.png';
         } elsif ($abc) {
@@ -696,6 +709,7 @@ sub printHTMLHead {
             $logofile = 'logo-JGI-IMG.png';
         } elsif ($img_nr) {
             $logofile = 'logo-JGI-IMG-NR.png';
+
         } else {
             $logofile = 'logo-JGI-IMG.png';
         }
@@ -791,80 +805,203 @@ EOF
             };
         }
 
-        require ScaffoldCart;
-        my $ssize = ScaffoldCart::getSize();
-        if ( $ssize > 0 ) {
-            $ssize = alink( 'main.cgi?section=ScaffoldCart&page=index', $ssize );
-        }
-
-        require FuncCartStor;
-        my $c     = new FuncCartStor();
-        my $fsize = $c->getSize();
-        if ( $fsize > 0 ) {
-            $fsize = alink( 'main.cgi?section=FuncCartStor&page=funcCart', $fsize );
-        }
-
-        require GeneCartStor;
-        my $gsize = GeneCartStor::getSize();
-        if ( $gsize > 0 ) {
-            $gsize = alink( 'main.cgi?section=GeneCartStor&page=geneCart', $gsize );
-        }
-
-        my $genomeUrl    = alink( 'main.cgi?section=GenomeCart&page=genomeCart', 'Genomes' );
-        my $scaffoldUrl  = alink( 'main.cgi?section=ScaffoldCart&page=index',    'Scaffolds' );
-        my $functionsUrl = alink( 'main.cgi?section=FuncCartStor&page=funcCart', 'Functions' );
-        my $genesUrl     = alink( 'main.cgi?section=GeneCartStor&page=geneCart', 'Genes' );
-
-        my $isEditor = 0;
-        my $cursize  = 0;
-        if ($user_restricted_site) {
-            $isEditor = WebUtil::isImgEditorWrap();
-        }
-        if ($isEditor) {
-            require CuraCartStor;
-            my $c = new CuraCartStor();
-            $cursize = $c->getSize();
-            if ( $cursize > 0 ) {
-                $cursize = alink( 'main.cgi?section=CuraCartStor&page=curaCart', $cursize );
-            }
-        }
-        my $bcCartSize = 0;
-        if($img_ken) {
-            require WorkspaceBcSet;
-            $bcCartSize = WorkspaceBcSet::getSize();
-        }
-
         print qq{
 </header>
 <div id="myclear"></div>
+        };
+
+        if ($enable_carts) {
+
+            require ScaffoldCart;
+            my $ssize = ScaffoldCart::getSize();
+            if ( $ssize > 0 ) {
+                $ssize = alink( 'main.cgi?section=ScaffoldCart&page=index', $ssize );
+            }
+
+            require FuncCartStor;
+            my $c     = new FuncCartStor();
+            my $fsize = $c->getSize();
+            if ( $fsize > 0 ) {
+                $fsize = alink( 'main.cgi?section=FuncCartStor&page=funcCart', $fsize );
+            }
+
+            require GeneCartStor;
+            my $gsize = GeneCartStor::getSize();
+            if ( $gsize > 0 ) {
+                $gsize = alink( 'main.cgi?section=GeneCartStor&page=geneCart', $gsize );
+            }
+
+            my $genomeUrl    = alink( 'main.cgi?section=GenomeCart&page=genomeCart', 'Genomes' );
+            my $scaffoldUrl  = alink( 'main.cgi?section=ScaffoldCart&page=index',    'Scaffolds' );
+            my $functionsUrl = alink( 'main.cgi?section=FuncCartStor&page=funcCart', 'Functions' );
+            my $genesUrl     = alink( 'main.cgi?section=GeneCartStor&page=geneCart', 'Genes' );
+
+            my $isEditor = 0;
+            my $cursize  = 0;
+            if ($user_restricted_site) {
+                $isEditor = WebUtil::isImgEditorWrap();
+            }
+            if ($isEditor) {
+                require CuraCartStor;
+                my $c = new CuraCartStor();
+                $cursize = $c->getSize();
+                if ( $cursize > 0 ) {
+                    $cursize = alink( 'main.cgi?section=CuraCartStor&page=curaCart', $cursize );
+                }
+            }
+            my $bcCartSize = 0;
+            if ( $abc || $img_ken ) {
+                require WorkspaceBcSet;
+                $bcCartSize = WorkspaceBcSet::getSize();
+            }
+
+            print qq{
 <div id="cart">
- &nbsp;&nbsp; My Analysis Carts: 
+ &nbsp;&nbsp; <span title="Carts are unsaved sets and are lost during session logouts">My Analysis Carts**:</span>
  &nbsp;&nbsp; <span id='genome_cart'>$str</span> $genomeUrl &nbsp;&nbsp;
 |&nbsp;&nbsp; <span id='scaffold_cart'>$ssize</span> $scaffoldUrl &nbsp;&nbsp;
 |&nbsp;&nbsp; <span id='function_cart'>$fsize</span> $functionsUrl &nbsp;&nbsp;
 |&nbsp;&nbsp; <span id='gene_cart'>$gsize</span> $genesUrl
         };
 
-        if ($isEditor) {
-            my $curationUrl = alink( 'main.cgi?section=CuraCartStor&page=curaCart', 'Curation' );
-            print qq{
-  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='curation_cart'>$cursize</span> $curationUrl            
+            if ($isEditor) {
+                my $curationUrl = alink( 'main.cgi?section=CuraCartStor&page=curaCart', 'Curation' );
+                print qq{
+  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='curation_cart'>$cursize</span> $curationUrl
           };
-        }
-        
-        if($img_ken) {
-            my $bcurl = alink('main.cgi?section=WorkspaceBcSet&page=viewCart', 'BC');
-            print qq{
-  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='bc_cart'>$bcCartSize</span> $bcurl            
+            }
+
+            if ( $abc || $img_ken ) {
+                my $bcurl = alink( 'main.cgi?section=WorkspaceBcSet&page=viewCart', 'BC' );
+                print qq{
+  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='bc_cart'>$bcCartSize</span> $bcurl
           };
-        }
-        
-        print "</div>";
-    }
+            }
+
+            print "</div>";
+        } # end if ($enable_carts)
+
+    } # end if ( $current eq "logout" || $current eq "login" ) "else" section
 
     print qq{
     <div id="myclear"></div>
     };
+}
+
+sub printMenuDiv2 {
+
+    # menu file json data
+    # read file
+    my $content;
+    if ( $abc ) {
+      $content = WebUtil::file2Str("$base_dir/menu-abc.json");
+    } else {
+      $content = WebUtil::file2Str("$base_dir/menu.json");
+    }
+
+    my $aref = decode_json($content);
+    print "<div id='menu'>\n";
+    printMenuRow( $aref, 0 );
+    print qq{
+        </div> <!-- end menu div -->
+<div id="myclear"></div>
+<div id="container">
+    };
+}
+
+sub printMenuRow {
+    my ( $aref, $level ) = @_;
+    return if ( $aref eq '' );
+
+    my $subarrowRight = "<img class='subarrow' src='../../images/ArrowNav.gif'/>";
+    my $subarrowLeft  = "<img class='subarrow_left' src='../../images/ArrowNav_left.gif'/>";
+
+    if ( $level == 0 ) {
+        print "<ul id='nav'>\n";
+    } elsif ( $level == 1 ) {
+        print "    <ul>\n";
+    } else {
+        print "        <ul>\n";
+    }
+
+    foreach my $menutop_href (@$aref) {
+        my $name              = $menutop_href->{'name'};
+        my $level             = $menutop_href->{'level'};
+        my $title             = $menutop_href->{'title'};
+        my $url               = $menutop_href->{'url'};
+        my $icon              = $menutop_href->{'icon'};
+        my $arrow             = $menutop_href->{'arrow'};
+        my $not_avaiable_href = $menutop_href->{'not avaiable'};
+        if ( !$not_avaiable_href ) {
+            $not_avaiable_href = $menutop_href->{'not in'};
+        }
+        my $submenu_aref = $menutop_href->{'submenu'};
+        my $onClick      = $menutop_href->{'onClick'};
+
+        next if ( $abc                 && exists $not_avaiable_href->{'abc'} );
+        next if ( $img_edu             && exists $not_avaiable_href->{'edu'} );
+        next if ( $img_hmp             && exists $not_avaiable_href->{'hmp'} );
+        next if ( $img_proportal       && exists $not_avaiable_href->{'proportal'} );
+        next if ( $virus               && exists $not_avaiable_href->{'vr'} );
+        next if ( $include_metagenomes && !$user_restricted_site && exists $not_avaiable_href->{'m'} );
+        next if (!$img_ken && $include_metagenomes && $user_restricted_site && exists $not_avaiable_href->{'mer'} );
+        next if (exists $not_avaiable_href->{'public'} && !$public_login && !$user_restricted_site);
+
+        my $arrowStr = '';
+        if ( $arrow eq 'right' ) {
+            $arrowStr = $subarrowRight;
+        } elsif ( $arrow eq 'left' ) {
+            $arrowStr = $subarrowLeft;
+        }
+
+        my $iconStr = '';
+        if ($icon) {
+            $iconStr = "<img class='menuimg' src='../../images/$icon'/>";
+        }
+
+        my $titleStr = '';
+        if ($title) {
+            $titleStr = "title='$title'";
+        }
+
+        if ( $level == 0 && $name ne 'Help' ) {
+            print qq{    <li><a href="$url"> $name </a>\n};
+        } elsif ( $level == 0 && $name eq 'Help' ) {
+            print qq{    <li class="rightmenu"><a href="$url"> $name </a>\n};
+        } elsif ( $level == 1 && $submenu_aref ne '' && $#$submenu_aref < 0 ) {
+            print qq{        <li class="sub" $titleStr><a href="$url">$iconStr $name </a>\n};
+        } elsif ( $level == 1 && $submenu_aref ne '' && $#$submenu_aref > -1 ) {
+            if ( $arrow eq 'right' ) {
+                print qq{        <li class="sub2" $titleStr><a href="$url">$iconStr $name $arrowStr</a>\n};
+            } elsif ( $arrow eq 'left' ) {
+                print qq{        <li class="sub2" $titleStr><a href="$url">$arrowStr $iconStr $name </a>\n};
+            } else {
+                print qq{       <li class="sub2" $titleStr><a href="$url">$iconStr $name </a>\n};
+            }
+        } elsif ( $level == 2 ) {
+            print qq{           <li class="sub3" $titleStr><a href="$url">$iconStr $name </a>\n};
+        }
+
+        if ( $submenu_aref ne '' && $#$submenu_aref > -1 ) {
+            printMenuRow( $submenu_aref, $level + 1 );
+        }
+        if ( $level == 0 ) {
+            print "    </li>\n";
+        } elsif ( $level == 1 ) {
+            print "        </li>\n";
+        } else {
+            print "            </li>\n";
+        }
+
+    }
+
+    if ( $level == 0 ) {
+        print "</ul>\n";
+    } elsif ( $level == 1 ) {
+        print "    </ul>\n";
+    } else {
+        print "        </ul>\n";
+    }
 }
 
 # menu
@@ -874,125 +1011,8 @@ EOF
 sub printMenuDiv {
     my ( $current, $dbh ) = @_;
 
-    my $template;
-    $template = HTML::Template->new( filename => "$base_dir/menu-template-v40.html" );
-
-    my $contact_oid = getContactOid();
-    my $isEditor    = 0;
-    if ($user_restricted_site) {
-        $isEditor = isImgEditor( $dbh, $contact_oid );
-    }
-    my $super_user = getSuperUser();
-
-    $img_internal        = 0 if ( $img_internal        eq "" );
-    $include_metagenomes = 0 if ( $include_metagenomes eq "" );
-    my $not_include_metagenomes = !$include_metagenomes;
-    $enable_cassette   = 0 if ( $enable_cassette   eq "" );
-    $enable_workspace  = 0 if ( $enable_workspace  eq "" );
-    $include_img_terms = 0 if ( $include_img_terms eq "" );
-    $img_pheno_rule    = 0 if ( $img_pheno_rule    eq "" );
-    $enable_biocluster = 0 if ( $enable_biocluster eq "" );
-    $img_edu           = 0 if ( $img_edu           eq "" );
-    $scaffold_cart     = 0 if ( $scaffold_cart     eq "" );
-
-    $template->param( img_internal            => $img_internal ) if $img_ken;
-    $template->param( include_metagenomes     => $include_metagenomes );
-    $template->param( not_include_metagenomes => $not_include_metagenomes );
-    $template->param( enable_cassette         => $enable_cassette );
-    $template->param( enable_workspace        => $enable_workspace );
-
-    my $enable_interpro = $env->{enable_interpro};
-    $template->param( enable_interpro => $enable_interpro );
-
-    #$template->param( img_edu           => $img_edu );
-    $template->param( not_img_edu    => !$img_edu );
-    $template->param( scaffold_cart  => $scaffold_cart );
-    $template->param( img_submit_url => $img_submit_url );
-    $template->param( base_url       => $base_url );
-
-    #$template->param( domain_name       => $domain_name );
-    $template->param( main_cgi_url      => "$cgi_url/$main_cgi" );
-    $template->param( img_er            => $img_er );
-    $template->param( isEditor          => $isEditor );
-    $template->param( imgAppTerm        => $imgAppTerm );
-    $template->param( include_img_terms => $include_img_terms );
-    $template->param( img_pheno_rule    => $img_pheno_rule );
-
-    #$template->param( enable_biocluster => $enable_biocluster );
-    $template->param( top_base_url => $top_base_url );
-
-    #$template->param( enable_ani        => $enable_ani );
-
-    #if ( $super_user eq 'Yes' ) {
-    $template->param( enable_omics => 1 );
-
-    #}
-
-    if ( $enable_mybin && canEditBin( $dbh, $contact_oid ) ) {
-        $template->param( enable_mybins => 1 );
-    }
-
-    if (   $current eq "Home"
-        || $current eq ""
-        || $current eq "ImgStatsOverview"
-        || $current eq "IMGContent" )
-    {
-        $template->param( highlight_1 => 'class="highlight"' );
-    }
-
-    # find genomes
-    if ( $current eq "FindGenomes" ) {
-        $template->param( highlight_2 => 'class="highlight"' );
-    }
-
-    # Find genes
-    if ( $current eq "FindGenes" ) {
-        $template->param( highlight_3 => 'class="highlight"' );
-    }
-
-    if ($enable_cassette) {
-
-        #$template->param( find_gene_1 => '1' );
-    }
-
-    # FindFunctions
-    if ( $current eq "FindFunctions" ) {
-        $template->param( highlight_4 => 'class="highlight"' );
-    }
-
-    # compare genomes
-    if ( $current eq "CompareGenomes" ) {
-        $template->param( highlight_5 => 'class="highlight"' );
-    }
-
-    # Analysis Carts
-    if ( $current eq "AnaCart" ) {
-        $template->param( highlight_6 => 'class="highlight"' );
-    }
-
-    # omics
-    if ( $current eq "Omics" ) {
-        $template->param( highlight_9 => 'class="highlight"' );
-    }
-
-    # My IMG
-    if ( $current eq "MyIMG" ) {
-        $template->param( highlight_7 => 'class="highlight"' );
-    }
-    if ( $contact_oid > 0 && $show_myimg_login ) {
-        $template->param( my_img_1 => '1' );
-    }
-    if (   $contact_oid > 0
-        && $show_myimg_login
-        && $myimg_job )
-    {
-        $template->param( my_img_2 => '1' );
-    }
-    if ( ( $public_login || $user_restricted_site ) ) {
-        $template->param( my_img_3 => '1' );
-    }
-
-    print $template->output;
+    printMenuDiv2();
+    return;
 }
 
 # bread crumbs frame
@@ -1210,49 +1230,14 @@ sub printErrorDiv {
     my $template = HTML::Template->new( filename => "$base_dir/error-message-tmpl.html" );
     $template->param( base_url => $base_url );
 
-    if (   $section eq 'Artemis'
-        || $section eq 'DistanceTree'
-        || $section eq 'Vista'
-        || $section eq 'ClustalW'
-        || $section eq 'Kmer'
-        || $section eq 'EgtCluster'
-        || $section eq 'RNAStudies'
-        || $section eq 'IMGProteins' )
-    {
-
-        my $text = <<EOF;
-<script src="https://www.java.com/js/deployJava.js"></script>
-<script type="text/javascript">
-if(! navigator.javaEnabled()) {
-    var div = document.getElementById('error_content');
-    div.style.display = "block";
-    div.innerHTML = "Please enable Java on your browser.&nbsp;&nbsp;<a href='http://java.com/en/download/help/enable_browser.xml'>How to enable Java.</a>";
-} else if(navigator.javaEnabled()) {
-    var x = deployJava.versionCheck('1.6+');
-    if (!x) {
-        var div = document.getElementById('error_content');
-        div.style.display = "block";
-        div.innerHTML = "Please update your <a href='http://java.com/'> Java.</a>";
-    }
-}
-</script>
-EOF
-        $template->param( java_test => $text );
-    } else {
-        $template->param( java_test => '' );
-    }
-
     print $template->output;
 
-    my $str = WebUtil::webDataTest();
-
     # message from the web config file - ken
-    if ( $MESSAGE ne "" || $str ne "" ) {
+    if ( $MESSAGE ne "" ) {
         print qq{
 	    <div id="message_content" class="message_frame shadow" style="display: block" >
 	    <img src='$top_base_url/images/announcementsIcon.gif'/>
 	    $MESSAGE
-	    $str
 	    </div>
 	};
     }
@@ -1264,7 +1249,7 @@ EOF
 sub printStatsTableDiv {
     my ( $maxAddDate, $maxErDate ) = @_;
     my ( $s, $hmp );
-    require MainPageStats;
+
     ( $s, $hmp ) = MainPageStats::replaceStatTableRows();
 
     print qq{
@@ -1275,7 +1260,7 @@ sub printStatsTableDiv {
 
         print qq{
 		<h2>HMP Genomes &amp;<br/> Samples </h2>
-		<table cellspacing="0" cellpadding="0">
+		<table >
 		<th align='left' valign='bottom'>Category</th>
 		<th align='right' valign='bottom' style="padding-right: 5px;"
 		title='Funded by HMP: Genomes sequenced as part of the NIH HMP Project'>
@@ -1291,10 +1276,11 @@ sub printStatsTableDiv {
     if ($img_hmp) {
         print qq{
         <h2>All Genomes &amp;</br> Samples</h2>
-        <table cellspacing="0" cellpadding="0">
+        <table >
         <tr>
-        <th align="right" colspan="2" > &nbsp; </th>
-        <th align="right">Total</th>
+             <th align="right">Datasets</th>
+             <th align="right">JGI</th>
+             <th align="right">All</th>
         </tr>
        };
         print $s;
@@ -1304,10 +1290,11 @@ sub printStatsTableDiv {
     } elsif ( !$abc ) {
         print qq{
          <h2>$imgAppTerm Content</h2>
-         <table cellspacing="0" cellpadding="0">
+         <table >
          <tr>
-             <th align="right" colspan="2" > &nbsp; </th>
              <th align="right">Datasets</th>
+             <th align="right">JGI</th>
+             <th align="right">All</th>
          </tr>
         };
         print $s;
@@ -1331,7 +1318,7 @@ sub printStatsTableDiv {
     &nbsp;&nbsp;Genome<br>
     &nbsp;&nbsp;Metagenome
     </td>
-    
+
     <td style="font-size:10px; border-top-width: 0px;">
     <a href='main.cgi?section=TaxonList&page=lastupdated&erDate=true'>$maxErDate</a><br>
     <a href='main.cgi?section=TaxonList&page=lastupdated'>$maxAddDate</a>
@@ -1339,8 +1326,16 @@ sub printStatsTableDiv {
 </tr>
 </table>
        };
+    } elsif ($img_edu) {
+        $tmp = qq{
+<table>
+<tr>
+    <td style="font-size:10px;" colspan="2">Last Genome Added:
+    <a href='main.cgi?section=TaxonList&page=lastupdated&erDate=true'>$maxErDate</a>
+    </td>
+</table>
+    };
     }
-
     print qq{
  $tmp
 	<div id="training" style="padding-top: 2px;">
@@ -1381,13 +1376,13 @@ sub printStatsTableDiv {
 
 # home page content div
 sub printContentHome {
-    if($abc) {
-    print qq{
+    if ($abc) {
+        print qq{
     <div id="content" class='content contentABC'>
     };
-        
+
     } else {
-    print qq{
+        print qq{
 	<div id="content" class='content'>
     };
     }
@@ -1407,11 +1402,10 @@ sub printContentEnd {
         <div id="myclear"></div>
     };
 
-#    if($abc) {
-#        # end of the large div width such that content 
-#        print '</div>';
-#    }
-
+    #    if($abc) {
+    #        # end of the large div width such that content
+    #        print '</div>';
+    #    }
 
     print qq{
     </div> <!-- end of container div  -->
@@ -1437,40 +1431,33 @@ sub printContentEnd {
 sub printAppHeader {
     my ( $current, $noMenu, $gwtModule, $yuijs, $content_js, $help, $redirecturl ) = @_;
 
-    require HtmlUtil;
-
     # sso
-    my $cookie_return;
+    my $cookie_return = '';
     if ( $sso_enabled && $current eq "login" && $sso_url ne "" ) {
         my $url = $cgi_url . "/" . $main_cgi . redirectform(1);
         $url = $redirecturl if ( $redirecturl ne "" );
-        
-        if($url =~ /cgi$/) {
+
+        if ( $url =~ /cgi$/ ) {
             $url = $url . '?oldLogin=false';
-        } elsif($url =~ /oldLogin=true/) {
-            $url =~ s/oldLogin=true/oldLogin=false/;    
+        } elsif ( $url =~ /oldLogin=true/ ) {
+            $url =~ s/oldLogin=true/oldLogin=false/;
         } else {
             $url = $url . '&oldLogin=false';
         }
-        
-        $cookie_return = CGI::Cookie->new(
-            -name   => $sso_cookie_name,
-            -value  => $url,
-            -domain => $sso_domain
-        );
+
+        $cookie_return = WebUtil::makeCookieSsoReturn($url);
+
     } elsif ($sso_enabled) {
         my $url = $cgi_url . "/" . $main_cgi . '?oldLogin=false';
-        $cookie_return = CGI::Cookie->new(
-            -name   => $sso_cookie_name,
-            -value  => $url,
-            -domain => $sso_domain
-        );
+        $cookie_return = WebUtil::makeCookieSsoReturn($url);
     }
 
+    my $cookie_host = WebUtil::makeCookieHostname();
+
     if ( $cookie_return ne "" ) {
-        print header( -type => "text/html", -cookie => [ $cookie, $cookie_return ] );
+        print header( -type => "text/html", -cookie => [ $cookie, $cookie_host, $cookie_return ] );
     } else {
-        print header( -type => "text/html", -cookie => $cookie );
+        print header( -type => "text/html", -cookie => [ $cookie, $cookie_host ] );
     }
 
     return if ( $current eq "exit" );
@@ -1497,18 +1484,17 @@ sub printAppHeader {
 
         my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
 
-#print qq{
-#  <div style='width:2000px'>  
-#};
+        #print qq{
+        #  <div style='width:2000px'>
+        #};
 
-        printAbcNavBar();
         printContentHome();
 
         my $templateFile = "$base_dir/home-v33a.html";
         my $template = HTML::Template->new( filename => $templateFile );
         print $template->output;
 
-        print qq{  
+        print qq{
 <div class='largeWidthDiv'>
 
 <div class="shadow" id='bcHomeDiv'>
@@ -1539,11 +1525,33 @@ Small organic molecules produced<br/>by living organisms<br/>
         print qq{
     </div>
 </div>
-</div> 
+</div>
 };
-# </div>
+
+        # </div>
         HtmlUtil::cgiCacheStop();
 
+    } elsif ( $virus && $current eq "Home" ) {
+        # caching home page
+        printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
+        printMenuDiv( $current, $dbh );
+        printErrorDiv();
+
+        my $page = param('page');
+        require Viral;
+	if ( $page eq "isoHostDetail" ||
+	     paramMatch("isoHostDetail") ne "" ||
+	     $page eq "metaHostDetail" ||
+	     paramMatch("metaHostDetail") ne "" ||
+	     $page eq "bothHostDetail" ||
+	     paramMatch("bothHostDetail") ne "" ||
+	     $page eq "mvcHostDetail" ||
+	     paramMatch("mvcHostDetail") ne "" ) {
+	    return;
+	}
+        elsif ( ! $page || $page eq 'googlemap' ) {
+	    Viral::printViralHome();
+        }
     } elsif ( $img_proportal && $current eq "Home" ) {
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
         printMenuDiv( $current, $dbh );
@@ -1601,12 +1609,21 @@ Small organic molecules produced<br/>by living organisms<br/>
 
             # mer / m
             my $file = $webfs_data_dir . "/hmp/img_m_home_page_v400.txt";
+
+                        if($img_ken) {
+                            $file = "/webfs/projectdirs/microbial/img/klchu/v2/webUI/img_m_home_page_v400.txt";
+                        }
+
             if ( $env->{home_page} ) {
                 $file = $webfs_data_dir . "/hmp/" . $env->{home_page};
             }
 
             $table_str = file2Str( $file, 1 );
             $table_str =~ s/__IMG__/$imgAppTerm/;
+
+            my $x = MainPageStats::getMetagenomeEcoSystemCnt();
+            $table_str =~ s/__table__/$x/;
+
         } elsif ($img_edu) {
 
             # edu
@@ -1686,7 +1703,7 @@ in particular, the workspace and background computation capabilities  available 
         my $newsStr = getNewsHeaders(10);
 
         print qq{
-            
+
 <fieldset class='newsFieldset'>
 <legend class='newsLegend'>News</legend>
 $newsStr
@@ -1707,9 +1724,8 @@ $newsStr
 
         if ( $abc && $current ne 'login' && $current ne 'logout' ) {
 #            print qq{
-#                <div style='width:2000px'>  
+#                <div style='width:2000px'>
 #            };
-            printAbcNavBar() 
         }
         printContentOther();
     }
@@ -1823,43 +1839,12 @@ sub printLogout {
 ############################################################################
 sub printMainFooter {
     my ( $homeVersion, $postJavascript ) = @_;
-
-    my $remote_addr = $ENV{REMOTE_ADDR};
-
-    # try to get true hostname
-    # can't use back ticks with -T
-    # - ken
-    my $servername = $ENV{SERVER_NAME};
-
-    my $hostname = WebUtil::getHostname();
-
-    $servername = $hostname . ' ' . $ENV{ORA_SERVICE} . ' ' . $];
-
-    my $copyright_year = $env->{copyright_year};
-    my $version_year   = $env->{version_year};
-    my $img            = param("img");
-
-    # no exit read
-    my $buildDate = file2Str( "$base_dir/buildDate", 1 );
-    my $templateFile = "$base_dir/footer-v33.html";
-
-    #$templateFile = "$base_dir/footer-v33.html" if ($homeVersion);
-    my $s = file2Str( $templateFile, 1 );
-    $s =~ s/__main_cgi__/$main_cgi/g;
-    $s =~ s/__base_url__/$base_url/g;
-    $s =~ s/__copyright_year__/$copyright_year/;
-    $s =~ s/__version_year__/$version_year/;
-    $s =~ s/__server_name__/$servername/;
-    $s =~ s/__build_date__/$buildDate $remote_addr/;
-    $s =~ s/__google_analytics__//;
-    $s =~ s/__post_javascript__/$postJavascript/;
-    $s =~ s/__top_base_url__/$top_base_url/g;
-    print "$s\n";
+    WebUtil::printMainFooter( $homeVersion, $postJavascript );
 }
 
 sub googleAnalyticsJavaScript {
     my ( $server, $google_key ) = @_;
-    
+
     my $str = file2Str( "$top_base_dir/js/google.js", 1 );
     $str =~ s/__google_key__/$google_key/g;
     $str =~ s/__server__/$server/g;
@@ -2024,17 +2009,6 @@ sub touchCartFiles {
     # touch cart directory s.t. it does not get purge
     my ( $cartDir, $sessionId ) = WebUtil::getCartDir();
     WebUtil::fileTouch($cartDir);
-}
-
-#
-# print the ABC nav bar / menu on the left side
-#
-sub printAbcNavBar {
-    if ($abc) {
-        my $templateFile = "$base_dir/abc-nav-bar.html";
-        my $template = HTML::Template->new( filename => $templateFile );
-        print $template->output;
-    }
 }
 
 sub render_template {

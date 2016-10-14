@@ -1,6 +1,6 @@
 ############################################################################
 # img-act web services package, using xml.cgi xml.pl
-# $Id: Cart.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: Cart.pm 35653 2016-05-17 02:09:35Z aratner $
 ############################################################################
 package Cart;
 
@@ -79,19 +79,20 @@ sub printGeneList {
     my $size = keys %$href if ( $href ne "" );
     if ( $size > 0 ) {
         my @a;
+	my @b;
         foreach my $id ( keys %$href ) {
-            push( @a, $id );
+	    if (isInt($id)) {
+		push( @a, $id );
+	    } else {
+		push( @b, $id );
+	    }
         }
 
-        my $str = join( ",", @a );
-        my $sql = qq{
-            select gene_oid
-            from gene
-            where gene_oid in ($str)
-        };
-
-        TaxonDetailUtil::printGeneListSectionSorting( $sql,
-	    "Gene Ortholog Neighborhoods - Selected Genes" );
+	my $dbh = dbLogin();
+	use HtmlUtil;
+	HtmlUtil::printGeneListHtmlTable
+	    ( "Gene Ortholog Neighborhoods - Selected Genes",
+	      "", $dbh, \@a, \@b );
     } else {
         webError("You have not selected any genes.");
     }

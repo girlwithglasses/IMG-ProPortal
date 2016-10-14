@@ -1,7 +1,7 @@
 ############################################################################
 # Utility functions to support to generate GenBank/EMBL file.
 #
-# $Id: GenerateArtemisFile.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: GenerateArtemisFile.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ############################################################################
 package GenerateArtemisFile;
 
@@ -12,6 +12,7 @@ use CGI qw( :standard );
 use DBI;
 use Cwd;
 use File::Path;
+use File::Path qw(make_path);
 use File::Copy;
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use threads;
@@ -19,7 +20,6 @@ use WebConfig;
 use WebUtil;
 use MailUtil;
 use FileHandle;
-use File::Path qw(make_path);
 
 # Force flush
 $| = 1;
@@ -29,7 +29,7 @@ my $main_cgi          = $env->{main_cgi};
 my $base_url          = $env->{base_url};
 my $base_dir          = $env->{base_dir};
 my $cgi_dir           = $env->{cgi_dir};
-my $tmp_url           = $env->{tmp_url};
+my $tmp_url           = $env->{tmp_url}; # eg 'https://img.jgi.doe.gov/m/tmp'
 my $tmp_dir           = $env->{tmp_dir};
 my $cgi_tmp_dir       = $env->{cgi_tmp_dir};
 my $artemis_url       = $env->{artemis_url};
@@ -48,9 +48,8 @@ my $artemis_scaffolds_switch = 100;
 my $max_artemis_genes    = 10000;
 my $artemis_genes_switch = 1000;
 
-my $ifs_tmp_dir        = $env->{ifs_tmp_dir};
-my $public_artemis_dir = "$ifs_tmp_dir";
-my $public_artemis_url = "$tmp_url/public";     # see WebUtil $ifs_tmp_dir
+my $public_artemis_dir = "$tmp_dir/public";
+my $public_artemis_url = "$tmp_url/public";
 
 # user's sub folder names
 my $GENE_FOLDER   = "gene";
@@ -110,15 +109,8 @@ sub processArtemisFile2 {
     my $url    = "$public_artemis_url/$user/$$/$taxon_oid";
 
     if (1) {
-        WebUtil::dbLogoutImg();
-        WebUtil::dbLogoutGold();
-
         # is the genome a metagenome
-        printProcessSubmittedMessage();
-
-        my $tmp = printWindowStop();
-        main::printMainFooter( "", $tmp );
-
+        MailUtil::processSubmittedMessage();
         my $t = threads->new( \&threadjob2, $myEmail, $taxon_oid, $user, $outDir, $url );
         $t->join;
 
@@ -177,15 +169,15 @@ sub threadjob2 {
         #webLog("threadjob2() outDir=$outDir, url=$url, tmp=$tmp\n");
 
         my $subject = "NCBI submission file for Genome $taxon_oid done";
-        my $content = getDoNotReplyMailContent($url, $tmp);
-        sendMail( $myEmail, '', $subject, $content );
+        my $content = MailUtil::getDoNotReplyMailContent("$url/", $tmp);
+        MailUtil::sendEMailTo( $myEmail, '', $subject, $content );
 
     };
     if ($@) {
         my $monitor = "imgsupp\@lists.jgi-psf.org";
         my $subject = "NCBI filed for submission processing failed.";
         my $content = "Genome $taxon_oid failed reason ==> $@ \n";
-        sendMail( $myEmail, $monitor, $subject, $content );
+        MailUtil::sendEMailTo( $myEmail, $monitor, $subject, $content );
     }
 }
 
@@ -456,7 +448,7 @@ sub printGenerateForm {
 
     ## enter email address
     if ( $scaffold_count > $artemis_scaffolds_switch ) {
-        my $myEmail = getMyEmail($dbh, $contact_oid);
+        my $myEmail = MailUtil::getMyEmail($dbh, $contact_oid);
         print "<tr class='img'>\n";
         print "<th class='subhead'>My Email</th>\n";
         print "<td class='img'>\n";
@@ -506,7 +498,7 @@ sub printGenerateForm {
         print hiddenVar( "section",   'GenerateArtemisFile' );
         print hiddenVar( "page",      'processArtemisFile2' );
 
-        my $myEmail = getMyEmail($dbh, $contact_oid);
+        my $myEmail = MailUtil::getMyEmail($dbh, $contact_oid);
         print "<table class='img' border='1'>\n";
         print "<tr class='img'>\n";
         print "<th class='subhead'>My Email</th>\n";
@@ -527,24 +519,6 @@ sub printGenerateForm {
 
         print end_form();
     }
-}
-
-sub getMyEmail {
-    my ( $dbh, $contact_oid ) = @_;
-
-    my $myEmail;
-    if ( $contact_oid > 0 ) {
-        my $sql = qq{
-           select email
-           from contact
-           where contact_oid = ?
-        };
-        my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
-        $myEmail = $cur->fetchrow();
-        $cur->finish();
-    }
-
-    return $myEmail;
 }
 
 ############################################################################
@@ -646,16 +620,8 @@ sub processArtemisFile {
     wunlink($outFile);
 
     if ( $nScaffolds > $artemis_scaffolds_switch ) {
-        printProcessSubmittedMessage("$nScaffolds scaffolds");
 
-        my $tmp = printWindowStop();
-        main::printMainFooter( "", $tmp );
-
-        # I need to disconnect parent thread before child use db connection because it cannot be shared between
-        # connections - ken
-        WebUtil::dbLogoutImg();
-        WebUtil::dbLogoutGold();
-
+        MailUtil::processSubmittedMessage("$nScaffolds scaffolds");
         my $t = threads->new(
               \&threadjob,     $format,        $title,         $outFile,         $outFileName,
               $outDir,         $myEmail,       $myImgOverride, $imgTermOverride, $gene_oid_note,
@@ -747,15 +713,15 @@ sub threadjob {
         #webLog("threadjob() zippedFilePath=$zippedFilePath, zippedFileName=$zippedFileName, zippedFileUrl=$zippedFileUrl\n");
 
         my $subject = "$title done for the $nScaffolds scaffolds";
-        my $content = getDoNotReplyMailContent($zippedFileUrl);
-        sendMail( $myEmail, '', $subject, $content );
+        my $content = MailUtil::getDoNotReplyMailContent($zippedFileUrl);
+        MailUtil::sendEMailTo( $myEmail, '', $subject, $content );
     };
     if ($@) {
         my $monitor = "jinghuahuang\@lbl.gov";
 
         my $subject = "Artemis processing failed for your $nScaffolds scaffolds.";
         my $content = "failed reason ==> $@ \n";
-        sendMail( $myEmail, $monitor, $subject, $content );
+        MailUtil::sendEMailTo( $myEmail, $monitor, $subject, $content );
 
         $subject = "Artemis processing thread failed for $nScaffolds scaffolds.";
         $content = "failed reason ==> $@ \n";
@@ -770,7 +736,7 @@ sub threadjob {
         $content .= "mygeneOverride: $mygeneOverride\n";
         $content .= "misc_features: $misc_features\n";
         $content .= "scaffold_oids: @$scaffold_oids_ref\n";
-        sendMail( '', $monitor, $subject, $content );
+        MailUtil::sendEMailTo( '', $monitor, $subject, $content );
     }
 
 }
@@ -826,27 +792,6 @@ sub compressFiles {
     return ( $zippedFilePath, $zippedFileUrl );
 }
 
-sub sendMail {
-    my ( $emailTo, $ccTo, $subject, $content, $filePath, $file ) = @_;
-
-    if ( $filePath ne '' ) {
-        MailUtil::sendMailAttachment( $emailTo, $ccTo, $subject, $content, $filePath, $file );
-    } else {
-        MailUtil::sendMail( $emailTo, $ccTo, $subject, $content );
-    }
-    webLog("Mail sent to $emailTo for $subject<br/>\n");
-}
-
-sub printWindowStop {
-    my $str = qq{
-        <script language="javascript" type="text/javascript">
-            window.stop();
-        </script>
-    };
-    return $str;
-}
-
-
 ############################################################################
 # processFastaFile - Process generating a gene or scaffold fasta file
 ############################################################################
@@ -892,14 +837,7 @@ sub processFastaFile {
         webLog("processFastaFile() write '$outFile'\n") if $verbose >= 1;
         wunlink($outFile);
 
-        printProcessSubmittedMessage("$nOids $folderTxt");
-
-        my $tmp = printWindowStop();
-        main::printMainFooter( "", $tmp );
-
-        WebUtil::dbLogoutImg();
-        WebUtil::dbLogoutGold();
-
+        MailUtil::processSubmittedMessage("$nOids $folderTxt");
         my $t = threads->new(
             \&threadjob_fasta, $title, $outFile, $outFileName, $outDir, $myEmail,
             $oids_ref, $isAA, $isFromWorkspace, $folder
@@ -981,15 +919,15 @@ sub threadjob_fasta {
         my ( $zippedFilePath, $zippedFileName, $zippedFileUrl ) = compressArtemisFile( $outFile, $outFileName, $outDir );
 
         my $subject = "$title done for the $nOids $folderTxt $fromWorkspaceText";
-        my $content = getDoNotReplyMailContent($zippedFileUrl);
-        sendMail( $myEmail, '', $subject, $content );
+        my $content = MailUtil::getDoNotReplyMailContent($zippedFileUrl);
+        MailUtil::sendEMailTo( $myEmail, '', $subject, $content );
     };
     if ($@) {
         my $monitor = "jinghuahuang\@lbl.gov";
 
         my $subject = "Artemis processing failed for your $nOids $folderTxt $fromWorkspaceText";
         my $content = "failed reason ==> $@ \n";
-        sendMail( $myEmail, $monitor, $subject, $content );
+        MailUtil::sendEMailTo( $myEmail, $monitor, $subject, $content );
 
         $subject = "Client Artemis processing thread failed for $nOids $folderTxt $fromWorkspaceText";
         $content = "failed reason ==> $@ \n";
@@ -998,7 +936,7 @@ sub threadjob_fasta {
         $content .= "outFileName: $outFileName\n";
         $content .= "myEmail: $myEmail\n";
         $content .= "oids: " . @$oids_ref. "\n";
-        sendMail( '', $monitor, $subject, $content );
+        MailUtil::sendEMailTo( '', $monitor, $subject, $content );
     }
 
 }
@@ -1021,39 +959,6 @@ sub prepareProcessGeneFastaFile {
 
 sub prepareProcessGeneAAFastaFile {
 	return prepareProcessGeneFastaFile( 1 );
-}
-
-sub printProcessSubmittedMessage {
-    my ($content) = @_;
-
-    my $fromEmail = $env->{img_support_email};
-    my $text = qq{
-        Your request to process $content has been successfully submitted.
-        You will be notified via email from <b>$fromEmail</b>. <br/>
-        with a URL to the result. The URL will be valid for <b>only 24 hours</b>.
-    };
-    printMessage($text);
-
-}
-
-sub getDoNotReplyMailContent {
-    my ($url, $tmp) = @_;
-
-    my $content = qq{
-        This is an automatically generated email. DO NOT reply.
-        Use links below to download your results. (The URL will be valid for <b>only 24 hours</b>)
-
-        Files:
-        $url
-        $tmp
-
-        It is best to have the IMG web page open first.
-        $base_url
-        before downloading files.
-    };
-
-    return $content;
-
 }
 
 sub printDataExportHint {
@@ -1156,14 +1061,7 @@ sub processDataFile {
         webLog("processDataFile() write '$outFile'\n") if $verbose >= 1;
         wunlink($outFile);
 
-        printProcessSubmittedMessage("$nOids $folderTxt");
-
-        my $tmp = printWindowStop();
-        main::printMainFooter( "", $tmp );
-
-        WebUtil::dbLogoutImg();
-        WebUtil::dbLogoutGold();
-
+        MailUtil::processSubmittedMessage("$nOids $folderTxt");
         my $t = threads->new(
             \&threadjob_data, $title, $outFile, $outFileName, $outDir, $myEmail,
             $oids_ref, $isFromWorkspace, $folder
@@ -1176,13 +1074,13 @@ sub processDataFile {
             # print Excel Header
             WebUtil::printExcelHeader($folder."_sets$$.xls");
             if ( $folder eq $GENE_FOLDER ) {
-                #for future implementation
+                require GeneDataUtil;
+                GeneDataUtil::printGeneDataFile( $oids_ref );
             }
             elsif ( $folder eq $SCAF_FOLDER ) {
                 require ScaffoldCart;
                 ScaffoldCart::printScaffoldDataFile($oids_ref);
             }
-
             WebUtil::webExit(0);
         }
         else {
@@ -1209,7 +1107,8 @@ sub threadjob_data {
     eval {
         if ( $folder eq $GENE_FOLDER ) {
             if ($isFromWorkspace == 1) {
-                #for future implementation
+                require GeneDataUtil;
+                GeneDataUtil::printGeneDataFile( $oids_ref, $outFile );
             }
             else {
                 #for future implementation
@@ -1225,15 +1124,15 @@ sub threadjob_data {
         my ( $zippedFilePath, $zippedFileName, $zippedFileUrl ) = compressArtemisFile( $outFile, $outFileName, $outDir );
 
         my $subject = "$title done for the $nOids $folderTxt $fromWorkspaceText";
-        my $content = getDoNotReplyMailContent($zippedFileUrl);
-        sendMail( $myEmail, '', $subject, $content );
+        my $content = MailUtil::getDoNotReplyMailContent($zippedFileUrl);
+        MailUtil::sendEMailTo( $myEmail, '', $subject, $content );
     };
     if ($@) {
         my $monitor = "jinghuahuang\@lbl.gov";
 
         my $subject = "Artemis processing failed for your $nOids $folderTxt $fromWorkspaceText";
         my $content = "failed reason ==> $@ \n";
-        sendMail( $myEmail, $monitor, $subject, $content );
+        MailUtil::sendEMailTo( $myEmail, $monitor, $subject, $content );
 
         $subject = "Client Artemis processing thread failed for $nOids $folderTxt $fromWorkspaceText";
         $content = "failed reason ==> $@ \n";
@@ -1242,7 +1141,7 @@ sub threadjob_data {
         $content .= "outFileName: $outFileName\n";
         $content .= "myEmail: $myEmail\n";
         $content .= "oids: " . @$oids_ref. "\n";
-        sendMail( '', $monitor, $subject, $content );
+        MailUtil::sendEMailTo( '', $monitor, $subject, $content );
     }
 
 }

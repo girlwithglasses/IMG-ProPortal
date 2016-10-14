@@ -121,7 +121,11 @@ sub printCogDetail {
     print "<h3>$cog_id: " . WebUtil::escHtml($cog_name) . "</h3>\n";
 
     print "<table class='img' border='1'>\n";
-    printAttrRowRaw( "DB Source", WebUtil::escHtml($db_source) );
+    
+    my $url = $cog_base_url . $cog_id;
+    $url = alink($url, $db_source);
+    
+    printAttrRowRaw( "DB Source", $url );
     printAttrRowRaw( "Add Date", $add_date );
     printAttrRowRaw( "Seq Length", $seq_length );
 

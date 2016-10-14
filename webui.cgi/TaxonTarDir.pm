@@ -5,13 +5,10 @@
 #    in the file system.
 #    This has later been modified to be an API for zip files also.
 #    --es 02/14/11
-# $Id: TaxonTarDir.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: TaxonTarDir.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package TaxonTarDir;
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
+
 use strict;
 use CGI qw( :standard );
 use WebConfig;
@@ -214,6 +211,32 @@ sub getOtfHits {
     #my $tmpFile   = "$cgi_tmp_dir/$genomePair.$$.m8.txt";
     $tmpFile = "$tmpFile/$genomePair.$$.m8.txt";
 
+    if(-e $tmpFile) {
+        # Profiler -> single genes
+        # this should not be possible for metagenomes?
+        # I saw 4 commands exactly the same process ids, with different homologs in
+        
+       # bug the cart shows metagenoms
+        
+
+# wwwimg   28657 28321  0 06:38 ?        00:00:00 /usr/common/usg/languages/perl/5.16.0/bin/perl /global/u1/w/wwwimg/gpint501/apache/cgi-bin/runCmd/cmd.cgi
+# wwwimg   28659 28657 99 06:38 ?        06:43:49 /global/dna/projectdirs/microbial/img/webui/bin/x86_64-linux/usearch64 --query /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006420/3300006420.a.faa --db /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006421/3300006421.a.faa --accel 0.8 --quiet --trunclabels --iddef 4 --evalue 1e-1 --blast6out /global/projectb/scratch/img/www-data/service/tmp/gpweb36_37_shared/mer/1931f5a5a98d627d861728a5e2414a4d/3300006420-3300006421.50808.m8.txt
+# wwwimg   28807 28321  0 06:41 ?        00:00:00 /usr/common/usg/languages/perl/5.16.0/bin/perl /global/u1/w/wwwimg/gpint501/apache/cgi-bin/runCmd/cmd.cgi
+# wwwimg   28809 28807 99 06:41 ?        06:40:50 /global/dna/projectdirs/microbial/img/webui/bin/x86_64-linux/usearch64 --query /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006420/3300006420.a.faa --db /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006465/3300006465.a.faa --accel 0.8 --quiet --trunclabels --iddef 4 --evalue 1e-1 --blast6out /global/projectb/scratch/img/www-data/service/tmp/gpweb36_37_shared/mer/1931f5a5a98d627d861728a5e2414a4d/3300006420-3300006465.50808.m8.txt
+#        
+#wwwimg   29039 28321  0 06:44 ?        00:00:00 /usr/common/usg/languages/perl/5.16.0/bin/perl /global/u1/w/wwwimg/gpint501/apache/cgi-bin/runCmd/cmd.cgi
+#wwwimg   29041 29039 99 06:44 ?        06:37:51 /global/dna/projectdirs/microbial/img/webui/bin/x86_64-linux/usearch64 --query /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006420/3300006420.a.faa --db /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006466/3300006466.a.faa --accel 0.8 --quiet --trunclabels --iddef 4 --evalue 1e-1 --blast6out /global/projectb/scratch/img/www-data/service/tmp/gpweb36_37_shared/mer/1931f5a5a98d627d861728a5e2414a4d/3300006420-3300006466.50808.m8.txt
+#
+#wwwimg   29418 28321  0 06:47 ?        00:00:00 /usr/common/usg/languages/perl/5.16.0/bin/perl /global/u1/w/wwwimg/gpint501/apache/cgi-bin/runCmd/cmd.cgi
+#wwwimg   29420 29418 99 06:47 ?        06:34:51 /global/dna/projectdirs/microbial/img/webui/bin/x86_64-linux/usearch64 --query /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006420/3300006420.a.faa --db /global/projectb/sandbox/IMG/web-data/sandbox.blast.data/3300006468/3300006468.a.faa --accel 0.8 --quiet --trunclabels --iddef 4 --evalue 1e-1 --blast6out /global/projectb/scratch/img/www-data/service/tmp/gpweb36_37_shared/mer/1931f5a5a98d627d861728a5e2414a4d/3300006420-3300006468.50808.m8.txt
+        
+        WebUtil::webLog("File already exists ========= $tmpFile \n");
+        WebUtil::webError("You are already running a similar request!");
+    } else {
+        WebUtil::webLog("NEW temp File ========= $tmpFile \n");
+    }
+
+
     my $cmd;
     if ( $otf_phyloProfiler_method eq "blastall" ) {
         ## New BLAST
@@ -245,17 +268,14 @@ sub getOtfHits {
     WebUtil::unsetEnvPath();
 
     my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+    Command::startDotThread();
     my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
     if ( $stdOutFile == -1 ) {
+        Command::killDotThread();
         webLog("getOtfHits: ERROR '$cmd' \n");
         webDie("$otf_phyloProfiler_method ERROR \n");
     }
-
-    #    my $st = system($cmd );
-    #    if ( $st != 0 ) {
-    #        webLog("getOtfHits: ERROR '$cmd' status=$st\n");
-    #        webDie("$otf_phyloProfiler_method ERROR status=$st\n");
-    #    }
+    Command::killDotThread();
 
     my $count = 0;
     my $rfh = newReadFileHandle( $tmpFile, "getOtfHits" );

@@ -6,7 +6,7 @@
 
 PERL5LIB=`pwd`
 export PERL5LIB
-/webfs/projectdirs/microbial/img/bin/imgPerlEnv perl -T inner.pl
+/webfs/projectdirs/microbial/img/bin/imgEnv2 perl -T inner.pl
 
 if [ $? != "0" ] 
 then

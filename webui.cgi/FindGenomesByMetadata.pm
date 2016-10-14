@@ -1,15 +1,10 @@
 ############################################################################
 # FindGenomesByMetadata.pm - split from FindGenomes.pm
 #  Handle the options under the "Find Metadata Genomes" tab menu.
-#
-# $Id: FindGenomesByMetadata.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: FindGenomesByMetadata.pm 36211 2016-09-23 03:49:51Z klchu $
 ############################################################################
 package FindGenomesByMetadata;
 my $section = "FindGenomes";
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use CGI qw( :standard );
@@ -24,6 +19,7 @@ use Data::Dumper;
 use TreeViewFrame;
 use HtmlUtil;
 use D3ChartUtil;
+use OracleUtil;
 
 my $env                  = getEnv();
 my $main_cgi             = $env->{main_cgi};
@@ -38,7 +34,7 @@ my $include_metagenomes  = $env->{include_metagenomes};
 my $use_img_gold         = $env->{use_img_gold};
 my $YUI28                = $env->{yui_dir_28};
 my $include_metagenomes  = $env->{include_metagenomes};
-my $top_base_url = $env->{top_base_url};
+my $top_base_url         = $env->{top_base_url};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
 
@@ -46,8 +42,7 @@ my $img_mer_submit_url   = $env->{img_mer_submit_url};
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-	my $page = param("page");
-
+    my $page = param("page");
     if ( $page eq "metadataForm" ) {
         my $id = param("id");
         my $tabName = param("tabName");
@@ -63,8 +58,7 @@ sub dispatch {
                 <name></name>
                 </response>
             }; 
-        }
-        elsif ( $tabName =~ /chart/i ) {
+        } elsif ( $tabName =~ /chart/i ) {
             print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
             print qq {
                 <response>
@@ -77,11 +71,10 @@ sub dispatch {
                 </response>
             }; 
 	}
+    } elsif ( $page eq "metadataCategoryChartResults" ||
+	      paramMatch("metadataCategoryChartResults") ne "" ) {
+	printMetadataCategoryChartResults();
     }
-	elsif ( $page eq "metadataCategoryChartResults" ||
-		paramMatch("metadataCategoryChartResults") ne "" ) {
-	    printMetadataCategoryChartResults ();
-	}
 }
 
 ############################################################################
@@ -113,7 +106,6 @@ sub printMetadataCategorySearchForm {
 ############################################################################
 sub printMetadataCategoryOperationForm {
     printStatusLine( "Loading ...", 1 );
-
     printHint( "Expand tree to select or deselect values." );
 
     print start_form(
@@ -151,9 +143,7 @@ sub printMetadataCategoryOperationForm {
 # printCategoryContent - Show category selection form.
 ############################################################################
 sub printCategoryContent {
-
     printTableTop();
-
     print "<table id='metadataTable' class='img' width='350'>\n";
 
     my $dbh;
@@ -167,7 +157,7 @@ sub printCategoryContent {
     my $numCategories = scalar(@categoryNames);
     #print "printCategoryContent() categoryNames=@categoryNames<br/>\n";
 
-    my %categories    = ();
+    my %categories = ();
     if ($numCategories > 0) {
         print qq{
             <tr>
@@ -182,7 +172,7 @@ sub printCategoryContent {
             print "<td class='img' nowrap>\n";
             print "<div id='$selectionAttr' class='ygtv-checkbox'>\n";
     
-            my $jsObject="";
+            my $jsObject = "";
             if ($use_img_gold) {
                 $jsObject = getCategoryRow_ImgGold( $dbh, $selectionAttr );
             } else {
@@ -201,7 +191,6 @@ sub printCategoryContent {
             }
         }
     }
-    #$dbh->disconnect();
 
     print "</table>\n";
     
@@ -210,7 +199,7 @@ sub printCategoryContent {
         $categoriesObj .= "{name : '$categoryNames[$i]', ";
         #$categoriesObj .= "value : $categories{$categoryNames[$i]}}";
         $categoriesObj .= "value : [" . $categories{$categoryNames[$i]} . "]}";
-        if ($i != $numCategories-1) {
+        if ($i != $numCategories - 1) {
             $categoriesObj .= ", ";
         }
     }
@@ -218,23 +207,21 @@ sub printCategoryContent {
     #webLog("$categoriesObj\n");
     #print "$categoriesObj\n";
     setJSObjects( $categoriesObj );
-    
 }
 
 sub getCategoryNames {
-
     my @categoryNames = ();
     if ($use_img_gold) {
         my @names = DataEntryUtil::getGoldCondAttr();
 
-	for my $n2 ( @names ) {
-#	    if($include_metagenomes) {
-		# see DataEntryUtil::getGoldCondAttr - ken
-		if ( $n2 eq "date_collected" ||
-		     $n2 eq "mrn" ) {
-		    next;
-		}
-#	    }
+	foreach my $n2 ( @names ) {
+	    #if($include_metagenomes) {
+	    # see DataEntryUtil::getGoldCondAttr - ken
+	    if ( $n2 eq "date_collected" ||
+		 $n2 eq "mrn" ) {
+		next;
+	    }
+	    #}
 
 	    if ( $n2 eq "contact_email" ||
 		 $n2 eq "contact_name" ||
@@ -256,15 +243,15 @@ sub getCategoryNames {
 
 	    ## disable the following; too many values
 	    if ( $n2 eq "host_name" ||
-		$n2 eq "latitude" ||
-		$n2 eq "longitude" ) {
+		 $n2 eq "latitude" ||
+		 $n2 eq "longitude" ) {
 		next;
 	    }
 
 	    push @categoryNames, ( $n2 );
 	}
 
-        if(!$include_metagenomes) {
+        if (!$include_metagenomes) {
             splice(@categoryNames, 8, 4);  
             # remove 'ecosystem', 'ecosystem_category', 'ecosystem_type', 'ecosystem_subtype',
          } 
@@ -280,14 +267,14 @@ sub getCategoryNames {
 # getCategoryRow - get category row data
 ############################################################################
 sub getCategoryRow {
-	my ( $dbh, $selectionAttr ) = @_;
+    my ( $dbh, $selectionAttr ) = @_;
 
-	my $selectionAttrLc = $selectionAttr;
-	$selectionAttrLc =~ tr/A-Z/a-z/;
-	my $mgr = new TermNodeMgr();
-	$mgr->loadTree( $dbh, $selectionAttrLc );
-	my $root = $mgr->getRoot();
-	my $jsObject = $root->processJSObject($selectionAttrLc);
+    my $selectionAttrLc = $selectionAttr;
+    $selectionAttrLc =~ tr/A-Z/a-z/;
+    my $mgr = new TermNodeMgr();
+    $mgr->loadTree( $dbh, $selectionAttrLc );
+    my $root = $mgr->getRoot();
+    my $jsObject = $root->processJSObject($selectionAttrLc);
     my $hilitedAttr = '';
     if ( $selectionAttr eq "Ecotype" ) {
         $hilitedAttr = "<b>Habitat</b>";
@@ -296,7 +283,7 @@ sub getCategoryRow {
     }
     $jsObject =~ s/$selectionAttr/$hilitedAttr/i;
 
-	return $jsObject;
+    return $jsObject;
 }
 
 ############################################################################
@@ -319,13 +306,15 @@ sub getCategoryRow_ImgGold {
     if ( $gold_table_h{$selectionAttr} ) {
 	$table_name = $gold_table_h{$selectionAttr};
 	$fld_name = $gold_field_h{$selectionAttr};
-	$sql = "select distinct $fld_name from $table_name" .
-	    "\@imgsg_dev where $fld_name is not null " .
-	    "order by 1";
-    }
-    elsif ( $selectionAttr eq 'altitude' ||
+	$sql = qq{
+            select distinct $fld_name from $table_name
+	     where $fld_name is not null
+	    order by 1
+        };
+    } elsif ( $selectionAttr eq 'altitude' ||
 	$selectionAttr eq 'biotic_rel' ||
 	$selectionAttr eq 'cell_shape' ||
+	$selectionAttr eq 'depth' ||
 	$selectionAttr =~ /ecosystem/ ||
 	$selectionAttr eq 'host_gender' ||
 	$selectionAttr eq 'motility' ||
@@ -336,7 +325,10 @@ sub getCategoryRow_ImgGold {
 	$selectionAttr eq 'sporulation' ||
 	$selectionAttr eq 'temp_range' ||
 	$selectionAttr eq 'funding_program' ) {
-	$sql = "select distinct $selectionAttr from gold_sequencing_project\@imgsg_dev order by 1";
+	$sql = qq{
+	    select distinct $selectionAttr
+            from gold_sequencing_project order by 1
+        };
     }
 
     print "getCategoryRow_ImgGold \$sql: $sql<br/>\n"; 
@@ -344,7 +336,7 @@ sub getCategoryRow_ImgGold {
     if ( !blankStr($sql) ) { 
 	my $cur = execSql( $dbh, $sql, $verbose ); 
 	my $cnt = 0; 
-	for ( ; ; ) { 
+	for ( ;; ) { 
 	    my ($cv_val) = $cur->fetchrow(); 
 	    last if !defined($cv_val); 
  
@@ -362,20 +354,19 @@ sub getCategoryRow_ImgGold {
     return $jsObject; 
 } 
 
-
 sub packJSObject {
     my( $selectionAttr, @cv_vals ) = @_;
     my $disp_name = DataEntryUtil::getGoldAttrDisplayName($selectionAttr);
-    $disp_name = "<b>".$disp_name."</b>";
+    $disp_name = "<b>" . $disp_name . "</b>";
     
     my $jsObject = "{level:0, label:'$disp_name', param:'$selectionAttr', children: [";
     my $nNodes = @cv_vals;
     my $count = 0;
-    for my $cv_val (@cv_vals) {
+    foreach my $cv_val (@cv_vals) {
         $jsObject .= "{";
         #$jsObject .= "term_oid:\"$cv_val\", ";
         $jsObject .= "label:\"$cv_val\"}";
-        if ($count != $nNodes-1) {
+        if ($count != $nNodes - 1) {
             $jsObject .= ", ";
         }
         $count++;
@@ -390,7 +381,6 @@ sub packJSObject {
 # Print genome metadata category search results.
 ############################################################################
 sub printMetadataCategorySearchResults {
-
     #### I am working here ???
     my $searchFilter = param("metadataCategorySearchFilter");
     my $searchTerm   = param("metadataCategorySearchTerm");
@@ -411,40 +401,7 @@ sub printMetadataCategorySearchResults {
         return;
     }
 
-#    my ($gold_stamp_id2outColVal_href, $gold_id2outColVal_href, $submission_id2outColVal_href)
-#        = GoldDataEntryUtil::getCategorySearchGoldAndSumissionIds($searchFilter, $searchTermLc);
-    #print Dumper($gold_stamp_id2outColVal_href);
-    #print " gold_stamp_id2outColVal_href<br/>\n";
-    #print Dumper($gold_id2outColVal_href);
-    #print " gold_id2outColVal_href<br/>\n";
-    #print Dumper($submission_id2outColVal_href);
-    #print " submission_id2outColVal_href<br/>\n";
-    
-#    my @gold_stamp_ids = keys %$gold_stamp_id2outColVal_href;
-#    my @gold_ids = keys %$gold_id2outColVal_href;
-#    my @submission_ids = keys %$submission_id2outColVal_href;
-
-#    if ( scalar(@gold_stamp_ids) == 0 && scalar(@gold_ids) == 0 && scalar(@submission_ids) == 0 ) {
-#        printStatusLine( "Loaded.", 2 );
-#        print "<p>There are no genomes satisfying the condition.</p>\n";
-#        print end_form();
-#        return;
-#    }
-
     my $dbh = dbLogin();
-
-#    my $sample_gold_id_conds = GoldDataEntryUtil::getSampleGoldIdClause($dbh, @gold_ids);
-
-#    my $gold_id_conds = GoldDataEntryUtil::getGoldIdClause($dbh, @gold_stamp_ids);
-#    if ( !blankStr($sample_gold_id_conds) and !blankStr($gold_id_conds) ) {
-#        $gold_id_conds = ' or ' . $gold_id_conds;
-#    }
-    
-#    my $submission_id_conds = GoldDataEntryUtil::getSubmissionIdClause($dbh, @submission_ids);
-#    if ( (!blankStr($sample_gold_id_conds) || !blankStr($gold_id_conds)) && !blankStr($submission_id_conds) ) {
-#        $submission_id_conds = ' or ' . $submission_id_conds;
-#    }
-
     my ($rclause, @bindList) = WebUtil::urClauseBind('tx');
     my $imgClause = WebUtil::imgClause('tx');
 
@@ -454,21 +411,45 @@ sub printMetadataCategorySearchResults {
     my %attr_val_h;
     if ( DataEntryUtil::isGoldSingleAttr($attr) ) {
 	## single-valued
-	$new_gold_conds = " tx.sequencing_gold_id in (select p.gold_id " .
-	    "from gold_sequencing_project\@imgsg_dev p " .
+	$new_gold_conds = 
+	    " tx.sequencing_gold_id in (select p.gold_id " .
+	    "from gold_sequencing_project p " .
 	    "where lower($attr) like '%$searchTermLc%') ";
 
-	my $sql2 = "select gold_id, $attr from gold_sequencing_project\@imgsg_dev " .
+	my $sql2 = "select gold_id, $attr from gold_sequencing_project " .
 	    "where lower($attr) like '%$searchTermLc%' ";
+
+        if ( $attr eq 'pmo_project_id' || $attr eq 'its_spid' || $attr eq 'its_proposal_id' || $attr eq 'gpts_proposal_id' ) {
+            # make sure list is all numbers.
+            $searchTermLc =~ s/'/ /g; 
+            $searchTermLc =~ s/,/ /g;
+            
+            # now split into array pr numbers
+            my @list = split(/\s+/, $searchTermLc);
+            foreach my $test (@list) {
+                # ids can only be numbers
+                WebUtil::webError("Id can only be a number: >$test<", 0) if ($test =~ /\D/);
+            }
+        
+            # fix for 1000+
+            $searchTermLc = OracleUtil::getNumberIdsInClause($dbh, @list );
+
+            $new_gold_conds =
+                " tx.sequencing_gold_id in (select p.gold_id "
+              . "from gold_sequencing_project p "
+              . "where $attr in ($searchTermLc) )";
+            $sql2 = "select gold_id, $attr from gold_sequencing_project where $attr in ($searchTermLc) ";
+        }
+
 	my $cur2 = execSql( $dbh, $sql2, $verbose ); 
-	for (;;) {
+	for ( ;; ) {
 	    my ($id2, $val2) = $cur2->fetchrow();
 	    last if ! $id2;
 	    $attr_val_h{$id2} = $val2;
 	}
 	$cur2->finish();
-    }
-    else {
+
+    } else {
 	## set valued
 	my %gold_table_h = getNewGoldTableNames();
 	my %gold_field_h = getNewGoldFieldNames();
@@ -476,14 +457,14 @@ sub printMetadataCategorySearchResults {
 	    my $tbl_name2 = $gold_table_h{$attr};
 	    my $fld_name2 = $gold_field_h{$attr};
 	    $new_gold_conds = " tx.sequencing_gold_id in (select p.gold_id " .
-		"from " . $tbl_name2 . "\@imgsg_dev p " .
+		"from " . $tbl_name2 . " p " .
 		"where lower($fld_name2) like '%$searchTermLc%') ";
 
 	    my $sql2 = "select gold_id, $fld_name2 from $tbl_name2" .
-		"\@imgsg_dev " .
+		" " .
 		"where lower($fld_name2) like '%$searchTermLc%' ";
 	    my $cur2 = execSql( $dbh, $sql2, $verbose ); 
-	    for (;;) {
+	    for ( ;; ) {
 		my ($id2, $val2) = $cur2->fetchrow();
 		last if ! $id2;
 		$attr_val_h{$id2} = $val2;
@@ -499,22 +480,7 @@ sub printMetadataCategorySearchResults {
         return;
     }
 
-#    my $sql = qq{
-#        select distinct tx.taxon_oid, tx.taxon_display_name, tx.domain, tx.seq_status, 
-#        tx.sequencing_gold_id, tx.analysis_project_id, tx.submission_id
-#        from taxon tx
-#        where 1 = 1
-#        and (
-#            $sample_gold_id_conds
-#            $gold_id_conds
-#            $submission_id_conds
-#        )
-#        $rclause
-#        $imgClause
-#        order by tx.taxon_display_name
-#    };
- 
-   my $sql = qq{
+    my $sql = qq{
         select distinct tx.taxon_oid, tx.taxon_display_name, tx.domain, tx.seq_status, 
         tx.sequencing_gold_id, tx.analysis_project_id, tx.submission_id
         from taxon tx
@@ -539,9 +505,9 @@ sub printMetadataCategorySearchResults {
 
     $it->addColSpec( "Select" );
     $it->addColSpec( "Domain", "char asc", "center", "",
-             "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
     $it->addColSpec( "Status", "char asc", "center", "",
-             "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
     $it->addColSpec( "Genome Name", "char asc", "left" );
     $it->addColSpec( "GOLD Project ID", "char asc", "left" );
     $it->addColSpec( "GOLD Analysis Project ID", "char asc", "left" );
@@ -549,7 +515,7 @@ sub printMetadataCategorySearchResults {
     $it->addColSpec( DataEntryUtil::getGoldAttrDisplayName($searchFilter), "char asc" );
 
     my $count = 0;
-    for ( ; ; ) {
+    for ( ;; ) {
         my ($taxon_oid, $taxon_display_name, $domain, $seq_status,
             $gold_sp_id, $gold_ap_id, $submission_id) = $cur->fetchrow();
         last if !$taxon_oid;
@@ -562,8 +528,7 @@ sub printMetadataCategorySearchResults {
         # domain and seq_status
         $row .= $domain . $sd . substr( $domain, 0, 1 ) . "\t";
         $row .= $seq_status . $sd . substr( $seq_status, 0, 1 ) . "\t";
-        my $url =
-            "$main_cgi?section=TaxonDetail"
+        my $url = "$main_cgi?section=TaxonDetail"
             . "&page=taxonDetail&taxon_oid=$taxon_oid";
         $row .= $taxon_display_name . $sd . alink( $url, $taxon_display_name ) . "\t";
 
@@ -596,22 +561,11 @@ sub printMetadataCategorySearchResults {
         }
     
         my $attrVal;
-#        if ( $gold_stamp_id2outColVal_href->{$gold_id} ) {
-#            $attrVal = $gold_stamp_id2outColVal_href->{$gold_id};
-#        }
-#        elsif ( $gold_id2outColVal_href->{$sample_gold_id} ) {
-#            $attrVal = $gold_id2outColVal_href->{$sample_gold_id};            
-#        }
-#        elsif ( $submission_id2outColVal_href->{$submission_id} ) {
-#            $attrVal = $submission_id2outColVal_href->{$submission_id};            
-#        }
-        
 	$attrVal = $attr_val_h{$gold_sp_id};
         if ( $attrVal ne '' ) {
             my $nameMatchText = WebUtil::highlightMatchHTML2( $attrVal, $searchTerm );
             $row .= $attrVal . $sd . "$nameMatchText\t";
-        }
-        else {
+        } else {
             $row .= $sd . "\t";
         }
 
@@ -620,16 +574,11 @@ sub printMetadataCategorySearchResults {
 
     if ( $count > 0 ) {
 	$it->printOuterTable(1);
-    }
-    else {
+    } else {
         print "<p>There are no genomes satisfying the condition.</p>\n";
     }
 
     $cur->finish();
-#    OracleUtil::truncTable($dbh, "gtt_func_id1") if ($sample_gold_id_conds =~ /gtt_func_id1/i);
-#    OracleUtil::truncTable($dbh, "gtt_func_id2") if ($gold_id_conds =~ /gtt_func_id2/i);
-#    OracleUtil::truncTable($dbh, "gtt_num_id3") if ($submission_id_conds =~ /gtt_num_id3/i);    
-    #$dbh->disconnect();
 
     if ( $count > 10 ) {
         TaxonSearchUtil::printButtonFooter($txTableName);
@@ -637,11 +586,10 @@ sub printMetadataCategorySearchResults {
     }
     
     print hiddenVar( "page",    "message" );
-    print hiddenVar( "section",    "Messages" );
+    print hiddenVar( "section", "Messages" );
     print hiddenVar( "message", "Genome selections saved and enabled." );
 
     printStatusLine( "$count genomes retrieved.", 2 );
-
     print end_form();
 }
 
@@ -660,8 +608,7 @@ sub printMetadataCategoryOperationResults {
 ############################################################################
 # printOrgCategoryResults - Print genome category result search.
 ############################################################################
-sub printOrgCategoryResults { 
- 
+sub printOrgCategoryResults {  
     my $dbh = dbLogin(); 
  
     printMainForm(); 
@@ -679,7 +626,7 @@ sub printOrgCategoryResults {
     #print "printOrgCategoryResults \$sql: $sql<br/>";
     #print "\@bindList: @bindList<br/>\n";
     my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
-    for ( ; ; ) {
+    for ( ;; ) {
         my ( $taxon_oid, $taxon_display_name ) = $cur->fetchrow();
         last if !$taxon_oid;
         $taxonOid2Name{$taxon_oid}   = $taxon_display_name;
@@ -708,26 +655,22 @@ sub printOrgCategoryResults {
     my $relevanceMgr = new TermNodeMgr();
     if ( $nPhenotypes > 0 ) {
         my %uniqueTaxonOids2; 
-        loadTermMgr( $dbh, $phenotypeMgr, "phenotype", \@phenotype_oids,
-             \%uniqueTaxonOids2 ); 
+        loadTermMgr( $dbh, $phenotypeMgr, "phenotype", \@phenotype_oids, \%uniqueTaxonOids2 ); 
         intersectHash( \%uniqueTaxonOids, \%uniqueTaxonOids2 );
     } 
     if ( $nEcotypes > 0 ) {
         my %uniqueTaxonOids2;
-        loadTermMgr( $dbh, $ecotypeMgr, "ecotype", \@ecotype_oids,
-             \%uniqueTaxonOids2 );
+        loadTermMgr( $dbh, $ecotypeMgr, "ecotype", \@ecotype_oids, \%uniqueTaxonOids2 );
         intersectHash( \%uniqueTaxonOids, \%uniqueTaxonOids2 ); 
     } 
     if ( $nDiseases > 0 ) { 
         my %uniqueTaxonOids2; 
-        loadTermMgr( $dbh, $diseaseMgr, "disease", \@disease_oids,
-             \%uniqueTaxonOids2 );
+        loadTermMgr( $dbh, $diseaseMgr, "disease", \@disease_oids, \%uniqueTaxonOids2 );
         intersectHash( \%uniqueTaxonOids, \%uniqueTaxonOids2 );
     } 
     if ( $nRelevances > 0 ) { 
         my %uniqueTaxonOids2; 
-        loadTermMgr( $dbh, $relevanceMgr, "relevance", \@relevance_oids, 
-             \%uniqueTaxonOids2 ); 
+        loadTermMgr( $dbh, $relevanceMgr, "relevance", \@relevance_oids, \%uniqueTaxonOids2 ); 
         intersectHash( \%uniqueTaxonOids, \%uniqueTaxonOids2 ); 
     } 
     my @taxon_oids = keys(%uniqueTaxonOids); 
@@ -737,14 +680,13 @@ sub printOrgCategoryResults {
         print "No results were found from query.\n"; 
         print "</p>\n"; 
         printStatusLine( "0 genomes found.", 2 ); 
-        #$dbh->disconnect(); 
         return; 
     } 
  
     ## Sort by taxon.taxon_display_name 
     my @recs; 
     my @taxon_oids = keys(%uniqueTaxonOids);
-    for my $taxon_oid (@taxon_oids) { 
+    foreach my $taxon_oid (@taxon_oids) { 
         my $taxon_display_name = $taxonOid2Name{$taxon_oid};
         my $r                  = "$taxon_display_name\t"; 
         $r .= "$taxon_oid\t";
@@ -752,7 +694,7 @@ sub printOrgCategoryResults {
     } 
     my @recs2 = sort(@recs); 
     my @taxon_oids_sorted; 
-    for my $r (@recs2) { 
+    foreach my $r (@recs2) { 
         my ( $taxon_display_name, $taxon_oid ) = split( /\t/, $r );
         push( @taxon_oids_sorted, $taxon_oid );
     } 
@@ -802,7 +744,7 @@ sub printOrgCategoryResults {
     $it->addColSpec( "Relevance", "char asc" ) if $nRelevances > 0;
 
     my $count = 0;
-    for my $taxon_oid (@taxon_oids_sorted) {
+    foreach my $taxon_oid (@taxon_oids_sorted) {
         my $taxon_display_name = $taxonOid2Name{$taxon_oid};
 	my $row;
         $count++;
@@ -810,8 +752,7 @@ sub printOrgCategoryResults {
 	$row .= $sd . "<input type='checkbox' name='taxon_filter_oid' "
 	    . "value='$taxon_oid' />\t";
 
-        my $url =
-            "$main_cgi?section=TaxonDetail"
+        my $url = "$main_cgi?section=TaxonDetail"
 	    . "&page=taxonDetail&taxon_oid=$taxon_oid";
 	$row .= $taxon_display_name . $sd . alink( $url, $taxon_display_name ) . "\t";
 
@@ -850,10 +791,9 @@ sub printOrgCategoryResults {
         print "<br/>";
     }
     print hiddenVar( "page",    "message" );
-    print hiddenVar( "section",    "Messages" );
+    print hiddenVar( "section", "Messages" );
     print hiddenVar( "message", "Genome selections saved and enabled." );
     printStatusLine( "$count genomes retrieved.", 2 );
-    #$dbh->disconnect();
     print end_form();
 }
 
@@ -895,12 +835,10 @@ sub getNewGoldFieldNames {
     return %field_h;
 }
 
-
 ############################################################################
 # printOrgCategoryResults_ImgGold - Print genome category result search.
 ############################################################################
 sub printOrgCategoryResults_ImgGold {
-
     printMainForm();
 
     # rename Categories to Metadata - ken
@@ -926,7 +864,7 @@ sub printOrgCategoryResults_ImgGold {
     my @single_select;
     my @set_select;
     my $domain_cond = "";
-    for my $attr (@cond_attrs) {
+    foreach my $attr (@cond_attrs) {
         my @vals = processParamValue(param($attr));
 
         if ( scalar(@vals) > 0 ) {
@@ -952,8 +890,7 @@ sub printOrgCategoryResults_ImgGold {
 	$domain_cond = " tx.domain in ('" . join("','", @vals) . "')";
     }
 
-    if ( scalar(@single_select) == 0 && scalar(@set_select) == 0 &&
-	! $domain_cond ) {
+    if ( scalar(@single_select) == 0 && scalar(@set_select) == 0 && ! $domain_cond ) {
         webError("Please select a category value.");
         return;
     }
@@ -997,7 +934,7 @@ sub printOrgCategoryResults_ImgGold {
     my $new_gold_conds = "";
     my @outputAttrs = ();
     if ( scalar(@single_select) > 0 ) {
-	for my $attr1 ( @single_select ) {
+	foreach my $attr1 ( @single_select ) {
 	    push @outputAttrs, ( $attr1 );
 	    my @vals = processParamValue(param($attr1));
 	    my $cond1 = "p.$attr1 in ('" . join("', '", @vals) . "') ";
@@ -1011,7 +948,7 @@ sub printOrgCategoryResults_ImgGold {
 	    }
 	    else {
 		$new_gold_conds = " and tx.sequencing_gold_id in " .
-		    "(select p.gold_id from gold_sequencing_project\@imgsg_dev p " .
+		    "(select p.gold_id from gold_sequencing_project p " .
 		    "where $cond1 ";
 	    }
 	}
@@ -1023,7 +960,7 @@ sub printOrgCategoryResults_ImgGold {
     my %gold_table_h = getNewGoldTableNames();
     my %gold_field_h = getNewGoldFieldNames();
     if ( scalar(@set_select) > 0 ) {
-	for my $attr1 ( @set_select ) {
+	foreach my $attr1 ( @set_select ) {
 	    if ( ! $gold_table_h{$attr1} ) {
 		webError ("ERROR: Cannot find $attr1");
 		return;
@@ -1033,7 +970,7 @@ sub printOrgCategoryResults_ImgGold {
 	    my @vals = processParamValue(param($attr1));
 	    $new_gold_conds .= " and tx.sequencing_gold_id in " .
 		"(select gold_id from " . $gold_table_h{$attr1} .
-		"\@imgsg_dev " .
+		" " .
 		" where " . $gold_field_h{$attr1} .
 		" in ('" . join("', '", @vals) . "')) ";
 	}
@@ -1043,7 +980,7 @@ sub printOrgCategoryResults_ImgGold {
     my %meta1_h;
     if ( scalar(@single_select) > 0 ) {
 	my $sql2 = "";
-	for my $attr1 ( @single_select ) {
+	foreach my $attr1 ( @single_select ) {
 	    if ( $sql2 ) {
 		$sql2 .= ", p." . $attr1;
 	    }
@@ -1053,7 +990,7 @@ sub printOrgCategoryResults_ImgGold {
 	}
 
 	if ( $sql2 ) {
-	    $sql2 .= " from gold_sequencing_project\@imgsg_dev p " .
+	    $sql2 .= " from gold_sequencing_project p " .
 		"where p.gold_id in (select t.sequencing_gold_id " .
 		"from taxon t where t.obsolete_flag = 'No'";
 	    if ( $genome_type ) {
@@ -1064,7 +1001,7 @@ sub printOrgCategoryResults_ImgGold {
 	    }
 
 	    my $cur2 = execSql( $dbh, $sql2, $verbose );
-	    for ( ; ; ) {
+	    for ( ;; ) {
 		my ($gold_id, @rest) = $cur2->fetchrow();
 		last if ! $gold_id;
 		$meta1_h{$gold_id} = \@rest;
@@ -1075,7 +1012,7 @@ sub printOrgCategoryResults_ImgGold {
 
     ## multi-valued fields
     if ( scalar(@set_select) > 0 ) {
-	for my $attr1 ( @set_select ) {
+	foreach my $attr1 ( @set_select ) {
 	    if ( ! $gold_table_h{$attr1} ) {
 		print "<p>ERROR: Cannot find $attr1\n";
 		next;
@@ -1084,13 +1021,13 @@ sub printOrgCategoryResults_ImgGold {
 	    my @vals = processParamValue(param($attr1));
 	    my $sql2 = "select p.gold_id, p." .
 		$gold_field_h{$attr1} . " from " .
-		$gold_table_h{$attr1} . "\@imgsg_dev p " .
+		$gold_table_h{$attr1} . " p " .
 		"where " . $gold_field_h{$attr1} . 
 		" in ('" . join("', '", @vals) . "') " .
 		"order by 1, 2";
 	    my $cur2 = execSql( $dbh, $sql2, $verbose );
 	    my $prev_id = "";
-	    for ( ; ; ) {
+	    for ( ;; ) {
 		my ($gold_id, $fld_val) = $cur2->fetchrow();
 		last if ! $gold_id;
 
@@ -1181,13 +1118,12 @@ sub printOrgCategoryResults_ImgGold {
     $it->addColSpec( "GOLD Analysis Project ID", "char asc", "left" );
     $it->addColSpec( "Submission ID", "char asc", "left" );
 
-#    for my $outputAttr ( @$outputAttrs_ref ) {
-    for my $outputAttr ( @outputAttrs ) {
+    foreach my $outputAttr ( @outputAttrs ) {
         $it->addColSpec( DataEntryUtil::getGoldAttrDisplayName($outputAttr), "char asc" );
     }
 
     my $count = 0;
-    for ( ; ; ) {
+    for ( ;; ) {
         my ($taxon_oid, $taxon_display_name, $domain, $seq_status,
             $gold_sp_id, $gold_ap_id, $submission_id) = $cur->fetchrow();
         last if !$taxon_oid;
@@ -1200,8 +1136,7 @@ sub printOrgCategoryResults_ImgGold {
 		# domain and seq_status
 		$row .= $domain . $sd . substr( $domain, 0, 1 ) . "\t";
 		$row .= $seq_status . $sd . substr( $seq_status, 0, 1 ) . "\t";
-		my $url =
-		    "$main_cgi?section=TaxonDetail"
+		my $url = "$main_cgi?section=TaxonDetail"
 		    . "&page=taxonDetail&taxon_oid=$taxon_oid";
 		$row .= $taxon_display_name . $sd . alink( $url, $taxon_display_name ) . "\t";
 
@@ -1257,16 +1192,15 @@ sub printOrgCategoryResults_ImgGold {
                         $row .= "<span style='color:green;font-weight:bold;'>";
                         $row .= escapeHTML($attrVal);
                         $row .= "</span>\t";
-                    }
-                    else {
+                    } else {
                         $row .= $sd . "\t";                        
                     }
                     
                 }   
             }            
         }
-
-		$it->addRow($row);
+	
+	$it->addRow($row);
     }
 
     if ( $count > 0 ) {
@@ -1287,11 +1221,10 @@ sub printOrgCategoryResults_ImgGold {
         print "<br/>";
     }
     print hiddenVar( "page",    "message" );
-    print hiddenVar( "section",    "Messages" );
+    print hiddenVar( "section", "Messages" );
     print hiddenVar( "message", "Genome selections saved and enabled." );
 
     printStatusLine( "$count genomes retrieved.", 2 );
-
     print end_form();
 }
 
@@ -1299,14 +1232,14 @@ sub printOrgCategoryResults_ImgGold {
 # loadTermMgr - Load term manager.  Convenience wrapper for reptition.
 ############################################################################
 sub loadTermMgr {
-	my ( $dbh, $mgr, $type, $termOids_ref, $uniqueTaxonOids_ref ) = @_;
-	my @outRecs;
-	$mgr->loadTree( $dbh, $type );
-	$mgr->findTaxons( $dbh, $type, $termOids_ref, \@outRecs );
-	for my $r (@outRecs) {
-		my ( $taxon_oid, undef ) = split( /\t/, $r );
-		$uniqueTaxonOids_ref->{$taxon_oid} = $taxon_oid;
-	}
+    my ( $dbh, $mgr, $type, $termOids_ref, $uniqueTaxonOids_ref ) = @_;
+    my @outRecs;
+    $mgr->loadTree( $dbh, $type );
+    $mgr->findTaxons( $dbh, $type, $termOids_ref, \@outRecs );
+    foreach my $r (@outRecs) {
+	my ( $taxon_oid, undef ) = split( /\t/, $r );
+	$uniqueTaxonOids_ref->{$taxon_oid} = $taxon_oid;
+    }
 }
 
 ############################################################################
@@ -1314,15 +1247,15 @@ sub loadTermMgr {
 #  Store results in first hash.
 ############################################################################
 sub intersectHash {
-	my ( $h1_ref, $h2_ref ) = @_;
-	my %h3;
-	my @keys = keys(%$h2_ref);
-	for my $k (@keys) {
-		my $x = $h1_ref->{$k};
-		next if $x eq "";
-		$h3{$k} = $k;
-	}
-	%$h1_ref = %h3;
+    my ( $h1_ref, $h2_ref ) = @_;
+    my %h3;
+    my @keys = keys(%$h2_ref);
+    foreach my $k (@keys) {
+	my $x = $h1_ref->{$k};
+	next if $x eq "";
+	$h3{$k} = $k;
+    }
+    %$h1_ref = %h3;
 }
 
 sub printTreeViewMarkup {
@@ -1337,7 +1270,6 @@ sub printTreeViewMarkup {
 }
 
 sub printTableTop {
-
     my $or = hiliteWordInColor( 'or', '#cc9966' );
     my $and = hiliteWordInColor( 'and', '#cc9966' );
 
@@ -1355,7 +1287,6 @@ sub printTableTop {
         </span>
         </p>
     };
-
 }
 
 sub hiliteWordInColor {
@@ -1384,14 +1315,14 @@ sub printCategoryLabel {
     my ( $selectionAttr, $jsObject ) = @_;
 
     if (!$use_img_gold) {
-	    my $hilitedAttr = '';
-	    if ( $selectionAttr eq "Ecotype" ) {
-	        $hilitedAttr = "<b>Habitat</b>";
-	    }
-	    else {
-	        $hilitedAttr = "<b>$selectionAttr</b>";
-	    }
-	    $jsObject =~ s/$selectionAttr/$hilitedAttr/i;
+	my $hilitedAttr = '';
+	if ( $selectionAttr eq "Ecotype" ) {
+	    $hilitedAttr = "<b>Habitat</b>";
+	}
+	else {
+	    $hilitedAttr = "<b>$selectionAttr</b>";
+	}
+	$jsObject =~ s/$selectionAttr/$hilitedAttr/i;
     }
     return $jsObject;
 }
@@ -1407,18 +1338,27 @@ sub setJSObjects {
     };
 }
 
-
 ############################################################################
 # printCategoryOptionList - Print option list for categories.
 ############################################################################
 sub printCategoryOptionList {
-
     my @categoryNames = getCategoryNames();
-    for my $selectionAttr (@categoryNames) {
+    foreach my $selectionAttr (@categoryNames) {
         my $disp_name = DataEntryUtil::getGoldAttrDisplayName($selectionAttr);
-        print qq{
-           <option value="$selectionAttr">$disp_name</option>
-        };
+        if (   $selectionAttr eq 'pmo_project_id'
+            || $selectionAttr eq 'its_spid'
+            || $selectionAttr eq 'its_proposal_id'
+            || $selectionAttr eq 'gpts_proposal_id' ) {
+
+            print qq{
+            <option value="$selectionAttr" title='A comma or a space separated list eg 16614, 16828'>$disp_name (list)</option>
+            };
+	    
+        } else {
+	    print qq{
+            <option value="$selectionAttr">$disp_name</option>
+            };
+	}
     }
 }
 
@@ -1438,28 +1378,23 @@ sub printPageHint {
     );
 }
 
-
-
 ############################################################################
 # printMetadataCategoryChartForm - Print MetadataCategoryChartForm 
 ############################################################################
 sub printMetadataCategoryChartForm {
     printMainForm();
-    print "<h2>Metadata Category Bar Chart Display</h2>\n";
-
+    print "<h2>Metadata Category Chart</h2>\n";
     printMetaCateFieldSelection();
-
     print end_form();
 }
 
-sub printMetaCateFieldSelection () {
-    my $bar_select = param('bar_field');
-
+sub getAttributeHash {
     my %attr_h;
-    $attr_h{'altitude'} = 'Altitude / Depth';
+    $attr_h{'altitude'} = 'Altitude';
     $attr_h{'biotic_rel'} = 'Biotic Relationships';
     $attr_h{'cell_arrangement'} = 'Cell Arrangement';
     $attr_h{'cell_shape'} = 'Cell Shape';
+    $attr_h{'depth'} = 'Depth';
     $attr_h{'diseases'} = 'Disease';
     $attr_h{'domain'} = 'Domain';
     $attr_h{'ecosystem'} = 'Ecosystem';
@@ -1474,7 +1409,7 @@ sub printMetaCateFieldSelection () {
     $attr_h{'gram_stain'} = 'Gram Staining';
     $attr_h{'habitat'} = 'Habitat';
 ## GOLD API returns null
-##    $attr_h{'iso_country'} = 'Isolation Country';
+## $attr_h{'iso_country'} = 'Isolation Country';
     $attr_h{'metabolism'} = 'Metabolism';
     $attr_h{'motility'} = 'Motility';
     $attr_h{'oxygen_req'} = 'Oxygen Requirement';
@@ -1482,12 +1417,20 @@ sub printMetaCateFieldSelection () {
     $attr_h{'temp_range'} = 'Temperature Range';
     $attr_h{'salinity'} = 'Salinity';
     $attr_h{'sporulation'} = 'Sporulation';
+    return \%attr_h;
+}
+
+sub printMetaCateFieldSelection {
+    my $bar_select = param('bar_field');
+
+    my $attr_h_href = getAttributeHash();
+    my %attr_h = %$attr_h_href;
 
     print "Metadata Category: ";
     print nbsp(2);
     print "<select id='bar_field' name='bar_field'>\n";
     print "<option value=''></option>\n";
-    for my $x ( sort(keys (%attr_h)) ) {
+    foreach my $x ( sort(keys (%attr_h)) ) {
 	print "<option value='$x' ";
 	if ( $x eq $bar_select ) {
 	    print " selected ";
@@ -1496,7 +1439,7 @@ sub printMetaCateFieldSelection () {
     }
     print "</select>\n";
 
-    print nbsp(3);
+    print nbsp(2);
     my $name = "_section_FindGenomes_metadataCategoryChartResults";
     print submit(
         -id    => "go",
@@ -1505,7 +1448,6 @@ sub printMetaCateFieldSelection () {
         -class => "smdefbutton"
     );
 }
-
 
 ############################################################################
 # printMetadataCategoryChartResults - 
@@ -1519,8 +1461,8 @@ sub printMetadataCategoryChartResults {
     printMetaCateFieldSelection();
 
     if ( ! $bar_select ) {
-    	print "<h4>Please select a field for chart display.</h4>\n";
     	print end_form();
+        webError("Please select a field for chart display.");
     	return;
     }
 
@@ -1533,14 +1475,18 @@ sub printMetadataCategoryChartResults {
     	return;
     }
 
-    print "<h3>Metadata Category Bar Chart</h3>\n";
+    print "<h2>Metadata Category Chart</h2>\n";
+    my $attr_h_href = getAttributeHash();
+    my %attr_h = %$attr_h_href;
+    my $attr = $attr_h{ $bar_select };
+    print "<h3>$attr</h3>";
 
     my $fld_type = getMetaFieldType($bar_select);
     if ( $fld_type == 1 && $include_metagenomes ) {
-    	print "<h5>The graph shows isolate genomes only.</h5>\n";
+    	print "<p><u>Please note</u>: this graph shows isolate genomes only</p>";
     }
     elsif ( $fld_type == 2 ) {
-    	print "<h5>The graph shows metagenomes only.</h5>\n";
+    	print "<p><u>Please note</u>: this graph shows metagenomes only</p>";
     }
 
     my $data = "";
@@ -1549,14 +1495,13 @@ sub printMetadataCategoryChartResults {
 
     my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
     my $cnt = 0;
-    for (;;) {
+    for ( ;; ) {
     	my ($name, $val) = $cur->fetchrow();
     	last if ! $name && length($name) == 0 ;
     
     	if ( $data ) {
     	    $data .= ",";
-    	}
-    	else {
+    	} else {
     	    $data = "[";
     	}
     	$data .= "{\"title\": \"" . $name . "\", \"count\": " . $val .
@@ -1574,9 +1519,8 @@ sub printMetadataCategoryChartResults {
     }
 
     if ( $data ) {
-    	#print "<p>Data: $data\n";
     	my $url2 = "$main_cgi?section=FindGenomes"
-    	    . "&page=metadataCategoryOperationResults&" ;
+    	    . "&page=metadataCategoryOperationResults&";
     	if ( $fld_type == 1 && $include_metagenomes ) {
     	    $url2 .= "genome_type=isolate&";
     	}
@@ -1595,13 +1539,12 @@ sub printMetadataCategoryChartResults {
     print end_form();
 }
 
-
 sub printEcosystemCategoryChartResults {
     my $field_name = 'ecosystem_category';
     my ($rclause, @bindList) = WebUtil::urClauseBind('tx');
     my $imgClause = WebUtil::imgClause('tx');
 
-    print "<h2>Metadata Category Bar Chart Display</h2>\n";
+    print "<h2>Metadata Category Chart</h2>\n";
 
     my $bar_select = param('bar_field');
     my $genome_type = "";
@@ -1613,23 +1556,26 @@ sub printEcosystemCategoryChartResults {
     }
 
     my $dbh = dbLogin();
-    my $sql = "select distinct ecosystem from gold_sequencing_project\@imgsg_dev where ecosystem is not null";
+    my $sql = qq{
+        select distinct ecosystem 
+        from gold_sequencing_project 
+        where ecosystem is not null
+    };
     my $cur = execSql( $dbh, $sql, $verbose );
     my @ecosystems = ();
-    for (;;) {
+    for ( ;; ) {
     	my ($val) = $cur->fetchrow();
-    	last if ! $val;
-    
+    	last if ! $val;    
     	push @ecosystems, ( $val );
     }
     $cur->finish();
 
-    for my $x ( sort @ecosystems ) {
+    foreach my $x ( sort @ecosystems ) {
     	$sql = qq{
            select new.name, count(distinct new.t_oid)
            from
             (select s.$field_name name, tx.taxon_oid t_oid
-            from taxon tx, gold_sequencing_project\@imgsg_dev s
+            from taxon tx, gold_sequencing_project s
             where tx.sequencing_gold_id = s.gold_id
             and s.ecosystem = ?
             and s.$field_name is not null
@@ -1643,14 +1589,13 @@ sub printEcosystemCategoryChartResults {
     	my $cur = execSql( $dbh, $sql, $verbose, $x );
     	my $data = "";
     	my $cnt = 0;
-    	for (;;) {
+    	for ( ;; ) {
     	    my ($name, $val) = $cur->fetchrow();
     	    last if ! $name;
     
     	    if ( $data ) {
 		$data .= ",";
-    	    }
-    	    else {
+    	    } else {
 		$data = "[";
     	    }
 	    $data .= "{\"title\": \"" . $name . "\", \"count\": " . $val .
@@ -1671,10 +1616,9 @@ sub printEcosystemCategoryChartResults {
     	    my $url2 = "$main_cgi?section=FindGenomes"
     		. "&page=metadataCategoryOperationResults&";
     	    if ( $genome_type ) {
-        		$url2 .= "genome_type=" . $genome_type . "&";
+		$url2 .= "genome_type=" . $genome_type . "&";
     	    }
-    	    $url2 .= "ecosystem=$x&"
-    		. $field_name . "=";
+    	    $url2 .= "ecosystem=$x&" . $field_name . "=";
     	    my $additional_text = "[\"" . $x . "\"]";
     	    D3ChartUtil::printHBarChart($data, $url2, $additional_text, $x);
     	    #D3ChartUtil::printDonutChart($data, $url2, $additional_text);
@@ -1689,7 +1633,7 @@ sub printDomainChartResults {
 
     TaxonSearchUtil::printNotes();
     ##WebUtil::printHint("Some domains may be hidden. Please check your MyIMG preference.");
-    print "<h2>Domain Pie Chart Display</h2>\n";
+    print "<h2>Domain Category Chart</h2>\n";
 
     my $dbh = dbLogin();
     my $sql = qq{
@@ -1708,7 +1652,7 @@ sub printDomainChartResults {
     my $hideGFragment = getSessionParam("hideGFragment");
     my %domain_h;
     my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
-    for (;;) {
+    for ( ;; ) {
     	my ($domain, $val) = $cur->fetchrow();
     	last if ! $domain;
 
@@ -1738,8 +1682,7 @@ sub printDomainChartResults {
     
     	if ( $domain_h{$domain} ) {
     	    $domain_h{$domain} += $val;
-    	}
-    	else {
+    	} else {
     	    $domain_h{$domain} = $val;
     	}
     	$cnt += $val;
@@ -1751,12 +1694,11 @@ sub printDomainChartResults {
     	$cnt = 1;
     }
     my $data = "";
-    for my $key (sort (keys %domain_h)) {
+    foreach my $key (sort (keys %domain_h)) {
     	my $val = $domain_h{$key};
     	if ( $data ) {
     	    $data .= ",";
-    	}
-    	else {
+    	} else {
     	    $data = "[";
     	}
     	my $id = substr($key, 0, 1);
@@ -1780,7 +1722,6 @@ sub printDomainChartResults {
     	D3ChartUtil::printPieChart($data, $url2, $url2, "");
     }
 }
-
 
 sub getMetadataCategoryQuery {
     my ($field_name) = @_;
@@ -1830,7 +1771,7 @@ sub getMetadataCategoryQuery {
 	    $field_name eq 'phenotype' ||
 	    $field_name eq 'relevance' ||
 	    $field_name eq 'seq_method' ) {
-    	my $table_name = "gold_sp_" . $field_name . "\@imgsg_dev";
+    	my $table_name = "gold_sp_" . $field_name . "";
     	$sql = qq{
            select p2.$field_name, count(distinct tx.taxon_oid)
             from taxon tx, $table_name p2
@@ -1847,12 +1788,12 @@ sub getMetadataCategoryQuery {
     	$field_name eq 'energy_source' ||
     	$field_name eq 'metabolism' ||
     	$field_name eq 'phenotypes' ) {
-    	my $table_name1 = "project_info_" . $field_name . "\@imgsg_dev";
-    	my $table_name2 = "env_sample_" . $field_name . "\@imgsg_dev";
+    	my $table_name1 = "project_info_" . $field_name . "";
+    	my $table_name2 = "env_sample_" . $field_name . "";
     	my $field_name2 = $field_name;
     	if ( $field_name eq 'habitat' ) {
     	    $field_name2 = 'habitat_type';
-    	    $table_name2 = "env_sample_habitat_type\@imgsg_dev";
+    	    $table_name2 = "env_sample_habitat_type";
     	}
     	$sql = qq{
            select new.name, count(distinct new.t_oid)
@@ -1880,7 +1821,7 @@ sub getMetadataCategoryQuery {
     else {
     	$sql = qq{
            select p.$field_name, count(distinct tx.taxon_oid)
-            from taxon tx, gold_sequencing_project\@imgsg_dev p
+            from taxon tx, gold_sequencing_project p
             where tx.sequencing_gold_id = p.gold_id
             and p.$field_name is not null
             $rclause
@@ -1894,7 +1835,6 @@ sub getMetadataCategoryQuery {
     return ($sql, @bindList);
 }
 
-
 sub getMetaFieldType {
     my ($fld_name) = @_;
 
@@ -1905,11 +1845,10 @@ sub getMetaFieldType {
 	 $fld_name eq 'motility' ||
 	 $fld_name eq 'sporulation' ) {
 	return 1;
-    }
-    elsif ( $fld_name =~ /metagenome/ ) {
+
+    } elsif ( $fld_name =~ /metagenome/ ) {
 	return 2;
-    }
-    else {
+    } else {
 	return 3;
     }
 }

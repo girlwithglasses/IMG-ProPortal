@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 34822 2015-12-03 05:08:23Z aratner $
+# $Id: EgtCluster.pm 36215 2016-09-23 17:59:48Z aratner $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -17,7 +17,6 @@ use MetaUtil;
 use OracleUtil;
 use WebConfig;
 use WebUtil;
-use King;
 use GenomeListJSON;
 use HTML::Template;
 
@@ -33,7 +32,7 @@ my $verbose  = $env->{ verbose };
 my $tmp_dir  = $env->{ tmp_dir };
 my $tmp_url  = $env->{ tmp_url };
 my $cluster_bin = $env->{ cluster_bin };
-my $r_bin = "R"; # $env->{ r_bin };
+my $r_bin = $env->{ r_bin };
 my $min_genome_selections = 2;
 my $include_metagenomes = $env->{include_metagenomes};
 
@@ -70,7 +69,6 @@ sub getAppHeaderData {
     if (WebUtil::paramMatch("noHeader") ne "") {
         return @a;
     } else {
-        
         require GenomeListJSON;
         my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
         $template->param( base_url => $base_url );
@@ -117,7 +115,7 @@ sub printClusterForm {
     WebUtil::printHeaderWithInfo
 	("Genome Clustering", $description,
 	 "show description for this tool",
-	 "Genome Clustering Info", 0, "userGuide.pdf#page=52", "", "java");
+	 "Genome Clustering Info", 0, "userGuide.pdf#page=52", "");
 
     print "<p>$description</p>";
 
@@ -490,7 +488,7 @@ sub printResults {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -598,7 +596,6 @@ sub printResults {
     if ( ! (-e $tmpOutFile) ) {
         print "<p><font color='red'>No data to display. "
 	    . "(no $tmpOutFile)</font></p>\n";
-        #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         return;
     }
@@ -635,12 +632,16 @@ sub printResults {
         push @orderedTxs, $taxon_oid;
     }
     $cur->finish();
-    #$dbh->disconnect();
 
     my $rfh = newReadFileHandle( $tmpOutFile, "printResults".$type_name );
     my $count = 0;
     my @recs;
     my @recs2;
+
+    my $pca = "\"data\": [";
+    my $max1 = 0; my $max2 = 0; my $max3 = 0;
+    my $min1 = 0; my $min2 = 0; my $min3 = 0;
+
     while( my $s = $rfh->getline() ) {
         chomp $s;
         $count++;
@@ -666,32 +667,75 @@ sub printResults {
 
         my( @vals ) = split( /\t/, $s );
 	my $idx = 0;
-        for my $v( @vals ) {
+	my $points;
+
+        foreach my $v( @vals ) {
             $v = sprintf( "%.3f", $v );
             $r .= "$v\t";
 	    if ($idx < 3) {
 		$r2 .= "$v\t";
+		$points .= "$v,";
+		$max1 = $max1 > $v ? $max1 : $v if $idx == 0;
+		$max2 = $max2 > $v ? $max2 : $v if $idx == 1;
+		$max3 = $max3 > $v ? $max3 : $v if $idx == 2;
+		$min1 = $min1 < $v ? $min1 : $v if $idx == 0;
+		$min2 = $min2 < $v ? $min2 : $v if $idx == 1;
+		$min3 = $min3 < $v ? $min3 : $v if $idx == 2;
 	    }
 	    $idx++;
         }
 	$r2 .= "\t\t"; # for "connect" and "url1"
         push( @recs, $r );
         push( @recs2, $r2 );
+
+	chop $points;
+	my $ptLabel = "\"$taxon_name"."[$d]"." [$taxon_oid]\"";
+        $pca .=
+            "{\"id\": \"$taxon_oid\","
+            . "\"coords\": [$points],"
+            . "\"label\": $ptLabel},";
     }
     close $rfh;
 
+    chop $pca;
+    $pca .= "]";
+
+    my $maxes = "\"maxes\": [ $max1,$max2,$max3 ]";
+    my $mins = "\"mins\": [ $min1,$min2,$min3 ]";
+    my $axesLabels = "\"axesLabels\": [ \"PCA1\",\"PCA2\",\"PCA3\" ]";
+
+    my $tx_url = "main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
+    my $txlink = "\"item_url\": \"$tx_url\"";
+    my $cart_url = "main.cgi?section=GenomeCart&page=genomeCart&genomes=";
+    my $cartlink = "\"cart_url\": \"$cart_url\"";
+
+    my $pca_data = "{".$cartlink.",".$txlink.",".$pca.","
+	.$maxes.",".$mins.",".$axesLabels."}";
+    
     print "<h2>3-D Plot of $xlabel, $ylabel, and $zlabel</h2>\n";
-    print King::writeKingHeader
-	("$tmp_url/cmd$$"."_$type"."_".$sid.".r", $type_name);
-    print "<br/>";
+    my $linked_file = "$tmp_url/cmd$$"."_$type"."_".$sid.".r";
+    print "<p>" . alink("$linked_file", "View R file", "_blank")
+    	. " used to generate this plot.</p>";
 
-    my $url_fragm1 = "section=TaxonDetail&page=taxonDetail&taxon_oid=";
-    my $url_fragm2 = "section=GenomeCart&page=genomeCart&genomes=";
+    printHint 
+        ("Mouse over a point to see item information.<br/>" .
+         "<u>Click on a point</u> to see item details. Use CTRL-drag to rotate.<br/>" .
+	 "Use drag to select multiple points. " .
+	 "Use SHIFT-drag to pan (i.e. move chart).<br/>" .
+	 "Use WHEEL to zoom (this is not available on all browsers).<br/>" .
+         "Use CTRL-click or SHIFT-click to select individual points.<br/>" .
+         "<u>Right-click</u> to add selections to the cart.<br/>" .
+	 "Click on a legend item to show it in the plot");
 
-    King::writeKinInputFile(\@recs2, "$tmp_dir/".$type."$$"."_".$sid.".kin", 0,
-			    $url_fragm1, $url_fragm2);
-    King::writeKingApplet("$tmp_url/".$type."$$"."_".$sid.".kin");
-    printStatusLine( "Loaded $nTaxons genomes.", 2 );
+    #require King;
+    #my $url_fragm1 = "section=TaxonDetail&page=taxonDetail&taxon_oid=";
+    #my $url_fragm2 = "section=GenomeCart&page=genomeCart&genomes=";
+    #King::writeKinInputFile(\@recs2, "$tmp_dir/".$type."$$"."_".$sid.".kin", 0,
+    #			    $url_fragm1, $url_fragm2);
+    #King::writeKingApplet_old("$tmp_url/".$type."$$"."_".$sid.".kin");
+ 
+    #printEgtClusterUI($pca_data);
+    printClusterChart3D($pca_data);
 }
 
 ############################################################################
@@ -750,7 +794,7 @@ sub printPcaResults {
     if ( $in_file ) {
 	my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
 	my $cur2 = execSql( $dbh, $sql2, $verbose );
-	for (;;) {
+	for ( ;; ) {
 	    my ($t2) = $cur2->fetchrow();
 	    last if !$t2;
 	    $taxon_in_file{$t2} = 1;
@@ -797,7 +841,6 @@ sub printPcaResults {
     if ( ! (-e $tmpOutFile) ) {
 	print "<p><font color='red'>No data to display. "
 	    . "(no $tmpOutFile)</font></p>\n";
-	#$dbh->disconnect();
 	printStatusLine( "Loaded.", 2 );
 	return;
     }
@@ -840,6 +883,11 @@ sub printPcaResults {
     my $count = 0;
     my @recs;
     my @recs2;
+
+    my $pca = "\"data\": [ ";
+    my $max1 = 0; my $max2 = 0; my $max3 = 0;
+    my $min1 = 0; my $min2 = 0; my $min3 = 0;
+
     while( my $s = $rfh->getline() ) {
 	chomp $s;
 	$count++;
@@ -865,25 +913,58 @@ sub printPcaResults {
 
 	my( @vals ) = split( /\t/, $s );
 	my $idx = 0;
-	for my $v( @vals ) {
+	my $points;
+
+	foreach my $v( @vals ) {
 	    $v = sprintf( "%.3f", $v );
 	    $r .= "$v\t";
 	    if ($idx < 3) {
 		# add only the first 3 components
 		$r2 .= "$v\t";
+		$points .= "$v,";
+		$max1 = $max1 > $v ? $max1 : $v if $idx == 0;
+		$max2 = $max2 > $v ? $max2 : $v if $idx == 1;
+		$max3 = $max3 > $v ? $max3 : $v if $idx == 2;
+		$min1 = $min1 < $v ? $min1 : $v if $idx == 0;
+		$min2 = $min2 < $v ? $min2 : $v if $idx == 1;
+		$min3 = $min3 < $v ? $min3 : $v if $idx == 2;
+		#$max1 = $max1 > abs($v) ? $max1 : abs($v) if $idx == 0;
+		#$max2 = $max2 > abs($v) ? $max2 : abs($v) if $idx == 1;
+		#$max3 = $max3 > abs($v) ? $max3 : abs($v) if $idx == 2;
 	    }
 	    $idx++;
 	}
 	$r2 .= "\t\t"; # for "connect" and "url1"
 	push( @recs, $r );
 	push( @recs2, $r2 );
+
+        chop $points;
+	my $ptLabel = "\"$taxon_name"."[$d]"." [$taxon_oid]\"";
+        $pca .=
+            "{\"id\": \"$taxon_oid\","
+            . "\"coords\": [$points],"
+            . "\"label\": $ptLabel},";
     }
     close $rfh;
+
+    chop $pca;
+    $pca .= "]";
+
+    my $maxes = "\"maxes\": [ $max1,$max2,$max3 ]";
+    my $mins = "\"mins\": [ $min1,$min2,$min3 ]";
+    my $axesLabels = "\"axesLabels\": [ \"PCA1\",\"PCA2\",\"PCA3\" ]";
+
+    my $tx_url = "main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
+    my $txlink = "\"item_url\": \"$tx_url\"";
+    my $cart_url = "main.cgi?section=GenomeCart&page=genomeCart&genomes=";
+    my $cartlink = "\"cart_url\": \"$cart_url\"";
+
+    my $pca_data = "{".$cartlink.",".$txlink.",".$pca.","
+	.$maxes.",".$mins.",".$axesLabels."}";
 
     if ( ! (-e $tmpSdevFile) ) {
 	print "<p><font color='red'>No data to display. "
 	    . "(no sdev)</font></p>\n";
-	#$dbh->disconnect();
 	printStatusLine( "Loaded.", 2 );
 	return;
     }
@@ -907,15 +988,28 @@ sub printPcaResults {
 
     if ( $sum > 0 ) {
 	print "<h2>3-D Plot of PC1, PC2, and PC3</h2>\n";
-	King::writeKingHeader("$tmp_url/cmd$$"."_pca_".$sid.".r", "PCA");
-	print "<br/>";
+	my $linked_file = "$tmp_url/cmd$$"."_pca_".$sid.".r";
+        print "<p>" . alink("$linked_file", "View R file", "_blank")
+	    . " used to generate this plot.</p>";
 
-	my $url_fragm1 = "section=TaxonDetail&page=taxonDetail&taxon_oid=";
-	my $url_fragm2 = "section=GenomeCart&page=genomeCart&genomes=";
-
-	King::writeKinInputFile(\@recs2, "$tmp_dir/pca$$"."_".$sid.".kin", 0,
-				$url_fragm1, $url_fragm2);
-	King::writeKingApplet("$tmp_url/pca$$"."_".$sid.".kin");
+	printHint 
+	    ("Mouse over a point to see item information.<br/>" .
+	     "<u>Click on a point</u> to see item details. Use CTRL-drag to rotate.<br/>" .
+	     "Use drag to select multiple points. " .
+	     "Use SHIFT-drag to pan (i.e. move chart).<br/>" .
+	     "Use WHEEL to zoom (this is not available on all browsers).<br/>" .
+	     "Use CTRL-click or SHIFT-click to select individual points.<br/>" .
+	     "<u>Right-click</u> to add selections to the cart.<br/>" .
+	     "Click on a legend item to show it in the plot");
+	
+	#require King;
+	#my $url_fragm1 = "section=TaxonDetail&page=taxonDetail&taxon_oid=";
+	#my $url_fragm2 = "section=GenomeCart&page=genomeCart&genomes=";
+	#King::writeKinInputFile(\@recs2, "$tmp_dir/pca$$"."_".$sid.".kin", 0,
+	#			$url_fragm1, $url_fragm2);
+	#King::writeKingApplet_old("$tmp_url/pca$$"."_".$sid.".kin");
+        #printEgtClusterUI( $pca_data );
+	printClusterChart3D($pca_data);
     }
     else {
 	print "<p><font color='red'>No data to display.</font></p>\n";
@@ -1003,7 +1097,6 @@ sub printPcaResults {
     print "</div>"; # end pcatab4
     TabHTML::printTabDivEnd();
 
-    #$dbh->disconnect();
     printStatusLine( "Loaded $nTaxons genomes.", 2 );
 }
 
@@ -1165,17 +1258,10 @@ sub printHierResults {
 	. "for selected genomes.<br/>";
     print "</p>\n";
 
+    printStatusLine( "$count Loaded.", 2 );
+
     my $xmlFile = $tmp_dir . "/treeXML$$"."_".$sid.".txt";
     $dt->toPhyloXML( $xmlFile );
-
-    require TabHTML;
-    TabHTML::printTabAPILinks("treeTab");
-
-    my @tabIndex = ("#treetab1", "#treetab2");
-    my @tabNames = ("Phylogenetic Tree", "Aptx Tree");
-    TabHTML::printTabDiv("treeTab", \@tabIndex, \@tabNames);
-
-    print "<div id='treetab1'>";
 
     use Bio::Phylo::IO;
     use Bio::Phylo::Forest::Tree;
@@ -1198,19 +1284,23 @@ sub printHierResults {
     print alink($url2, "View Newick File", "_blank");
     print "</p>\n";
 
+    require TabHTML;
+    TabHTML::printTabAPILinks("treeTab");
+
+    my @tabIndex = ("#treetab1", "#treetab2");
+    my @tabNames = ("Radial Phylogram", "Rectangular Phylogram");
+    TabHTML::printTabDiv("treeTab", \@tabIndex, \@tabNames);
+
+    print "<div id='treetab1'>";
     DistanceTree::configurePhylogram($newick_str, $data);
     print "</div>";    # end treetab1
 
     print "<div id='treetab2'>";
-    my $url = "http://www.phylosoft.org/archaeopteryx/";
-    print "<p>The tree below is generated using the ".alink($url, "Archaeopteryx")." applet</p>";
-    print "<font color='red'><b><u>PLEASE NOTE</u></font>:</b> Use of java in most browsers is deprecated.<br/>";
-    DistanceTree::printAptxApplet("treeXML$$"."_".$sid.".txt");
+    DistanceTree::configurePhylogram($newick_str, $data, "rectangular");
     print "</div>";    # end treetab2
 
     TabHTML::printTabDivEnd();
 
-    printStatusLine( "$count Loaded.", 2 );
     wunlink( $tmpProfileFile );
     wunlink( $tmpClusterCdt );
     wunlink( $tmpClusterGtr );
@@ -1408,7 +1498,7 @@ sub printCorrMapResults {
     if ( $in_file ) {
 	my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
 	my $cur2 = execSql( $dbh, $sql2, $verbose );
-	for (;;) {
+	for ( ;; ) {
 	    my ($t2) = $cur2->fetchrow();
 	    last if !$t2;
 	    $taxon_in_file{$t2} = 1;
@@ -1986,7 +2076,7 @@ sub getFuncCartVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2004,6 +2094,8 @@ sub getFuncCartVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
         if ( $taxon_in_file{$taxon_oid} ) {
@@ -2018,7 +2110,7 @@ sub getFuncCartVectors {
 	    foreach my $fn_type (keys %fn_types) {
 		# go through the list of fns in cart
 		my @list = split("\t", $fn_types{ $fn_type });
-		my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, '', $fn_type);
+		my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, $dt, $fn_type);
 		foreach my $id (@list) {
 		    $profile{ $id } = $funcs{$id};
 		}
@@ -2063,7 +2155,7 @@ sub getCogVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2081,6 +2173,8 @@ sub getCogVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
 	if ( $taxon_in_file{$taxon_oid} ) {
@@ -2091,7 +2185,7 @@ sub getCogVectors {
 
 	if ( $taxon_in_file{$taxon_oid} ) {
 	    # MER-FS
-	    my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, '', 'cog');
+	    my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, $dt, 'cog');
 	    my %profile = %tpl;
 	    foreach my $id (keys %funcs) {
 		next if ( !defined($tpl{ $id }) );
@@ -2149,7 +2243,7 @@ sub getCogCatVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2167,6 +2261,8 @@ sub getCogCatVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
         if ( $taxon_in_file{$taxon_oid} ) {
@@ -2178,7 +2274,7 @@ sub getCogCatVectors {
 	if ( $taxon_in_file{$taxon_oid} ) {
 	    # MER-FS
 	    my %profile = %tpl;
-            MetaUtil::getTaxonCategories($taxon_oid, '', "cog", \%profile);
+            MetaUtil::getTaxonCategories($taxon_oid, $dt, "cog", \%profile);
             $taxonProfiles_ref->{ $taxon_oid } = \%profile;
 
 	} else {
@@ -2228,7 +2324,7 @@ sub getCogPathwVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2250,6 +2346,8 @@ sub getCogPathwVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
         if ( $taxon_in_file{$taxon_oid} ) {
@@ -2262,7 +2360,7 @@ sub getCogPathwVectors {
             # MER-FS
             my %profile0 = %tpl;
             my %profile = MetaUtil::getTaxonCate2
-		($taxon_oid, '', "cog_pathway", \%profile0);
+		($taxon_oid, $dt, "cog_pathway", \%profile0);
 	    $taxonProfiles_ref->{ $taxon_oid } = \%profile;
 
         } else {
@@ -2314,7 +2412,7 @@ sub getKeggCatVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2336,6 +2434,8 @@ sub getKeggCatVectors {
 #    my $keystr = join(",", @keys);
 #    webLog "\nANNA CATEGORIES keggcat$type: $keystr";
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
 	if ( $taxon_in_file{$taxon_oid} ) {
@@ -2348,7 +2448,7 @@ sub getKeggCatVectors {
 	    # MER-FS
             my %profile0 = %tpl;
             my %profile = MetaUtil::getTaxonCate2
-		($taxon_oid, '', "kegg_category_".$type, \%profile0);
+		($taxon_oid, $dt, "kegg_category_".$type, \%profile0);
 	    $taxonProfiles_ref->{ $taxon_oid } = \%profile;
 
 	} else {
@@ -2424,7 +2524,7 @@ sub getKeggPathwVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2446,6 +2546,8 @@ sub getKeggPathwVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
 	if ( $taxon_in_file{$taxon_oid} ) {
@@ -2458,7 +2560,7 @@ sub getKeggPathwVectors {
 	    # MER-FS
             my %profile0 = %tpl;
             my %profile = MetaUtil::getTaxonCate2
-		($taxon_oid, '', "kegg_pathway_".$type, \%profile0);
+		($taxon_oid, $dt, "kegg_pathway_".$type, \%profile0);
 	    $taxonProfiles_ref->{ $taxon_oid } = \%profile;
 
 	} else {
@@ -2530,7 +2632,7 @@ sub getPfamVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2548,6 +2650,8 @@ sub getPfamVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
         if ( $taxon_in_file{$taxon_oid} ) {
@@ -2558,7 +2662,7 @@ sub getPfamVectors {
 
         if ( $taxon_in_file{$taxon_oid} ) {
             # MER-FS
-            my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, '', 'pfam');
+            my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, $dt, 'pfam');
             my %profile = %tpl;
             foreach my $id (keys %funcs) {
 		next if ( !defined($tpl{ $id }) );
@@ -2613,7 +2717,7 @@ sub getPfamCatVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2635,6 +2739,8 @@ sub getPfamCatVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
         if ( $taxon_in_file{$taxon_oid} ) {
@@ -2646,7 +2752,7 @@ sub getPfamCatVectors {
         if ( $taxon_in_file{$taxon_oid} ) {
             # MER-FS
             my %profile = %tpl;
-            MetaUtil::getTaxonCategories($taxon_oid, '', "pfam", \%profile);
+            MetaUtil::getTaxonCategories($taxon_oid, $dt, "pfam", \%profile);
             $taxonProfiles_ref->{ $taxon_oid } = \%profile;
 
         } else {
@@ -2705,7 +2811,7 @@ sub getEnzymeVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2723,6 +2829,8 @@ sub getEnzymeVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
         if ( $taxon_in_file{$taxon_oid} ) {
@@ -2733,7 +2841,7 @@ sub getEnzymeVectors {
 
         if ( $taxon_in_file{$taxon_oid} ) {
             # MER-FS
-            my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, '', 'enzyme');
+            my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, $dt, 'enzyme');
             my %profile = %tpl;
             for my $id (keys %funcs) {
 		next if ( !defined($tpl{ $id }) );
@@ -2788,7 +2896,7 @@ sub getTigrfamVectors {
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2806,6 +2914,8 @@ sub getTigrfamVectors {
 	@taxon_oids = param("selectedGenome1");
     }
 
+    my $dt = param("q_data_type");
+
     foreach my $taxon_oid( @taxon_oids ) {
         my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
         if ( $taxon_in_file{$taxon_oid} ) {
@@ -2816,7 +2926,7 @@ sub getTigrfamVectors {
 
         if ( $taxon_in_file{$taxon_oid} ) {
             # MER-FS
-            my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, '', 'tigrfam');
+            my %funcs = MetaUtil::getTaxonFuncCount($taxon_oid, $dt, 'tigrfam');
             my %profile = %tpl;
             for my $id (keys %funcs) {
 		next if ( !defined($tpl{ $id }) );
@@ -2853,11 +2963,15 @@ sub getTigrfamVectors {
 sub getTaxonomyVectors {
     my( $dbh, $taxonProfiles_ref, $txcat ) = @_;
 
+    # only assembled:
+    my $dt = param("q_data_type");
+    if ($dt ne "assembled") { return; }
+
     my %taxon_in_file;
     if ( $in_file ) {
         my $sql2 = "select t.taxon_oid from taxon t where t.$in_file = 'Yes'";
         my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for (;;) {
+        for ( ;; ) {
             my ($t2) = $cur2->fetchrow();
             last if !$t2;
             $taxon_in_file{$t2} = 1;
@@ -2956,7 +3070,7 @@ sub getTaxonomyVectors {
 
 		print "&nbsp;&nbsp;processing $taxon_oid [$lineage] ...<br/>";
 		my $cnt = MetaUtil::getPhyloGeneCounts
-		    ($taxon_oid, 'assembled', $domain, $phylum,
+		    ($taxon_oid, $dt, $domain, $phylum,
 		     $ir_class, $family, $genus);
 		next if !$cnt;
 		$profile{ $lineage } = $cnt;
@@ -3039,5 +3153,51 @@ sub normalizeTaxonProfile {
     }
 }
 
+sub printClusterChart3D {
+    my( $pca_data ) = @_;
+    #<script src="https://rawgit.com/Koorosh/dom-events/master/dom-events.js"></script>
+
+    print qq{
+      <script src='/js/d3.min.js'></script>
+      <script src='/js/highcharts.js'></script>
+      <script src='/js/highcharts-3d.js'></script>
+      <script src='/js/highcharts-export.js'></script>
+      <script src='/js/jquery-2.0.3.min.js'></script>
+      <script src='/js/chart3d.js'></script>
+      <div id="chart3d" style="height: 450px; width: 800px;"></div>
+      <script>
+          window.onload = drawChart3D("chart3d", $pca_data);
+      </script>
+    };
+    my $url = "http://www.highcharts.com/"; 
+    print "<p>This chart is generated using ".alink($url, "Highcharts")."<br/>";
+}
+
+############################################################################
+# printEgtClusterUI - prints the tags for ImgPlotter to plot pca_data
+############################################################################
+sub printEgtClusterUI {
+  my( $pca_data ) = @_;
+
+  print qq{
+    <script>var plotPCAJSON = '$pca_data';</script>
+    <table><tr>
+      <td valign=top>
+      <div id="plotArea" width="1024" height="1024"></div>
+      </td>
+      <td valign=top>
+      <button type='button' onclick='window.EgtClusterUI_addToCart();'>Add Selected to Cart</button>
+      <div id="legend"></div>
+      </td>
+      </tr></table>
+      <script src='/js/d3.min.js'></script>
+      <script src='/js/three.min.js'></script>
+      <script src='/js/ImgPlotter.js'></script>
+      <script src='/js/TrackballControls.js'></script>
+      <script src='/js/stats.min.js'></script>
+      <script src='/js/EgtClusterUI.js'></script>
+      <div id="pca3dLegend"></div>
+  };
+}
 
 1;

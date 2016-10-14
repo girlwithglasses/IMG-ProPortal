@@ -1,18 +1,13 @@
 ############################################################################
 # TaxonSearchUtil.pm - share use
 #
-# $Id: TaxonSearchUtil.pm 33504 2015-06-03 20:00:02Z klchu $
+# $Id: TaxonSearchUtil.pm 36206 2016-09-22 19:13:34Z jinghuahuang $
 ############################################################################
 package TaxonSearchUtil;
 my $section = "TaxonSearchUtil";
 require Exporter;
 @ISA = qw( Exporter );
 @EXPORT = qw(
-    getGenomeFieldAttrs
-    getColName2Align_g
-    getColName2Label_g
-    getColName2SortQual_g
-    getPreferenceRestrictClause
 );
 
 use strict;
@@ -79,7 +74,7 @@ if ($img_internal) {
 
 ### Maps database column name to UI friendly label.
 my %colName2Label_g = (
-    taxon_oid          => "Taxon ID",
+    taxon_oid          => "IMG Genome ID",
     taxon_oid_display  => "Taxon ID",
     taxon_display_name => "Genome Name",
     ncbi_taxon_id      => "NCBI Taxon ID",
@@ -105,10 +100,10 @@ my %colName2Label_g = (
     img_product_flag   => "IMG Product Assignment",
     submission_id      => "IMG Submission ID",
     jgi_project_id     => "JGI Project ID",
-    analysis_project_id            => "ANALYSIS PROJECT ID",
     proposal_name      => "Study Name",
-    study_gold_id     => "STUDY GOLD ID",
-    sequencing_gold_id     => "SEQUENCING_GOLD_ID",
+    study_gold_id      => "GOLD Study ID",
+    sequencing_gold_id => "GOLD Sequencing Project ID",
+    analysis_project_id => "GOLD Analysis Project ID",
     cog_cat_cnt        => "COG Category Count",
     kegg_cnt           => "KEGG Count",
     ext_accession      => "External Accession",

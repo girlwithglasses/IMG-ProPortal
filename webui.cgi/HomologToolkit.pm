@@ -237,12 +237,14 @@ sub printHomologResults {
    my $filterType = OtfBlast::genePageTopHits( 
        $dbh, $gene_oid, \@homologRecs, $top_n_homologs );
    my $nRecs = @homologRecs;
+   #print "$nRecs blast records found<br/>\n";
    webLog( "$nRecs blast records found\n" );
    my %attrs;
    retrieveAttributes( $dbh, $gene_oid, \@homologRecs, \%attrs );
    filterRows( $dbh, \@homologRecs, \%attrs );
    sortRows( $dbh, \@homologRecs, \%attrs );
    my $pagerFileRoot = getPagerFileRoot( $gene_oid );
+   #print "pagerFileRoot $pagerFileRoot<br/>\n";
    webLog( "pagerFileRoot $pagerFileRoot'\n" );
    outputRows( $dbh, $gene_oid, \@homologRecs, \%attrs );
    printEndWorkingDiv( );

@@ -2,13 +2,13 @@
 # NEW for 3.4  - Common WebConfig param between all sites
 # Params can be overridden in the site's Webconfig.pm
 #
-# $Id: WebConfigCommon.pm 34319 2015-09-21 16:30:21Z aireland $
+# $Id: WebConfigCommon.pm 36000 2016-08-11 22:39:36Z klchu $
 #
 #
 package WebConfigCommon;
 
 use strict;
-use warnings;
+#use warnings;
 
 use MIME::Base64;
 use CGI qw( :standard );
@@ -28,12 +28,12 @@ sub common {
     # database config files
     # one db now 4.0 before we had different db's for each system.
     $e->{dbTag}             = "img_core_v400";                        # database config file to use
-    $e->{oracle_config_dir} = "/global/u1/i/img/img_rdbms/config/";
+    $e->{oracle_config_dir} = "/webfs/projectdirs/microbial/img/img_rdbms/config/";
 
-    $e->{dbLock_dir} = '/webfs/projectdirs/microbial/img/dbLocks/';
+    $e->{dbLock_dir}        = '/webfs/projectdirs/microbial/img/dbLocks/';
 
     # Web UI data directory.
-    $e->{web_data_dir}           = "/global/dna/projectdirs/microbial/img_web_data";
+    $e->{web_data_dir}      = "/global/dna/projectdirs/microbial/img_web_data";
     $e->{sandbox_blast_data_dir} = "/global/projectb/sandbox/IMG/web-data/sandbox.blast.data";
 
     # location of static html pages on scratch
@@ -43,22 +43,24 @@ sub common {
     # BC/NP stats directory (for ANI, etc.)
     $e->{bcnp_stats_dir} = '/webfs/scratch/img/bcNp/';
 
+    $e->{gold_cache_dir} = '/webfs/scratch/img/gold/';
+
     # Common tmp directory between Web UI and service.
     # For passing report files rather than funneling them
     # through http, which can be very slow.
     $e->{common_tmp_dir} = "/global/projectb/scratch/img/www-data/service/tmp";
 
     # version
-    $e->{img_version}    = "4.530";
-    $e->{copyright_year} = "2015";
-    $e->{version_year}   = "Version " . $e->{img_version} . " June " . $e->{copyright_year};
+    $e->{img_version}    = "4.560";
+    $e->{copyright_year} = "2016";
+    $e->{version_year}   = "Version " . $e->{img_version} . " Mar. " . $e->{copyright_year};
 
     # --------------------------------------------------------------------------------------------
     #
     # IMG systems URLs
     #
     # --------------------------------------------------------------------------------------------
-    $e->{img_submit_url} = "https://img.jgi.doe.gov/submit";
+    $e->{img_submit_url} = "https://img.jgi.doe.gov/submit/";
 
     # --------------------------------------------------------------------------------------------
     #
@@ -66,33 +68,47 @@ sub common {
     #
     # --------------------------------------------------------------------------------------------
     $e->{img_tools_dir} = "/global/dna/projectdirs/microbial/img/tools/";
-    $e->{java_home}     = "/usr/common/usg/languages/java/jdk/oracle/1.7_64bit";
-    $e->{mummer_dir}    = $e->{img_tools_dir} . "MUMmer3.21";
-    $e->{neighbor_bin}  = $e->{img_tools_dir} . "arb/bin/neighbor";
-    $e->{protdist_bin}  = $e->{img_tools_dir} . "arb/bin/protdist";
+    #$e->{java_home}     = "/usr/common/usg/languages/java/jdk/oracle/1.7_64bit";
+
+    $e->{java_home}     = "/usr/common/usg/languages/java/jdk/oracle/1.8.0_31_x86_64";
+
+    #$e->{mummer_dir}    = $e->{img_tools_dir} . "MUMmer3.21";
+    $e->{mummer_dir}    = "/usr/common/jgi/aligners/mummer/3.23/bin/";
+    $e->{neighbor_bin}  = "/usr/common/jgi/phylogenetics/arb/5.5/bin/neighbor";
+    $e->{protdist_bin}  = "/usr/common/jgi/phylogenetics/arb/5.5/bin/protdist";
     $e->{perl_bin}      = "/usr/common/usg/languages/perl/5.16.0/bin/perl";
     $e->{gs_bin}        = "/usr/bin/gs";
+    $e->{ ma_bin }      = "/webfs/projectdirs/microbial/img/bin/multalin";
 
     # R  $ENV{LD_LIBRARY_PATH} = $ENV{LD_LIBRARY_PATH} .
     $e->{R_LD_LIBRARY_PATH} =
-        ':/global/common/genepool/usg/languages/R/3.0.1/lib64/R/lib'
-      . ':/usr/common/usg/utilities/curl/7.26.0/lib'
-      . ':/usr/common/usg/utility_libraries/boost/gnu4.6/1.50.0/lib';
+        ':/usr/common/usg/languages/R/3.1.2/lib64/R/lib'
+      . ':/usr/common/usg/utilities/curl/7.37.1/lib'
+      . ':/usr/common/usg/utility_libraries/boost/gnu4.8/1.50.0/lib';
 
-    $e->{r_bin} = "/global/common/genepool/usg/languages/R/3.0.1/bin/R";
+    $e->{r_bin} = "/usr/common/usg/languages/R/3.1.2/bin/R";
+
+
+#    $e->{R_LD_LIBRARY_PATH} =
+#        ':/global/common/genepool/usg/languages/R/3.1.2/lib64/R/lib'
+#      . ':/usr/common/usg/utilities/curl/7.37.1/lib'
+#      . ':/usr/common/usg/utility_libraries/boost/gnu4.8/1.50.0/lib';
+#
+#    $e->{r_bin} = "/global/common/genepool/usg/languages/R/3.1.2/bin/R";
+
 
     $e->{clustalw_bin}    = "/usr/common/jgi/aligners/clustalw/2.1/bin/clustalw2";
     $e->{clustalo_bin}    = "/usr/common/jgi/aligners/clustal-omega/1.1.0/bin/clustalo";
     $e->{sendmail}        = "/usr/sbin/sendmail";
     $e->{psu_diagram_dir} = $e->{img_tools_dir} . "psu_diagram"; # Circular chromosome viewer package
-    $e->{pepstats_bin}    =
+    $e->{pepstats_bin} =
       '/usr/common/jgi/frameworks/EMBOSS/6.4.0/bin/pepstats';    #$e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/pepstats';
     $e->{sixpack_bin} =
       '/usr/common/jgi/frameworks/EMBOSS/6.4.0/bin/sixpack';     #$e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/sixpack';
     $e->{seqret_bin} =
       '/usr/common/jgi/frameworks/EMBOSS/6.4.0/bin/seqret';      #$e->{img_tools_dir} . 'EMBOSS/DEFAULT/bin/seqret';
 
-    $e->{usearch_bin}  = "/global/dna/projectdirs/microbial/img/webui/bin/x86_64-linux/usearch64";
+    $e->{usearch_bin} = "/global/dna/projectdirs/microbial/img/webui/bin/x86_64-linux/usearch64";
     $e->{blastall_bin} = $e->{img_tools_dir} . "BLAST/ncbi-blast-2.2.26+";
 
     $e->{newick_all} = $e->{ web_data_dir } . "/newick/newick_all"; # distance tree
@@ -103,59 +119,59 @@ sub common {
     #
     # --------------------------------------------------------------------------------------------
     $e->{env_blast_dbs} = {
-                "amd"              => "Acid Mine Drainage",
-                "us_sludge"        => "Sludge/US",
-                "oz_sludge"        => "Sludge/Australian",
-                "all_sludge"       => "All Sludge",
-                "soil"             => "Soil: Diversa Silage",
-                "wf1"              => "Whalefall Sample #1",
-                "wf2"              => "Whalefall Sample #2",
-                "wf3"              => "Whalefall Sample #3",
-                "all_env"          => "All Microbiome Sequences",
-                "tgut"             => "Termite Gut (version 1)",
-                "tgut2b"           => "Termite Gut (version 2)",
-                "tgut3"            => "Termite Gut (version 3)",
-                "saf1"             => "Clark Quay Air",
-                "saf2"             => "Park Quay Air",
-                "lwm1"             => "Lake Washington Combined Assembly",
-                "gws2_d1"          => "O.algarvensis Delta1",
-                "gws2_d4"          => "O.algarvensis Delta4",
-                "gws2_g1"          => "O.algarvensis Gamma1",
-                "gws2_g3"          => "O.algarvensis Gamma3",
-                "tm7c32"           => "TM7Cell-1032",
-                "tm7c33"           => "TM7Cell-1033",
-                "mgutPt2"          => "Mouse Gut Community PT2",
-                "mgutPt3"          => "Mouse Gut Community PT3",
-                "mgutPt4"          => "Mouse Gut Community PT4",
-                "mgutPt6"          => "Mouse Gut Community PT6",
-                "mgutPt8"          => "Mouse Gut Community PT8",
-                "hsmat01"          => "Hypersaline Mat 01",
-                "hsmat02"          => "Hypersaline Mat 02",
-                "hsmat03"          => "Hypersaline Mat 03",
-                "hsmat04"          => "Hypersaline Mat 04",
-                "hsmat05"          => "Hypersaline Mat 05",
-                "hsmat06"          => "Hypersaline Mat 06",
-                "hsmat07"          => "Hypersaline Mat 07",
-                "hsmat08"          => "Hypersaline Mat 08",
-                "hsmat09"          => "Hypersaline Mat 09",
-                "hsmat10"          => "Hypersaline Mat 10",
-                "biz"              => "Bison Pool",
-                "saani"            => "Saanich Inlet",
-                "ucgw2"            => "Uranium Contaminted Groundwater",
-                "lwComb"           => "Lake Washington Combined",
-                "lwMethane"        => "Lake Washington, Methane Enrichment",
-                "lwMethanol"       => "Lake Washington, Methanol Enrichment",
-                "lwMethylamine"    => "Lake Washington, Methylamine Enrichment",
-                "lwFormaldehyde"   => "Lake Washington, Formaldehyde Enrichment",
-                "lwFormate"        => "Lake Washington, Formate Enrichment",
-                "taComm"           => "Thermophilic terepthalate-degrading community",
-                "taComm3"          => "Thermophilic terepthalate-degrading community (v3)",
-                "taCommComb"       => "Thermophilic terepthalate-degrading community (combined)",
-                "taCommFgenes"     => "Thermophilic terepthalate-degrading community (fgenes)",
-                "orpgw"            => "Oak Ridge Pristine Groundwater FRC FW301",
-                "apWin"            => "Anarctic Marin Bacterioplankton, winter",
-                "apSum"            => "Anarctic Marin Bacterioplankton, summer",
-                "bisonPool14jan08" => "Bison Pool (14JAN08)",
+        "amd"              => "Acid Mine Drainage",
+        "us_sludge"        => "Sludge/US",
+        "oz_sludge"        => "Sludge/Australian",
+        "all_sludge"       => "All Sludge",
+        "soil"             => "Soil: Diversa Silage",
+        "wf1"              => "Whalefall Sample #1",
+        "wf2"              => "Whalefall Sample #2",
+        "wf3"              => "Whalefall Sample #3",
+        "all_env"          => "All Microbiome Sequences",
+        "tgut"             => "Termite Gut (version 1)",
+        "tgut2b"           => "Termite Gut (version 2)",
+        "tgut3"            => "Termite Gut (version 3)",
+        "saf1"             => "Clark Quay Air",
+        "saf2"             => "Park Quay Air",
+        "lwm1"             => "Lake Washington Combined Assembly",
+        "gws2_d1"          => "O.algarvensis Delta1",
+        "gws2_d4"          => "O.algarvensis Delta4",
+        "gws2_g1"          => "O.algarvensis Gamma1",
+        "gws2_g3"          => "O.algarvensis Gamma3",
+        "tm7c32"           => "TM7Cell-1032",
+        "tm7c33"           => "TM7Cell-1033",
+        "mgutPt2"          => "Mouse Gut Community PT2",
+        "mgutPt3"          => "Mouse Gut Community PT3",
+        "mgutPt4"          => "Mouse Gut Community PT4",
+        "mgutPt6"          => "Mouse Gut Community PT6",
+        "mgutPt8"          => "Mouse Gut Community PT8",
+        "hsmat01"          => "Hypersaline Mat 01",
+        "hsmat02"          => "Hypersaline Mat 02",
+        "hsmat03"          => "Hypersaline Mat 03",
+        "hsmat04"          => "Hypersaline Mat 04",
+        "hsmat05"          => "Hypersaline Mat 05",
+        "hsmat06"          => "Hypersaline Mat 06",
+        "hsmat07"          => "Hypersaline Mat 07",
+        "hsmat08"          => "Hypersaline Mat 08",
+        "hsmat09"          => "Hypersaline Mat 09",
+        "hsmat10"          => "Hypersaline Mat 10",
+        "biz"              => "Bison Pool",
+        "saani"            => "Saanich Inlet",
+        "ucgw2"            => "Uranium Contaminted Groundwater",
+        "lwComb"           => "Lake Washington Combined",
+        "lwMethane"        => "Lake Washington, Methane Enrichment",
+        "lwMethanol"       => "Lake Washington, Methanol Enrichment",
+        "lwMethylamine"    => "Lake Washington, Methylamine Enrichment",
+        "lwFormaldehyde"   => "Lake Washington, Formaldehyde Enrichment",
+        "lwFormate"        => "Lake Washington, Formate Enrichment",
+        "taComm"           => "Thermophilic terepthalate-degrading community",
+        "taComm3"          => "Thermophilic terepthalate-degrading community (v3)",
+        "taCommComb"       => "Thermophilic terepthalate-degrading community (combined)",
+        "taCommFgenes"     => "Thermophilic terepthalate-degrading community (fgenes)",
+        "orpgw"            => "Oak Ridge Pristine Groundwater FRC FW301",
+        "apWin"            => "Anarctic Marin Bacterioplankton, winter",
+        "apSum"            => "Anarctic Marin Bacterioplankton, summer",
+        "bisonPool14jan08" => "Bison Pool (14JAN08)",
     };
 
     # --------------------------------------------------------------------------------------------
@@ -167,7 +183,7 @@ sub common {
        [ "FirstGov", "Jeeves",    "BecomeBot",     "AI-Agent",  "ysearch", "crawler",
         "Slurp",    "accelobot", "NimbleCrawler", "Java",      "bot",     "slurp",
         "libwww",   "lwp",       "LWP",           "Mechanize", "Sphider", "Wget",
-        "wget",     "Axel",      "Python",        "Darwin",    'curl' ];
+        "wget",     "Axel",      "Python",        "Darwin",    'curl', 'Ruby', 'Sogou' ];
 
     $e->{block_ip_address_file} = $e->{dbLock_dir} . "blockIps.txt";
 
@@ -335,7 +351,7 @@ sub common {
     $e->{ko_base_url}             = "http://www.genome.ad.jp/dbget-bin/www_bget?ko+";
     $e->{vimss_redirect_base_url} = "http://www.microbesonline.org/cgi-bin/gi2vimss.cgi?gi=";
     $e->{enzyme_base_url}         = "http://www.genome.jp/dbget-bin/www_bget?";
-    $e->{pfam_base_url}           = "http://pfam.sanger.ac.uk/family?acc=";
+    $e->{pfam_base_url}           = "http://pfam.xfam.org/family/";
     $e->{pfam_clan_base_url}      = "http://pfam.sanger.ac.uk/clan?acc=";
 
     # interpro urls
@@ -382,8 +398,8 @@ sub common {
     $e->{gcat_base_url}        = "http://darwin.nox.ac.uk/gsc/gcat/report/";
     $e->{pdb_blast_url}        = "http://www.rcsb.org/pdb/search/" . "searchSequence.do";
     $e->{pdb_base_url}         = "http://www.rcsb.org/pdb/explore.do?structureId=";
-    $e->{cog_base_url} = "#";  #= "http://www.ncbi.nlm.nih.gov/COG/grace/wiew.cgi?";
-    $e->{kog_base_url} = "#";  #"http://www.ncbi.nlm.nih.gov/COG/grace/shokog.cgi?";
+    $e->{cog_base_url} = "http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=";  #= "http://www.ncbi.nlm.nih.gov/COG/grace/wiew.cgi?";
+    $e->{kog_base_url} = "http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=";  #"http://www.ncbi.nlm.nih.gov/COG/grace/shokog.cgi?";
     $e->{go_base_url}  = "http://www.ebi.ac.uk/ego/DisplayGoTerm?id=";
     $e->{go_evidence_url}         = "http://www.geneontology.org/GO.evidence.shtml";
     $e->{metacyc_url}             = "http://biocyc.org/META/NEW-IMAGE?object=";
@@ -399,7 +415,6 @@ sub common {
     # --------------------------------------------------------------------------------------------
 
     # /ifs/scratch/img-tmp
-    $e->{ifs_tmp_parent_dir} = "/webfs/scratch/img/tmp";           # used for checking if disk failed or not
     $e->{ifs_tmp_dir}        = "/webfs/scratch/img/tmp/img-tmp";
 
     # --------------------------------------------------------------------------------------------
@@ -419,6 +434,10 @@ sub common {
     # new queue
     $e->{workspace_pid_dir}   = '/global/projectb/sandbox/IMG_web/messageSystem/PID/';
     $e->{workspace_queue_dir} = '/global/projectb/sandbox/IMG_web/messageSystem/QUEUE/';
+
+    $e->{enable_carts} = 1;
+    $e->{cart_max_szie} = 20000; # no login max 1000
+    $e->{enable_download} = 1; # public site no download
 
     # --------------------------------------------------------------------------------------------
     #
@@ -461,13 +480,11 @@ sub common {
     #$e->{scaffold_page_size} = 1000000; # Page size (aa) for one section of a scaffold.
     $e->{scaffold_page_size} = 500000;
 
-    $e->{max_gene_cart_genes} = 9000;
-
     $e->{max_blast_jobs} = 20;    # Maximum BLAST jobs for the system.
 
     $e->{top_annotations_to_show} = 100;    # Top annotations to show if list is too long.
 
-    $e->{max_cgi_procs} = 20;               # Maximum CGI processes allowed.
+    $e->{max_cgi_procs} = 200;               # Maximum CGI processes allowed.
 
     # Maximum time in seconds a state file can live.
     # (Set this lower if you want the UI to run faster
@@ -504,11 +521,12 @@ sub common {
     # BLAST and usearch urls
     #
     # optional precomputed homologs server with -m 0 output
-    $e->{worker_base_url}       = 'https://img-worker.jgi-psf.org';
+    $e->{worker_base_url}       = 'https://img-worker-crt.services.nersc.gov';
 
     #$e->{blastallm0_server_url} = $e->{worker_base_url} . "/cgi-bin/blast/generic/blastallServer2.cgi";
     $e->{blastallm0_server_url} = $e->{worker_base_url} . "/cgi-bin/blast/generic/blastQueue.cgi";
-    $e->{blast_server_url}      = $e->{worker_base_url} . "/cgi-bin/usearch/generic/hopsServer.cgi";
+    #$e->{blast_server_url}      = $e->{worker_base_url} . "/cgi-bin/usearch/generic/hopsServer.cgi";
+    $e->{blast_server_url}      = $e->{worker_base_url} . "/cgi-bin/last/hopsServer.cgi";
     $e->{rna_server_url}        = $e->{worker_base_url} . "/cgi-bin/blast/generic/rnaServer.cgi";
 
     # Queue directory for BLAST jobs.
@@ -558,7 +576,10 @@ sub common {
     # /global/homes/k/klchu/Dev/img_dev/v2/java
     #
     # --------------------------------------------------------------------------------------------
-    $e->{chart_lib} = '/global/u1/k/klchu/Dev/svn/java/lib';    #"/global/homes/k/klchu/Dev/img_dev/v2/java/lib";
+
+    #$e->{chart_lib} = '/global/u1/k/klchu/Dev/svn/java/lib';    #"/global/homes/k/klchu/Dev/img_dev/v2/java/lib";
+    # for gpwweb36
+    $e->{chart_lib} = '/global/homes/k/klchu/v2/java/lib';    #"/global/homes/k/klchu/Dev/img_dev/v2/java/lib";
 
     # --------------------------------------------------------------------------------------------
     #
@@ -578,9 +599,9 @@ sub common {
     $e->{fastbit_dir} = '/global/homes/k/klchu/Dev/cassettes/v4/genome/';
 
     $e->{fastbit_LD_LIBRARY_PATH} =
-        ':/usr/common/usg/languages/gcc/4.8.1/lib64'
-      . ':/usr/common/usg/languages/gcc/4.8.1/lib'
-      . ':/usr/common/usg/utility_libraries/boost/1.50.0/lib'
+        ':/usr/common/usg/languages/gcc/4.6.4/lib64'
+      . ':/usr/common/usg/languages/gcc/4.6.4/lib'
+      . ':/usr/common/usg/utility_libraries/boost/gnu4.6/1.50.0/lib'
       . ':/usr/common/jgi/utilities/fastbit/1.3.9/lib';
 
     # --------------------------------------------------------------------------------------------
@@ -589,14 +610,14 @@ sub common {
     #
     # --------------------------------------------------------------------------------------------
     # /global/dna/projectdirs/microbial/img_web_data
-    $e->{kegg_root_dir}        = $e->{web_data_dir}  . "/kegg.maps.7.5";
+    $e->{kegg_root_dir}        = $e->{web_data_dir}  . "/kegg.maps.7.7";
     $e->{kegg_data_dir}        = $e->{kegg_root_dir} . "/png.files";
     $e->{kegg_tree_file}       = $e->{kegg_root_dir} . "/kegg_tree.txt";
     $e->{kegg_brite_tree_file} = $e->{kegg_root_dir} . "/kegg_brite_tree.txt";
     $e->{kegg_cat_file}        = $e->{kegg_root_dir} . "/kegg_cat.txt";
 
     # login logs
-    #$e->{ login_log_file } = "/webfs/scratch/img/imgLogins.log";
+    $e->{login_log_file}      = "/webfs/scratch/img/imgLogins.log";
     $e->{enable_autocomplete} = 1;
 
     # public taxon list / tree json files
@@ -639,6 +660,48 @@ sub common {
     $e->{metagenomeApDataFile} = '/webfs/scratch/img/gold/metagenomeAp.bin';
 
     $e->{merfs_timeout_mins} = 40;    # 40 mins
+
+    $e->{ko_module_dir}        = $e->{web_data_dir} . "/km.png.7.7";
+
+    # cgi cache
+    # new for 3.1 cgi caching
+    # enable cgi cache 0 to disable
+    $e->{ cgi_cache_enable } = 1;
+
+    # location of cache directory - this should be a unique directory
+    # for each web site
+    # to be defined in each individual sites config
+    # $e->{ cgi_cache_dir } =  $e->{ cgi_tmp_dir } . "/CGI_Cache";
+
+    # cache expire time in seconds 1 hour = 60 * 60
+    # should be less the purge tmp and cgi_tmp times
+    $e->{ cgi_cache_default_expires_in } = 3600;
+    # max cache size in bytes 20 MB
+    # changed max cache to 10 GB - ken
+    $e->{cgi_cache_size} = 10000 * 1024 * 1024;
+
+    # for 3.3 test to see if we can cache blast output for public sites
+    # for it to work both cgi_cache_enable must be 1
+    #     AND cgi_blast_cache_enable = 1
+    # this should help during the workshops - Ken
+    $e->{ cgi_blast_cache_enable } = 1;
+
+    # see https_cgi_url
+    $e->{ssl_enabled} = 1;
+
+    # sso
+    # caliban sso
+    # if null do not use sso
+    #
+    # for stage web farm MUST change url to .jgi-psf.org
+    #
+    $e->{sso_enabled} = 1;
+    $e->{sso_domain} = ".jgi.doe.gov";
+    $e->{sso_url} = "https://signon" . $e->{sso_domain};
+    $e->{sso_cookie_name} = "jgi_return";
+    $e->{sso_session_cookie_name} = "jgi_session"; # cookie that stores the caliban session id is has the format of "/api/sessions/30a6fa0dc58d3708"
+    $e->{sso_api_url} =  $e->{sso_url} . "/api/sessions/"; # "https://signon.jgi-psf.org/api/sessions/"; # session id from cookie jgi_session
+    $e->{sso_user_info_url} = $e->{sso_url} . '/api/users/';
 
     return $e;
 }

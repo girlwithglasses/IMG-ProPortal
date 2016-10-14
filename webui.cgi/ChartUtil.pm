@@ -1,7 +1,7 @@
 ############################################################################
 #   Charting utility functions
 #       --ac 3/24/2008
-# $Id: ChartUtil.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: ChartUtil.pm 35207 2016-02-05 22:28:19Z klchu $
 ############################################################################
 package ChartUtil;
 require Exporter;
@@ -334,7 +334,7 @@ sub printPieChart {
 
     my $it = new InnerTable( 1, $name.$tool."$$", $name.$tool, 0 );
     my $sd = $it->getSdDelim();
-    my $col2name = @series[0];
+    my $col2name = $series[0];
     $it->addColSpec( $name, "asc", "left" );
     $it->addColSpec( $col2name, "desc", "right" );
 

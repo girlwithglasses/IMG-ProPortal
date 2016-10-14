@@ -2,7 +2,7 @@
 #
 # see webUI/worker.cgi
 #
-# $Id: Command.pm 31512 2014-07-28 17:51:15Z klchu $
+# $Id: Command.pm 36260 2016-09-29 19:36:01Z klchu $
 ############################################################################
 package Command;
 
@@ -14,6 +14,7 @@ use Cwd;
 use File::Path qw(make_path remove_tree);
 use LWP::UserAgent;
 use HTTP::Request::Common qw( GET POST);
+use threads;
 
 $| = 1;
 
@@ -23,6 +24,9 @@ my $cassetteDir    = $env->{fastbit_dir};
 my $img_ken        = $env->{img_ken};
 my $base_url       = $env->{base_url};
 my $worker_base_url = $env->{worker_base_url};
+
+my $thr; # print dot thread
+
 #
 # create a session directory to store temp files
 # this dir is located at common_tmp_dir where gpint05 and gpweb04 to 07 can read and write data too
@@ -33,7 +37,8 @@ sub createSessionDir {
 
     my $sessionId = getSessionId();
 
-    my $hostname = WebUtil::getHostname();
+    #my $hostname = WebUtil::getHostname(); # load balancer issues
+    my $hostname = 'gpweb36_37_shared';
 
     #my @tmps   = split( /\//, $base_url );
     my $urlTag = $env->{urlTag}; #$tmps[$#tmps];
@@ -146,11 +151,46 @@ sub runCmdViaUrl {
         my $content = $res->content;
         print qq{
             <br>
-            failed<br/>
+            Failed: Message from BLAST Server - <br/>
             $code <br/>
             $content
         };
         return -1;
+    }
+}
+
+#
+# kill the dot printing thread
+#
+sub killDotThread {
+    # Send a signal to a thread
+    print "killDotThread <br>\n";
+    $thr->kill('KILL')->detach();
+}
+
+#
+# starts printing dots to the browser
+#
+# ONLY one dot thread for now - ken
+#
+sub startDotThread {
+    $thr = threads->create( 'printDotThread');
+    #$thr->join;    
+}
+
+#
+# printing dots every 5 secs for a max of 60 times
+#
+sub printDotThread {
+    my($times) = @_;
+    $times = 60 if($times eq '');
+    
+    # thread kill handler
+    $SIG{'KILL'} = sub { threads->exit(); };
+    
+    for(my $i=0; $i < $times; $i++) {
+        print "Waiting ... $i .. <br>\n";
+        sleep 5; # 5 secs
     }
 }
 

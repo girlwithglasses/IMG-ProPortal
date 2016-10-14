@@ -1,7 +1,7 @@
 # CircularMap - Generation of circular and linear maps of chromosomes
 #    --km 10/24/2006
 #
-# $Id: CircularMap.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: CircularMap.pm 35581 2016-04-21 19:42:33Z jinghuahuang $
 ############################################################################
 package CircularMap;
 use strict;
@@ -511,7 +511,7 @@ sub draw_pix {
         &make_map(
             $length,      $topology,     $page_width,
             $page_height, $border_width, $scaffold,
-            $img,         $in_file,      $taxon_oid
+            $img,         $in_file,      $taxon_oid, $d2
         );
 
         #show link to file
@@ -771,22 +771,22 @@ sub show_image {
 
 sub make_map {
     my ($length,$topology,$page_width,$page_height,
-	$border_width,$scaffold,$img,$in_file,$taxon_oid)=@_;
+	$border_width,$scaffold,$img,$in_file,$taxon_oid, $data_type)=@_;
 
     # img_edu
     my $myimg = "";
     if ($img ne "") {
-	$myimg = "&img=$img";
+    	$myimg = "&img=$img";
     }
     my $URL="$main_cgi?section=ScaffoldGraph"
 	. "&page=scaffoldGraph&scaffold_oid=$scaffold"
 	. "&seq_length=$length$myimg";
 
     if ( $in_file eq 'Yes' ) {
-	# MER-FS
+    	# MER-FS
         $URL = "$main_cgi?section=MetaScaffoldGraph" .
             "&page=metaScaffoldGraph&scaffold_oid=$scaffold" .
-            "&taxon_oid=$taxon_oid&seq_length=$length";
+            "&taxon_oid=$taxon_oid&data_type=$data_type&seq_length=$length";
     }
 
     print "<map name=\"genome_map_$scaffold\">\n";

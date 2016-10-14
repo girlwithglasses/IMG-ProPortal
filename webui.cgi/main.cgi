@@ -1,28 +1,39 @@
-#!/bin/bash 
-# Control the environment from here for security and other reasons.
-#
-# $Id: main.cgi 29739 2014-01-07 19:11:08Z klchu $
-#
-# http://aaroncrane.co.uk/2009/02/perl_safe_signals/
-#
-#PATH=""
-#export PATH
-#LD_LIBRARY_PATH="/global/common/genepool/usg/languages/R/2.15.2_1/lib64/R/lib:/usr/common/usg/utilities/curl/7.26.0/lib"; 
-#export LD_LIBRARY_PATH
+#!/usr/bin/env perl
 
-#/usr/bin/env PERL_SIGNALS=unsafe /usr/local/bin/perl -I`pwd` -T  main.pl 
-# /usr/common/usg/languages/perl
-#/usr/bin/env PERL_SIGNALS=unsafe /usr/common/usg/languages/perl/5.16.0/bin/perl -I`pwd` -T  main.pl 
+my @dir_arr;
+my $dir;
+BEGIN {
+	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Basename qw( dirname basename );
+	$dir = dirname( rel2abs( $0 ) );
+	while ( 'webUI' ne basename( $dir ) ) {
+		$dir = dirname( $dir );
+	}
+	@dir_arr = map { catdir( $dir, $_ ) } ( 'webui.cgi' );
+}
 
-PERL5LIB=`pwd`
-export PERL5LIB
-/webfs/projectdirs/microbial/img/bin/imgEnv perl -T main.pl
+use CGI;
 
-if [ $? != "0" ] 
-then
-   echo "<br/><font color='red'>"
-   echo "Oops. This is embarrassing an error has occurred.<br/>"
-   echo "Please report this along with your steps on how to reproduce it.<br/>"
-   echo "- IMG email: imgsupp at lists.jgi-psf.org"
-   echo "</font>"
-fi
+# find out the host
+my $host = virtual_host();
+$host =~ s/.jgi.doe.gov//;
+push @dir_arr, catdir( $dir, 'proportal/config', $host );
+
+my $vars = {
+	PATH => '/usr/bin:/bin',
+	LD_LIBRARY_PATH => '',
+	PERL5LIB => join ':', reverse @dir_arr
+};
+
+for my $k ( keys %$vars ) {
+	system( $k . '="' . $vars->{$k} . '"' );
+	system( 'export', $k );
+}
+system( '/webfs/projectdirs/microbial/img/bin/imgEnv2', 'perl', '-T', 'main.pl' );
+
+if ( $? != 0 ) {
+	print "An error has occurred. The command failed with the error: <br>"
+	. $!
+	. "<br>"
+	. "Please report this error, along with the steps required to reproduce it, to imgsupp at lists.jgi-psf.org.";
+}

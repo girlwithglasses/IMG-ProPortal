@@ -1,7 +1,7 @@
 ############################################################################
 # MetaScaffoldGraph.pm - Show graph of a section of a scaffold used in
 #   chromosomal viewers. (file version)
-# $Id: MetaScaffoldGraph.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: MetaScaffoldGraph.pm 36162 2016-09-12 16:10:46Z imachen $
 ############################################################################
 package MetaScaffoldGraph;
 my $section = "MetaScaffoldGraph";
@@ -21,6 +21,8 @@ use MetaUtil;
 use QueryUtil;
 use GraphUtil;
 use PhyloUtil;
+use ScaffoldDataUtil;
+use MyIMG;
 
 my $env                  = getEnv();
 my $img_internal         = $env->{img_internal};
@@ -40,6 +42,7 @@ my $user_restricted_site = $env->{user_restricted_site};
 my $YUI                  = $env->{yui_dir_28};
 my $top_base_url = $env->{top_base_url};
 my $mer_data_dir = $env->{mer_data_dir};
+my $virus = $env->{virus};
 
 # No. bp's for whole page.
 my $blockSize = 30000;
@@ -285,7 +288,7 @@ sub printMetaScaffoldGraph {
     HtmlUtil::printMetaTaxonName( $taxon_oid, $taxon_name, $data_type );
     
     print "<p style='width: 650px;'>";
-    my $s_url = "$main_cgi?section=MetaDetail" 
+    my $s_url = "$main_cgi?section=MetaScaffoldDetail" 
            . "&page=metaScaffoldDetail&taxon_oid=$taxon_oid" 
            . "&scaffold_oid=$scaffold_oid"
            . "&data_type=$data_type";
@@ -297,12 +300,42 @@ sub printMetaScaffoldGraph {
     print "${seq_length}bp gc=$gc_percent $depth";
     if ( $data_type eq 'assembled' ) {
         my ( $lineage, $lineage_percentage, $rank ) = 
-	MetaUtil::getScaffoldLineage($taxon_oid, $data_type, $scaffold_oid);
+        	MetaUtil::getScaffoldLineage($taxon_oid, $data_type, $scaffold_oid);
         if ( $lineage ) {
             print " lineage=$lineage lineage_percentage=$lineage_percentage"
         }
     }
     print ")<br/>\n";
+    if ( $data_type eq 'assembled' && $virus ) {
+	my $v_sql = qq{
+                select domain, phylum, ir_class, ir_order,
+                       family, subfamily, genus, species
+                from dt_mvc_taxonomy
+                where mvc = ?
+                };
+
+	my $mvc_id = $taxon_oid . "_____" . $scaffold_oid;
+	my $v_cur = execSql( $dbh, $v_sql, $verbose, $mvc_id );
+            my ($v_dom, $v_phy, $v_cla, $v_ord, $v_fam,
+                $v_sub_fam, $v_gen, $v_spe) = $v_cur->fetchrow();
+	$v_cur->finish();
+	if ( $v_dom ) {
+	    my $lineage = "$v_dom;$v_phy;$v_cla;$v_ord;$v_fam";
+	    if ( $v_sub_fam && $v_sub_fam ne 'unclassified' ) {
+		$lineage .= "(" . $v_sub_fam . ")";
+	    }
+	    $lineage .= ";$v_gen;";
+	    if ( $v_spe =~ /^vc\_/ || $v_spe =~ /^sg\_/ ) {
+		my $v_url = "$main_cgi?section=Viral"
+    		    . "&page=viralClusterDetail&viral_cluster_id=$v_spe";
+		$lineage .= alink($v_url, $v_spe);
+	    }
+	    else {
+		$lineage .= $v_spe;
+	    }
+	    print "<b>Viral study shows lineage: $lineage</b><br/>\n";
+	}
+    }
     print "(coordinates <b>$start_coord0-$end_coord0</b>)\n";
     print "</p>\n";
 
@@ -358,7 +391,7 @@ sub printMetaScaffoldGraph {
 
     my $url = "$main_cgi?section=MetaScaffoldGraph"
 	    . "&page=metaScaffoldGraph&scaffold_oid=$scaffold_oid"
-	    . "&taxon_oid=$taxon_oid"
+	    . "&taxon_oid=$taxon_oid&data_type=$data_type"
 	    . "&start_coord=$start_coord0&end_coord=$end_coord0"
 	    . "&seq_length=$seq_length";
 
@@ -549,7 +582,7 @@ sub printMetaScaffoldGraph {
     }
 
     my $hint_part =
-        "<image style='left: 0px;' src='$crispr_png' "
+        "<img style='left: 0px;' src='$crispr_png' "
       . "width='25' height='10' alt='Crispr'>&nbsp;&nbsp;CRISPR array<br/>";
     if ( $phantom_rec ne "" ) {
         $hint_part .= "(Alignment is shown as a thin red line "
@@ -569,7 +602,7 @@ sub printMetaScaffoldGraph {
           )
           = split( /\t/, $line );
         my ( $prod_name, $source2 ) =
-	    MetaUtil::getGeneProdNameSource( $gene_oid, $taxon_oid, 'assembled' );
+	    MetaUtil::getGeneProdNameSource( $gene_oid, $taxon_oid, $data_type );
         if ( !$prod_name && $gene_display_name ) {
             $prod_name = $gene_display_name;
         }
@@ -591,6 +624,7 @@ sub printMetaScaffoldGraph {
 
     my %phylo_h;
     my $phylo_cnt = 11;
+    my $crispr_cnt = 0;
 
     for my $g2 (@genes_on_s) {
         (
@@ -620,7 +654,7 @@ sub printMetaScaffoldGraph {
         $scf_seq_length = $seq_length;
 
         # get gene cog
-        my @cogs = MetaUtil::getGeneCogId( $gene_oid, $taxon_oid, "assembled" );
+        my @cogs = MetaUtil::getGeneCogId( $gene_oid, $taxon_oid, $data_type );
         if ( scalar(@cogs) > 0 ) {
             my $cog_id = $cogs[0];
             my $sql2 = "select functions from cog_functions where cog_id = ?";
@@ -637,7 +671,7 @@ sub printMetaScaffoldGraph {
         $ko_id = "";
         if ( $color eq "pfam" ) {
             my ($pfams_ref, $sdbFileExist) 
-                = MetaUtil::getGenePfamInfo( $gene_oid, $taxon_oid, "assembled" );
+                = MetaUtil::getGenePfamInfo( $gene_oid, $taxon_oid, $data_type );
             if ( scalar(@$pfams_ref) > 0 ) {
                 my $score0 = 0;
                 for my $pfam0 (@$pfams_ref) {
@@ -657,7 +691,7 @@ sub printMetaScaffoldGraph {
         }
         elsif ( $color eq "tigrfam" ) {
             my ($tigrfams_ref, $sdbFileExist) 
-                = MetaUtil::getGeneTIGRfamInfo( $gene_oid, $taxon_oid, "assembled" );
+                = MetaUtil::getGeneTIGRfamInfo( $gene_oid, $taxon_oid, $data_type );
             if ( scalar(@$tigrfams_ref) > 0 ) {
                 my $score0 = 0;
                 for my $tigrfam0 (@$tigrfams_ref) {
@@ -672,13 +706,13 @@ sub printMetaScaffoldGraph {
             }
         }
         elsif ( $color eq "kegg" ) {
-            my @kos = MetaUtil::getGeneKoId( $gene_oid, $taxon_oid, "assembled" );
+            my @kos = MetaUtil::getGeneKoId( $gene_oid, $taxon_oid, $data_type );
             if ( scalar(@kos) > 0 ) {
                 $ko_id = $kos[0];
             }
         }
         elsif ( $color eq "phylodist" ) {
-            my $tid = getGeneHomoTaxon( $gene_oid, $taxon_oid, "assembled" );
+            my $tid = getGeneHomoTaxon( $gene_oid, $taxon_oid, $data_type );
     	    if ( $tid ) {
 		$phylo_h{$tid} = $tid;
 		my $sql3 = "select taxon_oid, domain, phylum, ir_class from taxon " .
@@ -717,7 +751,7 @@ sub printMetaScaffoldGraph {
     	    }
         }
         elsif ( $color eq "gc" ) {
-            my $seq = MetaUtil::getScaffoldFna( $taxon_oid, "assembled", $scaffold_oid );
+            my $seq = MetaUtil::getScaffoldFna( $taxon_oid, $data_type, $scaffold_oid );
             my $gene_seq = "";
             if ( $strand eq '-' ) {
                 $gene_seq = getSequence( $seq, $end_coord, $start_coord );
@@ -776,7 +810,7 @@ sub printMetaScaffoldGraph {
             }
             elsif ( $sample ne "" && $color eq "expression" ) {
                 printHint( "Mouse over a gene to see details.<br/>"
-                      . "<image src='$base_url/images/colorstrip.100.png' "
+                      . "<img src='$base_url/images/colorstrip.100.png' "
                       . "width='200' style='left: 0px; top: 5px;' />"
                       . " &nbsp;&nbsp;red-high to green-low expression<br/>"
                       . "Query gene in <font color='red'><u>red</u></font>, "
@@ -805,6 +839,7 @@ sub printMetaScaffoldGraph {
                       . $hint_part )
                   if $block_count == 1;
             }
+    	    print "<br/>";
 
             my $id = "$scaffold_oid.$color.$block_coord1.x.$block_coord2";
             $id .= "$cogFuncFilterStrSuffix";
@@ -812,14 +847,16 @@ sub printMetaScaffoldGraph {
                 $id .= ".$sessionId";
             }
             #print "printMetaScaffoldGraph() id: $id<br/>\n";
-            my @retain = flushMetaRecs(
-                $dbh,           $scaffold_oid, $id,
+
+            my ($crisprCount, @retain) = flushMetaRecs(
+                $dbh, $data_type, $scaffold_oid, $id,
                 $block_coord1,  $block_coord2, $scf_seq_length,
                 \@recs,         \%uniqueGenes, \%cogFunction,
                 $marker_gene,   $taxon_gc_pc,
                 \@colorFuncs,   $color,        $data_id_href,
                 $cat_id_href,   \%ids_colored, $exp_profile
             );
+            #print "printMetaScaffoldGraph() crisprCount=$crisprCount, block_coord1=$block_coord1, block_coord2=$block_coord2<br/>\n";
 
             $block_coord1 = $block_coord2 + 1;
             $block_coord1 =
@@ -827,9 +864,10 @@ sub printMetaScaffoldGraph {
             $block_coord2 += $blockSize;
 
             @recs = @retain;
+            $crispr_cnt += $crisprCount;
         }
 
-        my $faa = MetaUtil::getGeneFaa( $gene_oid, $taxon_oid, 'assembled' );
+        my $faa = MetaUtil::getGeneFaa( $gene_oid, $taxon_oid, $data_type );
         $aa_seq_length = length($faa);
 
         my $rec = "$gene_oid\t";
@@ -869,7 +907,7 @@ sub printMetaScaffoldGraph {
 
         if ( $sample ne "" && $color eq "expression" && $block_count == 1 ) {
             printHint( "Mouse over a gene to see details.<br/>"
-		     . "<image src='$base_url/images/colorstrip.100.png' "
+		     . "<img src='$base_url/images/colorstrip.100.png' "
 		     . "width='200' style='left: 0px; top: 5px;' />"
 		     . " &nbsp;&nbsp;red-high to green-low expression"
                      . "<br/>$hint_part" );
@@ -887,14 +925,16 @@ sub printMetaScaffoldGraph {
             $id .= ".$sessionId";
         }
         #print "printMetaScaffoldGraph() id: $id<br/>\n";
-        flushMetaRecs(
-            $dbh,           $scaffold_oid, $id,
+        my ($crisprCount, @retain) = flushMetaRecs(
+            $dbh, $data_type, $scaffold_oid, $id,
             $block_coord1,  $block_coord2, $old_scf_seq_length,
             \@recs,         \%uniqueGenes, \%cogFunction,
             $marker_gene,   $taxon_gc_pc,
             \@colorFuncs,   $color,        $data_id_href,
             $cat_id_href,   \%ids_colored, $exp_profile
         );
+        #print "printMetaScaffoldGraph() crisprCount=$crisprCount, block_coord1=$block_coord1, block_coord2=$block_coord2<br/>\n";
+        $crispr_cnt += $crisprCount;
     }
 
     if ( $count == 0 ) {
@@ -902,14 +942,21 @@ sub printMetaScaffoldGraph {
         print "No genes were found to display for this coordinate range.";
         print "<br/></p>\n";
 
-        printNoGenePanel(
-              $dbh,  $taxon_oid,  $scaffold_oid,
+        my $crisprCount = printNoGenePanel(
+              $dbh,  $taxon_oid,  $data_type, $scaffold_oid,
               $start_coord0,      $end_coord0,
               $seq_length,        $phantom_start_coord,
               $phantom_end_coord, $phantom_strand
         );
+        $crispr_cnt += $crisprCount;
     }
     webLog "Add panels " . currDateTime() . "\n" if $verbose >= 1;
+
+    if ( $crispr_cnt > 0 ) {
+        require MetaScaffoldDetail;
+        MetaScaffoldDetail::printMetaScaffoldCrisprDetail( $taxon_oid, $data_type, $scaffold_oid, $start_coord0, $end_coord0 );            
+        #print "printMetaScaffoldGraph() crispr_cnt=$crispr_cnt, start_coord0=$start_coord0, end_coord0=$end_coord0<br/>\n";
+    }
 
     # Next and previous buttons.
     my $end_coord1   = $start_coord0 - 1;
@@ -922,7 +969,7 @@ sub printMetaScaffoldGraph {
     my $prevUrl =
         "$section_cgi&page=metaScaffoldGraph"
       . "&scaffold_oid=$scaffold_oid"
-      . "&taxon_oid=$taxon_oid";
+      . "&taxon_oid=$taxon_oid&data_type=$data_type";
     $prevUrl .= "&start_coord=$start_coord1&end_coord=$end_coord1";
     $prevUrl .= "&seq_length=$seq_length";
     if ( $mygene_oid ne "" ) {
@@ -950,7 +997,7 @@ sub printMetaScaffoldGraph {
     my $nextUrl =
         "$section_cgi&page=metaScaffoldGraph"
       . "&scaffold_oid=$scaffold_oid"
-      . "&taxon_oid=$taxon_oid";
+      . "&taxon_oid=$taxon_oid&data_type=$data_type";
     $nextUrl .= "&start_coord=$start_coord2&end_coord=$end_coord2";
     $nextUrl .= "&seq_length=$seq_length";
     if ( $mygene_oid ne "" ) {
@@ -994,7 +1041,7 @@ sub printMetaScaffoldGraph {
     print "<p>\n";
     my $url =
         "$section_cgi&page=metaScaffoldDna&scaffold_oid=$scaffold_oid"
-      . "&taxon_oid=$taxon_oid";
+      . "&taxon_oid=$taxon_oid&data_type=$data_type";
     $url .= "&start_coord=$start_coord0&end_coord=$end_coord0";
     print alink( $url, "Get Nucleotide Sequence For Range" ) . "<br/>\n";
 
@@ -1020,7 +1067,7 @@ sub printMetaScaffoldGraph {
     print "</p>\n";
 
     if ( $sample ne "" && $color eq "expression" ) {
-        print toolTipCode();
+        #print toolTipCode();
         print "<script src='$top_base_url/js/overlib.js'></script>\n";
         printStatusLine( "Loaded.", 2 );
         print end_form();
@@ -1535,6 +1582,7 @@ sub printMetaScaffoldGraph {
 
     print "<p>\n";
     print hiddenVar( "taxon_oid",    $taxon_oid );
+    print hiddenVar( "data_type",    $data_type );
     print hiddenVar( "scaffold_oid", $scaffold_oid );
     print hiddenVar( "start_coord",  $start_coord0 );
     print hiddenVar( "end_coord",    $end_coord0 );
@@ -1568,7 +1616,7 @@ sub printMetaScaffoldGraph {
     webLog "End Graph " . currDateTime() . "\n" if $verbose >= 1;
 
     printHint("Saving with no selections defaults to show all colors.");
-    print toolTipCode();
+    #print toolTipCode();
     print "<script src='$top_base_url/js/overlib.js'></script>\n";
 
     printStatusLine( "Loaded.", 2 );
@@ -1633,7 +1681,7 @@ YUI
 ############################################################################
 sub flushMetaRecs {
     my (
-        $dbh,              $scaffold_oid,     $id,
+        $dbh, $data_type,  $scaffold_oid,     $id,
         $scf_start_coord,  $scf_end_coord,    $scf_seq_length,
         $recs_ref,         $uniqueGenes_ref,  $cogFunction_ref,
         $marker_gene,      $taxon_gc_pc,
@@ -1649,16 +1697,16 @@ sub flushMetaRecs {
 
     my $coord_incr = 3000;
     ## Rescale for large Euks
-    #    my $taxon_oid     = scaffoldOid2TaxonOid( $dbh, $scaffold_oid );
-    #    my $taxon_rescale = getTaxonRescale( $dbh,      $taxon_oid );
+    #    my $taxon_oid     = QueryUtil::scaffoldOid2TaxonOid( $dbh, $scaffold_oid );
+    #    my $taxon_rescale = WebUtil::getTaxonRescale( $dbh, $taxon_oid );
 
     my $taxon_oid     = param("taxon_oid");
     my $taxon_rescale = 1;
 
     $coord_incr *= $taxon_rescale;
 
-# get protein data for these genes
-#    my $protein_href = getProtein($dbh, $taxon_oid, $scf_start_coord, $scf_end_coord);
+    # get protein data for these genes
+    # my $protein_href = getProtein($dbh, $taxon_oid, $scf_start_coord, $scf_end_coord);
     my $protein_href;
 
     # get gene in gene cart
@@ -1686,32 +1734,32 @@ sub flushMetaRecs {
         }
 
     } elsif ( $color_view eq "expression" ) {
-	$arrayofcolors = $env->{green2red_array_file};
+    	$arrayofcolors = $env->{green2red_array_file};
     } else {
-	$arrayofcolors = $env->{small_color_array_file};
+    	$arrayofcolors = $env->{small_color_array_file};
     }
 
     my $args = {
-	id                   => "scf.$id",
-	start_coord          => $scf_start_coord,
-	end_coord            => $scf_end_coord,
-	coord_incr           => $coord_incr,
-	strand               => "+",
-	has_frame            => 0,
-	gene_page_base_url   =>
-	    "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
-	  . "&taxon_oid=$taxon_oid&data_type=assembled",
-        mygene_page_base_url =>
-	"$main_cgi?section=MyGeneDetail&page=geneDetail",
-	color_array_file     => $arrayofcolors,
-	tmp_dir              => $tmp_dir,
-	tmp_url              => $tmp_url,
+    	id                   => "scf.$id",
+    	start_coord          => $scf_start_coord,
+    	end_coord            => $scf_end_coord,
+    	coord_incr           => $coord_incr,
+    	strand               => "+",
+    	has_frame            => 0,
+    	gene_page_base_url   =>
+    	    "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
+    	  . "&taxon_oid=$taxon_oid&data_type=$data_type",
+            mygene_page_base_url =>
+    	"$main_cgi?section=MyGeneDetail&page=geneDetail",
+    	color_array_file     => $arrayofcolors,
+    	tmp_dir              => $tmp_dir,
+    	tmp_url              => $tmp_url,
     };
     
     $args->{meta_gene_page_base_url} =
-	$args->{gene_page_base_url} . "&taxon_oid=$taxon_oid&data_type=assembled";
+	$args->{gene_page_base_url} . "&taxon_oid=$taxon_oid&data_type=$data_type";
 
-    my $sp          = new ScaffoldPanel($args);
+    my $sp = new ScaffoldPanel($args);
     my $color_array = $sp->{color_array};
     my @retain;
     my (
@@ -1868,7 +1916,7 @@ sub flushMetaRecs {
             elsif ( $color_view eq "phylodist" ) {
                 my $href = $data_id_href->{$ko_id};
                 my $cat_id = $ko_id;
-		$color = $cat_id;
+        		$color = $cat_id;
 
                 if ( $cat_id ne "" ) {
                     # for color selection table
@@ -2020,27 +2068,19 @@ sub flushMetaRecs {
         );
     }
 
- # find missing gene / my gene data?
- #    if ( $img_er || $img_internal ) {
- #        addMyGene( $dbh, $sp, $scaffold_oid, $scf_start_coord, $scf_end_coord,
- #                   $taxon_oid, $marker_gene );
- #    }
-
     if (   $scf_start_coord <= $scf_seq_length
         && $scf_seq_length <= $scf_end_coord )
     {
         $sp->addBracket( $scf_seq_length, "right" );
     }
 
-    #addNxFeatures( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord, $scf_end_coord );
-    addMetaRepeats( $taxon_oid, $scaffold_oid, $sp, "+", $scf_start_coord,
-		    $scf_end_coord );
-    #addIntergenic( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord, $scf_end_coord );
+    my $crisprCount = ScaffoldDataUtil::addMetaCrisprRepeats( $taxon_oid, $data_type, $scaffold_oid, 
+        $sp, "+", $scf_start_coord, $scf_end_coord );
 
     my $s = $sp->getMapHtml("overlib");
     print "$s\n";
 
-    return @retain;
+    return ($crisprCount, @retain);
 }
 
 # missing gene???
@@ -2057,20 +2097,11 @@ sub addMyGene {
     return if ( $contact_oid == 0 || $contact_oid eq "" );
     my $super_user = getSuperUser();
 
-    # get user's group
-    my $sql = qq{
-      select c.img_group
-      from contact c
-      where c.contact_oid = ?
-    };
-    my @a       = ($contact_oid);
-    my $cur     = WebUtil::execSqlBind( $dbh, $sql, \@a, $verbose );
-    my ($group) = $cur->fetchrow();
-    $cur->finish();
+    my $group = MyIMG::getUserGroup( $dbh, $contact_oid );
 
     my $user_clause = urClause("mg.taxon");
 
-    #    webLog("contact_oid $contact_oid ============ \n");
+    #webLog("contact_oid $contact_oid ============ \n");
 
     # now get users group info
 
@@ -2546,10 +2577,14 @@ sub printMetaScaffoldDna {
     my $end_coord    = param("end_coord");
 
     my $taxon_oid = param("taxon_oid");
+    my $data_type = param("data_type");
+    if ( !$data_type ) {
+        $data_type = 'assembled';
+    }
 
     printStatusLine( "Loading ...", 1 );
     my $seq;
-    $seq = MetaUtil::getScaffoldFna( $taxon_oid, "assembled", $scaffold_oid );
+    $seq = MetaUtil::getScaffoldFna( $taxon_oid, $data_type, $scaffold_oid );
 
     my $d1 = $start_coord - 1;
     my $d2 = $end_coord + 1 - $start_coord;
@@ -2750,7 +2785,7 @@ sub printContigReads {
     my $scaffold_oid = param("scaffold_oid");
 
     #    my $dbh = dbLogin();
-    #    my $extAccession = scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
+    #    my $extAccession = QueryUtil::scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
     #    print "<h1>Reads for $extAccession</h1>\n";
     #    my $sql = qq{
     #      select distinct ext_accession
@@ -2775,7 +2810,8 @@ sub printContigReads {
 #   there aren't any).
 ############################################################################
 sub printNoGenePanel {
-    my ( $dbh, $taxon_oid, $scaffold_oid, $scf_start_coord, $scf_end_coord, $scf_seq_length,
+    my ( $dbh, $taxon_oid, $data_type, $scaffold_oid, 
+        $scf_start_coord, $scf_end_coord, $scf_seq_length,
         $phantom_start_coord, $phantom_end_coord, $phantom_strand )
       = @_;
 
@@ -2808,12 +2844,14 @@ sub printNoGenePanel {
         $sp->addPhantomGene( $gene_oid, $phantom_start_coord,
             $phantom_end_coord, $phantom_strand );
     }
-    WebUtil::addNxFeatures( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord,
-        $scf_end_coord );
-    addMetaRepeats( $taxon_oid, $scaffold_oid, $sp, "+", $scf_start_coord,
-        $scf_end_coord );
+    ScaffoldDataUtil::addNxFeatures( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord,
+			    $scf_end_coord );
+    my $crisprCount = ScaffoldDataUtil::addMetaCrisprRepeats( $taxon_oid, $data_type, $scaffold_oid, 
+        $sp, "+", $scf_start_coord, $scf_end_coord );
     my $s = $sp->getMapHtml("overlib");
     print "$s\n";
+    
+    return $crisprCount;    
 }
 
 #
@@ -3180,7 +3218,7 @@ sub getExpressionProfile {
 	}
 	if (scalar keys %gene2info > 0) {
 	    my %genes4scaffold = MetaUtil::getScaffoldGenes
-		( $taxon_oid, "assembled", $scaffold_oid );
+		( $taxon_oid, $data_type, $scaffold_oid );
 	    my @genes_on_s = keys %genes4scaffold;
 
 	    foreach my $item (@genes_on_s) {
@@ -3305,46 +3343,6 @@ sub normalize {
     return \@nvalues;
 }
 
-#############################################################################
-# addMetaRepeats
-#############################################################################
-sub addMetaRepeats {
-    my (
-        $taxon_oid,   $scaffold_oid,    $scf_panel,
-        $panelStrand, $scf_start_coord, $scf_end_coord
-      )
-      = @_;
-    
-    #print "addMetaRepeats() taxon_oid=$taxon_oid, scaffold_oid=$scaffold_oid<br/>\n";
-    #print "addMetaRepeats() scf_start_coord=$scf_start_coord, scf_end_coord=$scf_end_coord<br/>\n";
-
-    my $dbh = dbLogin();
-    my @scaffold_oids = ( $scaffold_oid );
-    my @recs = QueryUtil::getTaxonCrisprList( $dbh, $taxon_oid, \@scaffold_oids );
-
-    my $count = 0;
-    for my $rec ( @recs ) {
-        my ( $contig_id, $sr_start, $sr_end, $crispr_no ) = split(/\t/, $rec);
-
-        if ( ( $sr_end - $sr_start ) <= 50 ) {
-            next;
-        }
-
-        if (
-            ( $sr_start > $scf_start_coord && $sr_end < $scf_end_coord )
-            || (   $scf_start_coord <= $sr_start
-                && $sr_start <= $scf_end_coord )
-            || (   $scf_start_coord <= $sr_end
-                && $sr_end <= $scf_end_coord )
-          )
-        {
-            $count++;
-            $scf_panel->addCrispr( $sr_start, $sr_end, $panelStrand,
-                $crispr_no );
-        }
-    }
-    
-}
 
 #############################################################################
 # getMetaScaffoldAttributes - Get scaffold attributes from MERFs
@@ -3359,7 +3357,9 @@ sub getMetaScaffoldAttributes {
     my %gene_oids_hash;
     for my $r (@$r_ref) {
         my ( $scf_id_full, undef ) = split( /\t/, $r, 2 );
-        my ( $goid, $dtype, $toid ) = MetaUtil::parseMetaGeneOid($scf_id_full);
+#print "scf_id_full $scf_id_full <br>\n";
+        #my ( $goid, $dtype, $toid ) = MetaUtil::parseMetaGeneOid($scf_id_full);
+        my ( $goid, $dtype, $toid ) = MetaUtil::parseMetaScaffoldOid($scf_id_full);
         unless ( $taxons{$toid} ) {
             $taxons{$toid} = 1;
         }
@@ -3405,7 +3405,8 @@ sub getMetaScaffoldAttributes {
         my ( $scf_id_full, $percIdent, $evalue, $bitScore, 
              $query_start, $query_end, $subj_start, $subj_end, $alen
         ) = split( /\t/, $r );
-        my ( $goid, $dtype, $taxon ) = MetaUtil::parseMetaGeneOid($scf_id_full);
+        #my ( $goid, $dtype, $taxon ) = MetaUtil::parseMetaGeneOid($scf_id_full);
+        my ( $goid, $dtype, $taxon ) = MetaUtil::parseMetaScaffoldOid($scf_id_full);
         my $gene_oid_full = MetaUtil::getMetaGeneOid( $goid, $dtype, $taxon );
         my ( $goid2, $scf_seq_length, $scf_gc_percent, $gene_count ) 
                 = split( /\t/, $stats_hash{$scf_id_full} );

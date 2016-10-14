@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id: PhyloUtil.pm 34858 2015-12-08 18:48:04Z klchu $
+# $Id: PhyloUtil.pm 36161 2016-09-12 16:10:14Z imachen $
 ###########################################################################
 package PhyloUtil;
 
@@ -43,6 +43,7 @@ my $YUI                 = $env->{yui_dir_28};
 my $yui_tables          = $env->{yui_tables};
 my $show_mgdist_v2      = $env->{show_mgdist_v2};
 my $img_internal        = $env->{img_internal};
+my $virus               = $env->{virus};
 my $scaffold_page_size  = $env->{scaffold_page_size};
 my $contact_oid = WebUtil::getContactOid();
 # also see MetaJavaSscript for this value too
@@ -4983,17 +4984,17 @@ sub printRecruitmentSelection {
 
     #&taxon_oid=2001200000&domain=Archaea&phylum=Euryarchaeota&family=Ferroplasmaceae";
     # http://networking.mydesigntool.com/viewtopic.php?tid=312&id=31
-    if ($img_internal) {
-        print qq{
-       <p> 
-        <input class='smbutton' type='button' value='View Plot (Beta)'
-        onClick="javascript:window.open('$recplot_url','popup',
-        'width=800,height=800,scrollbars=yes,status=yes,resizable=yes, toolbar=yes'); 
-        window.focus();" 
-        /> &nbsp; NEW Beta Viewer. (It will open in pop-up window)
-        </p>
-        };
-    }
+#    if ($img_internal) {
+#        print qq{
+#       <p> 
+#        <input class='smbutton' type='button' value='View Plot (Beta)'
+#        onClick="javascript:window.open('$recplot_url','popup',
+#        'width=800,height=800,scrollbars=yes,status=yes,resizable=yes, toolbar=yes'); 
+#        window.focus();" 
+#        /> &nbsp; NEW Beta Viewer. (It will open in pop-up window)
+#        </p>
+#        };
+#    }
 
     # Use YUI css
     my $tableAttr;
@@ -6638,6 +6639,10 @@ sub printPhylogeneticDistributionSection {
     my $inScaffoldMsg = lc( getInScaffoldMsg( $isSet, $isSingleScafDetail ) );
     print "<p>You may view the phylogenetic distrubution "
     . "of best blast hits of protein-coding genes in $inScaffoldMsg.</p>\n";
+
+    if ( $virus ) {
+	print "<p><font color='red'>Warning: Phylogenetic Distribution was precomputed based on BLAST result. It may not reflect correct viral lineage of the scaffold.</font></p>\n";
+    }
 
     ## something we might need in the future
     #    print "<p>\n";

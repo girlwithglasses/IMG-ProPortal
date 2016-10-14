@@ -1,4 +1,4 @@
-# $Id: TaxonDeleted.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: TaxonDeleted.pm 35780 2016-06-15 20:41:20Z klchu $
 
 package TaxonDeleted;
 my $section = "TaxonDeleted";
@@ -111,9 +111,9 @@ select tx.taxon_oid, tx.taxon_display_name,
   c.name,
   t.comments, tx.is_public, tx.domain, tx.submission_id
 from taxon tx, taxon\@img_i_taxon t, contact c
-where t.obsolete_flag = 'Yes'
-and t.modified_by     = c.contact_oid
-and tx.taxon_oid = t.taxon_oid
+where tx.obsolete_flag = 'Yes'
+and tx.taxon_oid = t.taxon_oid (+)
+and t.modified_by = c.contact_oid (+)
 $imgClause
 $urClause
     };

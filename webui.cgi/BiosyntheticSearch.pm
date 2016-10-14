@@ -1,6 +1,6 @@
 #
 #
-# $Id: BiosyntheticSearch.pm 31620 2014-08-27 04:30:27Z jinghuahuang $
+# $Id: BiosyntheticSearch.pm 35780 2016-06-15 20:41:20Z klchu $
 #
 package BiosyntheticSearch;
 
@@ -391,7 +391,7 @@ sub printBiosyntheticSearchResult {
 
     my $from_gene_cnt = param("from_gene_cnt");
     $from_gene_cnt = WebUtil::processSearchTerm( $from_gene_cnt ) 
-        if ( $from_length );
+        if ( $from_gene_cnt );
     my $to_gene_cnt = param("to_gene_cnt");
     $to_gene_cnt = WebUtil::processSearchTerm( $to_gene_cnt ) 
         if ( $to_gene_cnt );
@@ -588,8 +588,8 @@ sub printBiosyntheticSearchResult {
     my $attributeClause;
     if ( $evidence || $from_probability || $to_probability || 
 	 $from_length || $to_length || scalar @bcTypes > 0) {
+        my $attributeSql;
 
-        my $bcids_length_clause;
         if ( $from_length || $to_length ) {
             my $lengthSql .= qq{
                 select cluster_id, start_coord, end_coord
@@ -605,76 +605,83 @@ sub printBiosyntheticSearchResult {
         
                 $bcid2end{$bc_id} = $end_coord;
                 
-		my $start = $start_coord;
-		my $end = $bcid2end{$bc_id};
-		if ( $end && $start ) {
-		    my $length;
-		    if ( $end >= $start ) {
-			$length = $end - $start;                            
-		    }
-		    else {
-			$length = $start - $end;
-		    }
-		    
-		    if ( $from_length && $to_length ) {
-			if ( $length >= $from_length && $length <= $to_length ) {
-			    $bcid_h{$bc_id} = 1;
-			}
-		    }
-		    elsif ( $from_length ) {
-			if ( $length >= $from_length ) {
-			    $bcid_h{$bc_id} = 1;
-			}                            
-		    }
-		    elsif ( $to_length ) {
-			if ( $length <= $to_length ) {
-			    $bcid_h{$bc_id} = 1;
-			}
-		    }
-		}
+        		my $start = $start_coord;
+        		my $end = $bcid2end{$bc_id};
+        		if ( $end && $start ) {
+        		    my $length;
+        		    if ( $end >= $start ) {
+            			$length = $end - $start;                            
+        		    }
+        		    else {
+            			$length = $start - $end;
+        		    }
+        		    
+        		    if ( $from_length && $to_length ) {
+            			if ( $length >= $from_length && $length <= $to_length ) {
+            			    $bcid_h{$bc_id} = 1;
+            			}
+        		    }
+        		    elsif ( $from_length ) {
+            			if ( $length >= $from_length ) {
+            			    $bcid_h{$bc_id} = 1;
+            			}                            
+        		    }
+        		    elsif ( $to_length ) {
+            			if ( $length <= $to_length ) {
+            			    $bcid_h{$bc_id} = 1;
+            			}
+        		    }
+        		}
 		
             }
             $cur->finish();
 
             my @bcids_length = keys %bcid_h;
             if ( scalar(@bcids_length) > 0 ) {
-                my $bcids_str = OracleUtil::getFuncIdsInClause
-		    ( $dbh, @bcids_length );
-                $bcids_length_clause = " and bcd.cluster_id in ($bcids_str) ";
+                my $bcids_str = OracleUtil::getFuncIdsInClause( $dbh, @bcids_length );
+                $attributeSql .= qq{
+                    select bcd.cluster_id
+                    from bio_cluster_data_new bcd
+                    where bcd.cluster_id in ($bcids_str)
+                };
+                #print "printBiosyntheticSearchResult() attributeSql: $attributeSql<br/>";
             }
         }
-
-        my $attributeSql;
+        
         if ( scalar @bcTypes > 0 ) {
-	    if ($bcsearch_type eq "exact") {
-		$attributeSql .= qq{
+            if ( ! WebUtil::blankStr($attributeSql) ) {
+                $attributeSql .= qq{
+                    INTERSECT
+                }
+            }
+
+    	    if ($bcsearch_type eq "exact") {
+        		$attributeSql .= qq{
                     select bcd.cluster_id
                     from bio_cluster_data_new bcd
                     where bcd.bc_type = '$bct_str'
-                    $bcids_length_clause
                 };
-	    } else {
-		my @types = split(",", @bcTypes[0]);
-		my $sql;
-		foreach my $type (@types) {
-		    if (! WebUtil::blankStr($sql)) {
-			if ($bcsearch_type eq "inexact_and") {
-			    $sql .= " INTERSECT " ;
-			} elsif ($bcsearch_type eq "inexact_or") {
-			    $sql .= " UNION ";
-			}
-		    }
-
-		    $sql .= qq {
+    	    } else {
+        		my @types = split(",", @bcTypes[0]);
+        		my $sql;
+        		foreach my $type (@types) {
+        		    if (! WebUtil::blankStr($sql)) {
+            			if ($bcsearch_type eq "inexact_and") {
+            			    $sql .= " INTERSECT " ;
+            			} elsif ($bcsearch_type eq "inexact_or") {
+            			    $sql .= " UNION ";
+            			}
+        		    }
+        
+        		    $sql .= qq {
                         select bcd.cluster_id
                         from bio_cluster_data_new bcd
                         where bcd.bc_type LIKE '%$type%'
-                        $bcids_length_clause
                     };
-		}
-
-		$attributeSql .= $sql;
-	    }
+        		}
+        
+        		$attributeSql .= $sql;
+    	    }
         }
         
         if ( $evidence ) {
@@ -683,13 +690,12 @@ sub printBiosyntheticSearchResult {
                     INTERSECT
                 }
             }
+
             $attributeSql .= qq{
                 select bcd.cluster_id
                 from bio_cluster_data_new bcd
                 where bcd.evidence = ?
-                $bcids_length_clause
             };
-            #push(@binds, 'EVIDENCE');
             push(@binds, $evidence);
         }
         
@@ -699,8 +705,6 @@ sub printBiosyntheticSearchResult {
                     INTERSECT
                 }
             }
-
-            #push(@binds, 'PROBABILITY');
 
             my $from_probability_clause;
             if ( $from_probability ) {
@@ -720,7 +724,6 @@ sub printBiosyntheticSearchResult {
                 where 1 = 1
                 $from_probability_clause
                 $to_probability_clause
-                $bcids_length_clause
             };
         }
 
@@ -732,6 +735,7 @@ sub printBiosyntheticSearchResult {
             }            
         }
     }
+    #print "printBiosyntheticSearchResult() attributeClause: $attributeClause<br/>";
 
     my $geneCntClause;
     if ( $from_gene_cnt || $to_gene_cnt ) {
@@ -773,19 +777,50 @@ sub printBiosyntheticSearchResult {
             $geneCntClause = " and bcf.cluster_id in ($bcids_str) ";
         }
     }
+    #print "printBiosyntheticSearchResult() geneCntClause: $geneCntClause<br/>";
 
     my $pfamClause;
-    my $pfamFrom;
     if ( $pfamSearchTerm ) {
-        my $idWhereClause = OracleUtil::addIdWhereClause
-	    ( '', '', $pfamSearchTerm, '', '', '', 1 );
-        $pfamClause = qq{
-            and g.taxon = gpf.taxon
-            and bcf.GENE_OID = gpf.gene_oid
-            and gpf.PFAM_FAMILY in ( $idWhereClause )
-        };
-        $pfamFrom = ', GENE_PFAM_FAMILIES gpf';
+        my @terms = WebUtil::splitTerm($pfamSearchTerm); 
+        #print "$searchTerm terms: @terms<br/>\n";
+
+        if ( scalar(@terms) > 0 ) {
+            my $cnt = 0;
+            my $sql_pfam;            
+            foreach my $term (@terms) {
+                if ($cnt > 0) {
+                    $sql_pfam .= qq{
+                        INTERSECT
+                    }                    
+                }
+                $sql_pfam .= qq{
+                    select distinct bcf.cluster_id
+                    from bio_cluster_features_new bcf, GENE_PFAM_FAMILIES gpf
+                    where gpf.PFAM_FAMILY = '$term'
+                    and bcf.gene_oid = gpf.gene_oid
+                };
+                $cnt++;
+            }
+            #print "printBiosyntheticSearchResult() sql_pfam: $sql_pfam<br/>";
+            
+            my $cur = execSql( $dbh, $sql_pfam, $verbose );
+            my @ids;
+            for ( ;; ) {
+                my ($id) = $cur->fetchrow();
+                last if !$id;
+                push(@ids, $id);
+            }
+            $cur->finish();            
+
+            if ( scalar(@ids) > 0 ) {
+                my $ids_str = OracleUtil::getFuncIdsInClause3( $dbh, @ids );
+                $pfamClause = qq{
+                    and bcf.cluster_id in ( $ids_str )
+                };                
+            }
+        }
     }
+    #print "printBiosyntheticSearchResult() pfamClause: $pfamClause<br/>";
         
     my $taxonClause;
     if ( scalar(@genomeFilterSelections) > 0 ) {
@@ -813,7 +848,7 @@ sub printBiosyntheticSearchResult {
     
     my $sql = qq{
         select distinct g.cluster_id, g.taxon
-        from bio_cluster_new g, bio_cluster_features_new bcf $pfamFrom
+        from bio_cluster_new g, bio_cluster_features_new bcf
         where g.cluster_id = bcf.cluster_id
         $npNameClause
         $npActivityClause
@@ -858,10 +893,14 @@ sub printBiosyntheticSearchResult {
     $cur->finish();
     OracleUtil::truncTable( $dbh, "gtt_num_id" ) 
         if ( $taxonClause =~ /gtt_num_id/i ); 
+    OracleUtil::truncTable( $dbh, "gtt_func_id" ) 
+        if ( $attributeClause =~ /gtt_func_id/i ); 
     OracleUtil::truncTable( $dbh, "gtt_func_id1" ) 
         if ( $geneCntClause =~ /gtt_func_id1/i ); 
     OracleUtil::truncTable( $dbh, "gtt_func_id2" ) 
         if ( $npTypeClause =~ /gtt_func_id2/i ); 
+    OracleUtil::truncTable( $dbh, "gtt_func_id3" ) 
+        if ( $pfamClause =~ /gtt_func_id3/i ); 
     #print "printBiosyntheticSearchResult() $cnt clusters retrieved " . currDateTime() . "<br/>\n";
 
     if ( $cnt == 0 ) {

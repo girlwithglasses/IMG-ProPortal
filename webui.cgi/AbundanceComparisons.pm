@@ -2,7 +2,7 @@
 # AbundanceComparisons.pm - Tool to allow for multiple pairwise
 #   genome abundance comparisons.
 #        --es 06/11/2007
-# $Id: AbundanceComparisons.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: AbundanceComparisons.pm 35599 2016-04-26 19:22:22Z klchu $
 ############################################################################
 package AbundanceComparisons;
 
@@ -391,9 +391,9 @@ sub printAbundanceResults {
     foreach my $qTaxon (@queryGenomes) {
     	if ( $merfs_qtaxons{$qTaxon} ) {
     	    my $val = 0;
-    	    if ($q_data_type eq "assembled") {
+    	    if ($q_data_type eq "assembled" || $q_data_type eq "both") {
         		$val = MetaUtil::hasAssembled($qTaxon);
-    	    } elsif ($q_data_type eq "unassembled") {
+    	    } elsif ($q_data_type eq "unassembled" || $q_data_type eq "both") {
         		$val = MetaUtil::hasUnassembled($qTaxon);
     	    }
     	    if ($val) {
@@ -417,9 +417,9 @@ sub printAbundanceResults {
     foreach my $refTaxon (@referenceGenomes) {
         if ( $merfs_rtaxons{$refTaxon} ) {
     	    my $val = 0;
-            if ($r_data_type eq "assembled") {
+            if ($r_data_type eq "assembled" || $r_data_type eq "both") {
                 $val = MetaUtil::hasAssembled($refTaxon);
-            } elsif ($r_data_type eq "unassembled") {
+            } elsif ($r_data_type eq "unassembled" || $r_data_type eq "both") {
                 $val = MetaUtil::hasUnassembled($refTaxon);
             }
     	    if ($val) {

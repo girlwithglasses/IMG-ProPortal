@@ -2,7 +2,7 @@
 # TaxonList - Show list of taxons in alphabetical or phylogenetic order.
 # --es 09/17/2004
 #
-# $Id: TaxonList.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: TaxonList.pm 35739 2016-06-03 20:47:44Z klchu $
 ############################################################################
 package TaxonList;
 my $section = "TaxonList";
@@ -28,6 +28,7 @@ use ChartUtil;
 use TaxonTableConfiguration;
 use OracleUtil;
 use HtmlUtil;
+use GenomeList;
 
 my $env                  = getEnv();
 my $main_cgi             = $env->{main_cgi};
@@ -48,6 +49,7 @@ my $in_file              = $env->{in_file};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
 my $top_base_url = $env->{top_base_url};
+
 sub getPageTitle {
     my $page = param('page');
     my $pageTitle = 'Taxon Browser'; 
@@ -120,12 +122,12 @@ sub dispatch {
             my $category = param("category");
 
             print '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-            print qq { 
+            print qq{ 
                 <response> 
                 <div id='piechart'><![CDATA[ 
             };
             printChartForCategory($category);
-            print qq { 
+            print qq{ 
                 ]]></div>
                 </response> 
             };
@@ -141,6 +143,15 @@ sub dispatch {
         # display only user selected genomes
         printTaxonTable( "", 1 );
 
+    } elsif($page eq "metatranscriptome") {
+        printMetatranscriptome();
+
+    } elsif($page eq "metagEco") {
+        printEco();
+
+    } elsif($page eq "metagEcoList") {
+        printEcoList();
+
     } else {
 
         # --es 01/02/2006 because of AppHeader has to be handled in main.pl.
@@ -151,6 +162,134 @@ sub dispatch {
         #}
         printTaxonTable();
     }
+}
+
+sub printEcoList {
+    my $seq_strag = param('seq_strag');
+    my $phylum = param('phylum');
+    my $ir_class = param('ir_class');
+    
+    my $seqClause = "and p.SEQUENCING_STRATEGY = ?";
+    if($seq_strag eq 'Metagenome') {
+        $seqClause = "and (p.SEQUENCING_STRATEGY = ? or p.SEQUENCING_STRATEGY is null)";
+    }
+    
+    my $irClause;
+    if($ir_class) {
+        $irClause = "and t.ir_class = ?";
+    }
+    
+    my $imgclause = WebUtil::imgClause('t');
+    my $urclause = WebUtil::urClause('t');
+    
+    my $sql = qq{
+select t.taxon_oid
+from taxon t, GOLD_SEQUENCING_PROJECT p
+where t.SEQUENCING_GOLD_ID = p.GOLD_ID(+) 
+and t.genome_type = 'metagenome'
+$imgclause
+$urclause
+and t.phylum = ?
+$irClause
+$seqClause
+    };
+    
+    my @bind = ($phylum, $seq_strag);
+    my $title = "$seq_strag $phylum List";
+    
+    if($ir_class) {
+        @bind = ($phylum, $ir_class, $seq_strag);
+        $title = "$seq_strag $phylum $ir_class List";
+    }
+    
+    my $note = '';
+    if($user_restricted_site) {
+        $note = "(Private data sets are included.)";
+    }
+    
+    GenomeList::printGenomesViaSql( '', $sql, $title, \@bind, '', $note );
+}
+
+sub printEco {
+    my $eco = param('eco'); # Engineered, Environmental, Host-associated
+    my $seqstrag = param('seqstrag'); # metatranscriptome or metagenome or all
+    my $jgiseq = param('seq_center'); # jgi or all
+
+    my $imgclause = WebUtil::imgClause('tx');
+    my $urclause = WebUtil::urClause('tx');
+    
+    my $jgiseqclause = '';
+    if($jgiseq eq 'jgi') {
+       $jgiseqclause = qq{
+and tx.jgi_project_id > 0
+and tx.jgi_project_id is not null           
+       };
+    }   
+    
+    my $seqstragClause = ''; 
+    if($seqstrag eq 'Metatranscriptome') {
+        $seqstragClause = "and p.SEQUENCING_STRATEGY = 'Metatranscriptome'"
+    } elsif($seqstrag eq 'Metagenome') {
+        $seqstragClause = "and (p.SEQUENCING_STRATEGY = 'Metagenome' or p.SEQUENCING_STRATEGY is null)"
+    }
+    
+    my $ecoClause = '';
+    if($eco eq 'Engineered' || $eco eq 'Environmental' || $eco eq 'Host-associated') {
+        $ecoClause = "and tx.PHYLUM = '$eco'";
+    }
+    
+    my $sql = qq{
+select tx.taxon_oid
+from taxon tx, GOLD_SEQUENCING_PROJECT p
+where tx.SEQUENCING_GOLD_ID = p.GOLD_ID (+)
+and tx.genome_type='metagenome'
+and tx.OBSOLETE_FLAG = 'No'
+$seqstragClause
+$ecoClause
+$imgclause
+$urclause
+$jgiseqclause
+    }; 
+    
+    my $title = "$eco";
+    if($seqstrag ne 'all') {
+        $title = $title . ' '. $seqstrag;
+    }
+    if($jgiseq eq 'jgi') {
+        $title = $title . ' JGI Sequenced';
+    }
+    
+    GenomeList::printGenomesViaSql( '', $sql, $title );       
+}
+
+sub printMetatranscriptome {
+    my $jgiseq = param('seq_center');
+    my $jgiseqclause = '';
+    if($jgiseq) {
+       $jgiseqclause = qq{
+and tx.jgi_project_id > 0
+and tx.jgi_project_id is not null           
+       };
+    }
+    
+    my $imgclause = WebUtil::imgClause('tx');
+     my $urclause = WebUtil::urClause('tx');
+     
+    my $sql = qq{
+select distinct tx.taxon_oid
+from taxon tx,  GOLD_SEQUENCING_PROJECT p
+where tx.SEQUENCING_GOLD_ID = p.GOLD_ID
+and p.SEQUENCING_STRATEGY = 'Metatranscriptome'
+and tx.genome_type = 'metagenome'
+and tx.OBSOLETE_FLAG = 'No'
+$jgiseqclause
+$imgclause        
+    };
+
+    my $title = 'Metagenomes with Metatranscriptome';
+    $title = 'JGI Sequenced Metagenomes with Metatranscriptome' if ($jgiseq eq 'jgi');
+    GenomeList::printGenomesViaSql( '', $sql, $title );
+    
 }
 
 
@@ -186,7 +325,6 @@ $imgclause
     };
     
     my $dbh = dbLogin();
-    require GenomeList;
     
     my $title;
     if($include_metagenomes) {
@@ -224,38 +362,40 @@ sub printTaxonTable {
     my ( $geba, $selected ) = @_;
 
     my $seq_center = param('seq_center');    # JGI vs Non-JGI
-    my $seq_center_clause;
-    if ( $seq_center eq "JGI" ) {
-        $seq_center_clause = " and nvl(tx.seq_center, 'na') like 'DOE%' ";
-    } elsif ( $seq_center eq "Non-JGI" ) {
-        $seq_center_clause = " and nvl(tx.seq_center, 'na') not like 'DOE%' ";
-    }
+#    my $seq_center_clause;
+#    if ( $seq_center eq "JGI" ) {
+#        $seq_center_clause = " and nvl(tx.seq_center, 'na') like 'DOE%' ";
+#    } elsif ( $seq_center eq "Non-JGI" ) {
+#        $seq_center_clause = " and nvl(tx.seq_center, 'na') not like 'DOE%' ";
+#    } elsif($seq_center eq 'jgi') {
+#        $seq_center_clause = " and tx.jgi_project_id > 0 and tx.jgi_project_id is not null ";
+#    }
 
-    my $gebaClause    = "";
+#    my $gebaClause    = "";
     my @bindList_geba = ();
-    if ( $geba == 1 ) {
-        my $seq_status   = param("seq_status");
-        my $clause       = "";
-        my @bindList_seq = ();
-        if (    $seq_status eq "Finished"
-             || $seq_status eq "Draft"
-             || $seq_status eq "Permanent Draft" )
-        {
-            $clause = " and tx.seq_status = ? ";
-            push( @bindList_seq, "$seq_status" );
-        }
-        $gebaClause = qq{
-	        and tx.taxon_oid in (
-	        select c1.taxon_permissions
-	        from contact_taxon_permissions c1, contact c2
-	        where c1.contact_oid = c2.contact_oid
-	        and c2.username = ?
-	        )
-	        $clause
-       };
-        push( @bindList_geba, "GEBA" );
-        push( @bindList_geba, @bindList_seq );
-    }
+#    if ( $geba == 1 ) {
+#        my $seq_status   = param("seq_status");
+#        my $clause       = "";
+#        my @bindList_seq = ();
+#        if (    $seq_status eq "Finished"
+#             || $seq_status eq "Draft"
+#             || $seq_status eq "Permanent Draft" )
+#        {
+#            $clause = " and tx.seq_status = ? ";
+#            push( @bindList_seq, "$seq_status" );
+#        }
+#        $gebaClause = qq{
+#	        and tx.taxon_oid in (
+#	        select c1.taxon_permissions
+#	        from contact_taxon_permissions c1, contact c2
+#	        where c1.contact_oid = c2.contact_oid
+#	        and c2.username = ?
+#	        )
+#	        $clause
+#       };
+#        push( @bindList_geba, "GEBA" );
+#        push( @bindList_geba, @bindList_seq );
+#    }
 
     my $selectedOnlyClause = "";
     my @bindList_txs       = ();
@@ -348,15 +488,15 @@ sub printTaxonTable {
           from taxon tx
           where 1 = 1
           $restrictClause
-          $gebaClause
           $selectedOnlyClause
           $rclause
           $imgClause
     };       
     #print "printTaxonTable() sql=$sql<br/>\n";
     #print "printTaxonTable() bindList=@bindList<br/>\n";
-    require GenomeList;
-    GenomeList::printGenomesViaSql( '', $sql, '', \@bindList, 'TaxonList', $note );
+    my $title = '';
+    $title = 'JGI Sequenced' if ($seq_center eq 'jgi');
+    GenomeList::printGenomesViaSql( '', $sql, $title, \@bindList, 'TaxonList', $note );
 
     return;
 }
@@ -946,7 +1086,12 @@ sub getParamRestrictionClause {
     my $note = "";
     if ( $domain ne "" && $domain ne "all") {
         $note .= "<br/>" if $note ne "";
-        $note .= "<u>Domain</u>: $domain";
+        
+        if($domain eq '*Microbiome') {
+            $note .= "<u>Domain</u>: Metagenome and Metatranscriptome";
+        } else {
+            $note .= "<u>Domain</u>: $domain";
+        }
         if ( $domain =~ /Plasmid/ ) {
             $restrictClause .= "and tx.domain like ? ";
             push( @bindList, 'Plasmid%' );
@@ -1026,6 +1171,8 @@ sub getParamRestrictionClause {
         } elsif ( $seq_center eq "Non-JGI" ) {
             $restrictClause .= "and nvl(tx.seq_center, 'na') not like ? ";
             push( @bindList, 'DOE%' );
+        } elsif ($seq_center eq 'jgi') {
+            $restrictClause .= " and tx.jgi_project_id > 0 and tx.jgi_project_id is not null ";
         } else {
             $restrictClause .= "and tx.seq_center = ? ";
             push( @bindList, "$seq_center" );
@@ -1405,7 +1552,7 @@ YUI
 
     my $dbh2 = dbLogin();
     my $total_count = QueryUtil::getTotalTaxonCount( $dbh2 );
-    require GenomeList;
+
     my %dist = GenomeList::getMetadataCategoryTaxonCount($dbh2, $category);
     #print "printChartForCategory() dist:<br/>\n";
     #print Dumper(\%dist);
@@ -1638,7 +1785,7 @@ sub printCategoryTaxonStats_ImgGold {
     printMainForm();
 
     my $dbh2 = dbLogin();
-    require GenomeList;
+
     my %dist = GenomeList::getMetadataCategoryTaxonCount($dbh2, $category);
     for my $key ( keys %dist ) {
         my $cnt = $dist{$key};
@@ -1661,7 +1808,7 @@ sub printCategoryTaxons_ImgGold {
     printMainForm();
     print "<h1>" . DataEntryUtil::getGoldAttrDisplayName($category) . "</h1>\n";
 
-    require GenomeList;
+
     my @gids = GenomeList::getMetadataCategoryGids( $category, $categoryValue );
     
     if ( scalar(@gids) == 0 ) {
@@ -1895,7 +2042,7 @@ $clause
 $imgClause
         };
 
-    require GenomeList;
+
     GenomeList::printGenomesViaSql( '', $sql1, '<h1>Private Genomes</h1>' );
     return;
 }

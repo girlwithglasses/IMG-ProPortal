@@ -414,7 +414,7 @@ sub getMap {
     my $s;
     my $id = $map_id;
     $id = "drawTree$$" if $map_id eq "";
-    $s .= "<image src='$image_url' usemap='#$id' border='$border' />\n";
+    $s .= "<img src='$image_url' usemap='#$id' border='$border' />\n";
     $s .= "<map name='$id'>\n";
     my @keys = sort( keys( %$recs ) );
  

@@ -288,7 +288,7 @@ sub printRuleSetMainForm {
     printMainForm(); 
  
     my $super_user_flag = getSuperUser(); 
-    WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files, 1);
+    WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files);
     print hiddenVar( "directory", "$folder" );
     print hiddenVar( "folder", "$folder" );
     print "<br/>";
@@ -3832,10 +3832,10 @@ sub showGeneSetEvalResult {
 
     printEndWorkingDiv();
     if ( $sid == 312 ) {
-	print "<p>*** end time: " . currDateTime() . "<br/>\n";    
+	   print "<p>*** end time: " . currDateTime() . "<br/>\n";    
     }
     if ( $timeout_msg ) { 
-        printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+        WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     } 
 
     $it->printOuterTable(1);
@@ -6027,7 +6027,7 @@ sub showFuncSetGeneProfile {
 	$it->printOuterTable(1);
 
 	if ( $timeout_msg ) {
-	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
 	}
     }
     else {
@@ -6035,7 +6035,7 @@ sub showFuncSetGeneProfile {
 	    WebUtil::printMessage("There are too many selections. Only $max_profile_select functions are computed.");
 	}
 	if ( $timeout_msg ) {
-	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
 	}
 	print "<h6>No genes have selected functions.</h6>\n";
 	print end_form();
@@ -6444,7 +6444,7 @@ sub showFuncGeneProfile {
 	$it->printOuterTable(1);
 
 	if ( $timeout_msg ) {
-	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
 	}
     }
     else {
@@ -6452,7 +6452,7 @@ sub showFuncGeneProfile {
 	    WebUtil::printMessage("There are too many selections. Only $max_profile_select functions are computed.");
 	}
 	if ( $timeout_msg ) {
-	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
 	}
 	print "<h6>No genes have selected functions.</h6>\n";
 	print end_form();
@@ -7056,7 +7056,7 @@ sub printPhyloOccurProfiles {
     }
 
     if ( $timeout_msg ) { 
-	printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	   WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     } 
  
     ## Print it out as an alignment.
@@ -7669,7 +7669,7 @@ sub printEssentialGeneProfiles {
     }
 
     if ( $timeout_msg ) { 
-	printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	   WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     } 
  
     ## Print it out as an alignment.

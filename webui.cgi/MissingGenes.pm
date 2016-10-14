@@ -1,7 +1,7 @@
 ###########################################################################
 # MissingGenes - Module for searching for missing genes.
 #
-# $Id: MissingGenes.pm 34566 2015-10-23 18:38:02Z imachen $
+# $Id: MissingGenes.pm 35027 2016-01-08 18:55:14Z imachen $
 ############################################################################
 package MissingGenes;
 my $section = "MissingGenes";
@@ -17,6 +17,7 @@ use FuncUtil;
 use GeneCartStor;
 use FuncCartStor;
 use TaxonTarDir;
+use MetaUtil;
 
 my $env              = getEnv();
 my $main_cgi         = $env->{main_cgi};
@@ -30,13 +31,30 @@ my $img_lite         = $env->{img_lite};
 my $use_gene_priam   = $env->{use_gene_priam};
 my $show_myimg_login = $env->{show_myimg_login};
 
+my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
+my $maxGeneListResults = 1000; 
+if ( getSessionParam("maxGeneListResults") ne "" ) { 
+    $maxGeneListResults = getSessionParam("maxGeneListResults"); 
+} 
+
 my $default_timeout_mins = 20;
+
+sub getPageTitle {
+    return 'Missing Genes';
+}
+
+sub getAppHeaderData {
+    my ($self) = @_;
+    my @a = ('AnaCart');
+    return @a;
+}
 
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
-#    timeout( 60 * 20 );    # timeout in 20 minutes
+
+    #    timeout( 60 * 20 );    # timeout in 20 minutes
     timeout( 60 * $default_timeout_mins );
     my $page = param("page");
 
@@ -47,6 +65,7 @@ sub dispatch {
         my $taxon_oid = param('taxon_oid');
         printGenesWithKOInTaxon($taxon_oid);
     } elsif ( paramMatch("addToGeneCart0") ) {
+
         # add to cart
         my @gene_oids = ();
         my @tge       = param('tax_gene_enzyme');
@@ -59,9 +78,9 @@ sub dispatch {
         $gc->addGeneBatch( \@gene_oids );
         $gc->printGeneCartForm( '', 1 );
 
-    } elsif (    paramMatch("addToGeneCart2")
-              || paramMatch("addToGeneCart3")
-              || paramMatch("addToGeneCart4") )
+    } elsif ( paramMatch("addToGeneCart2")
+        || paramMatch("addToGeneCart3")
+        || paramMatch("addToGeneCart4") )
     {
 
         # add to cart
@@ -177,6 +196,8 @@ sub dispatch {
         # go to MyIMG annotations
         require MyIMG;
         MyIMG::printUpdateGeneAnnotForm();
+    } elsif ( paramMatch("listClosureGenes") ) {
+        listClosureGenes();
     } else {
         printCandidatesForm();
     }
@@ -200,15 +221,10 @@ sub printSimilarityPage {
 
     printMainForm();
     print "<h1>Similarity Search Results</h1>\n";
-    my $product_name =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name',
-                  '' );
+    my $product_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
 
-    print "<h2>Candidate Gene (OID: $gene_oid): "
-      . escapeHTML($product_name)
-      . "</h2>\n";
-    my $taxon_oid1 =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'taxon', '' );
+    print "<h2>Candidate Gene (OID: $gene_oid): " . escapeHTML($product_name) . "</h2>\n";
+    my $taxon_oid1 = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'taxon', '' );
 
     print hiddenVar( "gene_oid",  $gene_oid );
     print hiddenVar( "taxon_oid", $taxon_oid1 );
@@ -216,13 +232,12 @@ sub printSimilarityPage {
     my @homologRecs;
     require OtfBlast;
     printStartWorkingDiv();
-    my $filterType =
-      OtfBlast::genePageTopHits( $dbh, $gene_oid, \@homologRecs,
-				 "", $img_lite, 1 );
+    my $filterType = OtfBlast::genePageTopHits( $dbh, $gene_oid, \@homologRecs, "", $img_lite, 1 );
     printEndWorkingDiv();
 
     my $count = @homologRecs;
     my $cnt1  = printSimRecords( \@homologRecs );
+
     #$dbh->disconnect();
     print end_form();
     printStatusLine( "$cnt1 top hits loaded.", 2 );
@@ -284,10 +299,8 @@ sub printCandidatesForm {
     }
 
     print "<h1>Find Candidate Genes for Missing Function</h1>";
-    my $url = 
-        "$main_cgi?section=TaxonDetail"
-      . "&page=taxonDetail&taxon_oid=$taxon_oid";
-    my $link = alink($url, $taxon_name); 
+    my $url = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $link = alink( $url, $taxon_name );
     print "<b>$link</b>";
 
     my %lineage = db_getLineage( $dbh, $taxon_oid );
@@ -295,40 +308,41 @@ sub printCandidatesForm {
 
     print "<h2>Function: ($funcId) " . escapeHTML($func_name) . "</h2>\n";
     my $roi_label = param('roi_label');
-    my $match_ko = "";
-    if ( $roi_label ) {
-	print hiddenVar( "roi_label",  $roi_label );
-	$match_ko = 'KO:' . $roi_label;
+    my $match_ko  = "";
+    if ($roi_label) {
+        print hiddenVar( "roi_label", $roi_label );
+        $match_ko = 'KO:' . $roi_label;
     }
     if ( $funcId =~ /^EC/ ) {
-	## show KO too
-	my $sql2 = "select k.ko_id, k.ko_name, k.definition from ko_term k, ko_term_enzymes kte where kte.enzymes = ? and kte.ko_id = k.ko_id";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	for (;;) { 
-	    my ($ko2, $name2, $def2) = $cur2->fetchrow();
-	    last if ! $ko2; 
+        ## show KO too
+        my $sql2 =
+"select k.ko_id, k.ko_name, k.definition from ko_term k, ko_term_enzymes kte where kte.enzymes = ? and kte.ko_id = k.ko_id";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        for ( ; ; ) {
+            my ( $ko2, $name2, $def2 ) = $cur2->fetchrow();
+            last if !$ko2;
 
-	    if ( $match_ko && ($match_ko ne $ko2) ) {
-		next;
-	    }
-	    print "<p>$ko2 ($name2): $def2\n";
-	}
-	$cur2->finish(); 
-    }
-    elsif ( $funcId =~ /^KO/ ) {
-	## show enzymes too
-	my $sql2 = "select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	for (;;) { 
-	    my ($ko2, $name2) = $cur2->fetchrow();
-	    last if ! $ko2; 
+            if ( $match_ko && ( $match_ko ne $ko2 ) ) {
+                next;
+            }
+            print "<p>$ko2 ($name2): $def2\n";
+        }
+        $cur2->finish();
+    } elsif ( $funcId =~ /^KO/ ) {
+        ## show enzymes too
+        my $sql2 =
+"select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        for ( ; ; ) {
+            my ( $ko2, $name2 ) = $cur2->fetchrow();
+            last if !$ko2;
 
-	    if ( $match_ko && ($match_ko ne $ko2) ) {
-		next;
-	    }
-	    print "<p>$ko2 ($name2)\n";
-	}
-	$cur2->finish(); 
+            if ( $match_ko && ( $match_ko ne $ko2 ) ) {
+                next;
+            }
+            print "<p>$ko2 ($name2)\n";
+        }
+        $cur2->finish();
     }
 
     # list options
@@ -343,17 +357,15 @@ sub printCandidatesForm {
     } else {
         print "<br/>\n";
     }
-    print "<input type='radio' name='method_option' value='ko' "
-      . "/> Using KO<br/>\n";
-    print "<input type='radio' name='method_option' value='both' "
-      . "checked/> Using Both<br/>\n";
+    print "<input type='radio' name='method_option' value='ko' " . "/> Using KO<br/>\n";
+    print "<input type='radio' name='method_option' value='both' " . "checked/> Using Both<br/>\n";
     print "</p>\n";
 
     my $name = "_section_${section}_koEcCandidatesList";
     print submit(
-                  -name  => $name,
-                  -value => "Go",
-                  -class => "smdefbutton"
+        -name  => $name,
+        -value => "Go",
+        -class => "smdefbutton"
     );
 
     #    else {
@@ -385,9 +397,7 @@ sub printCandidatesForm {
         print "KO terms";
     }
     print " through homologs in other genomes.<br/>\n";
-    print "Homologs from the query genome <i>"
-      . escHtml($taxon_name)
-      . "</i><br/>";
+    print "Homologs from the query genome <i>" . escHtml($taxon_name) . "</i><br/>";
     print "has homologs in other genomes associated with <i>$funcId</i>.<br/>";
     print "These homologs have a reciprocal hits ";
     print "in the query genome,\n";
@@ -411,8 +421,7 @@ sub printCandidatesForm {
         # no profile
         $check2 = "checked";
     } else {
-        print "<input type='radio' name='database' "
-	    . "value='profileTaxons' checked/>\n";
+        print "<input type='radio' name='database' " . "value='profileTaxons' checked/>\n";
         print "Genomes in profile only (fast)<br/>\n";
     }
     print "<input type='radio' name='database' value='currSelect' $check2/>\n";
@@ -421,8 +430,7 @@ sub printCandidatesForm {
     print "Whole database (slow)<br/>\n";
 
     # add new selection based on taxon lineage
-    for my $s1 ( 'domain', 'phylum', 'ir_class', 'ir_order', 'family',
-	'genus' ) {
+    for my $s1 ( 'domain', 'phylum', 'ir_class', 'ir_order', 'family', 'genus' ) {
         my $val1 = $lineage{$s1};
         if ( $val1 && $val1 ne 'unclassified' ) {
             print "<input type='radio' name='database' value='$s1' />\n";
@@ -447,9 +455,9 @@ sub printCandidatesForm {
     printOptionLabel("Percent Identity Cutoff");
     print nbsp(2);
     print popup_menu(
-                      -name    => "minPercIdent",
-                      -values  => [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ],
-                      -default => 30
+        -name    => "minPercIdent",
+        -values  => [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ],
+        -default => 30
     );
     print "</p>\n";
 
@@ -457,17 +465,19 @@ sub printCandidatesForm {
     printOptionLabel("E-value cutoff");
     print nbsp(2);
     print popup_menu(
-              -name   => "maxEvalue",
-              -values => [ "1e-1", "1e-2", "1e-5", "1e-10", "1e-50", "1e-100" ],
-              -default => "1e-2"
+        -name    => "maxEvalue",
+        -values  => [ "1e-1", "1e-2", "1e-5", "1e-10", "1e-50", "1e-100" ],
+        -default => "1e-2"
     );
     print "</p>\n";
 
     print "<p>\n";
     printOptionLabel("Maximum Homologs");
     print nbsp(2);
-    print popup_menu( -name   => "maxHits",
-                      -values => [ 100, 200, 500, 1000, 5000 ] );
+    print popup_menu(
+        -name   => "maxHits",
+        -values => [ 100, 200, 500, 1000, 5000 ]
+    );
     print "</p>\n";
 
     print "<hr>\n";
@@ -477,9 +487,9 @@ sub printCandidatesForm {
     printOptionLabel("Percent Identity Cutoff");
     print nbsp(2);
     print popup_menu(
-                      -name    => "koEcMinPercIdent",
-                      -values  => [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ],
-                      -default => 10
+        -name    => "koEcMinPercIdent",
+        -values  => [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ],
+        -default => 10
     );
     print "</p>\n";
 
@@ -487,9 +497,9 @@ sub printCandidatesForm {
     printOptionLabel("E-value cutoff");
     print nbsp(2);
     print popup_menu(
-              -name   => "koEcMaxEvalue",
-              -values => [ "1e-1", "1e-2", "1e-5", "1e-10", "1e-50", "1e-100" ],
-              -default => "1e-2"
+        -name    => "koEcMaxEvalue",
+        -values  => [ "1e-1", "1e-2", "1e-5", "1e-10", "1e-50", "1e-100" ],
+        -default => "1e-2"
     );
     print "</p>\n";
 
@@ -497,9 +507,9 @@ sub printCandidatesForm {
     printOptionLabel("Bit-score cutoff");
     print nbsp(2);
     print popup_menu(
-                      -name    => "koEcBitScore",
-                      -values  => [ "0", "100", "1000", "10000", "20000" ],
-                      -default => "0"
+        -name    => "koEcBitScore",
+        -values  => [ "0", "100", "1000", "10000", "20000" ],
+        -default => "0"
     );
     print "</p>\n";
 
@@ -507,14 +517,15 @@ sub printCandidatesForm {
     printOptionLabel("Percent Alignment Cutoff");
     print nbsp(2);
     print popup_menu(
-                      -name    => "koEcMinPercSAlign",
-                      -values  => [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ],
-                      -default => 10
+        -name    => "koEcMinPercSAlign",
+        -values  => [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ],
+        -default => 10
     );
     print "</p>\n";
 
     print end_form();
     printStatusLine( "Loaded.", 2 );
+
     #$dbh->disconnect();
 }
 
@@ -612,14 +623,14 @@ sub printOrthologCandidates {
     my $taxonClause;
     $taxonClause = "and g2.taxon in( $otherTaxonOids )"
       if $otherTaxonOids ne "" && $database ne "all";
-    $taxonClause = txsClause("g2.taxon", $dbh) if $database eq "all";
+    $taxonClause = txsClause( "g2.taxon", $dbh ) if $database eq "all";
     my @bindList_txs = ();
-    if (    $database eq 'domain'
-         || $database eq 'phylum'
-         || $database eq 'ir_class'
-         || $database eq 'ir_order'
-         || $database eq 'family' 
-         || $database eq 'genus' )
+    if (   $database eq 'domain'
+        || $database eq 'phylum'
+        || $database eq 'ir_class'
+        || $database eq 'ir_order'
+        || $database eq 'family'
+        || $database eq 'genus' )
     {
         my %lineage = db_getLineage( $dbh, $taxon_oid );
         if ( $lineage{$database} ) {
@@ -629,7 +640,7 @@ sub printOrthologCandidates {
         }
     }
 
-    my $sql = "";
+    my $sql   = "";
     my @binds = ();
     if ( $tag eq 'ITERM' ) {
         my $rclause   = WebUtil::urClause('tx2');
@@ -657,7 +668,7 @@ sub printOrthologCandidates {
                 $rclause
                 $imgClause
         };
-	     @binds = ($taxon_oid, $taxon_oid, $term_oid, $minPercIdent, $maxEvalue);
+        @binds = ( $taxon_oid, $taxon_oid, $term_oid, $minPercIdent, $maxEvalue );
     } elsif ( $tag eq 'EC' ) {
         my $rclause   = WebUtil::urClause('tx2');
         my $imgClause = WebUtil::imgClause('tx2');
@@ -684,13 +695,14 @@ sub printOrthologCandidates {
                 $rclause
                 $imgClause
         };
-	@binds = ($taxon_oid, $taxon_oid, $funcId, $minPercIdent, $maxEvalue);
+        @binds = ( $taxon_oid, $taxon_oid, $funcId, $minPercIdent, $maxEvalue );
     } else {
+
         #$dbh->disconnect();
         return;
     }
-    if (scalar(@bindList_txs) > 0) {
-        push (@binds, @bindList_txs);     
+    if ( scalar(@bindList_txs) > 0 ) {
+        push( @binds, @bindList_txs );
     }
 
     my $cur = execSql( $dbh, $sql, $verbose, @binds );
@@ -698,14 +710,11 @@ sub printOrthologCandidates {
     my $count = 0;
     for ( ; ; ) {
         my (
-             $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
-             $gene_oid2,   $gene_display_name2,  $aa_seq_length2,
-             $taxon_oid2,  $taxon_display_name2, $domain2,
-             $seq_status2, $percent_identity,    $bit_score,
-             $evalue,      $query_start,         $query_end,
-             $subj_start,  $subj_end
-          )
-          = $cur->fetchrow();
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1,      $gene_oid2,   $gene_display_name2,
+            $aa_seq_length2,   $taxon_oid2,         $taxon_display_name2, $domain2,     $seq_status2,
+            $percent_identity, $bit_score,          $evalue,              $query_start, $query_end,
+            $subj_start,       $subj_end
+        ) = $cur->fetchrow();
         last if !$gene_oid1;
         last if $count > $maxHits;
 
@@ -737,23 +746,19 @@ sub printOrthologCandidates {
     #$dbh->disconnect();
 
     # ko?
-    if ($with_ko_ec && ($tag eq 'KO' || $tag eq 'EC') ) {
+    if ( $with_ko_ec && ( $tag eq 'KO' || $tag eq 'EC' ) ) {
         my @ko_ec_recs = getKoEcRecords();
         my $count_h    = @recs;
         my $count_p    = @ko_ec_recs;
-        my $cnt1       =
-	    printRecordsWithKoEc( "Ortholog", $tag, \@recs, \@ko_ec_recs );
+        my $cnt1       = printRecordsWithKoEc( "Ortholog", $tag, \@recs, \@ko_ec_recs );
         print end_form();
-        printStatusLine
-	    ( "$cnt1 distinct hits loaded. "
-	      . "($count_h total orthologs hits; $count_p KO hits)", 2 );
+        printStatusLine( "$cnt1 distinct hits loaded. " . "($count_h total orthologs hits; $count_p KO hits)", 2 );
     } else {
 
         my $cnt1 = printRecords( "Ortholog", $tag, \@recs );
 
         print end_form();
-        printStatusLine
-	    ( "$cnt1 distinct hits loaded. ($count total hits)", 2 );
+        printStatusLine( "$cnt1 distinct hits loaded. ($count total hits)", 2 );
     }
 }
 
@@ -787,30 +792,30 @@ sub printHomologCandidates {
     my $dbh             = dbLogin();
     my $func_name       = "";
     my $taxon_func_cond = "";
-    my @bindList_cond = ();
+    my @bindList_cond   = ();
     if ( $tag eq 'ITERM' ) {
-        $func_name       = termOid2Term( $dbh, $term_oid );
+        $func_name = termOid2Term( $dbh, $term_oid );
         $taxon_func_cond = qq{
 	     and tx.taxon_oid in
 		 (select distinct gif.taxon
 			 from gene_img_functions gif
 			 where gif.function = ? )
 	     };
-	     push(@bindList_cond, $term_oid);
+        push( @bindList_cond, $term_oid );
     } elsif ( $tag eq 'EC' ) {
-        $func_name       = enzymeName( $dbh, $funcId );
+        $func_name = enzymeName( $dbh, $funcId );
         $taxon_func_cond = qq{
 	     and tx.taxon_oid in
 		 (select distinct ge.taxon
 			 from gene_ko_enzymes ge
 			 where ge.enzymes = ? )
 	     };
-         push(@bindList_cond, $funcId);
+        push( @bindList_cond, $funcId );
     } elsif ( $tag eq 'KO' ) {
-	my $sql2 = "select definition from ko_term where ko_id = ?";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	($func_name) = $cur2->fetchrow();
-	$cur2->finish();
+        my $sql2 = "select definition from ko_term where ko_id = ?";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        ($func_name) = $cur2->fetchrow();
+        $cur2->finish();
 
         $taxon_func_cond = qq{
 	     and tx.taxon_oid in
@@ -818,7 +823,7 @@ sub printHomologCandidates {
 			 from gene_ko_terms ge
 			 where ge.ko_terms = ? )
 	     };
-         push(@bindList_cond, $funcId);
+        push( @bindList_cond, $funcId );
     }
 
     my $taxon_display_name = taxonOid2Name( $dbh, $taxon_oid );
@@ -826,40 +831,41 @@ sub printHomologCandidates {
     print "<h3>Function: ($funcId) " . escapeHTML($func_name) . "</h3>\n";
 
     my $roi_label = param('roi_label');
-    my $match_ko = "";
-    if ( $roi_label ) {
-	print hiddenVar( "roi_label",  $roi_label );
-	$match_ko = 'KO:' . $roi_label;
+    my $match_ko  = "";
+    if ($roi_label) {
+        print hiddenVar( "roi_label", $roi_label );
+        $match_ko = 'KO:' . $roi_label;
     }
     if ( $funcId =~ /^EC/ ) {
-	## show KO too
-	my $sql2 = "select k.ko_id, k.ko_name, k.definition from ko_term k, ko_term_enzymes kte where kte.enzymes = ? and kte.ko_id = k.ko_id";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	for (;;) { 
-	    my ($ko2, $name2, $def2) = $cur2->fetchrow();
-	    last if ! $ko2; 
+        ## show KO too
+        my $sql2 =
+"select k.ko_id, k.ko_name, k.definition from ko_term k, ko_term_enzymes kte where kte.enzymes = ? and kte.ko_id = k.ko_id";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        for ( ; ; ) {
+            my ( $ko2, $name2, $def2 ) = $cur2->fetchrow();
+            last if !$ko2;
 
-	    if ( $match_ko && ($match_ko ne $ko2) ) {
-		next;
-	    }
-	    print "<p>$ko2 ($name2): $def2\n";
-	}
-	$cur2->finish(); 
-    }
-    elsif ( $funcId =~ /^KO/ ) {
-	## show enzymes too
-	my $sql2 = "select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	for (;;) { 
-	    my ($ko2, $name2) = $cur2->fetchrow();
-	    last if ! $ko2; 
+            if ( $match_ko && ( $match_ko ne $ko2 ) ) {
+                next;
+            }
+            print "<p>$ko2 ($name2): $def2\n";
+        }
+        $cur2->finish();
+    } elsif ( $funcId =~ /^KO/ ) {
+        ## show enzymes too
+        my $sql2 =
+"select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        for ( ; ; ) {
+            my ( $ko2, $name2 ) = $cur2->fetchrow();
+            last if !$ko2;
 
-	    if ( $match_ko && ($match_ko ne $ko2) ) {
-		next;
-	    }
-	    print "<p>$ko2 ($name2)\n";
-	}
-	$cur2->finish(); 
+            if ( $match_ko && ( $match_ko ne $ko2 ) ) {
+                next;
+            }
+            print "<p>$ko2 ($name2)\n";
+        }
+        $cur2->finish();
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -905,14 +911,14 @@ sub printHomologCandidates {
             order by tx.taxon_display_name
 	};
 
-	# Read genome cart text file and insert into Oracle temp file
-	require GenomeCart;
-	GenomeCart::insertToGtt($dbh);
-	
-	my @bindList;
-	if (scalar(@bindList_cond) > 0) {
-	    push (@bindList, @bindList_cond);
-	}
+        # Read genome cart text file and insert into Oracle temp file
+        require GenomeCart;
+        GenomeCart::insertToGtt($dbh);
+
+        my @bindList;
+        if ( scalar(@bindList_cond) > 0 ) {
+            push( @bindList, @bindList_cond );
+        }
 
         my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
         for ( ; ; ) {
@@ -929,21 +935,21 @@ sub printHomologCandidates {
         }
     } else {
         my @bindList = ();
+
         # whole database or taxon lineage selection
-        my $lineage_cond = 
-	    "tx.domain in( 'Bacteria', 'Archaea', 'Eukaryota' )";
+        my $lineage_cond = "tx.domain in( 'Bacteria', 'Archaea', 'Eukaryota' )";
         if ( $database ne 'all' ) {
             my %lineage = db_getLineage( $dbh, $taxon_oid );
             if ( $lineage{$database} ) {
                 my $val = $lineage{$database};
                 $lineage_cond = "tx.$database = ? ";
-                push (@bindList, $val);
+                push( @bindList, $val );
             }
         }
 
         my $rclause   = WebUtil::urClause('tx');
         my $imgClause = WebUtil::imgClause('tx');
-        my $sql = qq{
+        my $sql       = qq{
             select tx.taxon_oid, tx.taxon_display_name
             from taxon tx
             where $lineage_cond
@@ -952,8 +958,8 @@ sub printHomologCandidates {
                 $imgClause
             order by tx.taxon_display_name
         };
-        if (scalar(@bindList_cond) > 0) {
-            push (@bindList, @bindList_cond);
+        if ( scalar(@bindList_cond) > 0 ) {
+            push( @bindList, @bindList_cond );
         }
 
         my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
@@ -968,62 +974,53 @@ sub printHomologCandidates {
     my @recs;
     printStartWorkingDiv();
     my $merfs_timeout_mins = $env->{merfs_timeout_mins};
-    if ( ! $merfs_timeout_mins ) {
-	$merfs_timeout_mins = $default_timeout_mins;
-    } 
+    if ( !$merfs_timeout_mins ) {
+        $merfs_timeout_mins = $default_timeout_mins;
+    }
     timeout( 60 * $merfs_timeout_mins );
     my $start_time  = time();
-    my $timeout_msg = ""; 
+    my $timeout_msg = "";
 
     for my $taxon_oid2 (@taxon_oids) {
-	if ( ( ( $merfs_timeout_mins * 60 ) - 
-	       ( time() - $start_time ) ) < 60 ) {
-	    $timeout_msg = 
-		"Process takes too long to run " 
-		. "-- stopped before genome $taxon_oid2. " 
-		. "Only partial result is displayed."; 
-	    last; 
-	} 
-
-        if ( $tag eq 'ITERM' ) {
-            getHomologs( $dbh, $taxon_oid, $taxon_oid2, $funcId, $minPercIdent,
-                         $maxEvalue, $maxHits, \@recs );
-        } elsif ( $tag eq 'EC' ) {
-            getHomologs_EC( $dbh, $taxon_oid, $taxon_oid2, $funcId,
-                            $minPercIdent, $maxEvalue, $maxHits, \@recs );
-        } elsif ( $tag eq 'KO' ) {
-            getHomologs_KO( $dbh, $taxon_oid, $taxon_oid2, $funcId,
-                            $minPercIdent, $maxEvalue, $maxHits, \@recs );
+        if ( ( ( $merfs_timeout_mins * 60 ) - ( time() - $start_time ) ) < 60 ) {
+            $timeout_msg =
+                "Process takes too long to run "
+              . "-- stopped before genome $taxon_oid2. "
+              . "Only partial result is displayed.";
+            last;
         }
 
-	### for test
-#	if ( scalar(@recs) > 0 ) {
-#	    last;
-#	}
+        if ( $tag eq 'ITERM' ) {
+            getHomologs( $dbh, $taxon_oid, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue, $maxHits, \@recs );
+        } elsif ( $tag eq 'EC' ) {
+            getHomologs_EC( $dbh, $taxon_oid, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue, $maxHits, \@recs );
+        } elsif ( $tag eq 'KO' ) {
+            getHomologs_KO( $dbh, $taxon_oid, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue, $maxHits, \@recs );
+        }
+
+        ### for test
+        #	if ( scalar(@recs) > 0 ) {
+        #	    last;
+        #	}
     }
 
     printEndWorkingDiv();
 
-    if ( $timeout_msg ) {
-	print "<p><font color='red'>Warning: " . $timeout_msg .
-	    "</font>\n";
+    if ($timeout_msg) {
+        print "<p><font color='red'>Warning: " . $timeout_msg . "</font>\n";
     }
 
     #$dbh->disconnect();
 
     # KO
-    if ($with_ko_ec && ($tag eq 'KO' || $tag eq 'EC') ) {
+    if ( $with_ko_ec && ( $tag eq 'KO' || $tag eq 'EC' ) ) {
         my @ko_ec_recs = getKoEcRecords();
         my $count_h    = @recs;
         my $count_p    = @ko_ec_recs;
 
-        my $cnt1       =
-          printRecordsWithKoEc( "Homolog", $tag, \@recs, \@ko_ec_recs );
+        my $cnt1 = printRecordsWithKoEc( "Homolog", $tag, \@recs, \@ko_ec_recs );
         print end_form();
-        printStatusLine(
-"$cnt1 distinct hits loaded. ($count_h total homologs hits; $count_p KO hits)",
-            2
-        );
+        printStatusLine( "$cnt1 distinct hits loaded. ($count_h total homologs hits; $count_p KO hits)", 2 );
     } else {
         my $count = @recs;
         my $cnt1 = printRecords( "Homolog", $tag, \@recs );
@@ -1036,9 +1033,7 @@ sub printHomologCandidates {
 # getGeneHomologs - Get list of homologs for gene_oid
 ############################################################################
 sub getGeneHomologs {
-    my ( $dbh, $gene_oid, $taxon_oid1, $taxon_oid2, $minPercIdent, $maxEvalue,
-         $maxHits, $recs_ref )
-      = @_;
+    my ( $dbh, $gene_oid, $taxon_oid1, $taxon_oid2, $minPercIdent, $maxEvalue, $maxHits, $recs_ref ) = @_;
 
     my $taxon_name = taxonOid2Name( $dbh, $taxon_oid2 );
 
@@ -1058,42 +1053,39 @@ sub getGeneHomologs {
     }
     $cur->finish();
 
-#    my $fpath =
-#      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
-#    if ( -e $fpath ) {
-#
-#        # fine
-#    } else {
-#        print "0 hits found for <i>" . escHtml($taxon_name) . "</i>";
-#        print "<br/>\n";
-#        return;
-#    }
+    #    my $fpath =
+    #      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
+    #    if ( -e $fpath ) {
+    #
+    #        # fine
+    #    } else {
+    #        print "0 hits found for <i>" . escHtml($taxon_name) . "</i>";
+    #        print "<br/>\n";
+    #        return;
+    #    }
 
-#    my $rfh = newReadGzFileHandle( $fpath, "getGeneHomologs" );
-#    if ( !$rfh ) {
-#
-#        # print "Error: File $fpath does not exist.\n<br/>\n";
-#        return;
-#    }
+    #    my $rfh = newReadGzFileHandle( $fpath, "getGeneHomologs" );
+    #    if ( !$rfh ) {
+    #
+    #        # print "Error: File $fpath does not exist.\n<br/>\n";
+    #        return;
+    #    }
 
     my @recs;
     my $count = 0;
-#    while ( my $s = $rfh->getline() ) {
-#        chomp $s;
+
+    #    while ( my $s = $rfh->getline() ) {
+    #        chomp $s;
     my @rows;
     TaxonTarDir::getGenomePairData( $taxon_oid1, $taxon_oid2, \@rows );
     my $nRows = @rows;
-    if( $nRows == 0 ) {
-        print "0 hits found for <i>" . escHtml( $taxon_name ) . "</i><br/>\n";
-	return;
+    if ( $nRows == 0 ) {
+        print "0 hits found for <i>" . escHtml($taxon_name) . "</i><br/>\n";
+        return;
     }
-    for my $s( @rows ) {
-        my (
-             $qid,       $sid,   $percIdent, $alen,
-             $nMisMatch, $nGaps, $qstart,    $qend,
-             $sstart,    $send,  $evalue,    $bitScore
-          )
-          = split( /\t/, $s );
+    for my $s (@rows) {
+        my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
+          split( /\t/, $s );
         next if $evalue > $maxEvalue;
         next if $percIdent < $minPercIdent;
         my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
@@ -1134,9 +1126,9 @@ sub getGeneHomologs {
 	    and g.taxon = tx.taxon_oid
 	    };
         my $cur = execSql( $dbh, $sql, $verbose, $sgene_oid );
-        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2,
-             $seq_status2, $term_oid2, $term2 )
-          = $cur->fetchrow();
+        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2, $seq_status2, $term_oid2, $term2 ) =
+          $cur->fetchrow();
+
         #$cur->finish();
         my $nRecs = @$recs_ref;
         if ( $nRecs > $maxHits ) {
@@ -1165,7 +1157,8 @@ sub getGeneHomologs {
         $r .= "$send\t";
         push( @$recs_ref, $r );
     }
-#    $rfh->close();
+
+    #    $rfh->close();
     print "<font color='red'>" if $count > 0;
     print "$count hits found for <i>" . escHtml($taxon_name) . "</i>";
     print "</font>" if $count > 0;
@@ -1191,19 +1184,18 @@ sub printSimRecords {
     }
     my $it = new InnerTable( 0, "missingGenes$$", "missingGenes", 12 );
     $it->addColSpec("Select");
-    $it->addColSpec( "$ortho_homo Gene",     "number asc",  "left" );
-    $it->addColSpec( "IMG Term OID",         "number asc",  "left" );
-    $it->addColSpec( "IMG Term",             "char asc",    "left" );
-    $it->addColSpec( "Domain",               "char asc",    "center", "",
-		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
-    $it->addColSpec( "Status",               "char asc", "center", "",
-		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
-    $it->addColSpec( "Genome",               "char asc",    "left" );
+    $it->addColSpec( "$ortho_homo Gene", "number asc", "left" );
+    $it->addColSpec( "IMG Term OID",     "number asc", "left" );
+    $it->addColSpec( "IMG Term",         "char asc",   "left" );
+    $it->addColSpec( "Domain", "char asc", "center", "",
+        "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "char asc", "center", "", "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome", "char asc", "left" );
     $it->addColSpec( "Percent<br/>Identity", "number desc", "right" );
-    $it->addColSpec( "Alignment<br/>On<br/>Candidate");
-    $it->addColSpec( "Alignment<br/>On<br/>$ortho_homo");
-    $it->addColSpec( "E-value",              "number asc",  "left" );
-    $it->addColSpec( "Bit<br/>Score",        "number desc", "right" );
+    $it->addColSpec("Alignment<br/>On<br/>Candidate");
+    $it->addColSpec("Alignment<br/>On<br/>$ortho_homo");
+    $it->addColSpec( "E-value",       "number asc",  "left" );
+    $it->addColSpec( "Bit<br/>Score", "number desc", "right" );
     my $sd  = $it->getSdDelim();
     my $cnt = 0;
     my $dbh = dbLogin();
@@ -1217,17 +1209,12 @@ sub printSimRecords {
     if ($get_top_n) {
         for my $r0 (@$recs_ref) {
             my (
-                 $gene_oid1,        $gene_oid2,   $taxon_oid2,
-                 $percent_identity, $query_start, $query_end,
-                 $subj_start,       $subj_end,    $evalue,
-                 $bit_score,        $align_length
-              )
-              = split( /\t/, $r0 );
+                $gene_oid1,  $gene_oid2, $taxon_oid2, $percent_identity, $query_start, $query_end,
+                $subj_start, $subj_end,  $evalue,     $bit_score,        $align_length
+            ) = split( /\t/, $r0 );
             next if $gene_oid1 == $gene_oid2;
 
-            my $term_cnt =
-              db_findCount( $dbh, 'gene_img_functions',
-                            "gene_oid = ?", $gene_oid2 );
+            my $term_cnt = db_findCount( $dbh, 'gene_img_functions', "gene_oid = ?", $gene_oid2 );
             if ( $term_cnt == 0 ) {
 
                 # gene has no terms
@@ -1257,22 +1244,18 @@ sub printSimRecords {
     $cnt = 0;
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,        $gene_oid2,   $taxon_oid2,
-             $percent_identity, $query_start, $query_end,
-             $subj_start,       $subj_end,    $evalue,
-             $bit_score,        $align_length
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,  $gene_oid2, $taxon_oid2, $percent_identity, $query_start, $query_end,
+            $subj_start, $subj_end,  $evalue,     $bit_score,        $align_length
+        ) = split( /\t/, $r0 );
         next if $gene_oid1 == $gene_oid2;
 
         if ( $get_top_n && $bit_score < $min_score ) {
             next;
         }
 
-        my @term_oids =
-          db_findSetVal( $dbh, 'gene_img_functions', 'gene_oid', $gene_oid2,
-                         'function', '' );
+        my @term_oids = db_findSetVal( $dbh, 'gene_img_functions', 'gene_oid', $gene_oid2, 'function', '' );
         if ( scalar(@term_oids) == 0 ) {
+
             # gene has no terms
             next;
         }
@@ -1293,37 +1276,34 @@ sub printSimRecords {
 
         $percent_identity = sprintf( "%.2f", $percent_identity );
         $evalue           = sprintf( "%.2e", $evalue );
-        $domain2 = substr( $domain2, 0, 1 );
+        $domain2     = substr( $domain2,     0, 1 );
         $seq_status2 = substr( $seq_status2, 0, 1 );
         $bit_score = sprintf( "%d", $bit_score );
         my $sel_type = 'checkbox';
         my $r;
         $r .=
-            "$sd<input type='"
-          . $sel_type
-          . "' name='gene_oid_hit' "
-          . "value='$gene_oid1,$gene_oid2,$all_term_oids' />\t";
+          "$sd<input type='" . $sel_type . "' name='gene_oid_hit' " . "value='$gene_oid1,$gene_oid2,$all_term_oids' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$gene_oid2";
-        $r   .= $gene_oid2 . $sd . alink( $url, $gene_oid2 ) . "\t";
+        $r .= $gene_oid2 . $sd . alink( $url, $gene_oid2 ) . "\t";
+
         # term oid and terms
         my $cell_sort    = "";
         my $cell_display = "";
-        my $term_names    = "";
+        my $term_names   = "";
         for my $term_oid2 (@term_oids) {
             $term_oid2 = FuncUtil::termOidPadded($term_oid2);
-            my $url2   = FuncUtil::getUrl( $main_cgi, 'IMG_TERM', $term_oid2 );
-            $cell_sort    .= $term_oid2;
-            $cell_display .= ", " if ($cell_display ne "");
+            my $url2 = FuncUtil::getUrl( $main_cgi, 'IMG_TERM', $term_oid2 );
+            $cell_sort .= $term_oid2;
+            $cell_display .= ", " if ( $cell_display ne "" );
             $cell_display .= alink( $url2, $term_oid2 );
 
             my $t2;
             if ( $term_h{$term_oid2} ) {
                 $t2 = $term_h{$term_oid2};
             } else {
-                $t2 = db_findVal( $dbh, 'img_term', 'term_oid', 
-                         $term_oid2, 'term', '' );
+                $t2 = db_findVal( $dbh, 'img_term', 'term_oid', $term_oid2, 'term', '' );
                 $term_h{$term_oid2} = $t2;
             }
             if ( length($term_names) == 0 ) {
@@ -1343,8 +1323,7 @@ sub printSimRecords {
 		 and g.taxon = t.taxon_oid
 	     };
         my $cur2 = execSql( $dbh, $sql2, $verbose, $gene_oid2 );
-        my ( $taxon_display_name2, $domain2, $seq_status2 )
-	    = $cur2->fetchrow();
+        my ( $taxon_display_name2, $domain2, $seq_status2 ) = $cur2->fetchrow();
 
         $r .= "$domain2\t";
         $r .= "$seq_status2\t";
@@ -1354,16 +1333,12 @@ sub printSimRecords {
 
         my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail";
         $url .= "&taxon_oid=$taxon_oid2";
-        $r   .=
-          $taxon_display_name2 . $sd
-          . alink( $url, $taxon_display_name2 ) . "\t";
+        $r .= $taxon_display_name2 . $sd . alink( $url, $taxon_display_name2 ) . "\t";
 
         $r .= "$percent_identity\t";
 
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
-        $r .=
-          $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        $r .= $sd . alignImage( $subj_start,  $subj_end,  $aa_seq_length2 ) . "\t";
 
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
@@ -1384,9 +1359,9 @@ sub printSimRecords {
     my $contact_oid = getContactOid();
     if ( canEditGeneTerm( $dbh, $contact_oid ) ) {
         print submit(
-                      -name  => $name,
-                      -value => "Add Term to Candidate Gene",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add Term to Candidate Gene",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     }
@@ -1415,7 +1390,7 @@ sub printSimGeneTermAssocForm {
     for my $hit (@gene_oid_hits) {
         my ( $gene_oid1, $gene_oid2, @term_arr ) = split( /,/, $hit );
         for my $term_oid2 (@term_arr) {
-            if ( ! WebUtil::inIntArray( $term_oid2, @term_oids ) ) {
+            if ( !WebUtil::inIntArray( $term_oid2, @term_oids ) ) {
                 push @term_oids, ($term_oid2);
             }
         }
@@ -1435,9 +1410,7 @@ sub printSimGeneTermAssocForm {
 
     my $dbh = dbLogin();
 
-    my $product_name =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name',
-                  '' );
+    my $product_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
     print "<h3>Candidate Gene: " . escapeHTML($product_name) . "</h3>\n";
 
     # get IMG terms for gene_oid
@@ -1453,9 +1426,7 @@ sub printSimGeneTermAssocForm {
     if ( $geneTerms{$gene_oid} ) {
         $replace_opt = " ";
     }
-    print "  <input type='radio' name='$ar_name' value='replace' "
-      . $replace_opt
-      . "/>Replace\n";
+    print "  <input type='radio' name='$ar_name' value='replace' " . $replace_opt . "/>Replace\n";
     print "</p>\n";
 
     # get all cell_loc values
@@ -1523,9 +1494,7 @@ sub printSimGeneTermAssocForm {
         my $tax_display_name = taxonOid2Name( $dbh, $tax_oid );
         my $desc             = geneOid2Name( $dbh, $gene_oid );
 
-        my $url =
-            "$main_cgi?section=GeneDetail"
-          . "&page=geneDetail&gene_oid=$gene_oid";
+        my $url = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene_oid";
         print "<td class='img'>" . alink( $url, $gene_oid ) . "</td>\n";
         print "<td class='img'>" . escapeHTML($desc) . "</td>\n";
         print "<td class='img'>" . escapeHTML($tax_display_name) . "</td>\n";
@@ -1540,9 +1509,7 @@ sub printSimGeneTermAssocForm {
         # print new IMG term
         my $new_term = termOid2Term( $dbh, $term_oid );
 
-        print "<td class='img'>(OID: $term_oid) "
-          . escapeHTML($new_term)
-          . "</td>\n";
+        print "<td class='img'>(OID: $term_oid) " . escapeHTML($new_term) . "</td>\n";
 
         # print evidence
         my $ev_name = "ev_" . $gene_oid;
@@ -1558,8 +1525,7 @@ sub printSimGeneTermAssocForm {
         # print confidence
         my $cm_name = "cm_" . $gene_oid;
         print "<td class='img'>\n";
-        print
-          "  <input type='text' name='$cm_name' size='20' maxLength='255'/>\n";
+        print "  <input type='text' name='$cm_name' size='20' maxLength='255'/>\n";
         print "</td>\n";
 
         # cell_loc
@@ -1577,14 +1543,16 @@ sub printSimGeneTermAssocForm {
     print "</table>\n";
 
     print "</p>\n";
-    printHint("Click '<u>Update Database</u>' to save your change(s) to the database. Only selected gene-term associations will be updated.\n");
+    printHint(
+"Click '<u>Update Database</u>' to save your change(s) to the database. Only selected gene-term associations will be updated.\n"
+    );
 
     print "</p>\n";
     my $name = "_section_${section}_dbUpdateSimGeneTerm";
     print submit(
-                  -name  => $name,
-                  -value => "Update Database",
-                  -class => "meddefbutton"
+        -name  => $name,
+        -value => "Update Database",
+        -class => "meddefbutton"
     );
     print nbsp(1);
     print reset( -class => "medbutton" );
@@ -1597,28 +1565,26 @@ sub printSimGeneTermAssocForm {
 # getHomologs - Get list of homologs between pairs of taxons.
 ############################################################################
 sub getHomologs {
-    my ( $dbh, $taxon_oid1, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue,
-         $maxHits, $recs_ref )
-      = @_;
+    my ( $dbh, $taxon_oid1, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue, $maxHits, $recs_ref ) = @_;
     my ( $tag, $term_oid ) = split( /:/, $funcId );
 
     my $taxon_name = taxonOid2Name( $dbh, $taxon_oid2 );
 
-#    my $sql = qq{
-#        select gif.gene_oid
-#	from gene_img_functions gif, gene g
-#	where gif.function = ?
-#	and gif.gene_oid = g.gene_oid
-#	and g.taxon = ?
-#    };
-#    my %queryGeneHasTerm;
-#    my $cur = execSql( $dbh, $sql, $verbose, $term_oid, $taxon_oid1 );
-#    for ( ; ; ) {
-#        my ($gene_oid) = $cur->fetchrow();
-#        last if !$gene_oid;
-#        $queryGeneHasTerm{$gene_oid} = 1;
-#    }
-#    $cur->finish();
+    #    my $sql = qq{
+    #        select gif.gene_oid
+    #	from gene_img_functions gif, gene g
+    #	where gif.function = ?
+    #	and gif.gene_oid = g.gene_oid
+    #	and g.taxon = ?
+    #    };
+    #    my %queryGeneHasTerm;
+    #    my $cur = execSql( $dbh, $sql, $verbose, $term_oid, $taxon_oid1 );
+    #    for ( ; ; ) {
+    #        my ($gene_oid) = $cur->fetchrow();
+    #        last if !$gene_oid;
+    #        $queryGeneHasTerm{$gene_oid} = 1;
+    #    }
+    #    $cur->finish();
 
     my $sql = qq{
         select gif.gene_oid
@@ -1637,41 +1603,38 @@ sub getHomologs {
     }
     $cur->finish();
 
-#    my $fpath =
-#      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
-#    if ( -e $fpath ) {
-#
-#        # fine
-#    } else {
-#
-#        # print "Error: File $fpath does not exist.\n<br/>\n";
-#        return;
-#    }
-#
-#    my $rfh = newReadGzFileHandle( $fpath, "getHomologs" );
-#    if ( !$rfh ) {
-#
-#        # print "Error: File $fpath does not exist.\n<br/>\n";
-#        return;
-#    }
+    #    my $fpath =
+    #      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
+    #    if ( -e $fpath ) {
+    #
+    #        # fine
+    #    } else {
+    #
+    #        # print "Error: File $fpath does not exist.\n<br/>\n";
+    #        return;
+    #    }
+    #
+    #    my $rfh = newReadGzFileHandle( $fpath, "getHomologs" );
+    #    if ( !$rfh ) {
+    #
+    #        # print "Error: File $fpath does not exist.\n<br/>\n";
+    #        return;
+    #    }
 
     my @recs;
     my $count = 0;
-#    while ( my $s = $rfh->getline() ) {
-#        chomp $s;
+
+    #    while ( my $s = $rfh->getline() ) {
+    #        chomp $s;
     my @rows;
     TaxonTarDir::getGenomePairData( $taxon_oid1, $taxon_oid2, \@rows );
     my $nRows = @rows;
-    if( $nRows == 0 ) {
-	return;
+    if ( $nRows == 0 ) {
+        return;
     }
-    for my $s( @rows ) {
-        my (
-             $qid,       $sid,   $percIdent, $alen,
-             $nMisMatch, $nGaps, $qstart,    $qend,
-             $sstart,    $send,  $evalue,    $bitScore
-          )
-          = split( /\t/, $s );
+    for my $s (@rows) {
+        my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
+          split( /\t/, $s );
         next if $evalue > $maxEvalue;
         next if $percIdent < $minPercIdent;
         my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
@@ -1680,8 +1643,7 @@ sub getHomologs {
         #next if $queryGeneHasTerm{ $qgene_oid };
         next if !$subjGeneHasTerm{$sgene_oid};
         next
-          if !reciprocalHit( $taxon_oid2, $sid, $taxon_oid1, $qid,
-                             $minPercIdent, $maxEvalue );
+          if !reciprocalHit( $taxon_oid2, $sid, $taxon_oid1, $qid, $minPercIdent, $maxEvalue );
         $count++;
         my $sql = qq{
 	    select g.gene_display_name
@@ -1690,6 +1652,7 @@ sub getHomologs {
 	    };
         my $cur = execSql( $dbh, $sql, $verbose, $qgene_oid );
         my ($gene_display_name1) = $cur->fetchrow();
+
         #$cur->finish();
 
         #
@@ -1704,9 +1667,8 @@ sub getHomologs {
     	    and g.taxon = tx.taxon_oid
 	    };
         my $cur = execSql( $dbh, $sql, $verbose, $sgene_oid );
-        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2,
-             $seq_status2, $term2 )
-          = $cur->fetchrow();
+        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2, $seq_status2, $term2 ) = $cur->fetchrow();
+
         #$cur->finish();
         my $nRecs = @$recs_ref;
         if ( $nRecs > $maxHits ) {
@@ -1734,7 +1696,8 @@ sub getHomologs {
         $r .= "$send\t";
         push( @$recs_ref, $r );
     }
-#    $rfh->close();
+
+    #    $rfh->close();
     print "<font color='red'>" if $count > 0;
     print "$count hits found for <i>" . escHtml($taxon_name) . "</i>";
     print "</font>" if $count > 0;
@@ -1746,28 +1709,26 @@ sub getHomologs {
 #                  (based on gene-enzyme)
 ############################################################################
 sub getHomologs_EC {
-    my ( $dbh, $taxon_oid1, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue,
-         $maxHits, $recs_ref )
-      = @_;
+    my ( $dbh, $taxon_oid1, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue, $maxHits, $recs_ref ) = @_;
     my ( $tag, $term_oid ) = split( /:/, $funcId );
 
     my $taxon_name = taxonOid2Name( $dbh, $taxon_oid2 );
 
-#    my $sql = qq{
-#        select ge.gene_oid
-#	from gene_ko_enzymes ge, gene g
-#	where ge.enzymes = ?
-#	and ge.gene_oid = g.gene_oid
-#	and g.taxon = ?
-#    };
-#    my %queryGeneHasEnzyme;
-#    my $cur = execSql( $dbh, $sql, $verbose, $funcId, $taxon_oid1 );
-#    for ( ; ; ) {
-#        my ($gene_oid) = $cur->fetchrow();
-#        last if !$gene_oid;
-#        $queryGeneHasEnzyme{$gene_oid} = 1;
-#    }
-#    $cur->finish();
+    #    my $sql = qq{
+    #        select ge.gene_oid
+    #	from gene_ko_enzymes ge, gene g
+    #	where ge.enzymes = ?
+    #	and ge.gene_oid = g.gene_oid
+    #	and g.taxon = ?
+    #    };
+    #    my %queryGeneHasEnzyme;
+    #    my $cur = execSql( $dbh, $sql, $verbose, $funcId, $taxon_oid1 );
+    #    for ( ; ; ) {
+    #        my ($gene_oid) = $cur->fetchrow();
+    #        last if !$gene_oid;
+    #        $queryGeneHasEnzyme{$gene_oid} = 1;
+    #    }
+    #    $cur->finish();
 
     my $sql = qq{
         select ge.gene_oid
@@ -1788,43 +1749,40 @@ sub getHomologs_EC {
     }
     $cur->finish();
 
-#    my $fpath =
-#      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
-#    if ( -e $fpath ) {
-#
-#        # fine
-#    } else {
-#
-#        # print "Error: File $fpath does not exist.\n<br/>\n";
-#        return;
-#    }
-#
-#    my $rfh = newReadGzFileHandle( $fpath, "getHomologs_EC" );
-#    if ( !$rfh ) {
-#
-#        # print "Error: File $fpath does not exist.\n<br/>\n";
-#        return;
-#    }
+    #    my $fpath =
+    #      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
+    #    if ( -e $fpath ) {
+    #
+    #        # fine
+    #    } else {
+    #
+    #        # print "Error: File $fpath does not exist.\n<br/>\n";
+    #        return;
+    #    }
+    #
+    #    my $rfh = newReadGzFileHandle( $fpath, "getHomologs_EC" );
+    #    if ( !$rfh ) {
+    #
+    #        # print "Error: File $fpath does not exist.\n<br/>\n";
+    #        return;
+    #    }
 
     my @recs;
     my $count = 0;
-#    while ( my $s = $rfh->getline() ) {
-#        chomp $s;
+
+    #    while ( my $s = $rfh->getline() ) {
+    #        chomp $s;
     my @rows;
 
     TaxonTarDir::getGenomePairData( $taxon_oid1, $taxon_oid2, \@rows );
 
     my $nRows = @rows;
-    if( $nRows == 0 ) {
-	return;
+    if ( $nRows == 0 ) {
+        return;
     }
-    for my $s( @rows ) {
-        my (
-             $qid,       $sid,   $percIdent, $alen,
-             $nMisMatch, $nGaps, $qstart,    $qend,
-             $sstart,    $send,  $evalue,    $bitScore
-          )
-          = split( /\t/, $s );
+    for my $s (@rows) {
+        my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
+          split( /\t/, $s );
         next if $evalue > $maxEvalue;
         next if $percIdent < $minPercIdent;
         my ( $qgene_oid, $qtaxon, $qlen ) = split( /_/, $qid );
@@ -1833,8 +1791,7 @@ sub getHomologs_EC {
         #next if $queryGeneHasEnzyme{ $qgene_oid };
         next if !$subjGeneHasEnzyme{$sgene_oid};
         next
-          if !reciprocalHit( $taxon_oid2, $sid, $taxon_oid1, $qid,
-                             $minPercIdent, $maxEvalue );
+          if !reciprocalHit( $taxon_oid2, $sid, $taxon_oid1, $qid, $minPercIdent, $maxEvalue );
         $count++;
         my $sql = qq{
 	    select g.gene_display_name
@@ -1843,6 +1800,7 @@ sub getHomologs_EC {
 	    };
         my $cur = execSql( $dbh, $sql, $verbose, $qgene_oid );
         my ($gene_display_name1) = $cur->fetchrow();
+
         #$cur->finish();
 
         #
@@ -1857,9 +1815,8 @@ sub getHomologs_EC {
 	    and g.taxon = tx.taxon_oid
 	    };
         my $cur = execSql( $dbh, $sql, $verbose, $sgene_oid );
-        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2,
-             $seq_status2, $term2 )
-          = $cur->fetchrow();
+        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2, $seq_status2, $term2 ) = $cur->fetchrow();
+
         #$cur->finish();
         my $nRecs = @$recs_ref;
         if ( $nRecs > $maxHits ) {
@@ -1887,6 +1844,7 @@ sub getHomologs_EC {
         $r .= "$send\t";
         push( @$recs_ref, $r );
     }
+
     #$rfh->close();
     print "<font color='red'>" if $count > 0;
     print "$count hits found for <i>" . escHtml($taxon_name) . "</i>";
@@ -1899,9 +1857,7 @@ sub getHomologs_EC {
 #                  (based on gene-ko)
 ############################################################################
 sub getHomologs_KO {
-    my ( $dbh, $taxon_oid1, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue,
-         $maxHits, $recs_ref )
-      = @_;
+    my ( $dbh, $taxon_oid1, $taxon_oid2, $funcId, $minPercIdent, $maxEvalue, $maxHits, $recs_ref ) = @_;
     my ( $tag, $term_oid ) = split( /:/, $funcId );
 
     my $taxon_name = taxonOid2Name( $dbh, $taxon_oid2 );
@@ -1932,16 +1888,12 @@ sub getHomologs_KO {
     TaxonTarDir::getGenomePairData( $taxon_oid1, $taxon_oid2, \@rows );
 
     my $nRows = @rows;
-    if( $nRows == 0 ) {
-	return;
+    if ( $nRows == 0 ) {
+        return;
     }
-    for my $s( @rows ) {
-        my (
-             $qid,       $sid,   $percIdent, $alen,
-             $nMisMatch, $nGaps, $qstart,    $qend,
-             $sstart,    $send,  $evalue,    $bitScore
-          )
-          = split( /\t/, $s );
+    for my $s (@rows) {
+        my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
+          split( /\t/, $s );
         next if $evalue > $maxEvalue;
         next if $percIdent < $minPercIdent;
 
@@ -1950,8 +1902,7 @@ sub getHomologs_KO {
 
         next if !$subjGeneHasKo{$sgene_oid};
         next
-          if !reciprocalHit( $taxon_oid2, $sid, $taxon_oid1, $qid,
-                             $minPercIdent, $maxEvalue );
+          if !reciprocalHit( $taxon_oid2, $sid, $taxon_oid1, $qid, $minPercIdent, $maxEvalue );
         $count++;
         my $sql = qq{
 	    select g.gene_display_name
@@ -1960,6 +1911,7 @@ sub getHomologs_KO {
 	    };
         my $cur = execSql( $dbh, $sql, $verbose, $qgene_oid );
         my ($gene_display_name1) = $cur->fetchrow();
+
         #$cur->finish();
 
         #
@@ -1974,9 +1926,8 @@ sub getHomologs_KO {
 	    and g.taxon = tx.taxon_oid
 	    };
         my $cur = execSql( $dbh, $sql, $verbose, $sgene_oid );
-        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2,
-             $seq_status2, $term2 )
-          = $cur->fetchrow();
+        my ( $gene_display_name2, $taxon_oid2, $taxon_display_name2, $domain2, $seq_status2, $term2 ) = $cur->fetchrow();
+
         #$cur->finish();
         my $nRecs = @$recs_ref;
         if ( $nRecs > $maxHits ) {
@@ -2004,6 +1955,7 @@ sub getHomologs_KO {
         $r .= "$send\t";
         push( @$recs_ref, $r );
     }
+
     #$rfh->close();
     print "<font color='red'>" if $count > 0;
     print "$count hits found for <i>" . escHtml($taxon_name) . "</i>";
@@ -2015,55 +1967,50 @@ sub getHomologs_KO {
 # reciprocalHit - Check for reciprocal hit.
 ############################################################################
 sub reciprocalHit {
-    my (
-         $taxon_oid1, $gene_lid1,    $taxon_oid2,
-         $gene_lid2,  $minPercIdent, $maxEvalue
-      )
-      = @_;
+    my ( $taxon_oid1, $gene_lid1, $taxon_oid2, $gene_lid2, $minPercIdent, $maxEvalue ) = @_;
 
-#    my $fpath =
-#      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
-#    if ( -e $fpath ) {
-#
-#        # fine
-#    } else {
-#
-#        # print "Error: File $fpath does not exist.\n<br/>\n";
-#        return;
-#    }
-#
-#    my $rfh = newReadGzFileHandle( $fpath, "getHomologs" );
-#    if ( !$rfh ) {
-#
-#        # print "Error: File $fpath does not exist.\n<br/>\n";
-#        return;
-#    }
+    #    my $fpath =
+    #      "$avagz_batch_dir/" . "$taxon_oid1/$taxon_oid1-$taxon_oid2.m8.txt.gz";
+    #    if ( -e $fpath ) {
+    #
+    #        # fine
+    #    } else {
+    #
+    #        # print "Error: File $fpath does not exist.\n<br/>\n";
+    #        return;
+    #    }
+    #
+    #    my $rfh = newReadGzFileHandle( $fpath, "getHomologs" );
+    #    if ( !$rfh ) {
+    #
+    #        # print "Error: File $fpath does not exist.\n<br/>\n";
+    #        return;
+    #    }
 
     my @recs;
     my $count = 0;
-#    while ( my $s = $rfh->getline() ) {
-#        chomp $s;
+
+    #    while ( my $s = $rfh->getline() ) {
+    #        chomp $s;
     my @rows;
     TaxonTarDir::getGenomePairData( $taxon_oid1, $taxon_oid2, \@rows );
     my $nRows = @rows;
-    if( $nRows == 0 ) {
-	return;
+    if ( $nRows == 0 ) {
+        return;
     }
-    for my $s( @rows ) {
-        my (
-             $qid,       $sid,   $percIdent, $alen,
-             $nMisMatch, $nGaps, $qstart,    $qend,
-             $sstart,    $send,  $evalue,    $bitScore
-          )
-          = split( /\t/, $s );
+    for my $s (@rows) {
+        my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
+          split( /\t/, $s );
         next if $percIdent < $minPercIdent;
         next if $evalue > $maxEvalue;
         if ( $qid eq $gene_lid1 && $sid eq $gene_lid2 ) {
             webLog("Reciprocal hit found for $qid-$sid\n");
+
             #$rfh->close();
             return 1;
         }
     }
+
     #$rfh->close();
     return 0;
 }
@@ -2088,18 +2035,16 @@ sub printRecords {
     if ( $tag eq 'EC' ) {
         $it->addColSpec( "Enzyme for Candidate Gene", "char asc", "left" );
     }
-    $it->addColSpec( "$ortho_homo Gene", "number asc", "left" );
-    $it->addColSpec( "$ortho_homo Gene Product<br/>(IMG Term)",
-                     "char asc", "left" );
+    $it->addColSpec( "$ortho_homo Gene",                        "number asc", "left" );
+    $it->addColSpec( "$ortho_homo Gene Product<br/>(IMG Term)", "char asc",   "left" );
     if ( $tag eq 'EC' ) {
         $it->addColSpec( "Enzyme for $ortho_homo Gene", "char asc", "left" );
     }
 
-    $it->addColSpec( "Domain",               "char asc",    "center", "",
-		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
-    $it->addColSpec( "Status",               "char asc",    "center", "",
-		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
-    $it->addColSpec( "Genome",               "char asc",    "left" );
+    $it->addColSpec( "Domain", "char asc", "center", "",
+        "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "char asc", "center", "", "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome", "char asc", "left" );
     $it->addColSpec( "Percent<br/>Identity", "number desc", "right" );
     $it->addColSpec("Alignment<br/>On<br/>Candidate");
     $it->addColSpec("Alignment<br/>On<br/>$ortho_homo");
@@ -2112,14 +2057,11 @@ sub printRecords {
     my %gene_score;
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
-             $gene_oid2,   $gene_display_name2,  $aa_seq_length2,
-             $taxon_oid2,  $taxon_display_name2, $domain2,
-             $seq_status2, $percent_identity,    $bit_score,
-             $evalue,      $query_start,         $query_end,
-             $subj_start,  $subj_end
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1,      $gene_oid2,   $gene_display_name2,
+            $aa_seq_length2,   $taxon_oid2,         $taxon_display_name2, $domain2,     $seq_status2,
+            $percent_identity, $bit_score,          $evalue,              $query_start, $query_end,
+            $subj_start,       $subj_end
+        ) = split( /\t/, $r0 );
         if ( $gene_score{$gene_oid1} ) {
 
             # already has some hit. compare.
@@ -2142,14 +2084,11 @@ sub printRecords {
     my $dbh = dbLogin();
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
-             $gene_oid2,   $gene_display_name2,  $aa_seq_length2,
-             $taxon_oid2,  $taxon_display_name2, $domain2,
-             $seq_status2, $percent_identity,    $bit_score,
-             $evalue,      $query_start,         $query_end,
-             $subj_start,  $subj_end
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1,      $gene_oid2,   $gene_display_name2,
+            $aa_seq_length2,   $taxon_oid2,         $taxon_display_name2, $domain2,     $seq_status2,
+            $percent_identity, $bit_score,          $evalue,              $query_start, $query_end,
+            $subj_start,       $subj_end
+        ) = split( /\t/, $r0 );
 
         if ( $gene_score{$gene_oid1} ) {
             my ( $g2, $score2 ) = split( /,/, $gene_score{$gene_oid1} );
@@ -2171,13 +2110,11 @@ sub printRecords {
 
         $percent_identity = sprintf( "%.2f", $percent_identity );
         $evalue           = sprintf( "%.2e", $evalue );
-        $domain2 = substr( $domain2, 0, 1 );
+        $domain2     = substr( $domain2,     0, 1 );
         $seq_status2 = substr( $seq_status2, 0, 1 );
         $bit_score = sprintf( "%d", $bit_score );
         my $r;
-        $r .=
-            "$sd<input type='checkbox' name='gene_oid_hit' "
-          . "value='$gene_oid1,$gene_oid2' />\t";
+        $r .= "$sd<input type='checkbox' name='gene_oid_hit' " . "value='$gene_oid1,$gene_oid2' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$gene_oid1";
@@ -2203,22 +2140,18 @@ sub printRecords {
         $r .= "$seq_status2\t";
         my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail";
         $url .= "&taxon_oid=$taxon_oid2";
-        $r   .=
-          $taxon_display_name2 . $sd
-          . alink( $url, $taxon_display_name2 ) . "\t";
+        $r .= $taxon_display_name2 . $sd . alink( $url, $taxon_display_name2 ) . "\t";
 
         $r .= "$percent_identity\t";
 
-	if ( ! $aa_seq_length1 && isInt($gene_oid1)) {
-	    $aa_seq_length1 = geneOid2AASeqLength($dbh, $gene_oid1);
-	}
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
-	if ( ! $aa_seq_length2 && isInt($gene_oid2)) {
-	    $aa_seq_length2 = geneOid2AASeqLength($dbh, $gene_oid2);
-	}
-        $r .=
-          $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
+        if ( !$aa_seq_length1 && isInt($gene_oid1) ) {
+            $aa_seq_length1 = geneOid2AASeqLength( $dbh, $gene_oid1 );
+        }
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        if ( !$aa_seq_length2 && isInt($gene_oid2) ) {
+            $aa_seq_length2 = geneOid2AASeqLength( $dbh, $gene_oid2 );
+        }
+        $r .= $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
 
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
@@ -2239,22 +2172,22 @@ sub printRecords {
     my $dbh         = dbLogin();
     my $contact_oid = getContactOid();
     if ( $tag eq 'ITERM'
-         && canEditGeneTerm( $dbh, $contact_oid ) )
+        && canEditGeneTerm( $dbh, $contact_oid ) )
     {
         my $name = "_section_${section}_addAssoc";
         print submit(
-                      -name  => $name,
-                      -value => "Add Term to Candidate Gene(s)",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add Term to Candidate Gene(s)",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
         print "\n";
     } elsif ( $tag eq 'EC' && $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_addMyImgEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
         print "\n";
@@ -2262,9 +2195,9 @@ sub printRecords {
 
     my $name = "_section_${section}_addToGeneCart2";
     print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
     print "\n";
@@ -2284,10 +2217,9 @@ sub printGenePriamList {
 
     print "<h1>Candidate Enzymes Using PRIAM</h1>\n";
 
-    my $dbh          = dbLogin();
-    my $product_name =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name',
-                  '' );
+    my $dbh = dbLogin();
+    my $product_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
+
     #$dbh->disconnect();
     print "<h3>Gene ($gene_oid): " . escapeHTML($product_name) . "</h3>\n";
 
@@ -2332,6 +2264,7 @@ sub printPriamCandidateList {
     if ( $tag eq 'EC' ) {
         $func_name = enzymeName( $dbh, $funcId );
     } else {
+
         #$dbh->disconnect();
         webError("This function is only applicable to enzymes.");
         return;
@@ -2414,12 +2347,10 @@ sub printPriamRecords {
 
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,    $gene_display_name1, $aa_seq_length1,
-             $align_length, $percent_identity,   $bit_score,
-             $evalue,       $query_start,        $query_end,
-             $subj_start,   $subj_end
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1, $align_length,
+            $percent_identity, $bit_score,          $evalue,         $query_start,
+            $query_end,        $subj_start,         $subj_end
+        ) = split( /\t/, $r0 );
 
         $cnt++;
 
@@ -2427,9 +2358,7 @@ sub printPriamRecords {
         $evalue           = sprintf( "%.2e", $evalue );
         $bit_score        = sprintf( "%d",   $bit_score );
         my $r;
-        $r .=
-            "$sd<input type='checkbox' name='gene_oid_hit' "
-          . "value='$gene_oid1,$gene_oid1' />\t";
+        $r .= "$sd<input type='checkbox' name='gene_oid_hit' " . "value='$gene_oid1,$gene_oid1' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$gene_oid1";
@@ -2441,8 +2370,7 @@ sub printPriamRecords {
 
         $r .= "$percent_identity\t";
 
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
 
         # hide this one - align_length is not the correct seq length value
         # to use -- the length we need is not in database
@@ -2461,9 +2389,9 @@ sub printPriamRecords {
     if ( $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_addMyImgEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     }
@@ -2471,9 +2399,9 @@ sub printPriamRecords {
     # add to gene cart 3
     my $name = "_section_${section}_addToGeneCart3";
     print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
 
@@ -2508,72 +2436,72 @@ sub getPriamRecords {
     my ( $tag, $term_oid ) = split( /:/, $funcId );
 
     my @priam_recs;
-    return @priam_recs; # v4.0
+    return @priam_recs;    # v4.0
 
-#    my $dbh = dbLogin();
-#
-#    # priam
-#    my $taxonClause = "";
-#    my $sql         = qq{
-#	 select g1.gene_oid, g1.gene_display_name, g1.aa_seq_length,
-#	 gpe.align_length,
-#	 gpe.percent_identity, gpe.bit_score, gpe.evalue,
-#	 gpe.query_start, gpe.query_end, gpe.subj_start, gpe.subj_end
-#	     from gene g1, gene_priam_enzymes gpe
-#	     where g1.gene_oid = gpe.gene_oid
-#	     and g1.taxon = ?
-#	     and gpe.enzymes = ?
-#	     and gpe.percent_identity >= ?
-#	     and gpe.evalue <= ?
-#	     and gpe.bit_score >= ?
-#         $taxonClause
-#	 };
-#
-#    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, $funcId, $minPercIdent, $maxEvalue, $bitScore );
-#
-#    for ( ; ; ) {
-#        my (
-#             $gene_oid1,    $gene_display_name1, $aa_seq_length1,
-#             $align_length, $percent_identity,   $bit_score,
-#             $evalue,       $query_start,        $query_end,
-#             $subj_start,   $subj_end
-#          )
-#          = $cur->fetchrow();
-#        last if !$gene_oid1;
-#
-#        # check percent alignment
-#        if ( $aa_seq_length1 > 0 ) {
-#            my $qfrac =
-#              ( $query_end - $query_start + 1 ) * 100 / $aa_seq_length1;
-#            if ( $qfrac < $minPercAlign ) {
-#                next;
-#            }
-#        } else {
-#            next;
-#        }
-#
-#        # disregard fusion genes
-#        if ( isFusionGene($gene_oid1) ) {
-#            next;
-#        }
-#
-#        my $r;
-#        $r .= "$gene_oid1\t";
-#        $r .= "$gene_display_name1\t";
-#        $r .= "$aa_seq_length1\t";
-#        $r .= "$align_length\t";
-#        $r .= "$percent_identity\t";
-#        $r .= "$bit_score\t";
-#        $r .= "$evalue\t";
-#        $r .= "$query_start\t";
-#        $r .= "$query_end\t";
-#        $r .= "$subj_start\t";
-#        $r .= "$subj_end\t";
-#        push( @priam_recs, $r );
-#    }
-#    $cur->finish();
-#
-#    return @priam_recs;
+    #    my $dbh = dbLogin();
+    #
+    #    # priam
+    #    my $taxonClause = "";
+    #    my $sql         = qq{
+    #	 select g1.gene_oid, g1.gene_display_name, g1.aa_seq_length,
+    #	 gpe.align_length,
+    #	 gpe.percent_identity, gpe.bit_score, gpe.evalue,
+    #	 gpe.query_start, gpe.query_end, gpe.subj_start, gpe.subj_end
+    #	     from gene g1, gene_priam_enzymes gpe
+    #	     where g1.gene_oid = gpe.gene_oid
+    #	     and g1.taxon = ?
+    #	     and gpe.enzymes = ?
+    #	     and gpe.percent_identity >= ?
+    #	     and gpe.evalue <= ?
+    #	     and gpe.bit_score >= ?
+    #         $taxonClause
+    #	 };
+    #
+    #    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, $funcId, $minPercIdent, $maxEvalue, $bitScore );
+    #
+    #    for ( ; ; ) {
+    #        my (
+    #             $gene_oid1,    $gene_display_name1, $aa_seq_length1,
+    #             $align_length, $percent_identity,   $bit_score,
+    #             $evalue,       $query_start,        $query_end,
+    #             $subj_start,   $subj_end
+    #          )
+    #          = $cur->fetchrow();
+    #        last if !$gene_oid1;
+    #
+    #        # check percent alignment
+    #        if ( $aa_seq_length1 > 0 ) {
+    #            my $qfrac =
+    #              ( $query_end - $query_start + 1 ) * 100 / $aa_seq_length1;
+    #            if ( $qfrac < $minPercAlign ) {
+    #                next;
+    #            }
+    #        } else {
+    #            next;
+    #        }
+    #
+    #        # disregard fusion genes
+    #        if ( isFusionGene($gene_oid1) ) {
+    #            next;
+    #        }
+    #
+    #        my $r;
+    #        $r .= "$gene_oid1\t";
+    #        $r .= "$gene_display_name1\t";
+    #        $r .= "$aa_seq_length1\t";
+    #        $r .= "$align_length\t";
+    #        $r .= "$percent_identity\t";
+    #        $r .= "$bit_score\t";
+    #        $r .= "$evalue\t";
+    #        $r .= "$query_start\t";
+    #        $r .= "$query_end\t";
+    #        $r .= "$subj_start\t";
+    #        $r .= "$subj_end\t";
+    #        push( @priam_recs, $r );
+    #    }
+    #    $cur->finish();
+    #
+    #    return @priam_recs;
 }
 
 ############################################################################
@@ -2599,18 +2527,16 @@ sub printRecordsWithPriam {
     if ( $tag eq 'EC' ) {
         $it->addColSpec( "Enzyme for Candidate Gene", "char asc", "left" );
     }
-    $it->addColSpec( "$ortho_homo Gene", "number asc", "left" );
-    $it->addColSpec( "$ortho_homo Gene Product<br/>(IMG Term)",
-                     "char asc", "left" );
+    $it->addColSpec( "$ortho_homo Gene",                        "number asc", "left" );
+    $it->addColSpec( "$ortho_homo Gene Product<br/>(IMG Term)", "char asc",   "left" );
     if ( $tag eq 'EC' ) {
         $it->addColSpec( "Enzyme for $ortho_homo Gene", "char asc", "left" );
     }
 
-    $it->addColSpec( "Domain",               "char asc",    "center", "",
-		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
-    $it->addColSpec( "Status",               "char asc",     "center", "",
-		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
-    $it->addColSpec( "Genome",               "char asc",    "left" );
+    $it->addColSpec( "Domain", "char asc", "center", "",
+        "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "char asc", "center", "", "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome", "char asc", "left" );
     $it->addColSpec( "Percent<br/>Identity", "number desc", "right" );
     $it->addColSpec("Alignment<br/>On<br/>Candidate");
     $it->addColSpec("Alignment<br/>On<br/>$ortho_homo");
@@ -2629,14 +2555,12 @@ sub printRecordsWithPriam {
     my %priam_h;
     for my $r2 (@$priam_recs_ref) {
         my (
-             $gene_oid1,    $gene_display_name1, $aa_seq_length1,
-             $align_length, $percent_identity,   $bit_score,
-             $evalue,       $query_start,        $query_end,
-             $subj_start,   $subj_end
-          )
-          = split( /\t/, $r2 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1, $align_length,
+            $percent_identity, $bit_score,          $evalue,         $query_start,
+            $query_end,        $subj_start,         $subj_end
+        ) = split( /\t/, $r2 );
         $priam_h{$gene_oid1} =
-"$gene_display_name1\t$query_start\t$query_end\t$aa_seq_length1\t$percent_identity\t$bit_score\t$evalue";
+          "$gene_display_name1\t$query_start\t$query_end\t$aa_seq_length1\t$percent_identity\t$bit_score\t$evalue";
     }
 
     # get the highest score hits
@@ -2644,14 +2568,11 @@ sub printRecordsWithPriam {
     my %gene_score;
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
-             $gene_oid2,   $gene_display_name2,  $aa_seq_length2,
-             $taxon_oid2,  $taxon_display_name2, $domain2,
-             $seq_status2, $percent_identity,    $bit_score,
-             $evalue,      $query_start,         $query_end,
-             $subj_start,  $subj_end
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1,      $gene_oid2,   $gene_display_name2,
+            $aa_seq_length2,   $taxon_oid2,         $taxon_display_name2, $domain2,     $seq_status2,
+            $percent_identity, $bit_score,          $evalue,              $query_start, $query_end,
+            $subj_start,       $subj_end
+        ) = split( /\t/, $r0 );
         if ( $gene_score{$gene_oid1} ) {
 
             # already has some hit. compare.
@@ -2673,14 +2594,11 @@ sub printRecordsWithPriam {
 
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
-             $gene_oid2,   $gene_display_name2,  $aa_seq_length2,
-             $taxon_oid2,  $taxon_display_name2, $domain2,
-             $seq_status2, $percent_identity,    $bit_score,
-             $evalue,      $query_start,         $query_end,
-             $subj_start,  $subj_end
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1,      $gene_oid2,   $gene_display_name2,
+            $aa_seq_length2,   $taxon_oid2,         $taxon_display_name2, $domain2,     $seq_status2,
+            $percent_identity, $bit_score,          $evalue,              $query_start, $query_end,
+            $subj_start,       $subj_end
+        ) = split( /\t/, $r0 );
 
         if ( $gene_score{$gene_oid1} ) {
             my ( $g2, $score2 ) = split( /,/, $gene_score{$gene_oid1} );
@@ -2702,13 +2620,11 @@ sub printRecordsWithPriam {
 
         $percent_identity = sprintf( "%.2f", $percent_identity );
         $evalue           = sprintf( "%.2e", $evalue );
-        $domain2 = substr( $domain2, 0, 1 );
+        $domain2     = substr( $domain2,     0, 1 );
         $seq_status2 = substr( $seq_status2, 0, 1 );
         $bit_score = sprintf( "%d", $bit_score );
         my $r;
-        $r .=
-            "$sd<input type='checkbox' name='gene_oid_hit' "
-          . "value='$gene_oid1,$gene_oid2' />\t";
+        $r .= "$sd<input type='checkbox' name='gene_oid_hit' " . "value='$gene_oid1,$gene_oid2' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$gene_oid1";
@@ -2730,36 +2646,25 @@ sub printRecordsWithPriam {
         $r .= "$seq_status2\t";
         my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail";
         $url .= "&taxon_oid=$taxon_oid2";
-        $r   .=
-          $taxon_display_name2 . $sd
-          . alink( $url, $taxon_display_name2 ) . "\t";
+        $r .= $taxon_display_name2 . $sd . alink( $url, $taxon_display_name2 ) . "\t";
 
         $r .= "$percent_identity\t";
 
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
-        $r .=
-          $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        $r .= $sd . alignImage( $subj_start,  $subj_end,  $aa_seq_length2 ) . "\t";
 
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
 
         if ( $priam_h{$gene_oid1} ) {
-            my (
-                 $gene_name1,         $priam_query_start,
-                 $priam_query_end,    $priam_aa_seq_length1,
-                 $priam_percent_iden, $priam_bit_score,
-                 $priam_evalue
-              )
+            my ( $gene_name1, $priam_query_start, $priam_query_end, $priam_aa_seq_length1, $priam_percent_iden,
+                $priam_bit_score, $priam_evalue )
               = split( /\t/, $priam_h{$gene_oid1} );
             $priam_bit_score = sprintf( "%d",   $priam_bit_score );
             $priam_evalue    = sprintf( "%.2e", $priam_evalue );
             $r .= "Yes\t";
             $r .= "$priam_percent_iden\t";
-            $r .= $sd
-              . alignImage( $priam_query_start, $priam_query_end,
-                            $priam_aa_seq_length1 )
-              . "\t";
+            $r .= $sd . alignImage( $priam_query_start, $priam_query_end, $priam_aa_seq_length1 ) . "\t";
             $r .= "$priam_evalue\t";
             $r .= "$priam_bit_score\t";
         } else {
@@ -2778,19 +2683,14 @@ sub printRecordsWithPriam {
 
         # display
         my (
-             $gene_display_name1, $priam_query_start,
-             $priam_query_end,    $priam_aa_seq_length1,
-             $priam_percent_iden, $priam_bit_score,
-             $priam_evalue
-          )
-          = split( /\t/, $priam_h{$key} );
+            $gene_display_name1, $priam_query_start, $priam_query_end, $priam_aa_seq_length1,
+            $priam_percent_iden, $priam_bit_score,   $priam_evalue
+        ) = split( /\t/, $priam_h{$key} );
         $priam_bit_score = sprintf( "%d",   $priam_bit_score );
         $priam_evalue    = sprintf( "%.2e", $priam_evalue );
 
         my $r;
-        $r .=
-            "$sd<input type='checkbox' name='gene_oid_hit' "
-          . "value='$key,' />\t";
+        $r .= "$sd<input type='checkbox' name='gene_oid_hit' " . "value='$key,' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$key";
@@ -2803,10 +2703,7 @@ sub printRecordsWithPriam {
         $r .= "\t\t\t\t\t\t\t\t\t\t\t";
         $r .= "Yes\t";
         $r .= "$priam_percent_iden\t";
-        $r .= $sd
-          . alignImage( $priam_query_start, $priam_query_end,
-                        $priam_aa_seq_length1 )
-          . "\t";
+        $r .= $sd . alignImage( $priam_query_start, $priam_query_end, $priam_aa_seq_length1 ) . "\t";
         $r .= "$priam_evalue\t";
         $r .= "$priam_bit_score\t";
 
@@ -2823,30 +2720,30 @@ sub printRecordsWithPriam {
     my $dbh         = dbLogin();
     my $contact_oid = getContactOid();
     if ( $tag eq 'ITERM'
-         && canEditGeneTerm( $dbh, $contact_oid ) )
+        && canEditGeneTerm( $dbh, $contact_oid ) )
     {
         my $name = "_section_${section}_addAssoc";
         print submit(
-                      -name  => $name,
-                      -value => "Add Term to Candidate Gene(s)",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add Term to Candidate Gene(s)",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     } elsif ( $tag eq 'EC' && $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_addMyImgEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     }
 
     my $name = "_section_${section}_addToGeneCart4";
     print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
 
@@ -2864,53 +2761,53 @@ sub printRecordsWithPriam {
 ############################################################################
 sub getGenePriamRecords {
     my ($gene_oid) = @_;
-    
-    my @priam_recs;
-    return @priam_recs; # v4.0
 
-#    my $dbh = dbLogin();
-#
-#    # priam
-#    my $sql = qq{
-#	 select e1.ec_number, e1.enzyme_name, g1.aa_seq_length,
-#	 gpe.align_length, gpe.percent_identity, gpe.bit_score, gpe.evalue,
-#	 gpe.query_start, gpe.query_end, gpe.subj_start, gpe.subj_end
-#	     from enzyme e1, gene_priam_enzymes gpe, gene g1
-#	     where gpe.gene_oid = ?
-#	     and gpe.gene_oid = g1.gene_oid
-#	     and e1.ec_number = gpe.enzymes
-#	 };
-#
-#    my $cur = execSql( $dbh, $sql, $verbose, $gene_oid );
-#
-#    for ( ; ; ) {
-#        my (
-#             $ec_number,    $enzyme_name1,     $aa_seq_length1,
-#             $align_length, $percent_identity, $bit_score,
-#             $evalue,       $query_start,      $query_end,
-#             $subj_start,   $subj_end
-#          )
-#          = $cur->fetchrow();
-#        last if !$ec_number;
-#
-#        my $r;
-#        $r .= "$ec_number\t";
-#        $r .= "$enzyme_name1\t";
-#        $r .= "$aa_seq_length1\t";
-#        $r .= "$align_length\t";
-#        $r .= "$percent_identity\t";
-#        $r .= "$bit_score\t";
-#        $r .= "$evalue\t";
-#        $r .= "$query_start\t";
-#        $r .= "$query_end\t";
-#        $r .= "$subj_start\t";
-#        $r .= "$subj_end\t";
-#        push( @priam_recs, $r );
-#    }
-#    $cur->finish();
-#    #$dbh->disconnect();
-#
-#    return @priam_recs;
+    my @priam_recs;
+    return @priam_recs;    # v4.0
+
+    #    my $dbh = dbLogin();
+    #
+    #    # priam
+    #    my $sql = qq{
+    #	 select e1.ec_number, e1.enzyme_name, g1.aa_seq_length,
+    #	 gpe.align_length, gpe.percent_identity, gpe.bit_score, gpe.evalue,
+    #	 gpe.query_start, gpe.query_end, gpe.subj_start, gpe.subj_end
+    #	     from enzyme e1, gene_priam_enzymes gpe, gene g1
+    #	     where gpe.gene_oid = ?
+    #	     and gpe.gene_oid = g1.gene_oid
+    #	     and e1.ec_number = gpe.enzymes
+    #	 };
+    #
+    #    my $cur = execSql( $dbh, $sql, $verbose, $gene_oid );
+    #
+    #    for ( ; ; ) {
+    #        my (
+    #             $ec_number,    $enzyme_name1,     $aa_seq_length1,
+    #             $align_length, $percent_identity, $bit_score,
+    #             $evalue,       $query_start,      $query_end,
+    #             $subj_start,   $subj_end
+    #          )
+    #          = $cur->fetchrow();
+    #        last if !$ec_number;
+    #
+    #        my $r;
+    #        $r .= "$ec_number\t";
+    #        $r .= "$enzyme_name1\t";
+    #        $r .= "$aa_seq_length1\t";
+    #        $r .= "$align_length\t";
+    #        $r .= "$percent_identity\t";
+    #        $r .= "$bit_score\t";
+    #        $r .= "$evalue\t";
+    #        $r .= "$query_start\t";
+    #        $r .= "$query_end\t";
+    #        $r .= "$subj_start\t";
+    #        $r .= "$subj_end\t";
+    #        push( @priam_recs, $r );
+    #    }
+    #    $cur->finish();
+    #    #$dbh->disconnect();
+    #
+    #    return @priam_recs;
 }
 
 ############################################################################
@@ -2946,12 +2843,9 @@ sub printGenePriamRecords {
     my %gene_score;
     for my $r0 (@$recs_ref) {
         my (
-             $ec_number,    $enzyme_name,      $aa_seq_length1,
-             $align_length, $percent_identity, $bit_score,
-             $evalue,       $query_start,      $query_end,
-             $subj_start,   $subj_end
-          )
-          = split( /\t/, $r0 );
+            $ec_number, $enzyme_name, $aa_seq_length1, $align_length, $percent_identity, $bit_score,
+            $evalue,    $query_start, $query_end,      $subj_start,   $subj_end
+        ) = split( /\t/, $r0 );
 
         $cnt++;
 
@@ -2959,9 +2853,7 @@ sub printGenePriamRecords {
         $evalue           = sprintf( "%.2e", $evalue );
         $bit_score        = sprintf( "%d",   $bit_score );
         my $r;
-        $r .=
-            "$sd<input type='checkbox' name='ec_hit' "
-          . "value='$ec_number' />\t";
+        $r .= "$sd<input type='checkbox' name='ec_hit' " . "value='$ec_number' />\t";
 
         my $enzyme_base_url = $env->{enzyme_base_url};
         my $url             = "$enzyme_base_url$ec_number";
@@ -2971,8 +2863,7 @@ sub printGenePriamRecords {
 
         $r .= "$percent_identity\t";
 
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
 
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
@@ -2984,9 +2875,9 @@ sub printGenePriamRecords {
     if ( $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_addMyGeneEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     }
@@ -3032,6 +2923,7 @@ sub addGeneTermAssoc {
     my $dbh = dbLogin();
     print "<h1>Gene Term Assocication</h1>\n";
     if ( !isImgEditor( $dbh, $contact_oid ) ) {
+
         #$dbh->disconnect();
         webError("You do not have permission to modify IMG terms.");
         return;
@@ -3042,10 +2934,10 @@ sub addGeneTermAssoc {
     for my $gene_oid (@gene_oids) {
         print "Adding gene <i>$gene_oid</i> to term <i>$funcId</i>\n";
         my $confidence = "Inferred from" . $hits{$gene_oid};
-        addImgFunction( $dbh, $gene_oid, $term_oid, $contact_oid, $confidence,
-                        $procId );
+        addImgFunction( $dbh, $gene_oid, $term_oid, $contact_oid, $confidence, $procId );
     }
     print "</p>\n";
+
     #$dbh->disconnect();
     printStatusLine( "Loaded.", 2 );
 }
@@ -3084,7 +2976,7 @@ sub addImgFunction {
 
     my $sql = "select taxon, scaffold from gene where gene_oid = ?";
     my $cur = execSql( $dbh, $sql, $verbose, $gene_oid );
-    my ($taxon_oid, $scaffold_oid) = $cur->fetchrow();
+    my ( $taxon_oid, $scaffold_oid ) = $cur->fetchrow();
     $cur->finish();
 
     $sql = qq{
@@ -3277,13 +3169,11 @@ sub printGeneTermAssocForm {
         print "name='gene_oid' value='$gene_oid' $ck/>\n";
         print "</td>\n";
 
-        my $tax_oid          = geneOid2TaxonOid( $dbh, $gene_oid );
-        my $tax_display_name = taxonOid2Name( $dbh,    $tax_oid );
-        my $desc             = geneOid2Name( $dbh,     $gene_oid );
+        my $tax_oid = geneOid2TaxonOid( $dbh, $gene_oid );
+        my $tax_display_name = taxonOid2Name( $dbh, $tax_oid );
+        my $desc = geneOid2Name( $dbh, $gene_oid );
 
-        my $url =
-            "$main_cgi?section=GeneDetail"
-          . "&page=geneDetail&gene_oid=$gene_oid";
+        my $url = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene_oid";
         print "<td class='img'>" . alink( $url, $gene_oid ) . "</td>\n";
         print "<td class='img'>" . escapeHTML($desc) . "</td>\n";
         print "<td class='img'>" . escapeHTML($tax_display_name) . "</td>\n";
@@ -3294,13 +3184,7 @@ sub printGeneTermAssocForm {
             print "<td class='img'>" . "$geneTerms{$gene_oid}" . "</td>\n";
 
             # check whether the same term already exist
-            if (
-                 db_findCount( $dbh, 'GENE_IMG_FUNCTIONS',
-                               "gene_oid = ? and function = ? ",
-			       $gene_oid, $term_oid  )
-                 > 0
-              )
-            {
+            if ( db_findCount( $dbh, 'GENE_IMG_FUNCTIONS', "gene_oid = ? and function = ? ", $gene_oid, $term_oid ) > 0 ) {
                 $ar = 1;
             }
         } else {
@@ -3315,28 +3199,23 @@ sub printGeneTermAssocForm {
         my $ar_name = "ar_" . $gene_oid;
         print "<td class='img' bgcolor='#eed0d0'>\n";
         if ( $ar == 1 ) {
+
             # replace only
-            print
-"  <input type='radio' name='$ar_name' value='add' disabled />Add\n";
+            print "  <input type='radio' name='$ar_name' value='add' disabled />Add\n";
             print "<br/>\n";
-            print
-"  <input type='radio' name='$ar_name' value='replace' checked />Replace\n";
+            print "  <input type='radio' name='$ar_name' value='replace' checked />Replace\n";
         } elsif ( $ar == 2 ) {
 
             # add only
-            print
-"  <input type='radio' name='$ar_name' value='add' checked />Add\n";
+            print "  <input type='radio' name='$ar_name' value='add' checked />Add\n";
             print "<br/>\n";
-            print
-"  <input type='radio' name='$ar_name' value='replace' disabled />Replace\n";
+            print "  <input type='radio' name='$ar_name' value='replace' disabled />Replace\n";
         } else {
 
             # both
-            print
-"  <input type='radio' name='$ar_name' value='add' checked />Add\n";
+            print "  <input type='radio' name='$ar_name' value='add' checked />Add\n";
             print "<br/>\n";
-            print
-"  <input type='radio' name='$ar_name' value='replace' />Replace\n";
+            print "  <input type='radio' name='$ar_name' value='replace' />Replace\n";
         }
         print "</td>\n";
 
@@ -3354,8 +3233,7 @@ sub printGeneTermAssocForm {
         # print confidence
         my $cm_name = "cm_" . $gene_oid;
         print "<td class='img'>\n";
-        print
-          "  <input type='text' name='$cm_name' size='20' maxLength='255'/>\n";
+        print "  <input type='text' name='$cm_name' size='20' maxLength='255'/>\n";
         print "</td>\n";
 
         # cell_loc
@@ -3371,27 +3249,30 @@ sub printGeneTermAssocForm {
         print "</tr>\n";
     }
     print "</table>\n";
+
     #$dbh->disconnect();
 
     print "<h4>Display New Results in:</h4>\n";
     print "<p>\n";
     print "<input type='radio' name='disp_type' "
-	. "value='func_profile_s' checked />"
-	. "Function Profile (view functions vs. genomes)\n";
+      . "value='func_profile_s' checked />"
+      . "Function Profile (view functions vs. genomes)\n";
     print "<br/>\n";
     print "<input type='radio' name='disp_type' "
-	. "value='func_profile_t' />"
-	. "Function Profile (view genomes vs. functions)\n";
+      . "value='func_profile_t' />"
+      . "Function Profile (view genomes vs. functions)\n";
     print "</p>\n";
 
-    printHint("Click '<u>Update Database</u>' to save your change(s) to the database. Only selected gene-term associations will be updated.\n");
+    printHint(
+"Click '<u>Update Database</u>' to save your change(s) to the database. Only selected gene-term associations will be updated.\n"
+    );
 
     print "</p>\n";
     my $name = "_section_${section}_dbUpdateGeneTerm";
     print submit(
-                  -name  => $name,
-                  -value => "Update Database",
-                  -class => "meddefbutton"
+        -name  => $name,
+        -value => "Update Database",
+        -class => "meddefbutton"
     );
     print nbsp(1);
     print reset( -class => "medbutton" );
@@ -3444,10 +3325,7 @@ sub dbUpdateGeneTerm {
         } else {
 
             # check whether gene-term assoc is already there
-            my $cnt =
-              db_findCount( $dbh, 'gene_img_functions',
-                            "gene_oid = ? and function = ?",
-			    $gene_oid, $term_oid );
+            my $cnt = db_findCount( $dbh, 'gene_img_functions', "gene_oid = ? and function = ?", $gene_oid, $term_oid );
             if ( $cnt > 0 ) {
                 next;
             }
@@ -3455,11 +3333,11 @@ sub dbUpdateGeneTerm {
 
         # , evidence, confidence, modified_by)";
 
-	# get taxon, scaffold
-	my $sql2 = "select taxon, scaffold from gene where gene_oid = ?";
-	my $cur2  = execSql( $dbh, $sql2, $verbose, $gene_oid );
-	my ($taxon2, $scaffold2) = $cur2->fetchrow();
-	$cur2->finish();
+        # get taxon, scaffold
+        my $sql2 = "select taxon, scaffold from gene where gene_oid = ?";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $gene_oid );
+        my ( $taxon2, $scaffold2 ) = $cur2->fetchrow();
+        $cur2->finish();
 
         # insert
         $ins  = "insert into gene_img_functions (gene_oid, taxon, scaffold, function, f_order";
@@ -3475,9 +3353,9 @@ sub dbUpdateGeneTerm {
 
         # evidence
         my $ev = param( "ev_" . $gene_oid );
-        if (    $ev eq 'Experimental'
-             || $ev eq 'High'
-             || $ev eq 'Inferred' )
+        if (   $ev eq 'Experimental'
+            || $ev eq 'High'
+            || $ev eq 'Inferred' )
         {
             $ins  .= ", evidence";
             $vals .= ", '" . $ev . "'";
@@ -3561,10 +3439,7 @@ sub dbUpdateSimGeneTerm {
         } else {
 
             # check whether gene-term assoc is already there
-            my $cnt =
-              db_findCount( $dbh, 'gene_img_functions',
-                            "gene_oid = ? and function = ?",
-			    $gene_oid, $term_oid );
+            my $cnt = db_findCount( $dbh, 'gene_img_functions', "gene_oid = ? and function = ?", $gene_oid, $term_oid );
             if ( $cnt > 0 ) {
                 next;
             }
@@ -3572,11 +3447,11 @@ sub dbUpdateSimGeneTerm {
 
         # , evidence, confidence, modified_by)";
 
-	# get taxon, scaffold
-	my $sql2 = "select taxon, scaffold from gene where gene_oid = ?";
-	my $cur2  = execSql( $dbh, $sql2, $verbose, $gene_oid );
-	my ($taxon2, $scaffold2) = $cur2->fetchrow();
-	$cur2->finish();
+        # get taxon, scaffold
+        my $sql2 = "select taxon, scaffold from gene where gene_oid = ?";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $gene_oid );
+        my ( $taxon2, $scaffold2 ) = $cur2->fetchrow();
+        $cur2->finish();
 
         # insert
         $ins  = "insert into gene_img_functions (gene_oid, taxon, scaffold, function, f_order";
@@ -3595,9 +3470,9 @@ sub dbUpdateSimGeneTerm {
 
         # evidence
         my $ev = param( "ev_" . $gene_oid );
-        if (    $ev eq 'Experimental'
-             || $ev eq 'High'
-             || $ev eq 'Inferred' )
+        if (   $ev eq 'Experimental'
+            || $ev eq 'High'
+            || $ev eq 'Inferred' )
         {
             $ins  .= ", evidence";
             $vals .= ", '" . $ev . "'";
@@ -3660,8 +3535,8 @@ sub isFusionGene {
     my ($gene_oid) = @_;
 
     my $dbh = dbLogin();
-    my $cnt =
-      db_findCount( $dbh, 'gene_fusion_components', "gene_oid = $gene_oid" );
+    my $cnt = db_findCount( $dbh, 'gene_fusion_components', "gene_oid = $gene_oid" );
+
     #$dbh->disconnect();
 
     if ($cnt) {
@@ -3695,17 +3570,13 @@ sub getMinScore {
 sub getEnzymeForGene {
     my ($gene_oid) = @_;
 
-    my $dbh    = dbLogin();
-    my $ec_val =
-      db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid', $gene_oid,
-                  'ec_number', '' );
+    my $dbh = dbLogin();
+    my $ec_val = db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid', $gene_oid, 'ec_number', '' );
     if ( !blankStr($ec_val) ) {
         return $ec_val;
     }
 
-    my @ec_vals =
-      db_findSetVal( $dbh, 'gene_ko_enzymes', 'gene_oid', $gene_oid, 'enzymes',
-                     '' );
+    my @ec_vals = db_findSetVal( $dbh, 'gene_ko_enzymes', 'gene_oid', $gene_oid, 'enzymes', '' );
 
     my $prev_ec = "";
     for my $s1 ( sort(@ec_vals) ) {
@@ -3869,13 +3740,11 @@ sub printMyImgGeneEnzymeForm {
         print "name='gene_oid' value='$gene_oid' $ck/>\n";
         print "</td>\n";
 
-        my $tax_oid          = geneOid2TaxonOid( $dbh, $gene_oid );
-        my $tax_display_name = taxonOid2Name( $dbh,    $tax_oid );
-        my $desc             = geneOid2Name( $dbh,     $gene_oid );
+        my $tax_oid = geneOid2TaxonOid( $dbh, $gene_oid );
+        my $tax_display_name = taxonOid2Name( $dbh, $tax_oid );
+        my $desc = geneOid2Name( $dbh, $gene_oid );
 
-        my $url =
-            "$main_cgi?section=GeneDetail"
-          . "&page=geneDetail&gene_oid=$gene_oid";
+        my $url = "$main_cgi?section=GeneDetail" . "&page=geneDetail&gene_oid=$gene_oid";
         print "<td class='img'>" . alink( $url, $gene_oid ) . "</td>\n";
         print "<td class='img'>" . escapeHTML($desc) . "</td>\n";
         print "<td class='img'>" . escapeHTML($tax_display_name) . "</td>\n";
@@ -3903,27 +3772,21 @@ sub printMyImgGeneEnzymeForm {
         if ( $ar == 1 ) {
 
             # replace only
-            print
-"  <input type='radio' name='$ar_name' value='add' disabled />Add\n";
+            print "  <input type='radio' name='$ar_name' value='add' disabled />Add\n";
             print "<br/>\n";
-            print
-"  <input type='radio' name='$ar_name' value='replace' checked />Replace\n";
+            print "  <input type='radio' name='$ar_name' value='replace' checked />Replace\n";
         } elsif ( $ar == 2 ) {
 
             # add only
-            print
-"  <input type='radio' name='$ar_name' value='add' checked />Add\n";
+            print "  <input type='radio' name='$ar_name' value='add' checked />Add\n";
             print "<br/>\n";
-            print
-"  <input type='radio' name='$ar_name' value='replace' disabled />Replace\n";
+            print "  <input type='radio' name='$ar_name' value='replace' disabled />Replace\n";
         } else {
 
             # both
-            print
-"  <input type='radio' name='$ar_name' value='add' checked />Add\n";
+            print "  <input type='radio' name='$ar_name' value='add' checked />Add\n";
             print "<br/>\n";
-            print
-"  <input type='radio' name='$ar_name' value='replace' />Replace\n";
+            print "  <input type='radio' name='$ar_name' value='replace' />Replace\n";
         }
         print "</td>\n";
 
@@ -3945,23 +3808,25 @@ sub printMyImgGeneEnzymeForm {
 "<input type='radio' name='disp_type' value='func_profile_s' checked />Function Profile (view functions vs. genomes)\n";
         print "<br/>\n";
         print
-"<input type='radio' name='disp_type' value='func_profile_t' />Function Profile (view genomes vs. functions)\n";
+          "<input type='radio' name='disp_type' value='func_profile_t' />Function Profile (view genomes vs. functions)\n";
 
         print "<br/>\n";
     }
 
     print "<p/>\n";
 
-    printHint("Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. Only selected gene-enzyme associations will be added to MyIMG annotation.\n");
+    printHint(
+"Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. Only selected gene-enzyme associations will be added to MyIMG annotation.\n"
+    );
 
     print "</p>\n";
 
     if ( $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_dbUpdateMyImgGeneEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Update MyIMG Annotation",
-                      -class => "meddefbutton"
+            -name  => $name,
+            -value => "Update MyIMG Annotation",
+            -class => "meddefbutton"
         );
         print nbsp(1);
         print reset( -class => "medbutton" );
@@ -3987,14 +3852,13 @@ sub printAddMyGeneEnzymeForm {
     my ($gene_oid) = param("gene_oid");
     print hiddenVar( "gene_oid", $gene_oid );
 
-    my $dbh          = dbLogin();
-    my $product_name =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name',
-                  '' );
+    my $dbh = dbLogin();
+    my $product_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
     print "<h3>Gene ($gene_oid): " . escapeHTML($product_name) . "</h3>\n";
 
     my @ec_hits = param("ec_hit");
     if ( scalar(@ec_hits) == 0 ) {
+
         #$dbh->disconnect();
         webError("No enzymes were selected. Please select an enzyme.");
     }
@@ -4003,14 +3867,8 @@ sub printAddMyGeneEnzymeForm {
 
     # get MyIMG gene-enzyme for selected gene
     my $contact_oid = getContactOid();
-    my @myimg_enzymes = db_findSetVal(
-                                       $dbh,
-                                       'gene_myimg_enzymes',
-                                       'gene_oid',
-                                       $gene_oid,
-                                       'ec_number',
-                                       "modified_by = $contact_oid"
-    );
+    my @myimg_enzymes =
+      db_findSetVal( $dbh, 'gene_myimg_enzymes', 'gene_oid', $gene_oid, 'ec_number', "modified_by = $contact_oid" );
 
     ### Print the records out in a table.
     print "<table class='img'>\n";
@@ -4031,8 +3889,8 @@ sub printAddMyGeneEnzymeForm {
         my $url             = "$enzyme_base_url$ec1";
         print "<td class='img'>" . alink( $url, $ec1 ) . "</td>\n";
 
-        my $sql2 = "select enzyme_name from enzyme where ec_number = '$ec1'";
-        my $cur2 = execSql( $dbh, $sql2, $verbose );
+        my $sql2          = "select enzyme_name from enzyme where ec_number = '$ec1'";
+        my $cur2          = execSql( $dbh, $sql2, $verbose );
         my ($enzyme_name) = $cur2->fetchrow();
         $cur2->finish();
         print "<td class='img'>" . escapeHTML($enzyme_name) . "</td>\n";
@@ -4044,27 +3902,26 @@ sub printAddMyGeneEnzymeForm {
 
     # add or replace
     print "<p>\n";
-    print "Add or replace MyIMG gene-enzyme annotation:<br/>\n"; 
-    print "  <input type='radio' name='ar_mygeneec' "
-	. "value='add' checked />Add\n";
+    print "Add or replace MyIMG gene-enzyme annotation:<br/>\n";
+    print "  <input type='radio' name='ar_mygeneec' " . "value='add' checked />Add\n";
     print nbsp(2);
     if ( scalar(@myimg_enzymes) == 0 ) {
-        print "  <input type='radio' name='ar_mygeneec' "
-	    . "value='replace' disabled />Replace\n";
+        print "  <input type='radio' name='ar_mygeneec' " . "value='replace' disabled />Replace\n";
     } else {
-        print "  <input type='radio' name='ar_mygeneec' "
-	    . "value='replace' />Replace\n";
+        print "  <input type='radio' name='ar_mygeneec' " . "value='replace' />Replace\n";
     }
     print "</p>\n";
 
-    printHint("Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. Only selected gene-enzyme associations will be added to MyIMG annotation.\n");
+    printHint(
+"Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. Only selected gene-enzyme associations will be added to MyIMG annotation.\n"
+    );
 
     if ($show_myimg_login) {
         my $name = "_section_${section}_dbUpdMyGeneEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Update MyIMG Annotation",
-                      -class => "meddefbutton"
+            -name  => $name,
+            -value => "Update MyIMG Annotation",
+            -class => "meddefbutton"
         );
         print nbsp(1);
         print reset( -class => "medbutton" );
@@ -4107,9 +3964,7 @@ sub dbUpdateMyImgGeneEnzyme {
         if ( $ar eq 'replace' ) {
 
             # delete from gene_myimg_enzymes
-            $sql =
-                "delete from gene_myimg_enzymes "
-              . "where gene_oid = $gene_oid and modified_by = $contact_oid";
+            $sql = "delete from gene_myimg_enzymes " . "where gene_oid = $gene_oid and modified_by = $contact_oid";
             push @sqlList, ($sql);
 
             # update gene_myimg_functions
@@ -4129,16 +3984,11 @@ sub dbUpdateMyImgGeneEnzyme {
         } else {
 
             # add
-            my $cnt =
-              db_findCount
-	      ( $dbh, 'gene_myimg_functions',
-		"gene_oid = $gene_oid and modified_by = $contact_oid" );
+            my $cnt = db_findCount( $dbh, 'gene_myimg_functions', "gene_oid = $gene_oid and modified_by = $contact_oid" );
 
             my $ec_val = '';
             if ($cnt) {
-                $ec_val =
-                  db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid',
-                              $gene_oid, 'ec_number', '' );
+                $ec_val = db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid', $gene_oid, 'ec_number', '' );
             }
 
             my $to_update = 1;
@@ -4165,9 +4015,7 @@ sub dbUpdateMyImgGeneEnzyme {
                 } else {
 
                     # insert
-                    my $prod_name =
-                      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid,
-                                  'gene_display_name', '' );
+                    my $prod_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
                     $prod_name =~ s/'/''/g;    # replace ' with ''
                     $sql =
                         "insert into gene_myimg_functions "
@@ -4236,9 +4084,7 @@ sub dbUpdMyGeneEnzyme {
     if ( $ar eq 'replace' ) {
 
         # delete from gene_myimg_enzymes
-        $sql =
-            "delete from gene_myimg_enzymes "
-          . "where gene_oid = $gene_oid and modified_by = $contact_oid";
+        $sql = "delete from gene_myimg_enzymes " . "where gene_oid = $gene_oid and modified_by = $contact_oid";
         push @sqlList, ($sql);
 
         # update gene_myimg_functions
@@ -4260,10 +4106,9 @@ sub dbUpdMyGeneEnzyme {
     } else {
 
         # add
-        my $to_update     = 0;
+        my $to_update = 0;
         my @myimg_enzymes =
-          db_findSetVal( $dbh, 'gene_myimg_enzymes', 'gene_oid', $gene_oid,
-                         'ec_number', "modified_by = $contact_oid" );
+          db_findSetVal( $dbh, 'gene_myimg_enzymes', 'gene_oid', $gene_oid, 'ec_number', "modified_by = $contact_oid" );
 
         for my $ec2 (@myimg_enzymes) {
             if ( WebUtil::inArray( $ec2, @ec_numbers ) ) {
@@ -4277,10 +4122,7 @@ sub dbUpdMyGeneEnzyme {
         }    # end for my ec2
 
         # gene has myimg annotation?
-        my $cnt =
-          db_findCount
-	  ( $dbh, 'gene_myimg_functions',
-	    "gene_oid = $gene_oid and modified_by = $contact_oid" );
+        my $cnt = db_findCount( $dbh, 'gene_myimg_functions', "gene_oid = $gene_oid and modified_by = $contact_oid" );
 
         if ($cnt) {
 
@@ -4294,9 +4136,7 @@ sub dbUpdMyGeneEnzyme {
         } else {
 
             # insert
-            my $prod_name =
-              db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid,
-                          'gene_display_name', '' );
+            my $prod_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
             $prod_name =~ s/'/''/g;    # replace ' with ''
             $sql =
                 "insert into gene_myimg_functions "
@@ -4342,8 +4182,8 @@ sub dbUpdMyGeneEnzyme {
 sub printGenesWithPriamInTaxon {
     my ($taxon_oid) = @_;
 
-    return; # v4.0
-    
+    return;    # v4.0
+
     printMainForm();
 
     print "<h1>Genes w/o enzymes but with candidate KO based enzymes</h1>\n";
@@ -4351,14 +4191,12 @@ sub printGenesWithPriamInTaxon {
         webError("No genome is selected.");
     }
 
-    my $dbh = dbLogin();
+    my $dbh        = dbLogin();
     my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
-    my $url = 
-        "$main_cgi?section=TaxonDetail" 
-      . "&page=taxonDetail&taxon_oid=$taxon_oid"; 
-    my $link = alink($url, $taxon_name); 
- 
-    print "<b>$link</b>"; 
+    my $url        = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $link       = alink( $url, $taxon_name );
+
+    print "<b>$link</b>";
     print hiddenVar( "taxon_oid", $taxon_oid );
 
     printStatusLine( "Loading ...", 1 );
@@ -4385,25 +4223,26 @@ sub printGenesWithPriamInTaxon {
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, $taxon_oid );
 
     if ($show_myimg_login) {
+
         # add or replace
         print "<p>\n";
-        print "Add or replace MyIMG gene-enzyme annotation:<br/>\n"; 
-        print "  <input type='radio' name='ar_taxgeneec' "
-	    . "value='add' checked />Add\n";
+        print "Add or replace MyIMG gene-enzyme annotation:<br/>\n";
+        print "  <input type='radio' name='ar_taxgeneec' " . "value='add' checked />Add\n";
         print nbsp(2);
-        print "  <input type='radio' name='ar_taxgeneec' "
-	    . "value='replace' />Replace\n";
+        print "  <input type='radio' name='ar_taxgeneec' " . "value='replace' />Replace\n";
         print "</p>\n";
 
-        printHint("Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. Only selected gene-enzyme associations will be added to MyIMG annotation.\n");
+        printHint(
+"Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. Only selected gene-enzyme associations will be added to MyIMG annotation.\n"
+        );
     }
 
     if ($show_myimg_login) {
         my $name = "_section_${section}_dbUpdTaxonGeneEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Update MyIMG Annotation",
-                      -class => "meddefbutton"
+            -name  => $name,
+            -value => "Update MyIMG Annotation",
+            -class => "meddefbutton"
         );
         print nbsp(1);
 
@@ -4413,9 +4252,9 @@ sub printGenesWithPriamInTaxon {
 
     my $name = "_section_${section}_addToGeneCart0";
     print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
 
@@ -4428,7 +4267,7 @@ sub printGenesWithPriamInTaxon {
     ### Print the records out in a table.
     my $it = new InnerTable( 0, "taxonGenePriam$$", "taxonGenePriam", 9 );
     $it->addColSpec("Select");
-    $it->addColSpec( "Gene ID",       "number asc",  "left" );
+    $it->addColSpec( "Gene ID",              "number asc",  "left" );
     $it->addColSpec( "Product Name",         "char asc",    "left" );
     $it->addColSpec( "EC Number",            "char asc",    "left" );
     $it->addColSpec( "Enzyme Name",          "char asc",    "left" );
@@ -4442,11 +4281,9 @@ sub printGenesWithPriamInTaxon {
     my $cnt       = 0;
     for ( ; ; ) {
         my (
-             $g1,          $gname,     $aa_seq_length,    $ec1,
-             $ename,       $bit_score, $percent_identity, $evalue,
-             $query_start, $query_end, $subj_start,       $subj_end
-          )
-          = $cur->fetchrow();
+            $g1,               $gname,  $aa_seq_length, $ec1,       $ename,      $bit_score,
+            $percent_identity, $evalue, $query_start,   $query_end, $subj_start, $subj_end
+        ) = $cur->fetchrow();
         last if !$g1;
 
         $cnt++;
@@ -4463,11 +4300,7 @@ sub printGenesWithPriamInTaxon {
 
         my $sel_type = 'checkbox';
         my $r;
-        $r .=
-            "$sd<input type='"
-          . $sel_type
-          . "' name='tax_gene_enzyme' "
-          . "value='$g1,$ec1' />\t";
+        $r .= "$sd<input type='" . $sel_type . "' name='tax_gene_enzyme' " . "value='$g1,$ec1' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$g1";
@@ -4481,8 +4314,7 @@ sub printGenesWithPriamInTaxon {
 
         # scores
         $r .= "$percent_identity\t";
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length ) . "\t";
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
         $it->addRow($r);
@@ -4497,9 +4329,9 @@ sub printGenesWithPriamInTaxon {
     if ($show_myimg_login) {
         my $name = "_section_${section}_dbUpdTaxonGeneEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Update MyIMG Annotation",
-                      -class => "meddefbutton"
+            -name  => $name,
+            -value => "Update MyIMG Annotation",
+            -class => "meddefbutton"
         );
         print nbsp(1);
         print reset( -class => "smbutton" );
@@ -4535,72 +4367,69 @@ sub printGenesWithKOInTaxon {
     my $dbh = dbLogin();
 
     print "<h1>Genes w/o enzymes but with candidate KO based enzymes</h1>\n";
-    my $url = 
-        "$main_cgi?section=TaxonDetail"
-      . "&page=taxonDetail&taxon_oid=$taxon_oid";
+    my $url        = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
     my $taxon_name = taxonOid2Name( $dbh, $taxon_oid, 0 );
-    my $link = alink($url, $taxon_name);
+    my $link       = alink( $url, $taxon_name );
     print "<b>$link</b>";
 
     # get MyIMG gene-enzyme for selected gene
     #my $contact_oid = getContactOid();
 
-#    my $sql = qq{
-#    	select g.gene_oid, g.gene_display_name, g.aa_seq_length,
-#    	gckt.ko_terms, ko.definition,
-#    	gckt.bit_score, gckt.percent_identity, gckt.evalue, 
-#    	gckt.query_start, gckt.query_end, 
-#    	gckt.subj_start, gckt.subj_end
-#	    from (select g2.gene_oid gene_oid
-#		  from gene g2
-#		  where g2.taxon = ?
-#		  and g2.obsolete_flag = 'No'
-#		  minus 
-#		  select gkt.gene_oid
-#		  from gene_ko_terms gkt, ko_term_enzymes kte
-#		  where gkt.ko_terms = kte.ko_id) g3,
-#		  gene g, gene_candidate_ko_terms gckt,
-#		  ko_term_enzymes kte2, ko_term ko
-#	    where g.gene_oid = g3.gene_oid
-#	    and g.gene_oid = gckt.gene_oid
-#	    and gckt.ko_terms = kte2.ko_id
-#	    and gckt.ko_terms = ko.ko_id (+)
-#	    order by 1 asc, 6 desc
-#	};
+    #    my $sql = qq{
+    #    	select g.gene_oid, g.gene_display_name, g.aa_seq_length,
+    #    	gckt.ko_terms, ko.definition,
+    #    	gckt.bit_score, gckt.percent_identity, gckt.evalue,
+    #    	gckt.query_start, gckt.query_end,
+    #    	gckt.subj_start, gckt.subj_end
+    #	    from (select g2.gene_oid gene_oid
+    #		  from gene g2
+    #		  where g2.taxon = ?
+    #		  and g2.obsolete_flag = 'No'
+    #		  minus
+    #		  select gkt.gene_oid
+    #		  from gene_ko_terms gkt, ko_term_enzymes kte
+    #		  where gkt.ko_terms = kte.ko_id) g3,
+    #		  gene g, gene_candidate_ko_terms gckt,
+    #		  ko_term_enzymes kte2, ko_term ko
+    #	    where g.gene_oid = g3.gene_oid
+    #	    and g.gene_oid = gckt.gene_oid
+    #	    and gckt.ko_terms = kte2.ko_id
+    #	    and gckt.ko_terms = ko.ko_id (+)
+    #	    order by 1 asc, 6 desc
+    #	};
     my $sql = QueryUtil::getSingleTaxonNoEnzymeWithKOGenesSql();
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
 
     if ($show_myimg_login) {
+
         # add or replace
         print "<p>\n";
         print "Add or replace MyIMG gene-enzyme annotation:<br/>\n";
-        print "  <input type='radio' name='ar_taxgeneec' "
-	    . "value='add' checked />Add\n";
+        print "  <input type='radio' name='ar_taxgeneec' " . "value='add' checked />Add\n";
         print nbsp(2);
-        print "  <input type='radio' name='ar_taxgeneec' "
-	    . "value='replace' />Replace\n";
+        print "  <input type='radio' name='ar_taxgeneec' " . "value='replace' />Replace\n";
         print "</p>\n";
 
-        printHint("Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. " .
-		  "Only enzymes associated with the selected gene-KO items will be added to MyIMG annotation.\n");
+        printHint( "Click '<u>Update MyIMG Annotation</u>' to save your change(s) to the database. "
+              . "Only enzymes associated with the selected gene-KO items will be added to MyIMG annotation.\n" );
     }
 
     print "<p>";
     if ($show_myimg_login) {
         my $name = "_section_${section}_dbUpdTaxonGeneKO";
         print submit(
-              -name  => $name,
-              -value => "Update MyIMG Annotation",
-              -class => "meddefbutton"
+            -name  => $name,
+            -value => "Update MyIMG Annotation",
+            -class => "meddefbutton"
         );
         print nbsp(1);
     }
 
     my $name = "_section_${section}_addToGeneCart0";
     print submit(
-          -name  => $name,
-          -value => "Add To Gene Cart",
-          -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
 
@@ -4613,7 +4442,7 @@ sub printGenesWithKOInTaxon {
     ### Print the records out in a table.
     my $it = new InnerTable( 0, "taxonGenePriam$$", "taxonGenePriam", 9 );
     $it->addColSpec("Select");
-    $it->addColSpec( "Gene ID",       "number asc",  "left" );
+    $it->addColSpec( "Gene ID",              "number asc",  "left" );
     $it->addColSpec( "Product Name",         "char asc",    "left" );
     $it->addColSpec( "KO ID",                "char asc",    "left" );
     $it->addColSpec( "KO<br/>Definition",    "char asc",    "left" );
@@ -4627,11 +4456,9 @@ sub printGenesWithKOInTaxon {
     my $cnt       = 0;
     for ( ; ; ) {
         my (
-             $g1,          $gname,     $aa_seq_length,    $ko1,
-             $ename,       $bit_score, $percent_identity, $evalue,
-             $query_start, $query_end, $subj_start,       $subj_end
-          )
-          = $cur->fetchrow();
+            $g1,               $gname,  $aa_seq_length, $ko1,       $ename,      $bit_score,
+            $percent_identity, $evalue, $query_start,   $query_end, $subj_start, $subj_end
+        ) = $cur->fetchrow();
         last if !$g1;
 
         if ( $g1 == $prev_gene ) {
@@ -4647,11 +4474,7 @@ sub printGenesWithKOInTaxon {
 
         my $sel_type = 'checkbox';
         my $r;
-        $r .=
-            "$sd<input type='"
-          . $sel_type
-          . "' name='tax_gene_enzyme' "
-          . "value='$g1,$ko1' />\t";
+        $r .= "$sd<input type='" . $sel_type . "' name='tax_gene_enzyme' " . "value='$g1,$ko1' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$g1";
@@ -4665,15 +4488,14 @@ sub printGenesWithKOInTaxon {
 
         # scores
         $r .= "$percent_identity\t";
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length ) . "\t";
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
         $it->addRow($r);
 
         # save prev
         $prev_gene = $g1;
-    } 
+    }
     $cur->finish();
 
     $it->printOuterTable(1);
@@ -4681,31 +4503,31 @@ sub printGenesWithKOInTaxon {
     if ($show_myimg_login) {
         my $name = "_section_${section}_dbUpdTaxonGeneKO";
         print submit(
-                      -name  => $name,
-                      -value => "Update MyIMG Annotation",
-                      -class => "meddefbutton"
+            -name  => $name,
+            -value => "Update MyIMG Annotation",
+            -class => "meddefbutton"
         );
         print nbsp(1);
     }
 
     my $name = "_section_${section}_addToGeneCart0";
     print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
 
     print "<input type='button' name='selectAll' value='Select All' "
-	. "onClick='selectAllCheckBoxes(1)', class='smbutton' />\n";
+      . "onClick='selectAllCheckBoxes(1)', class='smbutton' />\n";
     print nbsp(1);
     print "<input type='button' name='clearAll' value='Clear All' "
-	. "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
+      . "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
     print "</p>";
 
     #if ($cnt > 0) {
     #    my $select_id_name = 'gene_oid';
-    #    WorkspaceUtil::printSaveGeneToWorkspace_withAllNoEnzymeWithKOGenes($select_id_name);            
+    #    WorkspaceUtil::printSaveGeneToWorkspace_withAllNoEnzymeWithKOGenes($select_id_name);
     #}
 
     printStatusLine( "Loaded. (count: $cnt)", 2 );
@@ -4738,21 +4560,18 @@ sub dbUpdTaxonGeneEnzyme {
         my ( $gene_oid, $ec_number ) = split( /\,/, $gene_ec );
 
         my $gene_ar = $ar;
-        my $cnt     =
-          db_findCount
-	  ( $dbh, 'gene_myimg_functions',
-	    "gene_oid = $gene_oid and modified_by = $contact_oid" );
+        my $cnt = db_findCount( $dbh, 'gene_myimg_functions', "gene_oid = $gene_oid and modified_by = $contact_oid" );
 
         if ( $cnt == 0 ) {
+
             # add
             $gene_ar = 'add';
         }
 
         if ( $gene_ar eq 'replace' ) {
+
             # delete from gene_myimg_enzymes
-            $sql =
-                "delete from gene_myimg_enzymes "
-              . "where gene_oid = $gene_oid and modified_by = $contact_oid";
+            $sql = "delete from gene_myimg_enzymes " . "where gene_oid = $gene_oid and modified_by = $contact_oid";
             push @sqlList, ($sql);
 
             # update gene_myimg_functions
@@ -4771,13 +4590,14 @@ sub dbUpdTaxonGeneEnzyme {
             push @sqlList, ($sql);
 
         } else {
+
             # add
-            my $to_update     = 0;
+            my $to_update = 0;
             my @myimg_enzymes =
-              db_findSetVal( $dbh, 'gene_myimg_enzymes', 'gene_oid', $gene_oid,
-                             'ec_number', "modified_by = $contact_oid" );
+              db_findSetVal( $dbh, 'gene_myimg_enzymes', 'gene_oid', $gene_oid, 'ec_number', "modified_by = $contact_oid" );
 
             if ( WebUtil::inArray( $ec_number, @myimg_enzymes ) ) {
+
                 # already there
             } else {
                 $to_update = 1;
@@ -4789,13 +4609,14 @@ sub dbUpdTaxonGeneEnzyme {
 		    from gene_myimg_functions
 		    where gene_oid = ? and modified_by = ?
 		};
-            my $cur2 = execSql
-		( $dbh, $sql2, $verbose, $gene_oid, $contact_oid );
+            my $cur2 = execSql( $dbh, $sql2, $verbose, $gene_oid, $contact_oid );
             my ( $g2, $ec_str ) = $cur2->fetchrow();
+
             #$cur2->finish();
 
             if ($to_update) {
                 if ($g2) {
+
                     # update gene_myimg_functions
                     if ( blankStr($ec_str) ) {
                         $ec_str = $ec_number;
@@ -4810,10 +4631,9 @@ sub dbUpdTaxonGeneEnzyme {
                       . "and modified_by = $contact_oid";
 
                 } else {
+
                     # insert
-                    my $prod_name =
-                      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid,
-                                  'gene_display_name', '' );
+                    my $prod_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
                     $prod_name =~ s/'/''/g;    # replace ' with ''
                     $sql =
                         "insert into gene_myimg_functions "
@@ -4884,24 +4704,22 @@ sub dbUpdTaxonGeneKO {
             last if !$ec_number;
             push @ecs, ($ec_number);
         }
+
         #$cur2->finish();
 
         my $gene_ar = $ar;
-        my $cnt     =
-          db_findCount
-	  ( $dbh, 'gene_myimg_functions',
-	    "gene_oid = $gene_oid and modified_by = $contact_oid" );
+        my $cnt = db_findCount( $dbh, 'gene_myimg_functions', "gene_oid = $gene_oid and modified_by = $contact_oid" );
 
         if ( $cnt == 0 ) {
+
             # add
             $gene_ar = 'add';
         }
 
         if ( $gene_ar eq 'replace' ) {
+
             # delete from gene_myimg_enzymes
-            $sql =
-                "delete from gene_myimg_enzymes "
-              . "where gene_oid = $gene_oid and modified_by = $contact_oid";
+            $sql = "delete from gene_myimg_enzymes " . "where gene_oid = $gene_oid and modified_by = $contact_oid";
             push @sqlList, ($sql);
 
             # update gene_myimg_functions
@@ -4922,16 +4740,15 @@ sub dbUpdTaxonGeneKO {
             }
 
         } else {
+
             # add
             for my $ec_number (@ecs) {
-                my $to_update = 0;
-                my @myimg_enzymes = db_findSetVal(
-                                       $dbh,        'gene_myimg_enzymes',
-                                       'gene_oid',  $gene_oid,
-                                       'ec_number', "modified_by = $contact_oid"
-                );
+                my $to_update     = 0;
+                my @myimg_enzymes = db_findSetVal( $dbh, 'gene_myimg_enzymes', 'gene_oid', $gene_oid, 'ec_number',
+                    "modified_by = $contact_oid" );
 
                 if ( WebUtil::inArray( $ec_number, @myimg_enzymes ) ) {
+
                     # already there
                 } else {
                     $to_update = 1;
@@ -4945,10 +4762,12 @@ sub dbUpdTaxonGeneKO {
 		    };
                 my $cur2 = execSql( $dbh, $sql2, $verbose, $gene_oid, $contact_oid );
                 my ( $g2, $ec_str ) = $cur2->fetchrow();
+
                 #$cur2->finish();
 
                 if ($to_update) {
                     if ($g2) {
+
                         # update gene_myimg_functions
                         if ( blankStr($ec_str) ) {
                             $ec_str = $ec_number;
@@ -4964,9 +4783,7 @@ sub dbUpdTaxonGeneKO {
                     } else {
 
                         # insert
-                        my $prod_name =
-                          db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid,
-                                      'gene_display_name', '' );
+                        my $prod_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
                         $prod_name =~ s/'/''/g;    # replace ' with ''
                         $sql =
                             "insert into gene_myimg_functions "
@@ -5023,22 +4840,43 @@ sub printFindProdNamePage {
 
     printStatusLine( "Loading ...", 1 );
 
+    my $workspace_id = $gene_oid;
+    my $taxon_oid1 = param('taxon_oid');
+    my $data_type = param('data_type');
+
+    my $in_file = 'No';
+    my $seq_merfs = '';
+    if ( $taxon_oid1 && isInt($taxon_oid1) ) {
+	$in_file = db_findVal( $dbh, 'taxon', 'taxon_oid', 
+				    $taxon_oid1, 'in_file', '' );
+    }
+    if ( ! $taxon_oid1 && isInt($gene_oid) ) {
+	$taxon_oid1 = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'taxon', '' );
+    }
+
     printMainForm();
     print "<h1>Candidate Product Names for Query Gene (OID: $gene_oid)</h1>\n";
 
-    my $product_name =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name',
-                  '' );
+    my $product_name = "";
+    if ( $in_file eq 'Yes' ) {
+	my ($n2, $s2) = MetaUtil::getGeneProdNameSource($gene_oid, $taxon_oid1, 
+							$data_type );
+	$product_name = $n2;
+	$workspace_id = "$taxon_oid1 $data_type $gene_oid";
+	$seq_merfs = MetaUtil::getGeneFaa($gene_oid, $taxon_oid1, $data_type);
+    }
+    elsif ( isInt($gene_oid) ) {
+	$product_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 
+				    'gene_display_name', '' );
+    }
 
     #    print "<h2>Query Gene (OID: $gene_oid): " .
     #	escapeHTML($product_name) . "</h2>\n";
     print hidden( 'gene_oid', $gene_oid );
 
-    my $taxon_oid1 =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'taxon', '' );
-
     print hiddenVar( "gene_oid",  $gene_oid );
     print hiddenVar( "taxon_oid", $taxon_oid1 );
+    print hiddenVar( "data_type", $data_type );
 
     # show more info for this gene
     print "<table class='img'>\n";
@@ -5047,38 +4885,54 @@ sub printFindProdNamePage {
     my $taxon_name = taxonOid2Name( $dbh, $taxon_oid1, 0 );
     print "<tr class='img'>\n";
     print "<td class='img'><b>Genome Name</b></td>\n";
-    print "  <td class='img'   align='left'>"
-      . escapeHTML($taxon_name)
-      . "</td>\n";
+    print "  <td class='img'   align='left'>" . escapeHTML($taxon_name) . "</td>\n";
     print "</tr>\n";
 
     # gene product name
     print "<tr class='img'>\n";
     print "<td class='img'><b>Gene Product Name</b></td>\n";
-    print "  <td class='img'   align='left'>"
-      . escapeHTML($product_name)
-      . "</td>\n";
+    print "  <td class='img'   align='left'>" . escapeHTML($product_name) . "</td>\n";
     print "</tr>\n";
 
     # IMG term, if any
-    my $term_sql = qq{
-	select gif.gene_oid, t.term
+    my %term_h;
+    my $terms = "";
+    if ( isInt($gene_oid) ) {
+	my $term_sql = qq{
+	select gif.gene_oid, t.term_oid, t.term
 	    from gene_img_functions gif, img_term t
 	    where gif.gene_oid = ?
 	    and gif.function = t.term_oid
 	};
-    my $terms = db_getValues2( $dbh, $term_sql, "",$gene_oid );
+	my $cur2 = execSql( $dbh, $term_sql, $verbose, $gene_oid );
+	for (;;) {
+	    my ($gid, $func_id, $func_name) = $cur2->fetchrow();
+	    last if ! $gid;
+
+	    $term_h{$func_id} = 1;
+	    my $ck2 = "<input type='checkbox' name='term_oid' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $terms ) {
+		$terms .= "<br/>" . $ck2 . " " . $func_name;
+	    }
+	    else {
+		$terms = $ck2 . " " . $func_name;
+	    }
+	}
+	$cur2->finish();
+    }
     if ( !blankStr($terms) ) {
-        print "<tr class='img'>\n";
-        print "<td class='img'><b>IMG Term(s)</b></td>\n";
-        print "  <td class='img'   align='left'>"
-          . escapeHTML($terms)
-          . "</td>\n";
-        print "</tr>\n";
+	print "<tr class='img'>\n";
+	print "<td class='img'><b>IMG Term(s)</b></td>\n";
+	print "  <td class='img'   align='left'>" . escapeHTML($terms) . "</td>\n";
+	print "</tr>\n";
     }
 
     # TIGRfam, if any
-    my $tigr_sql = qq{
+    my $tigrfam = '';
+    my %tigr_h;
+    if ( isInt($gene_oid) ) {
+	my $tigr_sql = qq{
 	select gxf.gene_oid, gxf.description,
 	tigr.ext_accession, tigr.isology_type
 	    from gene_xref_families gxf, tigrfam tigr 
@@ -5086,95 +4940,513 @@ sub printFindProdNamePage {
 	    and gxf.db_name = 'TIGRFam' 
 	    and gxf.id = tigr.ext_accession
 	};
-    my $tigrfam = db_getValues2( $dbh, $tigr_sql, "",$gene_oid );
+	my $cur2 = execSql( $dbh, $tigr_sql, $verbose, $gene_oid );
+	for (;;) {
+	    my ($gid, $func_name, $func_id, $iso) = $cur2->fetchrow();
+	    last if ! $gid;
+
+	    $tigr_h{$func_id} = 1;
+	    my $ck2 = "<input type='checkbox' name='tigr_id' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $tigrfam ) {
+		$tigrfam .= "<br/>" . $ck2 . " " . $func_name;
+	    }
+	    else {
+		$tigrfam = $ck2 . " " . $func_name;
+	    }
+	}
+	$cur2->finish();
+    }
+    else {
+	my @tigrIds =
+	    MetaUtil::getGeneTIGRfamId($gene_oid, $taxon_oid1, $data_type); 
+	for my $str ( @tigrIds ) {
+	    my $func_id = $str;
+	    my $tigr_name = db_findVal($dbh, 'tigrfam', 
+				      'ext_accession', $func_id,
+				      'expanded_name', '');
+	    if ( $tigrfam ) {
+		$tigrfam .= "; " . $tigr_name;
+	    }
+	    else {
+		$tigrfam = $tigr_name;
+	    }
+	}
+    }
     if ( !blankStr($tigrfam) ) {
-        print "<tr class='img'>\n";
-        print "<td class='img'><b>TIGRfam</b></td>\n";
-        print "  <td class='img'   align='left'>"
-          . escapeHTML($tigrfam)
-          . "</td>\n";
-        print "</tr>\n";
+	print "<tr class='img'>\n";
+	print "<td class='img'><b>TIGRfam</b></td>\n";
+	print "  <td class='img'   align='left'>" . escapeHTML($tigrfam) . "</td>\n";
+	print "</tr>\n";
     }
 
     # COG, if any
-    my $cog_sql = qq{
-	select g.gene_oid, c.cog_name
+    my $cog = "";
+    my %cog_h;
+    if ( isInt($gene_oid) ) {
+	my $cog_sql = qq{
+	select g.gene_oid, c.cog_id, c.cog_name
 	    from gene_cog_groups g, cog c
 	    where g.gene_oid = ?
 	    and g.cog = c.cog_id
 	};
-    my $cog = db_getValues2( $dbh, $cog_sql, "",$gene_oid );
+	my $cur2 = execSql( $dbh, $cog_sql, $verbose, $gene_oid );
+	for (;;) {
+	    my ($gid, $func_id, $func_name) = $cur2->fetchrow();
+	    last if ! $gid;
+
+	    $cog_h{$func_id} = 1;
+	    my $ck2 = "<input type='checkbox' name='cog_id' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $cog ) {
+		$cog .= "<br/>" . $ck2 . " " . $func_name;
+	    }
+	    else {
+		$cog = $ck2 . " " . $func_name;
+	    }
+	}
+	$cur2->finish();
+    }
+    else {
+        my ($funcs_ref, $sdbFileExist) = 
+	    MetaUtil::getGeneCogInfo($gene_oid, $taxon_oid1, $data_type); 
+	for my $str ( @$funcs_ref ) {
+	    my ($gid, $func_id, @rest) = split(/\t/, $str);
+	    if ( $cog_h{$func_id} ) {
+		next;
+	    }
+	    $cog_h{$func_id} = 1;
+	    my $cog_name = db_findVal($dbh, 'cog', 'cog_id', $func_id,
+				      'cog_name', '');
+	    my $ck2 = "<input type='checkbox' name='cog_id' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $cog ) {
+		$cog .= "<br/>" . $ck2 . " (" . $func_id . ") " . $cog_name;
+	    }
+	    else {
+		$cog = $ck2 . " (" . $func_id . ") " . $cog_name;
+	    }
+	}
+    }
     if ( !blankStr($cog) ) {
-        print "<tr class='img'>\n";
-        print "<td class='img'><b>COG</b></td>\n";
-        print "  <td class='img'   align='left'>"
-          . escapeHTML($cog)
-          . "</td>\n";
-        print "</tr>\n";
+	print "<tr class='img'>\n";
+	print "<td class='img'><b>COG</b></td>\n";
+	print "  <td class='img'   align='left'>" . $cog . "</td>\n";
+	print "</tr>\n";
     }
 
     # Pfam
-    my $pfam_sql = qq{
-	select g.gene_oid, p.description
+    my $pfam = '';
+    my %pfam_h;
+    if ( isInt($gene_oid) ) {
+	my $pfam_sql = qq{
+	select distinct g.gene_oid, p.ext_accession, p.description
 	    from gene_pfam_families g, pfam_family p
 	    where g.gene_oid = ?
 	    and g.pfam_family = p.ext_accession
 	};
-    my $pfam = db_getValues2( $dbh, $pfam_sql, "",$gene_oid );
+	my $cur2 = execSql( $dbh, $pfam_sql, $verbose, $gene_oid );
+	for (;;) {
+	    my ($gid, $func_id, $func_name) = $cur2->fetchrow();
+	    last if ! $gid;
+
+	    $pfam_h{$func_id} = 1;
+	    my $ck2 = "<input type='checkbox' name='pfam_id' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $pfam ) {
+		$pfam .= "<br/>" . $ck2 . " " . $func_name;
+	    }
+	    else {
+		$pfam = $ck2 . " " . $func_name;
+	    }
+	}
+	$cur2->finish();
+    }
+    else {
+        my ($funcs_ref, $sdbFileExist) = 
+	    MetaUtil::getGenePfamInfo($gene_oid, $taxon_oid1, $data_type); 
+	for my $str ( @$funcs_ref ) {
+	    my ($gid, $func_id, @rest) = split(/\t/, $str);
+	    if ( $pfam_h{$func_id} ) {
+		next;
+	    }
+	    $pfam_h{$func_id} = 1;
+	    my $pfam_name = db_findVal($dbh, 'pfam_family', 
+				       'ext_accession', $func_id,
+				       'description', '');
+	    my $ck2 = "<input type='checkbox' name='pfam_id' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $pfam ) {
+		$pfam .= "<br/>" . $ck2 . " (" . $func_id . ") " . $pfam_name;
+	    }
+	    else {
+		$pfam = $ck2 . " (" . $func_id . ") " . $pfam_name;
+	    }
+	}
+    }
     if ( !blankStr($pfam) ) {
-        print "<tr class='img'>\n";
-        print "<td class='img'><b>Pfam</b></td>\n";
-        print "  <td class='img'   align='left'>"
-          . escapeHTML($pfam)
-          . "</td>\n";
-        print "</tr>\n";
+	print "<tr class='img'>\n";
+	print "<td class='img'><b>Pfam</b></td>\n";
+	print "  <td class='img'   align='left'>" . $pfam . "</td>\n";
+	print "</tr>\n";
     }
 
     # KO
-    my $ko_sql = qq{
-	select g.gene_oid, ko.definition
+    my $ko = '';
+    my %ko_h;
+    if ( isInt($gene_oid) ) {
+	my $ko_sql = qq{
+	select distinct g.gene_oid, ko_id, ko.definition
 	    from gene_ko_terms g, ko_term ko
 	    where g.gene_oid = ?
 	    and g.ko_terms = ko.ko_id
 	};
-    my $ko = db_getValues2( $dbh, $ko_sql, "",$gene_oid );
+	my $cur2 = execSql( $dbh, $ko_sql, $verbose, $gene_oid );
+	for (;;) {
+	    my ($gid, $func_id, $func_name) = $cur2->fetchrow();
+	    last if ! $gid;
+
+	    $ko_h{$func_id} = 1;
+	    my $ck2 = "<input type='checkbox' name='ko_id' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $ko ) {
+		$ko .= "<br/>" . $ck2 . " " . $func_name;
+	    }
+	    else {
+		$ko = $ck2 . " " . $func_name;
+	    }
+	}
+	$cur2->finish();
+    }
+    else{
+	my @koIds =
+	    MetaUtil::getGeneKoId($gene_oid, $taxon_oid1, $data_type); 
+	for my $str ( @koIds ) {
+	    my $func_id = $str;
+	    if ( $ko_h{$func_id} ) {
+		next;
+	    }
+	    $ko_h{$func_id} = 1;
+	    my $ko_name = db_findVal($dbh, 'ko_term', 
+				     'ko_id', $func_id,
+				     'definition', '');
+	    my $ck2 = "<input type='checkbox' name='ko_id' value='$func_id' checked />";
+	    $ck2 = '';
+	    if ( $ko ) {
+		$ko .= "<br/>" . $ck2 . " " . $ko_name;
+	    }
+	    else {
+		$ko = $ck2 . " " . $ko_name;
+	    }
+	}
+    }
     if ( !blankStr($ko) ) {
-        print "<tr class='img'>\n";
-        print "<td class='img'><b>KEGG Orthology (KO)</b></td>\n";
-        print "  <td class='img'   align='left'>" . escapeHTML($ko) . "</td>\n";
-        print "</tr>\n";
+	print "<tr class='img'>\n";
+	print "<td class='img'><b>KEGG Orthology (KO)</b></td>\n";
+	print "  <td class='img'   align='left'>" . $ko . "</td>\n";
+	print "</tr>\n";
+    }
+
+    # Ezyme
+    my $ec = '';
+    my %ec_h;
+    if ( isInt($gene_oid) ) {
+	my $ec_sql = qq{
+	select distinct g.gene_oid, e.ec_number, e.enzyme_name
+	    from gene_ko_enzymes g, enzyme e
+	    where g.gene_oid = ?
+	    and g.enzymes = e.ec_number
+	};
+	my $cur2 = execSql( $dbh, $ec_sql, $verbose, $gene_oid );
+	for (;;) {
+	    my ($gid, $func_id, $func_name) = $cur2->fetchrow();
+	    last if ! $gid;
+
+	    $ec_h{$func_id} = 1;
+	    my $ck2 = "<input type='checkbox' name='ec_number' value='$func_id' checked />";
+	    $ck2 = '';
+	    $func_name = "[" . $func_id . "] " . $func_name;
+	    if ( $ec ) {
+		$ec .= "<br/>" . $ck2 . " " . $func_name;
+	    }
+	    else {
+		$ec = $ck2 . " " . $func_name;
+	    }
+	}
+	$cur2->finish();
+    }
+    else{
+	my @EcIds =
+	    MetaUtil::getGeneEc($gene_oid, $taxon_oid1, $data_type); 
+	for my $str ( @EcIds ) {
+	    my $func_id = $str;
+	    if ( $ec_h{$func_id} ) {
+		next;
+	    }
+	    $ec_h{$func_id} = 1;
+	    my $ec_name = db_findVal($dbh, 'enzyme', 
+				     'ec_number', $func_id,
+				     'enzyme_name', '');
+	    my $ck2 = "<input type='checkbox' name='ec_number' value='$func_id' checked />";
+	    $ck2 = '';
+	    $ec_name = "[" . $func_id . "] " . $ec_name;
+	    if ( $ec ) {
+		$ec .= "<br/>" . $ck2 . " " . $ec_name;
+	    }
+	    else {
+		$ec = $ck2 . " " . $ec_name;
+	    }
+	}
+    }
+    if ( !blankStr($ec) ) {
+	print "<tr class='img'>\n";
+	print "<td class='img'><b>KEGG Enzyme</b></td>\n";
+	print "  <td class='img'   align='left'>" . $ec . "</td>\n";
+	print "</tr>\n";
     }
 
     # MyIMG, if any
-    if ( $show_myimg_login && $contact_oid > 0 ) {
-        my $myimg_name =
-          db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid', $gene_oid,
-                      'product_name', '' );
+    if ( $show_myimg_login && $contact_oid > 0 && isInt($gene_oid) ) {
+        my $myimg_name = db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid', $gene_oid, 'product_name', '' );
         if ( !blankStr($myimg_name) ) {
             print "<tr class='img'>\n";
             print "<td class='img'><b>MyIMG Annotation</b></td>\n";
-            print "  <td class='img'   align='left'>"
-              . escapeHTML($myimg_name)
-              . "</td>\n";
+            print "  <td class='img'   align='left'>" . escapeHTML($myimg_name) . "</td>\n";
             print "</tr>\n";
         }
     }
 
     print "</table>\n";
 
-    my @homologRecs;
-    require OtfBlast;
-    printStartWorkingDiv();
-    my $filterType =
-      OtfBlast::genePageTopHits( $dbh, $gene_oid, \@homologRecs,
-				 "", $img_lite, 1 );
-    printEndWorkingDiv();
+    my $method = param('findProdNameMethod');
+    if ( $method eq 'function-based' ) {
+	## function based
+	printFunctionClosure(\%term_h, \%cog_h, \%pfam_h,
+			     \%tigr_h, \%ko_h, \%ec_h);
+    }
+    else {
+	## sequence based
+	my @homologRecs;
+	require OtfBlast;
+	printStartWorkingDiv();
+	my $filterType = OtfBlast::genePageTopHits( $dbh, $workspace_id, \@homologRecs, "", $img_lite, 1, '', '', $seq_merfs );
+	printEndWorkingDiv();
 
-    my $count = @homologRecs;
-    my $cnt1  = printProdNameRecords( \@homologRecs );
+	my $count = @homologRecs;
+	my $cnt1  = printProdNameRecords( \@homologRecs );
+	printStatusLine( "$cnt1 top hits loaded.", 2 );
+    }
+
     #$dbh->disconnect();
     print end_form();
-    printStatusLine( "$cnt1 top hits loaded.", 2 );
+}
+
+############################################################################
+# printFunctionClosure
+############################################################################
+sub printFunctionClosure {
+    my ($term_href, $cog_href, $pfam_href, $tigr_href, 
+	$ko_href, $ec_href) = @_;
+
+    printHint("The following statistics is based on public isolate genome genes only.");
+    my @terms = keys %$term_href;
+    my @cogs = keys %$cog_href;
+    my @pfams = keys %$pfam_href;
+    my @tigrs = keys %$tigr_href;
+    my @kos = keys %$ko_href;
+    my @ecs = keys %$ec_href;
+
+    my $n_func = 0;
+    my $sql = "select count(*) from gene where taxon in " .
+	"(select taxon_oid from taxon where is_public = 'Yes' " .
+	"and genome_type = 'isolate' and obsolete_flag = 'No') ";
+    my $cond = "";
+    for my $term2 ( @terms ) {
+	$n_func++;
+	$cond .= "and gene_oid in (select gene_oid from gene_img_functions " .
+	    "where function = '" . $term2 . "') ";
+    }
+    for my $cog2 ( @cogs ) {
+	$n_func++;
+	$cond .= "and gene_oid in (select gene_oid from gene_cog_groups " .
+	    "where cog = '" . $cog2 . "') ";
+    }
+    for my $pfam2 ( @pfams ) {
+	$n_func++;
+	$cond .= "and gene_oid in (select gene_oid from gene_pfam_families " .
+	    "where pfam_family = '" . $pfam2 . "') ";
+    }
+    for my $tigrfam2 ( @tigrs ) {
+	$n_func++;
+	$cond .= "and gene_oid in (select gene_oid from gene_tigrfams " .
+	    "where ext_accession = '" . $tigrfam2 . "') ";
+    }
+    for my $ko2 ( @kos ) {
+	$n_func++;
+	$cond .= "and gene_oid in (select gene_oid from gene_ko_terms " .
+	    "where ko_terms = '" . $ko2 . "') ";
+    }
+    for my $ec2 ( @ecs ) {
+	$n_func++;
+	$cond .= "and gene_oid in (select gene_oid from gene_ko_enzymes " .
+	    "where enzymes = '" . $ec2 . "') ";
+    }
+
+    if ( $n_func <= 0 ) {
+	print "<h5>There is no enough information for function based prediction. Please try sequence based approach.</h5>\n";
+	return;
+    }
+
+    $sql .= $cond;
+
+    my $dbh = dbLogin();
+    printStartWorkingDiv();
+    print "Checking genes with the same function(s) ...<br/>\n";
+    my $cur = execSql( $dbh, $sql, $verbose );
+    my ($total) = $cur->fetchrow();
+    $cur->finish();
+    printEndWorkingDiv();
+
+    if ( $total == 0 ) {
+	print "<h5>No public isolate genes are associated with the same function(s). There is no enough information for function based prediction. Please try sequence based approach.</h5>\n";
+	return;
+    }
+
+    print "<h5>There are $total public isolate genes associated with the same function(s) as this gene.</h5>\n";
+
+    ## check img term?
+    my @func_arr = ('IMG Term', 'COG', 'Pfam', 'TIGRfam', 'KO', 'Enzyme');
+    my %func_table_h;
+    $func_table_h{'IMG Term'} = 'gene_img_functions';
+    $func_table_h{'COG'} = 'gene_cog_groups';
+    $func_table_h{'Pfam'} = 'gene_pfam_families';
+    $func_table_h{'TIGRfam'} = 'gene_tigrfams';
+    $func_table_h{'KO'} = 'gene_ko_terms';
+    $func_table_h{'Enzyme'} = 'gene_ko_enzymes';
+    my %func_attr_h;
+    $func_attr_h{'IMG Term'} = 'function';
+    $func_attr_h{'COG'} = 'cog';
+    $func_attr_h{'Pfam'} = 'pfam_family';
+    $func_attr_h{'TIGRfam'} = 'ext_accession';
+    $func_attr_h{'KO'} = 'ko_terms';
+    $func_attr_h{'Enzyme'} = 'enzymes';
+
+    my %select_h;
+    $select_h{'IMG Term'} = $term_href;
+    $select_h{'COG'} = $cog_href;
+    $select_h{'Pfam'} = $pfam_href;
+    $select_h{'TIGRfam'} = $tigr_href;
+    $select_h{'KO'} = $ko_href;
+    $select_h{'Enzyme'} = $ec_href;
+
+    for my $func ( @func_arr ) {
+	my $table_name = $func_table_h{$func};
+	my $attr_name = $func_attr_h{$func};
+	my $sql = qq{
+            select $attr_name, count(*) from $table_name
+            where gene_oid in 
+                  (select gene_oid from gene
+                   where taxon in (select taxon_oid from taxon
+                         where is_public = 'Yes'
+                         and genome_type = 'isolate'
+                         and obsolete_flag = 'No') 
+                   $cond )
+            group by $attr_name
+            };
+	my %res;
+	printStartWorkingDiv($func);
+	print "Checking $func distribution ...<br/>\n";
+	my $cur = execSql( $dbh, $sql, $verbose );
+	for (;;) {
+	    my ($id2, $cnt) = $cur->fetchrow();
+	    last if ! $id2;
+	    $res{$id2} = $cnt;
+	}
+	$cur->finish();
+	printEndWorkingDiv($func);
+
+	printFuncCount($func, \%res, $select_h{$func});
+    }
+
+    print "<h5>List genes with all selected functions.</h5>\n";
+    my $name = "_section_${section}_listClosureGenes";
+    print submit(
+        -name  => $name,
+        -value => "List Genes",
+        -class => 'smdefbutton'
+    );
+
+}
+
+
+sub printFuncCount {
+    my ($func_type, $href, $select_h) = @_;
+
+    print "<h4>$func_type Distribution</h4>\n";
+
+    my $table_name = 'cog';
+    my $id_name = 'cog_id';
+    my $attr_name = 'cog_name';
+    my $select_name = 'cog_id';
+
+    if ( lc($func_type) eq 'pfam' ) {
+	$table_name = 'pfam_family';
+	$id_name = 'ext_accession';
+	$attr_name = 'description';
+	$select_name = 'pfam_id';
+    }
+    elsif ( lc($func_type) eq 'tigrfam' ) {
+	$table_name = 'tigrfam';
+	$id_name = 'ext_accession';
+	$attr_name = 'expanded_name';
+	$select_name = 'tigr_id';
+    }
+    elsif ( lc($func_type) eq 'img_term' ) {
+	$table_name = 'img_term';
+	$id_name = 'term_oid';
+	$attr_name = 'term';
+	$select_name = 'term_oid';
+    }
+    elsif ( lc($func_type) eq 'ko' ) {
+	$table_name = 'ko_term';
+	$id_name = 'ko_id';
+	$attr_name = 'definition';
+	$select_name = 'ko_id';
+    }
+    elsif ( lc($func_type) eq 'enzyme' ) {
+	$table_name = 'enzyme';
+	$id_name = 'ec_number';
+	$attr_name = 'enzyme_name';
+	$select_name = 'ec_number';
+    }
+    my $cnt = 0;
+    my @keys = keys %$href;
+    if ( scalar(@keys) == 0 ) {
+	print "<h6>None of the genes has this function.</h6>\n";
+	return;
+    }
+
+    my $dbh = dbLogin();
+    print "<table class='img'>\n";
+    print "<th class='img'>Select</th>\n";
+    print "<th class='img'>$func_type</th>\n";
+    print "<th class='img'>Name</th>\n";
+    print "<th class='img'>Gene Count</th>\n";
+    for my $k ( sort @keys ) {
+	my $ck2 = '';
+	if ( $select_h->{$k} ) {
+	    $ck2 = 'checked';
+	}
+	print "<tr class='img'>\n";
+	print "<td class='img'><input type='checkbox' name='$select_name' value='$k' $ck2 /></td>";
+	print "<td class='img'>$k</td>\n";
+	my $name = db_findVal($dbh, $table_name, $id_name, $k,
+			      $attr_name, '');
+	print "<td class='img'>$name</td>\n";
+	print "<td class='img' align='right'>" . $href->{$k} . "</td>\n";
+	print "</tr>\n";
+    }
+    print "</table>\n";
 }
 
 ############################################################################
@@ -5189,6 +5461,8 @@ sub printProdNameRecords {
     my $disp_opt    = param("findProdNameOption");
     my $ortho_homo  = "Homolog";
 
+    my %aa_len;
+    my $in_file = 'No';
     my $nRecs = @$recs_ref;
     if ( $nRecs == 0 ) {
         print "<p>\n";
@@ -5201,18 +5475,17 @@ sub printProdNameRecords {
     if ( $show_myimg_login && $contact_oid > 0 ) {
         $it->addColSpec("Select");
     }
-    $it->addColSpec( "$ortho_homo Gene",         "number asc",  "left" );
-    $it->addColSpec( "$ortho_homo Product Name", "char asc",    "left" );
-    $it->addColSpec( "IMG Term OID",             "number asc",  "left" );
-    $it->addColSpec( "IMG Term",                 "char asc",    "left" );
+    $it->addColSpec( "$ortho_homo Gene",         "number asc", "left" );
+    $it->addColSpec( "$ortho_homo Product Name", "char asc",   "left" );
+    $it->addColSpec( "IMG Term OID",             "number asc", "left" );
+    $it->addColSpec( "IMG Term",                 "char asc",   "left" );
     $it->addColSpec( "Domain", "char asc", "center", "",
-		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
-    $it->addColSpec( "Status", "char asc", "center", "",
-		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
-    $it->addColSpec( "Genome", "char asc",    "left" );
-    $it->addColSpec( "Percent<br/>Identity",     "number desc", "right" );
-    $it->addColSpec( "Alignment<br/>On<br/>Query Gene" );
-    $it->addColSpec( "Alignment<br/>On<br/>$ortho_homo Gene" );
+        "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "char asc", "center", "", "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome", "char asc", "left" );
+    $it->addColSpec( "Percent<br/>Identity", "number desc", "right" );
+    $it->addColSpec("Alignment<br/>On<br/>Query Gene");
+    $it->addColSpec("Alignment<br/>On<br/>$ortho_homo Gene");
     $it->addColSpec( "E-value",       "number asc",  "left" );
     $it->addColSpec( "Bit<br/>Score", "number desc", "right" );
 
@@ -5233,26 +5506,26 @@ sub printProdNameRecords {
     my %gene_score;
     if ($get_top_n) {
         my $sql1 = "select gene_display_name from gene where gene_oid = ?";
+
         #my $sql2 = "select count(*) from gene_img_functions where gene_oid = ?";
-        my $cur1 = prepSql($dbh, $sql1, $verbose);
+        my $cur1 = prepSql( $dbh, $sql1, $verbose );
+
         #my $cur2 = prepSql($dbh, $sql2, $verbose);
-        
+
         for my $r0 (@$recs_ref) {
             my (
-                 $gene_oid1,        $gene_oid2,   $taxon_oid2,
-                 $percent_identity, $query_start, $query_end,
-                 $subj_start,       $subj_end,    $evalue,
-                 $bit_score,        $align_length
-              )
-              = split( /\t/, $r0 );
+                $gene_oid1,  $gene_oid2, $taxon_oid2, $percent_identity, $query_start, $query_end,
+                $subj_start, $subj_end,  $evalue,     $bit_score,        $align_length
+            ) = split( /\t/, $r0 );
             next if $gene_oid1 == $gene_oid2;
 
             #webLog("$gene_oid2 \n");
-            execStmt($cur1, $gene_oid2);
+            execStmt( $cur1, $gene_oid2 );
             my ($prod_name2) = $cur1->fetchrow();
-#            my $prod_name2 = 
-#              db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid2,
-#                          'gene_display_name', '' );
+
+            #            my $prod_name2 =
+            #              db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid2,
+            #                          'gene_display_name', '' );
             if ( $disp_opt eq 'hideHypothetical' ) {
                 my $lc_name2 = lc($prod_name2);
                 if ( $lc_name2 =~ /hypothetical protein/ ) {
@@ -5262,13 +5535,13 @@ sub printProdNameRecords {
 
             #execStmt($cur2, $gene_oid2);
             #my ($term_cnt) = $cur2->fetchrow();
-#            my $term_cnt =
-#              db_findCount( $dbh, 'gene_img_functions',
-#                            "gene_oid = ? ", $gene_oid2 );
+            #            my $term_cnt =
+            #              db_findCount( $dbh, 'gene_img_functions',
+            #                            "gene_oid = ? ", $gene_oid2 );
             #if ( $term_cnt == 0 ) {
 
-                # gene has no terms
-                #		 next;
+            # gene has no terms
+            #		 next;
             #}
 
             if ( $gene_score{$bit_score} ) {
@@ -5279,6 +5552,7 @@ sub printProdNameRecords {
             }
         }
         $cur1->finish();
+
         #$cur2->finish();
 
         sub reverse_num { $b <=> $a; }
@@ -5296,21 +5570,16 @@ sub printProdNameRecords {
     $cnt = 0;
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,        $gene_oid2,   $taxon_oid2,
-             $percent_identity, $query_start, $query_end,
-             $subj_start,       $subj_end,    $evalue,
-             $bit_score,        $align_length
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,  $gene_oid2, $taxon_oid2, $percent_identity, $query_start, $query_end,
+            $subj_start, $subj_end,  $evalue,     $bit_score,        $align_length
+        ) = split( /\t/, $r0 );
         next if $gene_oid1 == $gene_oid2;
 
         if ( $get_top_n && $bit_score < $min_score ) {
             next;
         }
 
-        my $prod_name2 =
-          db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid2, 'gene_display_name',
-                      '' );
+        my $prod_name2 = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid2, 'gene_display_name', '' );
         if ( $disp_opt eq 'hideHypothetical' ) {
             my $lc_name2 = lc($prod_name2);
             if ( $lc_name2 =~ /hypothetical protein/ ) {
@@ -5318,9 +5587,7 @@ sub printProdNameRecords {
             }
         }
 
-        my @term_oids =
-          db_findSetVal( $dbh, 'gene_img_functions', 'gene_oid', $gene_oid2,
-                         'function', '' );
+        my @term_oids = db_findSetVal( $dbh, 'gene_img_functions', 'gene_oid', $gene_oid2, 'function', '' );
         if ( scalar(@term_oids) == 0 ) {
 
             # gene has no terms
@@ -5343,7 +5610,7 @@ sub printProdNameRecords {
 
         $percent_identity = sprintf( "%.2f", $percent_identity );
         $evalue           = sprintf( "%.2e", $evalue );
-        $domain2 = substr( $domain2, 0, 1 );
+        $domain2     = substr( $domain2,     0, 1 );
         $seq_status2 = substr( $seq_status2, 0, 1 );
         $bit_score = sprintf( "%d", $bit_score );
 
@@ -5361,7 +5628,7 @@ sub printProdNameRecords {
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$gene_oid2";
-        $r   .= $gene_oid2 . $sd . alink( $url, $gene_oid2 ) . "\t";
+        $r .= $gene_oid2 . $sd . alink( $url, $gene_oid2 ) . "\t";
 
         # gene product name
         $r .= "$prod_name2\t";
@@ -5377,9 +5644,7 @@ sub printProdNameRecords {
             if ( $term_h{$term_oid2} ) {
                 $t2 = $term_h{$term_oid2};
             } else {
-                $t2 =
-                  db_findVal( $dbh, 'img_term', 'term_oid', $term_oid2, 'term',
-                              '' );
+                $t2 = db_findVal( $dbh, 'img_term', 'term_oid', $term_oid2, 'term', '' );
                 $term_h{$term_oid2} = $t2;
             }
 
@@ -5401,26 +5666,37 @@ sub printProdNameRecords {
 	     };
         my $cur2 = execSql( $dbh, $sql2, $verbose, $gene_oid2 );
         my ( $taxon_display_name2, $domain2, $seq_status2 ) = $cur2->fetchrow();
+
         #$cur2->finish();
 
         $r .= "$domain2\t";
         $r .= "$seq_status2\t";
 
-        my $aa_seq_length1 = geneOid2AASeqLength( $dbh, $gene_oid1 );
+        my $aa_seq_length1 = 1;
+	if ( $aa_len{$gene_oid1} ) {
+	    $aa_seq_length1 = $aa_len{$gene_oid1};
+	}
+	elsif ( isInt($gene_oid1) ) {
+	    $aa_seq_length1 = geneOid2AASeqLength( $dbh, $gene_oid1 );
+	    $aa_len{$gene_oid1} = $aa_seq_length1;
+	}
+	else {
+	    my ($t2, $d2, $g2) = split(/\:/, $gene_oid1);
+	    my $seq_merfs = MetaUtil::getGeneFaa($g2, $t2, $d2);
+	    $aa_seq_length1 = length($seq_merfs);
+	    $aa_len{$gene_oid1} = $aa_seq_length1;
+	    $in_file = 'Yes';
+	}
         my $aa_seq_length2 = geneOid2AASeqLength( $dbh, $gene_oid2 );
 
         my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail";
         $url .= "&taxon_oid=$taxon_oid2";
-        $r   .=
-          $taxon_display_name2 . $sd
-          . alink( $url, $taxon_display_name2 ) . "\t";
+        $r .= $taxon_display_name2 . $sd . alink( $url, $taxon_display_name2 ) . "\t";
 
         $r .= "$percent_identity\t";
 
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
-        $r .=
-          $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        $r .= $sd . alignImage( $subj_start,  $subj_end,  $aa_seq_length2 ) . "\t";
 
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
@@ -5434,7 +5710,7 @@ sub printProdNameRecords {
                 and gxf.db_name = 'TIGRFam' 
                 and gxf.id = tigr.ext_accession
             };
-        my $tigrfam = db_getValues2( $dbh, $tigr_sql, "",$gene_oid2 );
+        my $tigrfam = db_getValues2( $dbh, $tigr_sql, "", $gene_oid2 );
         $r .= "$tigrfam\t";
 
         # COG
@@ -5444,17 +5720,17 @@ sub printProdNameRecords {
                 where g.gene_oid = ?
                 and g.cog = c.cog_id
             };
-        my $cog = db_getValues2( $dbh, $cog_sql,"",$gene_oid2 );
+        my $cog = db_getValues2( $dbh, $cog_sql, "", $gene_oid2 );
         $r .= "$cog\t";
 
         # Pfam
         my $pfam_sql = qq{
-            select g.gene_oid, p.description
+            select distinct g.gene_oid, p.description
                 from gene_pfam_families g, pfam_family p
                 where g.gene_oid = ?
                 and g.pfam_family = p.ext_accession
             };
-        my $pfam = db_getValues2( $dbh, $pfam_sql, "",$gene_oid2 );
+        my $pfam = db_getValues2( $dbh, $pfam_sql, "", $gene_oid2 );
         $r .= "$pfam\t";
 
         my $ko_sql = qq{
@@ -5463,7 +5739,7 @@ sub printProdNameRecords {
 		 where g.gene_oid = ?
 		 and g.ko_terms = ko.ko_id
 	     };
-        my $ko = db_getValues2( $dbh, $ko_sql, "",$gene_oid2 );
+        my $ko = db_getValues2( $dbh, $ko_sql, "", $gene_oid2 );
         $r .= "$ko\t";
 
         $it->addRow($r);
@@ -5479,20 +5755,20 @@ sub printProdNameRecords {
     }
 
     # show button
-    if ( $show_myimg_login && $contact_oid > 0 ) {
+    if ( $in_file = 'Yes' ) {
+	print "<h5>IMG does not support MyIMG annotation for metagenome genes.</h5>\n";
+    }
+    elsif ( $show_myimg_login && $contact_oid > 0 ) {
         print "<p>\n";
         print "Add or replace MyIMG annotation by the selected gene.<br/>\n";
-        print "  <input type='radio' name='ar_myimgprod' "
-	    . "value='add' checked />Add\n";
+        print "  <input type='radio' name='ar_myimgprod' " . "value='add' checked />Add\n";
         print nbsp(2);
-        print "  <input type='radio' name='ar_myimgprod' "
-	    . "value='replace' />Replace\n";
-	print "</p>";
+        print "  <input type='radio' name='ar_myimgprod' " . "value='replace' />Replace\n";
+        print "</p>";
 
         print "<p>Use selected gene:\n";
         print "<select name='fld_myimgprod' class='img' size='1'>\n";
-        print "    <option value='prod_name' selected>"
-	    . "Gene Product Name</option>\n";
+        print "    <option value='prod_name' selected>" . "Gene Product Name</option>\n";
         print "    <option value='term'>IMG Term</option>\n";
         print "    <option value='tigrfam'>TIGRfam</option>\n";
         print "    <option value='cog'>COG</option>\n";
@@ -5503,9 +5779,9 @@ sub printProdNameRecords {
 
         my $name = "_section_${section}_dbAddMyImgProdName";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
     }
 
@@ -5536,10 +5812,8 @@ sub dbAddMyImgProdName {
     }
 
     # login
-    my $dbh       = dbLogin();
-    my $myimg_cnt =
-      db_findCount( $dbh, 'gene_myimg_functions',
-                    "gene_oid = $gene_oid and modified_by = $contact_oid" );
+    my $dbh = dbLogin();
+    my $myimg_cnt = db_findCount( $dbh, 'gene_myimg_functions', "gene_oid = $gene_oid and modified_by = $contact_oid" );
 
     my $ar_myimgprod  = param('ar_myimgprod');
     my $fld_myimgprod = param('fld_myimgprod');
@@ -5566,7 +5840,7 @@ sub dbAddMyImgProdName {
     		and gxf.db_name = 'TIGRFam' 
     		and gxf.id = tigr.ext_accession
 	    };
-        $new_prod_name = db_getValues2( $dbh, $tigr_sql, "",$gene_oid2 );
+        $new_prod_name = db_getValues2( $dbh, $tigr_sql, "", $gene_oid2 );
         if ( blankStr($new_prod_name) ) {
             webError("No TIGRfam for selected gene $gene_oid2");
             return;
@@ -5602,7 +5876,7 @@ sub dbAddMyImgProdName {
 		where g.gene_oid = ?
 		and g.ko_terms = ko.ko_id
 	    };
-        $new_prod_name = db_getValues2( $dbh, $ko_sql, "",$gene_oid2 );
+        $new_prod_name = db_getValues2( $dbh, $ko_sql, "", $gene_oid2 );
         if ( blankStr($new_prod_name) ) {
             webError("No KO Term for selected gene $gene_oid2");
             return;
@@ -5610,9 +5884,7 @@ sub dbAddMyImgProdName {
     } else {
 
         # prod name
-        $new_prod_name =
-          db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid2, 'gene_display_name',
-                      '' );
+        $new_prod_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid2, 'gene_display_name', '' );
         if ( blankStr($new_prod_name) ) {
             webError("No gene product name for selected gene $gene_oid2");
             return;
@@ -5626,9 +5898,7 @@ sub dbAddMyImgProdName {
     if ( $myimg_cnt > 0 ) {
 
         # there is an myimg annot
-        my $myimg_name =
-          db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid', $gene_oid,
-                      'product_name', '' );
+        my $myimg_name = db_findVal( $dbh, 'gene_myimg_functions', 'gene_oid', $gene_oid, 'product_name', '' );
         if ( $ar_myimgprod ne 'replace' && !blankStr($myimg_name) ) {
             $new_prod_name = $myimg_name . '; ' . $new_prod_name;
         }
@@ -5695,11 +5965,12 @@ sub printKoEcCandidateList {
     if ( $tag eq 'EC' ) {
         $func_name = enzymeName( $dbh, $funcId );
     } elsif ( $tag eq 'KO' ) {
-	my $sql2 = "select definition from ko_term where ko_id = ?";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	($func_name) = $cur2->fetchrow();
-	$cur2->finish();
+        my $sql2 = "select definition from ko_term where ko_id = ?";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        ($func_name) = $cur2->fetchrow();
+        $cur2->finish();
     } else {
+
         #$dbh->disconnect();
         webError("This function is only applicable to enzymes or KOs.");
         return;
@@ -5711,41 +5982,42 @@ sub printKoEcCandidateList {
     print "<h3>Function: ($funcId) " . escapeHTML($func_name) . "</h3>\n";
 
     my $roi_label = param('roi_label');
-    my $match_ko = "";
-    if ( $roi_label ) {
-	print hiddenVar( "roi_label",  $roi_label );
-	$match_ko = 'KO:' . $roi_label;
+    my $match_ko  = "";
+    if ($roi_label) {
+        print hiddenVar( "roi_label", $roi_label );
+        $match_ko = 'KO:' . $roi_label;
     }
 
     if ( $funcId =~ /^EC/ ) {
-	## show KO too
-	my $sql2 = "select k.ko_id, k.ko_name, k.definition from ko_term k, ko_term_enzymes kte where kte.enzymes = ? and kte.ko_id = k.ko_id";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	for (;;) { 
-	    my ($ko2, $name2, $def2) = $cur2->fetchrow();
-	    last if ! $ko2; 
+        ## show KO too
+        my $sql2 =
+"select k.ko_id, k.ko_name, k.definition from ko_term k, ko_term_enzymes kte where kte.enzymes = ? and kte.ko_id = k.ko_id";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        for ( ; ; ) {
+            my ( $ko2, $name2, $def2 ) = $cur2->fetchrow();
+            last if !$ko2;
 
-	    if ( $match_ko && ($match_ko ne $ko2) ) {
-		next;
-	    }
-	    print "<p>$ko2 ($name2): $def2\n";
-	}
-	$cur2->finish(); 
-    }
-    elsif ( $funcId =~ /^KO/ ) {
-	## show enzymes too
-	my $sql2 = "select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
-	my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
-	for (;;) { 
-	    my ($ko2, $name2) = $cur2->fetchrow();
-	    last if ! $ko2; 
+            if ( $match_ko && ( $match_ko ne $ko2 ) ) {
+                next;
+            }
+            print "<p>$ko2 ($name2): $def2\n";
+        }
+        $cur2->finish();
+    } elsif ( $funcId =~ /^KO/ ) {
+        ## show enzymes too
+        my $sql2 =
+"select e.ec_number, e.enzyme_name from enzyme e, ko_term_enzymes kte where kte.ko_id = ? and kte.enzymes = e.ec_number";
+        my $cur2 = execSql( $dbh, $sql2, $verbose, $funcId );
+        for ( ; ; ) {
+            my ( $ko2, $name2 ) = $cur2->fetchrow();
+            last if !$ko2;
 
-	    if ( $match_ko && ($match_ko ne $ko2) ) {
-		next;
-	    }
-	    print "<p>$ko2 ($name2)\n";
-	}
-	$cur2->finish(); 
+            if ( $match_ko && ( $match_ko ne $ko2 ) ) {
+                next;
+            }
+            print "<p>$ko2 ($name2)\n";
+        }
+        $cur2->finish();
     }
 
     print "</p>\n";
@@ -5830,7 +6102,7 @@ sub getKoEcRecords {
 	 };
 
     if ( $tag eq 'KO' ) {
-	$sql         = qq{
+        $sql = qq{
 	 select g1.gene_oid, g1.gene_display_name,
 	 kt.ko_id, kt.definition,
 	 g1.aa_seq_length, gckt.align_length, gckt.percent_identity,
@@ -5855,19 +6127,15 @@ sub getKoEcRecords {
     my $last_gene_oid = 0;
     for ( ; ; ) {
         my (
-             $gene_oid1,        $gene_display_name1, $ko_id,
-             $ko_def,           $aa_seq_length1,     $align_length,
-             $percent_identity, $bit_score,          $evalue,
-             $query_start,      $query_end,          $subj_start,
-             $subj_end
-          )
-          = $cur->fetchrow();
+            $gene_oid1,    $gene_display_name1, $ko_id,     $ko_def, $aa_seq_length1,
+            $align_length, $percent_identity,   $bit_score, $evalue, $query_start,
+            $query_end,    $subj_start,         $subj_end
+        ) = $cur->fetchrow();
         last if !$gene_oid1;
 
         # check percent alignment
         if ( $aa_seq_length1 > 0 ) {
-            my $qfrac =
-              ( $query_end - $query_start + 1 ) * 100 / $aa_seq_length1;
+            my $qfrac = ( $query_end - $query_start + 1 ) * 100 / $aa_seq_length1;
             if ( $qfrac < $minPercAlign ) {
                 next;
             }
@@ -5875,9 +6143,9 @@ sub getKoEcRecords {
             next;
         }
 
-	if ( $gene_oid1 == $last_gene_oid ) {
-	    next;
-	}
+        if ( $gene_oid1 == $last_gene_oid ) {
+            next;
+        }
 
         my $r;
         $r .= "$gene_oid1\t";
@@ -5894,7 +6162,7 @@ sub getKoEcRecords {
         $r .= "$subj_end\t";
 
         push( @ko_ec_recs, $r );
-	$last_gene_oid = $gene_oid1;
+        $last_gene_oid = $gene_oid1;
     }
     $cur->finish();
 
@@ -5925,29 +6193,27 @@ sub printRecordsWithKoEc {
     if ( $tag eq 'EC' || $tag eq 'KO' ) {
         $it->addColSpec( "Enzyme for Candidate Gene", "char asc", "left" );
     }
-    $it->addColSpec( "$ortho_homo Gene", "number asc", "left" );
-    $it->addColSpec( "$ortho_homo Gene Product<br/>(IMG Term)",
-                     "char asc", "left" );
+    $it->addColSpec( "$ortho_homo Gene",                        "number asc", "left" );
+    $it->addColSpec( "$ortho_homo Gene Product<br/>(IMG Term)", "char asc",   "left" );
     if ( $tag eq 'EC' || $tag eq 'KO' ) {
         $it->addColSpec( "Enzyme for $ortho_homo Gene", "char asc", "left" );
     }
 
-    $it->addColSpec( "Domain",               "char asc",    "center", "",
-		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
-    $it->addColSpec( "Status",               "char asc",    "center", "",
-		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
-    $it->addColSpec( "Genome",               "char asc",    "left" );
+    $it->addColSpec( "Domain", "char asc", "center", "",
+        "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
+    $it->addColSpec( "Status", "char asc", "center", "", "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
+    $it->addColSpec( "Genome", "char asc", "left" );
     $it->addColSpec( "Percent<br/>Identity", "number desc", "right" );
-    $it->addColSpec( "Alignment<br/>On<br/>Candidate");
-    $it->addColSpec( "Alignment<br/>On<br/>$ortho_homo");
+    $it->addColSpec("Alignment<br/>On<br/>Candidate");
+    $it->addColSpec("Alignment<br/>On<br/>$ortho_homo");
     $it->addColSpec( "E-value",       "number asc",  "left" );
     $it->addColSpec( "Bit<br/>Score", "number desc", "right" );
 
     $it->addColSpec("Confirmed<br/>by KO?");
-    $it->addColSpec( "KO ID",                           "number asc", "left" );
-    $it->addColSpec( "KO Definition",                   "char asc",   "left" );
-    $it->addColSpec( "Enzymes associated with this KO", "char asc",   "left" );
-    $it->addColSpec( "KO Percent<br/>Identity", "number desc", "right" );
+    $it->addColSpec( "KO ID",                           "number asc",  "left" );
+    $it->addColSpec( "KO Definition",                   "char asc",    "left" );
+    $it->addColSpec( "Enzymes associated with this KO", "char asc",    "left" );
+    $it->addColSpec( "KO Percent<br/>Identity",         "number desc", "right" );
     $it->addColSpec("KO Alignment<br/>On<br/>Candidate");
     $it->addColSpec( "KO E-value",       "number asc",  "left" );
     $it->addColSpec( "KO Bit<br/>Score", "number desc", "right" );
@@ -5958,13 +6224,10 @@ sub printRecordsWithKoEc {
     my %ko_ec_h;
     for my $r2 (@$ko_ec_recs_ref) {
         my (
-             $gene_oid1,        $gene_display_name1, $ko_id,
-             $ko_def,           $aa_seq_length1,     $align_length,
-             $percent_identity, $bit_score,          $evalue,
-             $query_start,      $query_end,          $subj_start,
-             $subj_end
-          )
-          = split( /\t/, $r2 );
+            $gene_oid1,    $gene_display_name1, $ko_id,     $ko_def, $aa_seq_length1,
+            $align_length, $percent_identity,   $bit_score, $evalue, $query_start,
+            $query_end,    $subj_start,         $subj_end
+        ) = split( /\t/, $r2 );
         $ko_ec_h{$gene_oid1} =
 "$gene_display_name1\t$ko_id\t$ko_def\t$query_start\t$query_end\t$aa_seq_length1\t$percent_identity\t$bit_score\t$evalue";
     }
@@ -5977,14 +6240,11 @@ sub printRecordsWithKoEc {
 
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
-             $gene_oid2,   $gene_display_name2,  $aa_seq_length2,
-             $taxon_oid2,  $taxon_display_name2, $domain2,
-             $seq_status2, $percent_identity,    $bit_score,
-             $evalue,      $query_start,         $query_end,
-             $subj_start,  $subj_end
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1,      $gene_oid2,   $gene_display_name2,
+            $aa_seq_length2,   $taxon_oid2,         $taxon_display_name2, $domain2,     $seq_status2,
+            $percent_identity, $bit_score,          $evalue,              $query_start, $query_end,
+            $subj_start,       $subj_end
+        ) = split( /\t/, $r0 );
         if ( $gene_score{$gene_oid1} ) {
 
             # already has some hit. compare.
@@ -6007,14 +6267,11 @@ sub printRecordsWithKoEc {
     my $dbh = dbLogin();
     for my $r0 (@$recs_ref) {
         my (
-             $gene_oid1,   $gene_display_name1,  $aa_seq_length1,
-             $gene_oid2,   $gene_display_name2,  $aa_seq_length2,
-             $taxon_oid2,  $taxon_display_name2, $domain2,
-             $seq_status2, $percent_identity,    $bit_score,
-             $evalue,      $query_start,         $query_end,
-             $subj_start,  $subj_end
-          )
-          = split( /\t/, $r0 );
+            $gene_oid1,        $gene_display_name1, $aa_seq_length1,      $gene_oid2,   $gene_display_name2,
+            $aa_seq_length2,   $taxon_oid2,         $taxon_display_name2, $domain2,     $seq_status2,
+            $percent_identity, $bit_score,          $evalue,              $query_start, $query_end,
+            $subj_start,       $subj_end
+        ) = split( /\t/, $r0 );
 
         if ( $gene_score{$gene_oid1} ) {
             my ( $g2, $score2 ) = split( /,/, $gene_score{$gene_oid1} );
@@ -6036,13 +6293,11 @@ sub printRecordsWithKoEc {
 
         $percent_identity = sprintf( "%.2f", $percent_identity );
         $evalue           = sprintf( "%.2e", $evalue );
-        $domain2 = substr( $domain2, 0, 1 );
+        $domain2     = substr( $domain2,     0, 1 );
         $seq_status2 = substr( $seq_status2, 0, 1 );
         $bit_score = sprintf( "%d", $bit_score );
         my $r;
-        $r .=
-            "$sd<input type='checkbox' name='gene_oid_hit' "
-          . "value='$gene_oid1,$gene_oid2' />\t";
+        $r .= "$sd<input type='checkbox' name='gene_oid_hit' " . "value='$gene_oid1,$gene_oid2' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$gene_oid1";
@@ -6064,50 +6319,38 @@ sub printRecordsWithKoEc {
         $r .= "$seq_status2\t";
         my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail";
         $url .= "&taxon_oid=$taxon_oid2";
-        $r   .=
-          $taxon_display_name2 . $sd
-          . alink( $url, $taxon_display_name2 ) . "\t";
+        $r .= $taxon_display_name2 . $sd . alink( $url, $taxon_display_name2 ) . "\t";
 
         $r .= "$percent_identity\t";
 
-	if ( ! $aa_seq_length1 && isInt($gene_oid1)) {
-	    $aa_seq_length1 = geneOid2AASeqLength($dbh, $gene_oid1);
-	}
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
-	if ( ! $aa_seq_length2 && isInt($gene_oid2)) {
-	    $aa_seq_length2 = geneOid2AASeqLength($dbh, $gene_oid2);
-	}
-        $r .=
-          $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
+        if ( !$aa_seq_length1 && isInt($gene_oid1) ) {
+            $aa_seq_length1 = geneOid2AASeqLength( $dbh, $gene_oid1 );
+        }
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        if ( !$aa_seq_length2 && isInt($gene_oid2) ) {
+            $aa_seq_length2 = geneOid2AASeqLength( $dbh, $gene_oid2 );
+        }
+        $r .= $sd . alignImage( $subj_start, $subj_end, $aa_seq_length2 ) . "\t";
 
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
 
         if ( $ko_ec_h{$gene_oid1} ) {
             my (
-                 $gene_name1,         $ko_id,
-                 $ko_def,             $ko_ec_query_start,
-                 $ko_ec_query_end,    $ko_ec_aa_seq_length1,
-                 $ko_ec_percent_iden, $ko_ec_bit_score,
-                 $ko_ec_evalue
-              )
-              = split( /\t/, $ko_ec_h{$gene_oid1} );
+                $gene_name1,         $ko_id,           $ko_def,
+                $ko_ec_query_start,  $ko_ec_query_end, $ko_ec_aa_seq_length1,
+                $ko_ec_percent_iden, $ko_ec_bit_score, $ko_ec_evalue
+            ) = split( /\t/, $ko_ec_h{$gene_oid1} );
             $ko_ec_bit_score = sprintf( "%d",   $ko_ec_bit_score );
             $ko_ec_evalue    = sprintf( "%.2e", $ko_ec_evalue );
             $r .= "Yes\t";
-            my $ko_url =
-                "main.cgi?section=KeggPathwayDetail&page=koterm2"
-              . "&ko_id=$ko_id";
+            my $ko_url = "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id";
             $r .= $ko_id . $sd . alink( $ko_url, $ko_id ) . "\t";
             $r .= "$ko_def\t";
 
             # enzymes associated with ko
-            my $sql2 =
-                "select ko_id, enzymes from ko_term_enzymes "
-              . "where ko_id = '"
-              . $ko_id . "'";
-            my @ko_enzymes = db_getValues( $dbh, $sql2 );
+            my $sql2           = "select ko_id, enzymes from ko_term_enzymes " . "where ko_id = '" . $ko_id . "'";
+            my @ko_enzymes     = db_getValues( $dbh, $sql2 );
             my $ko_enzyme_list = '';
             for my $val2 (@ko_enzymes) {
                 my ( $val2_id, $val2_ec ) = split( /\t/, $val2 );
@@ -6124,10 +6367,7 @@ sub printRecordsWithKoEc {
             $r .= "$ko_enzyme_list\t";
 
             $r .= "$ko_ec_percent_iden\t";
-            $r .= $sd
-              . alignImage( $ko_ec_query_start, $ko_ec_query_end,
-                            $ko_ec_aa_seq_length1 )
-              . "\t";
+            $r .= $sd . alignImage( $ko_ec_query_start, $ko_ec_query_end, $ko_ec_aa_seq_length1 ) . "\t";
             $r .= "$ko_ec_evalue\t";
             $r .= "$ko_ec_bit_score\t";
         } else {
@@ -6139,26 +6379,21 @@ sub printRecordsWithKoEc {
     # print the genes that only have KO hits
     for my $key ( keys %ko_ec_h ) {
         if ( $gene_score{$key} ) {
+
             # skip
             next;
         }
 
         # display
         my (
-             $gene_display_name1, $ko_id,
-             $ko_def,             $ko_ec_query_start,
-             $ko_ec_query_end,    $ko_ec_aa_seq_length1,
-             $ko_ec_percent_iden, $ko_ec_bit_score,
-             $ko_ec_evalue
-          )
-          = split( /\t/, $ko_ec_h{$key} );
+            $gene_display_name1,   $ko_id,              $ko_def,          $ko_ec_query_start, $ko_ec_query_end,
+            $ko_ec_aa_seq_length1, $ko_ec_percent_iden, $ko_ec_bit_score, $ko_ec_evalue
+        ) = split( /\t/, $ko_ec_h{$key} );
         $ko_ec_bit_score = sprintf( "%d",   $ko_ec_bit_score );
         $ko_ec_evalue    = sprintf( "%.2e", $ko_ec_evalue );
 
         my $r;
-        $r .=
-            "$sd<input type='checkbox' name='gene_oid_hit' "
-          . "value='$key,' />\t";
+        $r .= "$sd<input type='checkbox' name='gene_oid_hit' " . "value='$key,' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$key";
@@ -6168,24 +6403,19 @@ sub printRecordsWithKoEc {
         my $enzyme1 = getEnzymeForGene($key);
         $r .= "$enzyme1\t";
 
-	if ( $tag eq 'EC' || $tag eq 'KO' ) {
-	    $r .= "\t\t\t\t\t\t\t\t\t\t\t";
-	}
-	else {
-	    $r .= "\t\t\t\t\t\t\t\t\t";
-	}
+        if ( $tag eq 'EC' || $tag eq 'KO' ) {
+            $r .= "\t\t\t\t\t\t\t\t\t\t\t";
+        } else {
+            $r .= "\t\t\t\t\t\t\t\t\t";
+        }
         $r .= "Yes\t";
-        my $ko_url =
-          "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id";
+        my $ko_url = "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id";
         $r .= $ko_id . $sd . alink( $ko_url, $ko_id ) . "\t";
         $r .= "$ko_def\t";
 
         # enzymes associated with ko
-        my $sql2 =
-            "select ko_id, enzymes from ko_term_enzymes "
-          . "where ko_id = '"
-          . $ko_id . "'";
-        my @ko_enzymes = db_getValues( $dbh, $sql2 );
+        my $sql2           = "select ko_id, enzymes from ko_term_enzymes " . "where ko_id = '" . $ko_id . "'";
+        my @ko_enzymes     = db_getValues( $dbh, $sql2 );
         my $ko_enzyme_list = '';
         for my $val2 (@ko_enzymes) {
             my ( $val2_id, $val2_ec ) = split( /\t/, $val2 );
@@ -6202,16 +6432,14 @@ sub printRecordsWithKoEc {
         $r .= "$ko_enzyme_list\t";
 
         $r .= "$ko_ec_percent_iden\t";
-        $r .= $sd
-          . alignImage( $ko_ec_query_start, $ko_ec_query_end,
-                        $ko_ec_aa_seq_length1 )
-          . "\t";
+        $r .= $sd . alignImage( $ko_ec_query_start, $ko_ec_query_end, $ko_ec_aa_seq_length1 ) . "\t";
         $r .= "$ko_ec_evalue\t";
         $r .= "$ko_ec_bit_score\t";
 
         $it->addRow($r);
         $cnt++;
     }
+
     #$dbh->disconnect();
 
     print "<p>\n";
@@ -6226,30 +6454,30 @@ sub printRecordsWithKoEc {
     my $dbh         = dbLogin();
     my $contact_oid = getContactOid();
     if ( $tag eq 'ITERM'
-         && canEditGeneTerm( $dbh, $contact_oid ) )
+        && canEditGeneTerm( $dbh, $contact_oid ) )
     {
         my $name = "_section_${section}_addAssoc";
         print submit(
-                      -name  => $name,
-                      -value => "Add Term to Candidate Gene(s)",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add Term to Candidate Gene(s)",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     } elsif ( $tag eq 'EC' && $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_addMyImgEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     }
 
     my $name = "_section_${section}_addToGeneCart4";
     print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
 
@@ -6288,10 +6516,10 @@ sub printKoEcRecords {
     $it->addColSpec( "Enzyme for Candidate Gene", "char asc",   "left" );
 
     $it->addColSpec("Confirmed<br/>by KO?");
-    $it->addColSpec( "KO ID",                           "number asc", "left" );
-    $it->addColSpec( "KO Definition",                   "char asc",   "left" );
-    $it->addColSpec( "Enzymes associated with this KO", "char asc",   "left" );
-    $it->addColSpec( "KO Percent<br/>Identity", "number desc", "right" );
+    $it->addColSpec( "KO ID",                           "number asc",  "left" );
+    $it->addColSpec( "KO Definition",                   "char asc",    "left" );
+    $it->addColSpec( "Enzymes associated with this KO", "char asc",    "left" );
+    $it->addColSpec( "KO Percent<br/>Identity",         "number desc", "right" );
     $it->addColSpec("KO Alignment<br/>On<br/>Candidate");
     $it->addColSpec( "KO E-value",       "number asc",  "left" );
     $it->addColSpec( "KO Bit<br/>Score", "number desc", "right" );
@@ -6305,13 +6533,10 @@ sub printKoEcRecords {
 
     for my $r2 (@$ko_ec_recs_ref) {
         my (
-             $gene_oid1,        $gene_display_name1, $ko_id,
-             $ko_def,           $aa_seq_length1,     $align_length,
-             $percent_identity, $ko_ec_bit_score,    $ko_ec_evalue,
-             $query_start,      $query_end,          $subj_start,
-             $subj_end
-          )
-          = split( /\t/, $r2 );
+            $gene_oid1,    $gene_display_name1, $ko_id,           $ko_def,       $aa_seq_length1,
+            $align_length, $percent_identity,   $ko_ec_bit_score, $ko_ec_evalue, $query_start,
+            $query_end,    $subj_start,         $subj_end
+        ) = split( /\t/, $r2 );
 
         $ko_ec_bit_score = sprintf( "%d",   $ko_ec_bit_score );
         $ko_ec_evalue    = sprintf( "%.2e", $ko_ec_evalue );
@@ -6319,13 +6544,11 @@ sub printKoEcRecords {
         $cnt++;
         my $r;
 
-        $r .=
-            "$sd<input type='checkbox' name='gene_oid_hit' "
-          . "value='$gene_oid1' />\t";
+        $r .= "$sd<input type='checkbox' name='gene_oid_hit' " . "value='$gene_oid1' />\t";
 
         my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
         $url .= "&gene_oid=$gene_oid1";
-        $r   .= $gene_oid1 . $sd . alink( $url, $gene_oid1 ) . "\t";
+        $r .= $gene_oid1 . $sd . alink( $url, $gene_oid1 ) . "\t";
 
         $r .= "$gene_display_name1\t";
 
@@ -6333,18 +6556,13 @@ sub printKoEcRecords {
         $r .= "$enzyme1\t";
 
         $r .= "Yes\t";
-        my $ko_url =
-          "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id" .
-	  "&gene_oid=$gene_oid1";
+        my $ko_url = "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id" . "&gene_oid=$gene_oid1";
         $r .= $ko_id . $sd . alink( $ko_url, $ko_id ) . "\t";
         $r .= "$ko_def\t";
 
         # enzymes associated with ko
-        my $sql2 =
-            "select ko_id, enzymes from ko_term_enzymes "
-          . "where ko_id = '"
-          . $ko_id . "'";
-        my @ko_enzymes = db_getValues( $dbh, $sql2 );
+        my $sql2           = "select ko_id, enzymes from ko_term_enzymes " . "where ko_id = '" . $ko_id . "'";
+        my @ko_enzymes     = db_getValues( $dbh, $sql2 );
         my $ko_enzyme_list = '';
         for my $val2 (@ko_enzymes) {
             my ( $val2_id, $val2_ec ) = split( /\t/, $val2 );
@@ -6361,13 +6579,13 @@ sub printKoEcRecords {
         $r .= "$ko_enzyme_list\t";
 
         $r .= "$percent_identity\t";
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
         $r .= "$ko_ec_evalue\t";
         $r .= "$ko_ec_bit_score\t";
 
         $it->addRow($r);
     }
+
     #$dbh->disconnect();
 
     $it->printOuterTable(1);
@@ -6378,26 +6596,26 @@ sub printKoEcRecords {
     if ( $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_addMyImgEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     }
 
     my $name = "_section_${section}_addToGeneCart4";
     print submit(
-                  -name  => $name,
-                  -value => "Add To Gene Cart",
-                  -class => 'smdefbutton'
+        -name  => $name,
+        -value => "Add To Gene Cart",
+        -class => 'smdefbutton'
     );
     print nbsp(1);
 
     print "<input type='button' name='selectAll' value='Select All' "
-	. "onClick='selectAllCheckBoxes(1)', class='smbutton' />\n";
+      . "onClick='selectAllCheckBoxes(1)', class='smbutton' />\n";
     print nbsp(1);
     print "<input type='button' name='clearAll' value='Clear All' "
-	. "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
+      . "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
 
     return $cnt;
 }
@@ -6410,10 +6628,9 @@ sub printGeneKOEnzymeList {
 
     print "<h1>Candidate Enzymes Using Kegg Onthology (KO)</h1>\n";
 
-    my $dbh          = dbLogin();
-    my $product_name =
-      db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name',
-                  '' );
+    my $dbh = dbLogin();
+    my $product_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid, 'gene_display_name', '' );
+
     #$dbh->disconnect();
     print "<h3>Gene ($gene_oid): " . escapeHTML($product_name) . "</h3>\n";
 
@@ -6458,13 +6675,10 @@ sub getGeneKOEnzymeRecords {
     my @ko_ec_recs;
     for ( ; ; ) {
         my (
-             $ec_number,        $enzyme_name1,   $ko_id,
-             $ko_def,           $aa_seq_length1, $align_length,
-             $percent_identity, $bit_score,      $evalue,
-             $query_start,      $query_end,      $subj_start,
-             $subj_end
-          )
-          = $cur->fetchrow();
+            $ec_number,    $enzyme_name1,     $ko_id,     $ko_def, $aa_seq_length1,
+            $align_length, $percent_identity, $bit_score, $evalue, $query_start,
+            $query_end,    $subj_start,       $subj_end
+        ) = $cur->fetchrow();
         last if !$ec_number;
 
         my $r;
@@ -6508,12 +6722,12 @@ sub printGeneKOEnzymeRecords {
     if ( $show_myimg_login && $contact_oid > 0 ) {
         $it->addColSpec("Select");
     }
-    $it->addColSpec( "Candidate Enzyme",                "number asc", "left" );
-    $it->addColSpec( "Enzyme Name",                     "char asc",   "left" );
-    $it->addColSpec( "KO ID",                           "number asc", "left" );
-    $it->addColSpec( "KO Defnition",                    "char asc",   "left" );
-    $it->addColSpec( "Enzymes associated with this KO", "char asc",   "left" );
-    $it->addColSpec( "Percent<br/>Identity", "number desc", "right" );
+    $it->addColSpec( "Candidate Enzyme",                "number asc",  "left" );
+    $it->addColSpec( "Enzyme Name",                     "char asc",    "left" );
+    $it->addColSpec( "KO ID",                           "number asc",  "left" );
+    $it->addColSpec( "KO Defnition",                    "char asc",    "left" );
+    $it->addColSpec( "Enzymes associated with this KO", "char asc",    "left" );
+    $it->addColSpec( "Percent<br/>Identity",            "number desc", "right" );
     $it->addColSpec("Alignment<br/>On<br/>Candidate");
 
     # need to hide this one for the time being, because the other
@@ -6530,13 +6744,10 @@ sub printGeneKOEnzymeRecords {
     my $dbh = dbLogin();
     for my $r0 (@$recs_ref) {
         my (
-             $ec_number,        $enzyme_name,    $ko_id,
-             $ko_def,           $aa_seq_length1, $align_length,
-             $percent_identity, $bit_score,      $evalue,
-             $query_start,      $query_end,      $subj_start,
-             $subj_end
-          )
-          = split( /\t/, $r0 );
+            $ec_number,    $enzyme_name,      $ko_id,     $ko_def, $aa_seq_length1,
+            $align_length, $percent_identity, $bit_score, $evalue, $query_start,
+            $query_end,    $subj_start,       $subj_end
+        ) = split( /\t/, $r0 );
 
         $cnt++;
 
@@ -6545,9 +6756,7 @@ sub printGeneKOEnzymeRecords {
         $bit_score        = sprintf( "%d",   $bit_score );
         my $r;
         if ( $show_myimg_login && $contact_oid > 0 ) {
-            $r .=
-                "$sd<input type='checkbox' name='ec_hit' "
-              . "value='$ec_number' />\t";
+            $r .= "$sd<input type='checkbox' name='ec_hit' " . "value='$ec_number' />\t";
         }
 
         my $enzyme_base_url = $env->{enzyme_base_url};
@@ -6556,17 +6765,13 @@ sub printGeneKOEnzymeRecords {
         $r .= $ec_number . $sd . alink( $url, $ec_number ) . "\t";
         $r .= "$enzyme_name\t";
 
-        my $ko_url =
-          "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id";
+        my $ko_url = "main.cgi?section=KeggPathwayDetail&page=koterm2" . "&ko_id=$ko_id";
         $r .= $ko_id . $sd . alink( $ko_url, $ko_id ) . "\t";
         $r .= "$ko_def\t";
 
         # enzymes associated with ko
-        my $sql2 =
-            "select ko_id, enzymes from ko_term_enzymes "
-          . "where ko_id = '"
-          . $ko_id . "'";
-        my @ko_enzymes = db_getValues( $dbh, $sql2 );
+        my $sql2           = "select ko_id, enzymes from ko_term_enzymes " . "where ko_id = '" . $ko_id . "'";
+        my @ko_enzymes     = db_getValues( $dbh, $sql2 );
         my $ko_enzyme_list = '';
         for my $val2 (@ko_enzymes) {
             my ( $val2_id, $val2_ec ) = split( /\t/, $val2 );
@@ -6584,13 +6789,13 @@ sub printGeneKOEnzymeRecords {
 
         $r .= "$percent_identity\t";
 
-        $r .=
-          $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
+        $r .= $sd . alignImage( $query_start, $query_end, $aa_seq_length1 ) . "\t";
 
         $r .= "$evalue\t";
         $r .= "$bit_score\t";
         $it->addRow($r);
     }
+
     #$dbh->disconnect();
 
     $it->printOuterTable(1);
@@ -6600,9 +6805,9 @@ sub printGeneKOEnzymeRecords {
     if ( $show_myimg_login && $contact_oid > 0 ) {
         my $name = "_section_${section}_addMyGeneEnzyme";
         print submit(
-                      -name  => $name,
-                      -value => "Add to MyIMG Annotation",
-                      -class => "lgdefbutton"
+            -name  => $name,
+            -value => "Add to MyIMG Annotation",
+            -class => "lgdefbutton"
         );
         print nbsp(1);
     }
@@ -6624,5 +6829,133 @@ sub printGeneKOEnzymeRecords {
 
     return $cnt;
 }
+
+############################################################################
+# listClosureGenes
+############################################################################
+sub listClosureGenes {
+    my $contact_oid = getContactOid();
+    printMainForm();
+    print "<h1>Public Isolate Genes with Selected Functions</h1>\n";
+
+    my @terms = param('term_oid');
+    my @cogs = param('cog_id');
+    my @pfams = param('pfam_id');
+    my @tigrs = param('tigr_id');
+    my @kos = param('ko_id');
+    my @ecs = param('ec_number');
+
+    my $n_func = 0;
+    my $sql = "select g.gene_oid, g.gene_display_name, g.locus_tag, " .
+	"g.taxon, t.taxon_display_name, t.domain " .
+	"from gene g, taxon t where g.taxon = t.taxon_oid " .
+	"and t.is_public = 'Yes' " .
+	"and t.genome_type = 'isolate' " .
+	"and t.obsolete_flag = 'No' ";
+    my $cond = "";
+    for my $term2 ( @terms ) {
+	$n_func++;
+	$cond .= "and g.gene_oid in (select gene_oid from gene_img_functions " .
+	    "where function = '" . $term2 . "') ";
+    }
+    for my $cog2 ( @cogs ) {
+	$n_func++;
+	$cond .= "and g.gene_oid in (select gene_oid from gene_cog_groups " .
+	    "where cog = '" . $cog2 . "') ";
+    }
+    for my $pfam2 ( @pfams ) {
+	$n_func++;
+	$cond .= "and g.gene_oid in (select gene_oid from gene_pfam_families " .
+	    "where pfam_family = '" . $pfam2 . "') ";
+    }
+    for my $tigrfam2 ( @tigrs ) {
+	$n_func++;
+	$cond .= "and g.gene_oid in (select gene_oid from gene_tigrfams " .
+	    "where ext_accession = '" . $tigrfam2 . "') ";
+    }
+    for my $ko2 ( @kos ) {
+	$n_func++;
+	$cond .= "and g.gene_oid in (select gene_oid from gene_ko_terms " .
+	    "where ko_terms = '" . $ko2 . "') ";
+    }
+    for my $ec2 ( @ecs ) {
+	$n_func++;
+	$cond .= "and g.gene_oid in (select gene_oid from gene_ko_enzymes " .
+	    "where enzymes = '" . $ec2 . "') ";
+    }
+
+    if ( $n_func <= 0 ) {
+	webError("Please select at least one function.");
+	return;
+    }
+
+    $sql .= $cond;
+
+    my $it = new InnerTable( 1, "cogGenes$$", "cogGenes", 1 );
+    my $sd = $it->getSdDelim();
+ 
+    my $select_id_name = "gene_oid"; 
+    my $trunc = 0;
+    my $gene_count = 0;
+
+    my $dbh = dbLogin();
+    my $cur = execSql( $dbh, $sql, $verbose);
+    $it->addColSpec("Select"); 
+    $it->addColSpec( "Gene ID",           "asc", "left" );
+    $it->addColSpec( "Locus Tag",         "asc", "left" );
+    $it->addColSpec( "Gene Product Name", "asc", "left" );
+    $it->addColSpec( "Genome Name",       "asc", "left" ); 
+
+    for ( ; ; ) { 
+	my ( $gene_oid, $gene_name, $locus_tag, $taxon_oid,
+	    $taxon_name, $domain) = $cur->fetchrow(); 
+	last if !$gene_oid; 
+	my $row = $sd 
+	    . "<input type='checkbox' name='$select_id_name' value='$gene_oid' />\t"; 
+	$row .= 
+	    $gene_oid . $sd 
+	    . "<a href='main.cgi?section=GeneDetail" 
+	    . "&page=geneDetail&gene_oid=$gene_oid'>" 
+	    . "$gene_oid</a>\t"; 
+	$row .= $locus_tag . $sd . $locus_tag . "\t"; 
+	$row .= $gene_name . $sd . $gene_name . "\t"; 
+	$row .= 
+	    $taxon_name . $sd 
+	    . "<a href='main.cgi?section=TaxonDetail" 
+	    . "&page=taxonDetail&taxon_oid=$taxon_oid'>$taxon_name</a>\t"; 
+ 
+	$it->addRow($row);
+	$gene_count++;
+
+	if ( $gene_count >= $maxGeneListResults ) { 
+	    $trunc = 1; 
+	    last; 
+	} 
+    } 
+    $cur->finish(); 
+
+    if ($gene_count > 10) { 
+        printGeneCartFooter(); 
+    } 
+    $it->printOuterTable(1);
+    printGeneCartFooter(); 
+
+    if ($trunc) { 
+        my $s = "Results limited to $maxGeneListResults genes.\n";
+        $s .= "( Go to "
+          . alink( $preferences_url, "Preferences" ) 
+          . " to change \"Max. Gene List Results\". )\n"; 
+        printStatusLine( $s, 2 );
+    } 
+    else { 
+        printStatusLine( "$gene_count gene(s) retrieved.", 2 );
+    } 
+ 
+    print end_form();
+}
+
+
+
+
 
 1;

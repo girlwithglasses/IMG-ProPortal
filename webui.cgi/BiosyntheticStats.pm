@@ -1,6 +1,6 @@
 ############################################################################
 # BiosyntheticStats - detail page for biosynthetic clusters
-# $Id: BiosyntheticStats.pm 30385 2014-03-11 05:05:12Z aratner $
+# $Id: BiosyntheticStats.pm 35780 2016-06-15 20:41:20Z klchu $
 ############################################################################
 package BiosyntheticStats;
 my $section = "BiosyntheticStats";
@@ -1691,10 +1691,8 @@ sub printStatsByGeneCount {
 
     $it->addColSpec("Choose") if $dofilter ne "";
     $it->addColSpec("Gene Count",         "asc",  "right");
-    $it->addColSpec("Predicted Clusters", "desc", "right")
-      if $pred_cnt > 0;
-    $it->addColSpec("Experimentally Verified Clusters", "desc", "right")
-      if $exp_cnt > 0;
+    $it->addColSpec("Predicted Clusters", "desc", "right") if $pred_cnt > 0;
+    $it->addColSpec("Experimentally Verified Clusters", "desc", "right") if $exp_cnt > 0;
 
     my $url_section = "$section_cgi&page=clustersByGeneCount"
 	. "&probability=$probability&phylum=" . WebUtil::massageToUrl2($phylum);
@@ -1938,9 +1936,11 @@ sub printBreakdownBy {
 		     $name, $param, $use_log, $orientation, $log_scale, 0);
 
         $title = "Experimentally verified Clusters";
+	my $etotal = 0;
+	$etotal = scalar @$e_items_aref if $e_items_aref;
 	printMyChart($e_items_aref, $e_data_aref, $title, $yaxis,
 		     $url."&attr=Experimental", \@series,
-		     $name, $param, $use_log, $orientation, $log_scale, 0);
+		     $name, $param, $use_log, $orientation, $log_scale, 0) if $etotal > 0;
 
         my $title = "Predicted Clusters";
         printMyChart($p_items_aref, $p_data_aref, $title, $yaxis,
@@ -1980,9 +1980,11 @@ sub printBreakdownBy {
                      $name, $param, $use_log, $orientation, $log_scale, 1);
 
         $title = "Experimentally verified Clusters";
+	my $etotal = 0;
+	$etotal = scalar @$e_items_aref if $e_items_aref;
         printMyChart($e_items_aref, $e_data_aref, $title, $yaxis,
                      $url."&attr=Experimental", \@series,
-                     $name, $param, $use_log, $orientation, $log_scale, 1);
+                     $name, $param, $use_log, $orientation, $log_scale, 1) if $etotal > 0;
 
         my $title = "Predicted Clusters";
         printMyChart($p_items_aref, $p_data_aref, $title, $yaxis,
@@ -2621,11 +2623,13 @@ sub printBreakdownBy {
         select $nvl(cf.function_code, '_'),
                $nvl(cf.definition, '_'),
                count(distinct bcf.cluster_id)
-        from bio_cluster_features bcf,
-             bio_cluster bc, gene_pfam_families gpf
+        from bio_cluster_features_new bcf, bio_cluster_data_new bcd,
+             bio_cluster_new bc, gene_pfam_families gpf
         left join pfam_family_cogs pfc on gpf.pfam_family = pfc.ext_accession
         left join cog_function cf on pfc.functions = cf.function_code
-        where bcf.feature_type = 'gene'
+        where bcd.evidence = 'Predicted'
+        and bcd.cluster_id = bcf.cluster_id
+        and bcf.feature_type = 'gene'
         and bcf.gene_oid = gpf.gene_oid
         and bcf.cluster_id = bc.cluster_id
         and cf.function_code is not null
@@ -2953,9 +2957,9 @@ sub printClustersByBCType {
     print "<br/><u>Evidence</u>: $evidence" if $evidence ne "";
     print "</p>";
 
-    print start_form(-id     => "bybctype_frm",
-		     -name   => "mainForm",
-		     -action => "$main_cgi");
+#    print start_form(-id     => "bybctype_frm",
+#		     -name   => "mainForm",
+#		     -action => "$main_cgi");
 
     my $rclause = WebUtil::urClause("bc.taxon");
     my $imgClause = WebUtil::imgClauseNoTaxon("bc.taxon");
@@ -2976,6 +2980,7 @@ sub printClustersByBCType {
         push @cluster_ids, $bc_id;
     }
     $cur->finish();
+
 
     my $clusterClause;
     if (scalar(@cluster_ids) > 0) {
@@ -2998,15 +3003,16 @@ sub printClustersByBCType {
         $clusterClause
     };
 
-    my $it = new InnerTable(1, "bybctype$$", "bybctype", 1);
-    my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
-    $it->addColSpec("Cluster ID",  "asc", "right");
-    $it->addColSpec("Genome Name", "asc", "left");
-    $it->addColSpec("Evidence",    "asc", "left") if $evidence eq "";
+#    my $it = new InnerTable(1, "bybctype$$", "bybctype", 1);
+#    my $sd = $it->getSdDelim();
+#    $it->addColSpec("Select");
+#    $it->addColSpec("Cluster ID",  "asc", "right");
+#    $it->addColSpec("Genome Name", "asc", "left");
+#    $it->addColSpec("Evidence",    "asc", "left") if $evidence eq "";
 
     my $cnt = 0;
     my $cur = execSql($dbh, $sql, $verbose);
+    my @cids;
     for ( ;; ) {
         my ($cluster_id, $attr_val, $taxon_oid, $taxon_name) = $cur->fetchrow();
         last if !$cluster_id;
@@ -3014,31 +3020,37 @@ sub printClustersByBCType {
             next if $attr_val ne $evidence;
         }
 
-        my $url = "$main_cgi?section=BiosyntheticDetail" . "&page=cluster_detail&cluster_id=$cluster_id";
-        my $txurl = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+        push(@cids, $cluster_id);
 
-        my $row;
-        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-
-        if ($evidence eq "") {
-            $row .= $attr_val . $sd . $attr_val . "\t";
-        }
-
-        $it->addRow($row);
+#        my $url = "$main_cgi?section=BiosyntheticDetail" . "&page=cluster_detail&cluster_id=$cluster_id";
+#        my $txurl = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+#
+#        my $row;
+#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
+#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
+#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
+#
+#        if ($evidence eq "") {
+#            $row .= $attr_val . $sd . $attr_val . "\t";
+#        }
+#
+#        $it->addRow($row);
         $cnt++;
     }
 
-    OracleUtil::truncTable($dbh, "gtt_func_id")
-      if ($clusterClause =~ /gtt_func_id/i);
 
-    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bybctype_frm") if $cnt > 10;
-    $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bybctype_frm");
 
-    printStatusLine("$cnt clusters for BC TYPE: $bc_type. ", 2);
+    BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
+
+#    OracleUtil::truncTable($dbh, "gtt_func_id")
+#      if ($clusterClause =~ /gtt_func_id/i);
+#
+#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
+#    BiosyntheticDetail::printPfamFooter("bybctype_frm") if $cnt > 10;
+#    $it->printOuterTable(1);
+#    BiosyntheticDetail::printPfamFooter("bybctype_frm");
+#
+#    printStatusLine("$cnt clusters for BC TYPE: $bc_type. ", 2);
 }
 
 ######################################################################
@@ -3319,42 +3331,46 @@ sub printClustersByPfam {
     };
     my $cur = execSql($dbh, $sql, $verbose, $evidence, $func_code);
 
-    print start_form(-id     => "bcbypfam_frm",
-		     -name   => "mainForm",
-		     -action => "$main_cgi");
+#    print start_form(-id     => "bcbypfam_frm",
+#		     -name   => "mainForm",
+#		     -action => "$main_cgi");
 
-    my $it = new InnerTable(1, "bcbypfam$$", "bcbypfam", 1);
-    my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
-    $it->addColSpec("Cluster ID",  "asc", "right");
-    $it->addColSpec("Genome Name", "asc", "left");
+#    my $it = new InnerTable(1, "bcbypfam$$", "bcbypfam", 1);
+#    my $sd = $it->getSdDelim();
+#    $it->addColSpec("Select");
+#    $it->addColSpec("Cluster ID",  "asc", "right");
+#    $it->addColSpec("Genome Name", "asc", "left");
 
     my $cnt = 0;
+    my @cids;
     for ( ;; ) {
         my ($cluster_id, $taxon_oid, $taxon_name) = $cur->fetchrow();
         last if !$cluster_id;
 
-        my $url = "$main_cgi?section=BiosyntheticDetail"
-	    . "&page=cluster_detail&cluster_id=$cluster_id";
-        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
-
-        my $row;
-        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-        $it->addRow($row);
+        push(@cids, $cluster_id);
+#        my $url = "$main_cgi?section=BiosyntheticDetail"
+#	    . "&page=cluster_detail&cluster_id=$cluster_id";
+#        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
+#
+#        my $row;
+#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
+#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
+#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
+#        $it->addRow($row);
         $cnt++;
     }
     $cur->finish();
 
-    $it->hideAll() if $cnt < 50;
-    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bcbypfam_frm") if $cnt > 10;
-    $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bcbypfam_frm");
+    BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
 
-    printStatusLine("$cnt clusters for $definition. ", 2);
-    print end_form();
+#    $it->hideAll() if $cnt < 50;
+#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
+#    BiosyntheticDetail::printPfamFooter("bcbypfam_frm") if $cnt > 10;
+#    $it->printOuterTable(1);
+#    BiosyntheticDetail::printPfamFooter("bcbypfam_frm");
+#
+#    printStatusLine("$cnt clusters for $definition. ", 2);
+#    print end_form();
 }
 
 ######################################################################
@@ -3729,46 +3745,51 @@ sub printClustersByLength {
     };
     my $cur = execSql($dbh, $sql, $verbose, $min, $max);
 
-    print start_form(-id     => "bcbylength_frm",
-		     -name   => "mainForm",
-		     -action => "$main_cgi");
-
-    my $it = new InnerTable(1, "bcbylength$$", "bcbylength", 1);
-    my $sd = $it->getSdDelim();
-    $it->addColSpec("Select");
-    $it->addColSpec("Cluster ID",   "asc",  "right");
-    $it->addColSpec("Genome Name",  "asc",  "left");
-    $it->addColSpec("Length (bps)", "desc", "right");
+#    print start_form(-id     => "bcbylength_frm",
+#		     -name   => "mainForm",
+#		     -action => "$main_cgi");
+#
+#    my $it = new InnerTable(1, "bcbylength$$", "bcbylength", 1);
+#    my $sd = $it->getSdDelim();
+#    $it->addColSpec("Select");
+#    $it->addColSpec("Cluster ID",   "asc",  "right");
+#    $it->addColSpec("Genome Name",  "asc",  "left");
+#    $it->addColSpec("Length (bps)", "desc", "right");
 
     my $count = 0;
+    my @cids;
     for ( ;; ) {
         my ($cluster_id, $len, $taxon_oid, $taxon_name) = $cur->fetchrow();
         last if !$cluster_id;
 
-        my $url = "$main_cgi?section=BiosyntheticDetail"
-	    . "&page=cluster_detail&cluster_id=$cluster_id";
-        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
+        push(@cids, $cluster_id);
 
-        my $row;
-        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-        $row .= $len;
-        $it->addRow($row);
+#        my $url = "$main_cgi?section=BiosyntheticDetail"
+#	    . "&page=cluster_detail&cluster_id=$cluster_id";
+#        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
+#
+#        my $row;
+#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
+#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
+#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
+#        $row .= $len;
+#        $it->addRow($row);
         $count++;
     }
 
-    $it->hideAll() if $count < 50;
-    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bcbylength_frm") if $count > 10;
-    $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bcbylength_frm");
+    BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
 
-    OracleUtil::truncTable($dbh, "gtt_func_id")
-      if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
-
-    printStatusLine("$count clusters for seq length. ", 2);
-    print end_form();
+#    $it->hideAll() if $count < 50;
+#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
+#    BiosyntheticDetail::printPfamFooter("bcbylength_frm") if $count > 10;
+#    $it->printOuterTable(1);
+#    BiosyntheticDetail::printPfamFooter("bcbylength_frm");
+#
+#    OracleUtil::truncTable($dbh, "gtt_func_id")
+#      if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
+#
+#    printStatusLine("$count clusters for seq length. ", 2);
+#    print end_form();
 }
 
 ######################################################################
@@ -3897,49 +3918,54 @@ sub printClustersByGeneCount {
     };
     my $cur = execSql($dbh, $sql, $verbose);
 
-    print start_form(-id     => "bcbygcnt_frm",
-		     -name   => "mainForm",
-		     -action => "$main_cgi");
-
-    my $it = new InnerTable(1, "bcbygcnt$$", "bcbygcnt", 1);
-    my $sd = $it->getSdDelim();
-
-    $it->addColSpec("Select");
-    $it->addColSpec("Cluster ID",  "asc",  "right");
-    $it->addColSpec("Genome Name", "asc",  "left");
-    $it->addColSpec("Gene Count",  "desc", "right");
+#    print start_form(-id     => "bcbygcnt_frm",
+#		     -name   => "mainForm",
+#		     -action => "$main_cgi");
+#
+#    my $it = new InnerTable(1, "bcbygcnt$$", "bcbygcnt", 1);
+#    my $sd = $it->getSdDelim();
+#
+#    $it->addColSpec("Select");
+#    $it->addColSpec("Cluster ID",  "asc",  "right");
+#    $it->addColSpec("Genome Name", "asc",  "left");
+#    $it->addColSpec("Gene Count",  "desc", "right");
 
     my $count = 0;
+    my @cids;
     for ( ;; ) {
         my ($cluster_id, $taxon_oid, $taxon_name, $cnt) = $cur->fetchrow();
         last if !$cluster_id;
         next if $cnt < $min;
         next if $cnt > $max && $max ne "";
 
-        my $url = "$main_cgi?section=BiosyntheticDetail"
-	    . "&page=cluster_detail&cluster_id=$cluster_id";
-        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
+        push(@cids, $cluster_id);
 
-        my $row;
-        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-        $row .= $cnt;
-        $it->addRow($row);
+#        my $url = "$main_cgi?section=BiosyntheticDetail"
+#	    . "&page=cluster_detail&cluster_id=$cluster_id";
+#        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
+#
+#        my $row;
+#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
+#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
+#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
+#        $row .= $cnt;
+#        $it->addRow($row);
         $count++;
     }
 
-    $it->hideAll() if $count < 50;
-    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bcbygcnt_frm") if $count > 10;
-    $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bcbygcnt_frm");
+BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
 
-    OracleUtil::truncTable($dbh, "gtt_func_id")
-      if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
-
-    printStatusLine("$count clusters for gene count: $range. ", 2);
-    print end_form();
+#    $it->hideAll() if $count < 50;
+#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
+#    BiosyntheticDetail::printPfamFooter("bcbygcnt_frm") if $count > 10;
+#    $it->printOuterTable(1);
+#    BiosyntheticDetail::printPfamFooter("bcbygcnt_frm");
+#
+#    OracleUtil::truncTable($dbh, "gtt_func_id")
+#      if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
+#
+#    printStatusLine("$count clusters for gene count: $range. ", 2);
+#    print end_form();
 }
 
 sub getClusterClause {

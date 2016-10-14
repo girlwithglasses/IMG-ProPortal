@@ -2,7 +2,7 @@
 # MainPageStats - Statistics for genomes in main/home page.
 #    --es 02/01/2005
 #
-# $Id: MainPageStats.pm 34471 2015-10-09 19:47:35Z klchu $
+# $Id: MainPageStats.pm 35739 2016-06-03 20:47:44Z klchu $
 ############################################################################
 package MainPageStats;
 my $section = "MainPageStats";
@@ -25,6 +25,7 @@ use ScaffoldPanel;
 use WebConfig;
 use WebUtil;
 use DataEntryUtil;
+use OracleUtil;
 
 my $env                  = getEnv();
 my $main_cgi             = $env->{main_cgi};
@@ -41,7 +42,7 @@ my $base_url             = $env->{base_url};
 my $use_img_gold         = $env->{use_img_gold};
 my $img_hmp              = $env->{img_hmp};
 my $img_ken              = $env->{img_ken};
-my $img_nr = $env->{img_nr};
+my $img_nr               = $env->{img_nr};
 my $nvl                  = getNvl();
 
 # what names I found in gold to be human
@@ -82,12 +83,12 @@ sub mainPageStats {
         $domain = "Viruses"          if ( $domain =~ /^Vir/ );
         $domain = "Genome Fragments" if ( $domain =~ /^GFragment/ );
 
-        if($seq_center =~ /JGI/) {
-             $seq_center = "JGI"
+        if ( $seq_center =~ /JGI/ ) {
+            $seq_center = "JGI";
         } else {
-           $seq_center = "Other"; 
+            $seq_center = "Other";
         }
-        
+
         my $rec = "$domain\t$seq_center\t$seq_status";
         $stats{$rec} += $count;
 
@@ -126,7 +127,7 @@ sub mainPageStats {
     for my $k ( sort( keys(%stats) ) ) {
         my ( $domain, $seq_center, $seq_status ) = split( /\t/, $k );
         my $count = $stats{$k};
-       
+
         $stats2{$k} = $count;
         if ($derived) {
             if ( $seq_center eq "Other" ) {
@@ -206,7 +207,7 @@ sub mainPageStats {
 ############################################################################
 # v2.9 where the tree is the default view
 sub tableRowStats {
-    my ( $stats_ref, $domain, $genome_type ) = @_;
+    my ( $stats_ref, $domain, $genome_type, $jgistats_href) = @_;
     my $bgcolor;
     $bgcolor = "bgcolor=#ffcc00" if $domain eq "Bacteria";
     $bgcolor = "bgcolor=#99cc66" if $domain eq "Archaea";
@@ -214,7 +215,7 @@ sub tableRowStats {
     $bgcolor = "bgcolor=#ffdd99" if $domain eq "Plasmids";
     $bgcolor = "bgcolor=#66ccff" if $domain eq "Viruses";
     $bgcolor = "bgcolor=#cc99ff" if $domain eq "Genome Fragments";
-    $bgcolor = "bgcolor=#ffccff" if $domain eq "*Microbiome";
+    $bgcolor = "bgcolor=#e0c5b6" if $domain eq "*Microbiome";
 
     my ( $countStrTotal, $rowSum ) = getCountStr( $stats_ref, $domain, "Total", $genome_type );
 
@@ -223,28 +224,46 @@ sub tableRowStats {
 
     my $s = "<tr $bgcolor>\n";
 
-    # domain name link on main page
-    #my $domainUrl = getTreeUrl( $domain, "" );
-    my $domainUrl = getTableUrl( $domain, "" );
 
-    my $domain2 = $domain;
     ## --es 01/02/2006 Kludges for names.
+    my $domain2 = $domain;
     $domain2 = "Eukarya"    if $domain =~ /^Euk/;
-    $domain2 = "Metagenome" if $domain =~ /^\*Microbiome/;
-    my $domainLink = $domain2; #alink( $domainUrl, $domain2 );
-    $domainLink = $domain if $countStrTotal eq "0/0";
-    $s .= "<td >$domainLink</td>\n";
-    if ($img_hmp) {
-        $s .= "<td align='right'> &nbsp; </td>\n";
-    } else {
-        #### Individual totals removed for IMG 3.5 -BSJ 08/02/11
-        # $s .= "<td align='right'>$countStrTotal</td>\n";
-        $s .= "<td align='right'> &nbsp; </td>\n";
+    if($domain =~ /^Euk/) {
+        $domain2 = "Eukarya";
+    } elsif($domain =~ /^\*Microbiome/) {
+        $domain2 = "Metagenome &amp; Metatranscriptome";
     }
-    $s .= "<td align='right'>$rowSum</td>\n";
+    $s .= "<td >$domain2</td>\n";
+    
+    my $cnt = $jgistats_href->{$domain};
+    if($cnt) {
+        # JGI seq
+        my $domainUrl = getTableUrl( $domain, '',"jgi" );
+        $domainUrl = alink($domainUrl, $cnt);
+        if($domain =~ /^\*Microbiome/) {
+            #my $url = 'main.cgi?section=TaxonList&page=metatranscriptome&seq_center=jgi';
+            #$url = alink($url, $jgiSeqMscriptome);            
+            $s .= "<td align='right'>$domainUrl</td>\n";
+        } else {
+            $s .= "<td align='right'>$domainUrl</td>\n";
+        }
+    } else {
+        $s .= "<td align='right'>&nbsp;</td>\n";
+    }
+
+    if($domain =~ /^\*Microbiome/) {
+        #my $url = 'main.cgi?section=TaxonList&page=metatranscriptome';
+        #$url = alink($url, $allMscriptome);        
+        $s .= "<td align='right'>$rowSum\n";
+    } else {
+        $s .= "<td align='right'>$rowSum</td>\n";
+    }
+    
     $s .= "</tr>\n";
     return $s;
 }
+
+
 
 sub getTreeUrl {
     my ( $domain, $seq_status ) = @_;
@@ -272,7 +291,7 @@ sub getTreeUrl {
 }
 
 sub getTableUrl {
-    my ( $domain, $seq_status ) = @_;
+    my ( $domain, $seq_status, $seq_center ) = @_;
 
     my $alpha_url = "main.cgi?section=TaxonList&page=taxonListAlpha";
 
@@ -296,7 +315,7 @@ sub getTableUrl {
 
     $alpha_url .= "&seq_status=$seq_status" if ( $seq_status ne "" );
 
-    #$alpha_url .= "&seq_center=$seq_center" if ( $seq_center ne "" );
+    $alpha_url .= "&seq_center=$seq_center" if ( $seq_center ne "" );
     return $alpha_url;
 }
 
@@ -317,23 +336,198 @@ sub tableRowSumStats_new {
     #my $domainUrl = getTreeUrl($domain, "");
     my $domainUrl = getTableUrl( $domain, "" );
 
-    my $domainLink = $domain2; #alink( $domainUrl, $domain2 );
+    my $domainLink = $domain2;    #alink( $domainUrl, $domain2 );
     $s .= "<td>$domainLink</td>\n";
 
     my ( $countStr, $rowSum ) = getSumStr_new( $stats_ref, $domain, "Total" );
-    if ($img_hmp) {
-        $s .= "<td align='right'> &nbsp; </td>\n";
-    } else {
-        #### Individual totals removed for IMG 3.5 -BSJ 08/02/11
-        # $s .= "<td align='right'>$countStr</td>\n";
-        $s .= "<td align='right'> &nbsp; </td>\n";
-    }
+
+    $s .= "<td align='right'> &nbsp; </td>\n";
 
     my $countStr = getMergedSumStr_new( $stats_ref, $domain, "Total" );
     $s .= "<td align='right'>$countStr</td>\n";
 
     $s .= "</tr>\n";
     return $s;
+}
+
+sub getMetagenomeEcoSystemCnt {
+    my $dbh = dbLogin();
+    
+    my $imgclause = WebUtil::imgClause('tx');
+    my $urclause = WebUtil::urClause('tx');
+    
+    # all metagenomes
+    my $sql = qq{
+select tx.PHYLUM,  p.SEQUENCING_STRATEGY, count(*)
+from taxon tx, GOLD_SEQUENCING_PROJECT p
+where tx.SEQUENCING_GOLD_ID = p.GOLD_ID (+)
+and tx.genome_type='metagenome'
+and tx.OBSOLETE_FLAG = 'No'
+and tx.PHYLUM is not null
+and tx.PHYLUM != 'unclassified'
+and tx.PHYLUM != 'Unclassified'
+$imgclause
+$urclause
+group by tx.PHYLUM,  p.SEQUENCING_STRATEGY
+    };
+    
+    my $id = WebUtil::getContactOid();
+    
+    my %all;
+    my $aref = OracleUtil::execSqlCached( $dbh, $sql, 'getMetagenomeEcoSystemCntAll' . $id );
+    foreach my $inner_aref (@$aref) {
+        my ( $eco, $seqStr, $count ) = @$inner_aref;
+        #last if(!$eco);
+        if(exists $all{$eco}) {
+            if($seqStr eq 'Metatranscriptome') {
+                my $href = $all{$eco};
+                $href->{'Metatranscriptome'} = $href->{'Metatranscriptome'} + $count;
+            } else {
+                # metagenome or null $seqStr
+                my $href = $all{$eco};
+                $href->{'Metagenome'} = $href->{'Metagenome'} + $count;
+            }
+        } else {
+            if($seqStr eq 'Metatranscriptome') {
+                my %h = ('Metatranscriptome' => $count);
+                $all{$eco} = \%h;
+            } else {
+                # metagenome or null $seqStr
+                my %h = ('Metagenome' => $count);
+                $all{$eco} = \%h;
+            }
+        }
+    }    
+    
+    
+    # jgi seq metagenomes
+    my $sql = qq{
+select tx.PHYLUM,  p.SEQUENCING_STRATEGY, count(*)
+from taxon tx, GOLD_SEQUENCING_PROJECT p
+where tx.SEQUENCING_GOLD_ID = p.GOLD_ID (+)
+and tx.genome_type='metagenome'
+and tx.OBSOLETE_FLAG = 'No'
+and tx.PHYLUM is not null
+and tx.PHYLUM != 'unclassified'
+and tx.PHYLUM != 'Unclassified'
+and tx.jgi_project_id > 0
+and tx.jgi_project_id is not null
+$imgclause
+$urclause
+group by tx.PHYLUM,  p.SEQUENCING_STRATEGY
+    };    
+    
+    my %jgi;
+    my $aref = OracleUtil::execSqlCached( $dbh, $sql, 'getMetagenomeEcoSystemCntJgi' );
+    foreach my $inner_aref (@$aref) {
+        my ( $eco, $seqStr, $count ) =  @$inner_aref;#$cur->fetchrow();
+        #last if(!$eco);
+        if(exists $jgi{$eco}) {
+            if($seqStr eq 'Metatranscriptome') {
+                my $href = $jgi{$eco};
+                $href->{'Metatranscriptome'} = $href->{'Metatranscriptome'} + $count;
+            } else {
+                # metagenome or null $seqStr
+                my $href = $jgi{$eco};
+                $href->{'Metagenome'} = $href->{'Metagenome'} + $count;
+            }
+        } else {
+            if($seqStr eq 'Metatranscriptome') {
+                my %h = ('Metatranscriptome' => $count);
+                $jgi{$eco} = \%h;
+            } else {
+                # metagenome or null $seqStr
+                my %h = ('Metagenome' => $count);
+                $jgi{$eco} = \%h;
+            }
+        }
+    } 
+    
+    my $cnt = 2;
+my $s;
+
+    foreach my $type (('Metagenome', 'Metatranscriptome')) {
+        my $class = "class='yui-dt-even'"; 
+        $class = "class='yui-dt-odd'" if($cnt % 2 == 1);
+        $s .= "<tr $class>\n";
+        $s .= "<td $class><div class='yui-dt-liner'>$type</div></td>\n";
+    foreach my $eco (sort keys %all) {
+
+
+        my $all_href = $all{$eco};
+        my $allMetagCnt = $all_href->{$type};
+        #my $allMetatCnt = $all_href->{'Metatranscriptome'};
+        #my $allMetatCntTotal = $allMetagCnt + $allMetatCnt;
+        
+        my $jgi_href = $jgi{$eco};
+        my $jgiMetagCnt = $jgi_href->{$type};
+        #my $jgiMetatCnt = $jgi_href->{'Metatranscriptome'};
+        #my $jgiMetatCntTotal = $jgiMetagCnt + $jgiMetatCnt;
+    
+        
+        
+        #my $url1 = "main.cgi?section=TaxonList&page=metagEco&eco=$eco&seqstrag=all&seq_center=jgi";
+        #$url1 = WebUtil::alink($url1, $jgiMetatCntTotal);
+        my $url2 = "main.cgi?section=TaxonList&page=metagEco&eco=$eco&seqstrag=$type&seq_center=jgi";
+        $url2 = WebUtil::alink($url2, $jgiMetagCnt);
+        #my $url3 = "main.cgi?section=TaxonList&page=metagEco&eco=$eco&seqstrag=Metatranscriptome&seq_center=jgi";
+        #$url3 = WebUtil::alink($url3, $jgiMetatCnt);
+
+        #my $url4 = "main.cgi?section=TaxonList&page=metagEco&eco=$eco&seqstrag=all";
+        #$url4 = WebUtil::alink($url4, $allMetatCntTotal);
+        my $url5 = "main.cgi?section=TaxonList&page=metagEco&eco=$eco&seqstrag=$type";
+        $url5 = WebUtil::alink($url5, $allMetagCnt);
+        #my $url6 = "main.cgi?section=TaxonList&page=metagEco&eco=$eco&seqstrag=Metatranscriptome";
+        #$url6 = WebUtil::alink($url6, $allMetatCnt);       
+
+
+        $s .= qq{
+    <td $class style="text-align:right"><div class='yui-dt-liner'>$url2</div></td>
+    <td $class style="text-align:right"><div class='yui-dt-liner'>$url5</div></td>
+        };
+    }
+        $s .= "</tr>\n";
+        $cnt++;
+    }
+
+    return $s;
+}
+
+
+
+# Plasmid:other sequences 1
+# Archaea 316
+# Eukaryota   31
+# *Microbiome 4496
+# Bacteria    5741
+sub getJgiSeqCounts {
+    my $dbh = dbLogin();
+
+    my $imgclause = WebUtil::imgClause('t');
+    my $sql = qq{
+select t.domain, count(*)
+from taxon t
+where t.jgi_project_id > 0
+and t.jgi_project_id is not null
+and t.OBSOLETE_FLAG = 'No'
+$imgclause
+group by t.domain
+    };
+
+    my %data = ();
+    my $cur = execSql( $dbh, $sql, $verbose );
+    for ( ; ; ) {
+        my ( $domain, $count ) = $cur->fetchrow();
+        last if !$domain;
+        
+        $domain = 'Plasmids' if($domain =~ /^Pla/);
+        $domain = 'Viruses' if($domain =~ /^Vir/);
+        
+        $data{$domain} = $count
+        
+    }
+    
+    return \%data;
 }
 
 ############################################################################
@@ -415,7 +609,7 @@ sub getCountStr {
         $rowSum_str = alink( $url, $rowSum );
     }
 
-    if($domain eq 'Bacteria') {
+    if ( $domain eq 'Bacteria' ) {
         my $url = 'main.cgi?section=GenomeList&page=phylumList&domain=Bacteria&type=phylum';
         $rowSum_str = alink( $url, $rowSum );
     }
@@ -593,9 +787,8 @@ sub getMergedSumStr_new {
     my $comb_count     = $finished_count + $draft_count + $pdraft_count;
     my $comb_count_str = $comb_count;
 
-    
     my $url0 = getTableUrl( $domain, "" );
-    $url0 = getTreeUrl($domain, "") if ($domain eq 'All Genomes');
+    $url0 = getTreeUrl( $domain, "" ) if ( $domain eq 'All Genomes' );
 
     if ( $comb_count > 0 ) {
         my $url;
@@ -771,15 +964,21 @@ sub replaceStatTableRows {
 
     my $x;
     my %stats = mainPageStats();
+    
+    my $jgistats_href= getJgiSeqCounts();
+   
 
-    $x .= tableRowStats( \%stats, "Bacteria" );
-    $x .= tableRowStats( \%stats, "Archaea" );
-    $x .= tableRowStats( \%stats, "Eukaryota" );
-    $x .= tableRowStats( \%stats, "Plasmids" ) if $include_plasmids;
-    $x .= tableRowStats( \%stats, "Viruses" );
-    $x .= tableRowStats( \%stats, "Genome Fragments" );
-    $x .= tableRowStats( \%stats, "*Microbiome", "metagenome" )
-      if $include_metagenomes;
+    $x .= tableRowStats( \%stats, "Bacteria", "", $jgistats_href );
+    $x .= tableRowStats( \%stats, "Archaea", "",  $jgistats_href );
+    $x .= tableRowStats( \%stats, "Eukaryota", "", $jgistats_href );
+    $x .= tableRowStats( \%stats, "Plasmids", "", $jgistats_href ) if $include_plasmids;
+    $x .= tableRowStats( \%stats, "Viruses", "", $jgistats_href );
+    $x .= tableRowStats( \%stats, "Genome Fragments", "", $jgistats_href );
+    
+    if ($include_metagenomes) {
+        $x .= tableRowStats( \%stats, "*Microbiome", "metagenome", $jgistats_href);
+
+    }
 
     if ($include_metagenomes) {
         $x .= tableRowSumStats_new( \%stats, "All Genomes" );
@@ -790,15 +989,6 @@ sub replaceStatTableRows {
     }
 
     $x .= tablePrivateGenomeStats();
-
-#    if ($img_geba) {
-#
-#        #print "replaceStatTableRows() start getGebaStats()<br/>\n";
-#        $x .= getGebaStats();
-#
-#        #print "replaceStatTableRows() done getGebaStats()<br/>\n";
-#    }
-
     return ( $x, $hmp );
 }
 
@@ -826,8 +1016,7 @@ and p.host_name = '$HOST_NAME'
         my (
             $taxon_oid,   $gold_id,       $sample_gold_id, $submission_id, $genome_type,
             $project_oid, $gold_stamp_id, $body_site,      $show_in_dacc
-          )
-          = $cur->fetchrow();
+        ) = $cur->fetchrow();
         last if !$taxon_oid;
         my %tmphash = (
             taxon_oid      => $taxon_oid,
@@ -864,8 +1053,7 @@ and p.project_oid = 18646
             my (
                 $taxon_oid,   $gold_id,       $sample_gold_id, $submission_id, $genome_type,
                 $project_oid, $gold_stamp_id, $body_site,      $show_in_dacc
-              )
-              = $cur->fetchrow();
+            ) = $cur->fetchrow();
             last if !$taxon_oid;
             my %tmphash = (
                 taxon_oid      => $taxon_oid,
@@ -932,7 +1120,7 @@ sub getGebaStats {
     $pdcntLink = 0 if ( $pdcnt == 0 || $pdcnt eq "" );
 
     # total
-    my $url     = "$main_cgi?section=TaxonList&page=gebaList&mainPageStats=1";
+    my $url = "$main_cgi?section=TaxonList&page=gebaList&mainPageStats=1";
     my $cntLink = alink( $url, $cnt );
 
     my $s = "<tr>\n";
@@ -986,26 +1174,25 @@ and t.is_public     = 'Yes'
     for ( ; ; ) {
         my ( $class, $taxon_oid, $domain, $name ) = $cur->fetchrow();
         last if ( !$taxon_oid );
-        if($class eq 'prochlorococcus') {
-            $counts{prochlorococcus} = $counts{prochlorococcus} + 1; 
-        } elsif($class eq 'synechococcus') {
+        if ( $class eq 'prochlorococcus' ) {
+            $counts{prochlorococcus} = $counts{prochlorococcus} + 1;
+        } elsif ( $class eq 'synechococcus' ) {
             $counts{synechococcus} = $counts{synechococcus} + 1;
-        } elsif($class eq 'cyanophage') {
+        } elsif ( $class eq 'cyanophage' ) {
             $counts{cyanophage} = $counts{cyanophage} + 1;
         }
     }
     $cur->finish();
 
-
     my $str;
-    my $i               = 0;
+    my $i = 0;
     foreach my $x (@list) {
-        my $cnt = $counts{$x};
+        my $cnt  = $counts{$x};
         my $name = ucfirst($x);
-        my $tmp = $i % 6;    # for 6 possible colors
-        
+        my $tmp  = $i % 6;        # for 6 possible colors
+
         my $url = "main.cgi?section=ProPortal&page=genomeList&class=$x";
-        $url = alink($url, $cnt);
+        $url = alink( $url, $cnt );
         $str .= qq{<tr bgcolor=$color[$tmp]><td>$name</td><td align='right'>$url</td></tr> };
         $i++;
     }
@@ -1042,7 +1229,7 @@ sub tablePrivateGenomeStats {
     my ($cnt) = $cur->fetchrow();
     $cur->finish();
 
-webLog("done my private genome sql \n");
+    webLog("done my private genome sql \n");
 
     my $s = "<tr >\n";
     $s .= "<td colspan='2'>My Private Datasets</td>\n";

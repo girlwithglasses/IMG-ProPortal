@@ -3,7 +3,7 @@
 #  Module to handle the "Find Genes" menu tab option.
 #    --es 07/07/2005
 #
-# $Id: FindGenes.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: FindGenes.pm 35581 2016-04-21 19:42:33Z jinghuahuang $
 ############################################################################
 package FindGenes;
 my $section = "FindGenes";
@@ -1291,7 +1291,7 @@ sub printFindGeneResults {
                 }
                 else {
                     $scaffold_url =
-                        "$main_cgi?section=MetaDetail"
+                        "$main_cgi?section=MetaScaffoldDetail"
                       . "&page=metaScaffoldDetail&scaffold_oid=$t"
                       . "&taxon_oid=$taxon_oid&data_type=$data_type";
                 }
@@ -1950,7 +1950,7 @@ sub getGeneOidListSql {
 sub validateGeneOids {
     my ( $dbh, $term_str ) = @_;
 
-    my $sql = getGeneReplacementSql($term_str);
+    my $sql = WebUtil::getGeneReplacementSql($term_str);
     my $cur = execSql( $dbh, $sql, $verbose );
 
     my @gene_oids = ();

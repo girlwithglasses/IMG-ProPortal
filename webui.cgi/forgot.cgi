@@ -1,4 +1,4 @@
-#!/webfs/projectdirs/microbial/img/bin/imgPerlEnv perl
+#!/webfs/projectdirs/microbial/img/bin/imgEnv2 perl
 
 #
 # user forgot password or username - they must supply email
@@ -7,7 +7,7 @@
 #
 # use recap keys for email submit
 #
-# $Id: forgot.cgi 33494 2015-06-02 20:40:42Z klchu $
+# $Id: forgot.cgi 35780 2016-06-15 20:41:20Z klchu $
 #
 use strict;
 use CGI qw( :standard  );

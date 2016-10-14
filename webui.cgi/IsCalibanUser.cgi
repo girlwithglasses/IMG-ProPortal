@@ -1,4 +1,4 @@
-#!/webfs/projectdirs/microbial/img/bin/imgPerlEnv perl
+#!/webfs/projectdirs/microbial/img/bin/imgEnv2 perl
 
 # check if caliban user
 # GET - returns plain text
@@ -11,7 +11,7 @@
 # - 403 error for bots
 # Ken
 #
-# $Id: IsCalibanUser.cgi 31207 2014-06-16 19:48:53Z klchu $
+# $Id: IsCalibanUser.cgi 35611 2016-05-08 21:22:50Z klchu $
 #
 use strict;
 use CGI qw( :standard  );

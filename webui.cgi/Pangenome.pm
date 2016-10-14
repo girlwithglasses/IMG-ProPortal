@@ -1,6 +1,6 @@
 ############################################################################
 # Pangenome.pm - displays a pangenome and its composing genomes
-# $Id: Pangenome.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: Pangenome.pm 35375 2016-03-08 21:18:46Z jinghuahuang $
 ############################################################################
 package Pangenome;
 my $section = "Pangenome";
@@ -17,6 +17,7 @@ use WebConfig;
 use WebUtil;
 use GeneCassette;
 use CompareGenomes;
+use QueryUtil;
 
 my $env              = getEnv();
 my $main_cgi         = $env->{main_cgi};
@@ -1125,7 +1126,7 @@ sub printNeighborhood {
     my $mid_coord =
       int( ( $end_coord0 - $start_coord0 ) / 2 ) + $start_coord0 + 1;
 
-    my $taxon_oid = scaffoldOid2TaxonOid( $dbh, $scaffold_oid );
+    my $taxon_oid = QueryUtil::scaffoldOid2TaxonOid( $dbh, $scaffold_oid );
     my $left_flank = $mid_coord - $flank_length + 1;
     my $right_flank = $mid_coord + $flank_length + 1;
 
@@ -1261,7 +1262,8 @@ sub printNeighborhood {
         }
     }   # end for loop
 
-    WebUtil::addIntergenic( $dbh, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
+    require ScaffoldDataUtil;
+    ScaffoldDataUtil::addIntergenic( $dbh, $scaffold_oid, $sp, "+", $left_flank, $right_flank );
     my $s = $sp->getMapHtml("overlib");
     print "$s\n";
 
@@ -1302,7 +1304,7 @@ sub printScaffold {
     my $dbh = dbLogin();
 
     # get scaffold information
-    checkScaffoldPerm( $dbh, $scaffold_oid );
+    WebUtil::checkScaffoldPerm( $dbh, $scaffold_oid );
     my $scaffold_name = getScaffoldName( $dbh, $scaffold_oid );
 
     # determine flanking coordinates for the panel

@@ -1,6 +1,6 @@
 package IMG::Util::Base;
 
-use base 'Import::Base';
+use parent 'Import::Base';
 
 our @IMPORT_MODULES = (
 #	'warnings',

@@ -1,6 +1,6 @@
 ############################################################################
 # IMGProteins.pm - displays proteomic data
-# $Id: IMGProteins.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: IMGProteins.pm 35066 2016-01-20 19:25:21Z klchu $
 ############################################################################
 package IMGProteins;
 my $section = "IMGProteins";
@@ -4066,7 +4066,7 @@ sub printGraphicalSequence {
             style='height: $height"."px; 
                    width: 750px; overflow: auto; 
                    border: 2px solid #99CCFF;'>";
-    print "<image src='$tmpOutUrl' usemap='#peptidesmap' border='0' />\n";
+    print "<img src='$tmpOutUrl' usemap='#peptidesmap' border='0' />\n";
     print "<map name='peptidesmap'>\n";
     print $map;
     print "</map>\n";

@@ -1,7 +1,7 @@
 ############################################################################
 # BcNpIDSearch.pm - Formerly geneSearch.pl
 #
-# $Id: BcNpIDSearch.pm 31652 2014-08-14 05:59:25Z jinghuahuang $
+# $Id: BcNpIDSearch.pm 35780 2016-06-15 20:41:20Z klchu $
 ############################################################################
 package BcNpIDSearch;
 my $section = "BcNpIDSearch";

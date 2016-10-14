@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: Caliban.pm 34762 2015-11-20 07:21:14Z jinghuahuang $
+# $Id: Caliban.pm 36298 2016-10-10 20:14:39Z klchu $
 #
 ############################################################################
 package Caliban;
@@ -26,31 +26,31 @@ use OracleUtil;
 
 $| = 1;
 
-my $env         = getEnv();
-my $base_url    = $env->{base_url};
-my $base_dir    = $env->{base_dir};
+my $env                      = getEnv();
+my $base_url                 = $env->{base_url};
+my $base_dir                 = $env->{base_dir};
 my $top_base_url             = $env->{top_base_url};
-my $main_cgi    = $env->{main_cgi};
-my $cgi_url     = $env->{cgi_url};
-my $cgi_tmp_dir = $env->{cgi_tmp_dir};
-my $section     = "Caliban";
-my $section_cgi = "$main_cgi?section=$section";
+my $main_cgi                 = $env->{main_cgi};
+my $cgi_url                  = $env->{cgi_url};
+my $cgi_tmp_dir              = $env->{cgi_tmp_dir};
+my $section                  = "Caliban";
+my $section_cgi              = "$main_cgi?section=$section";
+my $user_restricted_site     = $env->{user_restricted_site};
+my $user_restricted_site_url = $env->{user_restricted_site_url};
+
+my $abc                      = $env->{abc};                        # BC & SM home
 
 # sso Caliban
 # cookie name: jgi_return, value: url, domain: jgi.doe.gov
 my $sso_url                 = $env->{sso_url};
 my $sso_domain              = $env->{sso_domain};
 my $sso_cookie_name         = $env->{sso_cookie_name};           # jgi_return cookie name
-my $sso_session_cookie_name = $env->{sso_session_cookie_name};
+my $sso_session_cookie_name = $env->{sso_session_cookie_name};  # jgi_session
 my $sso_api_url             = $env->{sso_api_url};               # https://signon.jgi-psf.org/api/sessions/
 my $sso_user_info_url       = $env->{sso_user_info_url};
+my $sso_enabled             = $env->{sso_enabled};
 my $verbose                 = $env->{verbose};
-
-
-#    } elsif ( $section eq 'Caliban' ) {
-#        require Caliban;
-#        printAppHeader("");
-#        Caliban::dispatch();
+my $public_login            = $env->{public_login};
 
 sub getPageTitle {
     return '';
@@ -60,7 +60,7 @@ sub getAppHeaderData {
     my ($self) = @_;
 
     my @a = ('');
-    if(param("logout") ne "") {
+    if ( param("logout") ne "" ) {
         @a = ('logout');
     }
     return @a;
@@ -70,7 +70,7 @@ sub dispatch {
     my ( $self, $numTaxon ) = @_;
     my $page = param('page');
 
-    if(param("logout") ne "") {
+    if ( param("logout") ne "" ) {
         WebUtil::setSessionParam( "blank_taxon_filter_oid_str", "1" );
         WebUtil::setSessionParam( "oldLogin",                   0 );
         WebUtil::setTaxonSelections("");
@@ -82,18 +82,21 @@ sub dispatch {
             <a href='main.cgi'>Sign in</a>
             </p>
         };
-        my $sso_enabled     = $env->{sso_enabled};
-        my $oldLogin = WebUtil::getSessionParam("oldLogin");
+        my $sso_enabled = $env->{sso_enabled};
+        my $oldLogin    = WebUtil::getSessionParam("oldLogin");
         if ( !$oldLogin && $sso_enabled ) {
             logout(1);
         } else {
             logout();
         }
     } elsif ( $page eq 'migrateForm' ) {
+
         #printMigrateForm();
     } elsif ( $page eq 'submitMigrate' ) {
+
         #processMigrateForm();
     } elsif ( $page eq 'userinfo' ) {
+
         #getCalibanInfoFromEmail();
     }
 }
@@ -119,13 +122,21 @@ sub printSsoForm {
         #    $template->param( sso_url  => $sso_url );
         print $template->output;
 
+    } elsif($abc) {
+        my $template = HTML::Template->new( filename => "$base_dir/loginFormABC.html" );
+        #$template->param( base_url     => $base_url );
+        $template->param( sso_url      => $sso_url );
+        $template->param( top_base_url => $top_base_url );
+        print $template->output;
+
+
     } else {
 
         my $template = HTML::Template->new( filename => "$base_dir/loginFormBoth.html" );
-        $template->param( base_url => $base_url );
-        $template->param( cgi_url  => $cgi_url );
-        $template->param( sso_url  => $sso_url );
-        $template->param( top_base_url  => $top_base_url );
+        $template->param( base_url     => $base_url );
+        #$template->param( cgi_url      => $cgi_url );
+        $template->param( sso_url      => $sso_url );
+        $template->param( top_base_url => $top_base_url );
         print $template->output;
     }
 }
@@ -135,6 +146,8 @@ sub printSsoForm {
 #
 # https://signon.jgi.doe.gov/api/users/3701.json
 # http://contacts.jgi-psf.org/api/contacts/3696
+#
+# $dbh should be null here - do not open db connect util signed into jgi sso first !!! - ken 10-09-2016
 #
 sub validateUser {
     my ($dbh) = @_;
@@ -153,7 +166,7 @@ sub validateUser {
     #webLog "here 3 <br/>\n";
 
     # the cookie has the sub path in id
-    # https://signon.jgi-psf.org/api/sessions/e29a0ea6ac80f6b8
+    # https://signon.jgi.doe.gov/api/sessions/e29a0ea6ac80f6b8
     #<session><location>/api/sessions/01f3b5f748d90db59a4a4fbe5f1cbdb2</location>
     #   <user>/api/users/3701</user><ip>128.3.44.193</ip></session>
     #
@@ -161,7 +174,7 @@ sub validateUser {
     #
     #
     # new user json url
-    # https://signon.jgi-psf.org/api/sessions/01f3b5f748d90db59a4a4fbe5f1cbdb2.json
+    # https://signon.jgi.doe.gov/api/sessions/01f3b5f748d90db59a4a4fbe5f1cbdb2.json
     # {"ip":"128.3.44.193","id":"01f3b5f748d90db59a4a4fbe5f1cbdb2",
     #  "user":{"created_at":"2011-02-15T14:52:51Z","email":"klchu@lbl.gov","id":3701,
     #    "last_authenticated_at":"2015-04-28T18:31:26Z","login":"klchu","updated_at":"2015-01-07T18:55:00Z",
@@ -174,7 +187,15 @@ sub validateUser {
     #    }
     my $url = $sso_url . $id . '.json';
 
-    webLog("here 4 $url\n");
+    #webLog("here 4 $url\n");
+    
+    # TODO 404 errors reported here on Oct 9 2016
+    # maybe pause for 1 sec to let sso finish its db stuff??? - Ken
+    webLog("\n\nStatus1: JGI SSO $url\n\n");
+    webLog("\n\nStatus1: sleep for 2 sec \n\n");
+    sleep(2);
+    webLog("\n\nStatus1: awake now \n\n");
+    
     my $ua = WebUtil::myLwpUserAgent();
 
     my $req  = GET($url);
@@ -182,6 +203,8 @@ sub validateUser {
     my $code = $res->code;
 
     #webLog("here 5 $code\n");
+
+    webLog("Status1: JGI SSO $url\n\n");
 
     if ( $code eq "200" ) {
         my $content = $res->content;
@@ -197,7 +220,8 @@ sub validateUser {
         my $user_href = $href->{user};
         my $user_id   = $user_href->{id};
 
-        my ( $contact_oid, $username, $super_user, $name, $email2 ) = getContactOidDb( $dbh, $user_id );
+        my $dbh = dbLogin();
+        my ( $contact_oid, $username, $super_user, $name, $email2, $jgi_user, $img_editor ) = getContactOidDb( $dbh, $user_id );
         my ( $ans, $login, $email, $userData_href ) = getUserInfo3( $user_id, $user_href );
 
         checkBannedUsers( $username, $email, $email2 );
@@ -218,7 +242,7 @@ sub validateUser {
 
                 imgAccounttForm( $email, $userData_href );
             }
-            ( $contact_oid, $username, $super_user, $name, $email2 ) = getContactOidDb( $dbh, $user_id );
+            ( $contact_oid, $username, $super_user, $name, $email2, $jgi_user, $img_editor ) = getContactOidDb( $dbh, $user_id );
         }
 
         return 0 if ( $contact_oid eq "" || $contact_oid eq "0" );
@@ -231,7 +255,48 @@ sub validateUser {
         setSessionParam( "email",             $email2 );
         setSessionParam( "caliban_id",        $user_id );
         setSessionParam( "caliban_user_name", $login );
+        setSessionParam( "jgi_user", $jgi_user );
+        setSessionParam( "img_editor", $img_editor );
+        if ( $img_editor eq "Yes" ) {
+            setSessionParam( "editor", 1 );
+        } else {
+            setSessionParam( "editor", 0 );
+        }
+        
         return 1;
+        
+    } elsif($code eq "410" || $code eq "404") {
+        my $text = qq{
+<br>
+Your JGI SSO session has expired. <br>
+Please login again.
+<br>
+<br>
+<b>Tip:<b> If you keep seeing this message try clearing your browser's cookie and cache.
+        };
+        
+        WebUtil::printSessionExpired($text);
+        
+    } else {
+        # TODO sso issue?
+        my $content = $res->content;
+        
+        webLog("Error1: ====================\n\n");
+        webLog("Error1: JGI SSO\n\n $url\n\n");
+        webLog("Error1: There is an issue with JGI SSO (https://signon.jgi.doe.gov/) \n\n $code \n\n $content <br> $url\n");
+        webLog("Error1: ====================\n\n");
+
+        my $text = qq{
+<br>
+Error1: There is an issue with JGI SSO (https://signon.jgi.doe.gov/) <br> $code <br> $content <br> $url
+Please login again.
+<br>
+<br>
+<b>Tip:<b> If you keep seeing this message try clearing your browser's cookie and cache.
+        };
+        
+        
+        WebUtil::webErrorHeader($text, -1, 1);
     }
     return 0;
 }
@@ -307,10 +372,10 @@ sub insertUser {
 
     my $phone = $userData_href->{'phone'};
     $reftype = reftype $phone;
-    $phone   = '' if ( $reftype eq 'HASH' );
+    $phone = '' if ( $reftype eq 'HASH' );
 
     my $organization = $userData_href->{'organization'};
-    $reftype      = reftype $organization;
+    $reftype = reftype $organization;
     $organization = '' if ( $reftype eq 'HASH' );
 
     my $address = $userData_href->{'address'};
@@ -319,7 +384,7 @@ sub insertUser {
 
     my $state = $userData_href->{'state'};
     $reftype = reftype $state;
-    $state   = '' if ( $reftype eq 'HASH' );
+    $state = '' if ( $reftype eq 'HASH' );
 
     my $country = $userData_href->{'country'};
     $reftype = reftype $country;
@@ -327,14 +392,14 @@ sub insertUser {
 
     my $city = $userData_href->{'city'};
     $reftype = reftype $city;
-    $city    = '' if ( $reftype eq 'HASH' );
+    $city = '' if ( $reftype eq 'HASH' );
 
     my $title = $userData_href->{'title'};
     $reftype = reftype $title;
-    $title   = '' if ( $reftype eq 'HASH' );
+    $title = '' if ( $reftype eq 'HASH' );
 
     my $department = $userData_href->{'department'};
-    $reftype    = reftype $department;
+    $reftype = reftype $department;
     $department = '' if ( $reftype eq 'HASH' );
 
     # get max contact_oid
@@ -393,21 +458,22 @@ sub imgAccounttForm {
 
     # get country list from img gold
     my $dbhg = WebUtil::dbGoldLogin();
-    my $sql = qq{
+    my $sql  = qq{
 select cv_term from countrycv
     };
-    my $aref = OracleUtil::execSqlCached($dbhg, $sql, 'countrycv');
+    my $aref = OracleUtil::execSqlCached( $dbhg, $sql, 'countrycv' );
 
     my @a;
     foreach my $ref (@$aref) {
         my $c = $ref->[0];
-        push(@a, $c);
+        push( @a, $c );
     }
+
     # add adhoc country spellings
-    push(@a ,'United States');
-    push(@a ,'Viet Nam');
-    my $str = join("','", @a);
-    my $countArray = "['"  . $str .  "']";
+    push( @a, 'United States' );
+    push( @a, 'Viet Nam' );
+    my $str = join( "','", @a );
+    my $countArray = "['" . $str . "']";
 
     $email = lc($email);
 
@@ -417,10 +483,10 @@ select cv_term from countrycv
 
     my $phone = $userData_href->{'phone'};
     $reftype = reftype $phone;
-    $phone   = '' if ( $reftype eq 'HASH' );
+    $phone = '' if ( $reftype eq 'HASH' );
 
     my $organization = $userData_href->{'organization'};
-    $reftype      = reftype $organization;
+    $reftype = reftype $organization;
     $organization = '' if ( $reftype eq 'HASH' );
 
     my $address = $userData_href->{'address'};
@@ -429,7 +495,7 @@ select cv_term from countrycv
 
     my $state = $userData_href->{'state'};
     $reftype = reftype $state;
-    $state   = '' if ( $reftype eq 'HASH' );
+    $state = '' if ( $reftype eq 'HASH' );
 
     my $country = $userData_href->{'country'};
     $reftype = reftype $country;
@@ -437,14 +503,14 @@ select cv_term from countrycv
 
     my $city = $userData_href->{'city'};
     $reftype = reftype $city;
-    $city    = '' if ( $reftype eq 'HASH' );
+    $city = '' if ( $reftype eq 'HASH' );
 
     my $title = $userData_href->{'title'};
     $reftype = reftype $title;
-    $title   = '' if ( $reftype eq 'HASH' );
+    $title = '' if ( $reftype eq 'HASH' );
 
     my $department = $userData_href->{'department'};
-    $reftype    = reftype $department;
+    $reftype = reftype $department;
     $department = '' if ( $reftype eq 'HASH' );
 
     my $template = HTML::Template->new( filename => "$base_dir/imgAccountForm.html" );
@@ -458,14 +524,27 @@ select cv_term from countrycv
     $template->param( address      => $address );
     $template->param( city         => $city );
     $template->param( state        => $state );
-    $template->param( country        => $country );
-    $template->param(countryArray => $countArray);
+    $template->param( country      => $country );
+    $template->param( countryArray => $countArray );
 
     # username
     my ( $username, $junk ) = split( /@/, $email );
+
     #$username =~ s/\W//g;
     $username =~ s/[^A-Za-z0-9]//g;
-    $username = $username . 'SSOAPI';
+    my $postfix = 'SSOAPI';
+    my $postfixSize = length($postfix);
+    my $minUsernameSize = 8 - $postfixSize;# 8 - 6;
+    my $maxUsernameSize = 30 - $postfixSize - 1; #30 - 7;
+    if(length($username) > $maxUsernameSize) {
+        $username = substr($username, 0, $maxUsernameSize);
+    } elsif(length($username) < $minUsernameSize) {
+        $username = $username . 'X'; # add char
+    }
+    
+    $username = $username . $postfix;
+    
+    
 
     # get all distinct img usernames
     my $dbh = WebUtil::dbLogin();
@@ -480,11 +559,13 @@ select cv_term from countrycv
         $allusernames{$name} = $name;
     }
     if ( exists $allusernames{$username} ) {
-
         # username exists
         my $tmp = $username;
+        if(length($tmp) > $maxUsernameSize) {
+            $tmp = substr($tmp, 0, $maxUsernameSize);
+        }
         do {
-            $username = $tmp . randomNumbers();
+            $username = $tmp . randomNumbers(); # random size is 3
         } while ( exists $allusernames{$username} );
     }
     $template->param( username => $username );
@@ -513,15 +594,15 @@ sub getContactOidDb {
     my ( $dbh, $user_id ) = @_;
 
     my $sql = qq{
-      select contact_oid, username, super_user, name, email
+      select contact_oid, username, super_user, name, email, jgi_user, img_editor
       from contact
       where caliban_id = ?
    };
 
     my $cur = WebUtil::execSql( $dbh, $sql, $verbose, $user_id );
 
-    my ( $contact_oid, $username, $super_user, $name, $email ) = $cur->fetchrow();
-    return ( $contact_oid, $username, $super_user, $name, $email );
+    my ( $contact_oid, $username, $super_user, $name, $email, $jgi_user, $img_editor ) = $cur->fetchrow();
+    return ( $contact_oid, $username, $super_user, $name, $email, $jgi_user, $img_editor );
 }
 
 #
@@ -534,12 +615,18 @@ sub isValidSession {
     webLog("isValidSession \n");
     return 0 if ( $sid eq "" || $sid eq 0 );
 
+    # make sure the jgi_Session cookie exists
+    # if gone the user logout eg closed browser
+    my %cookies = CGI::Cookie->fetch;
+    return 0 if ( !exists $cookies{$sso_session_cookie_name} );
+
+
     # https://signon.jgi-psf.org/api/sessions/
     # my $url = $sso_api_url . $sid;
     # new 2015-01-04 - ken
     my $url = $sso_api_url . $sid . '.json';
 
-    webLog("$url \n");
+    webLog("Status2: JGI SSO \n $url \n\n");
 
     my $ua = WebUtil::myLwpUserAgent();
 
@@ -556,8 +643,28 @@ sub isValidSession {
     # 410 or 404 - Gone
     if ( $code eq "200" || $code eq "204" ) {
         return 1;
-    } else {
+    } elsif ($code eq "410" || $code eq "404") {
         return 0;
+        
+    } else {
+        
+        # TODO sso issue? - SHOULD I even validate - lets just continue? 
+        # what about portal logins
+        my $content = $res->content;
+
+        webLog("Error2: ====================\n\n");
+        webLog("Error2: JGI SSO\n\n $url\n\n");
+        webLog("Error2: JGI SSO $code \n $content \n");
+        webLog("Error2: ====================\n\n");
+
+        my $text = qq{
+Error2: There is an issue with JGI SSO (https://signon.jgi.doe.gov/) <br> $code <br> $content <br><br>
+Please try again<br><br>
+
+<b>Tip:<b> If you keep seeing this message try clearing your browser's cookie and cache.
+        };
+
+        WebUtil::webErrorHeader($text, 1);
     }
 }
 
@@ -591,11 +698,15 @@ sub logout {
     WebUtil::clearSession();
 
     # http://blog.unmaskparasites.com/2009/10/28/evolution-of-hidden-iframes/
+    #
+    #     //window.open('$sso_url/signon/destroy', '_blank');
+    #
+    # this also calls the xml.cgi message file read twice 
+    #
     if ($sso_logout) {
         print <<EOF;
     <script language='JavaScript' type='text/javascript'>
-    document.cookie='jgi_return=$base_url; domain=$sso_domain; path=/;';
-    //window.open('$sso_url/signon/destroy', '_blank');
+    document.cookie='jgi_return=$base_url/; domain=$sso_domain; path=/;';
     </script>
 
     <iframe height="0" width="0" style="visibility: hidden" src="$sso_url/signon/destroy"></iframe>
@@ -653,8 +764,8 @@ sub getUserInfo2 {
 
     webLog("$url\n");
 
-    $req  = GET($url);
-    $res  = $ua->request($req);
+    $req = GET($url);
+    $res = $ua->request($req);
     my $href2;
     if ( $res->code eq "200" ) {
         my $content = $res->content;
@@ -840,7 +951,7 @@ sub migrateImg2JgiSso {
     my $caliban_user_name = getSessionParam('caliban_user_name');
 
     # the img public user account
-    return if ($contact_oid eq '901');
+    return if ( $contact_oid eq '901' );
 
     #webLog("1 migrateImg2JgiSso $caliban_id\n");
 
@@ -861,14 +972,14 @@ sub migrateImg2JgiSso {
             if ( $#$aref < -1 ) {
                 $caliban_id = 0;
 
-             #   webLog("3 migrateImg2JgiSso $caliban_id\n");
+                #   webLog("3 migrateImg2JgiSso $caliban_id\n");
 
             } else {
                 my $href = $aref->[0];
                 $caliban_id        = $href->{'id'};
                 $caliban_user_name = $href->{'login'};
 
-              #  webLog("4 migrateImg2JgiSso $caliban_id $caliban_user_name\n");
+                #  webLog("4 migrateImg2JgiSso $caliban_id $caliban_user_name\n");
 
             }
         }
@@ -891,7 +1002,7 @@ sub migrateImg2JgiSso {
         my $template = HTML::Template->new( filename => "$base_dir/userJgiSsoNo.html" );
 
         $template->param( email => $email );
-        $template->param( url         => $redirecturl );
+        $template->param( url   => $redirecturl );
         print $template->output;
     }
 
@@ -907,282 +1018,5 @@ sub migrateImg2JgiSso {
     # try to get all user info to prefill a form for jgi sso account.
 
 }
-
-#sub getCalibanInfoFromEmail {
-#
-#    my $email = param('email');
-#    my $url = 'https://signon.jgi.doe.gov/api/users.json?email=' . $email;
-#    my $data_aref = getCv($url);
-#    print "getCalibanInfoFromEmail() data_aref: <br/>\n";
-#    print Dumper($data_aref);
-#    print "<br/>\n";    
-#    
-#}
-#
-#
-## json data return must be an array or empty
-#sub getCv {
-#    my ($url) = @_;
-#
-#    my $ua    = WebUtil::myLwpUserAgent();
-#    my $req   = GET($url);
-#    my $res   = $ua->request($req);
-#    my $code  = $res->code;
-#
-#    my $data_aref;
-#    if ( $code eq "200" ) {
-#        my $content = $res->content;
-#        $data_aref = decode_json($content);
-#    }
-#
-#    return $data_aref;
-#}
-#
-# before print migrate form check to see if user has more than one account
-# with their email address
-#
-#sub printMigrateForm {
-#    my $email = getSessionParam('email');
-#    my ( $contact_oid, $name, $address, $city, $state, $country, $phone, $department, $organization );
-#
-#    if ( $email eq '' ) {
-#        WebUti::webError( 'Migration Error: Email cannot be blank!', 0, 1 );
-#    }
-#
-#    # do email check
-#    my $sql = qq{
-#select c.contact_oid, c.name, c.address, c.city, c.state, c.country, c.phone, c.department, c.organization
-#from contact c
-#where lower(email) = ?
-#    };
-#    my $dbh   = dbLogin();
-#    my $cur   = execSql( $dbh, $sql, 1, $email );
-#    my $count = 0;
-#    for ( ; ; ) {
-#        my @a = $cur->fetchrow();
-#        last if ( !$a[0] );
-#        ( $contact_oid, $name, $address, $city, $state, $country, $phone, $department, $organization ) = @a;
-#        $count++;
-#    }
-#    if ( $count > 1 ) {
-#        WebUti::webError(
-#            'Migration Error: You have more than one IMG account associated with this email: ' . $email
-#              . '<br>Please contact us at: imgsupp@lists.jgi-psf.org',
-#            0, 1
-#        );
-#    } elsif ( $count < 1 ) {
-#
-#        # this should not happen
-#        WebUti::webError( 'Migration Error: No email found in IMG!', 0, 1 );
-#    }
-#
-#    # now everything should be ok now
-#
-#    my @tmp       = split( /\s+/, $name );
-#    my $firstname = $tmp[0];
-#    my $lastname  = $tmp[$#tmp];
-#
-#    # TODO using testing url - I need to change before production
-#    my $countryCvUrl     = 'http://contacts-stage.jgi-psf.org/api/cvs/countries.json';
-#    my $institutionCvUrl = 'http://contacts-stage.jgi-psf.org/api/cvs/institution_types.json';
-#
-#    my $country_aref     = getCv($countryCvUrl);
-#    my $institution_aref = getCv($institutionCvUrl);
-#
-#    my $template = HTML::Template->new( filename => "$base_dir/userMigrateAccountForm.html" );
-#    $template->param( email     => $email );
-#    $template->param( firstname => $firstname );
-#    $template->param( lastname  => $lastname );
-#    $template->param( phone     => $phone );
-#    $template->param( address_1 => $address );
-#    $template->param( city      => $city );
-#    $template->param( state     => $state );
-#
-#    $template->param( institution => $organization . ' ' . $department );
-#
-#    # make cv list
-#
-#    # country
-#    my $str = qq{
-#        <select name='country' required>
-#    };
-#    foreach my $c (@$country_aref) {
-#        if ( ( $country eq 'USA' && $c eq 'United States' ) || $c eq 'United States' ) {
-#            $str = $str . qq{<option value='$c' selected>$c</option>};
-#        } elsif ( ( $country eq 'Korea' || $country =~ /Korea/ ) && $c eq 'Korea, Republic of' ) {
-#            $str = $str . qq{<option value='$c' selected>$c</option>};
-#
-#        } elsif ( $country eq $c ) {
-#            $str = $str . qq{<option value='$c' selected>$c</option>};
-#        } else {
-#            $str = $str . qq{<option value='$c'>$c</option>};
-#        }
-#    }
-#    $str = $str . qq{
-#        </select>
-#    };
-#    $template->param( country => $str );
-#
-#    # institution type
-#    my $str = qq{
-#        <select name='institutionType' required>
-#    };
-#    foreach my $c (@$institution_aref) {
-#        $str = $str . qq{
-#            <option value='$c'>$c</option>
-#        };
-#    }
-#    $str = $str . qq{
-#        </select>
-#    };
-#    $template->param( institutionType => $str );
-#
-#    my ( $server, $google_key ) = WebUtil::getGoogleReCaptchaPublicKey();
-#    if ( $google_key ne "" ) {
-#        require Captcha::reCAPTCHA;
-#        my $text = qq{
-#            <p>
-#            <font color='red'>*</font>
-#            To prevent spam and abuse, please enter the text shown in the window below.<br/>
-#            ReCaptcha is required.
-#            <br/>
-#        };
-#        my $c = Captcha::reCAPTCHA->new;
-#        my $error;
-#
-#        # 'red', 'white', 'blackglass', 'clean'
-#        my %options = ( 'theme' => 'clean' );
-#        $text = $text .  $c->get_html( "$google_key", $error, $env->{ssl_enabled}, \%options ) . "</p>\n";
-#
-#
-#        $template->param( captcha => $text );
-#    }
-#
-#
-#
-#    print $template->output;
-#}
-
-#sub processMigrateForm {
-#    my ( $server, $google_key ) = WebUtil::getGoogleReCaptchaPrivateKey();
-#    if ( $google_key ne "" ) {
-#        require Captcha::reCAPTCHA;
-#        my $c         = Captcha::reCAPTCHA->new;
-#        my $challenge = param('recaptcha_challenge_field');
-#        my $response  = param('recaptcha_response_field');
-#
-#        # Verify submission
-#        my $result = $c->check_answer( "$google_key", $ENV{'REMOTE_ADDR'}, $challenge, $response );
-#
-#        if ( $result->{is_valid} ) {
-#
-#            #print "Yes!";
-#            # do noting
-#            #jiraForm("TEST: reCAptcha was fine can continue and remove from code");
-#            #return;
-#        } else {
-#
-#            # Error
-#            print qq{
-#              <h3>Invalid captcha!</h3>
-#            };
-#            printMigrateForm();
-#            return;
-#        }
-#    }
-#
-#
-#    # TODO using testing url - I need to change before production
-#    my $registerUrl = 'http://contacts-stage.jgi-psf.org/api/registration.json';
-#
-#    # test with a validate url
-#    my $validateUrl = 'http://contacts-stage.jgi-psf.org/api/contacts/validate.json';
-#
-#    # all field require
-#    my $firstname       = param('firstname');
-#    my $lastname        = param('lastname');
-#    my $email           = param('email');
-#    my $institution     = param('institution');
-#    my $institutionType = param('institutionType');
-#    my $phone           = param('phone');
-#    my $address_1       = param('address_1');
-#    my $city            = param('city');
-#    my $state           = param('state');
-#    my $country         = param('country');
-#    my $postalCode      = param('postalCode');        # not required
-#
-#    my %ssoHash = (
-#        "email_address"    => $email,
-#        "first_name"       => $firstname,
-#        "last_name"        => $lastname,
-#        "institution"      => $institution,
-#        "institution_type" => $institutionType,
-#        "address_1"        => $address_1,
-#        "city"             => $city,
-#        "state"            => $state,
-#        "postal_code"      => $postalCode,
-#        "country"          => $country,
-#        "phone_number"     => $phone
-#    );
-#
-#    my $json = encode_json( \%ssoHash );
-#    print "Validating your information<br>\n";
-#    my $req = HTTP::Request->new( 'POST', $validateUrl );
-#    $req->header( 'Content-Type' => 'application/json' );
-#    $req->content($json);
-#    my $lwp  = new LWP::UserAgent();
-#    my $res  = $lwp->request($req);
-#    my $code = $res->code;
-#
-#    if ( $code ne '200' && $code ne '201' ) {
-#        print "Error $code";
-#        print "Validation failed<br>\n";
-#        my $content = $res->content;
-#        print $content;
-#        print "<br>\n";
-#        return;
-#    }
-#
-#    # validation OK
-#    my $json = encode_json( \%ssoHash );
-#    print "Creating your JGI SSO account<br>\n";
-#    my $req = HTTP::Request->new( 'POST', $registerUrl );
-#    $req->header( 'Content-Type' => 'application/json' );
-#    $req->content($json);
-#    my $lwp  = new LWP::UserAgent();
-#    my $res  = $lwp->request($req);
-#    my $code = $res->code;
-#
-#    if ( $code eq '200' || $code eq '201' ) {
-#
-#        # user added
-#        my $content = $res->content;
-#        my $href    = decode_json($content);
-#        #print Dumper $href;
-#        #print "<br>\n";
-#
-#
-#        print qq{
-#          <h1>Your JGI SSO Account Created</h1>
-#          <p>
-#          Your JGI SSO account has been created.
-#          An <b>email</b> will be sent to you to confirm the account creation and to set up your JGI SSO password.
-#          <br>
-#          Please log out of IMG and sign in with your JGI SSO account.
-#        };
-#
-#    } else {
-#        print qq{
-#            Error: $code <br>
-#            Your JGI SSO account creation failed.<br><br>
-#        };
-#        my $content = $res->content;
-#        print $content;
-#        print "<br>\n";
-#
-#    }
-#}
-
-
 
 1;

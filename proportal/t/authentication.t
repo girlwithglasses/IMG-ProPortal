@@ -14,11 +14,8 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Base 'NetTest';
 use Dancer2;
-use Plack::Test;
-use HTTP::Request::Common;
-use HTTP::Cookies;
 use AppCore;
 use Cookie::Baker;
 

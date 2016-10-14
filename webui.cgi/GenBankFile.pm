@@ -2,7 +2,7 @@
 # GenBankFile.pm - Generate GenBank files.
 #     --es 04/13/2006
 #
-# $Id: GenBankFile.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: GenBankFile.pm 35375 2016-03-08 21:18:46Z jinghuahuang $
 ############################################################################
 package GenBankFile;
 my $section = "GenBankFile";
@@ -14,6 +14,7 @@ use Data::Dumper;
 use WebUtil;
 use WebConfig;
 use QueryUtil;
+use ScaffoldDataUtil;
 
 $| = 1;
 
@@ -55,6 +56,7 @@ sub dispatch {
 
 ############################################################################
 # printProcessGenBank - print processing results for GenBank file.
+# not used
 ############################################################################
 sub printProcessGenBank {
     my ( $scaffold_oid, $myImgOverride, $imgTermOverride, $gene_oid_note,
@@ -122,7 +124,7 @@ sub writeScaffold2GenBankFile {
     $imgTermOverride = 1 if $imgTermOverride eq "on";
 
     my $dbh = dbLogin();
-    checkScaffoldPerm( $dbh, $scaffold_oid );
+    WebUtil::checkScaffoldPerm( $dbh, $scaffold_oid );
 
     my $wfh = newAppendFileHandle( $outFile, "writeScaffold2GenBankFile" );
 
@@ -131,7 +133,7 @@ sub writeScaffold2GenBankFile {
     #$cur->finish( );
     my $sysdate = getSysDate();
 
-    my $ext_accession = scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
+    my $ext_accession = QueryUtil::scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
     print "<p>\n" if (!$notPrint);
     print "Retrieve scaffold $ext_accession information ...<br/>\n" if (!$notPrint);
     ## We kludge chromosome for historical reasons since this value
@@ -176,31 +178,18 @@ sub writeScaffold2GenBankFile {
     };
     printFeature( $wfh, "source", $h );
 
+    my $rclause = WebUtil::urClause("g.taxon");
+    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
+
     ## Enzymes
     print "Process enzymes ...<br/>\n" if (!$notPrint);
     my %geneEnzymes;
-    my $rclause = WebUtil::urClause("g.taxon");
-    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
-    my $sql = getGeneKoEnzymesSql($rclause, $imgClause);
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $gene_oid, $enzyme ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $geneEnzymes{$gene_oid} .= "$enzyme ";
-    }
-    $cur->finish();
+    QueryUtil::fetchGeneKoEnzymesHash( $dbh, $scaffold_oid, \%geneEnzymes, $rclause, $imgClause);    
 
     ## IMG term override
     print "Process IMG terms ...<br/>\n" if (!$notPrint);
     my %geneImgTerms;
-    my $sql = getGeneImgFunctionsSql($rclause, $imgClause);    
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $gene_oid, $term, $f_order ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $geneImgTerms{$gene_oid} .= "$term\n";
-    }
-    $cur->finish();
+    QueryUtil::fetchGeneImgFunctionsHash( $dbh, $scaffold_oid, \%geneImgTerms, $rclause, $imgClause);    
 
     my %geneFeatures;
     if( $misc_features ) {
@@ -467,20 +456,7 @@ sub writeScaffold2GenBankFile {
     $cur->finish();
 
     ## Repeats
-    my $sql = getScaffoldRepeatsSql();
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $scaffold_oid, $start_coord, $end_coord, $type ) =
-          $cur->fetchrow();
-        last if !$scaffold_oid;
-        my $coords = "$start_coord..$end_coord";
-        my $h = {
-                  _coords    => $coords,
-                  rpt_family => "$type",
-        };
-        printFeature( $wfh, "repeat_region", $h );
-    }
-    $cur->finish();
+    printScaffoldRepeatRegions( $wfh, $dbh, $scaffold_oid );
 
     ## scaffold_misc_features
     my $sql = qq{
@@ -552,15 +528,10 @@ sub writeScaffold2GenBankFile {
 
     ## Get the sequence
     print "Process scaffold DNA sequence ...<br/>\n" if (!$notPrint);
-    my $sql = QueryUtil::getSingleScaffoldTaxonSql();
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    my ( $taxon_oid, $scf_ext_accession ) = $cur->fetchrow();
-    $cur->finish();
-    printScaffoldSequence( $wfh, $taxon_oid, $scf_ext_accession,
-                           $scf_seq_length );
+    my ( $taxon_oid, $scf_ext_accession ) = QueryUtil::fetchSingleScaffoldTaxon( $dbh, $scaffold_oid);
+    printScaffoldSequence( $wfh, $taxon_oid, $scf_ext_accession, $scf_seq_length );
     print $wfh "//\n";
     close $wfh;
-    #$dbh->disconnect();
     print "</p>\n" if (!$notPrint);
 }
 
@@ -573,11 +544,11 @@ sub writeScaffold2GenBankFile_act_header {
     $myImgOverride   = 1 if $myImgOverride   eq "on";
     $imgTermOverride = 1 if $imgTermOverride eq "on";
 
-    checkScaffoldPerm( $dbh, $scaffold_oid );
+    WebUtil::checkScaffoldPerm( $dbh, $scaffold_oid );
 
     my $sysdate = getSysDate();
 
-    my $ext_accession = scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
+    my $ext_accession = QueryUtil::scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
 
     print "Retrieve scaffold $ext_accession information ...<br/>\n";
 
@@ -655,14 +626,14 @@ sub writeScaffold2GenBankFile_act {
     $myImgOverride   = 1 if $myImgOverride   eq "on";
     $imgTermOverride = 1 if $imgTermOverride eq "on";
 
-    checkScaffoldPerm( $dbh, $scaffold_oid );
+    WebUtil::checkScaffoldPerm( $dbh, $scaffold_oid );
 
     #my $cur = execSql( $dbh, "select sysdate from dual", $verbose );
     #my $sydate = $cur->fetchrow( );
     #$cur->finish( );
     my $sysdate = getSysDate();
 
-    my $ext_accession = scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
+    my $ext_accession = QueryUtil::scaffoldOid2ExtAccession( $dbh, $scaffold_oid );
     print "<p>\n";
     print "Retrieve scaffold $ext_accession information ...<br/>\n";
     ## We kludge chromosome for historical reasons since this value
@@ -681,31 +652,18 @@ sub writeScaffold2GenBankFile_act {
       = $cur->fetchrow();
     $cur->finish();
 
+    my $rclause = WebUtil::urClause("g.taxon");
+    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
+
     ## Enzymes
     print "Process enzymes ...<br/>\n";
     my %geneEnzymes;
-    my $rclause = WebUtil::urClause("g.taxon");
-    my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
-    my $sql = getGeneKoEnzymesSql($rclause, $imgClause);
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $gene_oid, $enzyme ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $geneEnzymes{$gene_oid} .= "$enzyme ";
-    }
-    $cur->finish();
+    QueryUtil::fetchGeneKoEnzymesHash( $dbh, $scaffold_oid, \%geneEnzymes, $rclause, $imgClause);    
 
     ## IMG term override
     print "Process IMG terms ...<br/>\n";
     my %geneImgTerms;
-    my $sql = getGeneImgFunctionsSql($rclause, $imgClause);
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $gene_oid, $term, $f_order ) = $cur->fetchrow();
-        last if !$gene_oid;
-        $geneImgTerms{$gene_oid} .= "$term\n";
-    }
-    $cur->finish();
+    QueryUtil::fetchGeneImgFunctionsHash( $dbh, $scaffold_oid, \%geneImgTerms, $rclause, $imgClause);    
 
     ## Iterate through genes
     print "Process genes ...<br/>\n";
@@ -870,20 +828,8 @@ sub writeScaffold2GenBankFile_act {
     $cur->finish();
 
     ## Repeats
-    my $sql = getScaffoldRepeatsSql();
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    for ( ; ; ) {
-        my ( $scaffold_oid, $start_coord, $end_coord, $type ) =
-          $cur->fetchrow();
-        last if !$scaffold_oid;
-        my $coords = "$start_coord..$end_coord";
-        my $h = {
-                  _coords    => $coords,
-                  rpt_family => "$type",
-        };
-        printFeature( $wfh, "repeat_region", $h );
-    }
-    $cur->finish();
+    printScaffoldRepeatRegions( $wfh, $dbh, $scaffold_oid );
+
 }
 
 sub writeScaffold2GenBankFile_act_footer {
@@ -925,6 +871,47 @@ sub writeScaffold2GenBankFile_act_footer {
     print $wfh "//\n";
 }
 
+sub printScaffoldRepeatRegions {
+    my ( $wfh, $dbh, $scaffold_oid ) = @_;
+
+    my %rec_h;
+    
+    ## Repeats
+    my $sql = ScaffoldDataUtil::getScaffoldRepeatsSql();
+    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+    for ( ; ; ) {
+        my ( $scaffold_oid, $start_coord, $end_coord, $type ) =
+          $cur->fetchrow();
+        last if !$scaffold_oid;
+        my $coords = "$start_coord..$end_coord";
+        $rec_h{$coords} = $type;
+    }
+    $cur->finish();
+
+    my $sql = ScaffoldDataUtil::getScaffoldCrisprRepeatsSql();
+    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+    for ( ; ; ) {
+        my ( $scaffold_oid, $start_coord, $end_coord ) =
+          $cur->fetchrow();
+        last if !$scaffold_oid;
+        my $coords = "$start_coord..$end_coord";
+        $rec_h{$coords} = 'CRISPR';
+    }
+    $cur->finish();
+
+    my @recs = sort(keys %rec_h);
+    for my $coords ( @recs ) {
+        my $type = $rec_h{$coords};
+        my $h = {
+                  _coords    => $coords,
+                  rpt_family => "$type",
+        };
+        printFeature( $wfh, "repeat_region", $h );
+    }
+
+}
+
+
 sub getScaffoldStatTaxonInfoSql {
     
     my $rclause = WebUtil::urClause("tx");
@@ -940,20 +927,6 @@ sub getScaffoldStatTaxonInfoSql {
         where scf.scaffold_oid = ?
         and scf.taxon = tx.taxon_oid
         and scf.scaffold_oid = ss.scaffold_oid
-        $rclause
-        $imgClause
-    };
-    
-    return $sql;
-}
-
-sub getGeneKoEnzymesSql {
-    my ($rclause, $imgClause) = @_;
-    
-    my $sql = qq{
-        select g.gene_oid, g.enzymes
-        from gene_ko_enzymes g
-        where g.scaffold = ?
         $rclause
         $imgClause
     };
@@ -1002,19 +975,6 @@ sub getGeneMyimgFunctionsSql {
     };
     
     return $sql2;
-}
-
-
-sub getScaffoldRepeatsSql {
-    
-    my $sql = qq{
-        select sr.scaffold_oid, sr.start_coord, sr.end_coord, sr.type
-    	from scaffold_repeats sr
-    	where sr.scaffold_oid = ?
-    	order by sr.start_coord
-    };
-    
-    return $sql;
 }
 
 

@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: QueryUtil.pm 34666 2015-11-10 21:32:42Z jinghuahuang $
+# $Id: QueryUtil.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
 ############################################################################
 package QueryUtil;
 
@@ -599,6 +599,9 @@ sub fetchTaxonsOidAndNameFile {
     my %taxon_db;
 
     my ( $sql, $taxon_oid_str ) = getTaxonsOidAndNameFileSql( $dbh, $taxon_oids_ref, $rclause, $imgClause );
+    
+    #print "<br> =========  @$taxon_oids_ref =========== <br>" . $sql . "<br>";
+    
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ; ; ) {
         my ( $taxon_oid, $taxon_display_name, $in_file ) = $cur->fetchrow();
@@ -2301,6 +2304,31 @@ sub getSingleTaxonScaffoldSql {
     return $sql;
 }
 
+#############################################################################
+## getSingleScaffoldTaxonInfiledSql
+#############################################################################
+sub getSingleScaffoldTaxonInfiledSql {
+    my ($rclause, $imgClause) = @_;
+
+    if (!$rclause && !$imgClause) {
+        $rclause = WebUtil::urClause('s.taxon');
+        $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
+    }
+    my $sql = qq{
+        select s.taxon, t.in_file, s.ext_accession
+        from scaffold s, taxon t
+        where s.scaffold_oid = ?
+        $rclause
+        $imgClause
+    };
+    #print "getSingleScaffoldTaxonSql sql: $sql<br/>\n";
+    
+    return $sql;
+}
+
+#############################################################################
+## getSingleScaffoldTaxonSql
+#############################################################################
 sub getSingleScaffoldTaxonSql {
     my ($rclause, $imgClause) = @_;
 
@@ -2318,6 +2346,20 @@ sub getSingleScaffoldTaxonSql {
     #print "getSingleScaffoldTaxonSql sql: $sql<br/>\n";
     
     return $sql;
+}
+
+############################################################################
+# fetchSingleScaffoldTaxon
+############################################################################
+sub fetchSingleScaffoldTaxon {
+    my ( $dbh, $scaffold_oid) = @_;
+
+    my $sql = getSingleScaffoldTaxonSql();
+    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+    my ( $taxon_oid, $scf_ext_accession ) = $cur->fetchrow();
+    $cur->finish();
+    
+    return ( $taxon_oid, $scf_ext_accession ) ;
 }
 
 #############################################################################
@@ -2414,6 +2456,43 @@ sub getSingleScaffoldExtSql {
     #print "getSingleScaffoldExtSql sql: $sql<br/>\n";
     
     return $sql;
+}
+
+#############################################################################
+## getSingleScaffoldLengthSql
+#############################################################################
+sub getSingleScaffoldLengthSql {
+    my ($rclause, $imgClause) = @_;
+
+    if (!$rclause && !$imgClause) {
+        $rclause = WebUtil::urClause('s.taxon');
+        $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
+    }
+    my $sql = qq{
+        select s.scaffold_oid, st.seq_length
+        from scaffold s, scaffold_stats st
+        where s.scaffold_oid = ?
+        and s.scaffold_oid = st.scaffold_oid
+        $rclause
+        $imgClause
+    };
+    #print "getSingleScaffoldLengthSql sql: $sql<br/>\n";
+    
+    return $sql;
+}
+
+#############################################################################
+## fetchSingleScaffoldLength
+#############################################################################
+sub fetchSingleScaffoldLength {
+    my ( $dbh, $oid) = @_;
+
+    my $sql = QueryUtil::getSingleScaffoldLengthSql();
+    my $cur = execSql( $dbh, $sql, $verbose, $oid );
+    my ( $s_oid, $seq_length ) = $cur->fetchrow();
+    $cur->finish();
+
+    return $seq_length;
 }
 
 #############################################################################
@@ -2529,7 +2608,8 @@ sub fetchGeneGenomeOidsHash {
 sub fetchScaffoldGenomeOidsHash {
     my ( $dbh, @oids ) = @_;
 
-    my %oid_h;
+    my %goid_h;
+    my %s2goid_h;
     
     if (scalar(@oids) > 0) {
         #print "QueryUtil fetchScaffoldGenomeOidsHash oids size:".@oids."<br/>\n";
@@ -2539,7 +2619,7 @@ sub fetchScaffoldGenomeOidsHash {
         my $rclause = WebUtil::urClause('s.taxon');
         my $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
         my $sql = qq{
-            select distinct s.taxon
+            select distinct s.taxon, s.scaffold_oid
             from scaffold s 
             where s.scaffold_oid in ( $oid_str )
             $rclause 
@@ -2548,19 +2628,20 @@ sub fetchScaffoldGenomeOidsHash {
     
         my $cur = execSql( $dbh, $sql, $verbose );
         for ( ; ; ) {
-            my ($id) = $cur->fetchrow();
-            last if ( !$id );
-            $oid_h{$id} = 1;
+            my ($gid, $sid) = $cur->fetchrow();
+            last if ( !$gid );
+            $goid_h{$gid} = 1;
+            $s2goid_h{$sid} = $gid;
         }
         $cur->finish();
         
         OracleUtil::truncTable( $dbh, "gtt_num_id" ) 
             if ( $oid_str =~ /gtt_num_id/i );
     
-        #print "QueryUtil fetchScaffoldGenomeOidsHash oid_h size:".(keys(%oid_h))."<br/>\n";
+        #print "QueryUtil fetchScaffoldGenomeOidsHash oid_h size:".(keys(%goid_h))."<br/>\n";
     }
 
-    return %oid_h;
+    return (\%goid_h, \%s2goid_h);
 }
 
 
@@ -4760,17 +4841,24 @@ sub getCogId2Definition {
     return ( \%cogId2definition );
 }
 
+#
+# 
+#
 sub getCogId2DefinitionMapping {
 
     my %cogId2definition;
     
-    #print "printCogStatChart() base_dir=$base_dir<br/>\n";
-    my $rfh = newReadFileHandle( "$base_dir/cogid_and_cat.html" );
-    while ( my $line = $rfh->getline() ) {
-        chomp $line;
-        next if ( $line =~ /^COG_ID/i );
-        my ($cog_id, $code, $definition, @junk) = split(/\t/, $line);
-        
+    my $dbh = WebUtil::dbLogin();
+    my $sql = qq{
+        select cfs.cog_id, cf.function_code, cf.definition
+        from cog_functions cfs, cog_function cf
+        where cfs.functions = cf.function_code        
+    };
+  
+    my $cur = execSql( $dbh, $sql, $verbose );
+    for(;;) {
+        my ( $cog_id, $code, $definition ) = $cur->fetchrow();
+        last if !$cog_id;
         my $defs_ref = $cogId2definition{$cog_id};
         if ( $defs_ref ) {
             push(@$defs_ref, $definition);
@@ -4779,8 +4867,26 @@ sub getCogId2DefinitionMapping {
             my @defs = ($definition);
             $cogId2definition{$cog_id} = \@defs;
         }
-    }    
-    close $rfh;
+    }
+  
+    
+    #print "printCogStatChart() base_dir=$base_dir<br/>\n";
+#    my $rfh = newReadFileHandle( "$base_dir/cogid_and_cat.html" );
+#    while ( my $line = $rfh->getline() ) {
+#        chomp $line;
+#        next if ( $line =~ /^COG_ID/i );
+#        my ($cog_id, $code, $definition, @junk) = split(/\t/, $line);
+#        
+#        my $defs_ref = $cogId2definition{$cog_id};
+#        if ( $defs_ref ) {
+#            push(@$defs_ref, $definition);
+#        }
+#        else {
+#            my @defs = ($definition);
+#            $cogId2definition{$cog_id} = \@defs;
+#        }
+#    }    
+#    close $rfh;
 
     return ( \%cogId2definition );
 }
@@ -5103,57 +5209,7 @@ sub getBinName {
 
     return $id;
 }
-
-
-############################################################################
-#  getTaxonCrispr - Crispr list
-############################################################################
-sub getTaxonCrisprList {
-    my ( $dbh, $taxon_oid, $scaffolds_ref ) = @_;
-    
-    my @recs;
-    if ( ! OracleUtil::isTableExist( $dbh, "taxon_crispr_summary" ) ) {
-        return (@recs);        
-    }
-
-    my $scaffoldClause;
-    if ( $scaffolds_ref && scalar(@$scaffolds_ref) > 0 ) {
-        my $ids_str = OracleUtil::getFuncIdsInClause( $dbh, @$scaffolds_ref );
-        $scaffoldClause = "and tc.contig_id in ( $ids_str ) ";
-    }
-    
-    my $rclause   = WebUtil::urClause('tc.taxon_oid');
-    my $imgClause = WebUtil::imgClauseNoTaxon('tc.taxon_oid');
-    my $sql       = qq{
-        select tc.contig_id, tc.start_coord, tc.end_coord, tc.crispr_no
-        from taxon_crispr_summary tc
-        where tc.taxon_oid = ? 
-        $scaffoldClause
-        $rclause
-        $imgClause
-    };
-    #print "getTaxonCrisprList() sql=$sql<br/>\n";
-    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
-
-    for ( ; ; ) {
-        my ( $contig_id, $start, $end, $crispr_no ) = $cur->fetchrow();
-        last if !$contig_id;
-        
-        my $rec;
-        $rec .= "$contig_id\t";
-        $rec .= "$start\t";
-        $rec .= "$end\t";
-        $rec .= "$crispr_no";
-        push( @recs, $rec );
-    }
-    $cur->finish();
-
-    OracleUtil::truncTable( $dbh, "gtt_func_id" ) 
-        if ( $scaffoldClause =~ /gtt_func_id/i );        
-
-    return (@recs);
-}
-
+     
 #######################################################################
 # fetchDbGenomeGenes
 #######################################################################
@@ -5184,5 +5240,186 @@ sub fetchDbGenomeGenes {
 
     return (\%gene_h);
 }
+
+############################################################################
+# getTaxonOidEcosystemSql
+#
+# the second part of SQL is for combined assembly
+############################################################################
+sub getTaxonOidEcosystemSql {
+    my ($taxon_oid_str, $rclause, $imgClause) = @_;
+
+    if (!$rclause && !$imgClause) {
+        $rclause = WebUtil::urClause('t');
+        $imgClause = WebUtil::imgClause('t');
+    }
+
+    my $oid_cond = '';
+    if ( $taxon_oid_str ) {
+        $oid_cond = " and t.taxon_oid in ($taxon_oid_str) ";
+    }
+
+    my $sql    = qq{
+        select t.taxon_oid, sp.ecosystem,
+               sp.ecosystem_category, sp.ecosystem_type,
+               sp.ecosystem_subtype, sp.specific_ecosystem
+        from taxon t, gold_sequencing_project\@imgsg_dev sp
+        where t.sequencing_gold_id = sp.gold_id
+        $oid_cond
+        $rclause
+        $imgClause
+        union
+        select t.taxon_oid, ap.ecosystem,
+               ap.ecosystem_category, ap.ecosystem_type,
+               ap.ecosystem_subtype, ap.specific_ecosystem
+        from taxon t, gold_analysis_project\@imgsg_dev ap
+        where t.sequencing_gold_id is null
+        and t.analysis_project_id = ap.gold_id
+        $oid_cond
+        $rclause
+        $imgClause
+    };
+
+    return $sql;
+}
+
+############################################################################
+# fetchTaxonOid2EcosystemHash
+############################################################################
+sub fetchTaxonOid2EcosystemHash {
+    my ( $dbh, $taxon_oid_str, $rclause, $imgClause) = @_;
+
+    my $sql = getTaxonOidEcosystemSql($taxon_oid_str, $rclause, $imgClause);
+
+    my %eco_h;
+    my $cur = execSql( $dbh, $sql, $verbose);
+    for ( ; ; ) {
+        my ( $taxon_oid, @eco ) = $cur->fetchrow();
+        last if !$taxon_oid;
+        $eco_h{$taxon_oid} = join("\t", @eco);
+    }
+    $cur->finish();
+
+    return %eco_h;
+}
+
+############################################################################
+# scaffoldOid2TaxonOid - Get taxon_oid from scaffold_oid.
+############################################################################
+sub scaffoldOid2TaxonOid {
+    my ( $dbh, $scaffold_oid ) = @_;
+
+    my $sql = qq{
+        select scf.taxon
+        from scaffold scf
+        where scf.scaffold_oid = ?
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+    my ($taxon_oid) = $cur->fetchrow();
+    $cur->finish();
+
+    return $taxon_oid;
+}
+
+############################################################################
+# scaffoldOid2ExtAccession - Retrieve external accession.
+############################################################################
+sub scaffoldOid2ExtAccession {
+    my ( $dbh, $scaffold_oid ) = @_;
+
+    my $sql = qq{
+        select scf.ext_accession
+        from scaffold scf
+        where scf.scaffold_oid = ?
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+    my ($ext_accession) = $cur->fetchrow();
+    $cur->finish();
+
+    return $ext_accession;
+}
+
+############################################################################
+# getGeneKoEnzymesSql
+############################################################################
+sub getGeneKoEnzymesSql {
+    my ($rclause, $imgClause) = @_;
+    
+    if (!$rclause && !$imgClause) {
+        $rclause = WebUtil::urClause("g.taxon");
+        $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
+    }
+    my $sql = qq{
+        select g.gene_oid, g.enzymes
+        from gene_ko_enzymes g
+        where g.scaffold = ?
+        $rclause
+        $imgClause
+    };
+    
+    return $sql;
+}
+
+############################################################################
+# fetchGeneKoEnzymesHash
+############################################################################
+sub fetchGeneKoEnzymesHash {
+    my ( $dbh, $scaffold_oid, $geneEnzymes_href, $rclause, $imgClause) = @_;
+
+    my $sql = getGeneKoEnzymesSql($rclause, $imgClause);
+    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+    for ( ; ; ) {
+        my ( $gene_oid, $enzyme ) = $cur->fetchrow();
+        last if !$gene_oid;
+        $geneEnzymes_href->{$gene_oid} .= "$enzyme ";
+    }
+    $cur->finish();
+}
+
+############################################################################
+# getGeneImgFunctionsSql
+############################################################################
+sub getGeneImgFunctionsSql {
+    my ($rclause, $imgClause) = @_;
+    
+    #my $sql = qq{
+    #    select g.gene_oid, it.term, g.f_order
+    #    from gene_img_functions g, dt_img_term_path dtp, img_term it
+    #    where g.scaffold = ?
+    #    and g.function = dtp.map_term
+    #    and dtp.term_oid = it.term_oid
+    #    $rclause
+    #    $imgClause
+    #    order by g.gene_oid, g.f_order
+    #};
+    my $sql = qq{
+        select g.gene_oid, it.term, g.f_order
+        from gene_img_functions g, img_term it
+        where g.scaffold = ?
+        and g.function = it.term_oid
+        $rclause
+        $imgClause
+        order by g.gene_oid, g.f_order
+    };
+    
+    return $sql;
+}
+
+############################################################################
+# fetchGeneImgFunctionsHash
+############################################################################
+sub fetchGeneImgFunctionsHash {
+    my ( $dbh, $scaffold_oid, $geneImgTerms_href, $rclause, $imgClause) = @_;
+
+    my $sql = getGeneImgFunctionsSql($rclause, $imgClause);    
+    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
+    for ( ; ; ) {
+        my ( $gene_oid, $term, $f_order ) = $cur->fetchrow();
+        last if !$gene_oid;
+        $geneImgTerms_href->{$gene_oid} .= "$term\n";
+    }
+    $cur->finish();
+}
+
 
 1;

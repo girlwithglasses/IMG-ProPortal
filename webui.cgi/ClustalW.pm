@@ -3,7 +3,7 @@
 #   using secondary tools.  This is the perl wrapper for handling
 #   the display forms pertaining to CLUSTAL W alignments.
 #    --es 10/22/2004
-#  $Id: ClustalW.pm 34707 2015-11-13 20:21:17Z klchu $
+#  $Id: ClustalW.pm 35957 2016-08-05 19:31:06Z aratner $
 ############################################################################
 package ClustalW;
 
@@ -41,7 +41,7 @@ my $section_cgi = "$main_cgi?section=$section";
 my $clustalw_bin = $env->{ clustalw_bin };
 my $clustalo_bin = $env->{ clustalo_bin };
 my $base_url = $env->{ base_url };
-my $top_base_url                 = $env->{top_base_url};
+my $top_base_url = $env->{top_base_url};
 my $tmp_url = $env->{ tmp_url };
 my $tmp_dir = $env->{ tmp_dir };
 my $taxon_lin_fna_dir = $env->{ taxon_lin_fna_dir };
@@ -100,7 +100,7 @@ sub dispatch {
 
 
 	WebUtil::printHeaderWithInfo
-	($title, $text, "show citations", "Citations", "", $help, "", "java");
+	($title, $text, "show citations", "Citations", "", $help, "");
 
 	my( @gene_oids ) = param( "gene_oid" );
         runClustalw(\@gene_oids, $alignment);
@@ -130,6 +130,15 @@ sub runClustalw {
     }
 
     printStatusLine( "Loading ...", 1 );
+
+    # find the longest gene oid label (for msa):
+    my $lbmax = "";
+    for (my $i=0; $i<$nGenes; $i++) {
+	my $mylbl0 = @gene_oids[$i];
+        if (length($mylbl0) > length($lbmax)) {
+            $lbmax = $mylbl0;
+        }
+    }
 
     my $dbh = dbLogin();
     my %geneRec;
@@ -214,7 +223,6 @@ sub runClustalw {
 
     webLog "tmpAlnFile='$tmpAlnFile'\n" if $verbose >= 1;
     if ( !( -r $tmpAlnFile ) ) {
-	#$dbh->disconnect();
 	printEndWorkingDiv();
 	webError( "Clustal cannot align sequences." );
     }
@@ -236,14 +244,15 @@ sub runClustalw {
     };
 
     my @tabIndex = ( "#aligntab1", "#aligntab2", "#aligntab3" );
-    my @tabNames = ( "Jalview Alignment",
+    my @tabNames = ( "Alignment",
                      "Analyzed Genes",
-                     "Phylogenetic Tree" );
+                     "Rectangular Phylogram" );
 
     TabHTML::printTabDiv("alignmentTab", \@tabIndex, \@tabNames);
     print "<div id='aligntab1'>";
-    print "<h2>Jalview Alignment</h2>";
-    printJalView( $tmpAlnFile, $nGenes, $alignment );
+    #print "<h2>Jalview Alignment</h2>";
+    #printJalView( $tmpAlnFile, $nGenes, $alignment );
+    printBioJSMSAViewer( $tmpAlnFile, $nGenes, $alignment, $lbmax );
     print "</div>"; # end aligntab1
 
     print "<div id='aligntab2'>";
@@ -252,8 +261,7 @@ sub runClustalw {
     print "</div>"; # end aligntab2
 
     print "<div id='aligntab3'>";
-    print "<h2>Phylogenetic Tree</h2>";
-
+    print "<h2>Rectangular Phylogram</h2>";
     # must have at least 3 items for a neighbor-joining run:
     if ($nGenes < 3) {
 	printStatusLine( "$nGenes genes analyzed.", 2 );
@@ -317,9 +325,43 @@ sub runClustalw {
     WebUtil::resetEnvPath();
 
     my %gid2Rec;
-    loadDomainsRec( $dbh, $gene_oid_str, \%gid2Rec, $alignment );
-    #$dbh->disconnect();
+    my $genedata;
+    $genedata = loadDomainsRec( $dbh, $gene_oid_str, \%gid2Rec, $alignment );
     print "<br/>domains loaded";
+
+    printEndWorkingDiv("working2");
+    printStatusLine( "$nGenes genes analyzed.", 2 );
+
+    my $newick_str = "";
+    my $rfh = newReadFileHandle( $newickFile, "readNewickFile" );
+    while ( my $s = $rfh->getline() ) {
+        chomp $s;
+        $newick_str .= $s;
+    }
+    close $rfh;
+
+    if ( blankStr($newick_str) ) {
+        webError("Invalid newick '$newick_str' string.\n");
+    }
+
+    print "<p>";
+    my $url = "$base_url/tmp/newick$$.txt";
+    print alink($url, "View Newick File", "_blank");
+    print "</p>\n";
+
+    DistanceTree::printImports();
+    if ( $alignment eq "nucleic" ) {
+	#DistanceTree::printRectangularPhylogram($newick_str, $genedata, "genes");
+	DistanceTree::configurePhylogram($newick_str, $genedata, "rectangular", "genes");
+    } else {
+	#DistanceTree::printRectangularPhylogram($newick_str, $genedata, "domains");
+	DistanceTree::configurePhylogram($newick_str, $genedata, "rectangular", "domains");
+    }
+    print "</div>"; # end aligntab3
+
+    if (0) { # remove applet
+    print "<div id='aligntab4'>";
+    print "<h2>Phylogenetic Tree</h2>";
 
     my $newick = file2Str($newickFile);
     if ( blankStr($newick) ) {
@@ -331,19 +373,17 @@ sub runClustalw {
 
     my $xmlFile = "treeXML$$.txt";
     $dt->toPhyloXML( $xmlFile );
-    print "<br/>phyloXML done";
-    printEndWorkingDiv("working2");
 
     if ( $alignment eq "nucleic" ) {
 	DistanceTree::printAptxApplet("treeXML$$.txt", "genes");
     } else {
 	DistanceTree::printAptxApplet("treeXML$$.txt", "domains");
     }
-    print "</div>"; # end aligntab3
+    print "</div>"; # end aligntab4
+    }
     TabHTML::printTabDivEnd();
 
     print end_form();
-    printStatusLine( "$nGenes genes analyzed.", 2 );
 
     wunlink( $tmpFastaFile );
     wunlink( $tmpFastaFile2 );
@@ -360,7 +400,7 @@ sub loadDomainsRec {
     my @gene_oids = split(/\,/, $gene_oid_str);
     my @db_genes = ();
     my @fs_genes = ();
-    for my $gene_oid ( @gene_oids ) {
+    foreach my $gene_oid ( @gene_oids ) {
 	if ( isInt($gene_oid) ) {
 	    push @db_genes, ( $gene_oid );
 	} else {
@@ -369,6 +409,7 @@ sub loadDomainsRec {
     }
 
     my $db_gene_oid_str = "";
+    my %geneInfo;
     if ( scalar(@db_genes) > 0 ) {
 	$db_gene_oid_str = join(",", @db_genes);
 
@@ -392,7 +433,7 @@ sub loadDomainsRec {
         };
 
 	my $cur = execSql( $dbh, $sql, $verbose );
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $locus_tag, $gene_display_name,
 		$taxon_oid, $taxon_display_name, $domain,
 		$phylum, $class, $order, $family, $genus,
@@ -423,6 +464,20 @@ sub loadDomainsRec {
 		  . ":$start_coord0:$end_coord0:$ext_accession"."\t";
 	    $r .= $url."\t";
 	    $gid2rec_ref->{ $gene_oid } = $r;
+
+	    my $info = "\'name\': \'" . $gene_display_name
+		. "\', \'id\': \'" . $gene_oid
+		. "\', \'phylum\': \'" . $phylum
+		. "\', \'taxon_oid\': \'" . $taxon_oid
+		. "\', \'taxon_name\': \'" . $taxon_display_name
+		. "\', \'locus_tag\': \'" . $locus_tag
+		. "\', \'dna_seq_length\': \'" . $dna_seq_length
+		. "\', \'aa_seq_length\': \'" . $aa_seq_length
+		. "\', \'start_coord0\': \'" . $start_coord0
+		. "\', \'end_coord0\': \'" . $end_coord0
+		. "\'";
+	    $info .= ", \"domains\": [ " if $alignment ne "nucleic";
+	    $geneInfo{ $gene_oid } = $info;
 	}
 	$cur->finish();
     }
@@ -430,7 +485,7 @@ sub loadDomainsRec {
     my %taxon_info_h;
     if ( scalar(@fs_genes) > 0 ) {
 	# MER-FS
-	for my $gid (@fs_genes) {
+	foreach my $gid (@fs_genes) {
 	    my ($taxon_oid, $data_type, $gene_oid) = split(/ /, $gid);
 
 	    my ($gene_oid2, $locus_type, $locus_tag, $gene_display_name,
@@ -477,8 +532,7 @@ sub loadDomainsRec {
 	    }
 	    if ( ! $gene_display_name ) {
     		my ($gene_prod_name, $prod_src) =
-		    MetaUtil::getGeneProdNameSource
-		    ($gene_oid, $taxon_oid, $data_type);
+		    MetaUtil::getGeneProdNameSource($gene_oid, $taxon_oid, $data_type);
     		$gene_display_name = $gene_prod_name;
 	    }
 
@@ -509,11 +563,42 @@ sub loadDomainsRec {
 		  . ":$start_coord0:$end_coord0:$ext_accession"."\t";
 	    $r .= $url."\t";
 	    $gid2rec_ref->{ $new_id } = $r;
+
+	    my $info = "\'name\': \'" . $gene_display_name
+		. "\', \'id\': \'" . $new_id
+		. "\', \'gene_oid\': \'" . $gene_oid
+		. "\', \'full_id\': \'" . $fullgid
+		. "\', \'phylum\': \'" . $phylum
+		. "\', \'taxon_oid\': \'" . $taxon_oid
+		. "\', \'taxon_name\': \'" . $taxon_display_name
+		. "\', \'locus_tag\': \'" . $locus_tag
+		. "\', \'dna_seq_length\': \'" . $dna_seq_length
+		. "\', \'aa_seq_length\': \'" . $aa_seq_length
+		. "\', \'start_coord0\': \'" . $start_coord0
+		. "\', \'end_coord0\': \'" . $end_coord0
+		. "\'";
+	    $info .= ", \"domains\": [ " if $alignment ne "nucleic";
+	    $geneInfo{ $new_id } = $info;
 	}
     }
 
+    my $genedata = "";
     if ( $alignment eq "nucleic" ) {
-	return;
+	foreach my $key (keys %geneInfo) {
+	    my $val = $geneInfo{ $key };
+	    if ($genedata) {
+		$genedata .= ",";
+	    } else {
+		$genedata .= "[";
+	    }
+
+	    $genedata .= "{".$val."}";
+	}
+	if ($genedata) {
+	    $genedata .= "]";
+	}
+
+	return $genedata;
     }
 
     # load signal peptide domains:
@@ -526,7 +611,7 @@ sub loadDomainsRec {
 	    order by gsp.gene_oid
         };
 	my $cur = execSql( $dbh, $sql, $verbose );
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $feature,
 		$start_coord, $end_coord ) = $cur->fetchrow();
 	    last if !$gene_oid;
@@ -534,6 +619,15 @@ sub loadDomainsRec {
 	    my $r = $gid2rec_ref->{ $gene_oid };
 	    $r .= "SP:SP[$feature]".":$start_coord:$end_coord"."\t";
 	    $gid2rec_ref->{ $gene_oid } = $r;
+
+	    my $info = $geneInfo{ $gene_oid };
+	    $info .= 
+		"{ \'feature_type\': \'" . "SP"
+                . "\', \'feature_id\': \'" . $feature
+                . "\', \'feature_start\': \'" . $start_coord
+                . "\', \'feature_end\': \'" . $end_coord
+                . "\' },";
+	    $geneInfo{ $gene_oid } = $info;
 	}
 	$cur->finish();
 
@@ -546,7 +640,7 @@ sub loadDomainsRec {
 	   order by gth.gene_oid
            };
 	$cur = execSql( $dbh, $sql, $verbose );
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $feature,
 		$start_coord, $end_coord ) = $cur->fetchrow();
 	    last if !$gene_oid;
@@ -554,6 +648,15 @@ sub loadDomainsRec {
 	    my $r = $gid2rec_ref->{ $gene_oid };
 	    $r .= "TMH:TMH[$feature]".":$start_coord:$end_coord"."\t";
 	    $gid2rec_ref->{ $gene_oid } = $r;
+
+	    my $info = $geneInfo{ $gene_oid };
+	    $info .= 
+		"{ \'feature_type\': \'" . "TMH"
+                . "\', \'feature_id\': \'" . $feature
+                . "\', \'feature_start\': \'" . $start_coord
+                . "\', \'feature_end\': \'" . $end_coord
+                . "\' },";
+	    $geneInfo{ $gene_oid } = $info;
 	}
 	$cur->finish();
 
@@ -572,7 +675,7 @@ sub loadDomainsRec {
             order by gcg.gene_oid, c.cog_id, gcg.query_start
             };
 	$cur = execSql( $dbh, $sql, $verbose );
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $cog_id, $cog_name, $fn_code, $fn_def,
 		$q_start, $q_end ) = $cur->fetchrow();
 	    last if !$gene_oid;
@@ -580,21 +683,30 @@ sub loadDomainsRec {
 	    my $r = $gid2rec_ref->{ $gene_oid };
 	    $r .= "COG:$cog_id"."[$fn_code]".":$q_start:$q_end"."\t";
 	    $gid2rec_ref->{ $gene_oid } = $r;
+
+            my $info = $geneInfo{ $gene_oid };
+	    $info .=
+                "{ \'feature_type\': \'" . "COG"
+	        . "\', \'feature_id\': \'" . $cog_id . "-" . $fn_code
+                . "\', \'feature_start\': \'" . $q_start
+                . "\', \'feature_end\': \'" . $q_end
+                . "\' },";
+            $geneInfo{ $gene_oid } = $info;
 	}
 	$cur->finish();
 
 	# load PFAM domains:
 	my $sql = qq{
             select distinct gpf.gene_oid,
-              pf.ext_accession, pf.name, pf.description,
-              gpf.query_start, gpf.query_end
+                   pf.ext_accession, pf.name, pf.description,
+                   gpf.query_start, gpf.query_end
             from pfam_family pf, gene_pfam_families gpf
             where pf.ext_accession = gpf.pfam_family
             and gpf.gene_oid in ($db_gene_oid_str)
             order by pf.ext_accession, gpf.query_start
             };
 	$cur = execSql( $dbh, $sql, $verbose );
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $ext_accession, $pfname, $pfdesc,
 		$q_start, $q_end ) = $cur->fetchrow();
 	    last if !$gene_oid;
@@ -602,45 +714,92 @@ sub loadDomainsRec {
 	    my $r = $gid2rec_ref->{ $gene_oid };
 	    $r .= "PFAM:$ext_accession".":$q_start:$q_end"."\t";
 	    $gid2rec_ref->{ $gene_oid } = $r;
+
+            my $info = $geneInfo{ $gene_oid };
+	    $info .=
+                "{ \'feature_type\': \'" . "PFAM"
+	        . "\', \'feature_id\': \'" . $ext_accession
+                . "\', \'feature_start\': \'" . $q_start
+                . "\', \'feature_end\': \'" . $q_end
+                . "\' },";
+            $geneInfo{ $gene_oid } = $info;
 	}
 	$cur->finish();
     }
 
     if ( scalar(@fs_genes) > 0 ) {
-    	for my $gid (@fs_genes) {
+    	foreach my $gid (@fs_genes) {
     	    my ($taxon_oid, $data_type, $gene_oid) = split(/ /, $gid);
     	    my $new_id = convertGeneOid($gene_oid);
 
     	    # load COG
     	    my ($cogs_ref, $sdbFileExist) = MetaUtil::getGeneCogInfo($gene_oid, $taxon_oid, $data_type);
-    	    for my $line ( @$cogs_ref ) {
-        		my ($gid2, $cog_id, $perc_identity, $align_length,
-        		    $q_start, $q_end, $s_start, $s_end, $evalue,
-        		    $bit_score, $rank) = split(/\t/, $line);
+    	    foreach my $line ( @$cogs_ref ) {
+		my ($gid2, $cog_id, $perc_identity, $align_length,
+		    $q_start, $q_end, $s_start, $s_end, $evalue,
+		    $bit_score, $rank) = split(/\t/, $line);
 
-        		my $sql2 = "select cfs.functions from cog_functions cfs "
-        		         . "where cfs.cog_id=?";
-        		my $cur2 = execSql( $dbh, $sql2, $verbose, $cog_id );
-        		my ($fn_code) = $cur2->fetchrow();
-        		$cur2->finish();
-        		my $r = $gid2rec_ref->{ $new_id };
-        		$r .= "COG:$cog_id"."[$fn_code]".":$q_start:$q_end"."\t";
-        		$gid2rec_ref->{ $new_id } = $r;
+		my $sql2 = "select cfs.functions from cog_functions cfs "
+		    . "where cfs.cog_id=?";
+		my $cur2 = execSql( $dbh, $sql2, $verbose, $cog_id );
+		my ($fn_code) = $cur2->fetchrow();
+		$cur2->finish();
+		my $r = $gid2rec_ref->{ $new_id };
+		$r .= "COG:$cog_id"."[$fn_code]".":$q_start:$q_end"."\t";
+		$gid2rec_ref->{ $new_id } = $r;
+
+		my $info = $geneInfo{ $new_id };
+		next if !$info || $info eq "";
+
+		$info .= 
+		    "{ \'feature_type\': \'" . "COG"
+		    . "\', \'feature_id\': \'" . $cog_id . "-" . $fn_code
+		    . "\', \'feature_start\': \'" . $q_start
+		    . "\', \'feature_end\': \'" . $q_end
+		    . "\' },";
+		$geneInfo{ $new_id } = $info;
     	    }
 
     	    # load Pfam
-    	    my ($pfams_ref, $sdbFileExist) = MetaUtil::getGenePfamInfo($gene_oid, $taxon_oid, $data_type);
-    	    for my $line ( @$pfams_ref ) {
-        		my ($gid2, $ext_accession, $perc_identity,
-        		    $q_start, $q_end, $s_start, $s_end, $evalue,
-        		    $bit_score, $align) = split(/\t/, $line);
+    	    my ($pfams_ref, $sdbFileExist) 
+		= MetaUtil::getGenePfamInfo($gene_oid, $taxon_oid, $data_type);
+    	    foreach my $line ( @$pfams_ref ) {
+		my ($gid2, $ext_accession, $perc_identity,
+		    $q_start, $q_end, $s_start, $s_end, $evalue,
+		    $bit_score, $align) = split(/\t/, $line);
 
-        		my $r = $gid2rec_ref->{ $new_id };
-        		$r .= "PFAM:$ext_accession".":$q_start:$q_end"."\t";
-        		$gid2rec_ref->{ $new_id } = $r;
+		my $r = $gid2rec_ref->{ $new_id };
+		$r .= "PFAM:$ext_accession".":$q_start:$q_end"."\t";
+		$gid2rec_ref->{ $new_id } = $r;
+
+		my $info = $geneInfo{ $new_id };
+		next if !$info || $info eq "";
+
+		$info .=
+		    "{ \'feature_type\': \'" . "PFAM"
+		    . "\', \'feature_id\': \'" . $ext_accession
+		    . "\', \'feature_start\': \'" . $q_start
+		    . "\', \'feature_end\': \'" . $q_end
+		    . "\' },";
+		$geneInfo{ $new_id } = $info;
     	    }
     	}
     }
+
+    foreach my $key (keys %geneInfo) {
+	my $val = $geneInfo{ $key };
+        if ($genedata) {
+            $genedata .= ",";
+	} else {
+            $genedata .= "[";
+        }
+	chop $val; # remove last comma
+	$genedata .= "{".$val."]"."}";
+    }
+    if ($genedata) {
+	$genedata .= "]";
+    }
+    return $genedata;
 
     # load TIGRPFAM domains:
 #    my $sql = qq{
@@ -654,7 +813,7 @@ sub loadDomainsRec {
 #                 tf.expanded_name, gtf.query_start
 #    };
 #    $cur = execSql( $dbh, $sql, $verbose );
-#    for( ;; ) {
+#    for ( ;; ) {
 #        my( $gene_oid, $ext_accession, $tfname,
 #            $q_start, $q_end ) = $cur->fetchrow();
 #        last if !$gene_oid;
@@ -677,7 +836,7 @@ sub loadGeneRec {
     my @gene_oids = split(/\,/, $gene_oid_str);
     my @db_genes = ();
     my @fs_genes = ();
-    for my $gene_oid ( @gene_oids ) {
+    foreach my $gene_oid ( @gene_oids ) {
 	if ( isInt($gene_oid) ) {
 	    push @db_genes, ( $gene_oid );
 	} else {
@@ -697,7 +856,7 @@ sub loadGeneRec {
             };
 	my $cur = execSql( $dbh, $sql, $verbose, 'Yes');
 	my %geneOid2BinNames;
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $bin_display_name ) = $cur->fetchrow();
 	    last if !$gene_oid;
 	    $geneOid2BinNames{ $gene_oid } .= "$bin_display_name, ";
@@ -714,7 +873,7 @@ sub loadGeneRec {
         };
 
 	$cur = execSql( $dbh, $sql, $verbose );
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $locus_tag, $gene_display_name,
 		$taxon_oid, $taxon_display_name,
 		$scf_ext_accession )  = $cur->fetchrow();
@@ -738,7 +897,7 @@ sub loadGeneRec {
 
     # MER-FS
     my %taxon_name_h;
-    for my $g ( @fs_genes ) {
+    foreach my $g ( @fs_genes ) {
 	my ($taxon_oid, $data_type, $gene_oid) = split(/ /, $g);
 
 	my ($gene_oid2, $locus_type, $locus_tag, $gene_display_name,
@@ -780,8 +939,11 @@ sub writeSeq {
 	$outFile, $idonly ) = @_;
     $idonly = 0 if $idonly eq "";
 
+    # use only the "good" genes ($gene_oid_ref has "bad" genes, too):
+    my @genes = keys %$gene2Seq_ref;
+
     my $wfh = newWriteFileHandle( $outFile, "writeSeq" );
-    for my $gid( @$gene_oid_ref ) {
+    foreach my $gid( @genes ) {
 	my( $gene_oid, $locus_tag, undef ) =
 	    split( /\t/, $geneRec_ref->{ $gid } );
 
@@ -816,11 +978,10 @@ sub loadSeq {
     my @gene_oids = split(/\,/, $gene_oid_str);
     my @db_genes = ();
     my @fs_genes = ();
-    for my $gene_oid ( @gene_oids ) {
+    foreach my $gene_oid ( @gene_oids ) {
 	if ( isInt($gene_oid) ) {
 	    push @db_genes, ( $gene_oid );
-	}
-	else {
+	} else {
 	    push @fs_genes, ( $gene_oid );
 	}
     }
@@ -831,31 +992,39 @@ sub loadSeq {
 	    select g.gene_oid, g.aa_residue
   	    from gene g
 	    where g.gene_oid in( $db_gene_oid_str )
-            };
+        };
 	my $cur = execSql( $dbh, $sql, $verbose );
 	my $badGenes;
-	for( ;; ) {
+	for ( ;; ) {
 	    my( $gene_oid, $aa_residue )  = $cur->fetchrow();
 	    last if !$gene_oid;
 	    my $seq = $aa_residue;
 	    if ( blankStr( $seq ) ) {
-		$badGenes .= "$gene_oid,";
+		$badGenes .= "$gene_oid, ";
+	    } else {
+		$seq =~ s/\s+//g;
+		$gene2Seq_ref->{ $gene_oid } = $seq;
 	    }
-	    $seq =~ s/\s+//g;
-	    $gene2Seq_ref->{ $gene_oid } = $seq;
 	}
 	$cur->finish();
 	chop $badGenes;
+	chop $badGenes;
+
 	if ( !blankStr( $badGenes ) ) {
-	    printStatusLine( "Error.", 2 );
-	    webError( "Amino Acid sequences expected for gene(s) $badGenes. "
-		    . "( Check for RNA, Pseudogene, or gene without a "
-		    . "protein sequence. )"  );
+	    if (scalar keys %$gene2Seq_ref < 2) {
+		printStatusLine( "Missing amino acid sequences.", 2 );
+		webError( "Could not find the amino acid sequences for gene(s) $badGenes. ".
+			  "Check for RNA, Pseudogene, or gene without a ".
+			  "protein sequence."  );
+	    } else {
+		print "<p><u>Please note</u>: Could not find the amino acid sequences "
+		    . "for gene(s): $badGenes. </p>";
+	    }
 	}
     }
 
     if ( scalar(@fs_genes) > 0 ) {
-	for my $gid ( @fs_genes ) {
+	foreach my $gid ( @fs_genes ) {
 	    my ($taxon_oid, $data_type, $gene_oid) = split(/ /, $gid);
 	    my $seq = MetaUtil::getGeneFaa($gene_oid, $taxon_oid, $data_type);
 	    $gene2Seq_ref->{ $gid } = $seq;
@@ -1017,7 +1186,7 @@ sub printGeneRec {
    $it->addColSpec( "Scaffold ID", "asc", "left" );
    $it->addColSpec( "Genome", "asc", "left" );
 
-   for my $k( @keys ) {
+   foreach my $k( @keys ) {
       my $rec = $geneRec_ref->{ $k };
       my( $gene_oid, $locus_tag, $gene_display_name,
 	  $taxon_oid, $taxon_display_name,
@@ -1055,6 +1224,129 @@ sub printGeneRec {
 ############################################################################
 # printJalView - Show JalView'er
 ############################################################################
+sub printBioJSMSAViewer {
+    my( $alnFile, $nGenes, $alignment, $lbmax ) = @_;
+    my $fileName = lastPathTok( $alnFile );
+    my $alnFileUrl = "$tmp_url/$fileName";
+    my $alnLink = alink($alnFileUrl, "alignment", "_blank");
+    
+    my $clustalw_url = "http://www.clustal.org/clustalw2/";
+    my $clustalo_url = "http://www.clustal.org/omega/";
+    my $url = "http://msa.biojs.net";
+
+    print "<p>";
+    if ($use_clustal_omega) {
+	print alink($clustalo_url, "Clustal Omega", "_blank")
+	    . " sequence $alnLink below is displayed using "
+	    . alink($url, "BioJS MSA Viewer", "_blank").".";
+    } else {
+	print alink($clustalw_url, "ClustalW", "_blank")
+	    . " sequence alignment below is displayed using "
+	    . alink($url, "BioJS MSA Viewer", "_blank").".";
+    }
+    print "<br/>Click on the gene name to display the gene page in IMG.";
+    print "</p>";
+    
+    my $colors = "clustal";
+    $colors = "nucleotide" if $alignment eq "nucleic";
+
+    my $gene_page_base_url= "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=";
+    my $meta_gene_page_base_url = "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail";
+
+    print qq{
+    <div id="alignDiv"></div>
+
+    <script src="$top_base_url/js/msa.min.gz.js"></script>
+    <script src="$top_base_url/js/d3.min.js"></script>
+    <script>
+
+    function visualLength(textEl) {
+        if (textEl === undefined) { return 5; }
+        return Math.ceil(textEl.getBBox().x + textEl.getBBox().width + 5);
+    }
+    var span_element = document.createElement("span");
+    document.body.appendChild(span_element);
+    var tmp = d3.select(span_element).append("svg");
+    var texttmp = tmp.append("text")
+        .style("font", "13px sans-serif")
+        .text("$lbmax");
+    var lblen = visualLength(texttmp.node());
+    document.body.removeChild(span_element);
+    console.log("lblen: "+lblen+" lbmax: $lbmax");
+    if (lblen < 150) {
+        lblen = 150;
+    }
+
+    var myDiv = document.getElementById('alignDiv');
+    var opts = {
+        el: myDiv,
+        colorscheme : {"scheme": "$colors"},
+        vis: {
+            conserv: true,
+            overviewbox: false,
+            seqlogo: false,
+            labelId: false
+        },
+        conf: {
+            importProxy: "",
+            registerMouseClicks: true,
+            dropImport: true
+        },
+        zoomer: {
+            labelNameLength: lblen,
+            alignmentWidth: 1000,
+            alignmentHeight: 300,
+            menuFontsize: "10px",
+            autoResize: true
+        },
+        menu: {
+            menuFontsize: "10px"
+        }
+    };
+    var m = new msa.msa(opts);
+
+    var url = "$alnFileUrl";
+    m.u.file.importURL(url, renderMSA);
+    function renderMSA() {
+        var menuOpts = {
+            el: document.getElementById('div'),
+            msa: m
+        };
+        var defMenu = new msa.menu.defaultmenu(menuOpts);
+        m.addView("menu", defMenu);
+        m.render();
+    }
+
+    m.g.on("row:click", function(data) {
+        if (data.seqId >= $nGenes) { return; }
+        console.log("clicked on: "+data.seqId);
+        var x = m.seqs.find(function(el) {
+            if (el.get('id') == data.seqId) { return el.get('name'); }
+        });
+        var item = x.attributes.name;
+        console.log("id: "+data.seqId+", name: "+item);
+        var tidx = item.indexOf(".");
+        if (tidx > -1) { 
+              item = item.substring(0, tidx);
+              window.open("$gene_page_base_url"+item, "_blank");
+        } else {
+            var a = item.split("-");
+            if (a.length == 3) {
+                var tx = a[0];
+                var assembled = a[1];
+                var gene = a[2];
+                window.open("$meta_gene_page_base_url"+
+                "&taxon_oid="+a[0]+"&data_type="+a[1]+"&gene_oid="+a[2], "_blank");
+            }
+        }
+    });
+    </script>
+    };
+}
+
+############################################################################
+# printJalView - show alignment in Jalview
+############################################################################
 sub printJalView {
    my( $alnFile, $nGenes, $alignment ) = @_;
    my $fileName = lastPathTok( $alnFile );
@@ -1083,9 +1375,7 @@ sub printJalView {
    print "<br/>Click on the id in Jalview to display the gene page in IMG.";
    print "</p>\n";
 
-   my $gurl = "$main_cgi?section=GeneDetail"
-            . "&page=geneDetail&gene_oid=";
-
+   my $gurl = "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=";
    my $colors = "Clustal";
    $colors = "Nucleotide" if $alignment eq "nucleic";
 
@@ -1169,76 +1459,15 @@ sub printColorScheme {
 	. " onclick='showColors(\"nocolors\")' />";
     print "<p>";
     if ( $alignment eq "nucleic" ) {
-	print "<image src='$base_url/images/jalview-nucleotides.jpg' "
+	print "<img src='$base_url/images/jalview-nucleotides.jpg' "
 	    . "width='220' height='30' />\n";
     } else {
-	print "<image src='$base_url/images/jalview-colors.jpg' "
+	print "<img src='$base_url/images/jalview-colors.jpg' "
 	    . "width='440' height='200' />\n";
     }
     print "</p>";
     print "</div>\n";
     print "<br/>";
-}
-
-############################################################################
-# printAtvButton - Show "A Tree Viewer" button. (Not used.)
-############################################################################
-sub printAtvButton {
-    my( $dndFilePath ) = @_;
-
-    print "<br/>/p\n";
-    print "[ ";
-    my $fileName = lastPathTok( $dndFilePath );
-    my $url = "atv.cgi?dndFilePath=$fileName";
-    print "<font color='green'>\n";
-    print "<b>\n";
-    print alink( $url, "Run A Tree Viewer (ATV)", "2" );
-    print "</b>\n";
-    print "</font>\n";
-    print " ]";
-    print "<br/>/p\n";
-}
-
-############################################################################
-# massageDndIds - Massage DND Id's for ATV (not used).
-############################################################################
-sub massageDndIds {
-    my( $dndFile, $geneRec_ref ) = @_;
-    my $str = file2Str( $dndFile );
-    $str =~ s/\(/ ( /g;
-    $str =~ s/\)/ ) /g;
-    $str =~ s/,/ , /g;
-    $str =~ s/:/ : /g;
-    $str =~ s/\s+/ /g;
-    webLog "original DND: '$str'\n" if $verbose >= 1;
-
-    my @toks = split( / /, $str );
-    my $nToks = @toks;
-    my $str2;
-    for( my $i = 0; $i < $nToks; $i++ ) {
-	my $currTok = $toks[ $i ];
-	my $nextTok = $toks[ $i+1 ];
-	if ( $nextTok eq ":" ) {
-	    my $rec = $geneRec_ref->{ $currTok };
-	    my( $gene_oid, $gene_display_name, $genus, $species )
-		= split( /\t/, $rec );
-
-	    if ( $gene_oid ne "" ) {
-		$currTok = "$gene_oid $gene_display_name { $genus $species }";
-		$currTok =~ s/\s+/_/g;
-		$currTok =~ s/\(/_/g;
-		$currTok =~ s/\)/_/g;
-		$currTok =~ s/,/_/g;
-		$currTok =~ s/;/_/g;
-		$currTok =~ s/-/_/g;
-	    }
-	}
-	$str2 .= " $currTok ";
-    }
-    webLog "dndFileRevised: '$str2'\n" if $verbose >= 1;
-    my $outFile = "$dndFile.atv";
-    str2File( $str2, $outFile );
-    return $outFile;
 }
 
 ############################################################################
@@ -1386,7 +1615,7 @@ sub printClustalAlignFnaSeq {
 
     my @db_genes = ();
     my @fs_genes = ();
-    for my $gene_oid ( @gene_oids ) {
+    foreach my $gene_oid ( @gene_oids ) {
     	if ( isInt($gene_oid) ) {
     	    push @db_genes, ( $gene_oid );
     	} else {
@@ -1420,7 +1649,7 @@ sub printClustalAlignFnaSeq {
 	       and g.end_coord > 0
         };
     	my $cur = execSql( $dbh, $sql, $verbose );
-    	for( ;; ) {
+    	for ( ;; ) {
     	    my( $gene_oid, $locus_tag,
     		$gene_display_name, $taxon_oid, $genus, $species,
     		$start_coord0, $end_coord0, $strand, $cds_frag_coord,
@@ -1438,7 +1667,7 @@ sub printClustalAlignFnaSeq {
     }
 
     my %taxon_info_h;
-    for my $g ( @fs_genes ) {
+    foreach my $g ( @fs_genes ) {
     	my ($taxon_oid, $data_type, $gene_oid) = split(/ /, $g);
 
     	my ($gene_oid2, $locus_type, $locus_tag, $gene_display_name,
@@ -1466,9 +1695,8 @@ sub printClustalAlignFnaSeq {
     	my $new_id = convertGeneOid($gene_oid);
     	$records{$new_id} = $rec;
     }
-    #$dbh->disconnect();
 
-    for my $gid (@gene_oids) {
+    foreach my $gid (@gene_oids) {
     	my $new_id = convertGeneOid($gid);
         my $str = $records{$new_id};
 
@@ -1476,19 +1704,18 @@ sub printClustalAlignFnaSeq {
     	my( $gene_oid, $locus_tag,
     	    $gene_display_name, $taxon_oid, $genus, $species,
     	    $start_coord0, $end_coord0, $strand, $cds_frag_coord,
-    	    $ext_accession )
-    	    = split("\t",$str);
+    	    $ext_accession ) = split("\t", $str);
 
     	# Reverse convention for reverse strand
     	my $start_coord = $start_coord0 + $up_stream;
-    	$start_coord = 1 if $start_coord < 1;
     	my $end_coord = $end_coord0 + $down_stream;
     	if ( $strand eq "-" ) {
-               $start_coord = $start_coord0 - $down_stream;
-               $end_coord = $end_coord0 - $up_stream;
+	    $start_coord = $start_coord0 - $down_stream;
+	    $end_coord = $end_coord0 - $up_stream;
     	}
+    	$start_coord = 1 if $start_coord < 1;
     	webLog "$ext_accession: $start_coord..$end_coord ($strand)\n"
-                 if $verbose >= 1;
+	    if $verbose >= 1;
 
     	my $x;
     	$x = ".$locus_tag" if ($locus_tag ne "" && !$idonly);
@@ -1508,18 +1735,19 @@ sub printClustalAlignFnaSeq {
     	my $path = "$taxon_lin_fna_dir/$taxon_oid.lin.fna";
     	if ( isInt($gene_oid) ) {
             @coordLines = GeneUtil::getMultFragCoords( $dbh, $gene_oid, $cds_frag_coord );
-            my @adjustedCoordsLines = GeneUtil::adjustMultFragCoordsLine( \@coordLines, $strand, $up_stream, $down_stream );
-    	    $seq1 = WebUtil::readLinearFasta( $path, $ext_accession,
-    				     $start_coord, $end_coord, $strand, \@adjustedCoordsLines );
+            my @adjustedCoordsLines = GeneUtil::adjustMultFragCoordsLine
+		( \@coordLines, $strand, $up_stream, $down_stream );
+    	    $seq1 = WebUtil::readLinearFasta
+		( $path, $ext_accession, $start_coord, $end_coord, $strand, \@adjustedCoordsLines );
     	} else {
     	    # MER-FS
     	    my ($taxon_oid, $data_type, $gid2) = split(/ /, $gid);
     	    my $line = MetaUtil::getScaffoldFna($taxon_oid, $data_type, $ext_accession);
     	    if ( $line ) {
     		if ( $strand eq '-' ) {
-    		    $seq1 = getSequence($line, $end_coord0, $start_coord0);
+    		    $seq1 = getSequence($line, $end_coord, $start_coord);
     		} else {
-    		    $seq1 = getSequence($line, $start_coord0, $end_coord0);
+    		    $seq1 = getSequence($line, $start_coord, $end_coord);
     		}
     	    }
     	}
@@ -1575,12 +1803,12 @@ sub printClustalAlignFnaSeq {
     	my $baseCount = 0;
     	my $maxWrapCount = 50;
     	my $wrapCount = 0;
-    	for my $b( @bases ) {
+    	foreach my $b( @bases ) {
     	    $wrapCount++;
     	    print $wfh $b;
     	    if ( $wrapCount >= $maxWrapCount ) {
-        		print $wfh "\n";
-        		$wrapCount = 0;
+		print $wfh "\n";
+		$wrapCount = 0;
     	    }
     	}
     	print $wfh "\n";
@@ -1588,7 +1816,6 @@ sub printClustalAlignFnaSeq {
 
     close $wfh;
 }
-
 
 #######################################################################
 # convertGeneOid - convert gene_oid to no more than 10 chars

@@ -6,8 +6,6 @@ use JSON qw( encode_json decode_json );
 use IMG::Util::File qw( :all );
 use File::Spec::Functions;
 
-#use AnyEvent;
-use AE;
 
 prefix '/cart' => sub {
 	any '/genomes/add' => sub {
@@ -133,6 +131,11 @@ get '/test' => sub {
 };
 
 
+=cut
+
+#use AnyEvent;
+use AE;
+
 get '/delayed' => sub {
 
 	my %timers;
@@ -146,7 +149,7 @@ get '/delayed' => sub {
 		debug "Stretching...\n";
 
         flush;
-=cut
+#=cut
         use IMG::App::Role::Templater;
         IMG::App::Role::Templater::init_env({ base_dir => '/Users/gwg/webUI/proportal' });
 
@@ -160,7 +163,7 @@ get '/delayed' => sub {
         my $output = IMG::App::Role::Templater::render_template({ tmpl => 'any_content.tt' });
         content $output;
 
-=cut
+#=cut
         debug 'ready to output some more stuff at ' . localtime();
         content 'I wrote this at ' . localtime();
 
@@ -192,5 +195,6 @@ get '/delayed' => sub {
     };
 };
 
+=cut
 
 1;

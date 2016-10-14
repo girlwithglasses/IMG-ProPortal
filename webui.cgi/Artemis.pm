@@ -1,7 +1,7 @@
 ############################################################################
 # Artemis.pm - Handle web artemis start up.
 #     --es 09/13/2007
-# $Id: Artemis.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: Artemis.pm 35611 2016-05-08 21:22:50Z klchu $
 ############################################################################
 package Artemis;
 use strict;
@@ -16,7 +16,7 @@ use QueryUtil;
 use GenomeListJSON;
 
 $| = 1;
-my $section = "Artemis";
+my $section                  = "Artemis";
 my $env                      = getEnv();
 my $main_cgi                 = $env->{main_cgi};
 my $taxon_lin_fna_dir        = $env->{taxon_lin_fna_dir};
@@ -27,12 +27,12 @@ my $cgi_tmp_dir              = $env->{cgi_tmp_dir};
 my $cgi_url                  = $env->{cgi_url};
 my $cgi_dir                  = $env->{cgi_dir};
 my $base_url                 = $env->{base_url};
-my $top_base_url                 = $env->{top_base_url};
+my $top_base_url             = $env->{top_base_url};
 my $base_dir                 = $env->{base_dir};
 my $artemis_url              = $env->{artemis_url};
 my $img_internal             = $env->{img_internal};
 my $artemis_link             = alink( $artemis_url, "Artemis" );
-my $top_base_url = $env->{top_base_url};
+my $top_base_url             = $env->{top_base_url};
 my $verbose                  = $env->{verbose};
 my $max_export_scaffold_list = 1000;
 my $include_img_terms        = 0;
@@ -43,22 +43,22 @@ my $megablast_bin = $env->{megablast_bin};
 my $formatdb_bin  = $env->{formatdb_bin};
 my $fastacmd_bin  = $env->{fastacmd_bin};
 
-my $YUI           = $env->{yui_dir_28};
-my $yui_tables    = $env->{yui_tables};
-my $USE_YUI = 0;
+my $YUI        = $env->{yui_dir_28};
+my $yui_tables = $env->{yui_tables};
+my $USE_YUI    = 0;
 
 sub getPageTitle {
     return 'Artemis';
 }
 
 sub getAppHeaderData {
-    my($self) = @_;
-    
+    my ($self) = @_;
+
     my @a = ();
-    if (WebUtil::paramMatch("noHeader") ne "") {
+    if ( WebUtil::paramMatch("noHeader") ne "" ) {
         return @a;
     } else {
-        
+
         require GenomeListJSON;
         my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
         $template->param( base_url => $base_url );
@@ -100,6 +100,7 @@ sub dispatch {
     } elsif ( $page eq "processACT" ) {
         processACT();
     } elsif ( $page eq "reorder" ) {
+
         # reorder contigs
         if ($USE_YUI) {
             printReorderForm_yui();
@@ -171,48 +172,49 @@ sub printACTWebStart {
 
 sub printACTGenomeForm {
     my ($numTaxon) = @_;
-    my $act_link =
-	"<a href=http://bioinformatics.oxfordjournals.org/cgi/content/"
-      . "abstract/21/16/3422>Artemis Comparison Tool</a>";
-    my $artemis_link =
-	"<a href=http://www.sanger.ac.uk/Software/ACT/>ACT</a>";
-    my $webstart =
-	"<a href=http://java.sun.com/javase/technologies/desktop/"
-      . "javawebstart/index.jsp>Java Web Start</a>";
+    my $act_link = qq{<a href='http://bioinformatics.oxfordjournals.org/cgi/content/abstract/21/16/3422' target='_blank' >Artemis Comparison Tool</a>};
+    my $artemis_link = qq{<a href="http://www.sanger.ac.uk/science/tools/artemis-comparison-tool-act" target='_blank'>Artemis ACT</a>};
+
     my $citation = getActCitation();
 
-    my $text =
-	"$act_link (ACT) is a viewer based on Artemis for pairwise genome "
-      . "DNA sequence comparisons. Sequence comparisons displayed by ACT "
-      . "are the result of running Mega BLAST search. "
-      . "Artemis $artemis_link application requires $webstart and 1 GB of RAM.";
-
-    my $description = "$text<br/>$citation";
-    if ($include_metagenomes) {
-	WebUtil::printHeaderWithInfo
-	    ("Artemis Comparison Tool", $description,
-	     "show description for this tool", "ACT Info", 1);
-    } else {
-	WebUtil::printHeaderWithInfo
-	    ("Artemis Comparison Tool", $description,
-	     "show description for this tool", "ACT Info");
-    }
-
-    print "<p style='width: 650px;'>$text</p>";
-    print "<p><font color='#003366'>Please select 2 to 5 genomes.</font></p>";
-
+    print  qq{
+      <h1>Create Artemis Comparison Tool Data Files </h1>
+      <p>
+      <b>This tool only creates data files that are compatible with Artemis ACT.</b> (Metagenomes are NOT supported.)
+      <br>
+      <br><a href='https://docs.google.com/document/d/1nRH0zHulu7GHZQE30hIjdxWMxE7rVx66DXjsATmK4ms/edit?pref=2&pli=1#heading=h.3lvr2guv14fr' target="_blank">HELP</a>
+      <br><a href='https://docs.google.com/document/d/1nRH0zHulu7GHZQE30hIjdxWMxE7rVx66DXjsATmK4ms/edit?pref=2&pli=1#' target="_blank">End of Java Support</a>
+      <br>
+      <br>
+      Get ACT from Sanger: $artemis_link 
+      <br>
+      <br>
+      $act_link (ACT) is a viewer based on Artemis for pairwise genome 
+      DNA sequence comparisons. <br>Sequence comparisons displayed by ACT
+      are the result of running Mega BLAST search.
+      
+      <br><br><b>Requirements to run Artemis ACT:</b>
+      <ol>
+      <li>Java: <a href='http://www.java.com/en/' target="_blank">http://www.java.com/en/</a></li>
+      <li>Artmeis ACT: <a href='http://www.sanger.ac.uk/science/tools/artemis-comparison-tool-act' target="_blank">http://www.sanger.ac.uk/science/tools/artemis-comparison-tool-act</a> </li>
+      </ol> 
+      
+      
+      <p><font color='#003366'>Please select 2 to 5 genomes.</font></p>
+    };
+    
     printStatusLine( "Loading ...", 1 );
     printMainForm();
 
     my $dbh = dbLogin();
+
     #$dbh->disconnect();
 
     printForm();
     my $name = "_section_Artemis_pairwise";
     GenomeListJSON::printHiddenInputType( $section, 'pairwise' );
-    my $button = GenomeListJSON::printMySubmitButtonXDiv
-	( 'go', $name, 'Next', '', $section,
-	  'pairwise', 'meddefbutton', 'selectedGenome1', 2 );
+    my $button = GenomeListJSON::printMySubmitButtonXDiv( 'go', $name, 'Next', '', $section, 'pairwise', 'meddefbutton',
+        'selectedGenome1', 2 );
     print $button;
 
     print hiddenVar( "section", $section );
@@ -220,7 +222,7 @@ sub printACTGenomeForm {
     print hiddenVar( "from",    "ACT" );
 
     print end_form();
-    printWebstartTest();
+    #printWebstartTest();
     GenomeListJSON::showGenomeCart($numTaxon);
     printStatusLine( "Loaded.", 2 );
 }
@@ -230,25 +232,24 @@ sub printACTGenomeForm {
 ############################################################################
 sub printForm {
     my $hideViruses = getSessionParam("hideViruses");
-    $hideViruses = ($hideViruses eq "" || $hideViruses eq "Yes") ? 0 : 1;
+    $hideViruses = ( $hideViruses eq "" || $hideViruses eq "Yes" ) ? 0 : 1;
     my $hidePlasmids = getSessionParam("hidePlasmids");
-    $hidePlasmids = ($hidePlasmids eq "" || $hidePlasmids eq "Yes") ? 0 : 1;
+    $hidePlasmids = ( $hidePlasmids eq "" || $hidePlasmids eq "Yes" ) ? 0 : 1;
     my $hideGFragment = getSessionParam("hideGFragment");
-    $hideGFragment = ($hideGFragment eq "" || $hideGFragment eq "Yes") ? 0 : 1;
+    $hideGFragment = ( $hideGFragment eq "" || $hideGFragment eq "Yes" ) ? 0 : 1;
 
     my $xml_cgi = $cgi_url . '/xml.cgi';
-    my $template = HTML::Template->new
-        ( filename => "$base_dir/genomeJsonOneDiv.html" );
+    my $template = HTML::Template->new( filename => "$base_dir/genomeJsonOneDiv.html" );
 
-    $template->param( gfr          => $hideGFragment );
-    $template->param( pla          => $hidePlasmids );
-    $template->param( vir          => $hideViruses );
-    $template->param( isolate      => 1 );
-    $template->param( all          => 0 );
-    $template->param( cart         => 1 );
-    $template->param( xml_cgi      => $xml_cgi );
-    $template->param( prefix       => '' );
-    $template->param( maxSelected1 => 5 );
+    $template->param( gfr                  => $hideGFragment );
+    $template->param( pla                  => $hidePlasmids );
+    $template->param( vir                  => $hideViruses );
+    $template->param( isolate              => 1 );
+    $template->param( all                  => 0 );
+    $template->param( cart                 => 1 );
+    $template->param( xml_cgi              => $xml_cgi );
+    $template->param( prefix               => '' );
+    $template->param( maxSelected1         => 5 );
     $template->param( selectedGenome1Title => 'Please select 2 to 5 genomes:' );
 
     my $s = "";
@@ -317,9 +318,10 @@ EOF
 }
 
 sub printACTPairwise {
-    my @taxon_oids = param("selectedGenome1");
+    my @taxon_oids  = param("selectedGenome1");
     my @order       = param("order");
     my @orderTaxons = param("taxon_oid");
+
     #print "printACTPairwise \@taxon_oids: @taxon_oids <br\> \@order: @order";
 
     if ( $#taxon_oids < 1 && $#order < 1 ) {
@@ -344,7 +346,7 @@ sub printACTPairwise {
 
     # Use YUI css
     if ($yui_tables) {
-	print <<YUI;
+        print <<YUI;
 
         <link rel="stylesheet" type="text/css"
 	    href="$YUI/build/datatable/assets/skins/sam/datatable.css" />
@@ -374,7 +376,7 @@ sub printACTPairwise {
 	</th>
 YUI
     } else {
-	print qq{
+        print qq{
            <table class='img'>
            <th class='img'>Order</th>
            <th class='img'>Genome ID</th>
@@ -396,8 +398,8 @@ YUI
         # now sort the data in the hash by the value user entered
         my $i = 0;
         foreach my $key (
-                          sort { $hash_index{$a} <=> $hash_index{$b} }
-                          keys %hash_index
+            sort { $hash_index{$a} <=> $hash_index{$b} }
+            keys %hash_index
           )
         {
 
@@ -409,43 +411,45 @@ YUI
 
     # get genome names
     my $dbh = dbLogin();
-    my %taxon_names = QueryUtil::fetchTaxonOid2NameHash($dbh, \@taxon_oids);
+    my %taxon_names = QueryUtil::fetchTaxonOid2NameHash( $dbh, \@taxon_oids );
+
     #$dbh->disconnect();
 
     my $rowcnt = 1;
     foreach my $id (@taxon_oids) {
         my $name = $taxon_names{$id};
-    	my $classStr;
+        my $classStr;
 
-    	if ($yui_tables) {
-    	    $classStr = !$rowcnt ? "yui-dt-first ":"";
-    	    $classStr .= ($rowcnt % 2 == 0) ? "yui-dt-even" : "yui-dt-odd";
-    	} else {
-    	    $classStr = "img";
-    	}
+        if ($yui_tables) {
+            $classStr = !$rowcnt ? "yui-dt-first " : "";
+            $classStr .= ( $rowcnt % 2 == 0 ) ? "yui-dt-even" : "yui-dt-odd";
+        } else {
+            $classStr = "img";
+        }
 
-    	print "<tr class='$classStr'>\n";
+        print "<tr class='$classStr'>\n";
 
-    	# Order
-    	print "<td class='$classStr'>\n";
-    	print "<div class='yui-dt-liner'>" if $yui_tables;
-    	print "<input type='text' onKeyPress='return numbersonly(event)' size='4' name='order' value='$rowcnt' class='txtBox' />";
-    	print "</div>\n" if $yui_tables;
-    	print "</td>\n";
+        # Order
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print
+"<input type='text' onKeyPress='return numbersonly(event)' size='4' name='order' value='$rowcnt' class='txtBox' />";
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
-    	# Genome ID
-    	print "<td class='$classStr'>\n";
-    	print "<div class='yui-dt-liner'>" if $yui_tables;
-    	print "<input type='text' name='taxon_oid' value='$id' readonly='readonly' class='txtBox'/>";
-    	print "</div>\n" if $yui_tables;
-    	print "</td>\n";
+        # Genome ID
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print "<input type='text' name='taxon_oid' value='$id' readonly='readonly' class='txtBox'/>";
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
-    	# Genome Name
-    	print "<td class='$classStr'>\n";
-    	print "<div class='yui-dt-liner'>" if $yui_tables;
-    	print $name;
-    	print "</div>\n" if $yui_tables;
-    	print "</td>\n";
+        # Genome Name
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print $name;
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
         $rowcnt++;
     }
@@ -473,7 +477,7 @@ YUI
 sub printACTPairwise_yui {
     printYUI();
 
-    my @taxon_oids = param("selectedGenome1");
+    my @taxon_oids  = param("selectedGenome1");
     my @order       = param("order");
     my @orderTaxons = param("taxon_oid");
 
@@ -498,6 +502,7 @@ sub printACTPairwise_yui {
     printJS();
 
     if ( $#order > -1 ) {
+
         # intialize array
         @taxon_oids = @orderTaxons;
 
@@ -510,8 +515,12 @@ sub printACTPairwise_yui {
 
         # now sort the data in the hash by the value user entered
         my $i = 0;
-        foreach my $key ( sort { $hash_index{$a} <=> $hash_index{$b} }
-                          keys %hash_index ) {
+        foreach my $key (
+            sort { $hash_index{$a} <=> $hash_index{$b} }
+            keys %hash_index
+          )
+        {
+
             # key is index of the array order or orderTaxons
             $taxon_oids[$i] = $orderTaxons[$key];
             $i++;
@@ -519,8 +528,9 @@ sub printACTPairwise_yui {
     }
 
     # get genome names
-    my $dbh    = dbLogin();
-    my %taxon_names = QueryUtil::fetchTaxonOid2NameHash($dbh, \@taxon_oids);
+    my $dbh = dbLogin();
+    my %taxon_names = QueryUtil::fetchTaxonOid2NameHash( $dbh, \@taxon_oids );
+
     #$dbh->disconnect();
 
     my $rowcnt = 1;
@@ -587,69 +597,69 @@ EOF
 }
 
 # test to see if java web start is installed
-sub printWebstartTest {
-    print <<EOF;
-<SCRIPT LANGUAGE="JavaScript">
-var javawsInstalled = 0;
-var javaws142Installed=0;
-var javaws150Installed=0;
-var javaws160Installed = 0;
-isIE = "false";
-if (navigator.mimeTypes && navigator.mimeTypes.length) {
-   x = navigator.mimeTypes['application/x-java-jnlp-file'];
-   if (x) {
-      javawsInstalled = 1;
-      javaws142Installed=1;
-      javaws150Installed=1;
-      javaws160Installed = 1;
-  }
-}
-else {
-   isIE = "true";
-}
-</SCRIPT>
-
-<SCRIPT LANGUAGE="VBScript">
-on error resume next
-If isIE = "true" Then
-  If Not(IsObject(CreateObject("JavaWebStart.isInstalled"))) Then
-     javawsInstalled = 0
-  Else
-     javawsInstalled = 1
-  End If
-  If Not(IsObject(CreateObject("JavaWebStart.isInstalled.1.4.2.0"))) Then
-     javaws142Installed = 0
-  Else
-     javaws142Installed = 1
-  End If
-  If Not(IsObject(CreateObject("JavaWebStart.isInstalled.1.5.0.0"))) Then
-     javaws150Installed = 0
-  Else
-     javaws150Installed = 1
-  End If
-  If Not(IsObject(CreateObject("JavaWebStart.isInstalled.1.6.0.0"))) Then
-     javaws160Installed = 0
-  Else
-     javaws160Installed = 1
-  End If
-End If
-</SCRIPT>
-
-
-<SCRIPT LANGUAGE="JavaScript">
-if (javawsInstalled == 0 && javaws142Installed == 0 &&
-    javaws150Installed == 0 && javaws160Installed == 0) {
-    alert("Please install Java Web Start before continuing.");
-}  else {
-    //alert(javawsInstalled + " " + javaws142Installed + " " +
-    //javaws150Installed + " " + javaws160Installed );
-}
-
-</SCRIPT>
-
-EOF
-
-}
+#sub printWebstartTest {
+#    print <<EOF;
+#<SCRIPT LANGUAGE="JavaScript">
+#var javawsInstalled = 0;
+#var javaws142Installed=0;
+#var javaws150Installed=0;
+#var javaws160Installed = 0;
+#isIE = "false";
+#if (navigator.mimeTypes && navigator.mimeTypes.length) {
+#   x = navigator.mimeTypes['application/x-java-jnlp-file'];
+#   if (x) {
+#      javawsInstalled = 1;
+#      javaws142Installed=1;
+#      javaws150Installed=1;
+#      javaws160Installed = 1;
+#  }
+#}
+#else {
+#   isIE = "true";
+#}
+#</SCRIPT>
+#
+#<SCRIPT LANGUAGE="VBScript">
+#on error resume next
+#If isIE = "true" Then
+#  If Not(IsObject(CreateObject("JavaWebStart.isInstalled"))) Then
+#     javawsInstalled = 0
+#  Else
+#     javawsInstalled = 1
+#  End If
+#  If Not(IsObject(CreateObject("JavaWebStart.isInstalled.1.4.2.0"))) Then
+#     javaws142Installed = 0
+#  Else
+#     javaws142Installed = 1
+#  End If
+#  If Not(IsObject(CreateObject("JavaWebStart.isInstalled.1.5.0.0"))) Then
+#     javaws150Installed = 0
+#  Else
+#     javaws150Installed = 1
+#  End If
+#  If Not(IsObject(CreateObject("JavaWebStart.isInstalled.1.6.0.0"))) Then
+#     javaws160Installed = 0
+#  Else
+#     javaws160Installed = 1
+#  End If
+#End If
+#</SCRIPT>
+#
+#
+#<SCRIPT LANGUAGE="JavaScript">
+#if (javawsInstalled == 0 && javaws142Installed == 0 &&
+#    javaws150Installed == 0 && javaws160Installed == 0) {
+#    alert("Please install Java Web Start before continuing.");
+#}  else {
+#    //alert(javawsInstalled + " " + javaws142Installed + " " +
+#    //javaws150Installed + " " + javaws160Installed );
+#}
+#
+#</SCRIPT>
+#
+#EOF
+#
+#}
 
 #
 # reorder
@@ -741,10 +751,11 @@ sub printReorderForm {
             # now sort the data in the hash by the value user entered
             my $j = 0;
             foreach my $key (
-		sort { $hash_index{$a} <=> $hash_index{$b} }
-		keys %hash_index
-	    )
+                sort { $hash_index{$a} <=> $hash_index{$b} }
+                keys %hash_index
+              )
             {
+
                 # key is index of the array order or orderTaxons
                 $tmp_scaffold[$j] = $tmp_ext_aref->[$key];
                 $j++;
@@ -752,13 +763,12 @@ sub printReorderForm {
             $scaffold_order_aref = \@tmp_scaffold;
 
         } else {
-            if(!-e "$taxon_fna_dir/$toid.fna") {
+            if ( !-e "$taxon_fna_dir/$toid.fna" ) {
                 webError("$toid.fna file is missing.");
             }
 
             # get order from file
-            ( $taxon_href, $scaffold_order_aref ) =
-              loadSeqCount("$taxon_fna_dir/$toid.fna");
+            ( $taxon_href, $scaffold_order_aref ) = loadSeqCount("$taxon_fna_dir/$toid.fna");
         }
 
         my $sdetail_href = getTaxonScaffoldDetail( $dbh, $toid );
@@ -788,6 +798,7 @@ sub printReorderForm {
              value="Next" onclick="javascript:mySubmit('processACT')"/>
     };
     print end_form();
+
     #$dbh->disconnect();
     printStatusLine( "Loaded.", 2 );
 }
@@ -800,7 +811,6 @@ sub printReorderForm_yui {
     my $myImgOverride   = param("myImgOverride");
     my $imgTermOverride = param("imgTermOverride");
     my $gene_oid_note   = param("gene_oid_note");
-
 
     # list of ext_acc _ taxon oid to ignore
     my %ignore_hash;
@@ -831,12 +841,12 @@ sub printReorderForm_yui {
           if ( $#tmp_ext_accession2 > -1 );
     }
 
-print Dumper \@taxon_oids;
-print "<br/>";
-print Dumper \@ignore;
-print "<br/>";
-print Dumper \@orders;
-print "<br/>";
+    print Dumper \@taxon_oids;
+    print "<br/>";
+    print Dumper \@ignore;
+    print "<br/>";
+    print Dumper \@orders;
+    print "<br/>";
 
     if ( $#orders != $#taxon_oids && $#ignore > -1 ) {
         webError("You cannot remove all the scaffolds from a genome.\n");
@@ -890,8 +900,8 @@ print "<br/>";
             # now sort the data in the hash by the value user entered
             my $j = 0;
             foreach my $key (
-                              sort { $hash_index{$a} <=> $hash_index{$b} }
-                              keys %hash_index
+                sort { $hash_index{$a} <=> $hash_index{$b} }
+                keys %hash_index
               )
             {
 
@@ -903,8 +913,7 @@ print "<br/>";
         } else {
 
             # get order from file
-            ( $taxon_href, $scaffold_order_aref ) =
-              loadSeqCount("$taxon_fna_dir/$toid.fna");
+            ( $taxon_href, $scaffold_order_aref ) = loadSeqCount("$taxon_fna_dir/$toid.fna");
         }
 
         my $sdetail_href = getTaxonScaffoldDetail( $dbh, $toid );
@@ -934,6 +943,7 @@ print "<br/>";
                onclick="javascript:mySubmit('processACT')"/>
     };
     print end_form();
+
     #$dbh->disconnect();
     printStatusLine( "Loaded.", 2 );
 }
@@ -946,8 +956,7 @@ sub getTaxonScaffoldDetail {
     my %hash;
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
     for ( ; ; ) {
-        my ( $scaffold_oid, $scaffold_name, $ext_accession, $seq_length ) =
-          $cur->fetchrow();
+        my ( $scaffold_oid, $scaffold_name, $ext_accession, $seq_length ) = $cur->fetchrow();
         last if !$scaffold_oid;
         $hash{$ext_accession} = "$scaffold_oid\t$scaffold_name\t$seq_length";
     }
@@ -969,7 +978,7 @@ sub printReorderTable {
 
     # Use YUI css
     if ($yui_tables) {
-	print <<YUI;
+        print <<YUI;
         <link rel="stylesheet" type="text/css"
 	    href="$YUI/build/datatable/assets/skins/sam/datatable.css" />
         <style type="text/css">
@@ -1008,7 +1017,7 @@ sub printReorderTable {
 	</th>
 YUI
     } else {
-	print qq{
+        print qq{
             <table class='img'>
             <th class='img'>Ignore</th>
             <th class='img'>Order</th>
@@ -1024,56 +1033,56 @@ YUI
 
         my $line = $sdetail_href->{$sid};
         my ( $scaffold_oid, $scaffold_name, $seq_length ) =
-	    split( /\t/, $line );
-	my $classStr;
+          split( /\t/, $line );
+        my $classStr;
 
-	if ($yui_tables) {
-	    $classStr = !$rowcnt ? "yui-dt-first ":"";
-	    $classStr .= ($rowcnt % 2 == 0) ? "yui-dt-even" : "yui-dt-odd";
-	} else {
-	    $classStr = "img";
-	}
+        if ($yui_tables) {
+            $classStr = !$rowcnt ? "yui-dt-first " : "";
+            $classStr .= ( $rowcnt % 2 == 0 ) ? "yui-dt-even" : "yui-dt-odd";
+        } else {
+            $classStr = "img";
+        }
 
-	print "<tr class='$classStr'>\n";
+        print "<tr class='$classStr'>\n";
 
-	# Ignore
-	print "<td class='$classStr'>\n";
-	print "<div class='yui-dt-liner'>" if $yui_tables;
-	print "<input type='checkbox' name='ignore' value='$ignoreid' />";
-	print "</div>\n" if $yui_tables;
-	print "</td>\n";
+        # Ignore
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print "<input type='checkbox' name='ignore' value='$ignoreid' />";
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
-	# Order
-	print "<td class='$classStr'>\n";
-	print "<div class='yui-dt-liner'>" if $yui_tables;
-	print "<input type='text' onKeyPress='return numbersonly(event)' size='4'
+        # Order
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print "<input type='text' onKeyPress='return numbersonly(event)' size='4'
                name='order$order' value='$rowcnt' class='txtBox' />";
-	print "</div>\n" if $yui_tables;
-	print "</td>\n";
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
-	# Ext Accession
-	print "<td class='$classStr'>\n";
-	print "<div class='yui-dt-liner'>" if $yui_tables;
-	print "<input type='text' name='ext_accession$order' value='$sid'
+        # Ext Accession
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print "<input type='text' name='ext_accession$order' value='$sid'
                readonly='readonly' class='txtBox' />";
-	print "</div>\n" if $yui_tables;
-	print "</td>\n";
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
-	# Scaffold Name
-	print "<td class='$classStr'>\n";
-	print "<div class='yui-dt-liner'>" if $yui_tables;
-	print $scaffold_name;
-	print "</div>\n" if $yui_tables;
-	print "</td>\n";
+        # Scaffold Name
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print $scaffold_name;
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
-	# Seq. Length
-	print "<td class='$classStr'>\n";
-	print "<div class='yui-dt-liner'>" if $yui_tables;
-	print $seq_length;
-	print "</div>\n" if $yui_tables;
-	print "</td>\n";
+        # Seq. Length
+        print "<td class='$classStr'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        print $seq_length;
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
 
-	print "</tr>\n";
+        print "</tr>\n";
         $rowcnt++;
     }
 
@@ -1360,20 +1369,20 @@ EOF
 # list of ext_access_taxon_oid to ignore
 # return aref list of ext_access
 sub ignoreExtaccession {
-    my($taxon_oid, $ext_accession_aref, $ignore_aref) = @_;
+    my ( $taxon_oid, $ext_accession_aref, $ignore_aref ) = @_;
 
     my @array;
-    for(my $i=0; $i <= $#$ext_accession_aref; $i++) {
-        my $id = $ext_accession_aref->[$i] . "_" . $taxon_oid;
+    for ( my $i = 0 ; $i <= $#$ext_accession_aref ; $i++ ) {
+        my $id    = $ext_accession_aref->[$i] . "_" . $taxon_oid;
         my $found = 0;
         foreach my $ignore (@$ignore_aref) {
-            if($id eq $ignore) {
+            if ( $id eq $ignore ) {
                 $found = 1;
                 last;
             }
         }
-        if(!$found) {
-            push(@array, $ext_accession_aref->[$i]);
+        if ( !$found ) {
+            push( @array, $ext_accession_aref->[$i] );
         }
     }
 
@@ -1387,8 +1396,9 @@ sub processACT {
     my $myImgOverride   = param("myImgOverride");
     my $imgTermOverride = param("imgTermOverride");
     my $gene_oid_note   = param("gene_oid_note");
+
     # user select some to ignore - no update button pressed
-    my @ignore          = param("ignore");
+    my @ignore = param("ignore");
 
     # array of arrays of list of orders
     my @orders;
@@ -1402,8 +1412,8 @@ sub processACT {
         push( @ext_accessions, \@tmp_ext_accession )
           if ( $#tmp_ext_accession > -1 );
 
-        my $aref = ignoreExtaccession($taxon_oids[$i],\@tmp_ext_accession,\@ignore);
-        push(@filter_ext_accessions, $aref);
+        my $aref = ignoreExtaccession( $taxon_oids[$i], \@tmp_ext_accession, \@ignore );
+        push( @filter_ext_accessions, $aref );
 
     }
     if ($USE_YUI) {
@@ -1419,9 +1429,10 @@ sub processACT {
     my $dbh = dbLogin();
     my $sid = getSessionId();
 
-    WebUtil::printHeaderWithInfo
-	("Artemis - ACT", getActCitation(),
-	 "show citation", "ACT Info");
+    # WebUtil::printHeaderWithInfo( "Artemis - ACT", getActCitation(), "show citation", "ACT Info" );
+    print qq{
+        <h1>Creating Artemis ACT Data Files</h1>
+    };
 
     printStartWorkingDiv();
 
@@ -1440,8 +1451,7 @@ sub processACT {
 
         my $ext_order_aref = $ext_accessions[$i];
 
-        my ( $taxon_href, $filename ) =
-          loadSeqCount2( "$taxon_fna_dir/$toid.fna", $toid, $ext_order_aref );
+        my ( $taxon_href, $filename ) = loadSeqCount2( "$taxon_fna_dir/$toid.fna", $toid, $ext_order_aref );
         push( @taxon_coords, $taxon_href );
         push( @fnafilenames, $filename );
 
@@ -1451,26 +1461,23 @@ sub processACT {
         print "create genbank file $outFile <br/>\n";
 
         createGenBankFile(
-                           $dbh,            $toid,
-                           $ext_order_aref, $scaffold_href,
-                           $taxon_href,     $outFile,
-                           $myImgOverride,  $imgTermOverride,
-                           $gene_oid_note
+            $dbh,     $toid,          $ext_order_aref,  $scaffold_href, $taxon_href,
+            $outFile, $myImgOverride, $imgTermOverride, $gene_oid_note
         );
         push( @genebankfiles, $file );
     }
 
     # TODO - create tmp fna files with contigs reordered
 
-# read seq file to get all the contigs start and stop
-# hash of
-# '>NC_010369 Halobacterium salinarum R1 plasmid PHS2, complete sequence.' => '1,194963'
-# 'NC_010369' => '1,194963'
-# NC_010369 = ext_accession
-# 1,194963 = start, and end coord
-#
-# 2nd return param
-# array of ext_accession ids - used as the order the scaffols cat.
+    # read seq file to get all the contigs start and stop
+    # hash of
+    # '>NC_010369 Halobacterium salinarum R1 plasmid PHS2, complete sequence.' => '1,194963'
+    # 'NC_010369' => '1,194963'
+    # NC_010369 = ext_accession
+    # 1,194963 = start, and end coord
+    #
+    # 2nd return param
+    # array of ext_accession ids - used as the order the scaffols cat.
 
     # create one big fna files  without > s line
     my @mbalstfiles;
@@ -1479,8 +1486,7 @@ sub processACT {
         my $seqFile2      = $fnafilenames[ $i + 1 ];
         my $mblastoutfile = "mblast$$" . "_" . $i . "_" . $sid;
         print "create mblast $mblastoutfile <br/>\n";
-        runMegaBlast( "$tmp_dir/$seqFile1", "$tmp_dir/$seqFile2",
-                      $mblastoutfile );
+        runMegaBlast( "$tmp_dir/$seqFile1", "$tmp_dir/$seqFile2", $mblastoutfile );
         push( @mbalstfiles, $mblastoutfile );
     }
 
@@ -1490,7 +1496,7 @@ sub processACT {
     # Use YUI css
 
     if ($yui_tables) {
-	print <<YUI;
+        print <<YUI;
 
         <link rel="stylesheet" type="text/css"
 	    href="$YUI/build/datatable/assets/skins/sam/datatable.css" />
@@ -1511,11 +1517,11 @@ sub processACT {
 	</th>
 YUI
     } else {
-	print qq{
+        print qq{
           <table class='img'>
           <th class='img'>ACT Data Files</th>
         }
-    };
+    }
 
     for ( my $i = 0 ; $i < $#fnafilenames ; $i++ ) {
         my $file1  = $fnafilenames[$i];
@@ -1526,48 +1532,64 @@ YUI
         my $toid1 = $taxon_oids[$i];
         my $toid2 = $taxon_oids[ $i + 1 ];
         my $mfile = $mbalstfiles[$i];
+        my $classStr;
+        if ($yui_tables) {
+            $classStr = !$i ? "yui-dt-first " : "";
+            $classStr .= ( $i % 2 == 0 ) ? "yui-dt-even" : "yui-dt-odd";
+        } else {
+            $classStr = "img";
+        }
 
-	my $classStr;
-	if ($yui_tables) {
-	    $classStr = !$i ? "yui-dt-first ":"";
-	    $classStr .= ($i % 2 == 0) ? "yui-dt-even" : "yui-dt-odd";
-	} else {
-	    $classStr = "img";
-	}
-
-	print "<tr class='$classStr'>\n";
-	print "<td class='$classStr customCell'>\n";
-	print "<div class='yui-dt-liner'>" if $yui_tables;
+        print "<tr class='$classStr'>\n";
+        print "<td class='$classStr customCell'>\n";
+        print "<div class='yui-dt-liner'>" if $yui_tables;
+        
+        my $sf1 = $i + 1;
+        my $sf2 = $sf1 + 1;
+        my $cf = $i + 1;
+        
         print qq{
-            <a href='$tmp_url/$file1'> $toid1 fna file </a> <br/>
-            <a href='$tmp_url/$file2'> $toid2 fna file </a> <br/>
-            <a href='$tmp_url/$gfile1'> $toid1 GBK file </a> <br/>
-            <a href='$tmp_url/$gfile2'> $toid2 GBK file </a> <br/>
-            <a href='$tmp_url/$mfile'> Megablast out file </a>
+            <a href='$tmp_url/$file1' target="_blank" download="$toid1.fna"> $toid1 fna file </a> <br/>
+            <a href='$tmp_url/$file2' target="_blank" download="$toid2.fna"> $toid2 fna file </a> <br/>
+            <a href='$tmp_url/$gfile1' target="_blank" download="${toid1}-sequence${sf1}.gbk" > $toid1 GBK file </a> (Sequence File $sf1) <br/>
+            <a href='$tmp_url/$gfile2' target="_blank" download="${toid2}-sequence${sf2}.gbk"> $toid2 GBK file </a> (Sequence File $sf2) <br/>
+            <a href='$tmp_url/$mfile' target="_blank" download="compare${cf}.act"> Megablast out file </a> (Comparison File $cf) 
         };
-	print "</div>\n" if $yui_tables;
-	print "</td>\n";
-	print "</tr>\n";
+        print "</div>\n" if $yui_tables;
+        print "</td>\n";
+        print "</tr>\n";
     }
     print "</table>";
     print "</div>\n" if $yui_tables;
 
     # create jnlp file
-    my $file = printACTWebStart( \@genebankfiles, \@mbalstfiles );
+#    my $file = printACTWebStart( \@genebankfiles, \@mbalstfiles );
 
-    print qq{
-        <p>
-        <input class='smdefbutton' type='button' value="Run ACT"
-        onclick="window.location.href='$tmp_url/$file'">
-        </p>
-    };
+#    print qq{
+#        <p>
+#        <input class='smdefbutton' type='button' value="Run ACT"
+#        onclick="window.location.href='$tmp_url/$file'">
+#        </p>
+#    };
 
     #$dbh->disconnect();
+ 
+    print qq{
+        You can now download the above Artemis ACT data files.
+    };
+ 
+ 
     printStatusLine( "Loaded.", 2 );
 }
 
 sub getActCitation {
-    return "<b>ACT: the Artemis Comparison Tool.</b><br/><i>Carver TJ, Rutherford KM, Berriman M, Rajandream MA, Barrell BG, Parkhill J</i><br/>Bioinformatics. 2005;21;3422-3. PMID: <a href=http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=PubMed&list_uids=15976072&dopt=Abstract target=external>15976072</a> DOI: <a href=http://dx.doi.org/10.1093/bioinformatics/bti553>10.1093/bioinformatics/bti553</a><br/>";
+    return qq{
+<b>ACT: the Artemis Comparison Tool.</b>
+<br>
+<i>Carver TJ, Rutherford KM, Berriman M, Rajandream MA, Barrell BG, Parkhill J</i><br/>Bioinformatics. 2005;21;3422-3. PMID: 
+<a href=http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=PubMed&list_uids=15976072&dopt=Abstract target=external>15976072</a> 
+DOI: <a href=http://dx.doi.org/10.1093/bioinformatics/bti553>10.1093/bioinformatics/bti553</a><br>;
+    };
 }
 
 # $scaffold_order_aref - array of ext accession
@@ -1575,11 +1597,9 @@ sub getActCitation {
 # $taxon_href - 'NC_010369' => '1,194963'
 sub createGenBankFile {
     my (
-         $dbh,           $taxon_oid,       $scaffold_order_aref,
-         $scaffold_href, $taxon_href,      $outFile,
-         $myImgOverride, $imgTermOverride, $gene_oid_note
-      )
-      = @_;
+        $dbh,     $taxon_oid,     $scaffold_order_aref, $scaffold_href, $taxon_href,
+        $outFile, $myImgOverride, $imgTermOverride,     $gene_oid_note
+    ) = @_;
 
     my $total_basepair = 0;
     foreach my $ext ( keys %$taxon_href ) {
@@ -1590,35 +1610,34 @@ sub createGenBankFile {
 
     my $wfh = newWriteFileHandle( $outFile, "writeScaffold2GenBankFile" );
 
-    my $scaffold_oid =
-      getScaffoldOid( $scaffold_order_aref->[0], $scaffold_href );
+    my $scaffold_oid = getScaffoldOid( $scaffold_order_aref->[0], $scaffold_href );
+
     #print "createGenBankFile scaffold: $scaffold_oid for " . $scaffold_order_aref->[0] . "<br/>\n";
 
     # create genbank header
-    GenBankFile::writeScaffold2GenBankFile_act_header( $dbh, $wfh,
-                      $scaffold_oid, $outFile, $myImgOverride, $imgTermOverride,
-                      $gene_oid_note, $total_basepair );
+    GenBankFile::writeScaffold2GenBankFile_act_header( $dbh, $wfh, $scaffold_oid, $outFile, $myImgOverride, $imgTermOverride,
+        $gene_oid_note, $total_basepair );
 
     # create gene section
     my $offset = 0;
     foreach my $ext_accesstion (@$scaffold_order_aref) {
+
         #print "createGenBankFile ext_accesstion: $ext_accesstion<br/>\n";
         my $scaffold_oid = getScaffoldOid( $ext_accesstion, $scaffold_href );
+
         #print "createGenBankFile scaffold: $scaffold_oid<br/>\n";
         my $line = $taxon_href->{$ext_accesstion};
+
         #print "createGenBankFile line: $line<br/>\n";
         my ( $start, $end ) = split( /,/, $line );
-        print "Creating gbk for scaffold $scaffold_oid "
-          . "$ext_accesstion $start, $end <br/>\n";
-        GenBankFile::writeScaffold2GenBankFile_act( $dbh, $wfh, $scaffold_oid,
-                     $outFile, $myImgOverride, $imgTermOverride, $gene_oid_note,
-                     $offset );
+        print "Creating gbk for scaffold $scaffold_oid " . "$ext_accesstion $start, $end <br/>\n";
+        GenBankFile::writeScaffold2GenBankFile_act( $dbh, $wfh, $scaffold_oid, $outFile, $myImgOverride, $imgTermOverride,
+            $gene_oid_note, $offset );
         $offset = $offset + $end;
     }
 
     # create genbank footer
-    GenBankFile::writeScaffold2GenBankFile_act_footer( $dbh, $wfh, $taxon_oid,
-                                        $scaffold_order_aref, $total_basepair );
+    GenBankFile::writeScaffold2GenBankFile_act_footer( $dbh, $wfh, $taxon_oid, $scaffold_order_aref, $total_basepair );
     close $wfh;
 
 }
@@ -1701,11 +1720,31 @@ sub printArtemisForm {
 
     my $dbh = dbLogin();
 
-    print "<h1>Web Artemis</h1>\n";
+    print "<h1>Create Artemis Data File</h1>\n";
     print "<p>\n";
-    webError("Unable to determine Taxon ID. Please use <b>Find Genomes</b> above
-             and select a genome.\n") if $taxon_oid eq "";
+    webError(
+        "Unable to determine Taxon ID. Please use <b>Find Genomes</b> above
+             and select a genome.\n"
+    ) if $taxon_oid eq "";
     print "<p>\n";
+
+    print qq{
+      <b>This tool only creates a data file that is compatible with Artemis.</b>
+      <br>
+      <br><a href='https://docs.google.com/document/d/1nRH0zHulu7GHZQE30hIjdxWMxE7rVx66DXjsATmK4ms/edit?pref=2&pli=1#heading=h.83iytbb3lfe9' target="_blank">HELP</a>
+      <br><a href='https://docs.google.com/document/d/1nRH0zHulu7GHZQE30hIjdxWMxE7rVx66DXjsATmK4ms/edit?pref=2&pli=1#' target="_blank">End of Java Support</a>
+      <br>
+       
+      <br>Get Artemis from Sanger  
+      <a href='http://www.sanger.ac.uk/science/tools/artemis' target="_blank">http://www.sanger.ac.uk/science/tools/artemis</a>.
+      <br>Please see Sanger site on how to install and run <a href='http://www.sanger.ac.uk/science/tools/artemis' target="_blank">Artemis</a>.
+      <br><br><b>Requirements to run Artemis:</b>
+      <ol>
+      <li>Java: <a href='http://www.java.com/en/' target="_blank">http://www.java.com/en/</a></li>
+      <li>Artmeis: <a href='http://www.sanger.ac.uk/science/tools/artemis' target="_blank">http://www.sanger.ac.uk/science/tools/artemis</a> </li>
+      </ol>        
+    };
+
     print "Please select one scaffold to view.<br/>\n";
     print "</p>\n";
     printMainForm();
@@ -1717,7 +1756,7 @@ sub printArtemisForm {
     print "<tr class='img'>\n";
     print "<th class='subhead'>Scaffold</th>\n";
     print "<td class='img'>\n";
-    print "<select name='scaffold_oid' size='10'>\n";
+    print "<select name='scaffold_oid' size='10' >\n";
 
     my $sql = getSingleTaxonScaffoldStatSql();
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
@@ -1725,8 +1764,7 @@ sub printArtemisForm {
     my $count = 0;
     my $trunc = 0;
     for ( ; ; ) {
-        my ( $scaffold_oid, $scaffold_name, $ext_accession, $seq_length ) =
-          $cur->fetchrow();
+        my ( $scaffold_oid, $scaffold_name, $ext_accession, $seq_length ) = $cur->fetchrow();
         last if !$scaffold_oid;
         $count++;
         if ( $count > $max_export_scaffold_list ) {
@@ -1757,9 +1795,7 @@ sub printArtemisForm {
     if ($trunc) {
         print "<p>\n";
         print "<font color='red'>\n";
-        print escHtml(   "Scaffold list truncated to "
-                       . "$max_export_scaffold_list scaffolds." )
-          . "<br/>\n";
+        print escHtml( "Scaffold list truncated to " . "$max_export_scaffold_list scaffolds." ) . "<br/>\n";
         print "</font>\n";
         print "</p>\n";
     }
@@ -1767,18 +1803,18 @@ sub printArtemisForm {
     print "<br/>\n";
     my $name = "_section_${section}_processArtemisFile";
     print submit(
-                  -name  => $name,
-                  -value => "Go",
-                  -class => "smdefbutton"
+        -name  => $name,
+        -value => "Create File",
+        -class => "smdefbutton"
     );
     print nbsp(1);
     print reset( -value => "Reset", -class => "smbutton" );
 
     #$dbh->disconnect();
     printStatusLine( "Loaded.", 2 );
-    printHint(   "Hold down control key (or command key in the case "
-               . "of the Mac)<br/>to select or deselect multiple values."
-               . "Drag down the list to select many items.<br/>" );
+#    printHint( "Hold down control key (or command key in the case "
+#          . "of the Mac)<br/>to select or deselect multiple values."
+#          . "Drag down the list to select many items.<br/>" );
     print end_form();
 }
 
@@ -1793,7 +1829,7 @@ sub processArtemisFile {
     my $imgTermOverride = 0;
     my $gene_oid_note   = 1;
 
-    print "<h1>Web Artemis</h1>\n";
+    print "<h1>Artemis Data File</h1>\n";
     my $scaffold_oid = param("scaffold_oid");
     if ( $scaffold_oid eq "" ) {
         webError("Please select one scaffold.\n");
@@ -1804,46 +1840,55 @@ sub processArtemisFile {
       if $verbose >= 1;
     printMainForm();
     printStatusLine( "Loading ...", 1 );
-    EmblFile::writeScaffold2EmblFile(
-                                      $scaffold_oid,  $outFile,
-                                      $myImgOverride, $imgTermOverride,
-                                      $gene_oid_note
-    );
+    EmblFile::writeScaffold2EmblFile( $scaffold_oid, $outFile, $myImgOverride, $imgTermOverride, $gene_oid_note );
     printStatusLine( "Loaded.", 2 );
 
     my $archive = "$top_base_url/lib/powmap.jar";
     my $dataUrl = "$base_url/tmp/$$.art";
-    my $s       = qq{
-      <applet code='DianaApplet.class' archive='$archive'
-        width='600' height='300'>
-       <param name='entries' value='$$.art'>
-       If you are reading this it means your web browser
-       doesn't support java or you
-       have java disabled.
-       <p>
-       Artemis on the web needs a web browser that supports java 1.1
-       <p>
-       Suitable browsers include Netscape Navigator version 4.06 or better and
-       Microsoft Internet Explorer version 4 or better.
-       <p>
-       You might like to try the standalone version of Artemis instead.
-       Go to <a href="http://www.sanger.ac.uk/Software/Artemis">
-       Sanger</a> for more information.
-       </applet>
-   };
+
+    #    my $s       = qq{
+    #      <applet code='DianaApplet.class' archive='$archive'
+    #        width='600' height='300'>
+    #       <param name='entries' value='$$.art'>
+    #       If you are reading this it means your web browser
+    #       doesn't support java or you
+    #       have java disabled.
+    #       <p>
+    #       Artemis on the web needs a web browser that supports java 1.1
+    #       <p>
+    #       Suitable browsers include Netscape Navigator version 4.06 or better and
+    #       Microsoft Internet Explorer version 4 or better.
+    #       <p>
+    #       You might like to try the standalone version of Artemis instead.
+    #       Go to <a href="http://www.sanger.ac.uk/Software/Artemis">
+    #       Sanger</a> for more information.
+    #       </applet>
+    #   };
 
     #wunlink( $outFile );
-    my $artemisUrl  = "$tmp_url/artemis$$.html";
-    my $artemisFile = "$tmp_dir/artemis$$.html";
-    my $wfh         = newWriteFileHandle( $artemisFile, "processArtemisFile" );
-    print $wfh "<html>\n";
-    print $wfh "<head>\n";
-    print $wfh "<title>Artemis on the Web</title>\n";
-    print $wfh "</head>\n";
-    print $wfh "<body>\n";
-    print $wfh "$s\n";
-    close $wfh;
-    print buttonUrl( $artemisUrl, "View Results", "medbutton" );
+    #    my $artemisUrl  = "$tmp_url/artemis$$.html";
+    #    my $artemisFile = "$tmp_dir/artemis$$.html";
+    #    my $wfh         = newWriteFileHandle( $artemisFile, "processArtemisFile" );
+    #    print $wfh "<html>\n";
+    #    print $wfh "<head>\n";
+    #    print $wfh "<title>Artemis on the Web</title>\n";
+    #    print $wfh "</head>\n";
+    #    print $wfh "<body>\n";
+    #    print $wfh "$s\n";
+    #    close $wfh;
+    #    print buttonUrl( $artemisUrl, "View Results", "medbutton" );
+
+    print qq{
+        To run Artemis you will need to do the following:<br>
+          <ol>
+          <li>Install Java see: <a href='http://www.java.com/en/' target="_blank">http://www.java.com/en/</a></li>
+          <li>Instatll Artmeis see: <a href='http://www.sanger.ac.uk/science/tools/artemis' target="_blank">http://www.sanger.ac.uk/science/tools/artemis</a> </li>
+          <li><b>Download IMG Artemis data files:</b> <a href='$dataUrl' target="_blank" download="datafile.art">Click here to get the IMG data file</a> </li>
+          <li>Run Artemis</li>
+          <li>In Artemis File->Open the IMG Artemis file you have just downloaded from step 3.</li>
+          </ol>
+    };
+
     print end_form();
 }
 
@@ -1866,7 +1911,7 @@ sub loadSeqCount {
             my @tmp = split( /\s+/, $s );
             push( @scaffold_order, $tmp[0] );
 
-          # there is one extra hash entry where the key is "" and can be ignored
+            # there is one extra hash entry where the key is "" and can be ignored
             $hash{$lastname} = "1,$char_count" if ( $lastname ne "" );
             $lastname        = $tmp[0];
             $char_count      = 0;
@@ -1906,7 +1951,7 @@ sub loadSeqCount2 {
     # now create new tmp fna file
     my $sid      = getSessionId();
     my $filename = $taxon_oid . $sid . ".fna";
-    my $wfh = newWriteFileHandle( "$tmp_dir/$filename", "create tmp fna file" );
+    my $wfh      = newWriteFileHandle( "$tmp_dir/$filename", "create tmp fna file" );
 
     #    foreach my $ext (@$ext_order_aref) {
     #        my $seq = $seq_hash{$ext};
@@ -1996,9 +2041,9 @@ sub makeBlastDb {
 
 sub getSingleTaxonScaffoldStatSql {
 
-    my $rclause = WebUtil::urClause("s.taxon");
+    my $rclause   = WebUtil::urClause("s.taxon");
     my $imgClause = WebUtil::imgClauseNoTaxon('s.taxon');
-    my $sql = qq{
+    my $sql       = qq{
         select s.scaffold_oid, s.scaffold_name, s.ext_accession, ss.seq_length
         from scaffold s, scaffold_stats ss
         where s.taxon = ?

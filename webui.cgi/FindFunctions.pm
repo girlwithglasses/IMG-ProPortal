@@ -6,7 +6,7 @@
 #  These were used in the days before this code was placed in Perl modules.
 #    --es 07/07/2005
 #
-# $Id: FindFunctions.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: FindFunctions.pm 36003 2016-08-12 21:06:56Z jinghuahuang $
 ############################################################################
 package FindFunctions;
 my $section = "FindFunctions";
@@ -30,6 +30,7 @@ use FuncUtil;
 use WorkspaceUtil;
 use GenomeListJSON;
 use HTML::Template;
+use Date::Format;
 
 my $env                   = getEnv();
 my $main_cgi              = $env->{main_cgi};
@@ -123,22 +124,22 @@ sub getAppHeaderData {
     my($self) = @_;
     
     my @a = ();
-        require GenomeListJSON;
-        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-        $template->param( base_url => $base_url );
-        $template->param( YUI      => $YUI );
-        my $js = $template->output;
+    require GenomeListJSON;
+    my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
+    $template->param( base_url => $base_url );
+    $template->param( YUI      => $YUI );
+    my $js = $template->output;
 
     my $page = param('page');
-        if ( $page eq 'findFunctions' ) {
-            @a = ( "FindFunctions", '', '', $js, '', 'FunctionSearch.pdf' );
-        } elsif ( $page eq 'ffoAllSeed' ) {
-            @a = ( "FindFunctions", '', '', $js, '', 'SEED.pdf' );
-        } elsif ( $page eq 'ffoAllTc' ) {
-            @a = ( "FindFunctions", '', '', $js, '', 'TransporterClassification.pdf' );
-        } else {
-            @a = ( "FindFunctions", '', '', $js );
-        }
+    if ( $page eq 'findFunctions' ) {
+	@a = ( "FindFunctions", '', '', $js, '', 'FunctionSearch.pdf' );
+    } elsif ( $page eq 'ffoAllSeed' ) {
+	@a = ( "FindFunctions", '', '', $js, '', 'SEED.pdf' );
+    #} elsif ( $page eq 'ffoAllTc' ) {
+    #	@a = ( "FindFunctions", '', '', $js, '', 'TransporterClassification.pdf' );
+    } else {
+	@a = ( "FindFunctions", '', '', $js );
+    }
 
     return @a;
 }
@@ -203,12 +204,12 @@ sub dispatch {
         HtmlUtil::cgiCacheStart() or return;
         printFfoAllSeed();
         HtmlUtil::cgiCacheStop();
-    } elsif ( $page eq "ffoAllTc" ) {
-        my $time = 3600 * 24;    # 24 hour cache
-        HtmlUtil::cgiCacheInitialize($section);
-        HtmlUtil::cgiCacheStart() or return;
-        printFfoAllTc();
-        HtmlUtil::cgiCacheStop();
+#    } elsif ( $page eq "ffoAllTc" ) {
+#        my $time = 3600 * 24;    # 24 hour cache
+#        HtmlUtil::cgiCacheInitialize($section);
+#        HtmlUtil::cgiCacheStart() or return;
+#        printFfoAllTc();
+#        HtmlUtil::cgiCacheStop();
     } elsif (    paramMatch("ffgFindFunctions") ne ""
               || paramMatch("ffgSearchTerm") ne "" )
     {
@@ -310,20 +311,20 @@ sub dispatch {
         HtmlUtil::cgiCacheStart() or return;
         printSeedList();
         HtmlUtil::cgiCacheStop();
-    } elsif ( $page eq "tcList" ) {
-        HtmlUtil::cgiCacheInitialize($section);
-        HtmlUtil::cgiCacheStart() or return;
-        printTcList();
-        HtmlUtil::cgiCacheStop();
+#    } elsif ( $page eq "tcList" ) {
+#        HtmlUtil::cgiCacheInitialize($section);
+#        HtmlUtil::cgiCacheStart() or return;
+#        printTcList();
+#        HtmlUtil::cgiCacheStop();
     } elsif ( $page eq "viewProdNameProfile"
               || paramMatch("viewProdNameProfile") ne "" )
     {
         printProdNameProfile();
-    } elsif ( $page eq "tcFuncDetails" ) {
-        HtmlUtil::cgiCacheInitialize($section);
-        HtmlUtil::cgiCacheStart() or return;
-        printTcFuncDetails();
-        HtmlUtil::cgiCacheStop();
+#    } elsif ( $page eq "tcFuncDetails" ) {
+#        HtmlUtil::cgiCacheInitialize($section);
+#        HtmlUtil::cgiCacheStart() or return;
+#        printTcFuncDetails();
+#        HtmlUtil::cgiCacheStop();
     } elsif ( $page eq "cogid2cat" ) {
         printCog2Cat();
     } else {
@@ -335,26 +336,44 @@ sub printCog2Cat {
     print qq{
       <h1> COG ID Mapping to Categories</h1>   
     };
-    my $rfh = newReadFileHandle( "$base_dir/cogid_and_cat.html" );
+    #my $rfh = newReadFileHandle( "$base_dir/cogid_and_cat.html" );
+    
+    my $dbh = WebUtil::dbLogin();
+    my $sql = qq{
+        select cfs.cog_id, cf.function_code, cf.definition
+        from cog_functions cfs, cog_function cf
+        where cfs.functions = cf.function_code        
+    };
     
     my $it = new InnerTable( 0, "cog2cat$$", 'cog2cat', 1 );
     my $sd = $it->getSdDelim();
-    $it->addColSpec( "COG Id", "asc", "left" );
+    $it->addColSpec( "COG ID", "asc", "left" );
     $it->addColSpec( "Catergory Code", "asc", "left" );
     $it->addColSpec( "Catergory", "asc", "left" );
-    
-    while ( my $s = $rfh->getline() ) {
-        chomp $s;
-        next if($s =~ /^COG_ID/);
-        my($id, $code, $name) = split(/\t/, $s);
-        
+
+    my $cur = execSql( $dbh, $sql, $verbose );
+    for (;;) {
+        my ( $cog_id, $code, $name ) = $cur->fetchrow();
+        last if !$cog_id;
         my $r;
-        $r .= $id . $sd . "$id\t";
+        $r .= $cog_id . $sd . "$cog_id\t";
         $r .= $code . $sd . "$code\t";
         $r .= $name . $sd . "$name\t";
         $it->addRow($r);
-    }    
-    close $rfh;
+    }
+    
+#    while ( my $s = $rfh->getline() ) {
+#        chomp $s;
+#        next if($s =~ /^COG_ID/);
+#        my($id, $code, $name) = split(/\t/, $s);
+#        
+#        my $r;
+#        $r .= $id . $sd . "$id\t";
+#        $r .= $code . $sd . "$code\t";
+#        $r .= $name . $sd . "$name\t";
+#        $it->addRow($r);
+#    }    
+#    close $rfh;
     $it->printOuterTable(1);
 }
 
@@ -496,7 +515,7 @@ sub printSearchFilterOptions {
        <option value='pfam'>Pfam (list) $super </option>
        <option value='tigrfam'>TIGRfam (list) $super </option>
        <option value='ec'>Enzyme (list) $super </option>
-       <option value='tc'>Transporter Classification (list)</option>
+       <!-- <option value='tc'>Transporter Classification (list)</option> -->
        <option value='keggEnzymes'>KEGG Pathway Enzymes </option>
        <option value='koid'>KEGG Orthology ID (list) $super </option>
        <option value='koname'>KEGG Orthology Name $super </option>
@@ -509,7 +528,7 @@ sub printSearchFilterOptions {
        $img_plist
        $img_reaction
        $img_compound
-       <option value='all' title='SwissProt, GO, COG, KOG, Pfam, TIGRfam, InterPro, Enzyme, Transporter Classification, KEGG, MetaCyc, IMG Term and Synonyms, IMG Pathways, IMG Parts List'>
+       <option value='all' title='GO, COG, KOG, Pfam, TIGRfam, InterPro, Enzyme, KEGG, MetaCyc, IMG Term and Synonyms, IMG Pathways, IMG Parts List'>
        All function names (slow, Gene Product Name not included)</option>
     };
     
@@ -8491,34 +8510,31 @@ sub printKogList {
     my $dbh = dbLogin();
 
     if($stats) {
-    printStartWorkingDiv();
+        my $touchFileTime = WebUtil::fileAtime($env->{kog_data_file});
+        $touchFileTime = Date::Format::time2str( "%a, %b %e %Y %l:%M %P", $touchFileTime );
+        my $tmp = '';
+        if($user_restricted_site) {
+            $tmp = '<br>Counts inculde private data sets.';
+        }
+        print qq{
+          <p>
+          <span style='font-size:12px;font-style:italic;'>
+          The statistics was last updated on: $touchFileTime 
+          $tmp
+          </span>
+          </p>
+        };
 
-    print "<p>Counting isolate genomes ...\n";
+        my $rfh = WebUtil::newReadFileHandle($env->{kog_data_file});
+        while ( my $line = $rfh->getline() ) {
+            chomp $line;
+            next if ( $line eq "" );
+            my ( $id, $isocnt, $metacnt ) = split( /\t/, $line );
+            $kog_tcnts{$id} = $isocnt;
+         }
 
-    my $rclause   = urClause("g.taxon_oid");
-    my $imgClause = WebUtil::imgClauseNoTaxon( 'g.taxon_oid', 1 );
-    my $sql       = qq{
-        select /*+ result_cache */ g.kog, count(distinct g.taxon_oid)
-        from mv_taxon_kog_stat g
-        where 1 = 1
-        $rclause
-        $imgClause
-        group by g.kog
-    };
+        
 
-    my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ; ; ) {
-        my ( $kog_id, $tcnt ) = $cur->fetchrow();
-        last if !$kog_id;
-        $kog_tcnts{$kog_id} = $tcnt;
-    }
-    $cur->finish();
-
-    if ($include_metagenomes) {
-        print "<p>Counting metagenomes ...\n";
-    }
-
-    printEndWorkingDiv();
     }
 
     my $sql = "select kog_id, kog_name from kog";
@@ -8611,118 +8627,34 @@ sub printCogList2 {
     printStatusLine( "Loading ...", 1 );
     printMainForm();
 
-    my $sid = getContactOid();
-    if ( $sid == 312 ) {
-        print "<p>*** start time: " . currDateTime() . "<br/>\n";
-    }
-
     my %cog_cnts;
     my %m_cog_cnts;
 
     my $dbh = dbLogin();
     if ($stats) {
-        printStartWorkingDiv();
-
-        print "<p>Counting isolate genomes ...\n";
-
-        my $rclause   = urClause("gt.taxon_oid");
-        my $imgClause = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 1 );
-        my $sql       = qq{
-        select /*+ result_cache */  gt.cog, count(distinct gt.taxon_oid)
-        from mv_taxon_cog_stat gt
-        where 1 = 1 
-        $rclause
-        $imgClause
-        group by gt.cog
-    };
-
-        #print "FindFunctions::printCogList2() 1 sql: $sql<br/>\n";
-
-        my $cur = execSql( $dbh, $sql, $verbose );
-        for ( ; ; ) {
-            my ( $cog_id, $cnt ) = $cur->fetchrow();
-            last if !$cog_id;
-            $cog_cnts{$cog_id} = $cnt;
+        my $touchFileTime = WebUtil::fileAtime($env->{cog_data_file});
+        $touchFileTime = Date::Format::time2str( "%a, %b %e %Y %l:%M %P", $touchFileTime );
+        my $tmp = '';
+        if($user_restricted_site) {
+            $tmp = '<br>Counts inculde private data sets.';
         }
-        $cur->finish();
-
-        if ($include_metagenomes) {
-
-            print "<p>Counting metagenomes ...\n";
-
-            my $imgClause = WebUtil::imgClauseNoTaxon( 'gt.taxon_oid', 2 );
-            $sql = qq{
-                select /*+ result_cache */ gt.cog, count(distinct gt.taxon_oid)
-                from mv_taxon_cog_stat gt
-                where 1 = 1
-                $rclause
-                $imgClause
-                group by gt.cog
-            };
-
-            #print "FindFunctions::printCogList2() 2 sql: $sql<br/>\n";
-
-            $cur = execSql( $dbh, $sql, $verbose );
-            for ( ; ; ) {
-                my ( $cog_id, $cnt ) = $cur->fetchrow();
-                last if !$cog_id;
-                $m_cog_cnts{$cog_id} = $cnt;
-            }
-            $cur->finish();
-
-            print "<p>Counting MER-FS metagenomes ...\n";
-
-            if ($new_func_count) {
-                my $rclause2   = WebUtil::urClause('f.taxon_oid');
-                my $imgClause2 = WebUtil::imgClauseNoTaxon( 'f.taxon_oid', 2 );
-
-                $sql = qq{
-                    select f.func_id, count(distinct f.taxon_oid)
-                    from taxon_cog_count f
-                    where f.gene_count > 0
-                    $rclause2
-                    $imgClause2
-                    group by f.func_id
-                };
-                #print "FindFunctions::printCogList2() 3 sql: $sql<br/>\n";
-
-                $cur = execSql( $dbh, $sql, $verbose );
-                for ( ; ; ) {
-                    my ( $cog_id, $t_cnt ) = $cur->fetchrow();
-                    last if !$cog_id;
-
-                    if ( $m_cog_cnts{$cog_id} ) {
-                        $m_cog_cnts{$cog_id} += $t_cnt;
-                    } else {
-                        $m_cog_cnts{$cog_id} = $t_cnt;
-                    }
-                }
-                $cur->finish();
-                print "<br/>\n";
-            } else {
-                $sql = MerFsUtil::getTaxonsInFileSql();
-                $cur = execSql( $dbh, $sql, $verbose );
-                for ( ; ; ) {
-                    my ($t_oid) = $cur->fetchrow();
-                    last if !$t_oid;
-
-                    print ".";
-                    my %funcs = MetaUtil::getTaxonFuncCount( $t_oid, '', 'cog' );
-                    for my $cog_id ( keys %funcs ) {
-                        if ( $m_cog_cnts{$cog_id} ) {
-                            $m_cog_cnts{$cog_id} += 1;
-                        } else {
-                            $m_cog_cnts{$cog_id} = 1;
-                        }
-
-                        #print "FindFunctions::printCogList2() $cog_id added 1 into m_cog_cnts from file system<br/>\n";
-                    }
-                }
-                $cur->finish();
-                print "<br/>\n";
-            }
+        print qq{
+          <p>
+          <span style='font-size:12px;font-style:italic;'>
+          The statistics was last updated on: $touchFileTime 
+          $tmp
+          </span>
+          </p>
+        };
+        
+        my $rfh = WebUtil::newReadFileHandle($env->{cog_data_file});
+        while ( my $line = $rfh->getline() ) {
+            chomp $line;
+            next if ( $line eq "" );
+            my ( $id, $isocnt, $metacnt ) = split( /\t/, $line );
+            $cog_cnts{$id} = $isocnt;
+            $m_cog_cnts{$id} = $metacnt;
         }
-            printEndWorkingDiv();
     }
     my $sql = "select cog_id, cog_name from cog";
     my $cur = execSql( $dbh, $sql, $verbose );
@@ -8783,9 +8715,6 @@ sub printCogList2 {
     }
     $cur->finish();
 
-    if ( $sid == 312 ) {
-        print "<p>*** end time: " . currDateTime() . "<br/>\n";
-    }
 
     WebUtil::printFuncCartFooter() if ( $count > 10 );
     $it->printOuterTable(1);
@@ -8818,104 +8747,31 @@ sub printPfamList {
     my %m_pfam_cnts;
 
     my $sid = getContactOid();
-    if ( $sid == 312 ) {
-        print "<p>*** start time: " . currDateTime() . "<br/>\n";
-    }
 
     if($stats) {
-    printStartWorkingDiv();
-
-    print "<p>Counting isolate genomes ...\n";
-
-    my $rclause   = urClause("g.taxon_oid");
-    my $imgClause = WebUtil::imgClauseNoTaxon( 'g.taxon_oid', 1 );
-    my $sql       = qq{
-        select /*+ result_cache */ g.pfam_family, count(distinct g.taxon_oid)
-        from mv_taxon_pfam_stat g
-        where 1 = 1
-        $rclause
-        $imgClause 
-        group by g.pfam_family
-    };
-
-    my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ; ; ) {
-        my ( $ext_accession, $cnt ) = $cur->fetchrow();
-        last if !$ext_accession;
-        $pfam_cnts{$ext_accession} = $cnt;
-    }
-    $cur->finish();
-
-    if ($include_metagenomes) {
-        print "<p>Counting metagenomes ...\n";
-
-        my $imgClause = WebUtil::imgClauseNoTaxon( 'g.taxon_oid', 2 );
-        $sql = qq{
-            select /*+ result_cache */ g.pfam_family, count(distinct g.taxon_oid)
-            from mv_taxon_pfam_stat g
-            where 1 = 1
-            $rclause
-            $imgClause 
-            group by g.pfam_family
+        my $touchFileTime = WebUtil::fileAtime($env->{pfam_data_file});
+        $touchFileTime = Date::Format::time2str( "%a, %b %e %Y %l:%M %P", $touchFileTime );
+        my $tmp = '';
+        if($user_restricted_site) {
+            $tmp = '<br>Counts inculde private data sets.';
+        }
+        print qq{
+          <p>
+          <span style='font-size:12px;font-style:italic;'>
+          The statistics was last updated on: $touchFileTime 
+          $tmp
+          </span>
+          </p>
         };
-        $cur = execSql( $dbh, $sql, $verbose );
-        for ( ; ; ) {
-            my ( $ext_accession, $cnt ) = $cur->fetchrow();
-            last if !$ext_accession;
-            $m_pfam_cnts{$ext_accession} = $cnt;
+        
+        my $rfh = WebUtil::newReadFileHandle($env->{pfam_data_file});
+        while ( my $line = $rfh->getline() ) {
+            chomp $line;
+            next if ( $line eq "" );
+            my ( $id, $isocnt, $metacnt ) = split( /\t/, $line );
+            $pfam_cnts{$id} = $isocnt;
+            $m_pfam_cnts{$id} = $metacnt;
         }
-        $cur->finish();
-
-        print "<p>Counting MER-FS metagenomes ...\n";
-
-        if ($new_func_count) {
-            my $rclause2   = WebUtil::urClause('f.taxon_oid');
-            my $imgClause2 = WebUtil::imgClauseNoTaxon( 'f.taxon_oid', 2 );
-
-            $sql = qq{
-               select f.func_id, count(distinct f.taxon_oid)
-               from taxon_pfam_count f
-               where f.gene_count > 0
-               $rclause2
-               $imgClause2
-               group by f.func_id
-            };
-
-            $cur = execSql( $dbh, $sql, $verbose );
-            for ( ; ; ) {
-                my ( $pfam_id, $t_cnt ) = $cur->fetchrow();
-                last if !$pfam_id;
-
-                if ( $m_pfam_cnts{$pfam_id} ) {
-                    $m_pfam_cnts{$pfam_id} += $t_cnt;
-                } else {
-                    $m_pfam_cnts{$pfam_id} = $t_cnt;
-                }
-            }
-            $cur->finish();
-            print "<br/>\n";
-        } else {
-            $sql = MerFsUtil::getTaxonsInFileSql();
-            $cur = execSql( $dbh, $sql, $verbose );
-            for ( ; ; ) {
-                my ($t_oid) = $cur->fetchrow();
-                last if !$t_oid;
-
-                print ".";
-                my %funcs = MetaUtil::getTaxonFuncCount( $t_oid, '', 'pfam' );
-                for my $pfam_id ( keys %funcs ) {
-                    if ( $m_pfam_cnts{$pfam_id} ) {
-                        $m_pfam_cnts{$pfam_id} += 1;
-                    } else {
-                        $m_pfam_cnts{$pfam_id} += 1;
-                    }
-                }
-            }
-            $cur->finish();
-            print "<br/>\n";
-        }
-    }
-    printEndWorkingDiv();
     }
     my $sql = qq{
         select pf.ext_accession, pf.name, pf.description, pf.db_source
@@ -9087,103 +8943,39 @@ sub printEnzymeList {
         print "<p>*** start time: " . currDateTime() . "<br/>\n";
     }
 
+
+        my $touchFileTime = WebUtil::fileAtime($env->{enzyme_data_file});
+        $touchFileTime = Date::Format::time2str( "%a, %b %e %Y %l:%M %P", $touchFileTime );
+        my $tmp = '';
+        if($user_restricted_site) {
+            $tmp = '<br>Counts inculde private data sets.';
+        }
+        print qq{
+          <p>
+          <span style='font-size:12px;font-style:italic;'>
+          The statistics was last updated on: $touchFileTime 
+          $tmp
+          </span>
+          </p>
+        };
+        
+        my $rfh = WebUtil::newReadFileHandle($env->{enzyme_data_file});
+        while ( my $line = $rfh->getline() ) {
+            chomp $line;
+            next if ( $line eq "" );
+            my ( $id, $isocnt, $metacnt ) = split( /\t/, $line );
+            $ec_cnts{$id} = $isocnt;
+            $m_ec_cnts{$id} = $metacnt;
+        }
+
     printStartWorkingDiv();
 
-    print "<p>Counting isolate genomes ...\n";
+
 
     my $dbh       = dbLogin();
-    my $rclause   = WebUtil::urClause('g.taxon_oid');
-    my $imgClause = WebUtil::imgClauseNoTaxon( 'g.taxon_oid', 1 );
-    my $sql       = qq{
-        select /*+ result_cache */ g.enzyme, count(distinct g.taxon_oid)
-        from mv_taxon_ec_stat g 
-        where 1 = 1
-        $rclause
-        $imgClause
-        group by g.enzyme
-    };
-    #print "<p>SQL: $sql\n";
 
+    my $sql = "select ec_number, enzyme_name from enzyme";
     my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ; ; ) {
-        my ( $ec_num, $cnt ) = $cur->fetchrow();
-        last if !$ec_num;
-
-        $ec_cnts{$ec_num} = $cnt;
-    }
-    $cur->finish();
-
-    if ($include_metagenomes) {
-        print "<p>Counting metagenomes ...\n";
-        my $imgClause = WebUtil::imgClauseNoTaxon( 'g.taxon_oid', 2 );
-        my $sql       = qq{
-            select /*+ result_cache */ g.enzyme, count(distinct g.taxon_oid)
-            from mv_taxon_ec_stat g 
-            where 1 = 1
-            $rclause
-            $imgClause
-            group by g.enzyme
-        };
-
-        my $cur = execSql( $dbh, $sql, $verbose );
-        for ( ; ; ) {
-            my ( $ec_num, $cnt ) = $cur->fetchrow();
-            last if !$ec_num;
-            $m_ec_cnts{$ec_num} = $cnt;
-        }
-        $cur->finish();
-
-        print "<p>Counting metagenome genes ...\n";
-        if ($new_func_count) {
-            my $rclause2   = WebUtil::urClause('f.taxon_oid');
-            my $imgClause2 = WebUtil::imgClauseNoTaxon( 'f.taxon_oid', 2 );
-
-            $sql = qq{
-               select f.func_id, count(distinct f.taxon_oid)
-               from taxon_ec_count f
-               where f.gene_count > 0
-               $rclause2
-               $imgClause2
-               group by f.func_id
-            };
-
-            $cur = execSql( $dbh, $sql, $verbose );
-            for ( ; ; ) {
-                my ( $ec_id, $t_cnt ) = $cur->fetchrow();
-                last if !$ec_id;
-
-                if ( $m_ec_cnts{$ec_id} ) {
-                    $m_ec_cnts{$ec_id} += $t_cnt;
-                } else {
-                    $m_ec_cnts{$ec_id} = $t_cnt;
-                }
-            }
-            $cur->finish();
-            print "<br/>\n";
-        } else {
-            $sql = MerFsUtil::getTaxonsInFileSql();
-            $cur = execSql( $dbh, $sql, $verbose );
-            for ( ; ; ) {
-                my ($t_oid) = $cur->fetchrow();
-                last if !$t_oid;
-
-                print ".";
-                my %funcs = MetaUtil::getTaxonFuncCount( $t_oid, '', 'ec' );
-                for my $k ( keys %funcs ) {
-                    if ( $m_ec_cnts{$k} ) {
-                        $m_ec_cnts{$k} += 1;
-                    } else {
-                        $m_ec_cnts{$k} = 1;
-                    }
-                }
-            }
-            $cur->finish();
-            print "<br/>\n";
-        }
-    }
-
-    $sql = "select ec_number, enzyme_name from enzyme";
-    $cur = execSql( $dbh, $sql, $verbose );
 
     my $it = new InnerTable( 1, "enzylist$$", "enzylist", 1 );
     my $sd = $it->getSdDelim();    # sort delimiter
@@ -11420,11 +11212,11 @@ sub searchAllFunctions {
     #my ( $seedHits, $seedGeneCnt, $seedfile ) =
     #  getSearchAllSeedName( $dbh, $searchTermLc, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur );
 
-    webLog "Searching SwissProt Product Name " . currDateTime() . "\n"
-      if $verbose >= 1;
-    print "Searching SwissProt Product Name<br/>\n";
-    my ( $swissHits, $swissGeneCnt, $swissfile ) =
-      getSearchAllSwissProtName( $dbh, $searchTermLc, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur );
+    #webLog "Searching SwissProt Product Name " . currDateTime() . "\n"
+    #  if $verbose >= 1;
+    #print "Searching SwissProt Product Name<br/>\n";
+    #my ( $swissHits, $swissGeneCnt, $swissfile ) =
+    #  getSearchAllSwissProtName( $dbh, $searchTermLc, $taxonClause, $rclause, $imgClause, \@bindList_txs, \@bindList_ur );
 
     webLog "Searching GO " . currDateTime() . "\n" if $verbose >= 1;
     print "Searching GO<br/>\n";
@@ -11463,11 +11255,11 @@ sub searchAllFunctions {
     my ( $enzymeHits, $enzymeGeneCnt, $enzymefile ) =
       getSearchAllEnzyme( $dbh, $searchTermLc, $taxonClause1, $datatypeClause1, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1 );
 
-    webLog "Searching Transporter Classification " . currDateTime() . "\n"
-      if $verbose >= 1;
-    print "Searching Transporter Classification<br/>\n";
-    my ( $tcHits, $tcGeneCnt, $tcfile ) =
-      getSearchAllTc( $dbh, $searchTermLc, $taxonClause1, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1 );
+    #webLog "Searching Transporter Classification " . currDateTime() . "\n"
+    #  if $verbose >= 1;
+    #print "Searching Transporter Classification<br/>\n";
+    #my ( $tcHits, $tcGeneCnt, $tcfile ) =
+    #  getSearchAllTc( $dbh, $searchTermLc, $taxonClause1, $rclause1, $imgClause1, \@bindList_txs1, \@bindList_ur1 );
 
     webLog "Searching KEGG Pathway Enzymes " . currDateTime() . "\n"
       if $verbose >= 1;
@@ -11584,10 +11376,10 @@ sub searchAllFunctions {
     #};
     #printAllRow( $it, "Seed Product Name/Subsystem", $seedHits, $seedGeneCnt, $url );
 
-    my $url = qq{
-        <a href="javascript:mySubmit('swissProduct', '$swissfile')"> $swissHits </a>        
-    };
-    printAllRow( $it, "SwissProt Product Name", $swissHits, $swissGeneCnt, $url );
+    #my $url = qq{
+    #    <a href="javascript:mySubmit('swissProduct', '$swissfile')"> $swissHits </a>        
+    #};
+    #printAllRow( $it, "SwissProt Product Name", $swissHits, $swissGeneCnt, $url );
 
     my $url = qq{
         <a href="javascript:mySubmit('go','$gofile')"> $goHits </a>        
@@ -11624,10 +11416,10 @@ sub searchAllFunctions {
     };
     printAllRow( $it, "Enzyme", $enzymeHits, $enzymeGeneCnt, $url );
 
-    my $url = qq{
-        <a href="javascript:mySubmit('tc','$tcfile')"> $tcHits </a>        
-    };
-    printAllRow( $it, "Transporter Classification", $tcHits, $tcGeneCnt, $url );
+    #my $url = qq{
+    #    <a href="javascript:mySubmit('tc','$tcfile')"> $tcHits </a>        
+    #};
+    #printAllRow( $it, "Transporter Classification", $tcHits, $tcGeneCnt, $url );
 
     my $url = qq{
         <a href="javascript:mySubmit('keggEnzymes','$keggfile')"> $keggPathHits </a>

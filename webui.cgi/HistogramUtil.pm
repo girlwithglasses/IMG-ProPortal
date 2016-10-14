@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id$
+# $Id: HistogramUtil.pm 35780 2016-06-15 20:41:20Z klchu $
 ###########################################################################
 package HistogramUtil;
 
@@ -1753,12 +1753,12 @@ sub printSelectedScaffoldsTable {
 
         my $scaffold_url;
         if ( $d2 eq 'database' && isInt($scaffold_oid) ) {
-            $scaffold_url = "$main_cgi?section=ScaffoldCart"
+            $scaffold_url = "$main_cgi?section=ScaffoldDetail"
                   . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
         }
         else {
             $scaffold_url =
-                "$main_cgi?section=MetaDetail"
+                "$main_cgi?section=MetaScaffoldDetail"
               . "&page=metaScaffoldDetail&scaffold_oid=$scaffold_oid"
               . "&taxon_oid=$taxon_oid&data_type=$d2";
         }
@@ -1796,7 +1796,7 @@ sub printSelectedScaffoldsTable {
         }
         else {
             $scaf_gene_url =
-                "$main_cgi?section=MetaDetail"
+                "$main_cgi?section=MetaScaffoldDetail"
               . "&page=metaScaffoldGenes&scaffold_oid=$scaffold_oid"
               . "&taxon_oid=$taxon_oid";
         }

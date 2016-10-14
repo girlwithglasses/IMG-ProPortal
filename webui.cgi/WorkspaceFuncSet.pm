@@ -186,7 +186,7 @@ sub dispatch {
         submitJob('func_scaf_search');
     }    
     else {
-	    printFuncSetMainForm();
+        printFuncSetMainForm();
     }
 }
 
@@ -233,6 +233,9 @@ sub printFuncSetMainForm {
 
     print "<h2>Function Sets List</h2>";
 
+    my $groupSharingDisplay = getSessionParam("groupSharingDisplay");
+    WorkspaceUtil::printShareMsg( $groupSharingDisplay );
+
     print qq{
         <script type="text/javascript" src="$top_base_url/js/Workspace.js" >
         </script>
@@ -242,21 +245,19 @@ sub printFuncSetMainForm {
 
     printMainForm(); 
  
-    my $super_user_flag = getSuperUser(); 
-
     TabHTML::printTabAPILinks("funcsetTab"); 
     my @tabIndex = ( "#funcsettab1", "#funcsettab2", "#funcsettab3", "#funcsettab4", "#funcsettab5" );
     my @tabNames = ( "Function Sets", "Import & Export", "Scaffold Search", "Gene Profile", "Set Operation" );
     TabHTML::printTabDiv("funcsetTab", \@tabIndex, \@tabNames);
 
     print "<div id='funcsettab1'>";
-    WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files);
+    my $names_href = WorkspaceUtil::printShareMainTable($section, $workspace_dir, $sid, $folder, \@files, $groupSharingDisplay);
     print hiddenVar( "directory", "$folder" );
     print "</div>\n";
 
     print "<div id='funcsettab2'>";
     # Import/Export
-    Workspace::printImportExport($folder);
+    Workspace::printImportExport($folder, $groupSharingDisplay);
     print "</div>\n";
 
     print "<div id='funcsettab3'>";
@@ -327,7 +328,7 @@ sub printFuncSetMainForm {
     print "</div>\n";
 
     print "<div id='funcsettab5'>";
-    Workspace::printSetOperation($folder, $sid);
+    Workspace::printSetOperation($folder, $sid, '', $names_href);
     print "</div>\n";
 
     TabHTML::printTabDivEnd();
@@ -346,8 +347,7 @@ sub printFuncSetDetail {
  
     printMainForm(); 
  
-    my $super_user_flag = getSuperUser(); 
-
+    #my $super_user_flag = getSuperUser(); 
     my $sid = getContactOid();
     my $owner = param("owner");
     my $owner_name = "";
@@ -355,7 +355,7 @@ sub printFuncSetDetail {
         ## not my own data set
         ## check permission
         my $can_view = 0; 
-        my %share_h = WorkspaceUtil::getShareFromGroups($folder);
+        my %share_h = WorkspaceUtil::getShareFromGroups($folder, $filename);
         for my $k (keys %share_h) {
             my ($c_oid, $data_set_name) = WorkspaceUtil::splitOwnerFileset( $sid, $k );
             my ($g_id, $g_name, $c_name) = split(/\t/, $share_h{$k});
@@ -380,6 +380,7 @@ sub printFuncSetDetail {
     if ( $owner_name ) {
         print "<p><u>Owner</u>: <i>$owner_name</i></p>"; 
     } 
+    #WorkspaceUtil::printMaxNumMsg('functions');
 
     print hiddenVar( "directory", "$folder" );
     print hiddenVar( "folder",   $folder ); 
@@ -757,7 +758,7 @@ sub printFuncScaffoldSearch {
             if ( $taxon_in_file_href->{$taxon_oid} ) {
                 ( $t_oid, $d2, $scaf_oid ) = split( / /, $scaffold_oid );
                 $scaf_url =
-                    "$main_cgi?section=MetaDetail"
+                    "$main_cgi?section=MetaScaffoldDetail"
                   . "&page=metaScaffoldDetail&scaffold_oid=$scaf_oid"
                   . "&taxon_oid=$taxon_oid&data_type=$d2";
                 $scaffold_name = $scaf_oid;
@@ -765,7 +766,7 @@ sub printFuncScaffoldSearch {
             else {
                 $t_oid = $taxon_oid;
                 $scaf_oid = $scaffold_oid;
-                $scaf_url = "$main_cgi?section=ScaffoldCart"
+                $scaf_url = "$main_cgi?section=ScaffoldDetail"
                     . "&page=scaffoldDetail&scaffold_oid=$scaffold_oid";
                 $scaffold_name = $dbScaf2name_href->{$scaffold_oid};
             }
@@ -807,7 +808,7 @@ sub printFuncScaffoldSearch {
         WebUtil::printMessage("There are too many selections. Only $max_profile_select functions are displayed.");
     }
     if ( $timeout_msg ) {
-        printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+        WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     }
 
     if ( $row ) {
@@ -1225,7 +1226,7 @@ sub showFuncSetGeneProfile {
     	$it->printOuterTable(1);
     
     	if ( $timeout_msg ) {
-    	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+    	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     	}
     }
     else {
@@ -1233,7 +1234,7 @@ sub showFuncSetGeneProfile {
     	    WebUtil::printMessage("There are too many selections. Only $max_profile_select functions are computed.");
     	}
     	if ( $timeout_msg ) {
-    	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+    	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     	}
     	print "<h6>No genes have selected functions.</h6>\n";
     	print end_form();
@@ -1532,7 +1533,7 @@ sub showFuncGeneProfile {
     	$it->printOuterTable(1);
     
     	if ( $timeout_msg ) {
-    	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+    	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     	}
     }
     else {
@@ -1540,7 +1541,7 @@ sub showFuncGeneProfile {
     	    WebUtil::printMessage("There are too many selections. Only $max_profile_select functions are computed.");
     	}
     	if ( $timeout_msg ) {
-    	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+    	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     	}
     	print "<h6>No genes have selected functions.</h6>\n";
     	print end_form();
@@ -1736,7 +1737,7 @@ sub showFuncGenomeProfile {
 	$it->printOuterTable(1);
 
 	if ( $timeout_msg ) {
-	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
 	}
     }
     else {
@@ -1744,7 +1745,7 @@ sub showFuncGenomeProfile {
 	    WebUtil::printMessage("There are too many selections. Only $max_profile_select functions are computed.");
 	}
 	if ( $timeout_msg ) {
-	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
 	}
 	print "<h6>No genomes have selected functions.</h6>\n";
 	print end_form();
@@ -1873,7 +1874,7 @@ sub showFuncGenomeTreeProfile {
     	    WebUtil::printMessage("There are too many selections. Only first $max_profile_select functions are computed.");
     	}
     	if ( $timeout_msg ) {
-    	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+    	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     	}
     	print "<h6>No genomes have selected functions.</h6>\n";
     	print end_form();
@@ -1902,7 +1903,7 @@ sub showFuncGenomeTreeProfile {
     	}
     
     	if ( $timeout_msg ) {
-    	    printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+    	    WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     	}
     }
 
@@ -2296,7 +2297,7 @@ sub printPhyloOccurProfiles {
     }
 
     if ( $timeout_msg ) { 
-	printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+	   WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     } 
  
     ## Print it out as an alignment.
@@ -2887,7 +2888,7 @@ sub printEssentialGeneProfiles {
     }
 
     if ( $timeout_msg ) { 
-    	printMessage( "<font color='red'>Warning: $timeout_msg</font>");
+    	WebUtil::printMessage( "<font color='red'>Warning: $timeout_msg</font>");
     } 
  
     ## Print it out as an alignment.

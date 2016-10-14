@@ -1,7 +1,7 @@
 ############################################################################
 # LoadGeneImgTerm.pm - load Gene and IMG term association
 #
-# $Id: LoadGeneImgTerm.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: LoadGeneImgTerm.pm 35259 2016-02-12 09:10:40Z jinghuahuang $
 ############################################################################
 package LoadGeneImgTerm;
 use strict;
@@ -318,7 +318,7 @@ sub checkGeneOid {
     if ( uc($alt_table_name) eq "GENE_REPLACEMENTS" ) {
 
         # check GENE_REPLACEMENTS (IMG 2.0)
-        #? to use $sql = getGeneReplacementSql();
+        #? to use $sql = WebUtil::getGeneReplacementSql();
         $sql =
  "select gene_oid from GENE_REPLACEMENTS where old_gene_oid = ?";
     } elsif ( uc($alt_table_name) eq "GENE_ALT_IDENTIFIERS" ) {

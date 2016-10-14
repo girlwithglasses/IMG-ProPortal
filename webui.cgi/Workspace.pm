@@ -7,7 +7,7 @@
 # filenames with white spaces     $filename =~ s/\s/_/g;
 # - ken
 #
-# $Id: Workspace.pm 34596 2015-10-30 20:25:04Z klchu $
+# $Id: Workspace.pm 36003 2016-08-12 21:06:56Z jinghuahuang $
 #
 ############################################################################
 package Workspace;
@@ -65,7 +65,7 @@ my $mer_data_dir      = $env->{mer_data_dir};
 my $taxon_lin_fna_dir = $env->{taxon_lin_fna_dir};
 my $cgi_tmp_dir       = $env->{cgi_tmp_dir};
 my $YUI               = $env->{yui_dir_28};
-
+my $abc                      = $env->{abc};
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 my $maxGeneListResults = getSessionParam("maxGeneListResults") || 1000;
 
@@ -75,13 +75,14 @@ my $in_file          = $env->{in_file};
 my $merfs_timeout_mins = $env->{merfs_timeout_mins} || 60;
 
 # user's sub folder names
-my $GENE_FOLDER   = "gene";
-my $FUNC_FOLDER   = "function";
-my $SCAF_FOLDER   = "scaffold";
 my $GENOME_FOLDER = "genome";
+my $GENE_FOLDER   = "gene";
+my $SCAF_FOLDER   = "scaffold";
+my $FUNC_FOLDER   = "function";
 my $RULE_FOLDER   = "rule";
 my $BC_FOLDER     = 'bc';
-my @subfolders    = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER );
+my @subfolders    = ( $GENOME_FOLDER, $GENE_FOLDER, $SCAF_FOLDER, $FUNC_FOLDER, $BC_FOLDER );
+my @allSubfolders = ( $GENOME_FOLDER, $GENE_FOLDER, $SCAF_FOLDER, $FUNC_FOLDER, $BC_FOLDER, $RULE_FOLDER );
 
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
@@ -99,7 +100,7 @@ my $mer_fs_debug = 0;
 
 my $for_super_user_only = 1;
 if ( !$for_super_user_only ) {
-    @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+    @subfolders = @allSubfolders;
 }
 
 # initialize the workspace for new users
@@ -193,7 +194,7 @@ sub dispatch {
 
     } elsif ( $page eq $BC_FOLDER ) {
         require WorkspaceBcSet;
-        WorkspaceBcSet::printWorkspaceSets();
+        WorkspaceBcSet::printBcSetMainForm();
         
     } elsif ( $page eq "view" ) {
         viewFile();
@@ -342,10 +343,14 @@ sub dispatch {
         saveScaffoldGenomes( 0, 1 );
     } elsif ( paramMatch("saveScaffoldGenomes") ) {
         saveScaffoldGenomes(0);
+    } elsif ( paramMatch("saveBcCart") ) {
+        saveBcCart();
     } elsif ( paramMatch("exportGeneFasta") ) {
-        exportGeneFasta();
+        exportGeneFiles('fasta');
     } elsif ( paramMatch("exportGeneAA") ) {
-        exportGeneAA();
+        exportGeneFiles('aa');
+    } elsif ( paramMatch("exportGeneData") ) {
+        exportGeneFiles('data');
     } elsif ( paramMatch("exportScaffoldFasta") ) {
         exportScaffoldFasta();
     } elsif ( paramMatch("exportScaffoldData") ) {
@@ -438,13 +443,22 @@ sub printMainPage {
     # for super users only
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
     printMainForm();
     print "<h1>My Workspace</h1>\n";
 
+    printHint("Scroll right to find a 'book icon' to lead to the User Guide. For more information on MyIMG and Workspace, please refer to: " .
+              alink("https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-016-2629-y",
+                    "BMC Genomics doi:10.1186/s12864-016-2629-y"));
+
+
     foreach my $subdir (@subfolders) {
+        if(!$abc && $subdir eq $BC_FOLDER) {
+            next;
+        }
+        
     	## count my own
         my $wksSubdir = "$workspace_dir/$sid/$subdir";
 
@@ -545,23 +559,23 @@ sub printMainPage {
 # list sub directory
 #
 sub folderList {
-    my ( $folder, $text ) = @_;
+    my ( $folder, $text, $showSharing ) = @_;
 
     if ( $folder eq $GENE_FOLDER ) {
         require WorkspaceGeneSet;
-        WorkspaceGeneSet::printGeneSetMainForm($text);
+        WorkspaceGeneSet::printGeneSetMainForm($text, $showSharing);
     } elsif ( $folder eq $FUNC_FOLDER ) {
         require WorkspaceFuncSet;
-        WorkspaceFuncSet::printFuncSetMainForm($text);
+        WorkspaceFuncSet::printFuncSetMainForm($text, $showSharing);
     } elsif ( $folder eq $GENOME_FOLDER ) {
         require WorkspaceGenomeSet;
-        WorkspaceGenomeSet::printGenomeSetMainForm($text);
+        WorkspaceGenomeSet::printGenomeSetMainForm($text, 0, $showSharing);
     } elsif($folder eq $BC_FOLDER) {
         require WorkspaceBcSet;
-        WorkspaceBcSet::printMainForm();
+        WorkspaceBcSet::printBcSetMainForm($text, $showSharing);
     } elsif ( $folder eq $SCAF_FOLDER ) {
         require WorkspaceScafSet;
-        WorkspaceScafSet::printScafSetMainForm($text);
+        WorkspaceScafSet::printScafSetMainForm($text, $showSharing);
     } elsif ( $folder eq $RULE_FOLDER ) {
         require WorkspaceRuleSet;
         WorkspaceRuleSet::printRuleSetMainForm($text);
@@ -600,20 +614,12 @@ sub breakLargeSet {
     my $sid = getContactOid();
     inspectWorkspaceUsage( $sid );
 
-    my @input_files = param("filename");
+    my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     #print "breakLargeSet() input_files @input_files<br/>\n";
-    if ( scalar(@input_files) != 1 ) {
+    if ( scalar(@all_files) != 1 ) {
         webError("Please select only one set to break.");
         return;
     }
-
-    # check filename
-    # valid chars
-    my $rootfilename = $input_files[0];
-    WebUtil::checkFileName($rootfilename);
-
-    # this also untaints the name
-    $rootfilename = WebUtil::validFileName($rootfilename);
 
     my $folder = param("directory");
     #print "folder $folder<br/>\n";
@@ -622,15 +628,32 @@ sub breakLargeSet {
         $folder = $GENE_FOLDER;
     }
 
-    my $breaksize = param("breaksize");
+    my $breaksize = param("custombreaksize"); 
+    if ( $breaksize ) {
+        $breaksize =~ s/^\s+//;
+        $breaksize =~ s/\s+$//;        
+    }
+    if ( !$breaksize || !WebUtil::isInt($breaksize) ) {
+        $breaksize = param("breaksize");        
+    }
     if ( !$breaksize ) {
         webError("Please select a size to break the $folder set.");
         return;
     }
 
-    my %oids_hash = WorkspaceUtil::getOidsFromFile( $workspace_dir, $sid, $folder, @input_files );
+    my ($file2oids_href, $file2owner_href) = WorkspaceUtil::getOidsFromFile( $workspace_dir, $sid, $folder, @all_files );
+    my @files = keys %$file2oids_href;
+    my $rootfilename = @files[0];
+    my $oids_ref = $file2oids_href->{$rootfilename};
+    #my $owner = $file2owner_href->{$rootfilename};
 
-    my $nOids     = scalar( keys %oids_hash );
+    # check filename
+    # valid chars
+    WebUtil::checkFileName($rootfilename);
+    # this also untaints the name
+    $rootfilename = WebUtil::validFileName($rootfilename);
+    
+    my $nOids = scalar( @$oids_ref );
     if ( $breaksize >= $nOids ) {
         webError("The selected $folder set has $nOids $folder(s), smaller than the selected break size $breaksize.");
         return;
@@ -643,7 +666,7 @@ sub breakLargeSet {
     my $res;
     my $suffix_num = 0;
     my $cnt        = 0;
-    for my $key ( keys %oids_hash ) {
+    for my $key ( @$oids_ref ) {
         if ( !$key ) {
             next;
         }
@@ -2586,6 +2609,43 @@ sub execSaveAllGeneList {
     folderList( $folder, $text );
 }
 
+################################################################################
+# save BC cart
+################################################################################
+sub saveBcCart {
+    my $sid = getContactOid();
+
+    # form selected bc ids
+    my @oids =  param('bc_id');
+    if ( scalar(@oids) == 0 ) {
+        webError("Please select some BC IDs to save.");
+        return;
+    }
+
+    my $folder = $BC_FOLDER;
+    my ($filename, $res, $h2_href) = prepareSaveToWorkspace( $sid, $folder );
+
+    my $count = 0;
+    foreach my $id (@oids) {
+        if ( $h2_href->{$id} ) {
+            # already in
+            next;
+        }
+        print $res "$id\n";
+        $h2_href->{$id} = 1;
+        $count++;
+    }
+    close $res;
+
+    my $text = qq{
+        <p>
+        $count BC IDs saved to file <b>$filename</b>
+        </p>
+    };
+
+    folderList( $folder, $text );
+}
+
 
 ###############################################################################
 # prepareSaveToWorkspace
@@ -2749,7 +2809,7 @@ sub printWorkspaceSetDetail {
     my $sid        = getContactOid();
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
     # check filename
@@ -2984,11 +3044,11 @@ sub printWorkspaceSetDetail {
             } elsif ( $folder eq $SCAF_FOLDER ) {
                 my ( $t1, $d1, $g1 ) = split( / /, $id );
                 if ( !$g1 && WebUtil::isInt($t1) ) {
-                    $url = "$main_cgi?section=ScaffoldCart"
+                    $url = "$main_cgi?section=ScaffoldDetail"
                         . "&page=scaffoldDetail&scaffold_oid=$t1";
                 } else {
                     $display_id = $g1;
-                    $url = "$main_cgi?section=MetaDetail&page=metaScaffoldDetail"
+                    $url = "$main_cgi?section=MetaScaffoldDetail&page=metaScaffoldDetail"
                       . "&taxon_oid=$t1&scaffold_oid=$g1&data_type=$d1";
                 }
             } else {
@@ -3173,7 +3233,7 @@ sub printSetOpSection {
 #                     input: set type: "gene"|"function"|"genome"|"scaffold"
 ############################################################################
 sub printSetOperation {
-    my ( $folder, $sid, $workspacefilename ) = @_;
+    my ( $folder, $sid, $workspacefilename, $names_href ) = @_;
 
     # conflict in genome sets
     $workspacefilename = 'workspacefilename' if ($workspacefilename eq '');
@@ -3214,42 +3274,21 @@ sub printSetOperation {
         $sid = getContactOid();
     }
 
-    opendir( DIR, "$workspace_dir/$sid/$folder" )
-      or webDie("failed to open folder list");
-    my @files = readdir(DIR);
-    closedir(DIR);
-
-    ## my own
-    my %names_h = ();
     my @names = ();
-    for my $name ( sort @files ) {
-        if ( $name ne "." && $name ne ".." ) {
-            #my $fullName = WorkspaceUtil::getOwnerFilesetFullName( $sid, $name );
-            my $fullName = $name;
-    	    $names_h{$fullName} = $name;
-    	    push @names, ( $fullName );
-        }
-    }
-    ## share
-    my %share_from_h = WorkspaceUtil::getShareFromGroups($folder);
-    for my $k (keys %share_from_h) {
-        my ($c_oid, $data_set_name) = WorkspaceUtil::splitOwnerFileset( $sid, $k );
-        my ($g_id, $g_name, $c_name) = split(/\t/, $share_from_h{$k});
-
-    	$names_h{$k} = $data_set_name . " (owner: $c_name)";
-    	push @names, ( $k );
+    if ( $names_href && defined($names_href) ) {
+        @names = sort (keys %$names_href);
     }
     if ( scalar(@names) == 0 ) {
         # no other files
         return;
     }
-
+    
     print "<h2>Difference of Two Sets (First - Second)</h2>\n";
 
     print "<p>First $folder set: &nbsp\n";
     print "<select name='setopname1' >\n";
     for my $name1 (@names) {
-        print "<option value='$name1' >" . $names_h{$name1} .
+        print "<option value='$name1' >" . $names_href->{$name1} .
 	    "</option> \n";
     }
     print "</select>\n";
@@ -3258,7 +3297,7 @@ sub printSetOperation {
     print "<p>Second $folder set: &nbsp\n";
     print "<select name='setopname2' >\n";
     for my $name2 (@names) {
-        print "<option value='$name2' >" . $names_h{$name2} .
+        print "<option value='$name2' >" . $names_href->{$name2} .
 	    "</option> \n";
     }
     print "</select>\n";
@@ -3293,15 +3332,10 @@ sub printBreakLargeSet {
     if ( $user_restricted_site && !$public_nologin_site ) {
 
         #my $what = ucfirst( lc($folder) );
-	my $extra_text = "";
-	my $grpCnt = WorkspaceUtil::getContactImgGroupCnt();
-	if ( $grpCnt > 0 ) {
-	    $extra_text = "<u>your own</u>";
-	}
         print "<h2>Break Large Set</h2>";
         print qq{
             <p>
-            Break the selected $extra_text large
+            Break the selected large
             $folder set to smaller sets in
             <a href="$main_cgi?section=Workspace">My Workspace</a>.
             <br/>
@@ -3318,6 +3352,8 @@ sub printBreakLargeSet {
             print "<option value='$num'>$num</option>\n";
         }
         print "</select>\n";
+        print " or ";
+        print "<input type='text' name='custombreaksize' size='8'>";
 
         print "<br/>";
         my $name = "_section_Workspace_breakLargeSet";
@@ -3325,7 +3361,7 @@ sub printBreakLargeSet {
             -name    => $name,
             -value   => "Break Large Set",
             -class   => "lgbutton",
-            -onClick => "return checkOneSet('$folder');"
+            -onClick => "return checkOneSetIncludingShare('$folder');"
         );
 
         print "</p>\n";
@@ -3947,7 +3983,7 @@ sub checkFolder {
 
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
     my $found = WebUtil::inArray( $f, @subfolders );
@@ -4056,6 +4092,13 @@ sub readFile {
         require GenomeCart;
         GenomeCart::addToGenomeCart( \@good_oids );
         GenomeCart::dispatch();
+    } elsif ( $folder eq $BC_FOLDER ) {
+        setSessionParam( "lastCart", "bcCart" );
+        main::printAppHeader("AnaCart");
+
+        require WorkspaceBcSet;
+        WorkspaceBcSet::addBcIds( \@oids );
+        WorkspaceBcSet::printBuffer();
     }
 }
 
@@ -4065,7 +4108,7 @@ sub viewFile {
 
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
     # check filename
@@ -4127,7 +4170,7 @@ sub deleteFile {
     my @files      = param("filename");
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
     if ( scalar(@files) == 0 ) {
@@ -4494,38 +4537,38 @@ sub addSharing {
 
     my %group_h = WorkspaceUtil::getContactImgGroups();
     if ( ! $group_h{$group_share} ) {
-	webError("You do not belong to the group.");
-	return;
+    	webError("You do not belong to the group.");
+    	return;
     }
     my $group_name = $group_h{$group_share};
     my %share_h = WorkspaceUtil::getShareToGroups($folder);
     my $total = 0;
     my @sqlList = ();
     for my $file_name ( @input_files ) {
-	my @already_share = split(/\t/, $share_h{$file_name});
-	my %h2;
-	for my $s2 ( @already_share ) {
-	    my ($g_id, $g_name) = split(/\,/, $s2, 2);
-	    $h2{$g_id} = $g_name;
-	}
-	if ( $h2{$group_share} ) {
-	    # already shared
-	    next;
-	}
-
-	$file_name =~ s/'/''/g;   # replace ' with ''
-	my $sql2 = "insert into contact_workspace_group\@imgsg_dev (contact_oid, data_set_type, data_set_name, group_id) values ($sid, '" . $folder .
-	    "', '" . $file_name . "', $group_share) ";
-	push @sqlList, ( $sql2 );
-	$total++;
+    	my @already_share = split(/\t/, $share_h{$file_name});
+    	my %h2;
+    	for my $s2 ( @already_share ) {
+    	    my ($g_id, $g_name) = split(/\,/, $s2, 2);
+    	    $h2{$g_id} = $g_name;
+    	}
+    	if ( $h2{$group_share} ) {
+    	    # already shared
+    	    next;
+    	}
+    
+    	$file_name =~ s/'/''/g;   # replace ' with ''
+    	my $sql2 = "insert into contact_workspace_group\@imgsg_dev (contact_oid, data_set_type, data_set_name, group_id) values ($sid, '" . $folder .
+    	    "', '" . $file_name . "', $group_share) ";
+    	push @sqlList, ( $sql2 );
+    	$total++;
     }
     if ( $total ) {
-	my $err = db_sqlTrans( \@sqlList );
-	if ( $err ) {
-	    my $sql = $sqlList[$err-1];
-	    webError("SQL error: $sql");
-	    return;
-	}
+    	my $err = db_sqlTrans( \@sqlList );
+    	if ( $err ) {
+    	    my $sql = $sqlList[$err-1];
+    	    webError("SQL error: $sql");
+    	    return;
+    	}
     }
 
     my $text = qq{
@@ -4534,7 +4577,7 @@ sub addSharing {
         </p>
     };
 
-    folderList( $folder, $text );
+    folderList( $folder, $text, 1 );
 }
 
 ##############################################################################
@@ -4555,24 +4598,24 @@ sub removeSharing {
     my $total = 0;
     my @sqlList = ();
     for my $file_name ( @input_files ) {
-	my @already_share = split(/\t/, $share_h{$file_name});
-	if ( scalar(@already_share) > 0 ) {
-	    # remove sharing
-	    $file_name =~ s/'/''/g;   # replace ' with ''
-	    my $sql2 = "delete from contact_workspace_group\@imgsg_dev where contact_oid = $sid and data_set_type = '" . $folder .
-		"' and data_set_name = '" . $file_name . "' ";
-	    push @sqlList, ( $sql2 );
-	    $total++;
-	}
+    	my @already_share = split(/\t/, $share_h{$file_name});
+    	if ( scalar(@already_share) > 0 ) {
+    	    # remove sharing
+    	    $file_name =~ s/'/''/g;   # replace ' with ''
+    	    my $sql2 = "delete from contact_workspace_group\@imgsg_dev where contact_oid = $sid and data_set_type = '" . $folder .
+    		"' and data_set_name = '" . $file_name . "' ";
+    	    push @sqlList, ( $sql2 );
+    	    $total++;
+    	}
     }
 
     if ( $total ) {
-	my $err = db_sqlTrans( \@sqlList );
-	if ( $err ) {
-	    my $sql = $sqlList[$err-1];
-	    webError("SQL error: $sql");
-	    return;
-	}
+    	my $err = db_sqlTrans( \@sqlList );
+    	if ( $err ) {
+    	    my $sql = $sqlList[$err-1];
+    	    webError("SQL error: $sql");
+    	    return;
+    	}
     }
 
     my $text = qq{
@@ -4581,7 +4624,7 @@ sub removeSharing {
         </p>
     };
 
-    folderList( $folder, $text );
+    folderList( $folder, $text, 1 );
 }
 
 ##############################################################################
@@ -5862,10 +5905,11 @@ sub execSaveScaffoldGenomes {
 }
 
 ############################################################################
-# exportGeneFasta
+# exportGeneFiles
 ############################################################################
-sub exportGeneFasta {
-
+sub exportGeneFiles {
+    my ( $type ) = @_;
+    
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
         main::printAppHeader("AnaCart");
@@ -5873,8 +5917,8 @@ sub exportGeneFasta {
         return;
     }
 
-    my @input_files = param("filename");
-    if ( scalar(@input_files) == 0 ) {
+    my @all_files = WorkspaceUtil::getAllInputFiles($sid);
+    if ( scalar(@all_files) == 0 ) {
         main::printAppHeader("AnaCart");
         webError("Select at least one gene set to export.");
         return;
@@ -5886,14 +5930,14 @@ sub exportGeneFasta {
 
     # get all gene ids
     my %genes;
-    for my $input_file (@input_files) {
-        open( FH, "$workspace_dir/$sid/$folder/$input_file" )
+    for my $input_file (@all_files) {
+        my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
+        open( FH, "$workspace_dir/$owner/$folder/$x" )
           or webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
             if ( $genes{$line} ) {
-
                 # duplicates
                 next;
             }
@@ -5901,7 +5945,6 @@ sub exportGeneFasta {
             my @v = split( / /, $line );
             if ( scalar(@v) == 1 ) {
                 if ( WebUtil::isInt( $v[0] ) ) {
-
                     # integer database id
                     $genes{$line} = 1;
                 }
@@ -5920,70 +5963,20 @@ sub exportGeneFasta {
         return;
     }
 
-    GenerateArtemisFile::processFastaFile( \@keys, 0, 1, $GENE_FOLDER );
-}
-
-############################################################################
-# exportGeneAA: Amino Acid
-############################################################################
-sub exportGeneAA {
-
-    my $sid = getContactOid();
-    if ( blankStr($sid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
-        return;
+    if ( $type eq 'fasta' ) {
+        GenerateArtemisFile::processFastaFile( \@keys, 0, 1, $GENE_FOLDER );        
     }
-
-    my @input_files = param("filename");
-    if ( scalar(@input_files) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("Select at least one gene set to export.");
-        return;
+    elsif ( $type eq 'aa' ) {
+        GenerateArtemisFile::processFastaFile( \@keys, 1, 1, $GENE_FOLDER );        
     }
-
-    my $folder = $GENE_FOLDER;
-
-    timeout( 60 * $merfs_timeout_mins );
-
-    # get all gene ids
-    my %genes;
-    for my $input_file (@input_files) {
-        open( FH, "$workspace_dir/$sid/$folder/$input_file" )
-          or webError("File size - file error $input_file");
-
-        while ( my $line = <FH> ) {
-            chomp($line);
-            if ( $genes{$line} ) {
-
-                # duplicates
-                next;
-            }
-
-            my @v = split( / /, $line );
-            if ( scalar(@v) == 1 ) {
-                if ( WebUtil::isInt( $v[0] ) ) {
-
-                    # integer database id
-                    $genes{$line} = 1;
-                }
-            } else {
-                $genes{$line} = 2;
-            }
-        }
-
-        close FH;
+    elsif ( $type eq 'data' ) {
+        GenerateArtemisFile::processDataFile( \@keys, 1, $GENE_FOLDER );
+        #WebUtil::printExcelHeader("gene_export$$.xls");
+        #require GeneDataUtil;
+        #GeneDataUtil::printGeneDataFile( \@keys );
+        #WebUtil::webExit(0);        
     }
-
-    my @keys = ( keys %genes );
-    if ( scalar(@keys) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("No genes have been selected.");
-        return;
-    }
-
-    GenerateArtemisFile::processFastaFile( \@keys, 1, 1, $GENE_FOLDER );
-
+    
 }
 
 ############################################################################
@@ -6017,8 +6010,8 @@ sub getScaffoldsFromSets {
         return;
     }
 
-    my @input_files = param("filename");
-    if ( scalar(@input_files) == 0 ) {
+    my @all_files = WorkspaceUtil::getAllInputFiles($sid);
+    if ( scalar(@all_files) == 0 ) {
         webError("Select at least one scaffold set to export.");
         return;
     }
@@ -6027,8 +6020,9 @@ sub getScaffoldsFromSets {
 
     # get all scaffold ids
     my %scaffolds;
-    for my $input_file (@input_files) {
-        open( FH, "$workspace_dir/$sid/$folder/$input_file" )
+    for my $input_file (@all_files) {
+        my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
+        open( FH, "$workspace_dir/$owner/$folder/$x" )
           or webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
@@ -6391,7 +6385,8 @@ sub getComponentFuncIds {
 #                     input: set type: "gene"|"function"|"genome"|"scaffold"
 ############################################################################
 sub printImportExport {
-    my ($folder) = @_;
+    my ($folder, $groupSharingDisplay) = @_;
+
     printPopUpMarkup();
 
     print "<h2>Import</h2>\n";
@@ -6416,14 +6411,8 @@ sub printImportExport {
     );
 
     print "<h2>Export</h2>\n";
-    my $extra_text = "";
-    my $grpCnt = WorkspaceUtil::getContactImgGroupCnt();
-    if ( $grpCnt > 0 ) {
-	$extra_text = "<u>your own</u>";
-    }
-
     print qq{
-        <p>You may select one or more $extra_text
+        <p>You may select one or more 
         $folder sets from above to export.
         The exported file may be imported later into your workspace.<br>
         <span style="color:red;font-weight:bold">NOTE</span>:
@@ -6431,21 +6420,22 @@ sub printImportExport {
         of a $folder set, please go to the $folder set page.</p>
     };
 
-    #    print submit(
-    #                  -name    => "_section_Workspace_export_noHeader",
-    #                  -value   => "Export \u$folder Sets",
-    #                  -class   => "meddefbutton",
-    #                  -onClick => "return checkSets('$folder');"
-    #    );
+    #print submit(
+    #              -name    => "_section_Workspace_export_noHeader",
+    #              -value   => "Export \u$folder Sets",
+    #              -class   => "meddefbutton",
+    #              -onClick => "return checkSets('$folder');"
+    #);
     my $contact_oid = WebUtil::getContactOid();
-    my $str         = HtmlUtil::trackEvent(
+    my $str = HtmlUtil::trackEvent(
         "Export", $contact_oid,
         "img button $folder _section_Workspace_export_noHeader",
-        "return checkSets('$folder');"
+        "return checkSetsIncludingShare('$folder');"
     );
+    
     print qq{
-   <input class='meddefbutton' name='_section_Workspace_export_noHeader' type="submit" value="Export \u$folder Sets" $str>
- };
+        <input class='meddefbutton' name='_section_Workspace_export_noHeader' type="submit" value="Export \u$folder Sets" $str>
+    };
 
     print hiddenVar( "section",    $section );
     print hiddenVar( "importStep", 1 );          # import from file upload
@@ -6462,7 +6452,7 @@ sub importWorkspace {
     my $sid        = getContactOid();
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
     my $fh = upload("uploadFile");
@@ -6630,21 +6620,30 @@ sub importSelected {
 # exportWorkspace - Export selected data sets to tab delimited text file
 ############################################################################
 sub exportWorkspace {
+
     my $setType = param("directory");
-    my @setFile = param("filename");
     my $sid     = getContactOid();
+    #my @setFile = param("filename");
+
+    my @all_files = WorkspaceUtil::getAllInputFiles($sid);
+    if ( scalar(@all_files) == 0 ) {
+        #main::printAppHeader("MyIMG");
+        webError("Please select at least one data set to export.");
+        return;
+    }
 
     my $excelFileName = "${setType}sets";
-    $excelFileName = $setFile[0] if ( @setFile == 1 );
+    $excelFileName = $all_files[0] if ( @all_files == 1 );
     $excelFileName .= "_" . lc( getSysDate() ) . ".tab";
 
     print "Content-type: application/text\n";
     print "Content-Disposition: attachment;filename=$excelFileName\n";
     print "\n";
 
-    exportFile( $setType, \@setFile, $sid );
+    exportFile( $setType, \@all_files, $sid );
     WebUtil::webExit(0);
 }
+
 
 ############################################################################
 # exportAll - Export entire workspace
@@ -6655,7 +6654,7 @@ sub exportAll {
     my $exFileName .= "\L${user}_workspace_" . lc( getSysDate() ) . ".tab";
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
     print "Content-type: application/text\n";
@@ -6663,18 +6662,25 @@ sub exportAll {
     print "\n";
 
     for my $setType (@subfolders) {
+        my @setFile;
+
+        ## count own
         opendir( DIR, "$workspace_dir/$sid/$setType" )
           or webDie("failed to read files");
         my @files = readdir(DIR);
         closedir(DIR);
 
-        my @setFile;
         for my $x ( sort @files ) {
-
             # remove files "."  ".." "~$"
             next if ( $x eq "." || $x eq ".." || $x =~ /~$/ );
             push @setFile, $x;
         }
+
+        ## count share datasets
+        my %share_h = WorkspaceUtil::getShareFromGroups($setType);
+        my @keys = (keys %share_h);
+        push @setFile, @keys;
+
         exportFile( $setType, \@setFile, $sid );
     }
     WebUtil::webExit(0);
@@ -6686,15 +6692,22 @@ sub exportAll {
 #                   set type: "gene"|"function"|"genome"|"scaffold"
 ############################################################################
 sub exportFile {
-    my ( $setType, $setFile, $sid ) = @_;
+    my ( $setType, $setFiles, $sid ) = @_;
 
     my $super_user = getSuperUser();
     if ( $super_user eq 'Yes' ) {
-        @subfolders = ( $GENE_FOLDER, $FUNC_FOLDER, $SCAF_FOLDER, $GENOME_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+        @subfolders = @allSubfolders;
     }
 
-    for my $setName (@$setFile) {
-        print "$setType\t$setName\n";
+    my $dbh = dbLogin();
+    
+    for my $ownerFilename (@$setFiles) {
+        my ($owner, $filename) = WorkspaceUtil::splitOwnerFileset( $sid, $ownerFilename );
+        if ( ! $owner || ! $filename ) {
+            next;
+        }
+        my $share_set_name = WorkspaceUtil::fetchShareSetName( $dbh, $owner, $filename, $sid, 1 );
+        print "$setType\t$share_set_name\n";
 
         my $valid = 0;
         foreach my $x (@subfolders) {
@@ -6707,12 +6720,12 @@ sub exportFile {
             webError("Invalid directory ($setType).");
         }
 
-        WebUtil::checkFileName($setName);
+        WebUtil::checkFileName($filename);
 
         # this also untaints the name
-        $setName = WebUtil::validFileName($setName);
+        $filename = WebUtil::validFileName($filename);
 
-        my $res = newReadFileHandle("$workspace_dir/$sid/$setType/$setName");
+        my $res = newReadFileHandle("$workspace_dir/$owner/$setType/$filename");
         while ( my $id = $res->getline() ) {
             chomp $id;
             $id = WebUtil::strTrim($id);

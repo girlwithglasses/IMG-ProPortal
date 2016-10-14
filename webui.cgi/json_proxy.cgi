@@ -9,7 +9,7 @@
 
 PERL5LIB=`pwd`
 export PERL5LIB
-/webfs/projectdirs/microbial/img/bin/imgPerlEnv perl -T json_proxy.pl
+/webfs/projectdirs/microbial/img/bin/imgEnv2 perl -T json_proxy.pl
 
 if [ $? != "0" ]
 then
