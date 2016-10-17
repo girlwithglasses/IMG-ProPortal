@@ -4,7 +4,7 @@
 
 The IMG ProPortal provides access and tools for the ProPortal, a subset of the IMG database focussed on *Prochlorococcus*, *Synechococcus*, and cyanophage spp.
 
-Data comes from the IMG GOLD Oracle database and is served by a Perl application.
+Data comes from the IMG Oracle databases and is served by a Perl application. A demo version of the ProPortal can be run off an SQLite database.
 
 The project is a collaboration between IMG and MIT, with the projected user base being a global community of biologists interested in these particular marine microbe species.
 
@@ -16,13 +16,37 @@ All the ProPortal code lives in the IMG svn repository under /proportal and /web
 
 ## Dependencies ##
 
-Dependencies can be managed using local::lib (to install modules locally) and cpanm.
+### Perl! ###
 
-Install local::lib using the instructions here: https://metacpan.org/pod/local::lib
+To keep things neat and tidy, we are going to install a clean version of perl and the ProPortal dependencies using perlbrew.
 
-Install cpanm: `cpan install App::cpanminus`
+Install perlbrew from https://perlbrew.pl
 
-Install Perl modules: `cd webUI/proportal; cpanm --installdeps .`
+Use perlbrew to install the CPAN client cpanm and patchperl:
+
+perlbrew install-cpanm
+perlbrew install-patchperl
+
+Now install a local version of a recent version of Perl, and create a standard library to go with it:
+
+`perlbrew install perl-5.22.2
+perlbrew lib create perl-5.22.2@std
+perlbrew switch perl-5.22.2@std
+`
+
+Install the ProPortal dependencies using cpanm. You'll need to locate the path to `cpanfile` in the `proportal` folder; in this example, it's in my home directory within  the folder `webUI`.
+
+cpanm --cpanfile ~/webUI/proportal/cpanfile --installdeps ~/webUI/proportal/
+
+Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html):
+
+cpanm CJFIELDS/BioPerl-1.6.924.tar.gz
+
+
+### Apache ###
+
+
+
 
 Install JBrowse:
 

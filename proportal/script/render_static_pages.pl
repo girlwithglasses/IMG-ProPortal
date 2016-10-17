@@ -15,7 +15,6 @@ usage:
 use strict;
 use warnings;
 use feature ':5.10';
-use local::lib;
 
 use Data::Dumper;
 use Template;

@@ -12,7 +12,7 @@ our @IMPORT_MODULES = (
 	'feature' => [ qw( :5.16 ) ],
 	'Data::Dumper::Concise',
 	'Carp',
-	'local::lib'
+#	'local::lib'
 );
 
 $Data::Dumper::Sortkeys = 1;

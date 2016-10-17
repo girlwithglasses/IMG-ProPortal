@@ -26,10 +26,10 @@ $ENV{PLACK_URLMAP_DEBUG} = 1;
 $ENV{TWIGGY_DEBUG} = 1;
 
 # Mojolicious pod renderer
-use Mojo::Server::PSGI;
+#use Mojo::Server::PSGI;
 
-my $server = Mojo::Server::PSGI->new;
-$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
+#my $server = Mojo::Server::PSGI->new;
+#$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 
 say 'running app.psgi!';
 sub make_config {
@@ -61,7 +61,7 @@ sub make_config {
 }
 
 use ProPortalPackage;
-use TestApp;
+#use TestApp;
 
 builder {
 	enable "Deflater";
@@ -71,17 +71,17 @@ builder {
 #	mount "/cgi-bin" => $old_img->();
 #	enable "Log::Contextual";
 #	enable "Session", store => "File";
-	mount "/pod" => sub { $server->run(@_) };
+#	mount "/pod" => sub { $server->run(@_) };
 
-	enable 'Static',
-		path => sub { s!^/jbrowse_assets!! },
-		root => $dir . '/jbrowse';
+# 	enable 'Static',
+# 		path => sub { s!^/jbrowse_assets!! },
+# 		root => $dir . '/jbrowse';
+#
+# 	enable 'Static',
+# 		path => sub { s!^/data_dir!! },
+# 		root => '/tmp/jbrowse';
 
-	enable 'Static',
-		path => sub { s!^/data_dir!! },
-		root => '/tmp/jbrowse';
-
-    mount "/testapp" => TestApp->to_app;
+#    mount "/testapp" => TestApp->to_app;
 	mount "/" => ProPortalPackage->to_app;
 
 };

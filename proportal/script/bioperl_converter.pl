@@ -12,7 +12,6 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use local::lib;
 use IMG::Util::Base;
 
 # use Dancer2;

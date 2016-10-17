@@ -15,7 +15,6 @@ use lib @dir_arr;
 
 use IMG::Util::Base;
 use File::Path qw( make_path );
-use local::lib;
 
 use File::Basename;
 

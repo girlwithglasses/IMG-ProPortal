@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use feature ':5.10';
 use Data::Dumper;
-use local::lib;
 use IMG::App::Role::ErrorMessages qw( err );
 use Text::CSV_XS qw( csv );
 use DBI;

@@ -13,7 +13,6 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use local::lib;
 use IMG::Util::Base 'Class';
 use IMG::App::Role::ErrorMessages qw( script_die );
 use Getopt::Long;
