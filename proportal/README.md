@@ -20,27 +20,26 @@ All the ProPortal code lives in the IMG svn repository under /proportal and /web
 
 To keep things neat and tidy, we are going to install a clean version of perl and the ProPortal dependencies using perlbrew.
 
-Install perlbrew from https://perlbrew.pl
+Install perlbrew from https://perlbrew.pl (instructions on the website).
 
 Use perlbrew to install the CPAN client cpanm and patchperl:
 
-perlbrew install-cpanm
-perlbrew install-patchperl
+`perlbrew install-cpanm`
+`perlbrew install-patchperl`
 
 Now install a local version of a recent version of Perl, and create a standard library to go with it:
 
-`perlbrew install perl-5.22.2
-perlbrew lib create perl-5.22.2@std
-perlbrew switch perl-5.22.2@std
-`
+`perlbrew install perl-5.22.2`
+`perlbrew lib create perl-5.22.2@std`
+`perlbrew switch perl-5.22.2@std`
 
 Install the ProPortal dependencies using cpanm. You'll need to locate the path to `cpanfile` in the `proportal` folder; in this example, it's in my home directory within  the folder `webUI`.
 
-cpanm --cpanfile ~/webUI/proportal/cpanfile --installdeps ~/webUI/proportal/
+`cpanm --cpanfile ~/webUI/proportal/cpanfile --installdeps ~/webUI/proportal/`
 
 Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html):
 
-cpanm CJFIELDS/BioPerl-1.6.924.tar.gz
+`cpanm CJFIELDS/BioPerl-1.6.924.tar.gz`
 
 
 ### Apache ###
