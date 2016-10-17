@@ -18,28 +18,33 @@ All the ProPortal code lives in the IMG svn repository under /proportal and /web
 
 ### Perl! ###
 
-To keep things neat and tidy, we are going to install a clean version of perl and the ProPortal dependencies using perlbrew.
+To keep things neat and tidy, we are going to install a clean version of perl and the ProPortal dependencies using `perlbrew`.
 
-Install perlbrew from https://perlbrew.pl (instructions on the website).
+Install `perlbrew` from https://perlbrew.pl (follow the instructions on the website).
 
-Use perlbrew to install the CPAN client cpanm and patchperl:
+Use `perlbrew` to install the CPAN client `cpanm` and `patchperl`:
 
-`perlbrew install-cpanm`
-`perlbrew install-patchperl`
+	perlbrew install-cpanm
+	perlbrew install-patchperl
 
 Now install a local version of a recent version of Perl, and create a standard library to go with it:
 
-`perlbrew install perl-5.22.2`
-`perlbrew lib create perl-5.22.2@std`
-`perlbrew switch perl-5.22.2@std`
+	perlbrew install perl-5.18.4
+	perlbrew lib create perl-5.18.4@std
+	perlbrew switch perl-5.18.4@std
 
-Install the ProPortal dependencies using cpanm. You'll need to locate the path to `cpanfile` in the `proportal` folder; in this example, it's in my home directory within  the folder `webUI`.
+You're now using perl version 5.18.4 and any extra modules you install will be in the library `@std`.
 
-`cpanm --cpanfile ~/webUI/proportal/cpanfile --installdeps ~/webUI/proportal/`
+Install the ProPortal dependencies using `cpanm`. You'll need to locate the path to `cpanfile` in the `proportal` folder; in this example, it's in my home directory within  the folder `webUI`.
 
-Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html):
+	cpanm --cpanfile ~/webUI/proportal/cpanfile --installdeps ~/webUI/proportal/
 
-`cpanm CJFIELDS/BioPerl-1.6.924.tar.gz`
+Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html if required):
+
+	cpanm CJFIELDS/BioPerl-1.6.924.tar.gz
+
+Some modules may need to be installed by hand, including `DBD::Oracle` (for installations not using Oracle databases, this should not be an issue).
+
 
 
 ### Apache ###
@@ -47,13 +52,14 @@ Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html):
 
 
 
+### Other software ###
+
 Install JBrowse:
 
 download JBrowse from http://jbrowse.org
 
 
 
-Some modules need to be installed by hand, including DBD::Oracle.
 
 
 
@@ -64,8 +70,9 @@ ProPortal uses bower to manage web-related dependencies -- javascript and CSS li
 ### Installation on genepool (NERSC users) ###
 
 To set up bower, you need to activate the nodejs module and install the assets. `cd` to your home directory and do the following:
-        `module add nodejs`  (for genepool)
-        `npm install npm`
+
+	module add nodejs  (for genepool)
+	npm install npm
 
 
     - install npm (Node Package Manager)
