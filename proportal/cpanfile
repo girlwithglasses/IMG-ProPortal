@@ -1,9 +1,6 @@
 
 
 # requires 'Filter::Handle'                            => 0;
-# requires 'AE'                                        => 0; # test stuff
-# requires 'AnyEvent::IO'                              => 0;
-# requires 'AnyEvent'                                  => 0;
 requires 'Attribute::Contract'                       => 0;
 # requires 'Bio::Seq'                                  => 0;
 # requires 'Bio::SeqIO'                                => 0;
@@ -35,7 +32,6 @@ requires 'Plack::Handler::Starman'                   => 0;
 requires 'Plack::Middleware::Debug'                  => 0;
 requires 'Plack::Middleware::Deflater'               => 0;
 requires 'Plack'                                     => 0;
-# requires 'Promises'                                  => 0; # test stuff
 requires 'strictures'                                => 0;
 requires 'String::CamelCase'                         => 0;
 requires 'Sub::Override'                             => 0;
@@ -46,13 +42,19 @@ requires 'Time::Out'                                 => 0;
 requires 'Type::Tiny'                                => 0;
 requires 'Types::Standard'                           => 0;
 requires 'URI::Escape'                               => 0;
-# requires 'XML::LibXML'                               => 0; # for XML script
+requires 'XML::LibXML'                               => 0; # for XML script
 
 recommends 'Plack::Middleware::Debug' => '0';
-# recommends 'YAML'             => '0';
+recommends 'YAML'             => '0';
 recommends 'URL::Encode::XS'  => '0';
 recommends 'CGI::Deurl::XS'   => '0';
 recommends 'HTTP::Parser::XS' => '0';
+# test stuff
+recommends 'AE', 0;
+recommends 'AnyEvent::IO', 0;
+recommends 'AnyEvent', 0;
+recommends 'Mojo::Server::PSGI', 0;
+recommends 'Promises', 0;
 
 on 'test' => sub {
 	requires 'Test::Exception'           => '0';

@@ -15,7 +15,6 @@ BEGIN {
 
 use strict;
 use warnings;
-use WebConfigCommon;
 use WebConfig_img_proportal;
 
 my $conf = WebConfig_img_proportal::make_config({

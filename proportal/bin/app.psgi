@@ -16,9 +16,11 @@ BEGIN {
 		jbrowse/extlib/lib/perl5
 	);
 }
+
 use lib @dir_arr;
 use IMG::Util::Base;
 use IMG::Util::File qw( :all );
+use Dancer2;
 
 use Plack::Builder;
 #use Log::Contextual qw(:log);
@@ -32,6 +34,8 @@ $ENV{TWIGGY_DEBUG} = 1;
 #$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 
 say 'running app.psgi!';
+say 'config: ' . Dumper config;
+
 sub make_config {
 
 	my $env_dir = catdir( $dir, 'proportal/environments' );
@@ -61,7 +65,7 @@ sub make_config {
 }
 
 use ProPortalPackage;
-#use TestApp;
+use TestApp;
 
 builder {
 	enable "Deflater";
@@ -73,15 +77,15 @@ builder {
 #	enable "Session", store => "File";
 #	mount "/pod" => sub { $server->run(@_) };
 
-# 	enable 'Static',
-# 		path => sub { s!^/jbrowse_assets!! },
-# 		root => $dir . '/jbrowse';
-#
-# 	enable 'Static',
-# 		path => sub { s!^/data_dir!! },
-# 		root => '/tmp/jbrowse';
+	enable 'Static',
+		path => sub { s!^/jbrowse_assets!! },
+		root => $dir . '/jbrowse';
 
-#    mount "/testapp" => TestApp->to_app;
+	enable 'Static',
+		path => sub { s!^/data_dir!! },
+		root => '/tmp/jbrowse';
+
+    mount "/testapp" => TestApp->to_app;
 	mount "/" => ProPortalPackage->to_app;
 
 };

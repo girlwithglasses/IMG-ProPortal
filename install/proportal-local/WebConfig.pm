@@ -15,22 +15,44 @@ BEGIN {
 
 use strict;
 use warnings;
-use WebConfigCommon;
-use WebConfig_img_proportal;
+use feature ':5.16';
+use Data::Dumper;
+use File::Spec::Functions;
+use File::Basename;
 
-my $conf = WebConfig_img_proportal::make_config({
+# get the @inc
+my @pp_dirs = grep { m!proportal.*?lib! } @INC;
+
+say 'pp_dirs: ' . join ", ", @pp_dirs;
+
+my $pp_dir = dirname $pp_dirs[0];
+
+say 'pp_dir: ' . $pp_dir;
+
+
+my $webui_dir = dirname $pp_dir;
+say 'web ui dir: ' . $webui_dir;
+
+my $conf = {
+
 	domain_name => 'img-proportal.dev',
+	base_url => 'https://img-proportal.dev',
+
 	jbrowse => 'https://img-jbrowse.dev',
 	galaxy => 'https://img-galaxy.dev',
-	in_place => 1,
-	webUI_dir => '/global/homes/a/aireland/webUI',
-	scratch_dir => '/tmp/jbrowse',
-	web_data_dir => '/Users/gwg/webUI/proportal/t/files/img_web_data',
-});
 
-#$conf->{sso_url_prefix} = 'https://signon.';
-#$conf->{sso_domain} = 'jgi.doe.gov';
-delete $conf->{sso_enabled} if $conf->{sso_enabled};
+	pp_app => "https://img-proportal.dev/",
+	# home of css, js, images folders. Should end with "/"
+	pp_assets => "https://img-proportal.dev/",
+
+	# main.cgi location
+	main_cgi_url => 'https://img-proportal.dev/cgi-bin/main.cgi',
+
+	webUI_dir => $webui_dir,
+	scratch_dir => '/tmp/jbrowse',
+	web_data_dir => catdir( $pp_dir, 't/files/img_web_data' ),
+
+};
 
 sub getEnv {
 	return $conf;

@@ -45,6 +45,12 @@ return {
 				RECURSION => 1
 			}
 		},
+		logger => {
+			File => {
+				log_dir => "log/",
+				file_name => "proportal.log",
+			},
+		},
 	},
 };
 

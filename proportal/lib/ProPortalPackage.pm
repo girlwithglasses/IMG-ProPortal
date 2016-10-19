@@ -9,8 +9,9 @@ use Routes::GateKeeper;
 #use Routes::Ajax;
 use Routes::MenuPages;
 # use Routes::JBrowse;
-use Routes::IMG;
+# use Routes::IMG;
+# use Routes::API;
 use Routes::ProPortal;
-use Routes::TestStuff;
+# use Routes::TestStuff;
 
 1;

@@ -27,7 +27,7 @@ $conf->{sso_url_prefix} = 'https://signon.';
 $conf->{sso_domain} = 'jgi.doe.gov';
 
 # valid levels: production, development, testing
-my @pieces = qw( schema development db );
+my @pieces = qw( schema debug db );
 #
 # {
 # 	schema => 'schemafile.pl',
@@ -48,5 +48,5 @@ for ( @$cfg ) {
 	$hash = { %$hash, %$vals };
 }
 
-#return { img => $conf, %$hash };
+# return { img => $conf, %$hash };
 return { %$conf, %$hash };

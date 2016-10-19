@@ -12,7 +12,9 @@ The code uses the Dancer2 framework, and can be run locally (e.g. on a laptop) u
 
 ## Get the code ##
 
-All the ProPortal code lives in the IMG svn repository under /proportal and /webui.cgi
+All the ProPortal code lives in the IMG svn repository under /proportal and /webui.cgi. If installing from GitHub, download and extract the code, or clone the repository with the command:
+
+	git clone https://github.com/girlwithglasses/IMG-ProPortal.git
 
 ## Dependencies ##
 
@@ -46,11 +48,25 @@ Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html i
 Some modules may need to be installed by hand, including `DBD::Oracle` (for installations not using Oracle databases, this should not be an issue).
 
 
-
 ### Apache ###
 
+You will need to have `mod_rewrite`, `mod_proxy`, and `mod_expires` enabled in your Apache config file (usually /private/etc/apache2/httpd.conf); find the lines
 
+	LoadModule proxy_module libexec/apache2/mod_proxy.so
 
+	LoadModule expires_module libexec/apache2/mod_expires.so
+
+	LoadModule rewrite_module libexec/apache2/mod_rewrite.so
+
+and make sure that they are uncommented.
+
+On MacOS X, you can drop sample_server.conf into /private/etc/apache2/other/ and make sure that the line
+
+	Include /private/etc/apache2/other/
+
+is uncommented in your main apache config file. Restart the server to activate the new server configuration using the command
+
+	sudo apachectl -k restart
 
 ### Other software ###
 
@@ -121,17 +137,13 @@ TODO: create development.pl from source files.
 
 ## Launching the server
 
-* `cd` to the distribution directory `proportal` and run the launch script using `plackup bin/app.psgi`. You'll see a
-message like `HTTP::Server::PSGI: Accepting connections at http://0:5000/`. Visit `http://localhost:5000` in your browser to
-view the site.
+`cd` to the distribution directory `proportal` and run the launch script using `plackup bin/app.psgi`. You'll see a message like `HTTP::Server::PSGI: Accepting connections at http://0:5000/`. Visit `http://localhost:5000` in your browser to view the site.
 
 See the `plackup` documentation on options for running different Plack/PSGI servers. Starman is a good option for standard use. Sample launch instructions:
 
 `plackup -E development -s Starman --workers=10 bin/app.psgi`
 
-By default, Plack reads `app.psgi` once and keeps the application in memory. To allow live development, you can use the
-Shotgun loader, which will reload the application if any of the source files have changed. To do this, launch the app with
-the following command:
+By default, Plack reads `app.psgi` once and keeps the application in memory. To allow live development, you can use the Shotgun loader, which will reload the application if any of the source files have changed. To do this, launch the app with the following command:
 
 `plackup -L Shotgun bin/app.psgi`
 
