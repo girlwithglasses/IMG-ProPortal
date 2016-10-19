@@ -22,31 +22,27 @@ use File::Basename;
 
 # get the @inc
 my @pp_dirs = grep { m!proportal.*?lib! } @INC;
-
-say 'pp_dirs: ' . join ", ", @pp_dirs;
-
 my $pp_dir = dirname $pp_dirs[0];
-
-say 'pp_dir: ' . $pp_dir;
-
-
 my $webui_dir = dirname $pp_dir;
-say 'web ui dir: ' . $webui_dir;
+
+#say 'pp_dirs: ' . join ", ", @pp_dirs;
+#say 'pp_dir: ' . $pp_dir;
+#say 'web ui dir: ' . $webui_dir;
 
 my $conf = {
 
 	domain_name => 'img-proportal.dev',
-	base_url => 'https://img-proportal.dev',
+	base_url => 'http://img-proportal.dev',
 
-	jbrowse => 'https://img-jbrowse.dev',
-	galaxy => 'https://img-galaxy.dev',
+	jbrowse => 'http://img-jbrowse.dev',
+	galaxy => 'http://img-galaxy.dev',
 
-	pp_app => "https://img-proportal.dev/",
+	pp_app => "http://img-proportal.dev/",
 	# home of css, js, images folders. Should end with "/"
-	pp_assets => "https://img-proportal.dev/",
+	pp_assets => "http://img-proportal.dev/",
 
 	# main.cgi location
-	main_cgi_url => 'https://img-proportal.dev/cgi-bin/main.cgi',
+	main_cgi_url => 'http://img-proportal.dev/cgi-bin/main.cgi',
 
 	webUI_dir => $webui_dir,
 	scratch_dir => '/tmp/jbrowse',

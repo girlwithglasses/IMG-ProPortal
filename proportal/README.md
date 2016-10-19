@@ -50,9 +50,10 @@ Some modules may need to be installed by hand, including `DBD::Oracle` (for inst
 
 ### Apache ###
 
-You will need to have `mod_rewrite`, `mod_proxy`, and `mod_expires` enabled in your Apache config file (usually /private/etc/apache2/httpd.conf); find the lines
+You will need to have `mod_rewrite`, `mod_proxy`, and `mod_expires` enabled in your Apache config file (usually `/private/etc/apache2/httpd.conf`); find the lines
 
 	LoadModule proxy_module libexec/apache2/mod_proxy.so
+	LoadModule proxy_http_module libexec/apache2/mod_proxy_http.so
 
 	LoadModule expires_module libexec/apache2/mod_expires.so
 
@@ -60,13 +61,27 @@ You will need to have `mod_rewrite`, `mod_proxy`, and `mod_expires` enabled in y
 
 and make sure that they are uncommented.
 
-On MacOS X, you can drop sample_server.conf into /private/etc/apache2/other/ and make sure that the line
+On MacOS X, you can drop sample_server.conf (in `proportal/apache/` in the git repository) into `/private/etc/apache2/other/` and make sure that the line
 
 	Include /private/etc/apache2/other/
 
-is uncommented in your main apache config file. Restart the server to activate the new server configuration using the command
+is uncommented in your Apache config file (usually `/private/etc/apache2/httpd.conf`).
+
+Check that the new configuration works by running
+
+	sudo apachectl configtest
+
+Restart the server to activate the new server configuration using the command
 
 	sudo apachectl -k restart
+
+The configuration included sets up a ProPortal server at http://img-proportal.dev. Check it is working by visiting this URL:
+
+	http://img-proportal.dev/... [TO DO!]
+
+
+Test out the Apache installation by
+
 
 ### Other software ###
 
@@ -124,7 +139,7 @@ If you look in the `public` folder, you should find a `bower` directory with var
 
 ### Installation ###
 
-## Simple set up: ProPortal pages only ##
+## Simple set up: ProPortal pages only on Genepool servers ##
 
 * The majority of config parameters are set in `environments/development.pl`. The parameters that may need to be changed are the database login details and the URLs for the application. To get the current database login details, run the following from the proportal directory:
 
