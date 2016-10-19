@@ -77,25 +77,7 @@ Restart the server to activate the new server configuration using the command
 
 The configuration included sets up a ProPortal server at http://img-proportal.dev. Check it is working by visiting this URL:
 
-	http://img-proportal.dev/... [TO DO!]
-
-
-Test out the Apache installation by
-
-
-### Other software ###
-
-Install JBrowse:
-
-download JBrowse from http://jbrowse.org
-
-
-
-
-
-
-ProPortal uses bower to manage web-related dependencies -- javascript and CSS libraries, etc. Bower can be installed
-
+	http://img-proportal.dev/404.html
 
 
 ### Installation on genepool (NERSC users) ###
@@ -139,7 +121,7 @@ If you look in the `public` folder, you should find a `bower` directory with var
 
 ### Installation ###
 
-## Simple set up: ProPortal pages only on Genepool servers ##
+## Simple set up: ProPortal pages (only on Genepool servers) ##
 
 * The majority of config parameters are set in `environments/development.pl`. The parameters that may need to be changed are the database login details and the URLs for the application. To get the current database login details, run the following from the proportal directory:
 
@@ -162,7 +144,8 @@ By default, Plack reads `app.psgi` once and keeps the application in memory. To 
 
 `plackup -L Shotgun bin/app.psgi`
 
-## Set up to include the cgi-based installation ##
+
+## Set up to include the cgi-based installation (Genepool server only) ##
 
 * WebConfig.pm and WebConfigCommon.pm need to be edited to provide the correct parameters. Anything that previously pointed
 to the Apache cgi-bin directory needs to point at $base/webUI/webui.cgi, and the htdocs directory should now be
@@ -245,6 +228,20 @@ IMG::Util::Untaint: untaint your paths!
 
 IMG::Views::ExternalLinks   functional interface to external link data
 IMG::Views::Links           functional interface to internal link data
+
+
+### Other software ###
+
+Install JBrowse:
+
+download JBrowse from http://jbrowse.org
+
+
+
+
+
+
+ProPortal uses bower to manage web-related dependencies -- javascript and CSS libraries, etc. Bower can be installed
 
 
 ## Installing Galaxy

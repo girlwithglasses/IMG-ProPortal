@@ -2,285 +2,1046 @@
 <html lang="en">
 <head>
 	<title>IMG ProPortal: 404 Error</title>
-	<link rel="stylesheet" type="text/css" href="/css/proportal.css">
-	<meta charset="">
+	<link rel="stylesheet" type="text/css" href="css/proportal.css">
+
+	<meta charset="UTF-8">
 	<!-- link href="//www.google-analytics.com" rel="dns-prefetch" -->
-	<link href="http://jgi.doe.gov/favicon.ico" rel="shortcut icon">
 	<!-- link href="/images/icons/touch.png" rel="apple-touch-icon-precomposed" -->
+	<link href="http://jgi.doe.gov/favicon.ico" rel="shortcut icon">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Some information about the IMG ProPortal here">
 
-
-
 </head>
 <body>
+<!-- template: 500.tt -->
 <div class="wrapper">
-<header id="jgi-header" role="banner">
-	<div id="jgi-logo">
-		<a href="" class="img"><img width="480" height="70" src="/images/logo-proportal.png" alt="DOE Joint Genome Institute's IMG ProPortal logo" /></a>
-	</div>
-	<nav class="jgi-nav">
-	<ul>
-		<li><a href="http://jgi.doe.gov">JGI Home</a></li>
-		<li><a href="http://jgi.doe.gov/contact-us/">Contact Us</a></li>
-		<!-- li>
-		<form method="get" class="fillable" action="/search-results" role="search">
-			<label class="floatL" for="header-search">Search</label>
-			<div><input class="filler" id="header-search" type="search" name="q" placeholder="Search IMG/ProPortal" /></div>
+<header role="banner" class="cf">
+    <a id="jgi-logo" href="" class="img"><img src="images/logo-proportal.png" alt="DOE Joint Genome Institute's IMG ProPortal logo" /></a>
+    <ul class="user-links">
 
-			<input class="floatR" type="submit" value="Search" />
-		</form>
-		</li -->
+        <li class="user-links__item"><a href="#">Hello world!</a></li>
+		<li class="user-links__item"><a href="http://img-proportal.dev/login">Log in</a></li>
+
+	</ul>
+</header>
+
+<div class="nav-holder">
+    <input type="checkbox" id="horiz-bar-toggle" class="nav-toggle horiz-global-toggle" />
+    <!-- this toggle shows / hides the global nav and horiz-menu in mobile view -->
+    <div class="horiz-bar-toggle__container">
+        <label class="horiz-bar-toggle__label" for="horiz-bar-toggle">Menu</label>
+    </div>
+
+<nav class="horiz-bar cf" role="navigation">
+
+    <ul role="tree" class="horiz-bar-menu menu--l0 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="proportal" />
+			<label for="proportal" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/proportal">IMG ProPortal</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/proportal/clade">by clade</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/proportal/data_type">by data type</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/proportal/location">by location</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/proportal/ecosystem">by ecosystem</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/proportal/ecotype">by ecotype</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/proportal/phylogram">by taxonomic tree</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/galaxy">PhyloViewer (Galaxy)</a>
+
+        </li>
+
 	</ul>
 
-<div class="formLine">
-<form method="get" action="/search-results" role="search">
-    <button>click me</button>
-    <label for="header-search">some text.. </label>
-    <span><input type="text" id="header-search" /></span>
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="menu/FindGenomes" />
+			<label for="menu/FindGenomes" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/menu/FindGenomes"><span class="extra-text">Find </span>Genomes</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?domain=all&amp;page=domain&amp;section=TreeFile">Genome Browser</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=genomeSearch&amp;section=FindGenomes">Genome Search</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?section=ScaffoldSearch">Scaffold Search</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="menu/FindGenes" />
+			<label for="menu/FindGenes" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/menu/FindGenes"><span class="extra-text">Find </span>Genes</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=findGenes&amp;section=FindGenes">Find Genes</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=geneSearch&amp;section=FindGenes">Gene Search</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=form&amp;section=GeneCassetteSearch">Cassette Search</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=geneSearchBlast&amp;section=FindGenesBlast">BLAST</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/cassetteProfilers" />
+			<label for="menu/cassetteProfilers" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/cassetteProfilers">Gene Cassette Profilers</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=phyloProfileForm&amp;section=PhylogenProfiler">Single Genes</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=geneContextPhyloProfiler2&amp;section=GeneCassetteProfiler">Gene Cassettes</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="menu/FindFunctions" />
+			<label for="menu/FindFunctions" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/menu/FindFunctions"><span class="extra-text">Find </span>Functions</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=findFunctions&amp;section=FindFunctions">Function Search</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=allPwayBrowser&amp;section=AllPwayBrowser">Search Pathways</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/COG" />
+			<label for="menu/COG" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/COG">COG</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=ffoAllCogCategories&amp;section=FindFunctions">COG Browser</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=cogList&amp;section=FindFunctions">COG List</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=cogList&amp;section=FindFunctions&amp;stats=1">COGs with Stats</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=cogid2cat&amp;section=FindFunctions">COG Id to Categories</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/KOG" />
+			<label for="menu/KOG" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/KOG">KOG</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=ffoAllKogCategories&amp;section=FindFunctions">KOG Browser</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=kogList&amp;section=FindFunctions">KOG List</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=kogList&amp;section=FindFunctions&amp;stats=1">KOGs with Stats</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/Pfam" />
+			<label for="menu/Pfam" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/Pfam">Pfam</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=pfamCategories&amp;section=FindFunctions">Pfam Browser</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=pfamList&amp;section=FindFunctions">Pfam List</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=pfamList&amp;section=FindFunctions&amp;stats=1">Pfam with Stats</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=pfamListClans&amp;section=FindFunctions">Pfam Clans</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/TIGRfam" />
+			<label for="menu/TIGRfam" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/TIGRfam">TIGRfam</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=tigrBrowser&amp;section=TigrBrowser">TIGRfam Roles</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=tigrfamList&amp;section=TigrBrowser">TIGRfam List</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=tigrfamList&amp;section=TigrBrowser&amp;stats=1">TIGRfam with stats</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/TC" />
+			<label for="menu/TC" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/TC">Transporter Classification (TC)</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=ffoAllTc&amp;section=FindFunctions" title="Transporter Classification (TC)">Transporter Classification</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=tcList&amp;section=FindFunctions">TC List</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/KEGG" />
+			<label for="menu/KEGG" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/KEGG">KEGG</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=ffoAllKeggPathways&amp;section=FindFunctions&amp;view=brite">Orthology KO Terms</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=ffoAllKeggPathways&amp;section=FindFunctions&amp;view=ko">Pathways via KO Terms</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/IMGNetworks" />
+			<label for="menu/IMGNetworks" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/IMGNetworks">IMG Networks</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=imgNetworkBrowser&amp;section=ImgNetworkBrowser">IMG Network Browser</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=browse&amp;section=ImgPartsListBrowser">IMG Parts List</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=imgPwayBrowser&amp;section=ImgPwayBrowser">IMG Pathways</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=imgTermBrowser&amp;section=ImgTermBrowser">IMG Terms</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=enzymeList&amp;section=FindFunctions">Enzyme</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=phenoRules&amp;section=ImgPwayBrowser">Phenotypes</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?section=Interpro">InterPro Browser</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="menu/CompareGenomes" />
+			<label for="menu/CompareGenomes" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/menu/CompareGenomes">Compare Genomes</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=compareGenomes&amp;section=CompareGenomes">Genome Statistics</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/SyntenyViewers" />
+			<label for="menu/SyntenyViewers" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/SyntenyViewers">Synteny Viewers</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=vista&amp;section=Vista">VISTA</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=plot&amp;section=DotPlot">Dot Plot</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=ACTForm&amp;section=Artemis">Artemis ACT</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/AbundanceProfiles" />
+			<label for="menu/AbundanceProfiles" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/AbundanceProfiles">Abundance Profiles</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=mergedForm&amp;section=AbundanceProfiles">Overview (All Functions)</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?section=AbundanceProfileSearch">Abundance Profile Search</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?section=AbundanceComparisons">Function Comparisons</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?section=AbundanceComparisonsSub">Function Category Comparisons</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/PhylogeneticDistribution" />
+			<label for="menu/PhylogeneticDistribution" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/PhylogeneticDistribution">Phylogenetic Distribution</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=form&amp;section=MetagPhyloDist" title="Metagenome Phylogenetic Distribution">Metagenomes vs Genomes</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?section=GenomeHits">Genome vs Metagenomes</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?section=RadialPhyloTree">Radial Tree</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/ani" />
+			<label for="menu/ani" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/ani">Average Nucleotide Identity</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=pairwise&amp;section=ANI">Pairwise <abbr title="Average Nucleotide Identity">ANI</abbr></a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=doSameSpeciesPlot&amp;section=ANI">Same Species Plot</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=overview&amp;section=ANI"><abbr title="Average Nucleotide Identity">ANI</abbr> Cliques</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=tree&amp;section=DistanceTree">Distance Tree</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=profiler&amp;section=FunctionProfiler">Function Profile</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=topPage&amp;section=EgtCluster">Genome Clustering</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?section=GenomeGeneOrtholog">Genome Gene Best Homologs</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=phyloCogTaxonsForm&amp;section=PhyloCogs">Phylogenetic Marker COGs</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="menu/omics" />
+			<label for="menu/omics" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/menu/omics">OMICs</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?section=ImgStatsOverview#tabview=tab3">OMICS</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=proteomics&amp;section=IMGProteins">Protein</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=rnastudies&amp;section=RNAStudies">RNASeq Studies</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=methylomics&amp;section=Methylomics">Methylation</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="menu/UsingIMG" />
+			<label for="menu/UsingIMG" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/menu/UsingIMG">Using IMG</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/About" />
+			<label for="menu/About" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/About">About</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://localhost/mer/doc/about_index.html" title="Information about IMG">About IMG/M ER</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comfaq" title="Frequently Asked Questions">FAQ</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comusing-img/citation">Citation</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comusing-img/credits">Credits</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comusing-img/publication">Publications</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comusing-img/related-links">Related Links</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comdocuments" title="documents">IMG Document Archive</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/UserGuide" />
+			<label for="menu/UserGuide" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/UserGuide">User Guide</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://localhost/mer/doc/systemreqs.html">System Requirements</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comusing-img/tutorial">Tutorial</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://www.jgi.doe.gov/meetings/mgm/">MGM Workshop</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://something.comquestions">IMG User Forum</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/Downloads" />
+			<label for="menu/Downloads" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/Downloads">Downloads</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=policypage&amp;section=Help">Data Usage Policy</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://jgi.doe.gov/data-and-tools/data-management-policy-practices-resources/">Data Management Policy</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://jgi.doe.gov/collaborate-with-jgi/pmo-overview/policies/">Collaborate with JGI</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="https://groups.google.com/a/lbl.gov/d/msg/img-user-forum/o4Pjc_GV1js/EazHPcCk1hoJ">How to download</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://genome.jgi-psf.org/">JGI Genome Portal</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://something.comcontact-us">Contact us</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l0">
+
+			<input type="checkbox" class="nav-toggle" id="menu/MyIMG" />
+			<label for="menu/MyIMG" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l0" href="http://img-proportal.dev/menu/MyIMG">My IMG</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l1 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+			<input type="checkbox" class="nav-toggle" id="menu/cart" />
+			<label for="menu/cart" class="horiz-bar__toggle">expand</label>
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/menu/cart">Analysis Cart</a>
+
+    <ul role="tree" class="horiz-bar-menu menu--l2 toggle-me">
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=geneCart&amp;section=GeneCartStor">Genes</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=funcCart&amp;section=FuncCartStor">Functions</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=genomeCart&amp;section=GenomeCart">Genomes</a>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l2">
+
+		<a class="horiz-bar-menu__link menu__link--l2" href="http://img-proportal.dev/cgi-bin/main.cgi?page=index&amp;section=ScaffoldCart">Scaffolds</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="horiz-bar-menu__item menu__item--l1">
+
+		<a class="horiz-bar-menu__link menu__link--l1" href="http://img-proportal.dev/cgi-bin/main.cgi?page=preferences&amp;section=MyIMG">Preferences</a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+	</ul>
+
+
+</nav>
+
+
+<nav class="jgi-links">
+	<ul class="jgi-links-menu">
+		<li class="jgi-links-menu__item">
+			<a class="jgi-links-menu__link" href="http://jgi.doe.gov">JGI Home</a>
+		</li>
+
+		<li class="jgi-links-menu__item mart-list cf">
+			<input type="checkbox" id="mart-list-toggle" class="nav-toggle" />
+			<label for="mart-list-toggle" class="mart-list__toggle">expand</label>
+			<a class="jgi-links-menu__link" href="http://img-proportal.dev/menu/DataMarts">Data Marts</a>
+
+    <ul role="tree" class="mart-list-menu menu--l0">
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l0">
+
+		<a class="mart-list-menu__link menu__link--l0" href="http://img-proportal.dev/menu/isolates">IMG Isolates</a>
+
+    <ul role="tree" class="mart-list-menu menu--l1">
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l1">
+
+		<a class="mart-list-menu__link menu__link--l1" href="http://localhost/w">IMG isolates</a>
+
+        </li>
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l1">
+
+		<a class="mart-list-menu__link menu__link--l1" href="http://localhost/er" title="IMG Expert Review"><abbr title="IMG Expert Review">IMG ER</abbr></a>
+
+        </li>
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l1">
+
+		<a class="mart-list-menu__link menu__link--l1" href="http://localhost/edu" title="IMG Education"><abbr title="IMG Education">IMG EDU</abbr></a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l0">
+
+		<a class="mart-list-menu__link menu__link--l0" href="http://img-proportal.dev/menu/metagenomes">IMG Metagenomes</a>
+
+    <ul role="tree" class="mart-list-menu menu--l1">
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l1">
+
+		<a class="mart-list-menu__link menu__link--l1" href="http://localhost/m" title="IMG Metagenomes"><abbr title="IMG Metagenomes">IMG M</abbr></a>
+
+        </li>
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l1">
+
+		<a class="mart-list-menu__link menu__link--l1" href="http://localhost/mer" title="Metagenome Expert Review"><abbr title="IMG Metagenome Expert Review">IMG MER</abbr></a>
+
+        </li>
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l1">
+
+		<a class="mart-list-menu__link menu__link--l1" href="https://img.jgi.doe.gov/cgi-bin/imgm_hmp/main.cgi" title="Human Microbiome Project Metagenomes"><abbr title="Human Microbiome Project Metagenome">IMG HMP M</abbr></a>
+
+        </li>
+
+	</ul>
+
+        </li>
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l0">
+
+		<a class="mart-list-menu__link menu__link--l0" href="http://localhost/abc">IMG ABC</a>
+
+        </li>
+
+		<li role="treeitem" class="mart-list-menu__item menu__item--l0">
+
+		<a class="mart-list-menu__link menu__link--l0" href="http://localhost/submit">Submit Data Set</a>
+
+        </li>
+
+	</ul>
+
+
+		</li>
+
+		<li class="jgi-links-menu__item">
+			<a class="jgi-links-menu__link" href="http://jgi.doe.gov/contact-us/">Contact IMG</a>
+		</li>
+		<li class="jgi-links-menu__item header-search">
+        <form action="insert_search_url_here" method="POST" role="search" class="inline-form header-search">
+    <fieldset>
+        <label for="header-search" class="header-search__label"><span class="screen-reader">Search</span></label>
+        <input type="search" id="header-search" class="header-search__input" />
+		<input type="submit" class="header-search__submit" value="Search" />
+	    <!-- button class="header-search__submit">
+	    	<span class="is-vishidden">Search</span>
+	    </button -->
+    </fieldset>
 </form>
+
+<!--
+
+			<form method="POST" action="#" role="search">
+				<label for="header-search" class="header-search__label"><span class="screen-reader">Search</span></label>
+				<input class="header-search__input" type="search" id="header-search" />
+				<button class="header-search__submit">Search</button>
+			</form>
+-->
+
+		</li>
+    </ul>
+</nav>
+
 </div>
 
 
-	</nav>
-</header>
+    <input type="checkbox" id="sidebar-toggle" class="nav-toggle" />
+    <div class="sidebar-toggle__container">
+        <label class="sidebar-toggle__label" for="sidebar-toggle">toggle sidebar</label>
+    </div>
+
+<nav class="breadcrumbs" role="navigation">
+
+</nav>
 
 
-<div class="img_menu" role="navigation" id="menu">
-  <ul id="nav">
-    <li  ><a href=""> Home </a></li>
+	<article class="content cf" role="main">
 
-    <li  ><a href="?section=TreeFile&page=domain&domain=all">Find Genomes</a>
-      <ul>
-        <li class="sub"><a href="?section=TreeFile&page=domain&domain=all"><img class="menuimg" src="/images/browse_icon.png"/> Genome Browser</a></li>
-        <li class="sub"><a href="?section=FindGenomes&page=genomeSearch"><img class="menuimg" src="/images/binocular.png"/> Genome Search</a></li>
-
-
-        <li class="sub"><a href="?section=ScaffoldSearch"><img class="menuimg" src="/images/binocular.png"/> Scaffold Search</a></li>
-      </ul>
-    </li>
-
-    <li  ><a href="?section=FindGenes&page=findGenes"> Find Genes </a>
-      <ul>
-        <li class="sub"><a href="?section=FindGenes&page=geneSearch"><img class="menuimg" src="/images/binocular.png"/> Gene Search</a></li>
-
-        <li class="sub"><a href="?section=FindGenesBlast&page=geneSearchBlast"><img class="menuimg" src="/images/blast_icon.png"/> BLAST</a></li>
-
-        <li class="sub2"><a href="?section=GeneCassetteProfiler&page=genetools">Phylogenetic Profilers <img class="subarrow" src="/images/ArrowNav.gif"/> </a>
-          <ul>
-            <li class="sub3"> <a href="?section=PhylogenProfiler&page=phyloProfileForm"> Single Genes </a> </li>
-
-          </ul>
-        </li>
-      </ul>
-    </li>
-
-    <li  ><a href="?section=FindFunctions&page=findFunctions"> Find Functions </a>
-      <ul>
-        <li class="sub"><a href="?section=FindFunctions&page=findFunctions"> <img class="menuimg" src="/images/binocular.png"/> Function Search</a></li>
-        <li class="sub"><a href="?section=AllPwayBrowser&page=allPwayBrowser"> <img class="menuimg" src="/images/binocular.png"/> Search Pathways</a></li>
-
-
-        <li class="sub2"><a href="?section=FindFunctions&page=ffoAllCogCategories"><img class="menuimg" src="/images/cog.png"/>&nbsp;COG<img class="subarrow"  src="/images/ArrowNav.gif"/></a>
-          <ul>
-            <li class="sub3"><a href="?section=FindFunctions&page=ffoAllCogCategories">COG Browser</a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=cogList">COG List</a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=cogList&stats=1">COG List w/ Stats</a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=cogid2cat">COG Id to Categories</a> </li>
-          </ul>
-        </li>
-        <li class="sub2"><a href="?section=FindFunctions&page=ffoAllKogCategories"><img class="menuimg" src="/images/kog.png"/>&nbsp;KOG<img class="subarrow"  src="/images/ArrowNav.gif"/></a>
-          <ul>
-            <li class="sub3"><a href="?section=FindFunctions&page=ffoAllKogCategories">KOG Browser</a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=kogList">KOG List</a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=kogList&stats=1">KOG List w/ Stats</a> </li>
-          </ul>
-        </li>
-        <li class="sub2"><a href="?section=FindFunctions&page=pfamCategories"><img class="menuimg" src="/images/pfam.png"/> Pfam<img class="subarrow"  src="/images/ArrowNav.gif"/></a>
-          <ul>
-            <li class="sub3"><a href="?section=FindFunctions&page=pfamCategories"> Pfam Browser </a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=pfamList"> Pfam List </a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=pfamList&stats=1"> Pfam List w/ Stats</a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=pfamListClans"> Pfam Clans</a> </li>
-          </ul>
-        </li>
-        <li class="sub2"><a href="?section=TigrBrowser&page=tigrBrowser"><img class="menuimg" src="/images/tigrfam.png"/>&nbsp;TIGRfam<img class="subarrow"  src="/images/ArrowNav.gif"/></a>
-          <ul>
-            <li class="sub3"><a href="?section=TigrBrowser&page=tigrBrowser"> TIGRfam Roles </a> </li>
-            <li class="sub3"><a href="?section=TigrBrowser&page=tigrfamList"> TIGRfam List </a> </li>
-            <li class="sub3"><a href="?section=TigrBrowser&page=tigrfamList&stats=1"> TIGRfam List w/ Stats</a> </li>
-          </ul>
-        </li>
-
-        <li class="sub2"><a href="?section=FindFunctions&page=ffoAllTc" title="Transporter Classification (TC)"><img class="menuimg" src="/images/tcdb.png"/>&nbsp;Transporter Class.<img class="subarrow"  src="/images/ArrowNav.gif"/></a>
-          <ul>
-            <li class="sub3"><a href="?section=FindFunctions&page=ffoAllTc"> TC Browser </a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=tcList"> TC List </a> </li>
-          </ul>
-        </li>
-        <li class="sub2"><a href="?section=FindFunctions&page=ffoAllKeggPathways&view=brite"><img class="menuimg" src="/images/kegg.png"/>&nbsp;KEGG<img class="subarrow" src="/images/ArrowNav.gif"/></a>
-          <ul>
-            <li class="sub3"><a href="?section=FindFunctions&page=ffoAllKeggPathways&view=brite"> Orthology KO Terms </a> </li>
-            <li class="sub3"><a href="?section=FindFunctions&page=ffoAllKeggPathways&view=ko"> Pathways via KO Terms </a> </li>
-          </ul>
-        </li>
-
-        <li class="sub"><a href="?section=FindFunctions&page=enzymeList"><img class="menuimg" src="/images/kegg-ec.png"/>&nbsp;Enzyme</a></li>
-
-
-
-
-      </ul>
-    </li>
-
-    <li  ><a href="?section=CompareGenomes&page=compareGenomes"> Compare Genomes </a>
-      <ul>
-        <li class="sub"><a href="?section=CompareGenomes&page=compareGenomes">Genome Statistics</a></li>
-        <li class="sub2"><a href="?section=Vista&page=toppage">Synteny Viewers <img class="subarrow" src="/images/ArrowNav.gif"/> </a>
-          <ul>
-            <li class="sub3"><a href="?section=Vista&page=vista"> <img class="menuimg" src="/images/vista.ico"/> VISTA</a> </li>
-            <li class="sub3"><a href="?section=DotPlot&page=plot"> <img class="menuimg" src="/images/dotplot_icon.png"/> Dot Plot</a> </li>
-            <li class="sub3"><a href="?section=Artemis&page=ACTForm"> <img class="menuimg" src="/images/sanger-ico.png"/> Artemis ACT</a> </li>
-          </ul>
-        </li>
-        <li class="sub2"><a href="?section=AbundanceProfiles&page=topPage">Abundance Profiles <img class="subarrow"  src="/images/ArrowNav.gif"/> </a>
-          <ul>
-            <li class="sub3"><a href="?section=AbundanceProfiles&page=mergedForm">Overview (All Functions)</a> </li>
-            <li class="sub3"><a href="?section=AbundanceProfileSearch">Search</a> </li>
-          </ul>
-        </li>
-
-
-
-        <li class="sub"><a href="?section=DistanceTree&page=tree">Distance Tree</a></li>
-        <li class="sub"><a href="?section=FunctionProfiler&page=profiler">Function Profile</a></li>
-        <li class="sub"><a href="?section=EgtCluster&page=topPage">Genome Clustering</a></li>
-        <li class="sub"><a href="?section=GenomeGeneOrtholog" title="Genome Gene Best Homologs">Genome Gene Best Hmlgs</a></li>
-
-      </ul>
-    </li>
-
-    <li  ><a href="?section=GeneCartStor&page=geneCart"> Analysis Cart </a>
-      <ul>
-        <li class="sub"><a href="?section=GeneCartStor&page=geneCart">Genes</a></li>
-        <li class="sub"><a href="?section=FuncCartStor&page=funcCart">Functions</a></li>
-        <li class="sub"><a href="?section=GenomeCart&page=genomeCart">Genomes</a></li>
-
-      </ul>
-    </li>
-
-
-    <li  ><a href="?section=MyIMG"> My IMG </a>
-      <ul>
-        <li class="sub"><a href="?section=MyIMG&page=home">MyIMG Home</a></li>
-
-        <li class="sub"><a href="?section=MyIMG&page=preferences">Preferences</a></li>
-
-
-      </ul>
-    </li>
-
-    <li  ><a href="/doc/about_index.html">Using</a>
-      <ul>
-        <li class="sub2" title="Information about IMG"><a href="/doc/about_index.html"><img class="subarrow_left" src="/images/ArrowNav_left.gif"/><img class="menuimg" src="/images/information.png"/> About </a>
-          <ul>
-            <li class="sub3" title="IMG Mission"><a href="https://img.jgi.doe.gov/#IMGMission"> IMG Mission </a> </li>
-            <li class="sub3" title="Frequently Asked Questions"><a href="https://sites.google.com/a/lbl.gov/img-form/faq"> FAQ </a> </li>
-            <li class="sub3" title="Related Links"><a href="https://sites.google.com/a/lbl.gov/img-form/using-img/related-links"> Related Links </a> </li>
-            <li class="sub3" title="Credits"><a href="https://sites.google.com/a/lbl.gov/img-form/using-img/credits"> Credits </a> </li>
-            <li class="sub3" title="documents"><a href="https://sites.google.com/a/lbl.gov/img-form/documents"> IMG Document Archive</a>  </li>
-          </ul>
-        </li>
-        <li class="sub2" title="User Guide" ><a href="/doc/using_index.html"><img class="subarrow_left" src="/images/ArrowNav_left.gif"/><img class="menuimg" src="/images/question.png"/> User Guide </a>
-          <ul>
-            <li class="sub3" title="System Requirements"><a href="/doc/systemreqs.html"><b>System Requirements</b></a> </li>
-            <li class="sub3" title="Contains links to all menu pages and documents"><a href="?section=Help"> Site Map</a> </li>
-
-            <li class="sub3" ><a href="https://sites.google.com/a/lbl.gov/img-form/using-img/tutorial"> Tutorial</a> </li>
-
-            <li class="sub3" title="User Interface Map"><a href="/doc/images/uiMap.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'menu', 'ui map']);" > <img class="menuimg" src="/images/icon_pdf.gif"/> User Interface Map</a> </li>
-            <li class="sub3" title="Single Cell Data Decontamination"><a href="/doc/SingleCellDataDecontamination.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'menu', 'single cell data decon']);"> <img class="menuimg" src="/images/icon_pdf.gif"/> Single Cell Data Decontamination</a> </li>
-
-          </ul>
-        </li>
-        <li class="sub2"><a href="?section=Help&page=policypage"><img class="subarrow_left" src="/images/ArrowNav_left.gif"/><img class="menuimg" src="/images/download_icon.png"/>Downloads</a>
-          <ul>
-            <li class="sub3" ><a href="?section=Help&page=policypage"> <b>Data Usage Policy</b> </a> </li>
-
-            <li class="sub3" ><a href="http://jgi.doe.gov/data-and-tools/data-management-policy-practices-resources/"> <b>Data Management Policy</b> </a> </li>
-            <li class="sub3" ><a href="http://jgi.doe.gov/collaborate-with-jgi/pmo-overview/policies/"> <b>Collaborate with JGI</b> </a> </li>
-
-            <li class="sub3" title="How to download"><a href="https://groups.google.com/a/lbl.gov/d/msg/img-user-forum/o4Pjc_GV1js/EazHPcCk1hoJ"> <b>How to download</b> </a> </li>
-            <li class="sub3" title="JGI Genome Portal"><a href="http://genome.jgi-psf.org/" onClick="_gaq.push(['_trackEvent', 'Download Data', 'JGI Portal', 'menu']);"> <img class="menuimg" src="/favicon.ico"/> JGI Genome Portal</a> </li>
-          </ul>
-        </li>
-        <li class="sub"><a href="https://sites.google.com/a/lbl.gov/img-form/using-img/citation">Citation</a></li>
-        <li class="sub" title="Microbial Genome Annotation &amp; Data Integration SOP"><a href="/doc/MGAandDI_SOP.pdf" onClick="_gaq.push(['_trackEvent', 'Document', 'menu', 'Data Inegration SOP']);"><img class="menuimg" src="/images/icon_pdf.gif"/> Genome Annotation SOP</a></li>
-        <li class="sub"><a href="/doc/education.html">Education</a></li>
-        <li class="sub"><a href="https://sites.google.com/a/lbl.gov/img-form/using-img/publication"> Publications</a></li>
-        <li class="sub"><a href="http://www.jgi.doe.gov/meetings/mgm/"> MGM Workshop</a></li>
-        <li class="sub" title="IMG User Forum"><a href="https://sites.google.com/a/lbl.gov/img-form/questions"> <img class="menuimg" src="images/img-user-forum.png"/> IMG User Forum</a></li>
-        <li class="sub" title="Report bugs or issues"><a href="?page=questions"> <img class="menuimg" src="/images/mail.png"/> Report Bugs / Issues</a></li>
-        <li class="sub" title="Contact us"><a href="https://sites.google.com/a/lbl.gov/img-form/contact-us"> <img class="menuimg" src="/images/mail.png"/> Contact Us</a></li>
-        <li class="sub"><a href="http://jgi.doe.gov/disclaimer/"> Disclaimer</a></li>
-      </ul>
-    </li>
-
-    <li class="rightmenu2"><a href="http://img.jgi.doe.gov/"> Data Marts </a>
-      <ul>
-        <li class="sub2" title="IMG isolates"><a  href="/w"><img class="subarrow_left" src="/images/ArrowNav_left.gif"/><img class="menuimg" src="/images/img_ico.png"/> IMG </a>
-          <ul>
-            <li class="sub3" title="IMG"><a href="/w"> IMG </a> </li>
-            <li class="sub3" title="IMG Expert Review"><a href="https:///er"> IMG/ER </a> </li>
-
-            <li class="sub3" title="IMG Education"><a href="/edu"> IMG EDU </a> </li>
-          </ul>
-        </li>
-        <li class="sub2" title="IMG Metagenomes"><a  href="/m"> <img class="subarrow_left" src="/images/ArrowNav_left.gif"/><img class="menuimg" src="/images/img_m_ico.png"/> IMG/M </a>
-          <ul>
-            <li class="sub3" title="IMG/M"><a href="/m"> IMG/M </a> </li>
-            <li class="sub3" title="IMG/M Expert Review"><a href="https:///mer/"> IMG/MER </a> </li>
-            <li class="sub3" title="Human Microbiome Project Metagenome"><a href="https://img.jgi.doe.gov/cgi-bin/imgm_hmp/main.cgi"> IMG/HMP M </a> </li>
-          </ul>
-        </li>
-        <li class="sub" title="Data set submission"><a href=""> <img class="menuimg" src="/favicon.ico"/> Submit Data Set</a></li>
-      </ul>
-    </li>
-  </ul>
-
-</div> <!-- # end menu div -->
-
-	<div class="content-wrap">
-	<article class="content" role="main">
-
-<h2>Page not found!</h2>
+<h2>Page Not Found</h2>
 <p class="error">
-	Sorry, that page does not seem to exist! Are you sure the URL is correct?
+	ZOMG! Page not found! Are you sure that you typed the URL correctly?
 </p>
-
 	</article>
 
+<nav class="sidebar" role="navigation">
 
-	</div>
+<!-- p>Current page: </p -->
+</nav>
+
 <footer class="footer" role="contentinfo">
 	<ul class="collab">
-	<li><a href="http://chisholmlab.mit.edu/" rel="external" class="img"><img width="200" height="40" alt="chisholmlab.mit.edu logo" src="/images/logo-chisholm-lab.png" /></a></li>
-	<li><a href="http://www.moore.org/" rel="external" class="img"><img width="98" height="40" alt="www.moore.org logo" src="/images/logo-moore-fnd.jpg" /></a>
-	<li><a href="http://www.moore.org/programs/science/marine-microbiology-initiative" rel="external" class="img"><img width="171" height="40" alt="www.moore.org logo" src="/images/mmi.png" /></a></li>
-	<li><a href="http://science.energy.gov/" rel="external" class="img"><img width="175" height="30" src="/images/logo-doe-sc-bw.png" alt="Department of Energy logo" /></a></li>
+	<li><a class="collab__link logo-doe-sc" href="http://science.energy.gov/" rel="external" title="Department of Energy"><span class="collab__link--text">Department of Energy</span></a></li>
+	<li><a class="collab__link logo-moore-fnd" href="http://www.moore.org/" rel="external" title="The Moore Institute"><span class="collab__link--text">Moore Institute</span></a></li>
+	<li><a class="collab__link logo-chisholm-lab" href="https://chisholmlab.mit.edu/" rel="external" title="The Chisholm lab at MIT"><span class="collab__link--text">Chisholm Lab</span></a></li>
+	<li><a class="collab__link logo-mit" href="http://web.mit.edu/" rel="external" title="Massachusetts Institute of Technology"><span class="collab__link--text">Massachusetts Institute of Technology</span></a></li>
 	</ul>
 	<ul class="small">
 		<li><a href="https://sites.google.com/a/lbl.gov/img-form/contact-us">Contact us</a></li>
 		<li><a href="http://www.jgi.doe.gov/whoweare/accessibility.html">Accessibility/Section 508</a></li>
 		<li><a href="http://jgi.doe.gov/disclaimer/">Disclaimer</a></li>
-		<li></li>
-		<li> &bull; </li>
+		<li>ProPortal v0.1.0</li>
+		<li>Cygnus-X1.local &bull; The Oracle is silent &bull;  &bull; 127.0.0.1</li>
 		<li>&copy; 1997&ndash;2015 The Regents of the University of California</li>
 	</ul>
 </footer>
-
 </div>
-
+<!-- end 500.tt -->
 </body>
 </html>
+
+
