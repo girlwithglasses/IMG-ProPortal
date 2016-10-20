@@ -48,7 +48,15 @@ Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html i
 Some modules may need to be installed by hand, including `DBD::Oracle` (for installations not using Oracle databases, this should not be an issue).
 
 
-### Apache ###
+### Apache and dnsmasq ###
+
+The GitHub repository includes a sample Apache configuration file (see `proportal/apache/sample_server.conf`) for setting up a test server on your computer with the domain name http://img-proportal.dev. The config file requires Apache 2.4; to check the version of your Apache, run
+
+	apachectl -v
+
+on the command line.
+
+You will need dnsmasq to be able to give localhost servers (i.e. servers on your computer) a domain name. dnsmasq is easily installed using the Mac package manager Homebrew (http://brew.sh). Follow the instructions at https://mallinson.ca/osx-web-development/ for installing and configuration of dnsmasq (scroll down to the dnsmasq section; the rest of the page is not relevant).
 
 You will need to have `mod_rewrite`, `mod_proxy`, and `mod_expires` enabled in your Apache config file (usually `/private/etc/apache2/httpd.conf`); find the lines
 
@@ -135,6 +143,8 @@ TODO: create development.pl from source files.
 ## Launching the server
 
 `cd` to the distribution directory `proportal` and run the launch script using `plackup bin/app.psgi`. You'll see a message like `HTTP::Server::PSGI: Accepting connections at http://0:5000/`. Visit `http://localhost:5000` in your browser to view the site.
+
+If you have set up Apache as previously suggested, you should be able to go to http://img-proportal.dev to view the ProPortal pages.
 
 See the `plackup` documentation on options for running different Plack/PSGI servers. Starman is a good option for standard use. Sample launch instructions:
 
