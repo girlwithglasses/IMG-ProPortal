@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: FindGenesBlast.pm 36345 2016-10-21 16:14:00Z klchu $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -28,6 +28,7 @@ use QueryUtil;
 use Command;
 use GenomeListJSON;
 use HTML::Template;
+use File::Copy;
 
 $| = 1;
 
@@ -1193,6 +1194,8 @@ sub printGeneSearchProteinBlastForAll {
     my $reportFile;
     if ( $blastallm0_server_url ne "" ) {
 
+print "$blastallm0_server_url <br>\n" if ($img_ken);
+
         # For security reasons, we don't put in the whole
         # path, but make some assumptions about the report
         # being in common_tmp_dir.
@@ -1200,6 +1203,9 @@ sub printGeneSearchProteinBlastForAll {
             my $sessionId = getSessionId();
             $reportFile = "blast.$sessionId.$$.m0.txt";
         }
+
+print "$common_tmp_dir<br>\n" if ($img_ken);
+print "$reportFile<br>\n" if ($img_ken);
 
         # Heuristic to discover IMG (Oracle) database name.
         my $database = $img_lid_blastdb;
@@ -1213,12 +1219,18 @@ sub printGeneSearchProteinBlastForAll {
         $args{database}           = $database;
         $args{top_n}              = 10000;
         $args{pgm}                = $blast_pgm;
-        $args{private_taxon_oids} = getPrivateTaxonOids();
-        $args{super_user}         = getSuperUser();
+        $args{private_taxon_oids} = getPrivateTaxonOids();# . '2693429847,2634166626'; #"3300006036";#getPrivateTaxonOids();
+        $args{super_user}         = getSuperUser(); # 'No'
         $args{report_file}        = $reportFile if $reportFile ne "";
 
         webLog( ">>> Calling '$blastallm0_server_url' database='$database' "
               . "db='allFaa' pgm='$blast_pgm' reportFile='$reportFile'\n" );
+        if ($img_ken) {
+            print "<pre>";
+            print Dumper %args;
+            print "</pre><br>\n";  
+        }       
+        
         $cfh = new LwpHandle( $blastallm0_server_url, \%args );
     } else {
 
@@ -1267,10 +1279,25 @@ sub printGeneSearchProteinBlastForAll {
             }
         }
         if ( $qFile ne "" ) {
+         
+            print "waiting for $qFile<br>\n" if ($img_ken);
             waitForResults( $reportFile, $qFile );
         }
 
         webLog("Reading reportFile='$reportFile'\n");
+        
+        if ($img_ken) {
+            print "Reading reportFile='$reportFile'<br>\n";
+            if(-e "$common_tmp_dir/$reportFile") {
+                my $size = -s "$common_tmp_dir/$reportFile";
+                print "file size $size<br>\n"; 
+                print "copy report file to $cgi_tmp_dir/$reportFile<br>\n";
+                copy("$common_tmp_dir/$reportFile","$cgi_tmp_dir/$reportFile");
+            } else {
+                print "oh no! report file was not found<br>\n";
+            }
+        }
+        
         $cfh = newReadFileHandle( "$common_tmp_dir/$reportFile", "printGeneSearchProteinBlastForAll" );
     }
 
@@ -1416,9 +1443,19 @@ sub getPrivateTaxonOids {
     return "" if ( !$user_restricted_site || !$contact_oid );
 
     my $dbh = dbLogin();
-    my $sql = QueryUtil::getContactTaxonPermissionSql();
+    # this should only be private isolate genomes - ken
+    my $sql =  qq{
+        select distinct ctp.taxon_permissions
+        from contact_taxon_permissions ctp, taxon t
+        where ctp.contact_oid = ? 
+        and ctp.taxon_permissions = t.taxon_oid
+        and t.genome_type = 'isolate'
+    };
+    
+    #print "SQL = $sql<br>\n";
+    
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
-    my $s;
+    my $s = '';
     for ( ; ; ) {
         my ($taxon_oid) = $cur->fetchrow();    # private taxon_oid
         last if !$taxon_oid;
@@ -1646,10 +1683,16 @@ sub printGeneSearchDnaBlastForAll {
         print "<pre>\n";
     }
 
-    printStatusLine( "Loaded.", 2 );
 
-#    print "<p>$common_tmp_dir\n";
-#    print "<p>Report file: $reportFile\n";
+    if($img_ken) {
+
+        print "<p>$common_tmp_dir\n";
+        print "<p>Report file: $reportFile\n";
+
+    }
+        
+        
+    printStatusLine( "Loaded.", 2 );
 
     print end_form();
     webLog "BLAST Done for IMG DB process=$$ " . currDateTime() . "\n"
@@ -3545,7 +3588,12 @@ sub waitForResults {
             last;
         }
     }
-    printEndWorkingDiv("waitForResults");
+    
+    if($img_ken) {
+        printEndWorkingDiv( 'waitForResults', 1 );
+    } else {
+        printEndWorkingDiv("waitForResults");
+    }
 }
 
 1;

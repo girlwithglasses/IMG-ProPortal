@@ -33,36 +33,8 @@ $ENV{TWIGGY_DEBUG} = 1;
 #my $server = Mojo::Server::PSGI->new;
 #$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 
-say 'running app.psgi!';
-say 'config: ' . Dumper config;
-
-sub make_config {
-
-	my $env_dir = catdir( $dir, 'proportal/environments' );
-	my @files = map { "$env_dir/$_" } get_dir_contents({
-		dir => $env_dir,
-		filter => sub { -f "$env_dir/$_" }
-	});
-	push @files, catfile( $dir, 'proportal/config.pl' );
-
-	my $cfg = Config::Any->load_files({
-		files => [ @files ],
-		use_ext => 1,
-		flatten_to_hash => 1
-	});
-
-	my @keys = keys %$cfg;
-	for ( @keys ) {
-		if ( m!.+/(\w+)\.\w+$!x ) {
-			$cfg->{ $1 } = delete $cfg->{ $_ };
-		}
-	}
-
-	say 'config: ' . Dumper $cfg;
-
-	return $cfg;
-
-}
+#say 'running app.psgi!';
+#say 'config: ' . Dumper config;
 
 use ProPortalPackage;
 use TestApp;
@@ -77,15 +49,15 @@ builder {
 #	enable "Session", store => "File";
 #	mount "/pod" => sub { $server->run(@_) };
 
-	enable 'Static',
-		path => sub { s!^/jbrowse_assets!! },
-		root => $dir . '/jbrowse';
+# 	enable 'Static',
+# 		path => sub { s!^/jbrowse_assets!! },
+# 		root => $dir . '/jbrowse';
+#
+# 	enable 'Static',
+# 		path => sub { s!^/data_dir!! },
+# 		root => '/tmp/jbrowse';
 
-	enable 'Static',
-		path => sub { s!^/data_dir!! },
-		root => '/tmp/jbrowse';
-
-    mount "/testapp" => TestApp->to_app;
+#     mount "/testapp" => TestApp->to_app;
 	mount "/" => ProPortalPackage->to_app;
 
 };

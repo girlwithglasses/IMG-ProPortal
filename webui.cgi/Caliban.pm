@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: Caliban.pm 36298 2016-10-10 20:14:39Z klchu $
+# $Id: Caliban.pm 36346 2016-10-21 18:50:09Z klchu $
 #
 ############################################################################
 package Caliban;
@@ -51,6 +51,15 @@ my $sso_user_info_url       = $env->{sso_user_info_url};
 my $sso_enabled             = $env->{sso_enabled};
 my $verbose                 = $env->{verbose};
 my $public_login            = $env->{public_login};
+
+my $tipText = qq{
+<b>Tip:</b> If you keep seeing this message try the following:
+<br> 
+Try to login and logout using JGI SSO directly <a href='https://signon.jgi.doe.gov/'> https://signon.jgi.doe.gov/ </a>
+<br>
+Or try clearing your browser's cookies and cache.
+<br>
+};
 
 sub getPageTitle {
     return '';
@@ -272,11 +281,13 @@ Your JGI SSO session has expired. <br>
 Please login again.
 <br>
 <br>
-<b>Tip:<b> If you keep seeing this message try clearing your browser's cookie and cache.
+$tipText
         };
         
-        WebUtil::printSessionExpired($text);
         
+        logout();
+        #WebUtil::printSessionExpired($text);
+        return 0;
     } else {
         # TODO sso issue?
         my $content = $res->content;
@@ -292,10 +303,10 @@ Error1: There is an issue with JGI SSO (https://signon.jgi.doe.gov/) <br> $code 
 Please login again.
 <br>
 <br>
-<b>Tip:<b> If you keep seeing this message try clearing your browser's cookie and cache.
+$tipText
         };
         
-        
+        logout();
         WebUtil::webErrorHeader($text, -1, 1);
     }
     return 0;
@@ -661,9 +672,9 @@ sub isValidSession {
 Error2: There is an issue with JGI SSO (https://signon.jgi.doe.gov/) <br> $code <br> $content <br><br>
 Please try again<br><br>
 
-<b>Tip:<b> If you keep seeing this message try clearing your browser's cookie and cache.
+$tipText
         };
-
+        logout();
         WebUtil::webErrorHeader($text, 1);
     }
 }

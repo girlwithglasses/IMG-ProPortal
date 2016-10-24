@@ -649,7 +649,7 @@ sub timeout {
 # purgeTmpDir - Purge temp directory of file too old.
 ############################################################################
 sub purgeTmpDir {
-   my $max_time_diff = 60 * 5;
+   my $max_time_diff = 60 * 60 * 24;
 
    return if $common_tmp_dir eq "";
 
