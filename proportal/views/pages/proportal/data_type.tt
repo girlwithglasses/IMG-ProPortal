@@ -1,0 +1,96 @@
+[%
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'IMG ProPortal: Data Type Inventory';
+%]
+<h2>Data Type Inventory</h2>
+<section class="info--data_type page-intro">
+	<p>This page provides an overview of the data in IMG relevant to the ProPortal project. This comprises <i>Prochlorococcus</i>, <i>Synechococcus</i>, cyanophage species and metagenomes from marine environments.
+	</p>
+</section>
+[%	IF data_filters;
+		PROCESS 'inc/filters.tt';
+	END;
+	genomes = results.sorted_data.isolate;
+	metagen = results.sorted_data.metagenome; %]
+<section id="primary">
+	<h3>Data Type</h3>
+	<h4>Genomes</h4>
+[%	WRAPPER 'inc/cart_genome_add.tt';
+	IF genomes && genomes.keys.size > 0 %]
+	<ul role="tree">
+[%		FOREACH es IN genomes.keys.sort %]
+		<li>[% es %] ([% genomes.$es.size %])
+			<ul>
+[%			FOREACH s IN genomes.$es %]
+				<li>
+				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" />
+				<a href="[% link( 'taxon', { taxon_oid => s.taxon_oid } ) %]">[% s.taxon_display_name %]</a> <a href="[% link( 'jbrowse', { taxon_oid => s.taxon_oid } ) %]">JBrowse</a></li>
+[%			END %]
+			</ul>
+		</li>
+[%		END %]
+	</ul>
+[%	ELSE; %]
+<p>No genomes found</p>
+[%	END; %]
+<!-- metagenome data -->
+	<h4>Metagenomes</h4>
+[%	IF metagen && metagen.keys.size > 0 %]
+	<ul role="tree">
+[%		FOREACH es IN metagen.keys.sort %]
+		<li>[% es %] ([% metagen.$es.size %])
+			<ul>
+[%			FOREACH m IN metagen.$es %]
+				<li>
+				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% m.taxon_oid %]" id="cbox_[% m.taxon_oid %]" />
+				<a href="[% link( 'taxon', { taxon_oid => m.taxon_oid } ) %]">[% m.taxon_display_name %]</a></li>
+[%			END %]
+			</ul>
+		</li>
+[%		END %]
+	</ul>
+[%	ELSE; %]
+<p>No metagenomes found</p>
+[%	END;
+	END; # end wrapper %]
+</section>
+<section id="info" role="complementary">
+	<h3>Information</h3>
+	<p>The left panel lists public marine isolate genomes and metagenomes (excluding combined samples) in IMG. Click on the list to expand.
+	</p>
+
+	<table>
+	<caption>IMG ProPortal Statistics</caption>
+	<thead>
+	<tr><th class="L">Genomes</th><th class="L">Count</th></tr>
+	</thead>
+	<tbody>
+[%	IF genomes && genomes.keys.size > 0;
+		FOREACH es IN genomes.keys.sort %]
+		<tr><td><!-- a href="[% link( 'genome_list', { class => es } ) %]" -->[% es %]<!-- /a --></td>
+			<td>[% genomes.$es.size %]</td>
+		</tr>
+[%		END;
+	ELSE %]
+		<tr><td colspan="2">No genomes found</td></tr>
+[%	END; %]
+	</tbody>
+	<tbody>
+		<tr><th class="L">Metagenomes</th><th class="L">Count</th></tr>
+[%	IF metagen && metagen.keys.size > 0;
+		FOREACH es IN metagen.keys.sort %]
+		<tr>
+			<td><!-- a href="[% link( 'genome_list_ecosystem', { ecosystem_subtype => es } ) %]" -->[% es %]<!-- /a --></td>
+			<td>[% metagen.$es.size %]</td>
+		</tr>
+[%		END;
+	ELSE; %]
+		<tr><td colspan="2">No metagenomes found</td></tr>
+[%	END; %]
+	</tbody>
+	</table>
+</section>
+[% END %]

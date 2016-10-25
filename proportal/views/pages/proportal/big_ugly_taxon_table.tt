@@ -1,0 +1,50 @@
+[%
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'IMG ProPortal: Data Type Inventory';
+%]
+<h2>Data Type Inventory</h2>
+<section class="info--data_type page-intro">
+	<p>This page provides an overview of the data in IMG relevant to the ProPortal project. [add more info here?]
+	</p>
+</section>
+[%	IF data_filters;
+		PROCESS 'inc/filters.tt';
+	END;
+%]
+<section>
+	<h3>Data Type</h3>
+[%	IF results.js.array && results.js.array.size > 0;
+		headers = results.js.cols; %]
+	<table>
+	<caption>Taxonomic data and sample metadata</caption>
+	<thead>
+	<tr><th class='taxon_display_name'>Taxon</th>
+[%		FOREACH th IN headers; %]
+	<th class='[% IF th.size == 1; th; ELSE; th.0; END; %]'>[% IF th.size == 1; th; ELSE; th.0; END; %]</th>
+[%		END; %]
+	</tr>
+	</thead>
+	<tbody class="data-table__tbody">
+[%		FOREACH t IN results.js.array; %]
+		<tr id="taxon_oid_[% t.taxon_oid %]">
+			<td><a href="[% link( 'taxon', { taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
+[%			FOREACH th IN headers; %]
+			<td>[%
+				IF th.size == 1;
+					t.$th || '';
+				ELSE;
+					t.${th.0} || t.${th.1};
+				END; %]</td>
+[%			END; %]
+		</tr>
+[%		END; %]
+	</tbody>
+	</table>
+
+	<div id="table"></div>
+[% END %]
+</section>
+[% END %]

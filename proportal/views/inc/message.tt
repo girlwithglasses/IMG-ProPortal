@@ -1,0 +1,8 @@
+<div class="site-message">
+[%	IF settings.message_html;
+		settings.message_html;
+	ELSIF settings.message;
+		'<p class="site-message__p">' _ settings.message _ '</p>';
+	END;
+%]
+</div>

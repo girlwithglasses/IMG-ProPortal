@@ -1,0 +1,9 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'IMG ProPortal: 403 Error';
+%]
+<h2>Forbidden</h2>
+<p class="error">
+	Sorry, access to that page is forbidden.
+</p>
+[%	END; %]
