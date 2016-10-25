@@ -1,3 +1,5 @@
+# NOT IN USE (Oct 2016)
+
 package ProPortal::Controller::DatamartStats;
 
 use IMG::Util::Base 'Class';

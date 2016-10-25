@@ -8,7 +8,7 @@ has 'controller_args' => (
 	default => sub {
 		return {
 			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/location.tt',
+			tmpl => 'pages/proportal/location.tt',
 			tmpl_includes => {
 				tt_scripts => qw( location ),
 			}

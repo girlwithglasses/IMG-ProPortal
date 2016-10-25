@@ -12,7 +12,7 @@ has 'controller_args' => (
 	is => 'lazy',
 	default => sub {
 		return {
-			tmpl => 'pages/big_ugly_taxon_table.tt',
+			tmpl => 'pages/proportal/big_ugly_taxon_table.tt',
 			class => 'ProPortal::Controller::Filtered',
 		}
 	}

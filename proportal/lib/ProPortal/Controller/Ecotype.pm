@@ -11,7 +11,7 @@ has 'controller_args' => (
 	default => sub {
 		return {
 			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/ecotype.tt',
+			tmpl => 'pages/proportal/ecotype.tt',
 			filters => {
 				subset => 'prochlor'
 			},

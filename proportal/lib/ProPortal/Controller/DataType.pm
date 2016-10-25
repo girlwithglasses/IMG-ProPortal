@@ -11,7 +11,7 @@ has 'controller_args' => (
 	default => sub {
 		return {
 			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/data_type.tt',
+			tmpl => 'pages/proportal/data_type.tt',
 			tmpl_includes => {
 				tt_scripts => qw( data_type )
 			}

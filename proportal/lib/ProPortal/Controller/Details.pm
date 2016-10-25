@@ -1,3 +1,5 @@
+# NOT YET IMPLEMENTED (Oct 2016)
+
 package ProPortal::Controller::Details;
 
 use IMG::Util::Base 'MooRole';

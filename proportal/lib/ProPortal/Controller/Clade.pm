@@ -10,7 +10,7 @@ has 'controller_args' => (
 #		say 'running default controller args';
 		return {
 			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/clade.tt',
+			tmpl => 'pages/proportal/clade.tt',
 			tmpl_includes => {
 				tt_scripts => qw( clade ),
 				tt_styles  => qw( clade ),

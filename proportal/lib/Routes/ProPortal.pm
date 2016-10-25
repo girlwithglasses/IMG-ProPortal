@@ -156,7 +156,7 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 
 		my $pp = AppCore::bootstrap( 'Home' );
 
-		return template "pages/home", $pp->render();
+		return template "pages/proportal/home", $pp->render();
 
 	};
 

@@ -96,6 +96,13 @@ sub err {
 			. $args->{msg};
 		},
 
+		module_err => sub {
+			return
+			$args->{subject}
+			. " error: "
+			. $args->{msg};
+		},
+
 
 	# CONFIG ERRORS
 		cfg_missing => sub {
@@ -104,23 +111,7 @@ sub err {
 			. ' specified in application config';
 		},
 
-
 	# FILE ERRORS
-		module_err => sub {
-			return
-			$args->{subject}
-			. " error: "
-			. $args->{msg};
-		},
-
-		format_err => sub {
-			return
-			dict( $args->{subject} )
-			. ( $args->{fmt}
-			? ' should be ' . $args->{fmt}
-			: ' is in the wrong format' );
-		},
-
 		not_found => sub {
 			return $args->{subject}
 			. ' could not be found';
@@ -170,6 +161,15 @@ sub err {
 			. ( $args->{msg}
 			? ': ' . $args->{msg}
 			: '.' );
+		},
+
+		# data format error
+		format_err => sub {
+			return
+			dict( $args->{subject} )
+			. ( $args->{fmt}
+			? ' should be ' . $args->{fmt}
+			: ' is in the wrong format' );
 		},
 
 		# missing params
