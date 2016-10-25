@@ -2,7 +2,7 @@
 
 # cd ~/webUI/proportal && plackup -E development -s Starman --workers=16 -p 5013 bin/server-app.psgi &> ~/apache/logs/proportal.log &
 
-PORT=4013
+PORT=5013
 
 # This should be the directory name/app name
 APP="proportal_test"

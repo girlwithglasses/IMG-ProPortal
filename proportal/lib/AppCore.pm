@@ -295,6 +295,15 @@ any qr{
 	redirect 'https://signon.jgi-psf.org/signon/destroy';
 };
 
+any qr{
+	/(?<query> 403|404|500|503)
+	}x => sub {
+
+	return template captures->{query};
+
+};
+
+
 sub do_login {
 
 	debug 'running do_login';

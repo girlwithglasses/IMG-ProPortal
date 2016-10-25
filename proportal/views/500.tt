@@ -8,9 +8,9 @@
 </p>
 
 <pre>
-message: [% message %]
-status : [% status %]
-title  : [% title %]
-exceptn: [% exception %]
+message  : [% message %]
+status   : [% status %]
+title    : [% title %]
+exception: [% exception %]
 </pre>
 [%	END; %]

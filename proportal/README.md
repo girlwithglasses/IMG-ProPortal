@@ -87,58 +87,25 @@ The configuration included sets up a ProPortal server at http://img-proportal.de
 
 	http://img-proportal.dev/404.html
 
-
-### Installation on genepool (NERSC users) ###
-
-To set up bower, you need to activate the nodejs module and install the assets. `cd` to your home directory and do the following:
-
-	module add nodejs  (for genepool)
-	npm install npm
-
-
-    - install npm (Node Package Manager)
-    - install bower, and then
-
-        ubuntu 14 LTS install
-        - sudo apt-get install nodejs
-        - sudo apt-get install npm
-        - sudo ln -s /usr/bin/nodejs /usr/bin/node OR sudo apt-get install nodejs-legacy
-        - sudo apt-get install git
-        - sudo npm install -g bower
-        --- I did have issues so I had to undo everything -- eg sudo apt-get remove --purge node
-
-
-It's much easier if you now set npm's default install directory to your own home directory, as illustrated in the instructions here:
-https://docs.npmjs.com/getting-started/fixing-npm-permissions -- use option 2. (for genepool)
-
-    module load nodejs/4.2.6
-    npm config set prefix '/webfs/projectdirs/microbial/img/npm-global'
-
-in ~/.profile or ~/.bashrc:
-
-	export PATH=/webfs/projectdirs/microbial/img/npm-global:$PATH
-
-
-When you have done this, you can install bower globally:
-    `npm install -g bower`
-
-Now `cd` to the `proportal` directory, and run
-    `bower install`
-
-If you look in the `public` folder, you should find a `bower` directory with various sub-directories containing javascript and css.
-
 ### Installation ###
 
-## Simple set up: ProPortal pages (only on Genepool servers) ##
+## Database set up
+
+### Using a local database
+
+* Edit the file `environments/db.pl` to set the appropriate location for the SQLite database in place of `/global/homes/a/aireland/webUI/proportal/share/dbschema-img_core.db`.
+
+### Genepool server set up
 
 * The majority of config parameters are set in `environments/development.pl`. The parameters that may need to be changed are the database login details and the URLs for the application. To get the current database login details, run the following from the proportal directory:
 
     `perl script/write_db_config_files.pl`
 
 This will parse the database config files and dump the relevant DB details as JSON files in the `environments` directory.
-The database config details (username, password) should be copied into development.pl
 
-TODO: create development.pl from source files.
+The database config details (username, password) should be copied into db.pl
+
+TODO: change this to slurp in files named after the DB.
 
 ## Launching the server
 
@@ -238,6 +205,46 @@ IMG::Util::Untaint: untaint your paths!
 
 IMG::Views::ExternalLinks   functional interface to external link data
 IMG::Views::Links           functional interface to internal link data
+
+
+### Installation on genepool (NERSC users) ###
+
+To set up bower, you need to activate the nodejs module and install the assets. `cd` to your home directory and do the following:
+
+	module add nodejs  (for genepool)
+	npm install npm
+
+
+    - install npm (Node Package Manager)
+    - install bower, and then
+
+        ubuntu 14 LTS install
+        - sudo apt-get install nodejs
+        - sudo apt-get install npm
+        - sudo ln -s /usr/bin/nodejs /usr/bin/node OR sudo apt-get install nodejs-legacy
+        - sudo apt-get install git
+        - sudo npm install -g bower
+        --- I did have issues so I had to undo everything -- eg sudo apt-get remove --purge node
+
+
+It's much easier if you now set npm's default install directory to your own home directory, as illustrated in the instructions here:
+https://docs.npmjs.com/getting-started/fixing-npm-permissions -- use option 2. (for genepool)
+
+    module load nodejs/4.2.6
+    npm config set prefix '/webfs/projectdirs/microbial/img/npm-global'
+
+in ~/.profile or ~/.bashrc:
+
+	export PATH=/webfs/projectdirs/microbial/img/npm-global:$PATH
+
+
+When you have done this, you can install bower globally:
+    `npm install -g bower`
+
+Now `cd` to the `proportal` directory, and run
+    `bower install`
+
+If you look in the `public` folder, you should find a `bower` directory with various sub-directories containing javascript and css.
 
 
 ### Other software ###

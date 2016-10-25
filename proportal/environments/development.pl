@@ -24,7 +24,7 @@ use Config::Any;
 my $conf = WebConfig::getEnv();
 
 # valid levels: production, development, testing
-my @pieces = qw( schema debug db );
+my @pieces = qw( schema_local debug db );
 #
 # {
 # 	schema => 'schemafile.pl',
@@ -44,6 +44,10 @@ for ( @$cfg ) {
 	my $vals = ( values %$_ )[0];
 	$hash = { %$hash, %$vals };
 }
+
+my $rtn = { %$conf, %$hash };
+
+say Dumper $rtn;
 
 # return { img => $conf, %$hash };
 return { %$conf, %$hash };
