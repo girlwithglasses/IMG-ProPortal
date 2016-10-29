@@ -8,7 +8,7 @@ use File::Spec::Functions;
 prefix '/tools' => sub {
 
 	my @tools = qw( krona jbrowse galaxy phyloviewer );
-	my $re = join '|', @demo_pages;
+	my $re = join '|', @tools;
 
 	get qr{
 		/ (?<tool> $re )
