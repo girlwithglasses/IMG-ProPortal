@@ -1,0 +1,14 @@
+/* partials/message */
+
+/* Message box at the top of the page */
+
+
+.site-message {
+	margin: $line-ht;
+	padding: $line-ht - .25rem;
+	border: .25rem solid $error;
+
+	&__p {
+		margin-bottom: 0;
+	}
+}
