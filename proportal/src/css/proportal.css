@@ -481,6 +481,15 @@ header {
       .collab__link.logo-chisholm-lab:hover, .collab__link.logo-chisholm-lab:focus, .collab__link.logo-chisholm-lab:active {
         background-position: -360px -75px; }
 
+/* partials/message */
+/* Message box at the top of the page */
+.site-message {
+  margin: 1.5rem;
+  padding: 1.25rem;
+  border: 0.25rem solid #d3080c; }
+  .site-message__p {
+    margin-bottom: 0; }
+
 /* FORMS */
 form {
   overflow: auto; }

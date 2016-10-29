@@ -1,6 +1,6 @@
 package WebConfig;
 #
-# $Id: WebConfig.pm 36314 2016-10-13 06:00:20Z aireland $
+# $Id: WebConfig.pm 36367 2016-10-26 02:00:19Z aireland $
 #
 #	Configuration for testing ProPortal pieces or whole
 
@@ -47,6 +47,8 @@ my $conf = {
 	webUI_dir => $webui_dir,
 	scratch_dir => '/tmp/jbrowse',
 	web_data_dir => catdir( $pp_dir, 't/files/img_web_data' ),
+
+	message => 'IMG ProPortal local development site'
 
 };
 

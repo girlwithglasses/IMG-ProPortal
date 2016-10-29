@@ -12,6 +12,6 @@ use Routes::MenuPages;
 # use Routes::IMG;
 use Routes::API;
 use Routes::ProPortal;
-# use Routes::TestStuff;
+use Routes::TestStuff;
 
 1;

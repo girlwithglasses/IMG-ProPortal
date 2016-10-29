@@ -1,6 +1,6 @@
 package WebConfig;
 #
-# $Id: WebConfig.pm 36314 2016-10-13 06:00:20Z aireland $
+# $Id: WebConfig.pm 36384 2016-10-26 21:09:57Z aireland $
 #
 #	Configuration for the ProPortal dev server
 
@@ -23,12 +23,13 @@ my $conf = WebConfig_img_proportal::make_config({
 	galaxy => 'https://img-galaxy-test.jgi.doe.gov',
 	in_place => 1,
 	webUI_dir => '/global/homes/w/wwwimg/svn/webUI',
-	scratch_dir => '/tmp'
+	scratch_dir => '/tmp',
+	message => 'IMG ProPortal Development Site',
 });
 
 #$conf->{sso_url_prefix} = 'https://signon.';
 #$conf->{sso_domain} = 'jgi.doe.gov';
-delete $conf->{sso_enabled} if $conf->{sso_enabled};
+delete $conf->{sso_enabled};
 
 sub getEnv {
 	return $conf;

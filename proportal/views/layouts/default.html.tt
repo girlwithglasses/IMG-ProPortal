@@ -20,34 +20,34 @@
 <!-- template: [% template.name %] -->
 <div class="wrapper">
 [%
-    PROCESS 'inc/header.tt';
+	PROCESS 'inc/header.tt';
 %]
 <div class="nav-holder">
-    <input type="checkbox" id="horiz-bar-toggle" class="nav-toggle horiz-global-toggle" />
-    <!-- this toggle shows / hides the global nav and horiz-menu in mobile view -->
-    <div class="horiz-bar-toggle__container">
-        <label class="horiz-bar-toggle__label" for="horiz-bar-toggle">Menu</label>
-    </div>
+	<input type="checkbox" id="horiz-bar-toggle" class="nav-toggle horiz-global-toggle" />
+	<!-- this toggle shows / hides the global nav and horiz-menu in mobile view -->
+	<div class="horiz-bar-toggle__container">
+		<label class="horiz-bar-toggle__label" for="horiz-bar-toggle">Menu</label>
+	</div>
 [%
 	PROCESS 'inc/nav_horiz_bar.tt';
-    PROCESS 'inc/nav_jgi_links.tt';
+	PROCESS 'inc/nav_jgi_links.tt';
 %]
 </div>
-[%	IF message;
-		PROCESS 'inc/message.tt';
-	END;
-%]
-
-    <input type="checkbox" id="sidebar-toggle" class="nav-toggle" />
-    <div class="sidebar-toggle__container">
-        <label class="sidebar-toggle__label" for="sidebar-toggle">toggle sidebar</label>
-    </div>
+<input type="checkbox" id="sidebar-toggle" class="nav-toggle" />
+<div class="sidebar-toggle__container">
+	<label class="sidebar-toggle__label" for="sidebar-toggle">toggle sidebar</label>
+</div>
 [%
-    IF breadcrumbs;
+	IF breadcrumbs;
 		PROCESS 'inc/nav_breadcrumbs.tt';
 	END;
 %]
 	<article class="content cf" role="main">
+[%	IF settings.message;
+		PROCESS 'inc/message.tt';
+	END;
+%]
+
 [%	content	    # the page content %]
 	</article>
 [%
@@ -73,7 +73,7 @@
 		END;
 	END;
 
-	IF google_analytics;
+	IF settings.enable_google_analytics;
 		PROCESS 'inc/google_analytics.tt';
 	END;
 %]

@@ -27,7 +27,7 @@ $conf->{sso_url_prefix} = 'https://signon.';
 $conf->{sso_domain} = 'jgi.doe.gov';
 
 # valid levels: production, development, testing
-my @pieces = qw( schema debug db );
+my @pieces = qw( schema db debug );
 #
 # {
 # 	schema => 'schemafile.pl',

@@ -12,9 +12,10 @@ BEGIN {
 	@dir_arr = map { catdir( $dir, $_ ) } qw(
 		webui.cgi
 		proportal/lib
-		jbrowse/src/perl5
-		jbrowse/extlib/lib/perl5
 	);
+#		jbrowse/src/perl5
+#		jbrowse/extlib/lib/perl5
+#	);
 }
 
 use lib @dir_arr;
@@ -23,6 +24,7 @@ use IMG::Util::File qw( :all );
 use Dancer2;
 
 use Plack::Builder;
+use Plack::Middleware::Conditional;
 #use Log::Contextual qw(:log);
 $ENV{PLACK_URLMAP_DEBUG} = 1;
 $ENV{TWIGGY_DEBUG} = 1;
@@ -42,7 +44,7 @@ use TestApp;
 builder {
 	enable "Deflater";
 #	enable "Static", path => qr#^/(images|css|js)#, root => $base . "/public";
-	enable "Debug";
+	enable_if { config->{debug} } "Debug";
 
 #	mount "/cgi-bin" => $old_img->();
 #	enable "Log::Contextual";

@@ -22,9 +22,16 @@ return {
 # session engine
 	session => 'CGISession',
 
+# log engine
+	logger => 'File',
+
 # disable server tokens in production environments
 	no_server_tokens => 1,
 
+# print the banner on Dancer server startup
+	startup_info => 1,
+
+# if the requested path does not match any specific route, Dancer2 will check in the views directory for a matching template, and use it to satisfy the request if found
 	auto_page => 1,
 
 	engines => {
@@ -45,10 +52,12 @@ return {
 				RECURSION => 1
 			}
 		},
+
 		logger => {
 			File => {
 				log_dir => "log/",
 				file_name => "proportal.log",
+				log_level => 'error'
 			},
 		},
 	},

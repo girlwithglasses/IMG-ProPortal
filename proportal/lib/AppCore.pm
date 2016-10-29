@@ -240,7 +240,7 @@ sub get_tmpl_vars {
 
 any '/' => sub {
 
-	return template 'pages/home', {};
+	return template 'pages/proportal/home', {};
 
 };
 
@@ -295,13 +295,13 @@ any qr{
 	redirect 'https://signon.jgi-psf.org/signon/destroy';
 };
 
-any qr{
-	/(?<query> 403|404|500|503)
-	}x => sub {
-
-	return template captures->{query};
-
-};
+# any qr{
+# 	/(?<query> 403|404|500|503)
+# 	}x => sub {
+#
+# 	return template captures->{query};
+#
+# };
 
 
 sub do_login {

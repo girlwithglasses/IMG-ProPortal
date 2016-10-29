@@ -4,5 +4,9 @@
 	IF results;
 		dumper.dump( results );
 	END;
+
+	IF settings;
+		dumper.dump( settings );
+	END;
 %]
 </pre>

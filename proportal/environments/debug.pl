@@ -1,20 +1,12 @@
 {
 # configuration file for development environment
 
-# the logger engine to use
-# console: log messages to STDOUT (your console where you started the
-#          application server)
-# file:    log message to a file in log/
-	logger => "console",
-
 # the log level for this environment
 # core is the lowest, it shows Dancer2's core log messages as well as yours
 # (debug, info, warning and error)
-	log => "debug",
+#	log => "debug",
 
-	# should Dancer2 consider warnings as critical errors?
-	warnings => 1,
-
+# If set to true, Dancer2 will display full stack traces when a warning or a die occurs. (Internally sets Carp::Verbose). Default to false.
 	traces => 1,
 
 # should Dancer2 show a stacktrace when an error is caught?
@@ -22,10 +14,9 @@
 # views/500.tt, 'error_template' template, or a default error template will be used.
 	show_errors => 1,
 
+# turn on debug setting to dump data to html pages
 	debug => 1,
 
-	# print the banner
-	startup_info => 1,
 
 }
 

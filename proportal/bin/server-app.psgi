@@ -26,39 +26,12 @@ use CGI::Emulate::PSGI;
 use File::Basename;
 use ProPortalPackage;
 use Plack::Builder;
+use Plack::Middleware::Conditional;
 use Log::Contextual qw( :log );
 use Config::Any;
 use Dancer2;
 
 my $home = basename( $dir );
-
-sub make_config {
-
-	my $env_dir = catdir( $dir, 'proportal/environments' );
-	my @files = map { "$env_dir/$_" } get_dir_contents({
-		dir => $env_dir,
-		filter => sub { -f "$env_dir/$_" }
-	});
-	push @files, catfile( $dir, 'proportal/config.pl' );
-
-	my $cfg = Config::Any->load_files({
-		files => [ @files ],
-		use_ext => 1,
-		flatten_to_hash => 1
-	});
-
-	my @keys = keys %$cfg;
-	for ( @keys ) {
-		if ( m!.+/(\w+)\.\w+$!x ) {
-			$cfg->{ $1 } = delete $cfg->{ $_ };
-		}
-	}
-
-#	say 'config: ' . Dumper $cfg;
-
-	return $cfg;
-
-}
 
 # $ENV{PLACK_URLMAP_DEBUG} = 1;
 
@@ -115,7 +88,7 @@ for my $db ( keys %{$cfg->{schema}} ) {
 
 builder {
 	enable 'Deflater';
-	enable 'Debug';
+	enable_if { config->{debug} } "Debug";
 
 # 	enable_if { $_[0]->{REQUEST_URI} !~ m#/nyt/nytprofhtml# } 'Debug', panels => [
 # 		'Timer',

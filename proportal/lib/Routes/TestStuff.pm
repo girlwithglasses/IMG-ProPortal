@@ -5,6 +5,19 @@ use parent 'AppCore';
 use IMG::Util::File qw( :all );
 use File::Spec::Functions;
 
+prefix '/tools' => sub {
+
+	my @tools = qw( krona jbrowse galaxy phyloviewer );
+	my $re = join '|', @demo_pages;
+
+	get qr{
+		/ (?<tool> $re )
+	}x => sub {
+
+		return template "pages/tools/" . captures->{tool};
+
+	};
+};
 
 prefix '/cart' => sub {
 	any '/genomes/add' => sub {

@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 36215 2016-09-23 17:59:48Z aratner $
+# $Id: EgtCluster.pm 36348 2016-10-21 19:58:24Z aratner $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -3169,6 +3169,7 @@ sub printClusterChart3D {
           window.onload = drawChart3D("chart3d", $pca_data);
       </script>
     };
+    print "<br/>"; # space for reset button
     my $url = "http://www.highcharts.com/"; 
     print "<p>This chart is generated using ".alink($url, "Highcharts")."<br/>";
 }
