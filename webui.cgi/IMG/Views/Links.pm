@@ -797,6 +797,74 @@ my $static_links = {
 	},
 
 #	proportal links
+
+# 	home => {
+# 		label => 'Home', url => 'home',
+# 	},
+	browse => {
+		label => 'Browse', url => 'browse',
+	},
+	search => {
+		label => 'Search', url => 'search',		
+	},
+	'search/blast' => {
+		label => 'BLAST', url => 'search/blast',
+	},
+	'search/advanced_search' => {
+		label => 'Advanced Search', url => 'search_advanced_search',
+	},
+	tools => {
+		label => 'Tools', url => 'tools',
+	},
+	'tools/galaxy' => {
+		label => 'Launch Galaxy', url => 'tools/galaxy',
+	},
+	'tools/phyloviewer' => {
+		label => 'PhyloViewer', url => 'tools/phyloviewer',
+	},
+	'tools/jbrowse' => {
+		label => 'JBrowse', url => 'tools/jbrowse',
+	},
+	'tools/krona' => {
+		label => 'Krona', url => 'tools/krona',
+	},
+	my_img => {
+		label => 'My IMG', url => 'my_img',
+	},
+	'my_img/preferences' => {
+		label => 'Preferences', url => 'my_img/preferences',
+	},
+	support => {
+		label => 'Support', url => 'support',
+	},
+	'support/about' => {
+		label => 'About IMG/ProPortal', url => 'support/about',
+	},
+	'support/user_guide' => {
+		label => 'User Guide', url => 'support/user_guide',
+	},
+	'support/news' => {
+		label => 'News', url => 'support/news',
+	},
+	cart => {
+		label => 'Analysis Cart', url => 'cart',
+	},
+	'cart/genomes' => {
+		label => 'Genomes (#)', url => 'cart/genomes',
+	},
+	'cart/genes' => {
+		label => 'Genes (#)', url => 'cart/genes',
+	},
+	'cart/functions' => {
+		label => 'Functions (#)', url => 'cart/functions',
+	},
+	'cart/scaffolds' => {
+		label => 'Scaffolds (#)', url => 'cart/scaffolds',
+	},
+	
+
+
+		
 	proportal => {
 		label => 'IMG ProPortal',
 		url => 'proportal',
@@ -827,9 +895,9 @@ my $static_links = {
 	},
 
 #	galaxy
-	galaxy => {
-		url => 'galaxy', label => 'PhyloViewer (Galaxy)'
-	},
+# 	galaxy => {
+# 		url => 'galaxy', label => 'PhyloViewer (Galaxy)'
+# 	},
 
 # menu links
 
