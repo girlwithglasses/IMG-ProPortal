@@ -11,14 +11,6 @@ use ProPortal::Util::JBrowseFilePrep;
 
 prefix '/jbrowse' => sub {
 
-	# temporary fix for JBrowse path issues
-
-#	get qr{/(img|plugins)/.*?} => sub {
-#		my $path = request->dispatch_path;
-#		$path =~ s!/jbrowse/!/jbrowse_assets/!;
-#		redirect $path;
-#	};
-
 	get qr{
 		/ (?<taxon_oid> \d{1,16} )
 		/?

@@ -78,9 +78,6 @@ use lib @dir_arr;
 		$self->set_filters( subset => $self->args->subset );
 
 		my $rslts = $self->render;
-# 		$rslts->{settings} = $self->config;
-# 		$rslts->{page_wrapper} = 'layouts/contents_only.html.tt';
-# 		$rslts->{mode} = 'galaxy';
 		$rslts = AppCore::get_tmpl_vars({ core => $self, output => $rslts });
 
 		print { $self->args->outfile } $self->render_template({

@@ -16,7 +16,7 @@
 #    12: scaffold read depth
 #    --es 03/22/2007
 #
-# $Id: GeneCartStor.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: GeneCartStor.pm 36404 2016-11-07 17:58:06Z klchu $
 ############################################################################
 package GeneCartStor;
 my $section = "GeneCartStor";
@@ -41,6 +41,7 @@ use HTML::Template;
 use HtmlUtil;
 use CartUtil;
 use GeneDataUtil;
+use TabHTML;
 
 my $env         = getEnv();
 my $main_cgi    = $env->{main_cgi};
@@ -922,7 +923,7 @@ sub printGeneCartForm {
     print "<p>\n$count gene(s) in cart\n</p>\n";
     printValidationJS();
 
-    use TabHTML;
+
     TabHTML::printTabAPILinks("genecartTab");
     my @tabIndex = (
                      "#genecarttab1", "#genecarttab2", "#genecarttab3", "#genecarttab4",

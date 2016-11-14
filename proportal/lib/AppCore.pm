@@ -1,20 +1,32 @@
 package AppCore;
 use IMG::Util::Base;
 use Dancer2 appname => 'ProPortal';
-# use Dancer2::Plugin::LogContextual;
 use Dancer2::Session::CGISession;
-use Log::Contextual ':log';
+
 use Sys::Hostname;
 use IMG::App;
 use ProPortal::Util::Factory;
 # use ProPortal::CoreAppAdapter;
+#use Dancer2::Plugin::LogContextual;
+#use Dancer2::Plugin::AppRole::Helper;
+use Log::Contextual::SimpleLogger;
+use Log::Contextual qw( :log set_logger );
 
 our $VERSION = '0.1.0';
+
+my $logger = Log::Contextual::SimpleLogger->new({
+	levels => [qw( trace debug info warn error fatal )],
+	coderef => sub { say 'OOPS! ' . join "\n", @_ }
+});
+
+set_logger $logger;
+set lc_logger => $logger;
 
 sub init {
 	my $class = shift;
 	my %opts  = @_;
 
+	log_debug { 'running init code!' };
 	# set optional configuration override
 	set $_ => $opts{ $_ } for keys %opts;
 
@@ -27,7 +39,7 @@ Create a new IMG::App instance. Stored in the Dancer2 app as '_core'
 =cut
 
 sub create_core {
-
+	log_trace { 'running create core' };
 	my $class = Role::Tiny->create_class_with_roles( 'IMG::App',
 	qw( ProPortal::Views::ProPortalMenu
 		IMG::App::Role::MenuManager
@@ -54,7 +66,7 @@ ProPortal::Controller::Base for an example of the default controller.
 =cut
 
 sub bootstrap {
-	my ($c_type, $args) = @_;
+	my ( $c_type, $args ) = @_;
 	$c_type ||= 'Base';
 
 #	debug 'Application: ';
@@ -219,7 +231,11 @@ Default data to add to the templates
 
 Adds external and internal links, plus navigation data.
 
-@param  $output   (opt) data hash to add the defaults to
+@param  $args hashref with  keys
+	core	IMG::App core
+	output	(opt) data hash to add the defaults to
+
+@return $args->{output} with added goodness
 
 =cut
 
@@ -235,6 +251,7 @@ sub get_tmpl_vars {
 	$output->{breadcrumbs}++;
 	$output->{server_name} = hostname;
 	$output->{ora_service} = $ENV{ORA_SERVICE} || 'The Oracle is silent';
+#	$output->{img_cfg} = $core->img_cfg;
 	return $output;
 }
 
@@ -248,13 +265,18 @@ any '/' => sub {
 
 any '/login' => sub {
 
+	# no sso_domain configuration
+	if ( ! config->{sso_domain} ) {
+		forward '/';
+	}
+
 	# Display a login page; the original URL they requested is available as
 	# param('post_login'), so could be put in a hidden field in the form
 	my $path = param('post_login') // '';
 	$path =~ s!^/!!;
 	$path ||= 'logged_in';
 
-	delete cookies->{jgi_return} if cookies && exists cookies->{jgi_return};
+#	delete cookies->{jgi_return} if cookies && exists cookies->{jgi_return};
 
 	debug 'uri_for ' . $path . ' = ' . uri_for( $path );
 
@@ -268,10 +290,7 @@ any '/login' => sub {
 
 	push_response_header 'Set-Cookie' => $c->to_header();
 
-#	return '';
 	redirect 'https://signon.jgi.doe.gov';
-
-#	return template "pages/login", { path => $path, login => param('login') || undef, password => param('password') || undef };
 
 };
 
@@ -294,15 +313,6 @@ any qr{
 
 	redirect 'https://signon.jgi-psf.org/signon/destroy';
 };
-
-# any qr{
-# 	/(?<query> 403|404|500|503)
-# 	}x => sub {
-#
-# 	return template captures->{query};
-#
-# };
-
 
 sub do_login {
 

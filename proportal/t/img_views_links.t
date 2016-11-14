@@ -16,6 +16,7 @@ BEGIN {
 
 use lib @dir_arr;
 use IMG::Util::Base 'Test';
+
 use Dancer2;
 
 use_ok( 'IMG::Views::Links' );
@@ -28,11 +29,10 @@ my $cfg = {
 };
 
 my $cfg_w_jbrowse = {
-	base_url => 'http://example.com',
-	main_cgi_url => 'http://example.com/main.cgi',
+	base_url => 'http://example_w_jbrowse.com',
+	main_cgi_url => 'http://example_w_jbrowse.com/main.cgi',
 	server => 'http://another-server.com/',
 	jbrowse => 'http://jbrowse.com'
-
 };
 
 {	package TestApp;
@@ -74,27 +74,29 @@ subtest 'external links' => sub {
 
 subtest 'internal links: no config' => sub {
 
-	$msg = err({ err => 'missing', subject => 'config' });
-	throws_ok {
-		IMG::Views::Links::init()
-	} qr[$msg], 'No config hash supplied';
+	subtest 'error states' => sub {
+		$msg = err({ err => 'missing', subject => 'config' });
+		throws_ok {
+			IMG::Views::Links::init()
+		} qr[$msg], 'No config hash supplied';
 
-	$msg = err({
-		err => 'format_err',
-		subject => 'link configuration',
-		fmt => 'a hashref'
-	});
-	throws_ok {
-		IMG::Views::Links::init( 'hello world' )
-	} qr[$msg], 'Incorrect format for config';
+		$msg = err({
+			err => 'format_err',
+			subject => 'link configuration',
+			fmt => 'a hashref'
+		});
+		throws_ok {
+			IMG::Views::Links::init( 'hello world' )
+		} qr[$msg], 'Incorrect format for config';
 
-	$msg = err({
-		err => 'cfg_missing',
-		subject => 'link URLs'
-	});
-	throws_ok {
-		IMG::Views::Links::get_img_link()
-	} qr[$msg], 'No config hash for get_img_link';
+		$msg = err({
+			err => 'cfg_missing',
+			subject => 'link URLs'
+		});
+		throws_ok {
+			IMG::Views::Links::get_img_link()
+		} qr[$msg], 'No config hash for get_img_link';
+	};
 };
 
 subtest 'internal links' => sub {
@@ -150,28 +152,74 @@ subtest 'internal links' => sub {
 			'proportal link'
 		);
 
-		# new dynamic
+		# new dynamic, taxon
+		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/taxon/1234567', 'link with params');
+
+		# new dynamic, no params
+		is( $app->img_link({ id => 'taxon' }), 'http://example.com/taxon', 'link without params' );
+
+
+# 		# old dynamic
+# 		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=1234567', 'link with params');
+#
+# 		# old dynamic, no params
+# 		is( $app->img_link({ id => 'taxon' }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=', 'Make sure that incomplete URLs have the incomplete bit at the end' );
+
+	};
+};
+
+subtest 'jbrowse links' => sub {
+
+	subtest 'valid' => sub {
+
+		# with JBrowse server
+
+		$app = TestApp->new;
+		$msg = err({ err => 'missing', subject => 'config' });
+		throws_ok {
+			$app->img_link({ id => 'jbrowse' })
+		} qr[$msg], 'insufficient configuration';
+
+		$app = TestApp->new( config => $cfg_w_jbrowse );
+		say 'app: ' . Dumper $app;
+		is(
+			$app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }),
+			'http://example_w_jbrowse.com/taxon/1234567',
+			'taxon link'
+		);
+
+		is(
+			$app->img_link({ id => 'jbrowse', params => { taxon_oid => 1234567 } }),
+			'http://jbrowse.com/1234567',
+			'jbrowse server, link with params'
+		);
+		is(
+			$app->img_link({ id => 'jbrowse' }),
+			'http://jbrowse.com',
+			'jbrowse server, link no params'
+		);
+
+		# without JBrowse server
+		$app = TestApp->new( config => $cfg );
+		say 'app: ' . Dumper $app;
+		is(
+			$app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }),
+			'http://example.com/taxon/1234567',
+			'taxon link'
+		);
 		is(
 			$app->img_link({ id => 'jbrowse', params => { taxon_oid => 1234567 } }),
 			'http://example.com/jbrowse/1234567',
 			'jbrowse link with params'
 		);
-
-		# new dynamic, no params
 		is(
 			$app->img_link({ id => 'jbrowse' }),
-			'http://example.com/jbrowse/',
+			'http://example.com/jbrowse',
 			'jbrowse link no params'
 		);
-
-		# old dynamic
-		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=1234567', 'link with params');
-
-		# old dynamic, no params
-		is( $app->img_link({ id => 'taxon' }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=', 'Make sure that incomplete URLs have the incomplete bit at the end' );
-
 	};
 };
+
 
 subtest 'template toolkit links' => sub {
 

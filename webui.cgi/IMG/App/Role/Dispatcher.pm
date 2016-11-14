@@ -10,17 +10,6 @@ package IMG::App::Role::Dispatcher;
 use IMG::Util::Base 'MooRole';
 use IMG::App::DispatchCore;
 
-use Class::Load ':all';
-
-# register 'cgi_dispatch' => sub {
-# 	return prepare_dispatch( @_ );
-# };
-#
-# register 'prep_parse_params' => sub {
-# 	return prepare_to_parse( @_ );
-# };
-
-
 sub prepare_to_parse {
 	my $dsl = shift;
 	my $req = shift;
@@ -1021,178 +1010,182 @@ sub paramMatch {
 sub is_valid_module {
 	my $m = shift;
 	my $valid = valid_modules();
-	for (@$valid) {
-		# untaint
-		return $_ if $_ eq $m;
-	}
-	return 0;
+	return $valid->{$m} || 0;
 }
 
 sub valid_modules {
 
-	return [ qw(
-About
-AbundanceComparisons
-AbundanceComparisonsSub
-AbundanceProfiles
-AbundanceProfileSearch
-AbundanceTest
-AbundanceToolkit
-AllPwayBrowser
-AnalysisProject
-ANI
-Artemis
-BcNpIDSearch
-BcSearch
-BiosyntheticDetail
-BiosyntheticStats
-Caliban
-Cart
-ClustalW
-CogCategoryDetail
-CompareGeneModelNeighborhood
-CompareGenomes
-CompTaxonStats
-CuraCartDataEntry
-CuraCartStor
-DataEvolution
-DistanceTree
-DotPlot
-EggNog
-EgtCluster
-EmblFile
-Fastbit
-FindClosure
-FindFunctionMERFS
-FindFunctions
-FindGenes
-FindGenesBlast
-FindGenesLucy
-FindGenomes
-FuncCartStor
-FuncProfile
-FunctionAlignment
-FunctionProfiler
-GenBankFile
-GeneAnnotPager
-GeneCartChrViewer
-GeneCartDataEntry
-GeneCartStor
-GeneCassette
-GeneCassetteProfiler
-GeneCassetteSearch
-GeneDetail
-GeneInfoPager
-GeneNeighborhood
-GenePageEnvBlast
-GeneProfilerStor
-GenerateArtemisFile
-GenomeCart
-GenomeGeneOrtholog
-GenomeHits
-GenomeList
-GenomeListJSON
-GenomeProperty
-Help
-HmpTaxonList
-HomologToolkit
-HorizontalTransfer
-IMG::Views::ViewMaker
-ImgCompound
-IMGContent
-ImgCpdCartStor
-ImgGroup
-ImgNetworkBrowser
-ImgPartsListBrowser
-ImgPartsListCartStor
-ImgPartsListDataEntry
-IMGProteins
-ImgPwayBrowser
-ImgPwayCartDataEntry
-ImgPwayCartStor
-ImgReaction
-ImgRxnCartStor
-ImgStatsOverview
-ImgTermAndPathTab
-ImgTermBrowser
-ImgTermCartDataEntry
-ImgTermCartStor
-ImgTermStats
-Interpro
-KeggMap
-KeggPathwayDetail
-Kmer
-KoTermStats
-MeshTree
-MetaCyc
-MetaDetail
-MetaFileGraph
-MetaFileHits
-MetaGeneDetail
-MetaGeneTable
-Metagenome
-MetagenomeGraph
-MetagenomeHits
-MetagPhyloDist
-MetaScaffoldGraph
-Methylomics
-MissingGenes
-MpwPwayBrowser
-MyBins
-MyFuncCat
-MyGeneDetail
-MyIMG
-NaturalProd
-NcbiBlast
-NrHits
-Operon
-OtfBlast
-Pangenome
-PathwayMaps
-PepStats
-PfamCategoryDetail
-PhyloClusterProfiler
-PhyloCogs
-PhyloDist
-PhylogenProfiler
-PhyloOccur
-PhyloProfile
-PhyloSim
-ProfileQuery
-ProjectId
-ProteinCluster
-Questions
-RadialPhyloTree
-Registration
-RNAStudies
-ScaffoldCart
-ScaffoldGraph
-ScaffoldHits
-ScaffoldSearch
-Sequence
-SixPack
-StudyViewer
-TaxonCircMaps
-TaxonDeleted
-TaxonDetail
-TaxonEdit
-TaxonList
-TaxonSearch
-TigrBrowser
-TreeFile
-TreeQ
-Vista
-WebUtil
-Workspace
-WorkspaceFuncSet
-WorkspaceGeneSet
-WorkspaceGenomeSet
-WorkspaceJob
-WorkspaceRuleSet
-WorkspaceScafSet
-)];
+	return {
+		ClusterScout                 => 'ClusterScout',
+		WorkspaceBcSet               => 'WorkspaceBcSet',
+		AbundanceProfileSearch       => 'AbundanceProfileSearch',
+		GenomeList                   => 'GenomeList',
+		ImgStatsOverview             => 'ImgStatsOverview',
+		BiosyntheticDetail           => 'BiosyntheticDetail',
+		GeneCassetteProfiler         => 'GeneCassetteProfiler',
+		GenomeCart                   => 'GenomeCart',
+		Caliban                      => 'Caliban',
+		StudyViewer                  => 'StudyViewer',
+		GeneCassette                 => 'GeneCassette',
+		GeneCassetteSearch           => 'GeneCassetteSearch',
+		ANI                          => 'ANI',
+		ProjectId                    => 'ProjectId',
+		TreeFile                     => 'TreeFile',
+		ScaffoldSearch               => 'ScaffoldSearch',
+		MeshTree                     => 'MeshTree',
+		AbundanceProfiles            => 'AbundanceProfiles',
+		AbundanceTest                => 'AbundanceTest',
+		AbundanceComparisons         => 'AbundanceComparisons',
+		AbundanceComparisonsSub      => 'AbundanceComparisonsSub',
+		AbundanceToolkit             => 'AbundanceToolkit',
+		Artemis                      => 'Artemis',
+		np                           => 'NaturalProd',
+		NaturalProd                  => 'NaturalProd',
+		ClustalW                     => 'ClustalW',
+		CogCategoryDetail            => 'CogCategoryDetail',
+		CompareGenomes               => 'CompareGenomes',
+		CompareGenomesTab            => 'CompareGenomes',
+		GenomeGeneOrtholog           => 'GenomeGeneOrtholog',
+		Pangenome                    => 'Pangenome',
+		CompareGeneModelNeighborhood => 'CompareGeneModelNeighborhood',
+		CuraCartStor                 => 'CuraCartStor',
+		CuraCartDataEntry            => 'CuraCartDataEntry',
+		DataEvolution                => 'DataEvolution',
+		EbiIprScan                   => 'EbiIprScan',
+		EgtCluster                   => 'EgtCluster',
+		EmblFile                     => 'EmblFile',
+		BcSearch                     => 'BcSearch',
+		BiosyntheticStats            => 'BiosyntheticStats',
+		BcNpIDSearch                 => 'BcNpIDSearch',
+		ClusterScout                 => 'ClusterScout',
+		FindFunctions                => 'FindFunctions',
+		FindFunctionMERFS            => 'FindFunctionMERFS',
+		FindGenes                    => 'FindGenes',
+		FindGenesLucy                => 'FindGenesLucy',
+		FindGenesBlast               => 'FindGenesBlast',
+		FindGenomes                  => 'FindGenomes',
+		FunctionAlignment            => 'FunctionAlignment',
+		FuncCartStor                 => 'FuncCartStor',
+		FuncCartStorTab              => 'FuncCartStor',
+		FuncProfile                  => 'FuncProfile',
+		FunctionProfiler             => 'FunctionProfiler',
+		DotPlot                      => 'DotPlot',
+		DistanceTree                 => 'DistanceTree',
+		RadialPhyloTree              => 'RadialPhyloTree',
+		Kmer                         => 'Kmer',
+		GenBankFile                  => 'GenBankFile',
+		GeneAnnotPager               => 'GeneAnnotPager',
+		GeneCartChrViewer            => 'GeneCartChrViewer',
+		GeneCartStor                 => 'GeneCartStor',
+		GeneCartStorTab              => 'GeneCartStor',
+		MyGeneDetail                 => 'MyGeneDetail',
+		Help                         => 'Help',
+		GeneDetail                   => 'GeneDetail',
+		geneDetail                   => 'GeneDetail',
+		MetaGeneDetail               => 'MetaGeneDetail',
+		MetaGeneTable                => 'MetaGeneTable',
+		GeneNeighborhood             => 'GeneNeighborhood',
+		FindClosure                  => 'FindClosure',
+		MetagPhyloDist               => 'MetagPhyloDist',
+		Cart                         => 'Cart',
+		HorizontalTransfer           => 'HorizontalTransfer',
+		ImgTermStats                 => 'ImgTermStats',
+		KoTermStats                  => 'KoTermStats',
+		HmpTaxonList                 => 'HmpTaxonList',
+		Interpro                     => 'Interpro',
+		MetaCyc                      => 'MetaCyc',
+		AnalysisProject              => 'AnalysisProject',
+		GenePageEnvBlast             => 'GenePageEnvBlast',
+		GeneProfilerStor             => 'GeneProfilerStor',
+		GenomeProperty               => 'GenomeProperty',
+		GreenGenesBlast              => 'GreenGenesBlast',
+		HomologToolkit               => 'HomologToolkit',
+		ImgCompound                  => 'ImgCompound',
+		ImgCpdCartStor               => 'ImgCpdCartStor',
+		ImgTermAndPathTab            => 'ImgTermAndPathTab',
+		ImgNetworkBrowser            => 'ImgNetworkBrowser',
+		ImgPwayBrowser               => 'ImgPwayBrowser',
+		ImgPartsListBrowser          => 'ImgPartsListBrowser',
+		ImgPartsListCartStor         => 'ImgPartsListCartStor',
+		ImgPartsListDataEntry        => 'ImgPartsListDataEntry',
+		ImgPwayCartDataEntry         => 'ImgPwayCartDataEntry',
+		ImgPwayCartStor              => 'ImgPwayCartStor',
+		ImgReaction                  => 'ImgReaction',
+		ImgRxnCartStor               => 'ImgRxnCartStor',
+		ImgTermBrowser               => 'ImgTermBrowser',
+		ImgTermCartDataEntry         => 'ImgTermCartDataEntry',
+		ImgTermCartStor              => 'ImgTermCartStor',
+		KeggMap                      => 'KeggMap',
+		KeggPathwayDetail            => 'KeggPathwayDetail',
+		PathwayMaps                  => 'PathwayMaps',
+		Metagenome                   => 'Metagenome',
+		AllPwayBrowser               => 'AllPwayBrowser',
+		MpwPwayBrowser               => 'MpwPwayBrowser',
+		GenomeHits                   => 'GenomeHits',
+		ScaffoldHits                 => 'ScaffoldHits',
+		ScaffoldDetail               => 'ScaffoldDetail',
+		MetaScaffoldDetail           => 'MetaScaffoldDetail',
+		ScaffoldCart                 => 'ScaffoldCart',
+		MetagenomeHits               => 'MetagenomeHits',
+		MetaFileHits                 => 'MetaFileHits',
+		MetagenomeGraph              => 'MetagenomeGraph',
+		MetaFileGraph                => 'MetaFileGraph',
+		MissingGenes                 => 'MissingGenes',
+		MyFuncCat                    => 'MyFuncCat',
+		MyIMG                        => 'MyIMG',
+		ImgGroup                     => 'ImgGroup',
+		Workspace                    => 'Workspace',
+		WorkspaceGeneSet             => 'WorkspaceGeneSet',
+		WorkspaceFuncSet             => 'WorkspaceFuncSet',
+		WorkspaceGenomeSet           => 'WorkspaceGenomeSet',
+		WorkspaceScafSet             => 'WorkspaceScafSet',
+		WorkspaceRuleSet             => 'WorkspaceRuleSet',
+		WorkspaceJob                 => 'WorkspaceJob',
+		MyBins                       => 'MyBins',
+		About                        => 'About',
+		NcbiBlast                    => 'NcbiBlast',
+		NrHits                       => 'NrHits',
+		Operon                       => 'Operon',
+		OtfBlast                     => 'OtfBlast',
+		PepStats                     => 'PepStats',
+		PfamCategoryDetail           => 'PfamCategoryDetail',
+		PhyloCogs                    => 'PhyloCogs',
+		PhyloDist                    => 'PhyloDist',
+		PhyloOccur                   => 'PhyloOccur',
+		PhyloProfile                 => 'PhyloProfile',
+		PhyloSim                     => 'PhyloSim',
+		PhyloClusterProfiler         => 'PhyloClusterProfiler',
+		PhylogenProfiler             => 'PhylogenProfiler',
+		ProteinCluster               => 'ProteinCluster',
+		ProfileQuery                 => 'ProfileQuery',
+		PdbBlast                     => 'PdbBlast',
+		SixPack                      => 'SixPack',
+		Sequence                     => 'Sequence',
+		ScaffoldGraph                => 'ScaffoldGraph',
+		MetaScaffoldGraph            => 'MetaScaffoldGraph',
+		TaxonCircMaps                => 'TaxonCircMaps',
+		GenerateArtemisFile          => 'GenerateArtemisFile',
+		TaxonDetail                  => 'TaxonDetail',
+		TaxonDeleted                 => 'TaxonDeleted',
+		MetaDetail                   => 'MetaDetail',
+		TaxonList                    => 'TaxonList',
+		TaxonSearch                  => 'TaxonSearch',
+		TigrBrowser                  => 'TigrBrowser',
+		TreeQ                        => 'TreeQ',
+		Vista                        => 'Vista',
+		IMGContent                   => 'IMGContent',
+		IMGProteins                  => 'IMGProteins',
+		Methylomics                  => 'Methylomics',
+		RNAStudies                   => 'RNAStudies',
+		Questions                    => 'Questions',
+		Messages                     => 'Messages',
+		znormNote                    => 'Messages',
+		CogDetail                    => 'CogDetail',
+		Viral                        => 'Viral',
+		GeneInfoPager                => 'GeneInfoPager',
+		Export                       => 'Export',
+		WorkspacePublicSet           => 'WorkspacePublicSet',
+	};
 }
-
-register_plugin;
 
 1;

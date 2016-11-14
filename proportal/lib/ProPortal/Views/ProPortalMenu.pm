@@ -35,18 +35,136 @@ Returns a data structure representing the menu. This can be overridden by site-s
 sub _get_menu_items {
 	my $self = shift;
 	return [
-		proportal(),
-		genomes(),
-		genes(),
-		functions(),
-		compare_genomes(),
-		omics(),
-		using(),
-		$self->my_img,
-		datamarts(),
+# 		proportal(),
+# 		genomes(),
+# 		genes(),
+# 		functions(),
+# 		compare_genomes(),
+# 		omics(),
+# 		using(),
+# 		$self->my_img,
+#		datamarts(),
+
+		home(),
+		browse(),
+		search(),
+		tools(),
+		$self->my_img(),
+		support(),
+		cart(),
 	];
 
 }
+
+
+sub home {
+	return {
+		id => 'proportal'
+	};
+}
+
+sub browse {
+	return {
+		id => 'menu/browse',
+		submenu =>
+		[
+			'proportal/clade',
+			'proportal/data_type',
+			'proportal/location',
+			'proportal/ecosystem',
+			'proportal/ecotype',
+			'proportal/phylogram',
+			'galaxy',
+		],
+	};
+}
+
+sub search {
+	return {
+		id => 'menu/search',
+		submenu => [
+			'search/blast',
+			'search/advanced_search'
+		],
+	};
+}
+
+sub tools {
+	return {
+		id => 'menu/tools',
+		submenu => [
+			'tools/galaxy',
+			'tools/phyloviewer',
+			'tools/jbrowse',
+			'tools/krona'
+		],
+	};
+}
+
+sub my_img {
+	my $self = shift;
+	# logged in user?
+	if ( $self->has_user ) {
+		return {
+			id => 'menu/MyIMG',
+			submenu =>
+			[	'MyIMG/preferences',
+
+				id => 'menu/Workspace',
+				submenu =>
+				[
+					'Workspace', # label => 'Export Workspace' },
+					'WorkspaceGeneSet',
+					'WorkspaceFuncSet',
+					'WorkspaceGenomeSet',
+					'WorkspaceScafSet',
+				],
+			]
+		};
+	}
+
+	return {
+		id => 'menu/MyIMG',
+		submenu =>
+		[	'MyIMG/preferences',
+			'login'
+		]
+	};
+}
+
+sub support {
+	return {
+		id => 'support',
+		submenu => [
+			'support/about',
+			'support/user_guide',
+			'support/news',
+ 		],
+	};
+}
+
+sub cart {
+	return {
+# 		id => 'cart',
+# 		submenu => [
+# 			'cart/genomes',
+# 			'cart/genes',
+# 			'cart/functions',
+# 			'cart/scaffolds',
+# 		],
+		id => 'menu/cart',
+		submenu =>
+		[
+			'GeneCartStor',
+			'FuncCartStor',
+			'GenomeCart',
+			'ScaffoldCart',
+		],
+	};
+}
+
+
+
 
 sub proportal {
 
@@ -269,7 +387,7 @@ sub workspace {
 	};
 }
 
-sub my_img {
+sub my_img_expanded {
 	my $self = shift;
 
 	my $core_menu = {

@@ -2,7 +2,7 @@
 #
 # see webUI/worker.cgi
 #
-# $Id: Command.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: Command.pm 36403 2016-11-03 21:02:34Z klchu $
 ############################################################################
 package Command;
 
@@ -25,7 +25,7 @@ my $img_ken        = $env->{img_ken};
 my $base_url       = $env->{base_url};
 my $worker_base_url = $env->{worker_base_url};
 
-my $thr; # print dot thread
+my $thr = ''; # print dot thread
 
 #
 # create a session directory to store temp files
@@ -160,7 +160,7 @@ sub runCmdViaUrl {
 }
 
 #
-# kill the dot printing thread
+# kill the dot printing thread when the process is done.
 #
 sub killDotThread {
     # Send a signal to a thread
@@ -172,14 +172,30 @@ sub killDotThread {
 # starts printing dots to the browser
 #
 # ONLY one dot thread for now - ken
+# do not call startDotThread() more than once.
 #
+# How to use:
+# printStartWorkingDiv();
+# ....
+# require Command;
+#
+# Command::startDotThread(120); # print dots every 5 secs for a max of 120 times, default is 60 times
+# ....... do your long running query here ....
+# Command::killDotThread();
+# ...
+# printEndWorkingDiv(); 
+# 
 sub startDotThread {
-    $thr = threads->create( 'printDotThread');
+    my @a = @_;
+    
+    $thr = threads->create( 'printDotThread', @a);
     #$thr->join;    
 }
 
+# This is a private function DO NOT call this function
 #
-# printing dots every 5 secs for a max of 60 times
+# printing dots every 5 secs for a max of $times times
+# default is 60 times if not set.
 #
 sub printDotThread {
     my($times) = @_;
@@ -189,7 +205,7 @@ sub printDotThread {
     $SIG{'KILL'} = sub { threads->exit(); };
     
     for(my $i=0; $i < $times; $i++) {
-        print "Waiting ... $i .. <br>\n";
+        print "Waiting ... $i / $times .. <br>\n";
         sleep 5; # 5 secs
     }
 }

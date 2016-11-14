@@ -1,8 +1,6 @@
 package ProPortal::Util::Factory;
 
 use IMG::Util::Base;
-
-use Class::Load ':all';
 use String::CamelCase qw(camelize);
 use IMG::Util::Factory;
 

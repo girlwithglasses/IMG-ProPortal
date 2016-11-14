@@ -1,0 +1,10 @@
+<!--#include file="header.shtml" -->
+	<article class="content cf" role="main">
+		<h2>Server Offline</h2>
+		<p class="error">
+			The IMG ProPortal server is currently unavailable. Please try again later.
+		</p>
+		<p>Document requested: https://<!--#echo var="HTTP_X_FORWARDED_HOST"--><!--#echo var="REQUEST_URI"--></p>
+	</article>
+<!--#include file="footer.shtml" -->
+<!-- pre><!--#printenv --></pre -->

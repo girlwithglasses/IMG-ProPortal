@@ -10,7 +10,7 @@ our (@ISA, @EXPORT_OK);
 BEGIN {
 	require Exporter;
 	@ISA = qw( Exporter );
-	@EXPORT_OK = qw( get_link_data get_ext_link get_img_link get_img_link_tt );
+	@EXPORT_OK = qw( get_link_data get_ext_link get_img_link get_img_link_tt base_url_h );
 }
 
 sub set_base_url_h {
@@ -69,6 +69,8 @@ Initialise local URL-generating variables
 
 sub init {
 	my $config = shift // die err({ err => 'missing', subject => 'config' });
+
+	say 'Initialising!';
 
 	if (! ref $config || 'HASH' ne ref $config ) {
 		die err({
@@ -797,6 +799,72 @@ my $static_links = {
 	},
 
 #	proportal links
+
+# 	home => {
+# 		label => 'Home', url => 'home',
+# 	},
+	'menu/browse' => {
+		label => 'Browse', url => 'menu/browse',
+	},
+	'menu/search' => {
+		label => 'Search', url => 'search',
+	},
+	'search/blast' => {
+		label => 'BLAST', url => 'search/blast',
+	},
+	'search/advanced_search' => {
+		label => 'Advanced Search', url => 'search_advanced_search',
+	},
+	'menu/tools' => {
+		label => 'Tools', url => 'tools',
+	},
+	'tools/galaxy' => {
+		label => 'Launch Galaxy', url => 'tools/galaxy',
+	},
+	'tools/phyloviewer' => {
+		label => 'PhyloViewer', url => 'tools/phyloviewer',
+	},
+	'tools/jbrowse' => {
+		label => 'JBrowse', url => 'tools/jbrowse',
+	},
+	'tools/krona' => {
+		label => 'Krona', url => 'tools/krona',
+	},
+	my_img => {
+		label => 'My IMG', url => 'my_img',
+	},
+	'my_img/preferences' => {
+		label => 'Preferences', url => 'my_img/preferences',
+	},
+	support => {
+		label => 'Support', url => 'support',
+	},
+	'support/about' => {
+		label => 'About IMG/ProPortal', url => 'support/about',
+	},
+	'support/user_guide' => {
+		label => 'User Guide', url => 'support/user_guide',
+	},
+	'support/news' => {
+		label => 'News', url => 'support/news',
+	},
+	cart => {
+		label => 'Analysis Cart', url => 'cart',
+	},
+	'cart/genomes' => {
+		label => 'Genomes (#)', url => 'cart/genomes',
+	},
+	'cart/genes' => {
+		label => 'Genes (#)', url => 'cart/genes',
+	},
+	'cart/functions' => {
+		label => 'Functions (#)', url => 'cart/functions',
+	},
+	'cart/scaffolds' => {
+		label => 'Scaffolds (#)', url => 'cart/scaffolds',
+	},
+
+
 	proportal => {
 		label => 'IMG ProPortal',
 		url => 'proportal',
@@ -1011,7 +1079,8 @@ that depends on certain parameters
 
 my $dynamic_links = {
 
-	# example.com/jbrowse/12345678
+	# JBrowse base URL: jbrowse.com/12345678
+	# no JBrowse URL:   base_url/jbrowse/12345678
 	jbrowse => sub {
 		return {
 			style => 'new',
@@ -1020,7 +1089,7 @@ my $dynamic_links = {
 				return
 				( $base_url_h->{jbrowse}
 				? $base_url_h->{jbrowse}
-				: $base_url_h->{base_url} . '/jbrowse/' )
+				: $base_url_h->{base_url} . '/jbrowse' )
 				.
 				( $argh && $argh->{params}
 				? '/' . $argh->{params}{taxon_oid}
@@ -1039,9 +1108,9 @@ my $dynamic_links = {
 				taxon_oid => ''
 			},
 			fn => sub {
-				return $_[0]->{base} . '/taxon/' .
+				return $_[0]->{base} . 'taxon' .
 				( $_[0] && $_[0]->{params}
-				? shift->{params}{taxon_oid}
+				? '/' . shift->{params}{taxon_oid}
 				: '' );
 			},
 		};
@@ -1204,7 +1273,7 @@ sub get_img_link {
 
 	if ( ! exists $args->{id} || ! $args->{id} ) {
 
-		warn 'args: ' . Dumper $args;
+#		warn 'args: ' . Dumper $args;
 		die err({
 			err => 'missing',
 			subject => 'link ID'
@@ -1309,13 +1378,13 @@ sub get_img_link_tt {
 	return get_img_link( @_ );
 }
 
-=head3 module_reset
+=head3 reset_links
 
 Undefine $env for testing purposes
 
 =cut
 
-sub module_reset {
+sub reset_links {
 	delete $base_url_h->{init_run};
 }
 

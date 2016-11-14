@@ -14,8 +14,10 @@ BEGIN {
 	@dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib proportal/t/lib );
 }
 
-
 use lib @dir_arr;
+use IMG::Util::Base 'NetTest';
+use Dancer2;
+use Routes::ProPortal;
 
 {
 	package MiniContr;
@@ -25,9 +27,6 @@ use lib @dir_arr;
 }
 
 
-use IMG::Util::Base 'NetTest';
-use Dancer2;
-use Routes::ProPortal;
 
 # set up the app
 #my $psgi = Plack::Util::load_psgi( "$dir/proportal/bin/app.psgi" );

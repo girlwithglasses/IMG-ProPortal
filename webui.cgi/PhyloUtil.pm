@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id: PhyloUtil.pm 36161 2016-09-12 16:10:14Z imachen $
+# $Id: PhyloUtil.pm 36386 2016-10-27 18:19:02Z klchu $
 ###########################################################################
 package PhyloUtil;
 
@@ -2467,8 +2467,12 @@ sub processTaxonomyPhyloDist {
 
     my $taxonomyClause;
     my @binds = ( $taxon_oid );
-        
-    if ( $domain ) {
+    
+    if($domain =~ /^Vir/) {
+        $taxonomyClause .= " and t.domain like 'Vir%' ";
+    } elsif($domain =~ /^Pla/) {
+        $taxonomyClause .= " and t.domain like 'Pla%' ";
+    } elsif($domain) {
         $taxonomyClause .= " and t.domain = ? ";            
         push( @binds, $domain );
     }

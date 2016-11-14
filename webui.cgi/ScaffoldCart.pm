@@ -1,6 +1,6 @@
 ############################################################################
 # ScaffoldCart.pm - Cart for Scaffolds
-# $Id: ScaffoldCart.pm 36247 2016-09-28 19:25:09Z jinghuahuang $
+# $Id: ScaffoldCart.pm 36403 2016-11-03 21:02:34Z klchu $
 ############################################################################
 package ScaffoldCart;
 
@@ -44,7 +44,7 @@ my $user_restricted_site = $env->{user_restricted_site};
 my $base_url             = $env->{base_url};
 my $tmp_url              = $env->{tmp_url};
 my $enable_biocluster    = $env->{enable_biocluster};
-
+my $img_ken                = $env->{img_ken};
 my $img_internal = $env->{img_internal};
 my $virus = $env->{virus};
 
@@ -269,6 +269,11 @@ CSS
     }
 
     printStatusLine( "Loading", 1 );
+
+# TODO test dot thread
+printStartWorkingDiv();
+require Command;
+Command::startDotThread(240); # 20 minutes
 
     my @recs_ids;
     my %batch_ids;
@@ -600,6 +605,16 @@ CSS
         }
 
     }
+
+
+
+# TODO test dot thread
+Command::killDotThread();
+if($img_ken) {
+    printEndWorkingDiv('', 1);
+} else {
+    printEndWorkingDiv();
+}
 
     #$dbh->disconnect();
 

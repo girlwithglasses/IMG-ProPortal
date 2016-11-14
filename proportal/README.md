@@ -14,7 +14,7 @@ The code uses the Dancer2 framework, and can be run locally (e.g. on a laptop) u
 
 All the ProPortal code lives in the IMG svn repository under /proportal and /webui.cgi. If installing from GitHub, download and extract the code, or clone the repository with the command:
 
-	git clone https://github.com/girlwithglasses/IMG-ProPortal.git
+	git clone https://github.com/ialarmedalien/IMG-ProPortal.git
 
 ## Dependencies ##
 
@@ -119,15 +119,14 @@ See the `plackup` documentation on options for running different Plack/PSGI serv
 
 By default, Plack reads `app.psgi` once and keeps the application in memory. To allow live development, you can use the Shotgun loader, which will reload the application if any of the source files have changed. To do this, launch the app with the following command:
 
-`plackup -L Shotgun bin/app.psgi`
+`plackup -L Shotgun  -E development -s Starman --workers=10 bin/app.psgi`
+
+The `-L Shotgun` parameter is the reloader.
 
 
 ## Set up to include the cgi-based installation (Genepool server only) ##
 
-* WebConfig.pm and WebConfigCommon.pm need to be edited to provide the correct parameters. Anything that previously pointed
-to the Apache cgi-bin directory needs to point at $base/webUI/webui.cgi, and the htdocs directory should now be
-$base/webUI/webui.htd. If there are two .htd directories for an installation (e.g. for proportal), the files should be
-combined into a single directory.
+* WebConfig.pm and WebConfigCommon.pm need to be edited to provide the correct parameters. Anything that previously pointed to the Apache cgi-bin directory needs to point at $base/webUI/webui.cgi, and the htdocs directory should now be $base/webUI/webui.htd. If there are two .htd directories for an installation (e.g. for proportal), the files should be combined into a single directory.
 
 Set $base to the directory that the webUI installation is installed in. The following parameters should be changed:
 

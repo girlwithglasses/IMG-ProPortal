@@ -11,8 +11,8 @@
 
 <pre>
 study name
-organism name
-alt name(s)
+organism name: [% self.display_name %]
+alt name(s):
 </pre>
 
 <h3>Identification and External Links</h3>
@@ -21,25 +21,28 @@ alt name(s)
 <dt>Taxon ID</dt><dd>[% self.taxon_oid %]</dd>
 <dt>Bioproject Accession</dt><dd>[% self.bioproject_accession %]</dd>
 <dt>Biosample Accession</dt><dd>[% self.biosample_accession %]</dd>
-<dt>NCBI Taxon ID</dt><dd>[% ext_links.ncbi_taxon %][% self.ncbi_taxon_id %]</dd>
+<dt>NCBI Taxon ID</dt><dd>[%
+## TODO: find generic NCBI taxon link!
+
+%][% self.ncbi_taxon_id %]</dd>
 <dt>GOLD ID</dt><dd>[% self.gold_id %]</dd>
-<dt>Project ID</dt><dd>[% self.project_id %]</dd>
+<!-- dt>Project ID</dt><dd>[% self.project_id %]</dd -->
 <dt>Project Status</dt><dd>[% self.project_status %]</dd>
 <dt>GOLD details</dt>
-<dd><a rel="external" href="[% ext_links.gold %]/study?id=[% %]">Study ID [%  %]</a><dd>
-<dd><a rel="external" href="[% ext_links.gold %]/projects?id=[% %]">Project ID [%  %]</a><dd>
-<dt>Analysis Project ID</dt><dd><a rel="external" href="[% ext_links.gold %]/analysis_projects?id=[%  %]">[%  %]</a></dd>
+<dd><a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">Study ID [% self.study_gold_id %]</a><dd>
+<dd><a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">Project ID [% self.gold_id %]</a><dd>
+<dd><a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">Analysis Project ID [% self.analysis_project_id %]</a></dd>
 <dt>NCBI/RefSeq ID</dt>
 <dd>[%
-	IF self.extId %]<a rel="external" href="[% ext_links.ncbi %][% self.extId %]">[% self.extId %]</a>[%
+	IF self.extId %]<a rel="external" href="[% ext_link('ncbi_entrez_base_url') %][% self.extId %]">[% self.extId %]</a>[%
 	ELSE;
 		'Not specified';
 	END;
 	%]
 </dd>
 <dt>Genome publication<dt>
-[%	IF self.gsp_genome_publications.size > 0;
-		FOR p IN self.gsp_genome_publications %]
+[%	IF self.gold_sp_genome_publications.size > 0;
+		FOR p IN self.gold_sp_genome_publications %]
 			<dd>"[% p.title %]" in [% p.journal_name %][%
 			IF p.publication_date; " " _ p.publication_date; END;
 			IF p.volume; " volume " _ p.volume; END;
@@ -47,10 +50,10 @@ alt name(s)
 			IF p.page; " pages " _ p.page; END;
 
 			IF p.pubmed_id && p.pubmed_id != "";
-	 %] <a href="[% ext_links.pubmed %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>[%
+	 %] <a href="[% ext_link('pubmed') %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>[%
 			END;
 			IF p.doi && p.doi != "";
-	%] <a href="[% ext_links.doi %][% p.doi %]" rel="external">doi:[% p.doi %]</a>[%
+	%] <a href="[% ext_link('doi') %][% p.doi %]" rel="external">doi:[% p.doi %]</a>[%
 			END;
 		END;
 	ELSE;
@@ -69,8 +72,8 @@ alt name(s)
 <dl>
 <dt>Sequencing status</dt><dd>[% self.seq_status %]</dd>
 <dt>Sequencing Center</dt>[%
-	IF self.gsp_seq_centers.size > 0;
-		FOR sc IN self.gsp_seq_centers;
+	IF self.gold_sp_seq_centers.size > 0;
+		FOR sc IN self.gold_sp_seq_centers;
 			'<dd>';
 			IF sc.url;
 				%]<a href="[% sc.url %]" rel="external">[% sc.name %]</a>[%
@@ -86,8 +89,8 @@ alt name(s)
 		'<dd>Not specified</dd>';
 	END; %]
 <dt>Sequencing Method</dt>[%
-	IF self.gsp_seq_methods.size > 0;
-		FOR m IN self.gsp_seq_methods;
+	IF self.gold_sp_seq_methods.size > 0;
+		FOR m IN self.gold_sp_seq_methods;
 			'<dd>' _ m.seq_method _ '</dd>';
 		END;
 	ELSE;
@@ -127,8 +130,8 @@ Distance Matrix Calculation Date
 <dt>Biotic relationships</dt><dd>[% self.biotic_rel %]</dd>
 
 <dt>Cell arrangement</dt>[%
-	IF self.gsp_cell_arrangements;
-		FOR ca IN self.gsp_cell_arrangements; %]
+	IF self.gold_sp_cell_arrangements;
+		FOR ca IN self.gold_sp_cell_arrangements; %]
 		<dd>[% ca.cell_arrangement %]</dd>
 [%		END;
 	ELSE;
@@ -137,8 +140,8 @@ Distance Matrix Calculation Date
 <dt>Cell shape</dt><dd>[% self.cell_shape %]</dd>
 <dt>Gram stain</dt><dd>[% self.gram_stain %]</dd>
 <dt>Energy source</dt>[%
-	IF self.gsp_energy_sources.size > 0;
-		FOR e IN self.gsp_energy_sources; %]
+	IF self.gold_sp_energy_sources.size > 0;
+		FOR e IN self.gold_sp_energy_sources; %]
 	<dd>[% e.energy_source %]</dd>
 [%		END;
 	ELSE;
@@ -146,8 +149,8 @@ Distance Matrix Calculation Date
 	END %]
 <dt>Motility</dt><dd>[% self.motility %]</dd>
 <dt>Phenotype</dt>[%
-	IF self.gsp_phenotypes.size > 0;
-		FOR p IN self.gsp_phenotypes; %]
+	IF self.gold_sp_phenotypes.size > 0;
+		FOR p IN self.gold_sp_phenotypes; %]
 		<dd>[% p.phenotype %]</dd>
 [%		END;
 	ELSE;
@@ -155,8 +158,8 @@ Distance Matrix Calculation Date
 	END %]
 <dt>Temperature range</dt><dd>[% self.temp_range %]</dd>
 <dt>Relevance</dt>
-[%	IF self.gsp_relevances.size > 0;
-		FOR r IN self.gsp_relevances; %]
+[%	IF self.gold_sp_relevances.size > 0;
+		FOR r IN self.gold_sp_relevances; %]
 	<dd>[% r.relevance %]</dd>
 [%		END;
 	ELSE;
@@ -179,8 +182,8 @@ Distance Matrix Calculation Date
 		</dd>
 <dt>Geographic location</dt><dd>[% self.geo_location %]</dd>
 <dt>Habitat</dt>[%
-	IF self.gsp_habitats.size > 0;
-		FOR h IN self.gsp_habitats;
+	IF self.gold_sp_habitats.size > 0;
+		FOR h IN self.gold_sp_habitats;
 			%]<dd>[% h.habitat %]</dd>[%
 		END;
 	ELSE;

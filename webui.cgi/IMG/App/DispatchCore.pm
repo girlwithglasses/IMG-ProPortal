@@ -8,8 +8,7 @@
 package IMG::App::DispatchCore;
 
 use IMG::Util::Base;
-
-use Class::Load ':all';
+use IMG::Util::Factory;
 
 =head3 prepare_dispatch_coderef
 
@@ -29,8 +28,7 @@ sub prepare_dispatch_coderef {
 	my $module = $arg_h->{module} || die err ({ err => 'missing', subject => 'module' });
 	my $sub = $arg_h->{sub} || die err ({ err => 'missing', subject => 'sub' });
 
-	my ($ok, $err) = try_load_class( $module );
-	$ok or die "Unable to load class " . $module . ": $err";
+	IMG::Util::Factory::load_module( $module );
 
 	# make sure that we can run the sub:
 	if ( ! $module->can( $sub ) ) {
@@ -39,10 +37,15 @@ sub prepare_dispatch_coderef {
 
 #	warn "Loaded module OK!";
 
-	# get the module info
+#	get the module info
 
 #	getPageTitle
 #	getAppHeaderData
+	my $pageTitle = $section->getPageTitle();
+
+	my @appArgs = $section->getAppHeaderData();
+	my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
+	$section->dispatch($numTaxons);
 
 
 	my $to_do;

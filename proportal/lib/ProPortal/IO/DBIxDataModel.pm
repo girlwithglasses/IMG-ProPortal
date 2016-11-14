@@ -506,7 +506,7 @@ sub depth_ecotype {
 
 =head3 taxon_details
 
-Taxon details. Not currently working / used.
+Taxon details from taxon and gold_sequencing_project tables
 
 =cut
 
@@ -517,41 +517,13 @@ sub taxon_details {
 	my $data;
 
 	# taxonomic info
-	my $res = $self->schema('img_core')->table('GoldTaxon')
+	my $res = $self->schema('img_core')->join( qw[ GoldSequencingProject => taxa => taxon_stats ] )
+
 		->select(
-			-columns => [ qw( taxon.* gold_sequencing_project.* ) ],
-			-where => { taxon_oid => $args }
+			-columns => [ '*' ],
+			-where => { 'taxon.taxon_oid' => $args->{taxon_oid} },
+			-result_as => 'statement',
 		);
-
-	say "results: " . Dumper $res;
-
-	if (scalar @$res != 1) {
-		croak "Found " . scalar(@$res) . " results for taxon query";
-	}
-	$res = $res->[0];
-
-	my @associated = qw(
-		gsp_genome_publications
-		gsp_habitats
-		gsp_energy_sources
-		gsp_phenotypes
-		goldanaproj
-		gsp_seq_centers
-		gsp_seq_methods
-		gsp_relevances
-		gsp_cell_arrangements
-		gsp_metabolisms
-		gsp_study_gold_ids
-		gsp_collaborators
-		gsp_diseases
-	);
-
-	for my $assoc (@associated) {
-		my $r = $res->$assoc;
-		if ($r && scalar @$r) {
-			$res->{$assoc} = $r;
-		}
-	}
 
 	return $res;
 }

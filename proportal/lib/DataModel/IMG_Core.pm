@@ -126,6 +126,12 @@ DataModel::IMG_Core->metadm->define_table(
 );
 
 DataModel::IMG_Core->metadm->define_table(
+  class       => 'TaxonStats',
+  db_name     => 'TAXON_STATS',
+  primary_key => 'taxon_oid',
+);
+
+DataModel::IMG_Core->metadm->define_table(
   class       => 'GoldSpEnergySource',
   db_name     => 'GOLD_SP_ENERGY_SOURCE',
 #  primary_key => '',
@@ -231,26 +237,6 @@ DataModel::IMG_Core
   [qw/Scaffold                   scaffold                     *    scaffold_oid /])
 
 ->Association(
-  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
-  [qw/GoldSpGenomePublication    gold_sp_genome_publications  *    gold_id                 /])
-
-->Association(
-  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
-  [qw/GoldSpHabitat              gold_sp_habitats             *    gold_id                 /])
-
-->Association(
-  [qw/GoldSequencingProject      goldseqproj                  1    gold_id                 /],
-  [qw/Taxon                      taxa                         *    sequencing_gold_id      /])
-
-->Association(
-  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
-  [qw/GoldSpEnergySource         gold_sp_energy_sources       *    gold_id                 /])
-
-->Association(
-  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
-  [qw/GoldSpPhenotype            gold_sp_phenotypes           *    gold_id                 /])
-
-->Association(
   [qw/GoldAnalysisProject        reference_gold_ap            0..1 gold_analysis_project_id/],
   [qw/GoldAnalysisProject        gold_analysis_projects       *    reference_gold_ap_id    /])
 
@@ -261,6 +247,30 @@ DataModel::IMG_Core
 ->Association(
   [qw/GoldAnalysisProject        gold_analysis_project        0..1 gold_analysis_project_id/],
   [qw/GoldApGenbank              gold_ap_genbanks             *    gold_analysis_project_id/])
+
+->Association(
+  [qw/GoldSequencingProject      goldseqproj                  1    gold_id                 /],
+  [qw/Taxon                      taxa                         *    sequencing_gold_id      /])
+
+->Association(
+  [qw/Taxon                      taxon                        1    taxon_oid                 /],
+  [qw/TaxonStats                 taxon_stats                  1    taxon_oid      /])
+
+->Association(
+  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
+  [qw/GoldSpGenomePublication    gold_sp_genome_publications  *    gold_id                 /])
+
+->Association(
+  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
+  [qw/GoldSpHabitat              gold_sp_habitats             *    gold_id                 /])
+
+->Association(
+  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
+  [qw/GoldSpEnergySource         gold_sp_energy_sources       *    gold_id                 /])
+
+->Association(
+  [qw/GoldSequencingProject      gold                         1    gold_id                 /],
+  [qw/GoldSpPhenotype            gold_sp_phenotypes           *    gold_id                 /])
 
 ->Association(
   [qw/GoldSequencingProject      gold                         1    gold_id                 /],
@@ -292,6 +302,55 @@ DataModel::IMG_Core
 
 ->Association(
   [qw/GoldSequencingProject      gold                         1    gold_id                 /],
+  [qw/GoldSpDisease              gold_sp_diseases             *    gold_id                 /])
+
+# add in links for the GoldTaxonVw table->Association(
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpGenomePublication    gold_sp_genome_publications  *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpHabitat              gold_sp_habitats             *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpEnergySource         gold_sp_energy_sources       *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpPhenotype            gold_sp_phenotypes           *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpSeqCenter            gold_sp_seq_centers          *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpSeqMethod            gold_sp_seq_methods          *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpRelevance            gold_sp_relevances           *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpCellArrangement      gold_sp_cell_arrangements    *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpMetabolism           gold_sp_metabolisms          *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpStudyGoldId          gold_sp_study_gold_ids       *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/GoldSpCollaborator         gold_sp_collaborators        *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
   [qw/GoldSpDisease              gold_sp_diseases             *    gold_id                 /])
 
 ;

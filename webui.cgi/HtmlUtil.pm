@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. utility functions to support HTML.
-# $Id: HtmlUtil.pm 36263 2016-09-29 21:02:54Z klchu $
+# $Id: HtmlUtil.pm 36386 2016-10-27 18:19:02Z klchu $
 ############################################################################
 package HtmlUtil;
 
@@ -89,7 +89,8 @@ sub isCgiCacheEnable {
 sub cgiCacheInitialize {
     my ( $namespace, $override_cache_size, $override_expires_time, $forcePublicCache ) = @_;
     
-    $forcePublicCache = 1; # lets just share cache - ken 2016-09-29
+    # $forcePublicCache = 1; # lets just share cache - ken 2016-09-29
+    # the force messed up the home page user's private counts
     
     if($forcePublicCache || !$user_restricted_site) {
         # public system shared cache

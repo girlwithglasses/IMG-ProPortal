@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceScafSet.pm
-# $Id: WorkspaceScafSet.pm 36296 2016-10-10 06:43:29Z jinghuahuang $
+# $Id: WorkspaceScafSet.pm 36403 2016-11-03 21:02:34Z klchu $
 ###########################################################################
 package WorkspaceScafSet;
 
@@ -779,7 +779,20 @@ sub printScafSetDetail {
 
         my %scaffold_h;
         my @metaOids = keys %scaf_id_h;
+        
+# TODO test dot thread
+printStartWorkingDiv();
+require Command;
+Command::startDotThread(240); # 20 minutes        
         MetaUtil::getAllMetaScaffoldInfo( \%scaf_id_h, \@metaOids, \%scaffold_h );
+ 
+ # TODO test dot thread
+Command::killDotThread();
+if($img_ken) {
+    printEndWorkingDiv('', 1);
+} else {
+    printEndWorkingDiv();
+}
         
         for my $s_oid (@metaOids) {
             my ( $taxon_oid, $data_type, $scaffold_oid ) =

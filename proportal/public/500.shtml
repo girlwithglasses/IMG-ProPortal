@@ -1,0 +1,9 @@
+<!--#include file="header.shtml" -->
+	<article class="content cf" role="main">
+		<h2>Software Error</h2>
+		<p class="error">
+			Uh-oh! Something went wrong internally. If the error persists, please contact ...
+		</p>
+		<p>Document requested: https://<!--#echo var="HTTP_X_FORWARDED_HOST"--><!--#echo var="REQUEST_URI"--></p>
+	</article>
+<!--#include file="footer.shtml" -->

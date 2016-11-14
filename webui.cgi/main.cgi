@@ -1,39 +1,29 @@
-#!/usr/bin/env perl
+#!/bin/bash 
+# Control the environment from here for security and other reasons.
+#
+# $Id: main.cgi 35611 2016-05-08 21:22:50Z klchu $
+#
+# http://aaroncrane.co.uk/2009/02/perl_safe_signals/
+#
+PATH="/usr/bin:/bin"
+export PATH
+LD_LIBRARY_PATH=""
+export LD_LIBRARY_PATH
 
-my @dir_arr;
-my $dir;
-BEGIN {
-	use File::Spec::Functions qw( rel2abs catdir );
-	use File::Basename qw( dirname basename );
-	$dir = dirname( rel2abs( $0 ) );
-	while ( 'webUI' ne basename( $dir ) ) {
-		$dir = dirname( $dir );
-	}
-	@dir_arr = map { catdir( $dir, $_ ) } ( 'webui.cgi' );
-}
+#/usr/bin/env PERL_SIGNALS=unsafe /usr/local/bin/perl -I`pwd` -T  main.pl 
+# /usr/common/usg/languages/perl
+#/usr/bin/env PERL_SIGNALS=unsafe /usr/common/usg/languages/perl/5.16.0/bin/perl -I`pwd` -T  main.pl 
 
-use CGI;
+PERL5LIB=`pwd`
+export PERL5LIB
+/webfs/projectdirs/microbial/img/bin/imgEnv2 perl -T main.pl
 
-# find out the host
-my $host = virtual_host();
-$host =~ s/.jgi.doe.gov//;
-push @dir_arr, catdir( $dir, 'proportal/config', $host );
 
-my $vars = {
-	PATH => '/usr/bin:/bin',
-	LD_LIBRARY_PATH => '',
-	PERL5LIB => join ':', reverse @dir_arr
-};
-
-for my $k ( keys %$vars ) {
-	system( $k . '="' . $vars->{$k} . '"' );
-	system( 'export', $k );
-}
-system( '/webfs/projectdirs/microbial/img/bin/imgEnv2', 'perl', '-T', 'main.pl' );
-
-if ( $? != 0 ) {
-	print "An error has occurred. The command failed with the error: <br>"
-	. $!
-	. "<br>"
-	. "Please report this error, along with the steps required to reproduce it, to imgsupp at lists.jgi-psf.org.";
-}
+if [ $? != "0" ] 
+then
+   echo "<br/><font color='red'>"
+   echo "Oops. This is embarrassing an error has occurred.<br/>"
+   echo "Please report this along with your steps on how to reproduce it.<br/>"
+   echo "- IMG email: imgsupp at lists.jgi-psf.org"
+   echo "</font>"
+fi

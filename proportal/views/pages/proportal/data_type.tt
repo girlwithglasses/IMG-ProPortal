@@ -27,7 +27,7 @@
 [%			FOREACH s IN genomes.$es %]
 				<li>
 				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" />
-				<a href="[% link( 'taxon', { taxon_oid => s.taxon_oid } ) %]">[% s.taxon_display_name %]</a> <a href="[% link( 'jbrowse', { taxon_oid => s.taxon_oid } ) %]">JBrowse</a></li>
+				<a href="[% link( 'taxon', { taxon_oid => s.taxon_oid } ) %]">[% s.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => s.taxon_oid } ) %]">JBrowse</a --></li>
 [%			END %]
 			</ul>
 		</li>

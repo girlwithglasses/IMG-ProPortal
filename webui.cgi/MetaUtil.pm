@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. web utility functions for file system
-# $Id: MetaUtil.pm 36009 2016-08-17 17:28:50Z klchu $
+# $Id: MetaUtil.pm 36403 2016-11-03 21:02:34Z klchu $
 ############################################################################
 package MetaUtil;
 require Exporter;
@@ -51,6 +51,8 @@ use BerkeleyDB;
 use MerFsUtil;
 use OracleUtil;
 use QueryUtil;
+use Storable;
+
 
 my $env                = getEnv();
 my $main_cgi           = $env->{main_cgi};
@@ -63,7 +65,7 @@ my $in_file            = $env->{in_file};
 my $enable_biocluster  = $env->{enable_biocluster};
 my $new_func_count     = 1;
 my $verbose            = $env->{verbose};
-
+my $img_ken                = $env->{img_ken};
 my $block_size       = 500;
 my $large_block_size = 5000;
 my $max_gene_cnt_for_product_file = 280000000;
@@ -4641,7 +4643,7 @@ sub getScaffoldFuncGenes {
             }
         }
 
-        #TODO: currently only for bc, apply for others in future
+        # currently only for bc, apply for others in future
         if ( $genes_h{$gene_oid} ) {
             push( @func_gene_data, $g );
         }
@@ -6596,7 +6598,6 @@ sub getAllGeneFna {
             print "<p>Retrieving fna for database genes ... <br/>\n";
         }
 
-        #Todo future
     }
 
     if ( scalar(@metaOids) > 0 ) {
@@ -6755,8 +6756,6 @@ sub getAllGeneFaa {
         if ($print_msg) {
             print "<p>Retrieving faa for database genes ... <br/>\n";
         }
-
-        #Todo future
     }
 
     if ( scalar(@metaOids) > 0 ) {
@@ -7561,7 +7560,20 @@ sub getAllScaffoldInfo {
 sub getAllMetaScaffoldInfo {
     my ( $scaf_href, $metaOids_ref, $scaf_info_href, $needLineage, $print_msg ) = @_;
 
-    #print "MetaUtil::getAllMetaScaffoldInfo() 1 " . currDateTime() . "<br/>\n";
+    # TODO cache - ken
+    my $sid = WebUtil::getContactOid();
+    my $cachefile1 = "/webfs/scratch/img/cartCache/scaffold1_" . $needLineage . "_" . $sid;
+    my $cachefile2 = "/webfs/scratch/img/cartCache/scaffold2_" . $needLineage . "_" . $sid;
+    my $cache_href1 = '';
+    my $cache_href2 = '';
+    if(-e $cachefile1) {
+        $cache_href1 = retrieve($cachefile1);
+    }
+    if(-e $cachefile2) {
+        $cache_href2 = retrieve($cachefile2);
+    }
+    my @cacheKeys = (); # workspace ids found in cache
+    # end of added cache
 
     my @metaOids;
     if ( $metaOids_ref eq '' ) {
@@ -7580,24 +7592,37 @@ sub getAllMetaScaffoldInfo {
         for my $key ( keys %taxon_scaffolds ) {
             my ( $taxon_oid, $data_type ) = split( / /, $key );
 
-            #print "MetaUtil::getAllMetaScaffoldInfo() $taxon_oid $data_type " . currDateTime() . "<br/>\n";
             $taxon_oid = sanitizeInt($taxon_oid);
 
             if ($print_msg) {
                 print "<p>Retrieving scaffold information for genome $taxon_oid $data_type ...<br/>\n";
             }
 
+            # list of scaffold oid
             my $oid_ref = $taxon_scaffolds{$key};
+            
+            # TODO cache
+            my @tmpoids = (); # list of scaffold oids(this is not workspace ids) not in cache
+            foreach my $oid (@$oid_ref) {
+                my $key2 = "$taxon_oid $data_type $oid";
+                if($cache_href1 ne '' && exists $cache_href1->{$key2}) {
+print "found in cache: $key2<br>\n" if($img_ken);
+                    push(@cacheKeys, $key2); # workspace ids in cache
+                } else {
+print "push oid: $key2<br>\n"  if($img_ken); 
+                    push(@tmpoids, $oid);
+                }
+            }
+            $oid_ref = \@tmpoids; # I need only to finds oids not in cache
+            # end of added cache
+            
             if ( $oid_ref ne '' && scalar(@$oid_ref) > 0 ) {
 
                 #stats
                 my %scaffold_stats_h = getScaffoldStatsForTaxonScaffolds( $taxon_oid, $data_type, $oid_ref, $print_msg );
 
-                #print Dumper(\%scaffold_stats_h);
                 #depth
                 my %scaffold_depth_h = getScaffoldDepthForTaxonScaffolds( $taxon_oid, $data_type, $oid_ref, $print_msg );
-
-                #print Dumper(\%scaffold_depth_h);
 
                 #lineage
                 my %scaffold_lineage_h;
@@ -7606,8 +7631,6 @@ sub getAllMetaScaffoldInfo {
                       getScaffoldLineageForTaxonScaffolds( $taxon_oid, $data_type, $oid_ref, $print_msg );
                 }
 
-                #print Dumper(\%scaffold_lineage_h);
-
                 #info
                 if ( scalar( keys %scaffold_stats_h ) > 0 ) {
                     foreach my $workspace_id ( keys %scaffold_stats_h ) {
@@ -7615,7 +7638,6 @@ sub getAllMetaScaffoldInfo {
                         #for detailed scaffold info
                         if ( defined($scaf_href) && $scaf_href ne '' ) {
 
-                     #print "getAllMetaScaffoldInfo() workspace_id in scaf_href: " . $scaf_href->{$workspace_id} . "<br/>\n";
                             if ( $scaf_href->{$workspace_id} ) {
                                 my $scaf_depth = $scaffold_depth_h{$workspace_id};
                                 if ( !$scaf_depth && $data_type eq 'assembled' ) {
@@ -7628,21 +7650,53 @@ sub getAllMetaScaffoldInfo {
                                     $scaf_info_line .= "\t$scaf_lineage";
                                 }
                                 $scaf_info_href->{$workspace_id} = $scaf_info_line;
-
-                            #print "getAllMetaScaffoldInfo() workspace_id: $workspace_id, scaf info: $scaf_info_line<br/>\n";
                             }
                         }
                     }
                 }
-
             }
-
         }    # end for key
-
     }
 
-    #print "MetaUtil::getAllMetaScaffoldInfo() 2 " . currDateTime() . "<br/>\n";
+    # TODO test session caching this data
+    # add new scaffolds to cache
+    if($cache_href1 eq '') {
+       $cache_href1 = $scaf_href;
+    } else {
+        foreach my $key (keys %$scaf_href) {
+            $cache_href1->{$key} = $scaf_href->{$key};
+        }        
+    }
+    store $cache_href1, $cachefile1;
+    
+    if($cache_href2 eq '') {
+        $cache_href2 = $scaf_info_href;
+    } else {
+        foreach my $key (keys %$scaf_info_href) {
+            $cache_href2->{$key} = $scaf_info_href->{$key};
+        }        
+    }
+    store $cache_href2, $cachefile2;
 
+    # I need to merge found cache data to $scaf_href and $scaf_info_href
+    foreach my $key (@cacheKeys) {
+        # add the cache $key to $scaf_href and $scaf_info_href
+        $scaf_href->{$key} = $cache_href1->{$key};
+        $scaf_info_href->{$key} = $cache_href2->{$key};
+    }
+    # end of added cache
+
+    if($img_ken) {
+    my $size = keys %$cache_href1;
+    print "cache1: $size<br>\n";
+    my $size = keys %$scaf_href;
+    print "scaf 1: $size<br>\n";
+
+    my $size = keys %$cache_href2;
+    print "cache2: $size<br>\n";
+    my $size = keys %$scaf_info_href;
+    print "scaf 2: $size<br>\n";
+    }
 }
 
 ###############################################################################
@@ -7846,6 +7900,7 @@ sub getScaffoldLineageForTaxonScaffolds {
 sub getScaffoldStatsForTaxonScaffolds {
     my ( $taxon_oid, $data_type, $oids_ref, $print_msg ) = @_;
 
+
     my %scaffold_stats_h;
 
     my $hasScaffoldStatsSqliteFile = hasSdbScaffoldStatsFile( $taxon_oid, $data_type );
@@ -7882,19 +7937,17 @@ sub getScaffoldStatsForTaxonScaffolds {
                 }
                 $cnt1++;
                 if ( ( $cnt1 % $large_block_size ) == 0 || ( $cnt1 == $cnt0 ) ) {
-                    my $sql =
-                      "select scaffold_oid, length, gc, n_genes from scaffold_stats where scaffold_oid in ($file_oid_str)";
-                    my (%scaffoldStats) =
-                      fetchScaffoldStatsForTaxonFromSqlite( $taxon_oid, $data_type, $scaffoldStatsFile, $sql );
+                        my $sql = "select scaffold_oid, length, gc, n_genes from scaffold_stats where scaffold_oid in ($file_oid_str)";
+                        my (%scaffoldStats) = fetchScaffoldStatsForTaxonFromSqlite( $taxon_oid, $data_type, $scaffoldStatsFile, $sql );
 
-                    #print Dumper(\%scaffoldStats);
-                    if ( scalar( keys %scaffoldStats ) > 0 ) {
-                        foreach my $oid ( keys %scaffoldStats ) {
-                            my $workspace_id = "$taxon_oid $data_type $oid";
-                            $scaffold_stats_h{$workspace_id} = $scaffoldStats{$oid};
+                        #print Dumper(\%scaffoldStats);
+                        if ( scalar( keys %scaffoldStats ) > 0 ) {
+                            foreach my $oid ( keys %scaffoldStats ) {
+                                my $workspace_id = "$taxon_oid $data_type $oid";
+                                $scaffold_stats_h{$workspace_id} = $scaffoldStats{$oid};
+                            }
                         }
-                    }
-                    $file_oid_str = '';
+                        $file_oid_str = '';
                 }
             }
         }    #end of for scaffoldStatsFile
@@ -7911,7 +7964,7 @@ sub getScaffoldStatsForTaxonScaffolds {
         my $tag = "scaffold_stats";
         doFlieReading( $print_msg, '', $taxon_oid, $data_type, $oids_ref, $tag, \%scaffold_stats_h );
     }
-
+    
     return %scaffold_stats_h;
 }
 

@@ -54,7 +54,6 @@ prefix '/proportal' => sub {
 		var menu_grp => $group;
 		var page_id  => $group . "/$p";
 
-#		my $app = setting('_core') || create_core();
 		my $app = AppCore::create_core();
 		$app->add_controller_role( $p );
 
@@ -159,17 +158,41 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 		return template "pages/proportal/home", $pp->render();
 
 	};
+};
 
-# 	get '/taxon/:taxon_oid' => sub {
-#
-# 		my $pp = AppCore::bootstrap( 'Details' );
-#
-# 		$pp->set_filters({ taxon_oid => params->{taxon_oid} });
-#
-# 		template "pages/genome_details", $pp->render();
-#
-# 	};
+get '/taxon/:taxon_oid' => sub {
 
+	my $pp = AppCore::bootstrap( 'Details' );
+
+#	$pp->set_filters({ taxon_oid => params->{taxon_oid} });
+	say 'taxon_oid: ' . params->{taxon_oid};
+
+	template "pages/genome_details", $pp->render({ taxon_oid => params->{taxon_oid} });
+
+};
+
+prefix '/tools' => sub {
+
+	get qr{
+		/ (?<query> phyloviewer | krona | jbrowse | galaxy )
+		/?
+		}x => sub {
+
+		my $c = captures;
+		my $p = $c->{query};
+		my $group = 'tools';
+		var menu_grp => $group;
+		var page_id  => $group . "/$p";
+
+		my $app = AppCore::create_core();
+		$app->add_controller_role( $p );
+
+		debug 'page: ' . $p
+			. '; subset: ' . ( $c->{subset} || 'none' )
+			. '; template: ' . $app->controller->tmpl;
+
+		return template $app->controller->tmpl, $app->render;
+	};
 };
 
 1;
