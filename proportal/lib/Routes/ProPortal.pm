@@ -167,7 +167,7 @@ get '/taxon/:taxon_oid' => sub {
 #	$pp->set_filters({ taxon_oid => params->{taxon_oid} });
 	say 'taxon_oid: ' . params->{taxon_oid};
 
-	template $pp->controller->tmpl, $pp->render({ taxon_oid => params->{taxon_oid} });
+	return template $pp->controller->tmpl, $pp->render({ taxon_oid => params->{taxon_oid} });
 
 };
 

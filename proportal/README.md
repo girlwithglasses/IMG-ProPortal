@@ -69,7 +69,7 @@ You will need to have `mod_rewrite`, `mod_proxy`, and `mod_expires` enabled in y
 
 and make sure that they are uncommented.
 
-On MacOS X, you can drop sample_server.conf (in `proportal/apache/` in the git repository) into `/private/etc/apache2/other/` and make sure that the line
+On MacOS X, you can drop `sample_server.conf` (in `proportal/apache/` in the git repository) into `/private/etc/apache2/other/` and make sure that the line
 
 	Include /private/etc/apache2/other/
 
@@ -83,9 +83,11 @@ Restart the server to activate the new server configuration using the command
 
 	sudo apachectl -k restart
 
-The configuration included sets up a ProPortal server at http://img-proportal.dev. Check it is working by visiting this URL:
+The configuration included sets up a ProPortal server at `http://img-proportal.dev`. Check it is working by visiting this URL:
 
 	http://img-proportal.dev/404.html
+
+You should get a ProPortal-themed 404 page.
 
 ### Installation ###
 
@@ -123,6 +125,11 @@ By default, Plack reads `app.psgi` once and keeps the application in memory. To 
 
 The `-L Shotgun` parameter is the reloader.
 
+To prevent the reloading of all the perl modules, you can use the standard `-M` switch:
+
+`plackup -MMoo -MDancer2 -MDBIx::DataModel -MPlack -L Shotgun -E development -s Starman --workers=10 bin/app.psgi`
+
+This will preload `Moo`, `Dancer2`, `DBIx::DataModel`, and `Plack` and reload any other modules, including those in the `proportal/lib` and `webui.cgi` directories.
 
 ## Set up to include the cgi-based installation (Genepool server only) ##
 
