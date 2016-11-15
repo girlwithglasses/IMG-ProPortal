@@ -162,12 +162,12 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 
 get '/taxon/:taxon_oid' => sub {
 
-	my $pp = AppCore::bootstrap( 'Details' );
+	my $pp = AppCore::bootstrap( 'TaxonDetails' );
 
 #	$pp->set_filters({ taxon_oid => params->{taxon_oid} });
 	say 'taxon_oid: ' . params->{taxon_oid};
 
-	template "pages/genome_details", $pp->render({ taxon_oid => params->{taxon_oid} });
+	template $pp->controller->tmpl, $pp->render({ taxon_oid => params->{taxon_oid} });
 
 };
 

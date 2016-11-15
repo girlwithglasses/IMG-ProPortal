@@ -9,7 +9,7 @@ has 'controller_args' => (
 	default => sub {
 		return {
 			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/proportal/taxon_details.tt',
+			tmpl => 'pages/taxon_details.tt',
 			tmpl_includes => {
 #				tt_scripts => qw( data_type )
 			}
@@ -29,16 +29,24 @@ Details page for a taxon / metagenome
 sub render {
 	my $self = shift;
 	my $args = shift;
+
+	if ( ! $args || ! $args->{taxon_oid} ) {
+		$self->choke({
+			err => 'missing',
+			subject => 'taxon_oid'
+		});
+	}
+
 	my $res = $self->run_query({
 		query => 'taxon_details',
 		%$args
-#		filters => $self->filters
 	});
 
-#	my $data = $self->taxon_details( $self->filters->{taxon_oid} );
-
-	if (scalar @$res != 1) {
-		croak "Found " . scalar(@$res) . " results for taxon query";
+	if ( scalar @$res != 1 ) {
+		$self->choke({
+			err => 'no_results',
+			subject => 'IMG taxon ' . ( $args->{taxon_oid} || 'unspecified' )
+		});
 	}
 	$res = $res->[0];
 
@@ -57,6 +65,8 @@ sub render {
 		gold_sp_collaborators
 		gold_sp_diseases
 	);
+
+
 
 	for my $assoc (@associated) {
 		if ( $res->can( $assoc ) ) {

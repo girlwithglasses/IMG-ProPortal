@@ -28,14 +28,15 @@ use Plack::Middleware::Conditional;
 # $ENV{PLACK_URLMAP_DEBUG} = 1;
 # $ENV{TWIGGY_DEBUG} = 1;
 
+=comment
+
 # Mojolicious pod renderer
-use Mojo::Server::PSGI;
+#use Mojo::Server::PSGI;
 
-my $server = Mojo::Server::PSGI->new;
-$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
+#my $server = Mojo::Server::PSGI->new;
+#$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 
-#say 'running app.psgi!';
-#say 'config: ' . Dumper config;
+=cut
 
 use ProPortalPackage;
 use TestApp;
@@ -46,17 +47,8 @@ builder {
 	enable_if { config->{debug} } "Debug";
 
 #	mount "/cgi-bin" => $old_img->();
-#	enable "Log::Contextual";
-#	enable "Session", store => "File";
-	mount "/pod" => sub { $server->run(@_) };
 
-# 	enable 'Static',
-# 		path => sub { s!^/jbrowse_assets!! },
-# 		root => $dir . '/jbrowse';
-#
-# 	enable 'Static',
-# 		path => sub { s!^/data_dir!! },
-# 		root => '/tmp/jbrowse';
+#	mount "/pod" => sub { $server->run(@_) };
 
 #     mount "/testapp" => TestApp->to_app;
 	mount "/" => ProPortalPackage->to_app;
