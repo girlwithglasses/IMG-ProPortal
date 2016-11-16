@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 36297 2016-10-10 17:25:35Z klchu $
+# $Id: main.pl 36418 2016-11-15 20:23:47Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -888,7 +888,7 @@ EOF
     };
 }
 
-sub printMenuDiv2 {
+sub printMenuDiv {
 
     # menu file json data
     # read file
@@ -1004,16 +1004,6 @@ sub printMenuRow {
     }
 }
 
-# menu
-# 2nd div
-#
-# $current - which top level menu to highlight
-sub printMenuDiv {
-    my ( $current, $dbh ) = @_;
-
-    printMenuDiv2();
-    return;
-}
 
 # bread crumbs frame
 # - bread crumbs
@@ -1462,8 +1452,6 @@ sub printAppHeader {
 
     return if ( $current eq "exit" );
 
-    my $dbh = dbLogin();
-
     # genome cart
     my $numTaxons = printTaxonFilterStatus();    # if ( $current ne "Home" );
     $numTaxons = "" if ( $numTaxons == 0 );
@@ -1476,12 +1464,13 @@ sub printAppHeader {
         my $time = 3600 * 24;                    # 24 hour cache
 
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-        printMenuDiv( $current, $dbh );
+        printMenuDiv( );
         printErrorDiv();
 
         HtmlUtil::cgiCacheInitialize("homepage");
         HtmlUtil::cgiCacheStart() or return;
-
+        
+        my $dbh = dbLogin();
         my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
 
         #print qq{
@@ -1534,7 +1523,7 @@ Small organic molecules produced<br/>by living organisms<br/>
     } elsif ( $virus && $current eq "Home" ) {
         # caching home page
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-        printMenuDiv( $current, $dbh );
+        printMenuDiv( );
         printErrorDiv();
 
         my $page = param('page');
@@ -1554,7 +1543,7 @@ Small organic molecules produced<br/>by living organisms<br/>
         }
     } elsif ( $img_proportal && $current eq "Home" ) {
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-        printMenuDiv( $current, $dbh );
+        printMenuDiv(  );
         printErrorDiv();
         printContentHome();
         my $section = param("section");
@@ -1580,12 +1569,13 @@ Small organic molecules produced<br/>by living organisms<br/>
         my $time = 3600 * 24;         # 24 hour cache
 
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-        printMenuDiv( $current, $dbh );
+        printMenuDiv(  );
         printErrorDiv();
 
         HtmlUtil::cgiCacheInitialize("homepage");
         HtmlUtil::cgiCacheStart() or return;
 
+        my $dbh = dbLogin();
         my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
 
         # to stop the inline-block or float left from wrapping
@@ -1718,15 +1708,14 @@ $newsStr
         HtmlUtil::cgiCacheStop();
     } else {
         printHTMLHead( $current, $pageTitle, $gwtModule, $content_js, $yuijs, $numTaxons );
-        printMenuDiv( $current, $dbh );
-        printBreadcrumbsDiv( $current, $help, $dbh );
-        printErrorDiv();
+        printMenuDiv();
 
-        if ( $abc && $current ne 'login' && $current ne 'logout' ) {
-#            print qq{
-#                <div style='width:2000px'>
-#            };
+        if($current ne 'login' && $current ne 'logout') {
+        	my $dbh = dbLogin();
+        	printBreadcrumbsDiv( $current, $help, $dbh );
         }
+        
+        printErrorDiv();
         printContentOther();
     }
 

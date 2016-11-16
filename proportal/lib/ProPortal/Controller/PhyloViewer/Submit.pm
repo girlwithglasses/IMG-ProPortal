@@ -1,8 +1,19 @@
 package ProPortal::Controller::PhyloViewer::Submit;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Base 'MooRole';
 
-extends 'ProPortal::Controller::Base';
+has 'controller_args' => (
+	is => 'lazy',
+	default => sub {
+		return {
+			class => 'ProPortal::Controller::Base',
+			tmpl => 'pages/proportal/phylo_viewer/query.tt',
+			tmpl_includes => {
+#				tt_scripts => qw( data_type )
+			}
+		};
+	}
+);
 
 with qw( ProPortal::Controller::PhyloViewer::DemoData ProPortal::Controller::PhyloViewer::Schema ProPortal::Controller::PhyloViewer::Pipeline );
 

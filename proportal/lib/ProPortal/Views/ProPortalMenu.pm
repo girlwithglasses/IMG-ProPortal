@@ -59,13 +59,13 @@ sub _get_menu_items {
 
 sub home {
 	return {
-		id => 'proportal'
+		id => 'home'
 	};
 }
 
 sub browse {
 	return {
-		id => 'menu/browse',
+		id => 'menu/proportal',
 		submenu =>
 		[
 			'proportal/clade',
@@ -74,7 +74,6 @@ sub browse {
 			'proportal/ecosystem',
 			'proportal/ecotype',
 			'proportal/phylogram',
-			'galaxy',
 		],
 	};
 }
@@ -93,10 +92,10 @@ sub tools {
 	return {
 		id => 'menu/tools',
 		submenu => [
-			'tools/galaxy',
-			'tools/phyloviewer',
+			'phyloviewer',
 			'tools/jbrowse',
-			'tools/krona'
+			'tools/krona',
+			'galaxy',
 		],
 	};
 }
@@ -134,7 +133,7 @@ sub my_img {
 
 sub support {
 	return {
-		id => 'support',
+		id => 'menu/support',
 		submenu => [
 			'support/about',
 			'support/user_guide',

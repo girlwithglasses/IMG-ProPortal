@@ -2517,14 +2517,14 @@ article {
     clear: both; }
 
 @media only screen and (max-width: 479px) {
-  #about, #user-guide, #news, .content {
+  #about, #user-guide, #news, .content, #tool-input__section, #tool-info__section {
     width: 100%;
     padding: 0; } }
 
 @media only screen and (min-width: 480px) and (max-width: 767px) {
   #about {
     width: 100%; }
-  #user-guide, #news {
+  #user-guide, #news, #tool-input__section, #tool-info__section {
     width: 50%;
     float: left; } }
 
@@ -2557,6 +2557,13 @@ article {
     float: right;
     padding-left: 12px;
     padding-left: 0.75rem;
+    margin-bottom: 24px;
+    margin-bottom: 1.5rem; }
+  #tool-input__section, #tool-info__section {
+    float: left;
+    width: 50%;
+    padding: 0 12px;
+    padding: 0 0.75rem;
     margin-bottom: 24px;
     margin-bottom: 1.5rem; } }
 

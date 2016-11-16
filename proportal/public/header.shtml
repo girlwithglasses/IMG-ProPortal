@@ -2,20 +2,20 @@
 <html lang="en">
 <head>
 	<title>IMG ProPortal: 500 Error</title>
-	<link rel="stylesheet" type="text/css" href="css/proportal.css">
+	<link rel="stylesheet" type="text/css" href="/css/proportal.css">
 	<meta charset="UTF-8">
 	<!-- link href="//www.google-analytics.com" rel="dns-prefetch" -->
 	<!-- link href="/images/icons/touch.png" rel="apple-touch-icon-precomposed" -->
 	<link href="http://jgi.doe.gov/favicon.ico" rel="shortcut icon">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="description" content="Some information about the IMG ProPortal here">
+	<meta name="description" content="Some information about the IMG ProPortal">
 
 </head>
 <body>
 <div class="wrapper">
 	<header role="banner" class="cf">
-		<a id="jgi-logo" href="http://jgi.doe.gov" class="img"><img src="images/logo-proportal.png" alt="DOE Joint Genome Institute's IMG ProPortal logo" /></a>
+		<a id="jgi-logo" href="http://jgi.doe.gov" class="img"><img src="/images/logo-proportal.png" alt="DOE Joint Genome Institute's IMG ProPortal logo" /></a>
 	</header>
 
 

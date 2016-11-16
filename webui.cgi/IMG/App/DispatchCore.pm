@@ -3,7 +3,7 @@
 #
 #	Core dispatcher code
 #
-#	$Id: DispatchCore.pm 35833 2016-07-06 02:42:03Z aireland $
+#	$Id: DispatchCore.pm 36423 2016-11-16 06:57:15Z aireland $
 ############################################################################
 package IMG::App::DispatchCore;
 

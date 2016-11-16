@@ -800,23 +800,23 @@ my $static_links = {
 
 #	proportal links
 
-# 	home => {
-# 		label => 'Home', url => 'home',
-# 	},
-	'menu/browse' => {
-		label => 'Browse', url => 'menu/browse',
+	home => {
+		label => 'IMG/ProPortal', url => 'proportal',
+	},
+	'menu/proportal' => {
+		label => 'Browse', url => 'menu/proportal',
 	},
 	'menu/search' => {
-		label => 'Search', url => 'search',
+		label => 'Search', url => 'menu/search',
 	},
 	'search/blast' => {
 		label => 'BLAST', url => 'search/blast',
 	},
 	'search/advanced_search' => {
-		label => 'Advanced Search', url => 'search_advanced_search',
+		label => 'Advanced Search', url => 'search/advanced_search',
 	},
 	'menu/tools' => {
-		label => 'Tools', url => 'tools',
+		label => 'Tools', url => 'menu/tools',
 	},
 	'tools/galaxy' => {
 		label => 'Launch Galaxy', url => 'tools/galaxy',
@@ -836,8 +836,8 @@ my $static_links = {
 	'my_img/preferences' => {
 		label => 'Preferences', url => 'my_img/preferences',
 	},
-	support => {
-		label => 'Support', url => 'support',
+	'menu/support' => {
+		label => 'Support', url => 'menu/support',
 	},
 	'support/about' => {
 		label => 'About IMG/ProPortal', url => 'support/about',
@@ -884,9 +884,6 @@ my $static_links = {
 	'proportal/phylogram' => {
 		url => 'proportal/phylogram', label => 'by taxonomic tree',
 	},
-	'proportal/phylo_viewer' => {
-		url => 'proportal/phylo_viewer', label => 'PhyloViewer',
-	},
 	'proportal/ecosystem' => {
 		url => 'proportal/ecosystem', label => 'by ecosystem',
 	},
@@ -894,9 +891,13 @@ my $static_links = {
 		url => 'proportal/ecotype', label => 'by ecotype'
 	},
 
+	'phyloviewer' => {
+		url => 'tools/phyloviewer', label => 'PhyloViewer',
+	},
+
 #	galaxy
 	galaxy => {
-		url => 'galaxy', label => 'PhyloViewer (Galaxy)'
+		url => 'galaxy', label => 'Galaxy'
 	},
 
 # menu links

@@ -1,8 +1,8 @@
 package ProPortal::Controller::PhyloViewer::ResultsDemo;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Base 'MooRole';
 
-extends 'ProPortal::Controller::PhyloViewer::Results';
+with 'ProPortal::Controller::PhyloViewer::Results';
 with 'ProPortal::Controller::PhyloViewer::DemoData';
 
 =head1 ProPortal::Controller::PhyloViewer::ResultsDemo

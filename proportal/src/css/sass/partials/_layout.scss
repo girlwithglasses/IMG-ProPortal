@@ -8,7 +8,7 @@ article {
 
 @include maxw( $nar- ) {
 
-	#about, #user-guide, #news, .content {
+	#about, #user-guide, #news, .content, #tool-input__section, #tool-info__section {
 		width: 100%;
 		padding: 0;
 	}
@@ -19,7 +19,7 @@ article {
 	#about {
 		width: 100%;
 	}
-	#user-guide, #news {
+	#user-guide, #news, #tool-input__section, #tool-info__section {
 		width: 50%;
 		float: left;
 	}
@@ -55,6 +55,12 @@ article {
 		width: 33.3%;
 		float: right;
 		padding-left: $gutter;
+		margin-bottom: $line-ht;
+	}
+	#tool-input__section, #tool-info__section {
+		float: left;
+		width: 50%;
+		padding: 0 $gutter;
 		margin-bottom: $line-ht;
 	}
 }

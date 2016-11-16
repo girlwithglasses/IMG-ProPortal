@@ -34,6 +34,8 @@ return {
 # if the requested path does not match any specific route, Dancer2 will check in the views directory for a matching template, and use it to satisfy the request if found
 	auto_page => 1,
 
+#	views => '/Users/gwg/Dropbox/IMG-ProPortal/views',
+
 	engines => {
 		session => {
 			CGISession => {

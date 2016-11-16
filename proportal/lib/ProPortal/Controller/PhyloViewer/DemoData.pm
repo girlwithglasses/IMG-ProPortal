@@ -94,6 +94,11 @@ sub get_taxon_list {
 
 }
 
+around 'get_cart_contents' => sub {
+	return get_gene_scaffold_data();
+};
+
+
 around 'run_query' => sub {
 	my $orig = shift;
 	my $self = shift;

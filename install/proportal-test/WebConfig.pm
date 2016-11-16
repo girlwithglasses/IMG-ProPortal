@@ -1,6 +1,6 @@
 package WebConfig;
 #
-# $Id: WebConfig.pm 36384 2016-10-26 21:09:57Z aireland $
+# $Id: WebConfig.pm 36421 2016-11-16 00:09:50Z aireland $
 #
 #	Configuration for the ProPortal test server
 
@@ -15,6 +15,7 @@ BEGIN {
 
 use strict;
 use warnings;
+use Data::Dumper::Concise;
 use WebConfig_img_proportal;
 
 my $conf = WebConfig_img_proportal::make_config({
@@ -31,9 +32,14 @@ my $conf = WebConfig_img_proportal::make_config({
 
 #$conf->{sso_url_prefix} = 'https://signon.';
 #$conf->{sso_domain} = 'jgi.doe.gov';
-delete $conf->{sso_enabled};
+$conf->{sso_enabled} = 0;
 
 sub getEnv {
+
+	print 'INC: ' . join "\n", @INC;
+
+	print 'conf: ' . Dumper $conf;
+
 	return $conf;
 }
 

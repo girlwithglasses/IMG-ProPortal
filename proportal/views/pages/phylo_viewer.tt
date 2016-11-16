@@ -12,7 +12,7 @@
 </p>
 </section>
 <section class="cf clear">
-<form method="POST" class="[% class %]__form" action="[% link('proportal/phylo_viewer') %]">
+<form method="POST" class="[% class %]__form" action="[% link('phyloviewer') %]">
 	<fieldset>
 [%	FOREACH t IN results.options; %]
 		<fieldset class="[% class %]__field--[% t %]">
@@ -32,7 +32,7 @@
 	</fieldset>
 </form>
 
-<p><a href="[% link('proportal/phylo_viewer') %]/results">View sample results</a></p>
+<p><a href="[% link('phyloviewer') %]/results">View sample results</a></p>
 
 </section>
 [% END; %]

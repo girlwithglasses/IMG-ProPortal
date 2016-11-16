@@ -1,8 +1,8 @@
 package ProPortal::Controller::PhyloViewer::QueryDemo;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Base 'MooRole';
 
-extends qw( ProPortal::Controller::PhyloViewer::Query );
+with qw( ProPortal::Controller::PhyloViewer::Query );
 with qw( ProPortal::Controller::PhyloViewer::DemoData );
 
 =head1 ProPortal::Controller::PhyloViewer::QueryDemo

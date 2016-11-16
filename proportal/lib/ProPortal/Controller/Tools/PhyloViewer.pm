@@ -1,8 +1,8 @@
 package ProPortal::Controller::PhyloViewer::SubmitDemo;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Base 'Class';
 
-with 'ProPortal::Controller::PhyloViewer::Submit';
+extends 'ProPortal::Controller::PhyloViewer::Submit';
 with 'ProPortal::Controller::PhyloViewer::DemoData';
 
 =head1 ProPortal::Controller::PhyloViewer::SubmitDemo

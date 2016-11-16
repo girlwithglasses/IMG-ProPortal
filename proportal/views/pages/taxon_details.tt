@@ -1,221 +1,467 @@
 [%
-	WRAPPER layouts/default.html.tt;
-	title = 'IMG ProPortal: Genome Details';
-	self = results;
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	self = results.taxon;
+	title = 'IMG ProPortal: ' _ self.display_name;
 %]
 
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <!-- script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script -->
+
+
+<style>
+/*
+	div.indent {
+		padding-left: 1.5rem;
+		margin: 0;
+		display: inline;
+	}
+*/
+
+	.table-condensed>tbody>tr>td.indent {
+		padding-left: 1.5rem;
+	}
+	.noteToSelf {
+		background-color: #FFFF99;
+		font-style: italic;
+		padding: 0.3em 1em 0.3em 1em;
+		display: inline;
+	}
+	.help {
+		background-color: #8899dd;
+		color: white;
+		font-weight: bold;
+		border-radius: 12px;
+		padding: 0.1em 0.3em 0.1em 0.3em;
+		margin: 0.2em;
+		display: inline;
+		float: right;
+	}
+
+	.panelTable {		/* sets the width of the field names in the tables */
+		width: 12.5rem;
+	}
+
+</style>
+
+
+</head>
+
 <h2>[% self.display_name %]</h2>
+<h4>Alt Name(s) </h4>
+<br>
+
+<div class="container-float">
+
+<!--
+<div class="row">
+<div class="col-xs-12">
+
+  <div class="panel panel-default">
+  <div class="panel-heading"><b>General Information</b></div>
+
+  <table class="table">
+    <tr><td class="panelTable"> Organism Name </td>	<td> [% self.display_name %] </td></tr>
+    <tr><td> Alt Name(s) </td>		<td> ... </td></tr>
+
+  </table>
+  </div>
+
+</div> <!~~ col ~~>
+</div> <!~~ row ~~>
+ -->
+
+<div class="row">
+	<div class="col-xs-6">
+		<div class="panel panel-default">
+			<div class="panel-heading"><b>Natural Isolation Information</b></div>
+
+<table class="table table-condensed">
+	<tr>
+		<td class="panelTable">Date collected</td>
+		<td>[% self.date_collected %]</td>
+	</tr>
+	<tr>
+		<td>Latitude / longitude</td>
+		<td>[% self.latitude %]&#176;N, [% self.longitude %]&#176;E</td>
+	</tr>
+	<tr>
+		<td>Depth</td>
+		<td>[% self.depth %]</td>
+	</tr>
+	<tr>
+		<td>Isolation Details</td>
+		<td>[% self.proport_isolation %]</td>
+	</tr>
+	<tr>
+		<td>Longhurst Province</td>
+		<td>[%
+	IF self.longhurst_code && self.longhurst_description;
+		self.longhurst_code _ ', ' _ self.longhurst_description;
+	END %]</td>
+	</tr>
+	<tr>
+		<td>NOAA Sea Name</td>
+		<td>[% self.geo_location %]</td>
+	</tr>
+	<tr>
+		<td>Ocean</td>
+		<td>[% self.proport_ocean %]</td>
+	</tr>
+	<tr>
+		<td colspan="2"><b>Ecosystem Hierarchy</b></td>
+	</tr>
+[%
+	eco_hier = [ 'ecosystem',
+		'ecosystem_category',
+		'ecosystem_type',
+		'ecosystem_subtype',
+		'specific_ecosystem'
+	];
+
+	FOR e IN eco_hier; %]
+	<tr>
+		<td class="indent">
+			[% e | replace('_', ' ') | ucfirst %]
+		</td>
+		<td> [% self.$e %]</td>
+	</tr>
+[%	END; %]
+	<tr>
+		<td colspan="2"><b>Environmental Measurements</b>
+		<div class="help">
+			?
+		</div>
+		</td>
+	</tr>
+[%	env_meas = [
+		'salinity',
+		'oxygen_concentration',
+		'temperature',
+		'nitrate_concentration',
+		'chlorophyll_concentration',
+		'pressure'
+	];
+
+	FOR e in env_meas; %]
+	<tr>
+		<td class="indent">
+		[%	IF results.label_data.$e && results.label_data.$e.label;
+				results.label_data.$e.label;
+			ELSE;
+				e | replace('_', ' ') | ucfirst;
+			END;
+		%]
+		</td>
+		<td>[% self.$e %][%
+			IF self.$e && results.label_data.$e.unit;
+				results.label_data.$e.unit;
+			END;
+		%]</td>
+	</tr>
+[%	END %]
+	<tr>
+		<td colspan="2"><b>World Ocean Atlas Fields</b>
+		<div class="help">
+			?
+		</div>
+		</td>
+	</tr>
+[%	woa_fields = [
+		'salinity',
+		'temperature',
+		'dissolved_oxygen',
+		'nitrate',
+		'phosphate',
+		'silicate'
+	];
+	FOR e in woa_fields;
+		e = 'proport_woa_' _ e; %]
+	<tr>
+		<td class="indent">
+		[%	IF results.label_data.$e && results.label_data.$e.label;
+				results.label_data.$e.label;
+			ELSE;
+				e | replace('_', ' ') | ucfirst;
+			END;
+		%]
+		</td>
+		<td>[% self.$e %][%
+			IF self.$e && results.label_data.$e.unit;
+				results.label_data.$e.unit;
+			END;
+		%]</td>
+	</tr>
+[%	END %]
+</table>
+	</div>
+</div> <!-- col -->
+
+<div class="col-xs-6">
+
+	<div class="panel panel-default">
+		<div class="panel-heading"><b>Ecological Information</b></div>
 
 
-<h3>General Taxonomic Information</h3>
+<table class="table table-condensed">
+	<tr>
+		<td class="panelTable">Clade</td>
+		<td>[% self.clade %]</td>
+	</tr>
+	<tr>
+		<td>Ecotype</td>
+		<td>[% self.ecotype %]</td>
+	</tr>
+	<tr>
+		<td colspan="2"><b>NCBI Taxonomy</b></td>
+	</tr>
+[%
+	ncbi = [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ];
 
-<pre>
-study name
-organism name: [% self.display_name %]
-alt name(s):
-</pre>
+	FOR n IN ncbi;
+		n_field = 'ncbi_' _ n; %]
+	<tr>
+		<td class="indent">
+			[% n | ucfirst %]
+		</td>
+		<td>[% self.$n_field %]</td>
+	</tr>
+[%	END %]
+</table>
+	</div>
 
-<h3>Identification and External Links</h3>
 
-<dl>
-<dt>Taxon ID</dt><dd>[% self.taxon_oid %]</dd>
-<dt>Bioproject Accession</dt><dd>[% self.bioproject_accession %]</dd>
-<dt>Biosample Accession</dt><dd>[% self.biosample_accession %]</dd>
-<dt>NCBI Taxon ID</dt><dd>[%
-## TODO: find generic NCBI taxon link!
+</div> <!-- col -->
+</div> <!-- row -->
 
-%][% self.ncbi_taxon_id %]</dd>
-<dt>GOLD ID</dt><dd>[% self.gold_id %]</dd>
-<!-- dt>Project ID</dt><dd>[% self.project_id %]</dd -->
-<dt>Project Status</dt><dd>[% self.project_status %]</dd>
-<dt>GOLD details</dt>
-<dd><a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">Study ID [% self.study_gold_id %]</a><dd>
-<dd><a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">Project ID [% self.gold_id %]</a><dd>
-<dd><a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">Analysis Project ID [% self.analysis_project_id %]</a></dd>
-<dt>NCBI/RefSeq ID</dt>
-<dd>[%
-	IF self.extId %]<a rel="external" href="[% ext_link('ncbi_entrez_base_url') %][% self.extId %]">[% self.extId %]</a>[%
-	ELSE;
-		'Not specified';
-	END;
-	%]
-</dd>
-<dt>Genome publication<dt>
+<div class="row">
+<div class="col-xs-6">
+
+	<div class="panel panel-default">
+		<div class="panel-heading"><b>Identification and External Links</b></div>
+
+
+<table class="table table-condensed">
+	<tr>
+		<td class="panelTable">IMG Taxon ID</td>
+		<td>[% self.taxon_oid %]</td>
+	</tr>
+	<tr>
+		<td>Project Status</td>
+		<td>[% self.project_status %]</td>
+	</tr>
+	<tr>
+		<td colspan="2"><b>GOLD details</b></td>
+	</tr>
+	<tr>
+		<td class="indent">
+			Study ID
+		</td>
+		<td>[%	IF self.study_gold_id %]
+			<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
+			[%	END %]
+		</td>
+	</tr>
+	<tr>
+		<td class="indent">
+			Sequencing Project ID
+		</td>
+		<td>
+			<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
+		</td>
+	</tr>
+	<tr>
+		<td class="indent">
+			Analysis Project ID
+		</td>
+		<td>[% IF self.analysis_project_id %]
+			<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
+		[%	END; %]
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2"><b>External Links</b></td>
+	</tr>
+[%	ext_urls = [
+		'bioproject_accession',
+		'biosample_accession',
+		'ncbi_taxon_id',
+		'ncbi_project_id',
+	];
+	FOR e in ext_urls; %]
+	<tr>
+		<td class="indent">
+		[%	IF results.label_data.$e && results.label_data.$e.label;
+				results.label_data.$e.label;
+			ELSE;
+				e | replace('_', ' ') | ucfirst;
+			END;
+		%]
+		</td>
+		<td>[%
+		IF self.$e;
+			IF results.label_data.$e && results.label_data.$e.ext_link;
+				link_url = results.label_data.$e.ext_link;
+				%]
+				<a rel="external" href="[% ext_link( results.label_data.$e.ext_link ) %][% self.$e %]">[% self.$e %]</a>
+[%			ELSE;
+				self.$e;
+			END;
+		END; %]
+		</td>
+	</tr>
+[%	END  # end ext_urls section %]
+	<tr>
+		<td class="indent">
+			NCBI/RefSeq ID
+		</td>
+		<td>
+		<div class="noteToSelf">add!</div>
+		</td>
+	</tr>
+	<tr>
+		<td> Genome publications </td>
+		<td>
 [%	IF self.gold_sp_genome_publications.size > 0;
 		FOR p IN self.gold_sp_genome_publications %]
-			<dd>"[% p.title %]" in [% p.journal_name %][%
+		<p>"[% p.title %]" in [% p.journal_name %][%
 			IF p.publication_date; " " _ p.publication_date; END;
 			IF p.volume; " volume " _ p.volume; END;
 			IF p.issue; " issue " _ p.issue; END;
 			IF p.page; " pages " _ p.page; END;
 
-			IF p.pubmed_id && p.pubmed_id != "";
-	 %] <a href="[% ext_link('pubmed') %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>[%
-			END;
-			IF p.doi && p.doi != "";
-	%] <a href="[% ext_link('doi') %][% p.doi %]" rel="external">doi:[% p.doi %]</a>[%
-			END;
-		END;
-	ELSE;
-		'<dd>Not specified</dd>';
-	END; %]
-</dl>
-<h3>Sequence Information</h3>
+			IF p.pubmed_id; %]
+				<a href="[% ext_link('pubmed') %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>
+[% 			END;
 
-<dl>
-<dt>Project Type</dt><dd> ... </dd>
-<dt>Culture Type</dt><dd>[% self.culture_type %]</dd>
-<dt>High Quality</dt><dd>[% self.seq_quality %]</dd>
-<dt>Publicly Available</dt><dd>[% self.is_public %]</dd>
-</dl>
-<h4>Sequencing details</h4>
-<dl>
-<dt>Sequencing status</dt><dd>[% self.seq_status %]</dd>
-<dt>Sequencing Center</dt>[%
-	IF self.gold_sp_seq_centers.size > 0;
-		FOR sc IN self.gold_sp_seq_centers;
-			'<dd>';
-			IF sc.url;
-				%]<a href="[% sc.url %]" rel="external">[% sc.name %]</a>[%
-			ELSE;
-				sc.name;
-			END;
-			IF sc.country;
-				', ' _ sc.country;
-			END;
-			'</dd>';
-		END;
-	ELSE;
-		'<dd>Not specified</dd>';
-	END; %]
-<dt>Sequencing Method</dt>[%
-	IF self.gold_sp_seq_methods.size > 0;
-		FOR m IN self.gold_sp_seq_methods;
-			'<dd>' _ m.seq_method _ '</dd>';
-		END;
-	ELSE;
-		'<dd>Not specified</dd>';
-	END; %]
-</dl>
-
-<h4>Curation Details</h4>
-<pre>
-Submission Type
-IMG Release
-Release Date
-Add Date: [% self.add_date %]
-Modified Date: [% self.mod_date;
-	IF self.modified_by != "";
-		' by ' _ self.modified_by;
-	END; %]
-Distance Matrix Calculation Date
-</pre>
-<h3>Ecological Information</h3>
-
-<h4>Biological Details</h4>
-<h5>Lineage</h5>
-<dl>
-<dt>Kingdom</dt><dd>[% self.ncbi_kingdom %]</dd>
-<dt>Order</dt><dd>[% self.ncbi_order %]</dd>
-<dt>Phylum</dt><dd>[% self.ncbi_phylum %]</dd>
-<dt>Class</dt><dd>[% self.ncbi_class %]</dd>
-<dt>Family</dt><dd>[% self.ncbi_family %]</dd>
-<dt>Genus</dt><dd>[% self.ncbi_genus %]</dd>
-<dt>Species</dt><dd>[% self.ncbi_species %]</dd>
-<dt>NCBI Taxon ID</dt><dd>[% self.ncbi_taxon_id %]</dd>
-<dt>NCBI Project ID</dt><dd>[% self.ncbi_project_id %]</dd>
-
-<dt>Clade</dt><dd>[% self.clade %]</dd>
-<dt>Ecotype</dt><dd>[% self.ecotype %]</dd>
-<dt>Biotic relationships</dt><dd>[% self.biotic_rel %]</dd>
-
-<dt>Cell arrangement</dt>[%
-	IF self.gold_sp_cell_arrangements;
-		FOR ca IN self.gold_sp_cell_arrangements; %]
-		<dd>[% ca.cell_arrangement %]</dd>
-[%		END;
-	ELSE;
-		'<dd>Not specified</dd>';
+			IF p.doi %]
+				<a href="[% ext_link('doi') %][% p.doi %]" rel="external">doi:[% p.doi %]</a></p>
+			[% END;
+		END; # end FOR loop
 	END %]
-<dt>Cell shape</dt><dd>[% self.cell_shape %]</dd>
-<dt>Gram stain</dt><dd>[% self.gram_stain %]</dd>
-<dt>Energy source</dt>[%
-	IF self.gold_sp_energy_sources.size > 0;
-		FOR e IN self.gold_sp_energy_sources; %]
-	<dd>[% e.energy_source %]</dd>
-[%		END;
-	ELSE;
-		'<dd>Not specified</dd>';
-	END %]
-<dt>Motility</dt><dd>[% self.motility %]</dd>
-<dt>Phenotype</dt>[%
-	IF self.gold_sp_phenotypes.size > 0;
-		FOR p IN self.gold_sp_phenotypes; %]
-		<dd>[% p.phenotype %]</dd>
-[%		END;
-	ELSE;
-		'<dd>Not specified</dd>';
-	END %]
-<dt>Temperature range</dt><dd>[% self.temp_range %]</dd>
-<dt>Relevance</dt>
-[%	IF self.gold_sp_relevances.size > 0;
-		FOR r IN self.gold_sp_relevances; %]
-	<dd>[% r.relevance %]</dd>
-[%		END;
-	ELSE;
-		'<dd>Not specified</dd>';
-	END; %]
-<dt>Type strain</dt><dd>[% self.type_strain %]</dd>
-</dl>
-<h4>Natural Isolation Environment</h4>
-<dl>
-<dt>Date collected</dt><dd>[% self.date_collected %]</dd>
-<dt>Lat/long</dt><dd>[% self.latitude %], [% self.longitude %]</dd>
-<dt>Sample collection depth/altitude</dt><dd>[% self.altitude %] [% self.depth %]</dd>
-<dt>Isolation details / iso date / cruise</dt><dd>[% self.isolation %]</dd>
-<dt>Longhurst code</dt><dd>[%
-	IF self.longhurst_code && self.longhurst_description; %]
-		[% self.longhurst_code %], [% self.longhurst_description %]
-[%	ELSE;
-		self.longhurst_code || self.longhurst_description || 'Not specified';
-	END; %]
-		</dd>
-<dt>Geographic location</dt><dd>[% self.geo_location %]</dd>
-<dt>Habitat</dt>[%
-	IF self.gold_sp_habitats.size > 0;
-		FOR h IN self.gold_sp_habitats;
-			%]<dd>[% h.habitat %]</dd>[%
-		END;
-	ELSE;
-		'<dd>Not specified</dd>';
-	END %]
-<dt>Ecosystem information</dt>
-<dd>ecosystem: [% self.ecosystem %]</dd>
-<dd>category: [% self.ecosystem_category %]</dd>
-<dd>type: [% self.ecosystem_type %]</dd>
-<dd>subtype: [% self.ecosystem_subtype %]</dd>
-<dd>specific ecosystem: [% self.specific_ecosystem %]</dd>
-</dl>
-<h5>Environmental Parameters</h5>
-<dl>
-<dt>Salinity</dt><dd>[% self.salinity %]</dd>
+	</tr>
+	</table>
+</div>
 
-</dl>
+</div> <!-- col -->
+<div class="col-xs-6">
 
-<h4>Other stuff</h4>
-<dl>
-[%	params = [
-'comments', 'contact_oid', 'domain', 'funding_program', 'hmp_id', 'host_gender', 'host_name', 'host_ncbi_taxid', 'img_taxon_oid', 'iso_country', 'its_spid', 'legacy_project_type', 'locus_tag', 'mrn', 'oxygen_req', 'phylogeny', 'pi_email', 'pi_name', 'pm_email', 'pm_name', 'pmo_project_id', 'replicate_num', 'sample_body_site', 'sample_body_subsite', 'sequencing_strategy', 'sporulation', 'strain', 'uncultured_type', 'visit_num'];
+	  <div class="panel panel-default">
+		<div class="panel-heading"><b>Sequence Information</b></div>
 
-	FOR p IN params; %]
-<dt>[% p %]</dt>
-<dd>[% self.$p %]</dd>
-[%	END; %]
-</dl>
 
-<pre>
-[% USE Dumper; Dumper.dump(self); %]
-</pre>
+<table class="table table-condensed">
+	<tr>
+		<td class="panelTable">Project Type</td>
+		<td> ... </td>
+	</tr>
+	<tr>
+		<td>Culture Type</td>
+		<td>[% self.culture_type %]</td>
+	</tr>
+	<tr>
+		<td>Quality</td>
+		<td>[% self.seq_quality %]</td>
+	</tr>
+	<tr>
+		<td>Publicly Available</td>
+		<td>[% self.is_public %]</td>
+	</tr>
+	<tr>
+		<td colspan="2"><b>Sequencing details</b></td>
+	</tr>
+	<tr>
+		<td class="indent">
+			Sequencing Status
+		</td>
+		<td>[% self.seq_status %]</td>
+	</tr>
+	<tr>
+		<td class="indent">
+			Sequencing Center
+		</td>
+		[% IF self.gold_sp_seq_centers.size > 0;
+			FOR sc IN self.gold_sp_seq_centers; '
+		<td>'; IF sc.url; %]<a href="[% sc.url %]" rel="external">[% sc.name %]</a>[% ELSE; sc.name; END; IF sc.country; ', ' _ sc.country; END; '</td>
+		'; END; ELSE; '
+		<td>Not specified</td>
+		'; END; %] </td>
+		<tr>
+			<td class="indent">
+				Sequencing Method</td>
+			[% IF self.gold_sp_seq_methods.size > 0; FOR m IN self.gold_sp_seq_methods; '
+			<td>' _ m.seq_method _ '</td>
+			'; END; ELSE; '
+			<td>Not specified</td>
+			'; END; %]
+		</tr>
+		<tr>
+			<td colspan="2"><b>Curation Details</b></td>
+		</tr>
+		<tr>
+			<td class="indent">
+				Submission Type
+			</td>
+			<td>
+			<p class="noteToSelf">
+				add
+			</p>
+			</td>
+		</tr>
+		<tr>
+			<td class="indent">
+				IMG Release
+			</td>
+			<td>
+			<p class="noteToSelf">
+				add
+			</p>
+			</td>
+		</tr>
+		<tr>
+			<td class="indent">
+				Release Date
+			</td>
+			<td>
+				[%	self.release_date %]
+			</td>
+		</tr>
+		<tr>
+			<td class="indent">
+				Add Date
+			</td>
+			<td>[% self.add_date %]</td>
+		</tr>
+		<tr>
+			<td class="indent">
+				Modified Date
+			</td>
+			<td>[% self.mod_date %]</td>
+		</tr>
+		<tr>
+			<td class="indent">
+				Distance Matrix Calculation Date
+			</td>
+			<td>
+			<p class="noteToSelf">
+				add
+			</p>
+			</td>
+		</tr>
+	</table>
+</div>
+
+
+</div> <!-- col -->
+</div> <!-- row -->
+
+
+
+</div> <!-- container-float -->
 
 
 

@@ -1,0 +1,10 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'Krona';
+%]
+
+<h2>Krona</h2>
+<p> Coming soon: run Krona here by using the Galaxy API. </p>
+
+
+[%	END; %]

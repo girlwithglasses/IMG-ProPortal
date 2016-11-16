@@ -49,7 +49,7 @@ for ( @$cfg ) {
 }
 
 # delete some of the debugging stuff
-delete $conf->{debug};
+delete $hash->{debug};
 
 # return { img => $conf, %$hash };
 return { %$conf, %$hash };

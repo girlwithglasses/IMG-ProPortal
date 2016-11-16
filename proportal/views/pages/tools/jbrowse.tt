@@ -3,37 +3,32 @@
 		page_wrapper = 'layouts/default.html.tt';
 	END;
 	WRAPPER $page_wrapper;
-	title = 'IMG ProPortal: PhyloViewer';
-#	class = 'phylo_viewer';
-
+	title = 'IMG ProPortal: JBrowse';
 %]
-<div class="floatR" style="width: 250px"><img src="/images/logo-phyloviewer.png" /></div>
-<h2>
-	PhyloViewer (beta)
-</h2>
+<div class="floatR"><img src="http://gmod.org/mediawiki/images/thumb/a/ac/JBrowseLogo.png/250px-JBrowseLogo.png" /></div>
+<h2>[% JBrowse %]</h2>
 <section id="tool-info__section" role="complementary">
-<h4>What does PhyloViewer do?</h4>
+<h4>What does JBrowse do?</h4>
 [% 	PROCESS 'inc/lorem_ipsum.tt' %]
-<h4>How do I run PhyloViewer?</h4>
+<h4>How do I run JBrowse?</h4>
 [% 	PROCESS 'inc/lorem_ipsum.tt' %]
 <p><a href="#">Read the documentation for more information</a></p>
 </section>
 <section id="tool-input__section">
-	<h3>Gene Cart</h3>
+	<h3>Genome Cart</h3>
 [%	IF ! results.js.array; %]
-	<p>The gene cart is currently empty. To run the PhyloViewer, you need to collect a set of genes of interest in the gene cart.
+	<p>The genome cart is currently empty. To run JBrowse, you need to select a genome to view the sequence of.
 	</p>
-	<p><a href="[% link('phyloviewer') %]/demo">View a sample set of genes</a></p>
-
 [%	ELSE; %]
 
-<p>Select the genes to perform the analysis on.</p>
-<form method="POST" class="[% class %]__form" action="[% link('phyloviewer') %]/query">
+<p>Select a genome to view the sequence of:</p>
+<form method="POST" class="[% class %]__form" action="[% link('tools/krona') %]/query">
 [%	FOREACH f IN results.form;
 		t = results.schema.$f; %]
 		<fieldset class="[% class %]__field--[% f %]">
 			<legend class="[% class %]__legend">[% t.label %]</legend>
 [%
+
 		IF 'radio' == t.control || 'checkbox' == t.control;
 			FOREACH c IN t.enum; %]
 		<input class='[% class %]__input--[% f %]' type='[% t.control %]' name='[% t.name %]' value='[% c.id %]' id='[% f %]_[% c.id %]'[% IF t.default == c.id || c.selected %] selected[% END %] />
@@ -48,12 +43,10 @@
 			</fieldset>
 [%		END; # end t type %]
 		</fieldset>
-[%	END; # end options %]
+[%	END; # end f in results.form %]
 		<input type="submit" value="Go!" />
 	</fieldset>
 </form>
-[%	END; %]
-<!-- p><a href="[% link('phyloviewer') %]/results/demo">View sample results</a></p -->
-
+[%	END; # end if results.js.array %]
 </section>
-[% END; %]
+[% END %]

@@ -26,6 +26,7 @@ has 'active_components' => (
 	}
 );
 
+
 # any qr{ /.* }x => sub {
 any '/offline' => sub {
 
@@ -69,79 +70,6 @@ prefix '/proportal' => sub {
 
 	};
 
-=head3 PhyloViewer
-
-The following pages are all PhyloViewer-related.
-
-GET  /proportal/phylo_viewer(/query)? => Query form for the PhyloViewer
-
-POST /proportal/phylo_viewer/query    => submit form, validate, run analysis
-
-a unique QUERY_ID is generated and assigned
-
-GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
-
-
-=cut
-
-	prefix '/phylo_viewer' => sub {
-
-		# demo cart at phylo_viewer/demo
-		get qr{
-			/? (?<query> (query|demo) )?
-			}x => sub {
-
-			var menu_grp => $group;
-			var page_id  => $group . '/phylo_viewer';
-
-			my $c = captures;
-			my $p = delete $c->{query};
-			my $module = $p && 'demo' eq $p ? 'QueryDemo' : 'Query';
-
-			my $pp = AppCore::bootstrap( 'PhyloViewer::' . $module );
-			my $tmpl = 'pages/proportal/phylo_viewer/query';
-
-			return template $tmpl, $pp->render();
-		};
-
-		post qr{
-			/query
-			}x => sub {
-
-			var menu_grp => $group;
-			var page_id  => $group . '/phylo_viewer';
-			my $tmpl = 'pages/proportal/phylo_viewer/query';
-
-			my $params;
-			for my $p ( qw( gp input msa tree ) ) {
-				$params->{$p} = [ body_parameters->get_all($p) ];
-			}
-			my $pp = AppCore::bootstrap( 'PhyloViewer::Submit' );
-
-			return template $tmpl, $pp->render( $params );
-
-		};
-
-		# DEMO results page at phylo_viewer/results/demo
-		get qr{
-			/results/(?<query_id> ( demo | .*) )
-		}x => sub {
-			my $c = captures;
-			my $p = delete $c->{query_id};
-			my $module = $p && 'demo' eq $p ? 'ResultsDemo' : 'Results';
-
-			var menu_grp => $group;
-			var page_id  => $group. '/phylo_viewer';
-			my $tmpl = 'pages/proportal/phylo_viewer/results';
-
-			my $pp = AppCore::bootstrap( 'PhyloViewer::' . $module );
-
-			return template $tmpl, $pp->render();
-		};
-
-
-	};
-
 =head3 Home page
 
 =cut
@@ -164,28 +92,39 @@ get '/taxon/:taxon_oid' => sub {
 
 	my $pp = AppCore::bootstrap( 'TaxonDetails' );
 
-#	$pp->set_filters({ taxon_oid => params->{taxon_oid} });
-	say 'taxon_oid: ' . params->{taxon_oid};
-
-	return template $pp->controller->tmpl, $pp->render({ taxon_oid => params->{taxon_oid} });
+	my $rslts = $pp->render({ taxon_oid => params->{taxon_oid} });
+	$rslts->{page_wrapper} = 'layouts/default_wide.html.tt';
+	return template $pp->controller->tmpl, $rslts;
 
 };
 
 prefix '/tools' => sub {
 
+	my $group = 'tools';
+
 	get qr{
-		/ (?<query> phyloviewer | krona | jbrowse | galaxy )
+		/ (?<query> krona | jbrowse | galaxy )
 		/?
 		}x => sub {
 
 		my $c = captures;
 		my $p = $c->{query};
-		my $group = 'tools';
 		var menu_grp => $group;
 		var page_id  => $group . "/$p";
 
-		my $app = AppCore::create_core();
-		$app->add_controller_role( $p );
+		# phyloviewer: gene cart
+		# krona:
+		# jbrowse: ??? taxon selector?
+		# galaxy:  ???
+		my $h = {
+			krona => 'Krona',
+			jbrowse => 'JBrowse',
+			phyloviewer => 'PhyloViewer',
+			galaxy => 'Galaxy'
+		};
+
+		my $app = AppCore::bootstrap( 'Tools::' . $h->{$p} );
+#		$app->add_controller_role(  );
 
 		debug 'page: ' . $p
 			. '; subset: ' . ( $c->{subset} || 'none' )
@@ -193,6 +132,77 @@ prefix '/tools' => sub {
 
 		return template $app->controller->tmpl, $app->render;
 	};
+
+=head3 PhyloViewer
+
+The following pages are all PhyloViewer-related.
+
+GET  /proportal/phylo_viewer(/query)? => Query form for the PhyloViewer
+
+POST /proportal/phylo_viewer/query    => submit form, validate, run analysis
+
+a unique QUERY_ID is generated and assigned
+
+GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
+
+
+=cut
+	prefix '/phyloviewer' => sub {
+
+		# demo cart at phylo_viewer/demo
+
+		get qr{
+			/? (?<query> (query|demo) )?
+			}x => sub {
+
+			say 'running query code!';
+			var menu_grp => $group;
+			var page_id  => 'phyloviewer';
+
+			my $c = captures;
+			my $p = delete $c->{query};
+			my $module = $p && 'demo' eq $p ? 'QueryDemo' : 'Query';
+
+			my $pp = AppCore::bootstrap( 'PhyloViewer::' . $module );
+
+			return template $pp->controller->tmpl, $pp->render();
+		};
+
+		post qr{
+			/query
+			}x => sub {
+
+			var menu_grp => $group;
+			var page_id  => $group . '/phyloviewer';
+
+			my $params;
+			for my $p ( qw( gp input msa tree ) ) {
+				$params->{$p} = [ body_parameters->get_all($p) ];
+			}
+			my $pp = AppCore::bootstrap( 'PhyloViewer::Submit' );
+
+			return template $pp->controller->tmpl, $pp->render( $params );
+
+		};
+
+		# DEMO results page at phylo_viewer/results/demo
+		get qr{
+			/results/(?<query_id> ( demo | .*) )
+		}x => sub {
+			my $c = captures;
+			my $p = delete $c->{query_id};
+			my $module = $p && 'demo' eq $p ? 'ResultsDemo' : 'Results';
+
+			var menu_grp => $group;
+			var page_id  => $group. '/phyloviewer';
+			my $tmpl = 'pages/proportal/phylo_viewer/results';
+
+			my $pp = AppCore::bootstrap( 'PhyloViewer::' . $module );
+
+			return template $pp->controller->tmpl, $pp->render();
+		};
+	};
+
 };
 
 1;

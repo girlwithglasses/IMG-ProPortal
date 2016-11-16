@@ -4,6 +4,8 @@ package ProPortal::Controller::TaxonDetails;
 
 use IMG::Util::Base 'MooRole';
 
+with 'IMG::Model::DataManager';
+
 has 'controller_args' => (
 	is => 'lazy',
 	default => sub {
@@ -51,21 +53,21 @@ sub render {
 	$res = $res->[0];
 
 	my @associated = qw(
-		gold_sp_genome_publications
-		gold_sp_habitats
-		gold_sp_energy_sources
-		gold_sp_phenotypes
-		goldanaproj
-		gold_sp_seq_centers
-		gold_sp_seq_methods
-		gold_sp_relevances
 		gold_sp_cell_arrangements
-		gold_sp_metabolisms
-		gold_sp_study_gold_ids
 		gold_sp_collaborators
 		gold_sp_diseases
+		gold_sp_energy_sources
+		gold_sp_habitats
+		gold_sp_metabolisms
+		gold_sp_phenotypes
+		gold_sp_relevances
+		gold_sp_seq_centers
+		gold_sp_seq_methods
+		gold_sp_study_gold_ids
 	);
 
+# 		gold_sp_genome_publications
+# 		goldanaproj
 
 
 	for my $assoc (@associated) {
@@ -78,9 +80,7 @@ sub render {
 		}
 	}
 
-	say "results: " . Dumper $res;
-
-	return $self->add_defaults_and_render( $res );
+	return $self->add_defaults_and_render({ taxon => $res, label_data => $self->get_label_data });
 
 }
 

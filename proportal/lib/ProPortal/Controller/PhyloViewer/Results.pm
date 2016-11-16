@@ -9,6 +9,7 @@ has 'controller_args' => (
 	default => sub {
 		return {
 			class => 'ProPortal::Controller::Base',
+			tmpl => 'pages/proportal/phylo_viewer/results.tt',
 			tmpl_includes => {
 				tt_scripts => [ 'phylo_viewer' ]
 			}

@@ -1,8 +1,20 @@
 package ProPortal::Controller::PhyloViewer::Query;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Base 'MooRole';
 
-extends 'ProPortal::Controller::Base';
+has 'controller_args' => (
+	is => 'lazy',
+	default => sub {
+		return {
+			class => 'ProPortal::Controller::Base',
+			tmpl => 'pages/proportal/phylo_viewer/query.tt',
+			tmpl_includes => {
+#				tt_scripts => qw( data_type )
+			}
+		};
+	}
+);
+
 with qw( ProPortal::Controller::PhyloViewer::Schema );
 
 # use IMG::App::Cart;
@@ -33,12 +45,12 @@ sub render {
 # 	?? strain
 
 	my $headers = {
-		enum => [ qw( cbox gene_oid desc taxon_display_name ) ],
+		enum => [ qw( cbox gene_oid gene_display_name taxon_oid ) ],
 		enum_map => {
 			cbox => '',
 			gene_oid => 'Gene ID',
-			desc => 'Gene name',
-			taxon_display_name => 'Taxon',
+			gene_display_name => 'Gene name',
+			taxon_oid => 'Taxon ID',
 		}
 	};
 
@@ -75,15 +87,13 @@ sub render {
 # Deselect All (text link) -- “Deselect All” sequences in list, above list box
 # Ellipse (text link, toggle) -- An ellipse at the bottom of the list.  This lengthens/shortens the sequence list so that users can see more lines at once.
 #
+
+	my $form = [ qw( input gp msa tree ) ];
+
 	return $self->add_defaults_and_render({
 		schema => $self->get_query_schema,
 		transform => $transform,
-		form => [ qw(
-			input
-			gp
-			msa
-			tree
-		)],
+		form => [ qw( gp )],
 		js => {
 			table_headers => $headers,
 			array => $genes
@@ -93,8 +103,6 @@ sub render {
 
 
 sub get_cart_contents {
-
-
 	return;
 }
 
