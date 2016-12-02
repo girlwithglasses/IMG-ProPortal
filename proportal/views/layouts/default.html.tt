@@ -3,7 +3,7 @@
 <head>
 	<title>[% title %]</title>
 [%
-    PROCESS 'inc/page_head.tt';
+	PROCESS 'inc/page_head.tt';
 	IF tmpl_includes;
 		IF tmpl_includes.tt_styles;
 			FOREACH s IN tmpl_includes.tt_styles;
@@ -14,48 +14,31 @@
 		IF tmpl_includes.head;
 			# render style content
 		END;
-	END; %]
+	END;
+%]
 </head>
 <body[% body_class %]>
 <!-- template: [% template.name %] -->
 <div class="wrapper">
 [%
 	PROCESS 'inc/header.tt';
-%]
-<div class="nav-holder">
-	<input type="checkbox" id="horiz-bar-toggle" class="nav-toggle horiz-global-toggle" />
-	<!-- this toggle shows / hides the global nav and horiz-menu in mobile view -->
-	<div class="horiz-bar-toggle__container">
-		<label class="horiz-bar-toggle__label" for="horiz-bar-toggle">Menu</label>
-	</div>
-[%
-	PROCESS 'inc/nav_horiz_bar.tt';
-	PROCESS 'inc/nav_jgi_links.tt';
-%]
-</div>
-<input type="checkbox" id="sidebar-toggle" class="nav-toggle" />
-<div class="sidebar-toggle__container">
-	<label class="sidebar-toggle__label" for="sidebar-toggle">toggle sidebar</label>
-</div>
-[%
-	IF breadcrumbs;
-		PROCESS 'inc/nav_breadcrumbs.tt';
-	END;
+	PROCESS 'inc/nav_container.tt';
 %]
 	<article class="content cf" role="main">
-[%	IF settings.message;
-		PROCESS 'inc/message.tt';
+[%
+	IF settings.message;
+		#PROCESS 'inc/message.tt';
 	END;
+	content	    # the page content
 %]
-
-[%	content	    # the page content %]
 	</article>
 [%
     PROCESS 'inc/nav_sidebar.tt';
     PROCESS 'inc/footer.tt';
 %]
 </div>
-[%	IF settings.debug;
+[%
+	IF settings.debug;
 		PROCESS 'inc/debug.tt';
 	END;
 

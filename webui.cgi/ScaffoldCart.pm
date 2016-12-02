@@ -1,6 +1,6 @@
 ############################################################################
 # ScaffoldCart.pm - Cart for Scaffolds
-# $Id: ScaffoldCart.pm 36403 2016-11-03 21:02:34Z klchu $
+# $Id: ScaffoldCart.pm 36437 2016-11-17 08:16:30Z jinghuahuang $
 ############################################################################
 package ScaffoldCart;
 
@@ -792,7 +792,7 @@ sub printScaffoldCartButtons {
         -name    => $name,
         -value   => "Add Genomes of Selected Scaffolds to Cart",
         -class   => 'lgdefbutton',
-        -onClick => 'return validateSelection(1);'
+        #-onClick => 'return validateSelection(1);'
     );
     print nbsp(1);
 
@@ -802,7 +802,7 @@ sub printScaffoldCartButtons {
         -name    => $name,
         -value   => "Add Genes of Selected Scaffolds To Cart",
         -class   => 'lgdefbutton',
-        -onClick => 'return validateSelection(1);'
+        #-onClick => 'return validateSelection(1);'
     );
     print "<br/>";
 
@@ -813,7 +813,7 @@ sub printScaffoldCartButtons {
         -name  => $name,
         -value => 'Remove Selected',
         -class => 'smdefbutton',
-        -onClick => 'return validateSelection(1);'
+        #-onClick => 'return validateSelection(1);'
     );
 }
 

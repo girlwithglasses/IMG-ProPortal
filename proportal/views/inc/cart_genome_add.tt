@@ -1,6 +1,8 @@
 <form action="[% link('cart/genomes/add') %]" method="POST" class="sample-data__form">
 [% content %]
 <fieldset class="sample-data__controls" id="form_controls">
+<input type="hidden" value="" />
+<input type="hidden" value="" />
 <input class="sample-data__reset" type="reset" value="Clear selection" />
 <input class="sample-data__submit" type="submit" value="Add to cart" />
 </fieldset>

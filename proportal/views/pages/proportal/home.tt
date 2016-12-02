@@ -1,27 +1,257 @@
 [%
-	WRAPPER layouts/default.html.tt;
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default_wide.html.tt';
+	END;
+	WRAPPER $page_wrapper;
 	title = 'IMG ProPortal: Home';
 %]
+
+<head>
+<style>
+
+article {
+  *zoom: 1;
+  clear: both; }
+  article:before, article:after {
+    content: " ";
+    display: table; }
+  article:after {
+    clear: both; }
+
+@media only screen and (max-width: 479px) {
+  #about, #news, #quick-search, #gallery, .content, #tool-input__section, #tool-info__section {
+    width: 100%;
+    padding: 0;
+  }  }
+
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+
+  #quick-search, #gallery, #about, #news, #tool-input__section, #tool-info__section {
+    width: 100%;				/* 50%; */
+    margin: 12px 0 0 0;  		/* makes white space between stacked sections. */
+    padding: 30px;
+    float: left; }
+  #quick-search {
+  	color: white;
+  	background: #648DAA;
+  }
+  #gallery {
+  	color: white;
+  	background: #204977;
+  }
+  }
+
+@media only screen and (min-width: 768px) {
+  .content {
+    width: 80%;
+    float: right;
+    padding: 0 12px;
+    padding: 0 0.75rem; }
+  .sidebar {
+    width: 20%;
+    float: left; }
+  .footer {
+    clear: both; }
+  #news, #about {
+    width: 50%;					/*  33.3%; */
+    padding: 0;
+    float: left;
+    padding: 30px;
+   /*  padding: 0 0.75rem; */ }
+  #about {
+  	clear: left;
+  }
+  #quick-search {
+  	background: #648DAA;
+  	color: white;
+  	width: 400px;
+  	height: 340px;
+  	padding:30px;
+  	margin-bottom: 20px;
+  	float: left;
+  	}
+  #gallery {
+  	background: #204977;
+  	color: white;
+  	padding:30px;
+  	margin-left: 412px; /* width of #quick-search + 12px; */
+  	height: 340px;
+	/* float: left; */
+  }
+  #primary, .page-intro {
+    float: left;
+    width: 66.6%;
+    padding: 0 12px;
+    padding: 0 0.75rem;
+    margin-bottom: 24px;
+    margin-bottom: 1.5rem; }
+  #info, .filters {
+    width: 50%; 				/* 33.3%; */
+    float: right;
+    padding-left: 12px;
+    padding-left: 0.75rem;
+    margin-bottom: 24px;
+    margin-bottom: 1.5rem; }
+  #tool-input__section, #tool-info__section {
+    float: left;
+    width: 50%;
+    padding: 0 12px;
+    padding: 0 0.75rem;
+    margin-bottom: 24px;
+    margin-bottom: 1.5rem; } }
+
+.section-content {
+	padding: 15px 0;
+	border-top: 2px solid lightgray;
+	border-bottom: 2px solid lightgray;
+}
+h3 {
+	margin: 0;
+}
+select {
+	color: black;
+	width: 100%;
+}
+
+input {
+	color: black;
+	width: 100%;
+}
+
+.quick-search {
+	background: #204977;
+	padding: 10px 20px;
+	float: right;
+}
+
+</style>
+</head>
+
+<!-- Spacer -->
 <div class="cf">
+<br><br>
+</div>
+
+
+<!-- First row, quick search and image gallery. -->
+<div class="cf">
+
+<section id="quick-search">
+<h3> Quick Search</h3>
+
+<strong>Search category:</strong>
+<select>
+	<option value="genomes"> Genomes </option>
+	<option value="genes"> Genes </option>
+	<option value="functions"> Functions </option>
+</select>
+<p></p>
+<strong>For keyword:</strong>
+<input></input>
+
+<button class="quick-search">Go</button>
+
+
+</section>
+
+<section id="gallery">
+<h3>Image Gallery</h3>
+<p> Image gallery goes here...</p>
+</section>
+
 <section id="about">
 <h3>About IMG/ProPortal</h3>
+	<div class="section-content">
 <p>
 	The marine cyanobacterium <strong><i>Prochlorococcus</i></strong>, which is abundant in the oceans, is a key model system in microbial ecology. <strong>IMG/ProPortal</strong> provides <i>Prochlorococcus</i> and the closely related <i>Synechococcus</i> and <i>Cyanophage</i> genomes integrated with a comprehensive set of publicly-available isolate and single cell genomes, and a rich set of publicly-available metagenome samples. <strong>IMG/ProPortal</strong> includes genomic, transcriptomic, metagenomic and population data from both cultivated strains and wild populations of cyanobacteria and phage.</p>
 <p><strong>IMG/ProPortal</strong> relies on IMG's data warehouse and comparative analysis tools (<a href="http://nar.oxfordjournals.org/content/42/D1/D560" rel="external">Nucleic Acids Research, Volume 42 Issue D1</a>) and is a descendant of <strong>ProPortal</strong> (<a href="http://nar.oxfordjournals.org/content/40/D1/D632" rel="external">Nucleic Acids Research Volume 40 Issue D1</a>).</p>
+	</div>
 </section>
 
-<section id="user-guide">
-<h3>User Guide</h3>
-[%	IF user_guide;
-		# do something
-	ELSE; %]
-<p>The IMG/ProPortal user guide is still under development.</p>
-[%	END; %]
-</section>
 
 <section id="news">
-<h3>News</h3>
-[%	INCLUDE inc/news.tt %]
+<!-- <h3>News</h3> -->
+<!-- [%	INCLUDE inc/news.tt %] -->
+<a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 </section>
+
+	<table>
+	<caption>IMG ProPortal Statistics</caption>
+	<thead>
+	<tr><th class="L">Subset</th><th class="L">Count</th></tr>
+	</thead>
+	<tbody>
+[%	IF results.stats.subsets.size > 0;
+		FOREACH s IN results.stats.subsets %]
+		<tr><td>[% s.proportal_subset %]</td>
+			<td>[% s.count %]</td>
+		</tr>
+[%		END;
+	ELSE %]
+		<tr><td colspan="2">No statistics found!</td></tr>
+[%	END; %]
+	</tbody>
+	</table>
+
+	<table>
+	<caption>Counts by Longhurst Code</caption>
+	<thead>
+	<tr><th class="L">Longhurst Code</th><th class="L">Count</th></tr>
+	</thead>
+	<tbody>
+[%	IF results.stats.by_longhurst.size > 0;
+		FOREACH r IN results.stats.by_longhurst %]
+		<tr><td>[%
+			IF r.longhurst_description;
+				r.longhurst_description _ ' (' _ r.longhurst_code _ ')';
+			ELSE;
+				'unclassified';
+			END;
+			%]</td>
+			<td>[% r.count %]</td>
+		</tr>
+[%		END;
+	ELSE %]
+		<tr><td colspan="2">No statistics found!</td></tr>
+[%	END; %]
+	</tbody>
+	</table>
+
+[%
+	genomes = results.sorted_data.isolate;
+	metagen = results.sorted_data.metagenome; %]
+	<table>
+	<caption>IMG ProPortal Statistics</caption>
+	<thead>
+	<tr><th class="L">Genomes</th><th class="L">Count</th></tr>
+	</thead>
+	<tbody>
+[%	IF genomes && genomes.keys.size > 0;
+		FOREACH es IN genomes.keys.sort %]
+		<tr><td><!-- a href="[% link( 'genome_list', { class => es } ) %]" -->[% es %]<!-- /a --></td>
+			<td>[% genomes.$es.size %]</td>
+		</tr>
+[%		END;
+	ELSE %]
+		<tr><td colspan="2">No genomes found</td></tr>
+[%	END; %]
+	</tbody>
+	<tbody>
+		<tr><th class="L">Metagenomes</th><th class="L">Count</th></tr>
+[%	IF metagen && metagen.keys.size > 0;
+		FOREACH es IN metagen.keys.sort %]
+		<tr>
+			<td><!-- a href="[% link( 'genome_list_ecosystem', { ecosystem_subtype => es } ) %]" -->[% es %]<!-- /a --></td>
+			<td>[% metagen.$es.size %]</td>
+		</tr>
+[%		END;
+	ELSE; %]
+		<tr><td colspan="2">No metagenomes found</td></tr>
+[%	END; %]
+	</tbody>
+	</table>
+
+
 </div>
+
 [% END; %]

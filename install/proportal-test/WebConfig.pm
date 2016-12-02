@@ -1,6 +1,6 @@
 package WebConfig;
 #
-# $Id: WebConfig.pm 36421 2016-11-16 00:09:50Z aireland $
+# $Id: WebConfig.pm 36435 2016-11-16 16:41:18Z aireland $
 #
 #	Configuration for the ProPortal test server
 
@@ -15,7 +15,7 @@ BEGIN {
 
 use strict;
 use warnings;
-use Data::Dumper::Concise;
+use Data::Dumper;
 use WebConfig_img_proportal;
 
 my $conf = WebConfig_img_proportal::make_config({
@@ -36,9 +36,9 @@ $conf->{sso_enabled} = 0;
 
 sub getEnv {
 
-	print 'INC: ' . join "\n", @INC;
+	warn 'INC: ' . join "\n", @INC;
 
-	print 'conf: ' . Dumper $conf;
+	warn 'conf: ' . Dumper $conf;
 
 	return $conf;
 }

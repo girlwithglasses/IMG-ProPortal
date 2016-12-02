@@ -65,6 +65,8 @@ sub _build_filter_schema {
 				synech => 'Synechococcus',
 				prochlor_phage => 'Prochlorococcus phage',
 				synech_phage => 'Synechococcus phage',
+				phage => 'Prochlorococcus and Synechococcus phages',
+				coccus => 'Prochlorococcus and Synechococcus',
 				isolate => 'All ProPortal isolates',
 				metagenome => 'Marine metagenomes',
 				all_proportal => 'All isolates and metagenomes'

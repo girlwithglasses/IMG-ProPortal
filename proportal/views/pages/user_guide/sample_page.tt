@@ -1,0 +1,20 @@
+[%	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'Sample Demo';
+%]
+	<h2>
+		Sample Demo Page
+	</h2>
+<p>
+	Here is some introductory text.
+</p>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<h3>Heading Three</h3>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+
+<h4>Heading Four</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+
+[% END; %]

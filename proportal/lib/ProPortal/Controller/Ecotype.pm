@@ -12,6 +12,9 @@ has 'controller_args' => (
 		return {
 			class => 'ProPortal::Controller::Filtered',
 			tmpl => 'pages/proportal/ecotype.tt',
+			tmpl_includes => {
+				tt_scripts => qw( ecotype ),
+			},
 			filters => {
 				subset => 'prochlor'
 			},
@@ -47,12 +50,10 @@ sub render {
 	}
 
 	return $self->add_defaults_and_render({
-         output => $data,
-#         js => {
-#             class_type_h => $class_type_h,
-#             tree => $tree,
-#         }
-    });
+		js => {
+			data => $data,
+		}
+	});
 
 }
 

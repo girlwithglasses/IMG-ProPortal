@@ -1,0 +1,35 @@
+[%	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'Sample Demo';
+%]
+
+
+<h2 id="top">Getting Started </h2>
+
+<ol>
+	<li> <a href="#1">Understanding the Analysis Cart </a></li>
+	<li> <a href="#2">Populating the Cart </a></li>
+	<li> <a href="#3">Working with Data in the Cart </a></li>
+</ol>
+
+<h4>Overview</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+
+<h4 id="1">Understanding the Analysis Cart</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<a href="#top">go to top </a>
+<p></p>
+
+<h4 id="2">Populating the Cart</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<a href="#top">go to top </a>
+<p></p>
+
+<h4 id="3">Working with Data in the Cart</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<a href="#top">go to top </a>
+<p></p>
+
+[% END; %]

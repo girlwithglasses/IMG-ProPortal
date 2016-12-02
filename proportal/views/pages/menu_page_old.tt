@@ -3,23 +3,9 @@
 	title = content.title || content.label || 'Menu';
 
 	USE Dumper;
-%]
-	
-<head>
-<style>
 
-ul {
-  list-style-type: none;
-  
-}
-
-</style>
-</head>	
-	
-	
-[%	VIEW app_list;
+	VIEW app_list;
 		BLOCK list %]
-	<!-- <div class="cf">	 -->
 	<ul role="tree">
 [%	FOREACH m IN item %]
 	  <li role="treeitem">
@@ -33,7 +19,6 @@ ul {
 		</li>
 [%	END; # end foreach %]
 	</ul>
-	<!-- <div> -->
 [%		END; # end block
 	END; # end view
 

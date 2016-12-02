@@ -24,18 +24,15 @@
 		Please wait while the visualisation loads.
 	</p>
 </div>
-<div id="plotly" class="hide">
-</div>
 </section>
 <section role="complementary" class="clade-data">
 [%	WRAPPER 'inc/cart_genome_add.tt'; %]
 <ul class="noDot">
-[%	FOREACH genus IN results.js.data.keys.sort;
-	FOREACH clade IN results.js.data.$genus.keys.sort;
-		c = results.js.data.$genus.$clade; %]
+[%	FOREACH clade IN results.js.data.keys.sort;
+		c = results.js.data.$clade; %]
 <li data-clade-id="[% c.id %]" id="[% c.id %]" class="clade_details">
 	<h4 class="clade-details__genus">Genus [% c.genus %]</h4>
-	<h5 class="clade-details__clade">Clade [% c.label || 'unspecified' %], [% c.genomes.size %] species</h5>
+	<h5 class="clade-details__clade">Clade [% c.label %], [% c.count %] species</h5>
 	<p><a class="clade-details__link--genome_list_clade" href="[% link('genome_list_clade', { clade => c.label } ) %]">View species in table browser</a></p>
 	<ul>
 	[%		FOREACH s IN c.genomes %]
@@ -43,9 +40,9 @@
 	[%		END %]
 	</ul>
 </li>
-[%	END;
-	END; # end foreach genus %]
+[%	END; %]
 </ul>
 [%	END; # end cart_genome_add wrapper %]
 </section>
+</article>
 [%	END; %]

@@ -1,0 +1,29 @@
+[%	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'Sample Demo';
+%]
+	
+	
+<h2 id="top">Using Tools </h2>
+
+<ol>
+	<li> <a href="#1">Accessing Tools from the ProPortal Interface</a></li>
+	<li> <a href="#2">Galaxy </a></li>
+</ol>
+
+<h4>Overview</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+
+<h4 id="1">Accessing Tools from the ProPortal Interface</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<a href="#top">go to top </a>
+<p></p>
+
+<h4 id="2">Galaxy</h4>
+[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<a href="#top">go to top </a>
+<p></p>
+
+[% END; %]

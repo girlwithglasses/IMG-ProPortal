@@ -43,9 +43,10 @@
 	END;
 %]
 	<article class="cf" role="main">
-[%	IF settings.message;
-		PROCESS 'inc/message.tt';
-	END;
+[%	#IF settings.message;				#Sara's lazy hack to remove message...
+	#	PROCESS 'inc/message.tt';
+	#END;
+
 
 	content	    # the page content %]
 	</article>

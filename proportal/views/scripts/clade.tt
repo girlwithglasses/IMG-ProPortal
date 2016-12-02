@@ -1,7 +1,7 @@
-[%	scr_arr = [ '/js/d3.min.js', '/js/d3-tip.js'];
+[%	scr_arr = [ '/js/d3.min.js', '/js/d3-tip.js', 'https://cdn.plot.ly/plotly-latest.min.js' ];
 	IF scr_arr;
 		FOREACH s IN scr_arr;
-			'<script src="' _ settings.pp_assets _ s _ '"></script>';
+			'<script src="' _ s _ '"></script>';
 		END;
 	END;
 %]
@@ -11,6 +11,8 @@
 	IF results.js.data && results.js.data.size > 0;
 		USE JSON.Escape( convert_blessed => 1 );
 		results.js.data.json;
+		',clade_arr=';
+		results.js.clade_arr.json;
 	ELSE;
 		'{}';
 	END;
@@ -169,13 +171,15 @@ function fn(){
 		height = 360,
 		barHeight = 24,
 		offset = 190,
+//		genus = ['Prochlorococcus', 'Synechococcus'],
 		chart,
 		clades = ['', 'HLI', 'HLII', 'LLI', 'LLII/III', 'LLIV', '5.1A', '5.1B', '5.2', '5.3'],
-		objForMap = { data: cd },
 		sortedCladeData = clades.map(function(c){
-			if( this[c] ) {
-				this[c].count = +this[c].count;
-				return this[c];
+			for ( var g in cd ) {
+				if( this[g][c] ) {
+					this[g][c].count = this[g][c]['genomes'].length;
+					return this[g][c];
+				}
 			}
 			return { id: "", count: 0 };
 		}, cd),
@@ -403,8 +407,6 @@ function fn(){
 
 	, container = d3.select('#clade')
 
-
-
 	, tree = d3.layout.tree()
 		.size([height, width])
 
@@ -421,7 +423,6 @@ function fn(){
 		.append("g")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
 	container.node().parentNode.classList.add('populated');
 
 	d3.selectAll('.js_vis_loading')
@@ -432,6 +433,50 @@ function fn(){
 	makeGenusBoxes( svg );
 
 	makeBarChart( res, svg );
+
+	var WIDTH_IN_PERCENT_OF_PARENT = 90
+	, HEIGHT_IN_PERCENT_OF_PARENT = 80
+
+	, gd3 = Plotly.d3.select('#plotly')
+	.append('div')
+	.style({
+		width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+		'margin-left': (100 - WIDTH_IN_PERCENT_OF_PARENT) / 2 + '%',
+
+		height: HEIGHT_IN_PERCENT_OF_PARENT + 'vh',
+		'margin-top': (100 - HEIGHT_IN_PERCENT_OF_PARENT) / 2 + 'vh',
+	})
+
+	, gd = gd3.node()
+	, figs = clade_arr.map(function(c){
+			for ( var g in this ) {
+				if( this[g][c] ) {
+					this[g][c].count = this[g][c]['genomes'].length;
+					return this[g][c].count;
+				}
+			}
+			return 0;
+		}, res)
+	;
+
+	Plotly.plot(gd, [{
+		type: 'bar',
+		x: figs,
+		y: clade_arr,
+		orientation: 'h',
+		marker: {
+			color: '#C8A2C8'
+		}
+	}], {
+		title: 'Clade distribution',
+		font: {
+			size: 16
+		}
+	});
+
+	window.onresize = function() {
+		Plotly.Plots.resize(gd);
+	};
 
 }
 /* end insert */

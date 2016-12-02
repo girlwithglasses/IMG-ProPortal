@@ -1,0 +1,15 @@
+[%
+	WRAPPER layouts/default.html.tt;
+	title = 'User Guide';
+%]
+<h2>ProPortal User Guide</h2>
+<p>Welcome to the ProPortal User Guide! Blah blah blah.</p>
+
+<ol>
+	<li><a href="/user_guide/getting_started">Getting Started</a></li>
+	<li><a href="/user_guide/browsing">Browsing Data Sets</a></li>
+	<li><a href="/user_guide/searching">Searching in IMG/ProPortal - <i>Coming Soon!</i></a></li>
+	<li><a href="/user_guide/using_tools">Using Tools</a></li>
+</ol>
+
+[%	END; %]

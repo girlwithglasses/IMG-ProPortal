@@ -16,11 +16,11 @@ has 'controller_args' => (
 				tt_styles  => qw( clade ),
 			},
 			filters => {
-				subset => 'isolate'
+				subset => 'coccus'
 			},
 			valid_filters => {
 				subset => {
-					enum => [ qw( prochlor synech isolate ) ],
+					enum => [ qw( prochlor synech coccus ) ],
 				}
 			},
 		};
@@ -35,37 +35,39 @@ Requires JSON plugin for rendering data set
 =cut
 
 sub render {
-
 	my $self = shift;
 
-#	say 'self: ' . $self;
+	# get all distinct clade names
+	my $clades = $self->run_query({
+		query => 'distinct_clade',
+		filters => { subset => 'coccus' }
+	});
+
+	say 'Clades: ' . Dumper $clades;
+
+	my $data;
+	my $clade_h;
+
+	for my $c ( @$clades ) {
+		(my $wsc = $c->{generic_clade}) =~ s/([^\w]+)/_/g;
+		$data->{ $c->{genus} }{ $c->{generic_clade} } = {
+			id => 'clade_' . $wsc,
+			label => $c->{generic_clade},
+			genus => $c->{genus},
+			genomes => [],
+		};
+		$clade_h->{ $c->{generic_clade} }++;
+	}
 
 	my $res = $self->get_data();
-	my $data;
 
 	for my $r (@$res) {
-		# only required for badly-populated dbs
-		next unless $r->{clade};
-
-		# collect genomes by the web-friendly clade name
-		if ( ! $data->{ $r->{generic_clade} }) {
-			(my $wsc = $r->{generic_clade}) =~ s/([^\w]+)/_/g;
-			$data->{ $r->{generic_clade} } = {
-				id => 'clade_' . $wsc,
-				label => $r->{generic_clade},
-				genus => $r->{genus},
-				count => 1,
-				genomes => [ $r ],
-			};
-		}
-		else {
-			push @{$data->{ $r->{generic_clade} }{genomes}}, $r;
-			$data->{ $r->{generic_clade} }{count}++;
-		}
+		# collect genomes by the generic clade name
+		push @{$data->{ $r->{genus} }{ $r->{generic_clade} }{genomes}}, $r;
 	}
 
 	return $self->add_defaults_and_render({
-		js => { data => $data, original_data => $res }
+		js => { data => $data, clade_arr => [ sort keys %$clade_h ] }
 	});
 
 # 	return {
@@ -84,7 +86,10 @@ sub get_data {
 		filters => $self->filters,
 	});
 
-	return [ grep { $_->{clade} } @$res ];
+#	return $res;
+
+#	only required for badly-populated dbs
+	return [ grep { $_->{clade} =~ /\w/ } @$res ];
 
 }
 

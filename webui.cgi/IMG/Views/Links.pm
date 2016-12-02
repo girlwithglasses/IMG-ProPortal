@@ -843,7 +843,7 @@ my $static_links = {
 		label => 'About IMG/ProPortal', url => 'support/about',
 	},
 	'support/user_guide' => {
-		label => 'User Guide', url => 'support/user_guide',
+		label => 'User Guide', url => 'user_guide',
 	},
 	'support/news' => {
 		label => 'News', url => 'support/news',

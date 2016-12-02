@@ -221,7 +221,7 @@ sub add_filters {
 
 	my $f;
 
-	## This is implemented by ProPortal::IO::Filters
+	## This is implemented by ProPortal::IO::ProPortalFilters
 	## Not sure this is an ideal way to do this...
 	if ( $args->{filters}{subset} ) {
 		$f = $self->subset_filter( $args->{filters}{subset} );
@@ -255,12 +255,30 @@ sub clade {
 			-where    => {
 				clade => { '!=', undef },
 			},
-			-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
+			-order_by => [ qw( taxon_display_name ) ],
 			-result_as => 'statement',
 		);
 
 }
 
+=head3 distinct_clade
+
+Collect all clades from the ProPortal set
+
+=cut
+
+sub distinct_clade {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+		->select(
+			-columns => [ 'distinct genus || clade', 'clade', 'clade|generic_clade', 'genus' ],
+			-where    => {
+				clade => { '!=', undef },
+			},
+			-result_as => 'statement'
+		);
+}
 
 =head3 location
 
@@ -391,6 +409,44 @@ sub taxon_oid_display_name {
 		);
 }
 
+=head3 subset_stats
+
+Count of number of genomes in each of the proportal subset types
+
+@param  [none]
+
+@return $resultset, with fields:
+
+proportal_subset => ..., count => ...
+
+=cut
+
+sub subset_stats {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+		->select(
+			-columns => [ 'proportal_subset', 'count(distinct taxon_oid)|count' ],
+			-group_by => 'proportal_subset',
+			-result_as => 'statement'
+		);
+}
+
+
+
+sub metagenomes_by_ecosystem {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+		->select(
+			-columns  => [ 'count(distinct taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
+			-group_by => [ qw( ecosystem ecosystem_category ) ],
+			-where => {
+				proportal_subset => 'metagenome'
+			},
+			-result_as => 'statement',
+		);
+}
 
 
 =head3 taxon_metadata

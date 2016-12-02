@@ -31,40 +31,44 @@ prefix '/cart' => sub {
 	};
 };
 
-prefix '/demo' => sub {
+for my $f ( qw[ demo user_guide ] ) {
 
-	# get the demo pages in the directory '/views/pages/demo' (minus the index)
-	my @demo_pages = sort map { s/\.tt//; $_ }
-		@{ get_dir_contents({ dir => catdir( config->{views}, 'pages/demo' ), filter => sub { $_ !~ /index/ && -f catfile( config->{views}, 'pages/demo', $_ ) } }) };
+	prefix "/$f" => sub {
 
-	my $re = join '|', @demo_pages;
+		# get the pages in the directory '/views/pages/$f' (minus the index)
+		my @pages = sort map { s/\.tt//; $_ }
+			@{ get_dir_contents({ dir => catdir( config->{views}, 'pages', $f ), filter => sub { $_ !~ /index/ && $_ !~ /^\./ && -f catfile( config->{views}, 'pages', $f, $_ ) } }) };
 
-	get qr{
+		my $re = join '|', @pages;
 
-		/ (?<demo> $re )
+		get qr{
 
-		}x => sub {
+			/ (?<page_name> $re )
 
-		my $c = captures;
-		my $p = delete $c->{demo};
+			}x => sub {
 
-		return template "pages/demo/$p";
+			my $c = captures;
+			my $p = delete $c->{page_name};
+
+			return template "pages/$f/$p";
+		};
+
+		get qr{ /? }x => sub {
+
+			return template "pages/$f/index", { pages => [ @pages ] };
+
+		}
 	};
-
-	get qr{ /? }x => sub {
-
-		var menu_grp => 'proportal';
-		var page_id => 'proportal';
-		return template 'pages/demo/index', { pages => [ @demo_pages ] };
-
-	}
-};
+}
 
 
 {
 	package MiniContr;
 	use IMG::Util::Base 'Class';
-	with 'IMG::App::Role::Controller';
+	with qw(
+		IMG::App::Role::Controller
+		IMG::App::Role::ErrorMessages
+	);
 	1;
 }
 
@@ -109,21 +113,27 @@ prefix '/api/proportal' => sub {
 
 	get qr{ /? }x => sub {
 
+		var menu_grp => 'proportal';
+		var page_id => 'proportal';
 		# for each query, set the controller
 		# get the valid_filters
 		my $v_q;
 		for ( @valid_queries ) {
 			my $app = MiniContr->new();
 			$app->add_controller_role( $_ );
-			say $_ . ' controller: ' . Dumper $app->controller;
+#			say $_ . ' controller: ' . Dumper $app->controller;
 			$v_q->{$_} = $app->controller->valid_filters;
 		}
 
-		say 'valid filters: ' . Dumper $v_q;
+		my $results = {
+			valid => $v_q,
+			queries => [ @valid_queries ],
+			subsets => [ @subsets ]
+		};
 
-		var menu_grp => 'proportal';
-		var page_id => 'proportal';
-		return template 'pages/datamart_stats', { queries => [ @valid_queries ], subsets => [ @subsets ] };
+		say 'results: ' . Dumper $results;
+
+		return template 'pages/datamart_stats', $results;
 
 	}
 };
@@ -138,7 +148,7 @@ get '/test' => sub {
     var menu_grp => 'proportal';
     var page_id => 'proportal/test';
 
-    template 'pages/test', {};
+    return template 'pages/test', {};
 
 };
 

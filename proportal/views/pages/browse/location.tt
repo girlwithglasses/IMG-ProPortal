@@ -1,0 +1,32 @@
+[%
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'IMG ProPortal: Location Map';
+%]
+<h2>Sample Distribution by Location</h2>
+<section class="page-intro info--location">
+<p>
+	There are [% results.size %] sampling locations displayed on the map below. Only public projects that have provided longitude and latitude coordinates are displayed; if the coordinates are invalid, the project will not appear on the map.
+</p>
+<p>
+	Map pins represent location counts; some pins may have multiple genomes.
+</p>
+</section>
+[%	IF data_filters;
+		PROCESS 'inc/filters.tt';
+	END %]
+<section class="map" id="primary">
+<h3>Sample Acquisition Locations</h3>
+<div id="map" style="height: 500px;">
+</div>
+</section>
+<section role="complementary" class="details" id="info">
+<h3>Location and sample details</h3>
+<p>
+	Click on a marker to view the project details.
+</p>
+</section>
+</article>
+[%	END; %]

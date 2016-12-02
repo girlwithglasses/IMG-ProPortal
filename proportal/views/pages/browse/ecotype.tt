@@ -1,0 +1,61 @@
+[%
+	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.html.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'IMG ProPortal: Ecotype Browser';
+%]
+<h2>Sample Distribution by Ecotype</h2>
+<section class="info--ecotype init page-intro">
+<p>
+	Browse the distribution of samples by ecotype.
+</p>
+</section>
+[%	IF data_filters;
+		PROCESS 'inc/filters.tt';
+	END %]
+<section class="visualisation cf clear">
+<div id="ecotype">
+	<!-- p class="js_vis_loading">
+		Please wait while the visualisation loads.
+	</p -->
+	<p>Visualisation coming soon</p>
+[%
+	WRAPPER 'inc/cart_genome_add.tt';
+
+	FOREACH ecotype IN results.output.sort; %]
+	<h3>Ecotype: [% ecotype %]</h3>
+[%		FOREACH clade IN results.output.$ecotype.sort; %]
+	<h4>Clade [% clade %]</h4>
+[%			FOREACH taxid IN results.output.$ecotype.$clade.sort;
+				s = results.output.$ecotype.$clade.$taxid;
+				show = { ecotype => 1, h_level => 'h5' };
+				PROCESS 'inc/taxon_details.tt';
+			END;
+		END;
+	END;
+	END; # end wrapper
+%]
+
+</div>
+</section>
+<!-- section role="complementary" class="details" id="info">
+[%	WRAPPER 'inc/cart_genome_add.tt';
+
+	FOREACH ecotype IN results.output.sort; %]
+	<h3>Ecotype: [% ecotype %]</h3>
+[%		FOREACH clade IN results.output.$ecotype.sort; %]
+	<h4>Clade [% clade %]</h4>
+	<ul>
+[%			FOREACH taxid IN results.output.$ecotype.$clade.sort;
+				s = results.output.$ecotype.$clade.$taxid; %]
+		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a href="[% link( 'taxon', { taxon_oid => s.taxon_oid } ) %]">[% s.taxon_display_name %]</a></li>
+[%			END; %]
+	</ul>
+[%		END;
+	END ;
+	END; # end wrapper %]
+</section -->
+
+</article>
+[%	END; %]

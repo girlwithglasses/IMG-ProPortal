@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 36207 2016-09-22 19:30:10Z klchu $
+# $Id: MetaDetail.pm 36437 2016-11-17 08:16:30Z jinghuahuang $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -610,6 +610,7 @@ sub printPlasmidGeneList {
 #
 sub printCrisprDetails {
     my $taxon_oid = param("taxon_oid");
+    my $data_type   = param("data_type");
 
     my $dbh = dbLogin();
     my $isTaxonInFile = MerFsUtil::isTaxonInFile( $dbh, $taxon_oid );
@@ -624,10 +625,11 @@ sub printCrisprDetails {
     print qq{
         <h1>Genome CRISPR list</h1>
     };
-    my $taxon_name = WebUtil::taxonOid2Name( $dbh, $taxon_oid, 1 );
-    HtmlUtil::printMetaTaxonName( $taxon_oid, $taxon_name );
 
-    my @recs = ScaffoldDataUtil::getTaxonCrisprList( $dbh, $taxon_oid );
+    my $taxon_name = WebUtil::taxonOid2Name( $dbh, $taxon_oid, 1 );
+    HtmlUtil::printMetaTaxonName( $taxon_oid, $taxon_name, $data_type );
+
+    my @recs = MetaUtil::getMetaTaxonCrisprList( $taxon_oid, $data_type );
 
     my $it = new InnerTable( 1, "Crispr$$", "Crispr", 0 );
     my $sd = $it->getSdDelim();    # sort delimiter

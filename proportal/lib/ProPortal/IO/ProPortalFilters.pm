@@ -8,6 +8,21 @@ Get the filters for the ProPortal-specific species
 
 Filters apply to the 'VW_GOLD_TAXON' table (view)
 
+Current filters:
+
+prochlor
+prochlor_phage
+synech
+synech_phage
+metagenome
+
+coccus -- prochlor + synech
+phage  -- prochlor_phage + synech_phage
+
+isolate -- coccus + phage
+
+all_proportal -- isolate + metagenome
+
 =cut
 
 sub subset_filter {
@@ -63,16 +78,24 @@ sub subset_filter {
 		},
 	};
 
+	$filters->{coccus} = sub {
+		return [ map { $filters->{$_}->() } qw( prochlor synech ) ];
+	};
+
+	$filters->{phage} = sub {
+		return [ map { $filters->{$_}->() } qw( prochlor_phage synech_phage ) ];
+	};
+
 	$filters->{isolate} = sub {
 		return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage ) ];
 	};
 
-	$filters->{isolates} = $filters->{isolate};
-	$filters->{metagenomes} = $filters->{metagenome};
-
 	$filters->{all_proportal} = sub {
 		return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage metagenome ) ];
 	};
+
+	$filters->{isolates} = $filters->{isolate};
+	$filters->{metagenomes} = $filters->{metagenome};
 
 	$self->choke({
 		err => 'invalid',
