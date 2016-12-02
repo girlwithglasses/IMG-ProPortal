@@ -8,38 +8,64 @@
 <head>
 <style>
 
-ul {
-  list-style-type: none;
-  
+div.grid {
+	float: left;
 }
+
+a.grid:link, a.grid:visited {
+	background: #eee;
+	color: #343434;			/* IMG "black" */
+	
+	width: 230px;
+	height: 250px;
+    padding: 25px;
+    margin: 5px;
+    text-decoration: none;
+    display: inline-block;
+    border: 0;
+    clear: both;
+
+}
+
+
+a.grid:hover, a.grid:active {
+  background: #648DAA; 
+
+  color: white;
+  cursor: pointer;
+}
+
 
 </style>
 </head>	
 	
-	
-[%	VIEW app_list;
-		BLOCK list %]
-	<!-- <div class="cf">	 -->
-	<ul role="tree">
-[%	FOREACH m IN item %]
-	  <li role="treeitem">
-	  	<h5 id="[% m.id %]"><a href="[% link( m.id ) %]">[% m.title || m.label %]</a></h5>
-[%		IF description.${m.id};
-			description.${m.id};
-		END;
-		IF m.submenu;
-			view.print(m.submenu.list);
-		END %]
-		</li>
-[%	END; # end foreach %]
-	</ul>
-	<!-- <div> -->
+<div class="cf">	
+[%	PROCESS inc/tool_descriptions.tt;
+
+	VIEW app_list;
+		BLOCK list; 
+
+	FOREACH m IN item %]
+	<div class="grid"><a class="grid" href="[% link( m.id ) %]">
+		<h5 style="text-align: center;">[% m.title || m.label %]</h5>
+		
+		[%	IF description.${m.id};	
+				description.${m.id};
+			END;	
+		%] 
+	</a>
+	</div>	
+	[%	END; # end foreach %]
+
 [%		END; # end block
 	END; # end view
 
 %]
+</div>
+
+
 <div class="cf">
-[%	PROCESS inc/tool_descriptions.tt;
+[%	#PROCESS inc/tool_descriptions.tt;
 
 	IF content;
 		IF content.tmpl_includes && content.tmpl_includes.content_tmpl;
@@ -56,4 +82,7 @@ ul {
 		END;
 	END %]
 </div>
+
+<div class="cf" style="height: 50px;">  </div>
+
 [%	END; %]
