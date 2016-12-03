@@ -52,7 +52,6 @@ proportal/MANIFEST
 proportal/MANIFEST.SKIP
 proportal/Makefile.PL
 proportal/config.pl
-
 proportal/bin/async.psgi
 proportal/bin/stream_test.psgi
 

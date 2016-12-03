@@ -7,7 +7,7 @@
 <h2>Sample Distribution by Ecotype</h2>
 <section class="info--ecotype init page-intro">
 <p>
-	Browse the distribution of samples by ecotype.
+	Browse the distribution of samples by ecotype. Click on the bars of the chart to view the species in each subset.
 </p>
 </section>
 [%	IF data_filters;
@@ -20,22 +20,23 @@
 	</p>
 </div>
 </section>
-<section role="complementary">
-[%
-	WRAPPER 'inc/cart_genome_add.tt';
-
-	FOREACH ecotype IN results.js.data.keys.sort; %]
-	<h3>Ecotype: [% ecotype %]</h3>
+<section role="complementary" class="ecotype-data">
+[% WRAPPER 'inc/cart_genome_add.tt'; %]
+<ul class="noDot">
+[%	FOREACH ecotype IN results.js.data.keys.sort; %]
 [%		FOREACH clade IN results.js.data.$ecotype.keys.sort; %]
-	<h4>Clade [% clade %]</h4>
+	<li id="[% results.js.web_safe_names.$clade %]" class="ecotype_details">
+	<h4>Clade [% clade %], ecotype [% ecotype %]</h4>
 [%			FOREACH taxid IN results.js.data.$ecotype.$clade.sort;
 				s = results.js.data.$ecotype.$clade.$taxid;
 				show = { ecotype => 1, h_level => 'h5' };
 				PROCESS 'inc/taxon_details.tt';
 			END;
 		END;
+	'</li>';
 	END;
-	END; # end wrapper
+'</ul>';
+END; # end wrapper
 %]
 
 </section>

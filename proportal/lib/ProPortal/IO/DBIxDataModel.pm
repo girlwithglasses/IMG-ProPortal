@@ -336,9 +336,8 @@ sub ecotype {
 
 	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid clade ecotype ) ],
+			-columns  => [ qw( taxon_display_name taxon_oid clade clade|generic_clade ecotype ) ],
 			-where => {
-#				'length(ecotype)'  => { '>' => 1 },
 				ecotype => { '!=' => undef },
 				clade => { '!=' => undef },
 			},

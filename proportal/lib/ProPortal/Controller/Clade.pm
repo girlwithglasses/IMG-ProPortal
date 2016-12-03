@@ -43,7 +43,7 @@ sub render {
 		filters => { subset => 'coccus' }
 	});
 
-	say 'Clades: ' . Dumper $clades;
+#	say 'Clades: ' . Dumper $clades;
 
 	my $data;
 	my $clade_h;

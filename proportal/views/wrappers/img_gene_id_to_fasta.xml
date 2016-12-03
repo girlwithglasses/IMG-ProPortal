@@ -1,6 +1,6 @@
 <tool id="img_gene_id_to_fasta" name="Prepare FASTA file from gene IDs" version="0.1.0">
   <description>Retrieve the FASTA sequences for a set of gene IDs</description>
-  <command>perl /global/homes/a/aireland/webUI/proportal/script/galaxy/img_gene_id_to_fasta.pl
+  <command>DANCER_ENVIRONMENT="galaxy" perl /global/homes/a/aireland/webUI/proportal/script/galaxy/img_gene_id_to_fasta.pl
 --infile
 #if $source.reference_source_selector == "paste":
 "$infile" --infile_format "tsv"

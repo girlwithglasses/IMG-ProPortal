@@ -36,6 +36,7 @@ my $conf = {
 
 	jbrowse => 'http://img-jbrowse.dev',
 	galaxy => 'http://img-galaxy.dev',
+	galaxy_local => 'https://localhost:5011',
 
 	pp_app => "http://img-proportal.dev/",
 	# home of css, js, images folders. Should end with "/"

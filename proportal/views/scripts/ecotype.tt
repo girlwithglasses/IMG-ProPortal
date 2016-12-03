@@ -15,6 +15,8 @@
 	IF results.js.data && results.js.data.size > 0;
 		USE JSON.Escape( convert_blessed => 1 );
 		results.js.data.json;
+		',web_safe_names=';
+		results.js.web_safe_names.json;
 	ELSE;
 		'{}';
 	END;
@@ -84,6 +86,7 @@ function fn(){
 			}),
 		}
 	}];
+//	gd.parentNode.parentNode.classList.add('populated');
 	Plotly.plot(gd, data, {
 		title: 'Ecotype and Clade classification',
 		font: {
@@ -91,17 +94,20 @@ function fn(){
 		},
 	}, {displaylogo: false});
 
+
 	d3.selectAll('.js_vis_loading')
 		.remove();
 
 	gd.on('plotly_click', function(data){
-		var pts = '';
-		alert('Detected a click!');
-		for(var i=0; i < data.points.length; i++){
-			pts = 'x = '+data.points[i].x +'\ny = '+
-				data.points[i].y.toPrecision(4) + '\n\n';
-		}
-		alert('Closest point clicked:\n\n'+pts);
+		Plotly.d3.selectAll('.ecotype_details')
+			.classed('js_hide', true);
+
+		data.points.forEach( function(e){
+			if ( web_safe_names[ e.y ] ) {
+				Plotly.d3.select( '#' + web_safe_names[ e.y ] )
+					.classed('js_hide', false);
+			}
+		});
 	});
 
 	window.onresize = function() {

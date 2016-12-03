@@ -305,8 +305,8 @@ function fn(){
 	}
 
 
-	d3.selectAll('.clade_details')
-		.classed('js_hide',true);
+//	d3.selectAll('.clade_details')
+//		.classed('js_hide',true);
 
 	// tree
 	var treeData = [{

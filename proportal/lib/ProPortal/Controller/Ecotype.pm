@@ -44,14 +44,21 @@ sub render {
     }
 
 	my $data;
+	my $wsn;
 	# group by ecotype, then clade
 	for ( @$res ) {
 		$data->{ $_->{ecotype} }{ $_->{clade} }{ $_->{taxon_oid} } = $_;
+		$wsn->{ $_->{clade} }++;
+	}
+
+	for ( keys %$wsn ) {
+		($wsn->{$_} = $_) =~ s/([^\w]+)/_/g;
 	}
 
 	return $self->add_defaults_and_render({
 		js => {
 			data => $data,
+			web_safe_names => $wsn
 		}
 	});
 
