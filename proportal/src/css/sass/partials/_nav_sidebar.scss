@@ -43,8 +43,6 @@
 
 .nav-toggle:checked {
 	& ~ .sidebar-toggle__container {
-		color: $horiz-bar__link;
-		background-color: $horiz-bar__bg;
 		@include icon;
 		@include icon-r-arr;
 		background-position: 100% 50%;
@@ -87,12 +85,12 @@
 			}
 		}
 
-        &:hover, &:focus, &:active {
-            border-bottom-style: solid;
-            border-left-color: $secondary;
-//			background: ???
-        }
-    }
+		&:hover, &:focus, &:active {
+			border-bottom-style: solid;
+			border-left-color: $secondary;
+	//			background: ???
+		}
+	}
 }
 //	&__item {
 //		// highlight parent items

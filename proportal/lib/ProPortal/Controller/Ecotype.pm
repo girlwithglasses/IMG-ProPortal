@@ -6,6 +6,8 @@ use IMG::Util::Base 'MooRole';
 
 use Template::Plugin::JSON::Escape;
 
+with 'IMG::Util::Text';
+
 has 'controller_args' => (
 	is => 'lazy',
 	default => sub {
@@ -52,7 +54,7 @@ sub render {
 	}
 
 	for ( keys %$wsn ) {
-		($wsn->{$_} = $_) =~ s/([^\w]+)/_/g;
+		$wsn->{$_} = $self->make_text_web_safe( $_ );
 	}
 
 	return $self->add_defaults_and_render({

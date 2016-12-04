@@ -3279,8 +3279,6 @@ p:not(#foo) {
 }
 */
 .nav-toggle:checked ~ .sidebar-toggle__container {
-  color: #eee;
-  background-color: #648caa;
   background-repeat: no-repeat;
   background-image: url(../images/sprite.svg);
   background-size: 32px;

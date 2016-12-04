@@ -1,4 +1,4 @@
-[%	IF navigation %]
+[%	IF show_sidebar && show_sidebar == 1 %]
 <nav class="sidebar" role="navigation">
 [%	FOREACH grp IN navigation;
 		IF grp.class;

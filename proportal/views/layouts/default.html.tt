@@ -22,14 +22,14 @@
 <div class="wrapper">
 [%
 	PROCESS 'inc/header.tt';
+	show_sidebar = 1;
 	PROCESS 'inc/nav_container.tt';
 %]
 	<article class="content cf" role="main">
 [%
 	IF settings.message;
-		PROCESS 'inc/message.tt';
+	#	PROCESS 'inc/message.tt';
 	END;
-
 	content;	# the page content
 
 %]

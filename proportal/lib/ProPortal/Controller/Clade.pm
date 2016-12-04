@@ -4,6 +4,8 @@ use IMG::Util::Base 'MooRole';
 
 use Template::Plugin::JSON::Escape;
 
+with 'IMG::Util::Text';
+
 has 'controller_args' => (
 	is => 'lazy',
 	default => sub {
@@ -49,9 +51,8 @@ sub render {
 	my $clade_h;
 
 	for my $c ( @$clades ) {
-		(my $wsc = $c->{generic_clade}) =~ s/([^\w]+)/_/g;
 		$data->{ $c->{genus} }{ $c->{generic_clade} } = {
-			id => 'clade_' . $wsc,
+			id => 'clade_' . $self->make_text_web_safe( $c->{generic_clade} ),
 			label => $c->{generic_clade},
 			genus => $c->{genus},
 			genomes => [],

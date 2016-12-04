@@ -19,38 +19,23 @@
 <body[% body_class %]>
 <!-- template: [% template.name %] -->
 <div class="wrapper">
+<div class="wrapper">
 [%
 	PROCESS 'inc/header.tt';
+	show_sidebar = 0;
+	PROCESS 'inc/nav_container.tt';
 %]
-<div class="nav-holder">
-	<input type="checkbox" id="horiz-bar-toggle" class="nav-toggle horiz-global-toggle" />
-	<!-- this toggle shows / hides the global nav and horiz-menu in mobile view -->
-	<div class="horiz-bar-toggle__container">
-		<label class="horiz-bar-toggle__label" for="horiz-bar-toggle">Menu</label>
-	</div>
+	<article class="content cf" role="main">
 [%
-	PROCESS 'inc/nav_horiz_bar.tt';
-	PROCESS 'inc/nav_jgi_links.tt';
-%]
-</div>
-<!-- input type="checkbox" id="sidebar-toggle" class="nav-toggle" />
-<div class="sidebar-toggle__container">
-	<label class="sidebar-toggle__label" for="sidebar-toggle">toggle sidebar</label>
-</div -->
-[%
-	IF breadcrumbs;
-		PROCESS 'inc/nav_breadcrumbs.tt';
-	END;
-%]
-	<article class="cf" role="main">
-[%	#IF settings.message;				#Sara's lazy hack to remove message...
+	IF settings.message;
 	#	PROCESS 'inc/message.tt';
-	#END;
+	END;
+	content;	# the page content
 
-
-	content	    # the page content %]
+%]
 	</article>
 [%
+    PROCESS 'inc/nav_sidebar.tt';
     PROCESS 'inc/footer.tt';
 %]
 </div>
