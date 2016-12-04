@@ -61,6 +61,9 @@ return {
 				file_name => "proportal.log",
 				log_level => 'error'
 			},
+			Console => {
+				log_level => 'debug',
+			}
 		},
 	},
 };

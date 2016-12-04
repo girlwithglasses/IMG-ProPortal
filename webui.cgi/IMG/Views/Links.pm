@@ -839,10 +839,14 @@ my $static_links = {
 	'menu/support' => {
 		label => 'Support', url => 'menu/support',
 	},
+	'menu/user_guide' => {
+		url => 'menu/user_guide',
+		label => 'User Guide',
+	},
 	'support/about' => {
 		label => 'About IMG/ProPortal', url => 'support/about',
 	},
-	'support/user_guide' => {
+	'user_guide' => {
 		label => 'User Guide', url => 'user_guide',
 	},
 	'support/news' => {
@@ -866,8 +870,7 @@ my $static_links = {
 
 
 	proportal => {
-		label => 'IMG ProPortal',
-		url => 'proportal',
+		label => 'IMG ProPortal', url => 'proportal',
 	},
 	'proportal/big_ugly_taxon_table' => {
 		url => 'proportal/big_ugly_taxon_table', label => 'table view',
@@ -1001,10 +1004,6 @@ my $static_links = {
 	'menu/TIGRfam' => {
 		url => 'menu/TIGRfam',
 		label => 'TIGRfam',
-	},
-	'menu/UserGuide' => {
-		url => 'menu/UserGuide',
-		label => 'User Guide',
 	},
 	'menu/UsingIMG' => {
 		url => 'menu/UsingIMG',

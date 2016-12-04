@@ -1,3 +1,6 @@
+[%
+	show_sidebar = 0;
+%]
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,13 +22,11 @@
 <body[% body_class %]>
 <!-- template: [% template.name %] -->
 <div class="wrapper">
-<div class="wrapper">
 [%
 	PROCESS 'inc/header.tt';
-	show_sidebar = 0;
 	PROCESS 'inc/nav_container.tt';
 %]
-	<article class="content cf" role="main">
+	<article class="content cf full" role="main">
 [%
 	IF settings.message;
 	#	PROCESS 'inc/message.tt';

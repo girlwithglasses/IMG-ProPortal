@@ -152,9 +152,11 @@ subtest 'hapless app' => sub {
 
 };
 
+my ( $rtn, $app, $menu, $rslt );
+
 subtest 'checking make_menu' => sub {
 
-	my $app = TestApp->new( config => $cfg );
+	$app = TestApp->new( config => $cfg );
 	my $get_classes = sub {
 		my $s = shift;
 		my $c = shift;
@@ -164,39 +166,55 @@ subtest 'checking make_menu' => sub {
 		return $c;
 	};
 
-	my $menu = $app->make_menu;
-	is( ref $menu, 'ARRAY', 'checking we get an arrayref back' );
+	subtest 'get_menu_items' => sub {
+		$rtn = $app->get_menu_items;
+		ok( defined $rtn && ref $rtn eq 'ARRAY' );
+	};
 
-	is_deeply( {}, recurse( $menu, $get_classes ), 'Checking there are no classes' );
+	subtest 'zero' => sub {
+		$rtn = $app->make_menu;
+		$menu = $rtn->{menu};
+		is( ref $menu, 'ARRAY', 'checking we get an arrayref back' );
 
-	$menu = $app->make_menu( 'proportal', 'proportal/location' );
-	is_deeply( {}, recurse( $menu, $get_classes ), 'Checking there are no classes' );
+		is_deeply( {}, recurse( $menu, $get_classes ), 'Checking there are no classes' );
+	};
 
-	undef $menu;
-	$menu = $app->make_menu( undef, 'MyIMG/preferences' );
-	my $rslt = recurse( $menu, $get_classes );
+	subtest 'one' => sub {
+		$rtn = $app->make_menu({ group => 'proportal', page => 'proportal/location' });
+		$menu = $rtn->{menu};
+		is_deeply( {}, recurse( $menu, $get_classes ), 'Checking there are no classes' );
+	};
 
-	ok( defined $rslt && defined $rslt->{current} && 1 == scalar keys %{$rslt->{current}}, 'we have the current class!' ) or diag explain $rslt;
-	ok( defined $rslt->{current}{'MyIMG/preferences'} && 1 == $rslt->{current}{'MyIMG/preferences'}, 'We have the correct current page') or diag explain $rslt;
+	subtest 'two' => sub {
+		$rtn = $app->make_menu({ group => undef, page => 'MyIMG/preferences' });
+		$menu = $rtn->{menu};
+		$rslt = recurse( $menu, $get_classes );
 
-	ok( defined $rslt->{parent} && 'menu/MyIMG' eq join( '__', sort keys %{$rslt->{parent}} ), 'Checking parents are correct' ) or diag explain $rslt;
+		ok( defined $rslt && defined $rslt->{current} && 1 == scalar keys %{$rslt->{current}}, 'we have the current class!' ) or diag explain $rslt;
+		ok( defined $rslt->{current}{'MyIMG/preferences'} && 1 == $rslt->{current}{'MyIMG/preferences'}, 'We have the correct current page') or diag explain $rslt;
 
-	undef $menu;
-	$menu = $app->make_menu( undef, 'FindFunctions/ffoAllTc' );
-	$rslt = recurse( $menu, $get_classes );
-	ok( defined $rslt && defined $rslt->{current} && 1 == scalar keys %{$rslt->{current}}, 'we have the current class!' ) or diag explain $rslt;
+		ok( defined $rslt->{parent} && 'menu/MyIMG' eq join( '__', sort keys %{$rslt->{parent}} ), 'Checking parents are correct' ) or diag explain $rslt;
+	};
 
-	ok( defined $rslt->{current}{'FindFunctions/ffoAllTc'} &&  1 == $rslt->{current}{'FindFunctions/ffoAllTc'}, 'We have the correct current page') or diag explain $rslt;
+	subtest 'three' => sub {
+		$rtn = $app->make_menu({ group => undef, page => 'FindFunctions/ffoAllTc' });
+		$menu = $rtn->{menu};
+		$rslt = recurse( $menu, $get_classes );
+		ok( defined $rslt && defined $rslt->{current} && 1 == scalar keys %{$rslt->{current}}, 'we have the current class!' ) or diag explain $rslt;
 
-	ok( defined $rslt->{parent} && 'menu/FindFunctions__menu/TC' eq join ( "__", sort keys %{$rslt->{parent}} ), 'Checking that the parents are correct' ) or diag explain $rslt;
+		ok( defined $rslt->{current}{'FindFunctions/ffoAllTc'} &&  1 == $rslt->{current}{'FindFunctions/ffoAllTc'}, 'We have the correct current page') or diag explain $rslt;
 
-	undef $menu;
-	$menu = $app->make_menu( undef, 'ANI/doSameSpeciesPlot' );
-	$rslt = recurse( $menu, $get_classes );
-	ok( defined $rslt && defined $rslt->{current} && 1 == scalar keys %{$rslt->{current}} && defined $rslt->{current}{'ANI/doSameSpeciesPlot'}, 'Checking we have the correct current' ) or diag explain $rslt;
+		ok( defined $rslt->{parent} && 'menu/FindFunctions__menu/TC' eq join ( "__", sort keys %{$rslt->{parent}} ), 'Checking that the parents are correct' ) or diag explain $rslt;
+	};
 
-	ok( defined $rslt->{parent} && 'ANI/pairwise__menu/FindFunctions__menu/KEGG' eq join ( "__", sort keys %{$rslt->{parent}} ), 'Checking that the parents are correct' ) or diag explain $rslt;
+	subtest 'four' => sub {
+		$rtn = $app->make_menu({ group => undef, page => 'ANI/doSameSpeciesPlot' });
+		$menu = $rtn->{menu};
+		$rslt = recurse( $menu, $get_classes );
+		ok( defined $rslt && defined $rslt->{current} && 1 == scalar keys %{$rslt->{current}} && defined $rslt->{current}{'ANI/doSameSpeciesPlot'}, 'Checking we have the correct current' ) or diag explain $rslt;
 
+		ok( defined $rslt->{parent} && 'ANI/pairwise__menu/FindFunctions__menu/KEGG' eq join ( "__", sort keys %{$rslt->{parent}} ), 'Checking that the parents are correct' ) or diag explain $rslt;
+	};
 };
 
 

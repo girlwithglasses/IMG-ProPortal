@@ -36,7 +36,7 @@ sub render {
 	# counts, grouped by proportal subset
 	$stats->{subsets} = $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns => [ 'proportal_subset', 'count(distinct taxon_oid)|count' ],
+			-columns => [ 'proportal_subset', 'count(taxon_oid)|count' ],
 			-group_by => 'proportal_subset',
 			-where => {
 				proportal_subset => { '!=', undef }
@@ -46,8 +46,8 @@ sub render {
 	# counts, grouped by longhurst code
 	$stats->{by_longhurst} = $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ 'count(distinct taxon_oid)|count', qw( longhurst_code longhurst_description ) ],
-			-group_by => [ qw( longhurst_code ) ],
+			-columns  => [ 'count(taxon_oid)|count', qw( longhurst_code longhurst_description ) ],
+			-group_by => [ qw( longhurst_code longhurst_description ) ],
 			-where => {
 				proportal_subset => { '!=', undef }
 			},
@@ -57,7 +57,7 @@ sub render {
 
 	$stats->{metagenomes_by_eco} = $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ 'count(distinct taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
+			-columns  => [ 'count(taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-group_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype ) ],
 			-where => {
 				proportal_subset => 'metagenome'

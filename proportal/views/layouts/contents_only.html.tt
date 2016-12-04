@@ -19,7 +19,7 @@
 <body[% body_class %]>
 <!-- template: [% template.name %] -->
 <div class="wrapper">
-	<article class="content cf" role="main">
+	<article class="content cf full" role="main">
 [%	content	    # the page content %]
 	</article>
 </div>

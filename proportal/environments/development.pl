@@ -44,6 +44,7 @@ for ( @$cfg ) {
 	my $vals = ( values %$_ )[0];
 	$hash = { %$hash, %$vals };
 }
+$hash->{logger} = 'Console';
 
 my $rtn = { %$conf, %$hash };
 

@@ -7,26 +7,26 @@ use Sys::Hostname;
 use IMG::App;
 use ProPortal::Util::Factory;
 # use ProPortal::CoreAppAdapter;
-#use Dancer2::Plugin::LogContextual;
-#use Dancer2::Plugin::AppRole::Helper;
-use Log::Contextual::SimpleLogger;
-use Log::Contextual qw( :log set_logger );
+# use Dancer2::Plugin::LogContextual;
+# use Dancer2::Plugin::AppRole::Helper;
+# use Log::Contextual::SimpleLogger;
+# use Log::Contextual qw( :log set_logger );
 
 our $VERSION = '0.1.0';
 
-my $logger = Log::Contextual::SimpleLogger->new({
-	levels => [qw( trace debug info warn error fatal )],
-	coderef => sub { say 'OOPS! ' . join "\n", @_ }
-});
-
-set_logger $logger;
-set lc_logger => $logger;
+# my $logger = Log::Contextual::SimpleLogger->new({
+# 	levels => [qw( trace debug info warn error fatal )],
+# 	coderef => sub { say 'OOPS! ' . join "\n", @_ }
+# });
+#
+# set_logger $logger;
+# set lc_logger => $logger;
 
 sub init {
 	my $class = shift;
 	my %opts  = @_;
 
-	log_debug { 'running init code!' };
+#	log_debug { 'running init code!' };
 	# set optional configuration override
 	set $_ => $opts{ $_ } for keys %opts;
 
@@ -39,7 +39,7 @@ Create a new IMG::App instance. Stored in the Dancer2 app as '_core'
 =cut
 
 sub create_core {
-	log_trace { 'running create core' };
+#	log_trace { 'running create core' };
 	my $class = Role::Tiny->create_class_with_roles( 'IMG::App',
 	qw( ProPortal::Views::ProPortalMenu
 		IMG::App::Role::MenuManager
@@ -192,17 +192,24 @@ hook before_template_render => sub {
 };
 
 sub get_menu_vars {
-
 	my $output = shift // {};
 	my $page_id = var 'page_id';
 	my $menu_grp = var 'menu_grp';
 
-	debug 'page_id: ' . ( $page_id // 'is undefined' )
+	say 'page_id: ' . ( $page_id // 'is undefined' )
 	. ' menu_grp: ' . ( $menu_grp // 'is undefined' );
 
 	my $core = setting('_core') // create_core();
 
-	for ( @{ $core->make_menu( $menu_grp, $page_id ) } ) {
+	my $rslt = $core->make_menu({ group => $menu_grp, page => $page_id });
+
+# 	if ( ! $menu_grp && defined $rslt->{group} ) {
+# 		$menu_grp = $rslt->{group};
+# 	}
+
+	my $class;
+	for ( @{$rslt->{menu}} ) {
+		$class++ if defined $_->{class};
 		if ( $_->{id} && "menu/DataMarts" eq $_->{id} ) {
 			$output->{data_marts} = $_;
 		}
@@ -211,6 +218,10 @@ sub get_menu_vars {
 		}
 	}
 
+	if ( ! $class ) {
+		$output->{no_sidebar} = 1;
+#		say 'Setting no_sidebar!';
+	}
 	$output->{current_page} = $page_id;
 	if ( session->data ) {
 	#	debug "session data: " . Dumper session->data;
@@ -251,15 +262,10 @@ sub get_tmpl_vars {
 	$output->{breadcrumbs}++;
 	$output->{server_name} = hostname;
 	$output->{ora_service} = $ENV{ORA_SERVICE} || 'The Oracle is silent';
+
 #	$output->{img_cfg} = $core->img_cfg;
 	return $output;
 }
-
-any '/' => sub {
-
-	return template 'pages/proportal/home', {};
-
-};
 
 #	forward login requests to the JGI login page
 

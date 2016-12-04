@@ -27,6 +27,10 @@ has 'active_components' => (
 );
 
 
+get '/' => sub {
+	forward '/proportal';
+};
+
 # any qr{ /.* }x => sub {
 any '/offline' => sub {
 
@@ -62,9 +66,9 @@ prefix '/proportal' => sub {
 			$app->set_filters( subset => $c->{subset} );
 		}
 
-		debug 'page: ' . $p
-			. '; subset: ' . ( $c->{subset} || 'none' )
-			. '; template: ' . $app->controller->tmpl;
+#		debug 'page: ' . $p
+#			. '; subset: ' . ( $c->{subset} || 'none' )
+#			. '; template: ' . $app->controller->tmpl;
 
 		return template $app->controller->tmpl, $app->render;
 
@@ -72,20 +76,24 @@ prefix '/proportal' => sub {
 
 =head3 Home page
 
+The home page.
+
 =cut
 
-	get qr{
-		( / ( home | index ) )?
+	any qr{
+		/?
 		}x => sub {
 
 		var menu_grp => $group;
 		var page_id => $group;
 
-		my $pp = AppCore::bootstrap( 'Home' );
-
-		return template "pages/proportal/home", $pp->render();
+		my $app = AppCore::bootstrap( 'Home' );
+		my $rslts = $app->render;
+		$rslts->{page_wrapper} = 'layouts/default_wide.html.tt';
+		return template $app->controller->tmpl, $rslts;
 
 	};
+
 };
 
 get '/taxon/:taxon_oid' => sub {
@@ -126,7 +134,7 @@ prefix '/tools' => sub {
 		my $app = AppCore::bootstrap( 'Tools::' . $h->{$p} );
 #		$app->add_controller_role(  );
 
-		debug 'page: ' . $p
+		say 'page: ' . $p
 			. '; subset: ' . ( $c->{subset} || 'none' )
 			. '; template: ' . $app->controller->tmpl;
 
@@ -204,5 +212,40 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 	};
 
 };
+
+prefix '/support' => sub {
+
+	my $group = 'support';
+
+	get '/news' => sub {
+		var menu_grp => 'support';
+		var page_id  => 'support/news';
+
+#		return template
+	};
+	get '/about' => sub {
+
+#	return template
+	};
+
+};
+
+prefix '/search' => sub {
+
+	my $group = 'search';
+
+	get qr{
+		/ (?<query> advanced_search | blast )
+		/?
+		}x => sub {
+
+			my $c = captures;
+			my $p = $c->{query};
+			var menu_grp => $group;
+			var page_id  => $group . "/$p";
+			return template 'pages/tools/' . $p;
+	};
+};
+
 
 1;

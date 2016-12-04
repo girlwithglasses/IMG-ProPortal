@@ -3,7 +3,7 @@ package IMG::Util::Timed;
 use parent Exporter;
 use IMG::Util::Base 'MooRole';
 use IMG::App::Role::ErrorMessages qw( err );
-use Attribute::Contract -types => [ qw/ Tuple Int CodeRef slurpy Any Optional / ];
+# use Attribute::Contract -types => [ qw/ Tuple Int CodeRef slurpy Any Optional / ];
 use Time::HiRes 1.9721;
 use Time::Out qw( timeout );
 use Scalar::Util qw( looks_like_number );
@@ -29,7 +29,7 @@ Run a timed function
 
 =cut
 
-sub time_this : ContractRequires( Int, CodeRef, Optional[ Any ]) {
+sub time_this { #: ContractRequires( Int, CodeRef, Optional[ Any ]) {
 	my $t = shift;
 	return timeout $t, @_ => sub {
 		my $fn = shift;

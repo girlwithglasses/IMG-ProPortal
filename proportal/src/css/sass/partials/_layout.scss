@@ -32,10 +32,16 @@ article {
 		float: right;
 		padding: 0 $gutter;
 	}
+
+	.content.full {
+		width: 100%;
+	}
+
 	.sidebar { // section navigation
 		width: $sidebar-width;
 		float: left;
 	}
+
 	.footer {
 		clear: both;
 	}

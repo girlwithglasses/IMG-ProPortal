@@ -83,32 +83,19 @@ has 'controller_role' => (
 sub run {
 	my $self = shift;
 
+	my $rslts = $self->render( $self->args );
+	$rslts->{settings} = $self->config;
+	$rslts->{page_wrapper} = 'layouts/contents_only.html.tt';
+	$rslts = AppCore::get_tmpl_vars({ core => $self, output => $rslts });
 
-# 	my $out;
-# 	$tt->process(
-# 		'pages/proportal/phylo_viewer/results.tt',
-# 		{ %$rslts, mode => 'galaxy' },
-# 		\$out
-# 	) || die 'Could not render page: ' . $tt->error;
-#
-# 	print { $self->args->outfile } $out;
-
-		my $rslts = $self->render( $self->args );
-		$rslts->{settings} = $self->config;
-		$rslts->{page_wrapper} = 'layouts/contents_only.html.tt';
-		$rslts = AppCore::get_tmpl_vars({ core => $self, output => $rslts });
-
-		print { $self->args->outfile } $self->render_template({
-			tmpl_args => {
-				%{ $self->config->{engines}{template}{template_toolkit} },
-				INCLUDE_PATH => $self->config->{views}
-			},
-			tmpl_data => $rslts,
-			tmpl => 'pages/proportal/phylo_viewer/results.tt'
-		});
-
-#		print { $self->args->outfile } $out;
-
+	print { $self->args->outfile } $self->render_template({
+		tmpl_args => {
+			%{ $self->config->{engines}{template}{template_toolkit} },
+			INCLUDE_PATH => $self->config->{views}
+		},
+		tmpl_data => $rslts,
+		tmpl => 'pages/proportal/phylo_viewer/results.tt'
+	});
 
 }
 

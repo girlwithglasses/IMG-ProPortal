@@ -2534,6 +2534,8 @@ article {
     float: right;
     padding: 0 12px;
     padding: 0 0.75rem; }
+  .content.full {
+    width: 100%; }
   .sidebar {
     width: 20%;
     float: left; }

@@ -44,23 +44,24 @@ Get the page menus
 
 sub make_menu {
 	my $self = shift;
+	my $args = shift;
 
-	my $menu_grp = shift;
-	my $page_id = shift;
+	my $menu_grp = $args->{group} || undef;
+	my $page_id = $args->{page} || undef;
 
 	# if the ID is not defined, return the default menu
-	if ( not defined $page_id ) {
+#	if ( not defined $page_id ) {
 #		warn "page ID is not defined: group was " . Dumper $menu_grp;
 #		return make_menus( undef, $menu_grp, $page_id );
-	}
+#	}
 
 	# translate the menu group if necessary
 	if ( defined $menu_grp ) {
 		$menu_grp = $self->_get_group( $menu_grp, $page_id );
 	}
 
-	# get the menu structures and populate the links
-	my $menus = $self->get_menu_items();
+	# get the menu data structures and populate the links
+	my $menu_ds = $self->get_menu_items();
 
 #	say 'Looking for group ' . ( $menu_grp || 'undefined' ) . ' and page ' . ( $page_id || 'undefined' );
 
@@ -80,18 +81,13 @@ sub make_menu {
 		return $rtn;
 	};
 
-	$self->populate_links( $menus, $fn );
-	return $menus;
+	$self->populate_links( $menu_ds, $fn );
 
-#	my $grp = _get_group( $menu_grp, $page_id );
-
-#	say 'Group is ' . $grp;
-
-#	populate_links( $grp, $page_id );
-#	return {
-#		menu_bar => make_menus( undef, $grp, $page_id ),
-#		sidebar => $grp,
-#	};
+	return {
+		menu => $menu_ds,
+		page => $page_id,
+		group => $menu_grp
+	};
 
 }
 

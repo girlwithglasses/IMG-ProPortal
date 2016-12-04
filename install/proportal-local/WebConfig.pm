@@ -1,6 +1,6 @@
 package WebConfig;
 #
-# $Id: WebConfig.pm 36367 2016-10-26 02:00:19Z aireland $
+# $Id: WebConfig.pm 36455 2016-12-04 19:43:07Z aireland $
 #
 #	Configuration for testing ProPortal pieces or whole
 

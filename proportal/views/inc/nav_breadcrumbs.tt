@@ -15,7 +15,7 @@ MACRO classy_nav BLOCK;
 	END; # end foreach
 END; # end macro
 
-IF navigation %]
+IF ! no_sidebar; %]
 <nav class="breadcrumbs" role="navigation">
 [%	FOREACH grp IN navigation;
 		IF grp.class %]

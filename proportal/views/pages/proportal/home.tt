@@ -1,109 +1,69 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Home';
 %]
-
-<head>
 <style>
 
-article {
-  *zoom: 1;
-  clear: both; }
-  article:before, article:after {
-    content: " ";
-    display: table; }
-  article:after {
-    clear: both; }
+#quick-search, #gallery {
+	color: white;
+}
+#quick-search {
+	background: #648DAA;
+}
+#gallery {
+	color: white;
+	background: #204977;
+}
+
 
 @media only screen and (max-width: 479px) {
-  #about, #news, #quick-search, #gallery, .content, #tool-input__section, #tool-info__section {
+  #about, #news, #quick-search, #gallery, .content {
     width: 100%;
     padding: 0;
-  }  }
+  }
+}
 
 @media only screen and (min-width: 480px) and (max-width: 767px) {
 
-  #quick-search, #gallery, #about, #news, #tool-input__section, #tool-info__section {
-    width: 100%;				/* 50%; */
-    margin: 12px 0 0 0;  		/* makes white space between stacked sections. */
-    padding: 30px;
-    float: left; }
-  #quick-search {
-  	color: white;
-  	background: #648DAA;
-  }
-  #gallery {
-  	color: white;
-  	background: #204977;
-  }
-  }
+	#quick-search, #gallery, #about, #news {
+		width: 100%;				/* 50%; */
+		margin: .5rem 0 0 0;  		/* makes white space between stacked sections. */
+		padding: 2.5rem;
+		float: left;
+	}
+}
 
 @media only screen and (min-width: 768px) {
-  .content {
-    width: 80%;
-    float: right;
-    padding: 0 12px;
-    padding: 0 0.75rem; }
-  .sidebar {
-    width: 20%;
-    float: left; }
-  .footer {
-    clear: both; }
-  #news, #about {
-    width: 50%;					/*  33.3%; */
-    padding: 0;
-    float: left;
-    padding: 30px;
-   /*  padding: 0 0.75rem; */ }
-  #about {
-  	clear: left;
-  }
-  #quick-search {
-  	background: #648DAA;
-  	color: white;
-  	width: 400px;
-  	height: 340px;
-  	padding:30px;
-  	margin-bottom: 20px;
-  	float: left;
-  	}
-  #gallery {
-  	background: #204977;
-  	color: white;
-  	padding:30px;
-  	margin-left: 412px; /* width of #quick-search + 12px; */
-  	height: 340px;
+	#news, #about {
+		width: 50%;					/*  33.3%; */
+		float: left;
+		padding: 30px;
+	/*  padding: 0 0.75rem; */
+	}
+	#about {
+		clear: left;
+	}
+	#quick-search {
+		width: 400px;
+/*		height: 340px; */
+		padding:30px;
+		float: left;
+	}
+	#gallery {
+		padding:30px;
+		margin-left: 412px; /* width of #quick-search + 12px; */
+/*		height: 340px;
 	/* float: left; */
-  }
-  #primary, .page-intro {
-    float: left;
-    width: 66.6%;
-    padding: 0 12px;
-    padding: 0 0.75rem;
-    margin-bottom: 24px;
-    margin-bottom: 1.5rem; }
-  #info, .filters {
-    width: 50%; 				/* 33.3%; */
-    float: right;
-    padding-left: 12px;
-    padding-left: 0.75rem;
-    margin-bottom: 24px;
-    margin-bottom: 1.5rem; }
-  #tool-input__section, #tool-info__section {
-    float: left;
-    width: 50%;
-    padding: 0 12px;
-    padding: 0 0.75rem;
-    margin-bottom: 24px;
-    margin-bottom: 1.5rem; } }
+	}
+	.section-content {
+		padding: 15px 0;
+		border-top: 2px solid lightgray;
+		border-bottom: 2px solid lightgray;
+	}
 
-.section-content {
-	padding: 15px 0;
-	border-top: 2px solid lightgray;
-	border-bottom: 2px solid lightgray;
-}
 h3 {
 	margin: 0;
 }
+
 select {
 	color: black;
 	width: 100%;
@@ -116,18 +76,10 @@ input {
 
 .quick-search {
 	background: #204977;
-	padding: 10px 20px;
+	padding: .5rem 1rem;
 	float: right;
 }
-
 </style>
-</head>
-
-<!-- Spacer -->
-<div class="cf">
-<br><br>
-</div>
-
 
 <!-- First row, quick search and image gallery. -->
 <div class="cf">
@@ -143,11 +95,8 @@ input {
 </select>
 <p></p>
 <strong>For keyword:</strong>
-<input></input>
-
+<input type="text" />
 <button class="quick-search">Go</button>
-
-
 </section>
 
 <section id="gallery">
@@ -169,7 +118,9 @@ input {
 <!-- <h3>News</h3> -->
 <!-- [%	INCLUDE inc/news.tt %] -->
 <a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 </section>
+
 
 	<table>
 	<caption>IMG ProPortal Statistics</caption>

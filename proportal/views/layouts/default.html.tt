@@ -1,3 +1,10 @@
+[%
+	show_sidebar = 1;
+	IF no_sidebar;
+		show_sidebar = 0;
+	END;
+
+%]
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,11 +25,11 @@
 %]
 </head>
 <body[% body_class %]>
+<!-- no_sidebar: [% no_sidebar %]; show_sidebar: [% show_sidebar %] -->
 <!-- template: [% template.name %] -->
 <div class="wrapper">
 [%
 	PROCESS 'inc/header.tt';
-	show_sidebar = 1;
 	PROCESS 'inc/nav_container.tt';
 %]
 	<article class="content cf" role="main">
