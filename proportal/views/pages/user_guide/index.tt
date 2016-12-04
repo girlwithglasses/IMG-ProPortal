@@ -1,15 +1,30 @@
 [%
-	WRAPPER 'inc/page_wrapper.tt'
+	WRAPPER layouts/default.html.tt;
 	title = 'User Guide';
 %]
+
 <h2>ProPortal User Guide</h2>
-<p>Welcome to the ProPortal User Guide! Blah blah blah.</p>
 
 <ol>
 	<li><a href="/user_guide/getting_started">Getting Started</a></li>
 	<li><a href="/user_guide/browsing">Browsing Data Sets</a></li>
 	<li><a href="/user_guide/searching">Searching in IMG/ProPortal - <i>Coming Soon!</i></a></li>
 	<li><a href="/user_guide/using_tools">Using Tools</a></li>
+	<li><a href="/user_guide/api_manual">API Manual</a></li>
 </ol>
+
+<h4>Overview</h4>
+<p>
+The IMG/ProPortal system provides access to many hundreds of data sets that shed light on the 
+genetics, physiology and ecology of the marine cyanobacteria <i>Prochlorococcus</i> as well
+as its sister clade, <i>Synechococcus</i>, and the phage that infect them.  IMG/ProPortal
+is built upon the analysis cart system developed for the greater IMG system: users search for
+genomes, genes and functions, store them in the cart, and then run analysis tools on the
+items in the cart.  IMG/ProPortal follows this same basic workflow.  You'll find details on
+how to search and browse data, how to run tools in both the IMG/ProPortal interface and in
+Galaxy and how to use more advanced features like the IMG/ProPortal API in the above chapters.
+
+</p>
+
 
 [%	END; %]
