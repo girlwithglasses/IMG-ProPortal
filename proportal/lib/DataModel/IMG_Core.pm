@@ -437,7 +437,7 @@ My::Schema->metadm->define_type(
 sub coerce_clade {
 	my $c = shift // return;
 
-	say 'clade: "' . $c . '"';
+#	say 'clade: "' . $c . '"';
 	$c =~ s/^(\d\.\d[A-Z]?).*/$1/g;
 	# remove non-\w and replace with underscores
 	(my $web_safe_c = $c) =~ s/[^\w]/_/g;

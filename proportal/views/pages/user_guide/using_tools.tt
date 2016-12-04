@@ -1,11 +1,8 @@
-[%	IF ! page_wrapper;
-		page_wrapper = 'layouts/default.html.tt';
-	END;
-	WRAPPER $page_wrapper;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Sample Demo';
 %]
-	
-	
+
+
 <h2 id="top">Using Tools </h2>
 
 <ol>

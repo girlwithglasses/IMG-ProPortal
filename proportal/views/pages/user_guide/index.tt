@@ -1,5 +1,5 @@
 [%
-	WRAPPER layouts/default.html.tt;
+	WRAPPER 'inc/page_wrapper.tt'
 	title = 'User Guide';
 %]
 <h2>ProPortal User Guide</h2>

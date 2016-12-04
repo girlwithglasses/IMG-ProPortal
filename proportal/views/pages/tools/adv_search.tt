@@ -1,10 +1,9 @@
-[%
-	WRAPPER layouts/default.html.tt;
-	title = 'Krona';
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'Advanced Search';
 %]
 
-<h2>Krona</h2>
-<p> Coming soon: run Krona here by using the Galaxy API. </p>
+<h2>Advanced Search</h2>
+<p> Coming soon!</p>
 
 
 [%	END; %]

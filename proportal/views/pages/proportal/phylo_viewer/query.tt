@@ -1,8 +1,4 @@
-[%
-	IF ! page_wrapper;
-		page_wrapper = 'layouts/default.html.tt';
-	END;
-	WRAPPER $page_wrapper;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: PhyloViewer';
 #	class = 'phylo_viewer';
 

@@ -1,11 +1,6 @@
-[%	IF ! page_wrapper;
-		page_wrapper = 'layouts/default.html.tt';
-	END;
-	WRAPPER $page_wrapper;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: BLAST';
 %]
 <h2>BLAST</h2>
 <p> Coming soon: BLAST your sequences against ProPortal genomes.</p>
-
-
 [%	END; %]

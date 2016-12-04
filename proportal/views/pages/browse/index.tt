@@ -1,16 +1,7 @@
-
-[%
-	IF ! page_wrapper;
-		page_wrapper = 'layouts/default.html.tt';
-	END;
-	WRAPPER $page_wrapper;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Browse Data Sets';
 %]
-
-
 <h2>Browse Data Sets </h2>
-
-
 <ul>
 [%	FOREACH p IN pages %]
 	<li><a href="/browse/[% p %]">[% p %]</a></li>

@@ -1,5 +1,4 @@
-[%
-	WRAPPER layouts/default.html.tt;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal API';
 %]
 <h2>API</h2>

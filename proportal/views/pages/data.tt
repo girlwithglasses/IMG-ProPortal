@@ -1,5 +1,4 @@
-[%
-	WRAPPER layouts/default.html.tt;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: 500 Error';
 %]
 <h2>Internal Error</h2>

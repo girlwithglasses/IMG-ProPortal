@@ -1,8 +1,7 @@
-[%
-	WRAPPER layouts/default.html.tt;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = content.title || content.label || 'Menu';
 
-	USE Dumper;
+#	USE Dumper;
 
 	VIEW app_list;
 		BLOCK list %]

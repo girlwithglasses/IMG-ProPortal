@@ -1,10 +1,9 @@
-[%
-	WRAPPER layouts/default.html.tt;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = content.title || content.label || 'Menu';
 
 	USE Dumper;
 %]
-	
+
 <head>
 <style>
 
@@ -15,7 +14,7 @@ div.grid {
 a.grid:link, a.grid:visited {
 	background: #eee;
 	color: #343434;			/* IMG "black" */
-	
+
 	width: 230px;
 	height: 250px;
     padding: 25px;
@@ -29,7 +28,7 @@ a.grid:link, a.grid:visited {
 
 
 a.grid:hover, a.grid:active {
-  background: #648DAA; 
+  background: #648DAA;
 
   color: white;
   cursor: pointer;
@@ -37,24 +36,24 @@ a.grid:hover, a.grid:active {
 
 
 </style>
-</head>	
-	
-<div class="cf">	
+</head>
+
+<div class="cf">
 [%	PROCESS inc/tool_descriptions.tt;
 
 	VIEW app_list;
-		BLOCK list; 
+		BLOCK list;
 
 	FOREACH m IN item %]
-	<div class="grid"><a class="grid" href="[% link( m.id ) %]">
-		<h5 style="text-align: center;">[% m.title || m.label %]</h5>
-		
-		[%	IF description.${m.id};	
+	<div class="grid">
+		<a class="grid" href="[% link( m.id ) %]">
+		<h5 class="C">[% m.title || m.label %]</h5>
+		[%	IF description.${m.id};
 				description.${m.id};
-			END;	
-		%] 
-	</a>
-	</div>	
+			END;
+		%]
+		</a>
+	</div>
 	[%	END; # end foreach %]
 
 [%		END; # end block

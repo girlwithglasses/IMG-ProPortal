@@ -1,5 +1,4 @@
-[%
-	WRAPPER layouts/default.html.tt;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Table Demo';
 %]
 <h2>d3 Table demo</h2>

@@ -1,5 +1,4 @@
-[%
-	WRAPPER layouts/default.html.tt;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Form Elements Demo';
 %]
 	<style>

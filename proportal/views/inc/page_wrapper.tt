@@ -2,4 +2,8 @@
 		page_wrapper = 'layouts/default.html.tt';
 	END;
 	WRAPPER $page_wrapper;
+
+	content;
+
+	END;
 %]

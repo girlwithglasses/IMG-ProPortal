@@ -27,9 +27,11 @@
 	<article class="content cf" role="main">
 [%
 	IF settings.message;
-		#PROCESS 'inc/message.tt';
+		PROCESS 'inc/message.tt';
 	END;
-	content	    # the page content
+
+	content;	# the page content
+
 %]
 	</article>
 [%

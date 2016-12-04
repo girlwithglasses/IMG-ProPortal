@@ -1,5 +1,4 @@
-[%
-	WRAPPER layouts/default.html.tt;
+[%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Location Map';
 %]
 <h2>Sample Distribution by Depth</h2>
