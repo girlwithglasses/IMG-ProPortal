@@ -40,36 +40,42 @@ sub render {
 			-group_by => 'proportal_subset',
 			-where => {
 				proportal_subset => { '!=', undef }
-			}
+			},
+			-result_as => ['hashref' => 'proportal_subset' ]
 		);
 
 	# counts, grouped by longhurst code
 	$stats->{by_longhurst} = $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ 'count(taxon_oid)|count', qw( longhurst_code longhurst_description ) ],
+			-columns  => [ 'count(taxon_oid)|count', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
 			-group_by => [ qw( longhurst_code longhurst_description ) ],
+			-order_by => [ 'longhurst_description' ],
 			-where => {
 				proportal_subset => { '!=', undef }
 			},
+			-result_as => ['hashref' => 'longhurst_description' ]
 		);
-
+	if ( $stats->{by_longhurst}{''} ) {
+		$stats->{by_longhurst}{zzzzz} = delete $stats->{by_longhurst}{''};
+	}
 	# metagenome counts, grouped by ecosystem
 
 	$stats->{metagenomes_by_eco} = $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ 'count(taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
-			-group_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype ) ],
+			-group_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
+			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-where => {
 				proportal_subset => 'metagenome'
 			},
 		);
 
-	my $res = $self->get_data;
-
-	# arrange by genome type and then by ecosystem subtype
-	for (@$res) {
-		push @{$data->{ $_->{genome_type} }{ $_->{ecosystem_subtype} || 'Unclassified' }}, $_;
-	}
+# 	my $res = $self->get_data;
+#
+# 	# arrange by genome type and then by ecosystem subtype
+# 	for (@$res) {
+# 		push @{$data->{ $_->{genome_type} }{ $_->{ecosystem_subtype} || 'Unclassified' }}, $_;
+# 	}
 
 	return $self->add_defaults_and_render({
 		sorted_data => $data,

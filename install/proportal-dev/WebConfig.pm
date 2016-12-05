@@ -1,6 +1,6 @@
 package WebConfig;
 #
-# $Id: WebConfig.pm 36420 2016-11-15 23:53:54Z aireland $
+# $Id: WebConfig.pm 36468 2016-12-04 22:37:40Z aireland $
 #
 #	Configuration for the ProPortal dev server
 
@@ -19,11 +19,11 @@ use WebConfig_img_proportal;
 
 my $conf = WebConfig_img_proportal::make_config({
 	domain_name => 'img-proportal-dev.jgi.doe.gov',
-	jbrowse => 'https://img-jbrowse-test.jgi.doe.gov',
+	jbrowse => 'https://img-proportal-dev.jgi.doe.gov/jbrowse',
 	galaxy => 'https://img-galaxy-test.jgi.doe.gov',
 	in_place => 1,
 	webUI_dir => '/global/homes/w/wwwimg/svn/webUI',
-	scratch_dir => '/tmp',
+	scratch_dir => '/global/projectb/scratch/aireland',
 	message => 'IMG ProPortal Development Site',
 });
 

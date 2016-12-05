@@ -1,0 +1,12 @@
+[%
+	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: News';
+%]
+<h2>News</h2>
+<div class="cf">
+[%	USE Dumper;
+	'<pre>';
+	Dumper.dump( content );
+	'</pre>'; %]
+</div>
+[%	END; %]

@@ -387,7 +387,7 @@ article {
   .content {
     width: 80%;
     float: right;
-    padding: 0 0.75rem; }
+    padding: 1.5rem 0.75rem; }
   .content.full {
     width: 100%; }
   .sidebar {

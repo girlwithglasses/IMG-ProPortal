@@ -1,0 +1,10 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: Genome Cart';
+%]
+<h2>Genome Cart</h2>
+
+[%	FOR g IN results.genomes; %]
+
+[%	END %]
+
+[%	END; %]

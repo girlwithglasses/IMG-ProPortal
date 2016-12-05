@@ -1,0 +1,12 @@
+[%
+	WRAPPER 'inc/page_wrapper.tt';
+	title = 'About';
+%]
+<div class="cf">
+<h2>About</h2>
+[%	USE Dumper;
+	'<pre>';
+	Dumper.dump( content );
+	'</pre>'; %]
+</div>
+[%	END; %]

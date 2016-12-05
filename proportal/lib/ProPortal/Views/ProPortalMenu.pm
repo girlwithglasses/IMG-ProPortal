@@ -136,15 +136,16 @@ sub support {
 		id => 'menu/support',
 		submenu => [
 			'support/about',
-			'user_guide',
-# 		{	id => 'support/user_guide',
-# 			submenu => [
-# 				'user_guide/getting_started',
-# 				'user_guide/browsing',
-# 				'user_guide/searching',
-# 				'user_guide/using_tools'
-# 			]
-# 		}
+#			'user_guide',
+			{	id => 'user_guide',
+				submenu => [
+					'user_guide/getting_started',
+					'user_guide/browsing',
+					'user_guide/searching',
+					'user_guide/using_tools',
+					'user_guide/api_manual'
+				]
+			},
 			'support/news',
  		],
 	};

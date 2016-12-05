@@ -26,6 +26,8 @@ has 'active_components' => (
 	}
 );
 
+# say 'config: ' . Dumper config;
+
 
 get '/' => sub {
 	forward '/proportal';
@@ -213,39 +215,36 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 
 };
 
-prefix '/support' => sub {
-
-	my $group = 'support';
-
-	get '/news' => sub {
-		var menu_grp => 'support';
-		var page_id  => 'support/news';
-
-#		return template
-	};
-	get '/about' => sub {
-
-#	return template
-	};
-
+my $page_h = {
+	tools => [ qw( krona jbrowse galaxy phyloviewer ) ],
+	search => [ qw( advanced_search blast ) ],
+	user_guide => [ qw( api_manual browsing getting_started searching using_tools ) ],
+	support => [ qw( news about ) ]
 };
 
-prefix '/search' => sub {
 
-	my $group = 'search';
+for my $prefix ( keys %$page_h ) {
 
-	get qr{
-		/ (?<query> advanced_search | blast )
-		/?
+	prefix '/'.$prefix => sub {
+
+		my $re = join '|', @{ $page_h->{$prefix} };
+
+		get qr{
+			/ (?<query> $re )
 		}x => sub {
-
 			my $c = captures;
 			my $p = $c->{query};
-			var menu_grp => $group;
-			var page_id  => $group . "/$p";
-			return template 'pages/tools/' . $p;
+			var menu_grp => $prefix;
+			var page_id => $prefix . "/" . $p;
+			return template "pages/". $prefix . "/" . captures->{query};
+		};
 	};
-};
+}
 
+prefix '/user_guide' => sub {
+	get qr{ /? }x => sub {
+		return template "pages/user_guide/index", { pages => $page_h->{user_guide} };
+	}
+};
 
 1;

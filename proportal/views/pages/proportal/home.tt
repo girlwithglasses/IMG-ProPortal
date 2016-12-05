@@ -14,7 +14,6 @@
 	background: #204977;
 }
 
-
 @media only screen and (max-width: 479px) {
   #about, #news, #quick-search, #gallery, .content {
     width: 100%;
@@ -32,6 +31,20 @@
 	}
 }
 
+article section {
+	padding: 1rem;
+}
+@media only screen and (min-width: 480px) {
+  .longhurst-stats, .subset-stats {
+  	width: 50%;
+	float: left;
+ }
+}
+
+.longhurst-stats table, .subset-stats table {
+	padding: 0 1rem;
+}
+
 @media only screen and (min-width: 768px) {
 	#news, #about {
 		width: 50%;					/*  33.3%; */
@@ -44,14 +57,14 @@
 	}
 	#quick-search {
 		width: 400px;
-/*		height: 340px; */
-		padding:30px;
+		height: 340px;
+		padding: 30px;
 		float: left;
 	}
 	#gallery {
-		padding:30px;
+		padding: 30px;
 		margin-left: 412px; /* width of #quick-search + 12px; */
-/*		height: 340px;
+		height: 340px;
 	/* float: left; */
 	}
 	.section-content {
@@ -59,6 +72,7 @@
 		border-top: 2px solid lightgray;
 		border-bottom: 2px solid lightgray;
 	}
+}
 
 h3 {
 	margin: 0;
@@ -121,7 +135,7 @@ input {
 
 </section>
 
-
+<section class="subset-stats clear">
 	<table>
 	<caption>IMG ProPortal Statistics</caption>
 	<thead>
@@ -129,16 +143,27 @@ input {
 	</thead>
 	<tbody>
 [%	IF results.stats.subsets.size > 0;
-		FOREACH s IN results.stats.subsets %]
-		<tr><td>[% s.proportal_subset %]</td>
-			<td>[% s.count %]</td>
-		</tr>
-[%		END;
+		FOR fd IN data_filters.all.keys.sort;
+			FOR f IN data_filters.all.$fd.enum;
+				IF results.stats.subsets.$f;
+					s = results.stats.subsets.$f; %]
+			<tr><td>[% data_filters.all.$fd.enum_map.$f %]</td>
+				<td>[% s.count %]</td>
+			</tr>
+	[%			END;
+			END;
+		END;
 	ELSE %]
 		<tr><td colspan="2">No statistics found!</td></tr>
 [%	END; %]
 	</tbody>
 	</table>
+</section>
+<section class="longhurst-stats">
+
+<!--
+[% USE Dumper; '<pre>'; Dumper.dump(results.stats.by_longhurst); '</pre>' %]
+-->
 
 	<table>
 	<caption>Counts by Longhurst Code</caption>
@@ -147,12 +172,13 @@ input {
 	</thead>
 	<tbody>
 [%	IF results.stats.by_longhurst.size > 0;
-		FOREACH r IN results.stats.by_longhurst %]
+		FOREACH k IN results.stats.by_longhurst.keys.sort;
+			r = results.stats.by_longhurst.$k; %]
 		<tr><td>[%
 			IF r.longhurst_description;
 				r.longhurst_description _ ' (' _ r.longhurst_code _ ')';
 			ELSE;
-				'unclassified';
+				'(unclassified)';
 			END;
 			%]</td>
 			<td>[% r.count %]</td>
@@ -163,42 +189,33 @@ input {
 [%	END; %]
 	</tbody>
 	</table>
-
-[%
-	genomes = results.sorted_data.isolate;
-	metagen = results.sorted_data.metagenome; %]
+</section>
+<section class="mg_by_eco clear">
 	<table>
-	<caption>IMG ProPortal Statistics</caption>
+	<caption>Metagenome Counts by Ecosystem</caption>
 	<thead>
-	<tr><th class="L">Genomes</th><th class="L">Count</th></tr>
+	<tr><th class="L">Ecosystem</th><th class="L">Count</th></tr>
 	</thead>
 	<tbody>
-[%	IF genomes && genomes.keys.size > 0;
-		FOREACH es IN genomes.keys.sort %]
-		<tr><td><!-- a href="[% link( 'genome_list', { class => es } ) %]" -->[% es %]<!-- /a --></td>
-			<td>[% genomes.$es.size %]</td>
+[%	eco = [ 'ecosystem', 'ecosystem_category', 'ecosystem_type', 'ecosystem_subtype', 'specific_ecosystem' ];
+	IF results.stats.metagenomes_by_eco.size > 0;
+		FOREACH r IN results.stats.metagenomes_by_eco %]
+		<tr><td>[%
+			( r.ecosystem_type || '(unclassified)' )
+			%] > [%
+			( r.ecosystem_subtype || '(unclassified)' )
+			%] > [%
+			( r.specific_ecosystem || '(unclassified)' )
+			%]</td>
+			<td>[% r.count %]</td>
 		</tr>
 [%		END;
 	ELSE %]
-		<tr><td colspan="2">No genomes found</td></tr>
-[%	END; %]
-	</tbody>
-	<tbody>
-		<tr><th class="L">Metagenomes</th><th class="L">Count</th></tr>
-[%	IF metagen && metagen.keys.size > 0;
-		FOREACH es IN metagen.keys.sort %]
-		<tr>
-			<td><!-- a href="[% link( 'genome_list_ecosystem', { ecosystem_subtype => es } ) %]" -->[% es %]<!-- /a --></td>
-			<td>[% metagen.$es.size %]</td>
-		</tr>
-[%		END;
-	ELSE; %]
-		<tr><td colspan="2">No metagenomes found</td></tr>
+		<tr><td colspan="2">No statistics found!</td></tr>
 [%	END; %]
 	</tbody>
 	</table>
-
-
+</section>
 </div>
 
 [% END; %]

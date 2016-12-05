@@ -30,7 +30,7 @@ article {
 	.content { // article
 		width: 100% - $sidebar-width;
 		float: right;
-		padding: 0 $gutter;
+		padding: $line-ht $gutter;
 	}
 
 	.content.full {

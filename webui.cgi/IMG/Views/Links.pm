@@ -849,8 +849,26 @@ my $static_links = {
 	'user_guide' => {
 		label => 'User Guide', url => 'user_guide',
 	},
+	'user_guide/api_manual' => {
+		label => 'API Manual', url => 'user_guide/api_manual',
+	},
+	'user_guide/browsing' => {
+		label => 'Browsing', url => 'user_guide/browsing',
+	},
+	'user_guide/getting_started' => {
+		label => 'Getting Started', url => 'user_guide/getting_started',
+	},
+	'user_guide/searching' => {
+		label => 'Searching', url => 'user_guide/searching',
+	},
+	'user_guide/using_tools' => {
+		label => 'Using Tools', url => 'user_guide/using_tools',
+	},
 	'support/news' => {
 		label => 'News', url => 'support/news',
+	},
+	'support/about' => {
+		label => 'About', url => 'support/about',
 	},
 	cart => {
 		label => 'Analysis Cart', url => 'cart',

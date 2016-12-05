@@ -5,25 +5,22 @@ use parent 'AppCore';
 use IMG::Util::File qw( :all );
 use File::Spec::Functions;
 
-prefix '/tools' => sub {
-
-	my @tools = qw( krona jbrowse galaxy phyloviewer );
-	my $re = join '|', @tools;
-
-	get qr{
-		/ (?<tool> $re )
-	}x => sub {
-
-		return template "pages/tools/" . captures->{tool};
-
-	};
-};
-
 prefix '/cart' => sub {
 	any '/genomes/add' => sub {
 
 		say Dumper body_parameters;
 		my @tax_arr = body_parameters->get_all('taxon_oid[]');
+
+		my $self = AppCore::create_core;
+
+		return $self->schema('img_core')->table('Gene')
+			->select(
+				-columns => [ qw( gene_oid gene_symbol gene_display_name product_name locus_tag locus_type scaffold description taxon|taxon_oid obsolete_flag ) ],
+				-where   => { gene_oid => [ @tax_arr ] },
+				-result_as => [ 'hashref' => ( 'gene_oid' ) ]
+			);
+
+
 		return join "<br>", @tax_arr;
 		require GenomeCart;
 		GenomeCart::addToGenomeCart( \@tax_arr );
@@ -31,7 +28,7 @@ prefix '/cart' => sub {
 	};
 };
 
-for my $f ( qw[ demo user_guide ] ) {
+for my $f ( qw[ demo ] ) {
 
 	prefix "/$f" => sub {
 

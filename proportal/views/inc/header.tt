@@ -1,9 +1,9 @@
 <header role="banner" class="cf">
     <a id="jgi-logo" href="[% settings.base_url %]" class="img">
-    	<img src="[% settings.pp_assets %]images/logo-proportal.png" alt="DOE Joint Genome Institute's IMG ProPortal logo" />
+    	<img src="/images/logo-proportal.png" alt="DOE Joint Genome Institute's IMG ProPortal logo" />
     </a>
-    
-    
+
+
     <ul class="user-links">
 [%	IF settings.sso_enabled;
 		IF session && session.name %]

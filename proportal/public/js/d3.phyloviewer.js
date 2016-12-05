@@ -276,11 +276,15 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
     	.append("text")
     	.classed('leafnode_label', true )
 //          .attr("class", "id_leafnode_label")
-          .attr("dx", 10)
-          .attr("dy", 3)
-          .attr("text-anchor", "start")		// move to css
-          .attr('font-size', '12px')		// move to css
-          .text(function(d) { if (d.metadata) { return d.metadata["gene_oid"]; } return d.name; });
+		.attr("dx", 10)
+		.attr("dy", 3)
+		.attr("text-anchor", "start")		// move to css
+		.attr('font-size', '12px')		// move to css
+		.text(function(d) {
+//			return options.all_data.gene_data[ +d.name ].gene_oid ||
+
+			return d.name;
+		});
     vis.selectAll('.leafnode').append('circle');
     vis.selectAll('.rootnode').append('circle');
     //vis.selectAll('g.innernode').append('text').text( function(d) { return d.depth; });
@@ -294,7 +298,9 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
         .attr("text-anchor", 'end')		// move to css
         .attr('font-size', '10px')		// move to css
         .attr('fill', '#ccc')			// move to css
-        .text(function(d) { return d.length; });
+        .text(function(d) {
+        	return d.length;
+        });
 
 	  vis.selectAll('line')
           .data(yscale.ticks(10))
@@ -323,28 +329,38 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 	// if active, draw heatmap
     if (options.heatmap) {
 		// Build heatmap
-		var h_data = options.heatmap.data
+		var //h_data = options.heatmap.data
+		c
 		, cols = options.heatmap.cols
 		, rows = vis.selectAll('.leafnode')
 		, zScale_data = {}
+		, i = 0
 		;
 
-		cols.forEach( function(c,i){
+		for ( c in cols ) {
+//		cols.forEach( function(c){
 			zScale_data[ c ] = d3.scale.quantile()
-				.domain( d3.extent( h_data, function(d){ return +d[c]; } ) )
+				.domain( d3.extent(
+					Object.keys( options.all_data.gene_data ),
+					function(d){
+						return cols[c].fn( options.all_data.gene_data[d] );
+					})
+				)
 				.range( d3.range(9) );
-		});
-
-		cols.forEach( function(c,i){
+//		});
+		}
+//		cols.forEach( function(c,i){
+		for ( c in cols ) {
 			rows
 				.append("rect")
 			//	.attr("class", "heatmap")  // not working right now
 				.attr("y", (rowHeight/2)-rowHeight)
-				.attr("x", function(d) { return (rightPaneEdge - d.y) + i*rowHeight; })    // d.y --> d.x!
+				.attr("x", function(d){
+					return (rightPaneEdge - d.y) + i*rowHeight; })    // d.y --> d.x!
 				.attr("width", rowHeight-1)
 				.attr("height", rowHeight-1)
 				.attr("class", function(d) {
-					return 'q' + zScale_data[c](d.metadata[c]) + '-9';
+					return 'q' + zScale_data[c]( cols[c].fn( options.all_data.gene_data[d.name] ) ) + '-9';
 				});
 			rows
 				.append("text")
@@ -355,8 +371,12 @@ function updateTree(vis, w, lh, treeType, tree, nodes, diagonal) {
 				.attr('font-family', 'Helvetica Neue, Helvetica, sans-serif')	// move to css
 				.attr('font-size', '10px')										// move to css
 				.attr('fill', 'black')											// move to css
-				.text(function(d) { return d.metadata[c]; });
-		});
+				.text(function(d){
+					return cols[c].fn( options.all_data.gene_data[d.name] )
+				});
+//		});
+			i++;
+		}
 
 	}
 

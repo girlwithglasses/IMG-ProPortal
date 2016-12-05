@@ -3,9 +3,6 @@
 <h2>
 	PhyloViewer (beta)
 </h2>
-<p>
-	Some blurb here.
-</p>
 <section class="cf phylo_viewer__container">
 
 <div id="toolbar">

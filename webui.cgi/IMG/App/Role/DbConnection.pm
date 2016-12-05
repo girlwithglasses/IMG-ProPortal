@@ -287,5 +287,55 @@ sub create_db_conn {
 
 }
 
+=head3 disconnect_db_conn
+
+Get a database connection; if the connection is not present, it will be created.
+
+@param  $h  name of the connection
+
+@return (nothing)
+        dies if a parameter is missing
+
+=cut
+
+sub disconnect_db_conn {
+	my $self = shift;
+	my $h = shift || $self->choke({
+		err => 'missing',
+		subject => 'db_conn',
+	});
+
+	if ( $self->has_db_connection_h && $self->db_connection_h->{$h} ) {
+		$self->db_connection_h->{$h}->disconnect();
+	}
+}
+
+=head3 disconnect_all
+
+Disconnect all database connections
+
+=cut
+
+sub disconnect_all {
+	my $self = shift;
+	if ( $self->has_db_connection_h ) {
+		for ( keys %{$self->db_connection_h} ) {
+			$self->db_connection_h->{$_}->disconnect();
+		}
+	}
+}
+
+=head3 DEMOLISH
+
+remove all database connections
+
+=cut
+
+sub DEMOLISH {
+	my $self = shift;
+	$self->disconnect_all;
+}
+
+
 1;
 

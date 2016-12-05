@@ -196,8 +196,8 @@ sub get_menu_vars {
 	my $page_id = var 'page_id';
 	my $menu_grp = var 'menu_grp';
 
-	say 'page_id: ' . ( $page_id // 'is undefined' )
-	. ' menu_grp: ' . ( $menu_grp // 'is undefined' );
+#	say 'page_id: ' . ( $page_id // 'is undefined' )
+#	. ' menu_grp: ' . ( $menu_grp // 'is undefined' );
 
 	my $core = setting('_core') // create_core();
 
@@ -234,6 +234,14 @@ sub get_menu_vars {
 	return { output => $output, core => $core };
 
 }
+
+hook after_template_render => sub {
+	# delete the core
+	# clean up DB connections
+	my $core = setting('_core');
+	$core->disconnect_all;
+	set('_core') => undef;
+};
 
 
 =head3 get_tmpl_vars

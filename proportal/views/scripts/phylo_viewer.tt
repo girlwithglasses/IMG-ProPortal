@@ -12,6 +12,13 @@
 %]
 		var json = getJson()
 
+// 			gene_data => $uniq->{gene},
+// 			taxon_data => $taxon_data,
+// 			array => $db_results,
+// 			tree => $ds->[0],
+// 			max_length => $max,
+// 			n_leaves => $leaves,
+
 		// TREE INITIAL VARIABLES
 		var numLeaves = json.results.n_leaves
 		, rowHeight = 25
@@ -21,6 +28,7 @@
 
 		d3.phylogram.build('#phyloviewer',
 		json.results.tree, {
+			all_data: json.results,
 			width: totalWidth,
 			treeWidth: 400,
 			height: (json.results.n_leaves * rowHeight),	// ensures the genes are always the same distance from each other
@@ -31,9 +39,39 @@
 			showDistRuler: false,
 			treeType: "phylogram",
 			heatmap: {
-				data: json.results.array,
-				cols: ["Latitude", "Longitude", "Depth", "DNA Sequence Length (bp)", "Amino Acid Sequence Length (aa)"],
+//				data: json.results,
+				cols: {
+					"latitude":
+					{ 'label': 'Latitude',
+						'fn': function(d){
+							return json.results.taxon_data[ json.results.gene_data[d].taxon_oid ].latitude || 0;
+						}
+					},
+					"longitude":
+					{ 'label': 'Longitude',
+						'fn': function(d){
+							return json.results.taxon_data[ json.results.gene_data[d].taxon_oid ].longitude || 0;
+						}
+					},
+					"depth":
+					{ 'label': 'Depth',
+						'fn': function(d){
+							return json.results.taxon_data[ json.results.gene_data[d].taxon_oid ].depth || 0;
+						}
+					},
+// 					"seq_length":
+// 					{ 'label': "DNA Sequence Length (bp)",
+// 						'fn': function(d){
+// 							return json.results.gene_data[ d.gene_oid ].
+//
+// 					}
+// 					"aa_seq_length":
+// 					{ 'label': "Amino Acid Sequence Length (aa)",
+// 						'fn': function(d){
+// 							return json.results.gene_data[d.gene_oid].
+// 					}
+				},
 				showText: true
 			}
-        });
+        } );
 [%	END %]

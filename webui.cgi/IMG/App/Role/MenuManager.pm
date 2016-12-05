@@ -229,7 +229,7 @@ sub _get_group {
 #			return find_parent_menu( $page_id );
 #		}
 #	}
-	say 'Not mapped or a menu item. Hmmmm!';
+#	say 'Not mapped or a menu item. Hmmmm!';
 	return;
 #	return home();
 
@@ -240,7 +240,7 @@ sub _get_subtree {
 	my $self = shift;
 	my $struct = shift;
 
-	say 'struct: ' . Dumper $struct;
+#	say 'struct: ' . Dumper $struct;
 
 	my $menu_page = shift;
 	if ( ref $struct && 'ARRAY' eq ref $struct ) {
