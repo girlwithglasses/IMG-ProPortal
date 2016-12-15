@@ -20,7 +20,7 @@ All the ProPortal code lives in the IMG svn repository under /proportal and /web
 
 ### Perl! ###
 
-To keep things neat and tidy, we are going to install a clean version of perl and the ProPortal dependencies using `perlbrew`.
+To keep things neat and tidy, we are going to install a clean version of Perl and the ProPortal dependencies using `perlbrew`. Perlbrew allows you to maintain several Perl versions on the same machine and to keep sets of Perl modules specific to each Perl version.
 
 Install `perlbrew` from https://perlbrew.pl (follow the instructions on the website).
 
@@ -94,6 +94,10 @@ You should get a ProPortal-themed 404 page.
 ## Database set up
 
 ### Using a local database
+
+Download the SQLite demo database.
+
+https://www.dropbox.com/s/hm3xne8hc3d3vq7/dbschema-img_core.db?dl=0
 
 * Edit the file `environments/db.pl` to set the appropriate location for the SQLite database in place of `/global/homes/a/aireland/webUI/proportal/share/dbschema-img_core.db`.
 
@@ -211,6 +215,9 @@ IMG::Util::Untaint: untaint your paths!
 
 IMG::Views::ExternalLinks   functional interface to external link data
 IMG::Views::Links           functional interface to internal link data
+
+
+
 
 
 ### Installation on genepool (NERSC users) ###
