@@ -16,11 +16,15 @@ All the ProPortal code lives in the IMG svn repository under /proportal and /web
 
 	git clone https://github.com/ialarmedalien/IMG-ProPortal.git
 
+I have installed it in my home directory with the base directory renamed `webUI` to mimic the IMG svn structure; my git command was:
+
+	git clone https://github.com/ialarmedalien/IMG-ProPortal.git ~/webUI
+
 ## Dependencies ##
 
 ### Perl! ###
 
-To keep things neat and tidy, we are going to install a clean version of perl and the ProPortal dependencies using `perlbrew`.
+To keep things neat and tidy, we are going to install a clean version of Perl and the ProPortal dependencies using `perlbrew`. Perlbrew allows you to maintain several Perl versions on the same machine and to keep sets of Perl modules specific to each Perl version.
 
 Install `perlbrew` from https://perlbrew.pl (follow the instructions on the website).
 
@@ -39,14 +43,39 @@ You're now using perl version 5.18.4 and any extra modules you install will be i
 
 Install the ProPortal dependencies using `cpanm`. You'll need to locate the path to `cpanfile` in the `proportal` folder; in this example, it's in my home directory within  the folder `webUI`.
 
-	cpanm --cpanfile ~/webUI/proportal/cpanfile --installdeps ~/webUI/proportal/
+	cpanm --installdeps ~/webUI/proportal/
+
+Some modules may fail installation and need to be installed manually or using the `--force` flag (e.g. an issue with `Scalar::Does` meant it needed to be installed using `cpanm --force Scalar::Does`). Rerunning the command `cpanm --installdeps ~/webUI/proportal/` will redo the installation of any modules that were not installed previously.
 
 Install BioPerl (more detailed instructions at http://bioperl.org/INSTALL.html if required):
 
 	cpanm CJFIELDS/BioPerl-1.6.924.tar.gz
 
-Some modules may need to be installed by hand, including `DBD::Oracle` (for installations not using Oracle databases, this should not be an issue).
+If you have access to the IMG Oracle databases from your machine and want to run the code on those databases, you will need to install `DBD::Oracle`. This module may need to be installed by hand; see http://metacpan.org/pod/DBD::Oracle for downloads and installation instructions.
 
+### Database set up
+
+The ProPortal can run off a local database or using the IMG Oracle databases.
+
+### Using a local database
+
+Download the SQLite demo database:
+
+https://www.dropbox.com/s/hm3xne8hc3d3vq7/dbschema-img_core.db?dl=0
+
+* Edit the file `proportal/environments/db.pl` to set the appropriate location for the SQLite database in place of `/global/homes/a/aireland/webUI/proportal/share/dbschema-img_core.db`.
+
+### Genepool server set up
+
+* The majority of config parameters are set in `proportal/environments/development.pl`. The parameters that may need to be changed are the database login details and the URLs for the application. To get the current database login details, run the following from the proportal directory:
+
+    `perl script/write_db_config_files.pl`
+
+This will parse the database config files and dump the relevant DB details as JSON files in the `environments` directory.
+
+The database config details (username, password) should be copied into db.pl
+
+TODO: change this to slurp in files named after the DB.
 
 ### Apache and dnsmasq ###
 
@@ -56,7 +85,7 @@ The GitHub repository includes a sample Apache configuration file (see `proporta
 
 on the command line.
 
-You will need dnsmasq to be able to give localhost servers (i.e. servers on your computer) a domain name. dnsmasq is easily installed using the Mac package manager Homebrew (http://brew.sh). Follow the instructions at https://mallinson.ca/osx-web-development/ for installing and configuration of dnsmasq (scroll down to the dnsmasq section; the rest of the page is not relevant).
+If you are running the code on a Mac, you will need dnsmasq to be able to give localhost servers (i.e. servers on your computer) a domain name. dnsmasq is easily installed using the Mac package manager Homebrew (http://brew.sh). Follow the instructions at https://mallinson.ca/osx-web-development/ for installing and configuration of dnsmasq (scroll down to the dnsmasq section; the rest of the page is not relevant).
 
 You will need to have `mod_rewrite`, `mod_proxy`, and `mod_expires` enabled in your Apache config file (usually `/private/etc/apache2/httpd.conf`); find the lines
 
@@ -89,26 +118,6 @@ The configuration included sets up a ProPortal server at `http://img-proportal.d
 
 You should get a ProPortal-themed 404 page.
 
-### Installation ###
-
-## Database set up
-
-### Using a local database
-
-* Edit the file `environments/db.pl` to set the appropriate location for the SQLite database in place of `/global/homes/a/aireland/webUI/proportal/share/dbschema-img_core.db`.
-
-### Genepool server set up
-
-* The majority of config parameters are set in `environments/development.pl`. The parameters that may need to be changed are the database login details and the URLs for the application. To get the current database login details, run the following from the proportal directory:
-
-    `perl script/write_db_config_files.pl`
-
-This will parse the database config files and dump the relevant DB details as JSON files in the `environments` directory.
-
-The database config details (username, password) should be copied into db.pl
-
-TODO: change this to slurp in files named after the DB.
-
 ## Launching the server
 
 `cd` to the distribution directory `proportal` and run the launch script using `plackup bin/app.psgi`. You'll see a message like `HTTP::Server::PSGI: Accepting connections at http://0:5000/`. Visit `http://localhost:5000` in your browser to view the site.
@@ -131,7 +140,13 @@ To prevent the reloading of all the perl modules, you can use the standard `-M` 
 
 This will preload `Moo`, `Dancer2`, `DBIx::DataModel`, and `Plack` and reload any other modules, including those in the `proportal/lib` and `webui.cgi` directories.
 
+
+
+
+
 ## Set up to include the cgi-based installation (Genepool server only) ##
+
+### IN PROGRESS! ###
 
 * WebConfig.pm and WebConfigCommon.pm need to be edited to provide the correct parameters. Anything that previously pointed to the Apache cgi-bin directory needs to point at $base/webUI/webui.cgi, and the htdocs directory should now be $base/webUI/webui.htd. If there are two .htd directories for an installation (e.g. for proportal), the files should be combined into a single directory.
 
@@ -154,63 +169,6 @@ This is not a comprehensive list but will suffice for simple usage.
 - run `plackup bin/server-app.psgi` to start the server;
 
 - visit http://<server-name> to view the data.
-
-## Application Structure ##
-
-The ProPortal app is split into a number of parts. Core application functionality is in the webui.cgi/IMG::* modules, and
-ProPortal-specific code is (generally) in /proportal/lib/. Modules with general functionality will be shifted to the
-IMG:: namespace.
-
-The ProPortal modules consist of the following:
-
-ProPortalPackage.pm -- wrapper for all ProPortal modules.
-
-DataModel::*        -- DBIx::DataModel models of the Gold and core databases
-
-Routes::*           -- Dancer-based routing modules that parse the URL and dispatch the appropriate request.
-
-AppCore             -- Dancer-based functionality common to all routes, such as checks on incoming requests and template
-                       defaults. Caching capabilities are available but not yet implemented.
-
-ProPortal::Controller::*    -- controllers for specific ProPortal routes. Base.pm has the core controller functionality. Controllers and their functionality are independent of Dancer.
-
-ProPortal::IO::*    -- Input/output-related modules. Currently just DBIxDataModel
-                    -- previously had other modules but these are no longer in use.
-
-ProPortal::Util::*  -- various utility modules, including adaptors for Dancer2 plugins that have now been abandoned.
-
-
-The IMG modules consist of the following:
-
-IMG::App.pm         -- wrapper for the IMG core app functionality. Functionality is
-                    implemented using roles in the IMG::App::* namespace. An IMG::App
-                    instance can be created de novo, or automatically created by the ProPortal app.
-
-General App.pm functionality:
-
-- Database connections: DBIx::Connector connections to the databases.
-- Dispatch: parameter parsing, selecting which module to load
-- FileManager and IMG::Util::File: centralized file manager and useful file parsing shortcuts
-- HTTP client: defaults to a new HTTP::Tiny instance
-- JGISessionClient: interacts with Caliban to check the JGI session is valid
-- PreFlight: runs preflight checks to ensure the environment is ready
-- Schema:    provides access to the Gold and core databases via DBIx::DataModel
-- User:      access to user data and user checks
-
-TODO:
-- logger
-- cache
-
-IMG::App::Role::LinkManager:  Link manager. In development.
-IMG::App::Role::MenuManager:  Menu manager. In development.
-IMG::App::Role::Templater:    renders a Template::Toolkit template
-
-IMG::Util::Base:    defines sets of modules to be loaded together; see Import::Base
-IMG::Util::DB:      useful database-related functions, mostly DB config file-related.
-IMG::Util::Untaint: untaint your paths!
-
-IMG::Views::ExternalLinks   functional interface to external link data
-IMG::Views::Links           functional interface to internal link data
 
 
 ### Installation on genepool (NERSC users) ###
