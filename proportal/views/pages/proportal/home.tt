@@ -46,8 +46,8 @@ article section {
 }
 
 @media only screen and (min-width: 768px) {
-	#news, #about {
-		width: 50%;					/*  33.3%; */
+	#news, #about, #stats {
+		width: 33.3%;					/*  33.3%; */
 		float: left;
 		padding: 30px;
 	/*  padding: 0 0.75rem; */
@@ -67,11 +67,6 @@ article section {
 		height: 340px;
 	/* float: left; */
 	}
-	.section-content {
-		padding: 15px 0;
-		border-top: 2px solid lightgray;
-		border-bottom: 2px solid lightgray;
-	}
 }
 
 h3 {
@@ -88,10 +83,35 @@ input {
 	width: 100%;
 }
 
-.quick-search {
+.quick-search {		/* button */
 	background: #204977;
 	padding: .5rem 1rem;
 	float: right;
+}
+
+th {
+	padding: 4px 0 4px 10px;
+	/* border-bottom: 1px solid lightgray; */
+}
+
+tr {
+	border: 0;
+}
+
+td {
+	padding: 4px 0 4px 30px;
+}
+
+.category {
+	font-weight: bold;
+	padding: 10px 0 4px 15px;
+	
+}
+
+.section-content {
+	padding: 15px 0;
+	border-top: 2px solid lightgray;
+	border-bottom: 2px solid lightgray;
 }
 </style>
 
@@ -128,12 +148,55 @@ input {
 </section>
 
 
-<section id="news">
-<!-- <h3>News</h3> -->
-<!-- [%	INCLUDE inc/news.tt %] -->
-<a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<section id="stats">
+<h3>IMG/ProPortal Data Sets</h3>
+<div class="section-content">
+	
+<table>
 
+<tr><td class="category" colspan="2">Isolate and Single Cell Genomes</td></tr>
+	[%	IF results.stats.subsets.size > 0;
+		FOR fd IN data_filters.all.keys.sort;
+			FOR f IN data_filters.all.$fd.enum;
+				IF results.stats.subsets.$f;
+					s = results.stats.subsets.$f; %]
+			<tr><td>[% data_filters.all.$fd.enum_map.$f %]</td>
+				<td>[% s.count %]</td>
+			</tr>
+	[%			END;
+			END;
+		END;
+	ELSE %]
+		<tr><td colspan="2">No statistics found!</td></tr>
+	[%	END; %]
+
+<tr><td class="category" colspan="2">Metagenomes by Ecosystem Subtype</td></tr>
+
+	[% IF results.stats.metagenomes_by_ecoSub.size > 0;
+		FOREACH r IN results.stats.metagenomes_by_ecoSub %]
+		<tr><td>[%	( r.ecosystem_subtype || 'Unclassified' )		%]</td>
+			<td>[% r.count %]</td>
+		</tr>
+[%		END;
+	ELSE %]
+		<tr><td colspan="2">No statistics found!</td></tr>
+[%	END; %]
+
+
+	
+</table>
+</div>
 </section>
+
+
+
+<section id="news">
+<h3>News</h3>
+<div class="section-content">
+<a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+</section>
+<!-- 
 
 <section class="subset-stats clear">
 	<table>
@@ -161,9 +224,9 @@ input {
 </section>
 <section class="longhurst-stats">
 
-<!--
+<!~~
 [% USE Dumper; '<pre>'; Dumper.dump(results.stats.by_longhurst); '</pre>' %]
--->
+~~>
 
 	<table>
 	<caption>Counts by Longhurst Code</caption>
@@ -216,6 +279,7 @@ input {
 	</tbody>
 	</table>
 </section>
+ -->
 </div>
 
 [% END; %]

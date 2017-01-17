@@ -4,457 +4,478 @@
 %]
 
 <head>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<!--   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
   <!-- script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script -->
 
-
 <style>
-/*
-	div.indent {
-		padding-left: 1.5rem;
-		margin: 0;
-		display: inline;
-	}
-*/
+	
+/* RESPONSIVE GRID SIZING  */	
+	
+/* Resets */
+*,
+*:before,
+*:after {
+	box-sizing: border-box;
+}
 
-	.table-condensed>tbody>tr>td.indent {
-		padding-left: 1.5rem;
-	}
-	.noteToSelf {
-		background-color: #FFFF99;
-		font-style: italic;
-		padding: 0.3em 1em 0.3em 1em;
-		display: inline;
-	}
-	.help {
-		background-color: #8899dd;
-		color: white;
-		font-weight: bold;
-		border-radius: 12px;
-		padding: 0.1em 0.3em 0.1em 0.3em;
-		margin: 0.2em;
-		display: inline;
-		float: right;
-	}
+.clearfix:after {
+	content: "";
+	display: table;
+	clear: both;
+}	
 
-	.panelTable {		/* sets the width of the field names in the tables */
-		width: 12.5rem;
+.row {
+	display: flex;
+	flex-flow: row wrap;
+	margin: 0 -10px;
+	margin-bottom: 10px;
+}
+
+.row:last-child {
+	margin-bottom: 0;
+}
+
+[class*="col-"] {
+	padding: 10px;
+	width: 100%;
+
+}
+	
+	
+/* Small screen */
+@media all and (max-width: 1023px) {
+  .infoBox {
+    width: 100%;
+ 	margin-left: 0;
+ 	margin-right: 0;
+  }
+}
+
+/* Large screen */
+@media all and (min-width: 1024px) {
+	.infoBox {
+		width: 50%;
 	}
+}
+
+ 
+/* GLOBAL */ 
+h2, h3, h4, h5, h6 {
+ 	margin: 0;
+ 	padding: 0;
+
+}
+
+tr,td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.align-right {
+	text-align: right;
+	vertical-align: bottom;
+}
+
+button {
+	padding: 10px 20px 10px 20px;
+}
+
+.normal {
+	font-weight: normal;
+} 
+	
+.border {
+	border: 1px solid blue;
+}
+	
+.underline {
+	border-bottom: 2px solid black;
+}
+
+.thisWrapper {
+}
+
+#pageHeader {
+	display: table;
+	padding: 0 10px;
+	margin-top: 20px;
+	width: 100%;
+}
+
+#title {
+	float: left;
+	width: 100%;
+}
+
+#buttonBar {
+	float: right;
+	clear: both;
+}	
+	
+
+/* INFOBOX
+
+	+---------------div-------------+		div .infoBox
+	|	+-----------div---------+	|
+	|	|   TITLE				|	|		div .infoTableTitle
+	|	+-----------div---------+	|
+	|								|
+	|	+----------table--------+	|		table .infoBox
+	|	|	fields here			|	|
+	|	+-----------------------+	|
+	+-------------------------------+
+ */
+
+.infoBox {
+	padding: 0 20px 20px 20px;
+
+	
+}
+
+.infoBoxTitle {
+	border-bottom: 2px solid black;
+	margin: 10px 0 5px 0;
+}
+
+.infoBox table {
+	table-layout: fixed;
+	width: 100%;	
+	border-collapse: collapse;
+}
+
+.infoBox td{
+	padding: 4px 0px 4px 0px;
+}
+
+.col1 {
+	width: 200px;
+}
+
+.subheader {
+	margin-top: 10px;
+}
+.noteToSelf {
+	background-color: #FFFF99;
+	font-style: italic;
+	padding: 0.3em 1em 0.3em 1em;
+	display: inline;
+}
+.help {
+	background-color: #8899dd;
+	color: white;
+	font-weight: bold;
+	border-radius: 12px;
+	padding: 0.1em 0.3em 0.1em 0.3em;
+	/* margin: 0.2em; */
+	display: inline;
+	float: right;
+}
+
+button {
+	padding: 10px;
+	font-size: 75%;
+}
 
 </style>
 
-
 </head>
 
-<h2>[% self.display_name %]</h2>
-<!-- h4>Alt Name(s) </h4 -->
-<div class="container-float">
-<!--
-<div class="row">
-<div class="col-xs-12">
+<div class="thisWrapper">
+	<div id="pageHeader">
+		<div id="title" class="underline">
+			<!-- Write genome type -->
+			<h4 class="normal">
+			[% IF self.genome_type=="isolate"; %]
+				Isolate genome
+			[% ELSIF self.genome_type=="metagenome"; %]	
+				Metagenome
+			[% END %]
+			</h4>
 
-  <div class="panel panel-default">
-  <div class="panel-heading"><b>General Information</b></div>
-
-  <table class="table">
-    <tr><td class="panelTable"> Organism Name </td>	<td> [% self.display_name %] </td></tr>
-    <tr><td> Alt Name(s) </td>		<td> ... </td></tr>
-
-  </table>
-  </div>
-
-</div> <!~~ col ~~>
-</div> <!~~ row ~~>
- -->
-
-<div class="row">
-	<div class="col-xs-6">
-		<div class="panel panel-default">
-			<div class="panel-heading"><b>Natural Isolation Information</b></div>
-
-<table class="table table-condensed">
-	<tr>
-		<td class="panelTable">Date collected</td>
-		<td>[% self.date_collected %]</td>
-	</tr>
-	<tr>
-		<td>Latitude / longitude</td>
-		<td>[% self.latitude %]&#176;N, [% self.longitude %]&#176;E</td>
-	</tr>
-	<tr>
-		<td>Depth</td>
-		<td>[% self.depth %]</td>
-	</tr>
-	<tr>
-		<td>Isolation Details</td>
-		<td>[% self.proport_isolation %]</td>
-	</tr>
-	<tr>
-		<td>Longhurst Province</td>
-		<td>[%
-	IF self.longhurst_code && self.longhurst_description;
-		self.longhurst_code _ ', ' _ self.longhurst_description;
-	END %]</td>
-	</tr>
-	<tr>
-		<td>NOAA Sea Name</td>
-		<td>[% self.geo_location %]</td>
-	</tr>
-	<tr>
-		<td>Ocean</td>
-		<td>[% self.proport_ocean %]</td>
-	</tr>
-	<tr>
-		<td colspan="2"><b>Ecosystem Hierarchy</b></td>
-	</tr>
-[%
-	eco_hier = [ 'ecosystem',
-		'ecosystem_category',
-		'ecosystem_type',
-		'ecosystem_subtype',
-		'specific_ecosystem'
-	];
-
-	FOR e IN eco_hier; %]
-	<tr>
-		<td class="indent">
-			[% e | replace('_', ' ') | ucfirst %]
-		</td>
-		<td> [% self.$e %]</td>
-	</tr>
-[%	END; %]
-	<tr>
-		<td colspan="2"><b>Environmental Measurements</b>
-		<div class="help">
-			?
+			<!-- Write genome name -->
+			<h2>[% self.display_name %]</h2>
 		</div>
-		</td>
-	</tr>
-[%	env_meas = [
-		'salinity',
-		'oxygen_concentration',
-		'temperature',
-		'nitrate_concentration',
-		'chlorophyll_concentration',
-		'pressure'
-	];
-
-	FOR e in env_meas; %]
-	<tr>
-		<td class="indent">
-		[%	IF results.label_data.$e && results.label_data.$e.label;
-				results.label_data.$e.label;
-			ELSE;
-				e | replace('_', ' ') | ucfirst;
-			END;
-		%]
-		</td>
-		<td>[% self.$e %][%
-			IF self.$e && results.label_data.$e.unit;
-				results.label_data.$e.unit;
-			END;
-		%]</td>
-	</tr>
-[%	END %]
-	<tr>
-		<td colspan="2"><b>World Ocean Atlas Fields</b>
-		<div class="help">
-			?
+		<div id="buttonBar">
+			<button>Add to Cart</button>
+<!-- 			<button>Export</button> 	** develop this later **			-->		
 		</div>
-		</td>
-	</tr>
-[%	woa_fields = [
-		'salinity',
-		'temperature',
-		'dissolved_oxygen',
-		'nitrate',
-		'phosphate',
-		'silicate'
-	];
-	FOR e in woa_fields;
-		e = 'proport_woa_' _ e; %]
-	<tr>
-		<td class="indent">
-		[%	IF results.label_data.$e && results.label_data.$e.label;
-				results.label_data.$e.label;
-			ELSE;
-				e | replace('_', ' ') | ucfirst;
-			END;
-		%]
-		</td>
-		<td>[% self.$e %][%
-			IF self.$e && results.label_data.$e.unit;
-				results.label_data.$e.unit;
-			END;
-		%]</td>
-	</tr>
-[%	END %]
-</table>
-	</div>
-</div> <!-- col -->
 
-<div class="col-xs-6">
-
-	<div class="panel panel-default">
-		<div class="panel-heading"><b>Ecological Information</b></div>
-
-
-<table class="table table-condensed">
-	<tr>
-		<td class="panelTable">Clade</td>
-		<td>[% self.clade %]</td>
-	</tr>
-	<tr>
-		<td>Ecotype</td>
-		<td>[% self.ecotype %]</td>
-	</tr>
-	<tr>
-		<td colspan="2"><b>NCBI Taxonomy</b></td>
-	</tr>
-[%
-	ncbi = [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ];
-
-	FOR n IN ncbi;
-		n_field = 'ncbi_' _ n; %]
-	<tr>
-		<td class="indent">
-			[% n | ucfirst %]
-		</td>
-		<td>[% self.$n_field %]</td>
-	</tr>
-[%	END %]
-</table>
 	</div>
 
 
-</div> <!-- col -->
-</div> <!-- row -->
-
 <div class="row">
-<div class="col-xs-6">
 
-	<div class="panel panel-default">
-		<div class="panel-heading"><b>Identification and External Links</b></div>
+	<div class="infoBox">
+		<div class="infoBoxTitle"><h4>Natural Isolation Information</h4></div>
+		
+		<table>
+			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
+		
+			<tr><td>Date collected</td> 	<td>[% self.date_collected %]</td></tr>
+			<tr><td>Latitude / longitude</td>	<td>[% self.latitude %]&#176;N, [% self.longitude %]&#176;E</td></tr>
+			<tr><td>Depth</td>	<td>[% self.depth %]</td></tr>
+			<tr><td>Isolation Details</td>	<td>[% self.proport_isolation %]</td></tr>
+			<tr><td>Longhurst Province</td>	<td>
+				[%  IF self.longhurst_code && self.longhurst_description;
+					self.longhurst_code _ ', ' _ self.longhurst_description;
+				END %]</td></tr>
+			<tr><td>NOAA Sea Name</td>	<td>[% self.geo_location %]</td></tr>
+			<tr><td>Ocean</td>	<td>[% self.proport_ocean %]</td></tr>
+			
+			<tr><td colspan="2"><h6 class="subheader">Ecological Information</h6></td>
+			<tr><td class="panelTable">Clade</td>	<td>[% self.clade %]</td></tr>
+			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
+			
+			<tr><td colspan="2"><h6 class="subheader">Ecosystem Hierarchy</h6></td>
+			</tr>
+				[%
+					eco_hier = [ 'ecosystem',
+						'ecosystem_category',
+						'ecosystem_type',
+						'ecosystem_subtype',
+						'specific_ecosystem'
+					];
 
+				FOR e IN eco_hier; %]
+				<tr><td class="indent">[% e | replace('_', ' ') | ucfirst %]</td>	<td> [% self.$e %]</td>	</tr>
+				[%	END; %]
+				
+			
+		</table>
+	</div>	<!-- infoTable -->
+	
+	<div class="infoBox">
+		<div class="infoBoxTitle"><h4>Environmental Measurements</h4></div>
+		
+		<table>
+		<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
+		
+		<tr><td colspan="2"><h6 class="subheader">Direct Measurements</h6>
+				</td></tr>
+			[%	env_meas = [
+				'salinity',
+				'oxygen_concentration',
+				'temperature',
+				'nitrate_concentration',
+				'chlorophyll_concentration',
+				'pressure'
+			];
 
-<table class="table table-condensed">
-	<tr>
-		<td class="panelTable">IMG Taxon ID</td>
-		<td>[% self.taxon_oid %]</td>
-	</tr>
-	<tr>
-		<td>Project Status</td>
-		<td>[% self.project_status %]</td>
-	</tr>
-	<tr>
-		<td colspan="2"><b>GOLD details</b></td>
-	</tr>
-	<tr>
-		<td class="indent">
-			Study ID
-		</td>
-		<td>[%	IF self.study_gold_id %]
-			<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
-			[%	END %]
-		</td>
-	</tr>
-	<tr>
-		<td class="indent">
-			Sequencing Project ID
-		</td>
-		<td>
-			<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
-		</td>
-	</tr>
-	<tr>
-		<td class="indent">
-			Analysis Project ID
-		</td>
-		<td>[% IF self.analysis_project_id %]
-			<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
-		[%	END; %]
-		</td>
-	</tr>
-	<tr>
-		<td colspan="2"><b>External Links</b></td>
-	</tr>
-[%	ext_urls = [
-		'bioproject_accession',
-		'biosample_accession',
-		'ncbi_taxon_id',
-		'ncbi_project_id',
-	];
-	FOR e in ext_urls; %]
-	<tr>
-		<td class="indent">
-		[%	IF results.label_data.$e && results.label_data.$e.label;
-				results.label_data.$e.label;
-			ELSE;
-				e | replace('_', ' ') | ucfirst;
-			END;
-		%]
-		</td>
-		<td>[%
-		IF self.$e;
-			IF results.label_data.$e && results.label_data.$e.ext_link;
-				link_url = results.label_data.$e.ext_link;
+			FOR e in env_meas; %]
+			<tr>
+				<td>
+				[%	IF results.label_data.$e && results.label_data.$e.label;
+						results.label_data.$e.label;
+					ELSE;
+						e | replace('_', ' ') | ucfirst;
+					END;
 				%]
-				<a rel="external" href="[% ext_link( results.label_data.$e.ext_link ) %][% self.$e %]">[% self.$e %]</a>
-[%			ELSE;
-				self.$e;
-			END;
-		END; %]
-		</td>
-	</tr>
-[%	END  # end ext_urls section %]
-	<tr>
-		<td class="indent">
-			NCBI/RefSeq ID
-		</td>
-		<td>
-		<div class="noteToSelf">add!</div>
-		</td>
-	</tr>
-	<tr>
-		<td> Genome publications </td>
-		<td>
-[%	IF self.gold_sp_genome_publications.size > 0;
-		FOR p IN self.gold_sp_genome_publications %]
-		<p>"[% p.title %]" in [% p.journal_name %][%
-			IF p.publication_date; " " _ p.publication_date; END;
-			IF p.volume; " volume " _ p.volume; END;
-			IF p.issue; " issue " _ p.issue; END;
-			IF p.page; " pages " _ p.page; END;
-
-			IF p.pubmed_id; %]
-				<a href="[% ext_link('pubmed') %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>
-[% 			END;
-
-			IF p.doi %]
-				<a href="[% ext_link('doi') %][% p.doi %]" rel="external">doi:[% p.doi %]</a></p>
-			[% END;
-		END; # end FOR loop
-	END %]
-	</tr>
-	</table>
+				</td>
+				<td>[% self.$e %][%
+					IF self.$e && results.label_data.$e.unit;
+						results.label_data.$e.unit;
+					END;
+				%]</td>
+			</tr>
+			[%	END %]
+			<tr>
+				<td colspan="2"><h6 class="subheader">World Ocean Atlas Averages</h6>
+	<!-- 
+			<div class="help">
+					?
+				</div>
+ -->
+				</td>
+			</tr>
+			[%	woa_fields = [
+				'salinity',
+				'temperature',
+				'dissolved_oxygen',
+				'nitrate',
+				'phosphate',
+				'silicate'
+			];
+			FOR e in woa_fields;
+				e = 'proport_woa_' _ e; %]
+			<tr>
+				<td>
+				[%	IF results.label_data.$e && results.label_data.$e.label;
+						results.label_data.$e.label;
+					ELSE;
+						e | replace('_', ' ') | ucfirst;
+					END;
+				%]
+				</td>
+				<td>[% self.$e %][%
+					IF self.$e && results.label_data.$e.unit;
+						%] &#160; [% results.label_data.$e.unit;
+					END;
+				%]</td>
+			</tr>
+			[%	END %]
+		</table>
+	</div>
+		
 </div>
 
-</div> <!-- col -->
-<div class="col-xs-6">
+<div class="row">	
+	<div class="infoBox">
+		<div class="infoBoxTitle"><h4>Ecological Information</h4></div>
+			
+		<table>
+			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
+			<tr><td>Clade</td>	<td>[% self.clade %]</td></tr>
+			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
+			
+			<tr><td colspan="2"><h6 class="subheader">NCBI Taxonomy</h6></td></tr>
+			[% ncbi = [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ];
+				
+			FOR n IN ncbi;
+				n_field = 'ncbi_' _ n;%]
+			<tr><td> [% n | ucfirst %]</td>	<td>[% self.$n_field %]</td></tr>
+			[%	END %]
+		</table>
+	</div> <!-- infoBox -->
 
-	  <div class="panel panel-default">
-		<div class="panel-heading"><b>Sequence Information</b></div>
-
-
-<table class="table table-condensed">
-	<tr>
-		<td class="panelTable">Project Type</td>
-		<td> ... </td>
-	</tr>
-	<tr>
-		<td>Culture Type</td>
-		<td>[% self.culture_type %]</td>
-	</tr>
-	<tr>
-		<td>Quality</td>
-		<td>[% self.seq_quality %]</td>
-	</tr>
-	<tr>
-		<td>Publicly Available</td>
-		<td>[% self.is_public %]</td>
-	</tr>
-	<tr>
-		<td colspan="2"><b>Sequencing details</b></td>
-	</tr>
-	<tr>
-		<td class="indent">
-			Sequencing Status
-		</td>
-		<td>[% self.seq_status %]</td>
-	</tr>
-	<tr>
-		<td class="indent">
-			Sequencing Center
-		</td>
-		[% IF self.gold_sp_seq_centers.size > 0;
-			FOR sc IN self.gold_sp_seq_centers; '
-		<td>'; IF sc.url; %]<a href="[% sc.url %]" rel="external">[% sc.name %]</a>[% ELSE; sc.name; END; IF sc.country; ', ' _ sc.country; END; '</td>
-		'; END; ELSE; '
-		<td>Not specified</td>
-		'; END; %] </td>
-		<tr>
-			<td class="indent">
-				Sequencing Method</td>
-			[% IF self.gold_sp_seq_methods.size > 0; FOR m IN self.gold_sp_seq_methods; '
-			<td>' _ m.seq_method _ '</td>
-			'; END; ELSE; '
-			<td>Not specified</td>
-			'; END; %]
-		</tr>
-		<tr>
-			<td colspan="2"><b>Curation Details</b></td>
-		</tr>
-		<tr>
-			<td class="indent">
-				Submission Type
+	<div class="infoBox">
+		<div class="infoBoxTitle"><h4>Identification and External Links</h4></div>
+		
+		<table>
+		<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
+		<tr><td>IMG Taxon ID</td>	<td>[% self.taxon_oid %]</td></tr>
+		<tr><td>Project Status</td>	<td>[% self.project_status %]</td></tr>
+		<tr><td colspan="2"><h6 class="subheader">GOLD details</h6></td></tr>
+		<tr><td>Study ID</td>	
+			<td>[%	IF self.study_gold_id %]
+				<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
+				[%	END %]
 			</td>
+		</tr>
+		<tr><td>Sequencing Project ID</td>	
 			<td>
-			<p class="noteToSelf">
-				add
-			</p>
+				<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
 			</td>
 		</tr>
-		<tr>
-			<td class="indent">
-				IMG Release
-			</td>
-			<td>
-			<p class="noteToSelf">
-				add
-			</p>
+		<tr><td>Analysis Project ID</td>
+			<td>[% IF self.analysis_project_id %]
+				<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
+				[%	END; %]
 			</td>
 		</tr>
-		<tr>
-			<td class="indent">
-				Release Date
+		<tr><td colspan="2"><h6 class="subheader">External Links</h6></td></tr>
+		[%	ext_urls = [
+			'bioproject_accession',
+			'biosample_accession',
+			'ncbi_taxon_id',
+			'ncbi_project_id',
+		];
+		FOR e in ext_urls; %]
+		<tr><td>
+			[%	IF results.label_data.$e && results.label_data.$e.label;
+					results.label_data.$e.label;
+				ELSE;
+					e | replace('_', ' ') | ucfirst;
+				END;
+			%]
 			</td>
-			<td>
-				[%	self.release_date %]
-			</td>
-		</tr>
-		<tr>
-			<td class="indent">
-				Add Date
-			</td>
-			<td>[% self.add_date %]</td>
-		</tr>
-		<tr>
-			<td class="indent">
-				Modified Date
-			</td>
-			<td>[% self.mod_date %]</td>
-		</tr>
-		<tr>
-			<td class="indent">
-				Distance Matrix Calculation Date
-			</td>
-			<td>
-			<p class="noteToSelf">
-				add
-			</p>
+			<td>[%
+			IF self.$e;
+				IF results.label_data.$e && results.label_data.$e.ext_link;
+					link_url = results.label_data.$e.ext_link;
+					%]
+					<a rel="external" href="[% ext_link( results.label_data.$e.ext_link ) %][% self.$e %]">[% self.$e %]</a>
+				[%	ELSE;
+					self.$e;
+				END;
+			END; %]
 			</td>
 		</tr>
-	</table>
-</div>
+		[%	END  # end ext_urls section %]
+		<tr><td>NCBI/RefSeq ID</td>	<td><div class="noteToSelf">add!</div></td></tr>
+		<tr><td> Genome publications </td>	<td>
+			[%	IF self.gold_sp_genome_publications.size > 0;
+					FOR p IN self.gold_sp_genome_publications %]
+					<p>"[% p.title %]" in [% p.journal_name %][%
+						IF p.publication_date; " " _ p.publication_date; END;
+						IF p.volume; " volume " _ p.volume; END;
+						IF p.issue; " issue " _ p.issue; END;
+						IF p.page; " pages " _ p.page; END;
 
+						IF p.pubmed_id; %]
+							<a href="[% ext_link('pubmed') %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>
+			[% 			END;
 
-</div> <!-- col -->
+						IF p.doi %]
+							<a href="[% ext_link('doi') %][% p.doi %]" rel="external">doi:[% p.doi %]</a></p>
+						[% END;
+					END; # end FOR loop
+				END %]
+		</tr>
+		</table>
+	</div> <!-- infoBox -->
 </div> <!-- row -->
 
 
+<div class="row">
+	<div class="infoBox">
+		<div class="infoBoxTitle"><h4>Sequence Information</h4></div>
+			
+		<table>
+			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
+			<!-- <tr><td>Project Type</td>	<td> ... </td> -->
+			</tr>
+			<tr><td>Culture Type</td>	<td>[% self.culture_type %]</td></tr>
+			<tr><td>Quality</td>	<td>[% self.seq_quality %]</td></tr>
+			<tr><td>Publicly Available</td>	<td>[% self.is_public %]</td></tr>
+			
+			<tr><td colspan="2"><h6 class="subheader">Sequencing details</h6></td></tr>
+			<tr><td>Sequencing Status</td>	<td>[% self.seq_status %]</td></tr>
+			<tr><td class="indent">Sequencing Center</td>
+				[% IF self.gold_sp_seq_centers.size > 0;
+					FOR sc IN self.gold_sp_seq_centers; '
+						<td>'; IF sc.url; %]<a href="[% sc.url %]" rel="external">[% sc.name %]</a>[% ELSE; sc.name; END; IF sc.country; ', ' _ sc.country; END; '</td>
+					'; END; ELSE; '
+						<td>Not specified</td>
+					'; END; %] </tr>
+			<tr><td>Sequencing Method</td>
+				[% IF self.gold_sp_seq_methods.size > 0; FOR m IN self.gold_sp_seq_methods; '
+				<td>' _ m.seq_method _ '</td>
+					'; END; ELSE; '
+				<td>Not specified</td>
+					'; END; %]	</tr>
+					
+			<tr><td colspan="2"><h6 class="subheader">Curation Details</h6></td></tr>
+			<tr><td>Submission Type</td>	<td>
+<!-- 
+				<p class="noteToSelf">
+					add
+				</p>
+ -->
+				</td></tr>
+			<tr><td>IMG Release</td>	<td>
+<!-- 
+				<p class="noteToSelf">
+					add
+				</p>
+ -->
+				</td></tr>
+			<tr><td>Release Date</td>	<td>[%	self.release_date %]</td></tr>
+			<tr><td>Add Date</td>	<td>[% self.add_date %]</td></tr>
+			<tr><td>Modified Date</td>	<td>[% self.mod_date %]</td></tr>
+			<tr><td class="indent">Distance Matrix Calculation Date</td>	<td>
+<!-- 
+				<p class="noteToSelf">
+					add
+				</p>
+ -->
+				</td></tr>
+		</table>
+	</div>
 
-</div> <!-- container-float -->
+</div> <!-- row -->
+</div> <!-- thisWrapper -->
 
 
 
