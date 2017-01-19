@@ -16,7 +16,7 @@ Reusable page components are stored in `views/inc/`.
 
 Template data is processed by Template Toolkit; the basic template rendering command is
 
-    `process($template_name, \%data, $output, %options);`
+    process($template_name, \%data, $output, %options);
 
 Templates are sent query-specific data by the controller, plus a set of common variables and other information that is added before template rendering. This data is collected in a hashref and accessed in the templates using the hash keys, i.e.
 
