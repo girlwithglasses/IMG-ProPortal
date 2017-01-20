@@ -4,6 +4,14 @@
 
 Each of the ProPortal queries (clade, ecosystem, data type, etc.) is run by a controller (`ProPortal::Controller::<name>`) that pulls the relevant data, puts it into the appropriate format data structure, and then returns it. Most ProPortal controllers have two methods, `get_data` and `render`; `get_data` pulls the data from the database, and `render` does any data munging, etc., required for output.
 
+The basic flow of operations is:
+
+	parse query parameters
+	load appropriate module
+	run module->render
+	gather extra data for templates (see template contents, below, for details)
+	render template
+
 ## Templates and Template Structure ##
 
 All ProPortal HTML content is stored in template files, held in `proportal/views/`.
@@ -14,7 +22,7 @@ Reusable page components are stored in `views/inc/`.
 
 ## Template Contents ##
 
-Template data is processed by Template Toolkit; the basic template rendering command is
+Template data is processed by [Template Toolkit](http://template-toolkit.org); the basic template rendering command is
 
     process($template_name, \%data, $output, %options);
 
@@ -34,6 +42,22 @@ in the templates:
 
 ```
 <p>The name of this page is [% current_page %].</p>
+```
+
+or this snippet, which converts the results data structure into JSON:
+
+```
+[%	USE JSON.Escape( convert_blessed => 1 ); %]
+		function getJson(){
+			return { results:
+[%
+	IF results.js;        # if results exist
+		results.js.json;  # this dumps results.js as JSON
+	ELSE;
+		'{}';             # otherwise, print {}
+	END; %]
+			};
+		}
 ```
 
 The following data is available in the templates:
