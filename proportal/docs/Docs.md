@@ -44,6 +44,11 @@ in the templates:
 <p>The name of this page is [% current_page %].</p>
 ```
 
+result:
+```
+<p>The name of this page is proportal/clade.</p>
+```
+
 or this snippet, which converts the results data structure into JSON:
 
 ```
@@ -57,6 +62,13 @@ or this snippet, which converts the results data structure into JSON:
 		'{}';             # otherwise, print {}
 	END; %]
 			};
+		}
+```
+
+result:
+```
+		function getJson(){
+			return { results: /* dumped JSON data */ };
 		}
 ```
 
