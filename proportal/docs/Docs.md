@@ -24,11 +24,12 @@ Reusable page components are stored in `views/inc/`.
 
 Template data is processed by [Template Toolkit](http://template-toolkit.org); the basic template rendering command is
 
-    process($template_name, \%data, $output, %options);
-
+```perl
+process($template_name, \%data, $output, %options);
+```
 Templates are sent query-specific data by the controller, plus a set of common variables and other information that is added before template rendering. This data is collected in a hashref and accessed in the templates using the hash keys, i.e.
 
-```
+```perl
 my %data = (
 	no_sidebar => 1,
 	current_page => 'proportal/clade',
@@ -40,12 +41,12 @@ my %data = (
 
 in the templates:
 
-```
+```html
 <p>The name of this page is [% current_page %].</p>
 ```
 
 result:
-```
+```html
 <p>The name of this page is proportal/clade.</p>
 ```
 
@@ -66,7 +67,7 @@ or this snippet, which converts the results data structure into JSON:
 ```
 
 result:
-```
+```javascript
 		function getJson(){
 			return { results: /* dumped JSON data */ };
 		}
