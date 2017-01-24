@@ -25,6 +25,7 @@ The IMG modules consist of the following:
 | Package name | Functionality |
 |--------------|---------------|
 | [`IMG::App.pm`](../../webui.cgi/IMG/App.pm) | wrapper for the IMG core app functionality. Functionality is implemented using roles in the `IMG::App::*` namespace. An `IMG::App` instance can be created de novo, or automatically created by the ProPortal app. |
+| [`IMG::Util::ConfigValidator`](../../webui.cgi/IMG/Util/ConfigValidator.pm) | handles loading of config files, separating out elements into Dancer2 and `IMG::App` config. Validation to be added. |
 | [`IMG::App::Role::Dispatch`](../../webui.cgi/IMG/App/Role/Dispatch.pm) and [`IMG::App::DispatchCore`](../../webui.cgi/IMG/App/DispatchCore.pm) | parameter parsing, selecting which module to load. Needs some updating. |
 | [`IMG::App::Role::ErrorMessages`](../../webui.cgi/IMG/App/Role/ErrorMessages.pm) | standardised error messages! |
 | [`IMG::App::Role::HttpClient`](../../webui.cgi/IMG/App/Role/HttpClient.pm) | access to an HTTP client via `$img_app->http_ua`; defaults to a new [`HTTP::Tiny`](http://metacpan.org/pod/HTTP::Tiny) instance |
