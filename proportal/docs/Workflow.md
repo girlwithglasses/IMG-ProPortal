@@ -31,7 +31,7 @@ For modules in the `ProPortal::Controller::` hierarchy, this involves populating
 Data is collected, wrangled into an appropriate structure, and then returned. In the `Routes::` modules, this is usually in the form
 
 ```perl
-template img_app->controller->render, img_app->controller->tmpl
+template img_app->controller->render, img_app->controller->tmpl;
 ```
 
 ...which is a `Dancer2` shortcut for calling the Template Toolkit `process` function (see the [Pages and Templates docs](Pages_and_Templates.md) with the data from `img_app->controller->render` and using the template `img_app->controller->tmpl`.
