@@ -34,7 +34,7 @@ Data is collected, wrangled into an appropriate structure, and then returned. In
 template img_app->controller->render, img_app->controller->tmpl;
 ```
 
-...which is a `Dancer2` shortcut for calling the Template Toolkit `process` function (see the [Pages and Templates docs](Pages_and_Templates.md) with the data from `img_app->controller->render` and using the template `img_app->controller->tmpl`.
+...which is a `Dancer2` shortcut for calling the Template Toolkit `process` function (see the [Pages and Templates docs](Pages_and_Templates.md)) with the data from `img_app->controller->render` and using the template `img_app->controller->tmpl`.
 
 Ideally, the old IMG modules would act in the same way; e.g. the dispatcher would call `$module->render( $img_app )`, where `render` is a wrapper function that initialises the session, CGI, logger, etc., using the values from the `IMG::App`, and then calls the `dispatch` function to run the query and retrieve the appropriate data.
 
