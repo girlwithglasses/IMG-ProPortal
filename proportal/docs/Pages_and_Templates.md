@@ -4,6 +4,31 @@
 
 Each of the ProPortal queries (clade, ecosystem, data type, etc.) is run by a controller ([`ProPortal::Controller::<name>`](../lib/ProPortal/Controller/)) that pulls the relevant data, puts it into the appropriate format data structure, and then returns it. Most ProPortal controllers have two methods, `get_data` and `render`; `get_data` pulls the data from the database, and `render` does any data munging, etc., required for output.
 
+### Controller Properties ###
+
+Each controller has a number of properties, as well as inheriting the `IMG::App` object, which has core functionality such as database handles, config info, the session, and so on. Key controller properties are called using the syntax
+
+```perl
+$app->controller->property_name
+```
+
+e.g.
+
+```perl
+my $page_id = $app->controller->page_id;
+```
+
+| Property name | Contents |
+|---------------|----------|
+| page_id | the ID of the page |
+| tmpl | the template to use for rendering the page
+| tmpl_includes | data structure containing any extras to include in the page, such as scripts |
+| page_wrapper | which wrapper to use for the page |
+| valid_filters | filtered queries only; valid filters for this query |
+| filters | filtered queries only; the filters for the current query; the default will be used if there are no filters in the page parameters |
+
+Some queries have extra properties, specific to that query.
+
 ## Templates and Template Structure ##
 
 All ProPortal HTML content is stored in template files, held in [`proportal/views/`](../views/).
