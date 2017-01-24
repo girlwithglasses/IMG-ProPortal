@@ -31,8 +31,8 @@ General App.pm functionality:
 - HTTP client: defaults to a new [`HTTP::Tiny`](http://metacpan.org/pod/HTTP::Tiny) instance
 - [`JGISessionClient`](../../webui.cgi/IMG/App/Role/JGISessionClient.pm): interacts with Caliban to check the JGI session is valid
 - [`PreFlight`](../../webui.cgi/IMG/App/Role/PreFlight.pm): runs preflight checks to ensure the environment is ready
-- [`Schema`](../../webui.cgi/IMG/App/Role/Schema.pm):    provides access to the Gold and core databases via `DBIx::DataModel`
-- [`User`](../../webui.cgi/IMG/App/Role/User.pm):      access to user data and user checks
+- [`Schema`](../../webui.cgi/IMG/App/Role/Schema.pm): provides access to the Gold and core databases via `DBIx::DataModel`
+- [`User`](../../webui.cgi/IMG/App/Role/User.pm): access to user data and user checks
 
 TODO:
 - logger
@@ -49,6 +49,6 @@ TODO:
 | [`IMG::Util::DB`](../../webui.cgi/IMG/.pm) | useful database-related functions, mostly DB config file-related. |
 | [`IMG::Util::Untaint`](../../webui.cgi/IMG/Util/Untaint.pm) | untaint your paths! |
 |||
-| [`IMG::Views::ExternalLinks](../../webui.cgi/IMG/Views/ExternalLinks.pm) | functional interface to external link data |
+| [`IMG::Views::ExternalLinks`](../../webui.cgi/IMG/Views/ExternalLinks.pm) | functional interface to external link data |
 | [`IMG::Views::Links`](../../webui.cgi/IMG/Views/Links.pm) | functional interface to internal link data |
 
