@@ -11,7 +11,7 @@ The ProPortal modules consist of the following:
 | [`ProPortalPackage.pm`](../lib/ProPortalPackage.pm) | wrapper for all ProPortal modules. |
 | [`DataModel::*`](../lib/DataModel/) | [`DBIx::DataModel`](http://metacpan.org/pod/DBIx::DataModel) models of the Gold and core databases |
 | [`Routes::*`](../lib/Routes/) | Dancer-based routing modules that parse the URL and dispatch the appropriate request. |
-| [`AppCore`](../lib/AppCore.pm) | Dancer-based functionality common to all routes, such as checks on incoming requests and template defaults. Caching capabilities are available but not yet implemented. |
+| [`AppCore`](../lib/AppCore.pm) and [`AppCorePlugin`](../lib/AppCorePlugin.pm) | Dancer-based functionality common to all routes, such as checks on incoming requests and template defaults. Caching capabilities are available but not yet implemented. |
 | [`ProPortal::Controller::*`](../lib/ProPortal/Controller/) | controllers for specific ProPortal routes. Base.pm has the core controller functionality. Controllers and their functionality are independent of Dancer. |
 | [`ProPortal::IO::*`](../lib/IO/) | Input/output-related modules. |
 | [`ProPortal::IO::DBIxDataModel`](../lib/ProPortal/IO/DBIxDataModel.pm) | Common queries and database interactions |
