@@ -24,7 +24,7 @@ Handled by modules in [the `Routes::` directory](../lib/Routes/).
 
 #### load appropriate module `$module` ####
 
-For modules in the `ProPortal::Controller::` hierarchy, this involves populating the `controller` attribute on the `IMG::App`
+For modules in the `ProPortal::Controller::` hierarchy, this involves populating the `controller` attribute on the `IMG::App` with the appropriate `ProPortal::Controller::*` object. Most controller objects have a `get_data` function that returns raw data, e.g. the results of a database query. This is often then converted into a more convenient structure for output -- e.g. a hierarchical tree for `ProPortal::Controller::Phylogram`; grouped into sets for `ProPortal::Controller::Clade` -- as part of the controller's render` method.
 
 #### run `$module->render` ####
 
