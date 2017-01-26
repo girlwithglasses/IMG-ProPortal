@@ -1,80 +1,149 @@
 
 
-# requires 'Filter::Handle'                            => 0;
-requires 'Attribute::Contract'                       => 0;
-# requires 'Bio::Seq'                                  => 0;
-# requires 'Bio::SeqIO'                                => 0;
-# requires 'Bio::TreeIO'                               => 0;
-requires 'Carp::Always'                              => 0;
-requires 'CGI'                                       => 0; # for legacy code
-requires 'CGI::Compile'                              => 0; # ditto
-requires 'CGI::Emulate::PSGI'                        => 0; # ditto
-# requires 'Class::Load'                               => 0; # replace with Module::Runtime
-requires 'Dancer2::Plugin::Ajax'                     => 0;
-requires 'Dancer2::Plugin::AppRole::Helper'          => 0;
-requires 'Dancer2::Plugin::LogContextual'            => 0;
-requires 'Dancer2::Session::CGISession'              => '0.04';
-requires 'Dancer2'                                   => '0.2';
-requires 'Data::Dumper::Concise'                     => 0;
-# requires 'DBD::Oracle'                               => 0; # IMG server only!
-requires 'DBD::SQLite'                               => 0;
-requires 'DBIx::Connector'                           => '0.50';
-requires 'DBIx::DataModel'                           => '2.46';
-requires 'HTML::Template'                            => 0;
-requires 'HTTP::Tiny'                                => 0;
-requires 'Import::Base'                              => 0;
-requires 'IO::Socket::SSL'                           => 0;
-requires 'IPC::System::Simple' => 0;
-requires 'JSON'                                      => '2.90';
-requires 'JSON::XS'                                  => 0;
-# requires 'Log::Contextual' => 0;
-# requires 'Log::Log4perl' => 0;
-requires 'Moo'                                       => '2.000002';
-requires 'Module::Runtime'                           => 0;
-requires 'Net::SSLeay'                               => 0;
-requires 'Plack::Handler::Starman'                   => 0;
-requires 'Plack::Middleware::Debug'                  => 0;
-requires 'Plack::Middleware::Deflater'               => 0;
-requires 'Plack'                                     => 0;
-requires 'strictures'                                => 0;
-requires 'Server::Starter' => 0;
-requires 'Net::Server::SS::PreFork' => 0;
-requires 'String::CamelCase' => 0;
-requires 'Sub::Override'                             => 0;
-requires 'Template::Plugin::JSON::Escape'            => 0;
-requires 'Template'                                  => 0;
-requires 'Text::CSV_XS'                              => 0;
-requires 'Time::Out'                                 => 0;
-requires 'Type::Tiny'                                => 0;
-requires 'Types::Standard'                           => 0;
-requires 'URI::Escape'                               => 0;
-requires 'XML::LibXML'                               => 0; # for XML script
+# requires 'Filter::Handle', 0;
+requires 'Attribute::Contract', 0;
+# requires 'Bio::Seq', 0;
+# requires 'Bio::SeqIO', 0;
+# requires 'Bio::TreeIO', 0;
+requires 'Carp::Always', 0;
+requires 'CGI', 0;								# for legacy code
+requires 'CGI::Compile', 0;						# ditto
+requires 'CGI::Deurl::XS', 0;
+requires 'CGI::Emulate::PSGI', 0;				# ditto
+requires 'Dancer2::Plugin::Ajax', 0;
+requires 'Dancer2::Plugin::AppRole::Helper', 0;
+requires 'Dancer2::Plugin::Adapter', 0;
+requires 'Dancer2::Plugin::LogContextual', 0;
+requires 'Dancer2::Session::CGISession', '0.04';
+requires 'Dancer2', '0.2';
+requires 'Data::Dumper::Concise', 0;
+# requires 'DBD::Oracle', 0;					# IMG server only!
+requires 'DBD::SQLite', 0;
+requires 'DBIx::Connector', '0.50';
+requires 'DBIx::DataModel', '2.46';
+requires 'HTML::Template', 0;
+requires 'HTTP::Parser::XS', 0;
+requires 'HTTP::Tiny', 0;
+requires 'Import::Base', 0;
+requires 'IO::Socket::SSL', 0;
+requires 'IO::All', 0;
+requires 'IPC::System::Simple', 0;
+requires 'JSON::MaybeXS';
+requires 'JSON', '2.90';
+requires 'JSON::XS', 0;
+# requires 'Log::Log4perl', 0;
+requires 'Moo', '2.000002';
+requires 'Module::Runtime', 0;
+requires 'Net::SSLeay', 0;
+requires 'Plack::Handler::Starman', 0;
+requires 'Plack::Middleware::Debug', 0;
+requires 'Plack::Middleware::Deflater', 0;
+requires 'Plack', 0;
+requires 'strictures', 0;
+requires 'Server::Starter', 0;
+requires 'Net::Server::SS::PreFork', 0;
+requires 'String::CamelCase', 0;
+requires 'Sub::Override', 0;
+requires 'Template::Plugin::JSON::Escape', 0;
+requires 'Template', 0;
+requires 'Text::CSV_XS', 0;
+requires 'Time::Out', 0;
+requires 'Type::Tiny', 0;
+requires 'Types::Standard', 0;
+requires 'URI::Escape', 0;
+requires 'URL::Encode::XS', 0;
+requires 'XML::LibXML', 0;						# for XML script
+requires 'YAML', 0;
 
-recommends 'Plack::Middleware::Debug' => '0';
-recommends 'YAML'             => '0';
-recommends 'URL::Encode::XS'  => '0';
-recommends 'CGI::Deurl::XS'   => '0';
-recommends 'HTTP::Parser::XS' => '0';
-# test stuff
-recommends 'AE', 0;
-recommends 'AnyEvent::IO', 0;
-recommends 'AnyEvent', 0;
-recommends 'Mojo::Server::PSGI', 0;
-recommends 'Promises', 0;
+# speed hacks
+requires 'CGI::Deurl::XS', 0;
+requires 'Class::XSAccessor', 0;
+requires 'Cpanel::JSON::XS', 0;
+requires 'Crypt::URandom', 0;
+requires 'HTTP::Parser::XS', 0;
+requires 'HTTP::XSCookies', 0;
+requires 'Math::Random::ISAAC::XS', 0;
+requires 'Scope::Upper', 0;
+requires 'URL::Encode::XS', 0;
+requires 'YAML::XS', 0;
+
+feature 'async', 'asynchronous operation' => sub {
+
+	# test stuff
+	requires 'AE', 0;
+	requires 'AnyEvent::IO', 0;
+	requires 'AnyEvent', 0;
+	requires 'EV', 0;
+	recommends 'Mojo::Server::PSGI', 0;
+	requires 'Promises', 0;
+
+};
+
+feature 'jbrowse', 'JBrowse integration' => sub {
+	requires "Bio::Annotation::SimpleValue" => 0,
+	requires "Bio::FeatureIO" => 0,
+	requires "Bio::GFF3::LowLevel::Parser" => "1.8",
+	requires "Bio::Index::Fasta" => 0,
+	requires "Bio::OntologyIO" => 0,
+	requires "Bio::Root::Version" => "1.006000",
+	requires "Bio::SeqFeature::Annotated" => 0,
+	requires "Bio::SeqFeature::Lite" => 0, #< for Bio::DB::BAM
+	requires 'Capture::Tiny', 0;
+	requires "Carp" => 0,
+	requires "Cwd" => 0,
+	requires "DBI" => 0,
+	requires "Data::Dumper" => 0,
+	requires "DB_File" => 0,
+	requires "Devel::Size" => 0,
+	requires "Digest::Crc32" => 0,
+	requires "Exporter" => 0,
+	requires "Fcntl" => 0,
+	requires "File::Basename" => 0,
+	requires "File::Copy::Recursive" => 0,
+	requires "File::Path" => 2,
+	requires "File::Next" => 0,
+	requires "File::Spec" => 0,
+	requires "File::Spec::Functions" => 0,
+	requires "File::Temp" => 0,
+	requires "FindBin" => 0,
+	requires "Getopt::Long" => 0,
+	requires "Hash::Merge" => 0,
+	requires "Heap::Simple" => 0,
+	requires "Heap::Simple::Perl" => 0,
+	requires "Heap::Simple::XS" => 0,
+	requires "IO::File" => 0,
+	requires "IO::Uncompress::Gunzip" => 0,
+	requires "JSON" => 2,
+	requires "JSON::XS" => 0,
+	requires "List::Util" => 0,
+	requires "List::MoreUtils" => 0.28,
+	requires "POSIX" => 0,
+	requires "PerlIO::gzip" => 0,
+	requires "Pod::Usage" => 0,
+	requires "Parse::RecDescent" => 0,
+	requires "Scalar::Util" => 0,
+	requires "Storable" => 0,
+	requires "URI::Escape" => 0,
+	requires "base" => 0,
+	requires "constant" => 0,
+	requires "local::lib" => 0,
+	requires "strict" => 0,
+	requires "vars" => 0,
+	requires "warnings" => 0
+};
 
 on 'test' => sub {
-	requires 'Test::Exception'           => '0';
-	requires 'Test::Fatal'               => '0';
-	requires 'Test::More'                => '0';
-	requires 'Test::MockModule'          => '0';
-	requires 'Test::MockObject::Extends' => '0';
-	requires 'Test::Output'              => '0';
-	requires 'Test::Taint'               => '0';
-	requires 'HTTP::Request::Common'     => '0';
-	requires 'HTTP::Cookies'             => '0';
-	requires 'HTTP::CookieJar'           => '0';
-	requires 'Test::MockModule'          => '0';
-	requires 'Test::Script'              => '0';
-	requires 'WWW::Mechanize'            => '0';
-	requires 'Cookie::Baker'             => '0';
+	requires 'Cookie::Baker', 0;
+	requires 'HTTP::CookieJar', 0;
+	requires 'HTTP::Cookies', 0;
+	requires 'HTTP::Request::Common', 0;
+	requires 'Test::Exception', 0;
+	requires 'Test::Fatal', 0;
+	requires 'Test::MockModule', 0;
+	requires 'Test::MockObject::Extends', 0;
+	requires 'Test::More', 0;
+	requires 'Test::Output', 0;
+	requires 'Test::Script', 0;
+	requires 'Test::Taint', 0;
+	requires 'WWW::Mechanize', 0;
 };
