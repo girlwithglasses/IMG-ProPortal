@@ -7,7 +7,7 @@
 ############################################################################
 package IMG::App::Cart;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 requires 'config', 'session';
 

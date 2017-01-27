@@ -14,14 +14,14 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Dancer2;
 
 use ProPortal::Controller::PhyloViewer::DemoData;
 use Bio::TreeIO;
 {
 	package PhyloViewerApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use Dancer2;
 	extends 'IMG::App';
 	with qw( ProPortal::IO::DBIxDataModel ProPortal::Controller::PhyloViewer::Pipeline IMG::App::Role::Templater );

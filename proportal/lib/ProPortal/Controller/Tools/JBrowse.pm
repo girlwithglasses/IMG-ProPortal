@@ -1,19 +1,23 @@
 package ProPortal::Controller::Tools::JBrowse;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class'; #'MooRole';
 
-has 'controller_args' => (
-	is => 'lazy',
-	default => sub {
-		return {
-			class => 'ProPortal::Controller::Base',
-			tmpl => 'pages/tools/jbrowse.tt',
-			tmpl_includes => {
-#				tt_scripts => qw( data_type )
-			}
-		};
-	}
+extends 'ProPortal::Controller::Base';
+
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Base',
+# 			tmpl => 'pages/tools/jbrowse.tt',
+# 		};
+# 	}
+# );
+
+has '+page_id' => (
+	default => 'tools/jbrowse'
 );
+
 
 =head3 jbrowse page
 
@@ -21,7 +25,7 @@ has 'controller_args' => (
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 	return;
 }

@@ -14,13 +14,13 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Dancer2;
 use Carp::Always;
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use Dancer2;
 	extends 'IMG::App';
 	with qw(

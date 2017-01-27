@@ -10,10 +10,10 @@ BEGIN {
 	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib proportal/t/lib );
 }
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 {	package TestMenu;
-	use IMG::Util::Base 'MooRole';
+	use IMG::Util::Import 'MooRole';
 	with 'IMG::App::Role::MenuManager';
 
 	sub _get_menu_items {
@@ -107,14 +107,14 @@ use IMG::Util::Base 'Test';
 }
 
 {	package CrapApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	has config => ( is => 'ro' );
 	with 'IMG::App::Role::MenuManager';
 	1;
 }
 
 {	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	has config => ( is => 'ro' );
 	with 'TestMenu', 'IMG::App::Role::MenuManager';
 

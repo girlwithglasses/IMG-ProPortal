@@ -2,7 +2,7 @@
 #
 # see webUI/worker.cgi
 #
-# $Id: Command.pm 36403 2016-11-03 21:02:34Z klchu $
+# $Id: Command.pm 36499 2016-12-13 18:59:08Z klchu $
 ############################################################################
 package Command;
 
@@ -126,6 +126,12 @@ sub runCmdViaUrl {
 
     my $ua   = WebUtil::myLwpUserAgent(); #new LWP::UserAgent();
     #$ua->ssl_opts(verify_hostname => 0, SSL_verify_mode => 0x00);
+    
+    # 120 is from Fin gene blast printDotThread()
+    # 120 x 5 = 600 secs or 10 mins
+    # grep startDotThread * - 20 mins is the largest
+    $ua->timeout(1200);
+    
     my $req  = GET($url);
     my $res  = $ua->request($req);
     my $code = $res->code;

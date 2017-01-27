@@ -15,13 +15,13 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Dancer2;
 
 
 {
 	package ScriptAppArgs;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	with 'IMG::App::Role::ErrorMessages';
 	use Getopt::Long qw( GetOptionsFromArray );
 
@@ -88,7 +88,7 @@ use Dancer2;
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use Dancer2 appname => 'ProPortal';
 	use ProPortal::Util::Factory;
 	use ScriptAppArgs;
@@ -100,7 +100,7 @@ use Dancer2;
 
 {
 	package TestWithRoleApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use Dancer2 appname => 'ProPortal';
 	use ProPortal::Util::Factory;
 	use ScriptAppArgs;
@@ -112,7 +112,7 @@ use Dancer2;
 
 
 {
-	use IMG::Util::Base 'Test';
+	use IMG::Util::Import 'Test';
 	use Dancer2;
 	use File::Temp qw/tempfile/;
 	use Template;

@@ -105,7 +105,7 @@ td {
 .category {
 	font-weight: bold;
 	padding: 10px 0 4px 15px;
-	
+
 }
 
 .section-content {
@@ -151,39 +151,44 @@ td {
 <section id="stats">
 <h3>IMG/ProPortal Data Sets</h3>
 <div class="section-content">
-	
+[%	IF results.stats.subsets.size > 0; %]
 <table>
-
-<tr><td class="category" colspan="2">Isolate and Single Cell Genomes</td></tr>
-	[%	IF results.stats.subsets.size > 0;
-		FOR fd IN data_filters.all.keys.sort;
-			FOR f IN data_filters.all.$fd.enum;
-				IF results.stats.subsets.$f;
-					s = results.stats.subsets.$f; %]
-			<tr><td>[% data_filters.all.$fd.enum_map.$f %]</td>
-				<td>[% s.count %]</td>
-			</tr>
-	[%			END;
-			END;
+<caption>Isolate and Single Cell Genomes</caption>
+<thead>
+<tr><th>Category</th><th>Count</th></th></tr>
+</thead>
+<tbody>
+[%	FOR fd IN data_filters.all.keys.sort;
+		FOR f IN data_filters.all.$fd.enum;
+			IF results.stats.subsets.$f;
+				s = results.stats.subsets.$f; %]
+		<tr><td>[% data_filters.all.$fd.enum_map.$f %]</td>
+			<td>[% s.count %]</td>
+		</tr>
+[%			END;
 		END;
-	ELSE %]
-		<tr><td colspan="2">No statistics found!</td></tr>
-	[%	END; %]
+	END %]
+</tbody>
+</table>
+[%	END; %]
 
-<tr><td class="category" colspan="2">Metagenomes by Ecosystem Subtype</td></tr>
-
-	[% IF results.stats.metagenomes_by_ecoSub.size > 0;
-		FOREACH r IN results.stats.metagenomes_by_ecoSub %]
-		<tr><td>[%	( r.ecosystem_subtype || 'Unclassified' )		%]</td>
+<table>
+<caption>Metagenomes by Marine Ecosystem Subtype</caption>
+[% IF results.stats.metagenomes_by_subtype.size > 0 %]
+<thead>
+<tr><th>Category</th><th>Count</th></th></tr>
+</thead>
+<tbody>
+[%		FOREACH r IN results.stats.metagenomes_by_subtype %]
+		<tr><td>[% ( r.ecosystem_subtype || 'not given' ) %]</td>
 			<td>[% r.count %]</td>
 		</tr>
 [%		END;
 	ELSE %]
+	<tbody>
 		<tr><td colspan="2">No statistics found!</td></tr>
-[%	END; %]
-
-
-	
+[%	END %]
+</tbody>
 </table>
 </div>
 </section>
@@ -196,7 +201,9 @@ td {
 <a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 </div>
 </section>
-<!-- 
+<!--
+ -->
+
 
 <section class="subset-stats clear">
 	<table>
@@ -220,14 +227,31 @@ td {
 		<tr><td colspan="2">No statistics found!</td></tr>
 [%	END; %]
 	</tbody>
-	</table>
+</table>
+
+[%	IF results.stats.data_types.size > 0 %]
+<table>
+<caption>Genomes by sample type</caption>
+<thead>
+<tr><th>Sample type</th><th>Subset</th><th class="R">Count (public)</th><th class="R">Count (all)</th></tr>
+</thead>
+<tbody>
+[%		FOREACH s_key IN results.stats.data_types.keys.sort;
+			s = results.stats.data_types.$s_key;
+			s_type = s.proportal_subset; %]
+<tr>
+<td>[% s.data_type %]</td>
+<td>[% data_filters.all.subset.enum_map.$s_type %]</td>
+<td class="R">[% s.public_count %]</td><td class="R">[% s.count %]</td>
+</tr>
+[%	END;
+	END; %]
+
+
+
+
 </section>
 <section class="longhurst-stats">
-
-<!~~
-[% USE Dumper; '<pre>'; Dumper.dump(results.stats.by_longhurst); '</pre>' %]
-~~>
-
 	<table>
 	<caption>Counts by Longhurst Code</caption>
 	<thead>
@@ -279,7 +303,6 @@ td {
 	</tbody>
 	</table>
 </section>
- -->
 </div>
 
 [% END; %]

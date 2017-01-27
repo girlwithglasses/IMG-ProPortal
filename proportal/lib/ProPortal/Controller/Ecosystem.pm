@@ -1,23 +1,35 @@
 package ProPortal::Controller::Ecosystem;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class'; #'MooRole';
+
+extends 'ProPortal::Controller::Filtered';
 
 with 'ProPortal::Util::DataStructure';
 
 use Template::Plugin::JSON::Escape;
 
-has 'controller_args' => (
-	is => 'lazy',
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Filtered',
+# 			tmpl => 'pages/proportal/ecosystem.tt',
+# 			tmpl_includes => {
+#     			tt_scripts => qw( ecosystem ),
+# 	    	}
+# 		};
+# 	}
+# );
+has '+page_id' => (
+	default => 'proportal/ecosystem'
+);
+
+has '+tmpl_includes' => (
 	default => sub {
-		return {
-			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/proportal/ecosystem.tt',
-			tmpl_includes => {
-    			tt_scripts => qw( ecosystem ),
-	    	}
-		};
+		return { tt_scripts => qw( ecosystem ) };
 	}
 );
+
 
 =head3 render
 
@@ -25,7 +37,7 @@ Ecosystem query
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 
 	my $res = $self->get_data();
@@ -59,19 +71,19 @@ sub render {
 
 	my $tree = { name => 'all', path => 'all', children => $self->make_tree_with_path( $data, 'all' ) };
 
-	return $self->add_defaults_and_render({
+	return { results => {
 		class_types => \@class_types,
 		array => $res,
 		js => {
 			class_type_h => $class_type_h,
 			tree => $tree,
 		}
-	});
+	} };
 }
 
 sub get_data {
 	my $self = shift;
-	return $self->run_query({
+	return $self->_core->run_query({
 		query => 'ecosystem',
 		filters => $self->filters,
 	});

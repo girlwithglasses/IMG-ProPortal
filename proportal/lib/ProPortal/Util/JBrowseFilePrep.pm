@@ -1,6 +1,6 @@
 package ProPortal::Util::JBrowseFilePrep;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::Util::File;
 use IMG::Util::Parser::TSV2GFF;
 use File::Path qw( make_path remove_tree );

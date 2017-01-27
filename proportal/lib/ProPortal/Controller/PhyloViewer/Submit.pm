@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::Submit;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 has 'controller_args' => (
 	is => 'lazy',
@@ -23,7 +23,7 @@ Validate the PhyloViewer form and set up the workflow
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 	my $params = shift;
 
@@ -31,9 +31,9 @@ sub render {
 
 	my $q_id = $self->init_pipeline( $params );
 
-	return $self->add_defaults_and_render({
+	return { results => {
 		query_id => $q_id
-	});
+	} };
 }
 
 =head3 validate

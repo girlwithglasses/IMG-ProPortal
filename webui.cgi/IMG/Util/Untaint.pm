@@ -1,6 +1,6 @@
 package IMG::Util::Untaint;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use File::Spec::Functions qw( splitpath catdir catfile );
 use Scalar::Util qw( tainted );
 use Test::More;

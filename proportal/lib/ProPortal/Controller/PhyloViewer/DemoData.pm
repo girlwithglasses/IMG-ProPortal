@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::DemoData;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use File::Temp qw/tempfile/;
 use JSON qw( encode_json decode_json );
 

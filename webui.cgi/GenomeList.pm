@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeList.pm 36206 2016-09-22 19:13:34Z jinghuahuang $
+# $Id: GenomeList.pm 36508 2017-01-12 17:17:35Z klchu $
 ############################################################################
 package GenomeList;
 
@@ -147,8 +147,12 @@ my @genomeColumnsOrder = (
     't.genus',                               't.species',
     't.ncbi_taxon_id',                       't.refseq_project_id',
     't.gbk_project_id',                      't.submission_id',
-    't.jgi_project_id',                      't.study_gold_id',
+    't.jgi_project_id',                      
+    't.analysis_product_name',
+    
+    't.study_gold_id',
     't.sequencing_gold_id',                  't.analysis_project_id',
+
     'gap.gold_analysis_project_type',        'gap.is_gene_primp',
     'gap.submission_type',                   'gap.assembly_method',
     't.strain',                              't.funding_agency',
@@ -209,6 +213,7 @@ my %genomeColumns = (
     'gap.is_gene_primp'                        => 'Gene Model QC',
     'gap.assembly_method'                      => 'Assembly Method',
     't.genome_completion'                      => 'Genome Completeness %',
+    't.analysis_product_name'  => 'JGI Analysis Product Name',
 );
 
 if ($user_restricted_site) {
@@ -267,6 +272,7 @@ my %genomeColumnsAlign = (
     'gap.is_gene_primp'                        => 'char asc left',
     'gap.assembly_method'                      => 'char asc left',
     't.genome_completion'                      => 'char asc left',
+    't.analysis_product_name'  => 'char asc left',
 
 );
 

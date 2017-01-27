@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: SequenceExportUtil.pm 33963 2015-08-10 23:37:20Z jinghuahuang $
+# $Id: SequenceExportUtil.pm 36514 2017-01-18 06:04:29Z jinghuahuang $
 #
 ###########################################################################
 package SequenceExportUtil;
@@ -170,7 +170,8 @@ sub printFaaSeqDb {
         
         my $ids;
         $ids = $locus_tag   if !blankStr($locus_tag);
-        $ids = $gene_symbol if !blankStr($gene_symbol);
+        $ids .= ' ';
+        $ids .= $gene_symbol if !blankStr($gene_symbol);
         if ($wfh) {
             print $wfh ">$gene_oid $ids $gene_display_name [$scaffold_name]\n";
             print $wfh "$seq\n";

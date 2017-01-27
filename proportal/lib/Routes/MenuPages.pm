@@ -1,7 +1,7 @@
 package Routes::MenuPages;
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
-use parent 'AppCore';
+use AppCorePlugin;
 
 # render menu pages
 =head3 menu_page_subs
@@ -53,10 +53,9 @@ prefix '/menu' => sub {
 
 sub menu_maker {
 	my $page = shift;
-	my $core = setting("_core");
-	if ( $core->link_data( $page ) ) {
+	if ( img_app->link_data( $page ) ) {
 		# find the link in the menus
-		return $core->search_menu( $page );
+		return img_app->search_menu( $page );
 	}
 	return;
 }

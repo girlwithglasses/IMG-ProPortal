@@ -1,6 +1,6 @@
 package IMG::Util::Parser::TSV2GFF;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use URI::Escape;
 use IMG::App::Role::ErrorMessages qw( err );
 

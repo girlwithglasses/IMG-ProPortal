@@ -2,9 +2,9 @@
 
 package ProPortal::Controller::DatamartStats;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
-with 'ProPortal::Controller::Base';
+extends 'ProPortal::Controller::Base';
 
 =head3 datamart_stats
 
@@ -12,15 +12,15 @@ with 'ProPortal::Controller::Base';
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 
-	my $data = $self->run_query({
+	my $data = $self->_core->run_query({
 		query => 'datamart_stats',
 		filters => $self->filters,
 	});
 
-	return $self->add_defaults_and_render( $data );
+	return { results => $data };
 
 }
 

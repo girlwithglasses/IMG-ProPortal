@@ -1,11 +1,11 @@
 ###########################################################################
 #
-# $Id: UserChecks.pm 35833 2016-07-06 02:42:03Z aireland $
+# $Id: UserChecks.pm 36523 2017-01-26 17:53:41Z aireland $
 #
 ###########################################################################
 package IMG::App::Role::UserChecks;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::Model::Contact;
 
 requires 'config', 'session', 'check_jgi_session', 'get_jgi_user_json', 'get_db_contact_data';

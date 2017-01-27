@@ -1,6 +1,6 @@
 package IMG::Model::UnitConverter;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 sub distance_in_m {
 

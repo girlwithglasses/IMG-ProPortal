@@ -13,7 +13,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 use IMG::App::Role::ErrorMessages qw( script_die );
 use Getopt::Long;
 use ProPortal::App::JBrowseGalaxyPrep;

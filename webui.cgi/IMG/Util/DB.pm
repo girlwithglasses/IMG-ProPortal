@@ -1,13 +1,13 @@
 package IMG::Util::DB;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use JSON;
 use MIME::Base64;
 use IMG::App::Role::ErrorMessages qw( err );
 
 use IMG::Util::DBIxConnector;
 
-my $dir = '/global/u1/i/img/img_rdbms/config/';
+my $dir = '/webfs/projectdirs/microbial/img/img_rdbms/config/';
 
 =head3 common
 
@@ -23,6 +23,13 @@ my $common = {
 	gemini_2 => 'oracle.img_core_v400_gem2_shared.config',
 	img_gold => 'oracle.imgsg_dev.config',
 };
+
+#     $e->{ oracle_config } = $e->{ oracle_config_dir } . "web.$dbTag.config";
+#     $e->{ img_er_oracle_config } = $e->{ oracle_config_dir } . "web.$dbTag.config";
+#     $e->{ img_gold_oracle_config } = $e->{ oracle_config_dir } . "web.imgsg_dev.config";
+#     $e->{ img_i_taxon_oracle_config } = $e->{ oracle_config_dir } . "web.img_i_taxon.config";
+
+
 
 =head3 get_oracle_cfg_dir
 
@@ -127,7 +134,7 @@ sub _read_oracle_connection_file {
 	}
 
 	my @env = qw( ORA_DBI_DSN ORA_USER ORA_PASSWORD ORA_PORT ORA_HOST ORA_SID );
-	for (@env) {
+	for ( @env ) {
 		delete $ENV{$_};
 	}
 	eval {
@@ -175,12 +182,12 @@ sub clean_oracle_params {
 		options => $db_data->{options} || { RaiseError => 1 } ,
 	};
 
-	if ($db_data->{ora_user}) {
+	if ( $db_data->{ora_user} ) {
 		$h->{username} = $db_data->{ora_user};
 	}
 
 	# decode password
-	if ($db_data->{ora_password}) {
+	if ( $db_data->{ora_password} ) {
 		$h->{password} = decode_pass( $db_data->{ora_password} );
 	}
 

@@ -23,7 +23,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'NetTest';
+use IMG::Util::Import 'NetTest';
 use Dancer2;
 use File::Copy;
 use Test::MockModule;
@@ -31,7 +31,7 @@ use File::Spec::Functions;
 
 {
 	package CoreApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App';
 	with qw(
 		ProPortal::Views::ProPortalMenu
@@ -42,7 +42,7 @@ use File::Spec::Functions;
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App';
 	with qw(
 		ProPortal::Util::JBrowseFilePrep

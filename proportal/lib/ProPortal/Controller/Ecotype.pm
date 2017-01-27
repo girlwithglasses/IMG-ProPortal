@@ -1,31 +1,53 @@
 package ProPortal::Controller::Ecotype;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class';#'MooRole';
 
-# extends 'ProPortal::Controller::Filtered';
+extends 'ProPortal::Controller::Filtered';
+with 'IMG::Util::Text';
 
 use Template::Plugin::JSON::Escape;
 
-with 'IMG::Util::Text';
 
-has 'controller_args' => (
-	is => 'lazy',
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Filtered',
+# 			tmpl => 'pages/proportal/ecotype.tt',
+# 			tmpl_includes => {
+# 				tt_scripts => qw( ecotype ),
+# 			},
+# 			filters => {
+# 				subset => 'prochlor'
+# 			},
+# 			valid_filters => {
+# 				subset => {
+# 					enum => [ qw( prochlor ) ],
+# 				}
+# 			}
+# 		};
+# 	}
+# );
+
+has '+page_id' => (
+	default => 'proportal/ecotype'
+);
+
+has '+tmpl_includes' => (
 	default => sub {
-		return {
-			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/proportal/ecotype.tt',
-			tmpl_includes => {
-				tt_scripts => qw( ecotype ),
-			},
-			filters => {
-				subset => 'prochlor'
-			},
-			valid_filters => {
-				subset => {
-					enum => [ qw( prochlor ) ],
-				}
-			}
-		};
+		return { tt_scripts => qw( ecotype ) };
+	}
+);
+
+has '+filters' => (
+	default => sub {
+		return { subset => 'prochlor' };
+	}
+);
+
+has '+valid_filters' => (
+	default => sub {
+		return { subset => { enum => [ qw( prochlor ) ] } };
 	}
 );
 
@@ -35,7 +57,7 @@ Ecotype query: ecotype + clade classification
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 
     my $res = $self->get_data();
@@ -57,19 +79,19 @@ sub render {
 		$wsn->{$_} = $self->make_text_web_safe( $_ );
 	}
 
-	return $self->add_defaults_and_render({
+	return { results => {
 		js => {
 			data => $data,
 			web_safe_names => $wsn
 		}
-	});
+	} };
 
 }
 
 sub get_data {
     my $self = shift;
 
-	my $res = $self->run_query({
+	my $res = $self->_core->run_query({
 		query => 'ecotype',
 		filters => $self->filters,
 	});

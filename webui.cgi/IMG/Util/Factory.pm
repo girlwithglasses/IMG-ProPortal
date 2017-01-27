@@ -1,6 +1,6 @@
 package IMG::Util::Factory;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use IMG::App::Role::ErrorMessages qw( :all );
 use Module::Runtime 'use_module';
 

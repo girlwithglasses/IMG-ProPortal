@@ -1,13 +1,13 @@
 package Routes::API;
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
-use parent 'AppCore';
+use AppCorePlugin;
 use IMG::Util::File qw( :all );
 use File::Spec::Functions;
 
 {
 	package MiniContr;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	with 'IMG::App::Role::Controller';
 	1;
 }
@@ -29,25 +29,23 @@ prefix '/api/proportal' => sub {
 		my $c = captures;
 		my $p = delete $c->{page};
 
+		bootstrap( $p );
 
-		my $pp = AppCore::bootstrap( $p );
 		if ( $c->{subset} ) {
-			$pp->set_filters({ subset => $c->{subset} });
+			img_app->set_filters({ subset => $c->{subset} });
 		}
 
-		my $rslt = $pp->get_data();
+		my $rslt = img_app->controller->get_data();
 
 		if ( ! $rslt ) {
 			$rslt = { 'error' => 001, 'message' => 'No data returned by query' };
 		}
 
-		say Dumper $rslt;
-
 		content_type 'application/json';
 
-		my $json = JSON->new->convert_blessed(1)->encode( $rslt );
+		return JSON->new->convert_blessed(1)->encode( $rslt );
 
-		return $json;
+#		return $json;
 	};
 
 
@@ -57,17 +55,12 @@ prefix '/api/proportal' => sub {
 		# get the valid_filters
 		my $v_q;
 		for ( @valid_queries ) {
-			my $app = MiniContr->new();
-			$app->add_controller_role( $_ );
-			say $_ . ' controller: ' . Dumper $app->controller;
-			$v_q->{$_} = $app->controller->valid_filters;
+			$v_q->{$_} = MiniContr->new()->add_controller( $_ );
 		}
-
-		say 'valid filters: ' . Dumper $v_q;
 
 		var menu_grp => 'proportal';
 		var page_id => 'proportal';
-		return template 'pages/datamart_stats', { queries => [ @valid_queries ], subsets => [ @subsets ] };
+		return template 'pages/api_home', { queries => [ @valid_queries ], subsets => [ @subsets ], apps => $v_q };
 
 	}
 };

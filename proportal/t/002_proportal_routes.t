@@ -15,13 +15,13 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'NetTest';
+use IMG::Util::Import 'NetTest';
 use Dancer2;
 use Routes::ProPortal;
 
 {
 	package MiniContr;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	with 'IMG::App::Role::Controller';
 	1;
 }

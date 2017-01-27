@@ -15,13 +15,22 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'NetTest';
+use IMG::Util::Import 'NetTest';
 use Dancer2;
 
 {
 	package MiniContr;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	with 'IMG::App::Role::Controller';
+	1;
+}
+
+{
+	package MiniApp;
+	use IMG::Util::Import 'Class';
+	use Dancer2 appname => 'ProPortal';
+	use AppCorePlugin;
+
 	1;
 }
 
@@ -29,19 +38,32 @@ use_ok 'AppCore';
 
 use_ok 'ProPortal::Controller::Base';
 
-use_ok 'ProPortalPackage';
 
 
 my $pp = ProPortal::Controller::Base->new( config );
 
-ok( $pp->controller->can('tmpl'), "ProPortal controller can do a template!");
+ok( $pp->can('tmpl'), "ProPortal controller can do a template!");
 
-ok (! $pp->controller->can('valid_filters'), "No filters by default");
+ok (! $pp->can('valid_filters'), "No filters by default");
 
-ok( ! $pp->controller->has_tmpl_includes, "No default tmpl includes");
+is_deeply({}, $pp->tmpl_includes, "No default tmpl includes");
+
+## AppCorePlugin
+
+my $app = MiniApp->new( config )->to_app;
+ok( $app->can('img_app'), 'checking img_app can be done' );
+
+say 'app: ' . Dumper $app;
+
+my $test = Plack::Test->create($app);
+my $res  = $test->request( GET '/launch' );
 
 
-my $app = ProPortalPackage->to_app;
+done_testing();
+
+exit(0);
+
+$app = ProPortalPackage->to_app;
 is( ref $app, 'CODE', 'Got app' );
 
 my $test = Plack::Test->create($app);

@@ -13,7 +13,7 @@ BEGIN {
 }
 use lib @dir_arr;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use File::Path qw( make_path );
 
 use File::Basename;

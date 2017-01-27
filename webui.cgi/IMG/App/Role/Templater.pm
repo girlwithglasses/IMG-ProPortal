@@ -1,6 +1,6 @@
 package IMG::App::Role::Templater;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 #use IMG::App::Role::LinkManager;
 use Template;
 

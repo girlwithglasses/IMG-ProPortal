@@ -11,7 +11,7 @@
 		<li><a href="http://jgi.doe.gov/disclaimer/">Disclaimer</a></li>
 		<li>ProPortal v[% sw_version %]</li>
 		<li>[% server_name %] &bull; [% ora_service %] &bull; [% request.forwarded_for_address || request.address %]</li>
-		<li>&copy; 1997&ndash;2015 The Regents of the University of California</li>
+		<li>&copy; 1997&ndash;[% copyright_year %] The Regents of the University of California</li>
 	</ul>
 </footer>
 <!--

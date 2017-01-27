@@ -1,18 +1,24 @@
 package ProPortal::Controller::Tools::Krona;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class';#'MooRole';
 
-has 'controller_args' => (
-	is => 'lazy',
-	default => sub {
-		return {
-			class => 'ProPortal::Controller::Base',
-			tmpl => 'pages/tools/krona.tt',
-			tmpl_includes => {
-#				tt_scripts => qw( data_type )
-			}
-		};
-	}
+extends 'ProPortal::Controller::Base';
+
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Base',
+# 			tmpl => 'pages/tools/krona.tt',
+# 			tmpl_includes => {
+# #				tt_scripts => qw( data_type )
+# 			}
+# 		};
+# 	}
+# );
+
+has '+page_id' => (
+	default => 'tools/krona'
 );
 
 =head3 krona page
@@ -21,7 +27,7 @@ Requires krona blurb and taxon cart contents
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 
 	# get the contents of the gene cart
@@ -59,7 +65,7 @@ sub render {
 		}
 	};
 
-	return $self->add_defaults_and_render({
+	return { results => {
 		tool_name => 'Krona',
 		schema => $self->get_query_schema,
 		transform => $transform,
@@ -70,13 +76,13 @@ sub render {
 			table_headers => $headers,
 			array => $genomes
 		}
-	});
+	}};
 }
 
 sub get_cart_contents {
 	my $self = shift;
 
-	my $res = $self->run_query({
+	my $res = $self->_core->run_query({
 		query => 'clade',
 		filters => { subset => 'prochlor' },
 	});

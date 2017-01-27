@@ -4,11 +4,11 @@
 #	Core IMG application to run pre-flight checks, check the user, initiate
 #	the session, parse params, and dispatch the appropriate app.
 #
-#	$Id: App.pm 35780 2016-06-15 20:41:20Z klchu $
+#	$Id: App.pm 36523 2017-01-26 17:53:41Z aireland $
 ############################################################################
 package IMG::App;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 our $VERSION = 0.1.0;
 
@@ -31,7 +31,7 @@ with
 	'IMG::App::Role::LinkManager',
 #	'IMG::App::Role::MenuManager',     # menu manager: only needed for web output
 
-	'IMG::App::Role::Controller',      # web query controller
+#	'IMG::App::Role::Controller',      # web query controller
 	'IMG::App::Role::Schema';          # schema_h
 
 

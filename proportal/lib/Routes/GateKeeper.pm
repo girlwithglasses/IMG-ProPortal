@@ -3,11 +3,11 @@
 #
 #	Routes for logging in and out
 #
-#	$Id: GateKeeper.pm 35408 2016-03-10 18:03:11Z aireland $
+#	$Id: GateKeeper.pm 36524 2017-01-26 17:57:46Z aireland $
 ############################################################################
 package Routes::GateKeeper;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
 use parent 'AppCore';
 

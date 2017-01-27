@@ -1,11 +1,11 @@
 ###########################################################################
 #
-# $Id: Session.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: Session.pm 36523 2017-01-26 17:53:41Z aireland $
 #
 ############################################################################
 package IMG::App::Role::Session;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 requires 'config';
 

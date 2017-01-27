@@ -1,6 +1,6 @@
 package IMG::App::Role::Schema;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::Util::Factory;
 
 with 'IMG::App::Role::ErrorMessages';

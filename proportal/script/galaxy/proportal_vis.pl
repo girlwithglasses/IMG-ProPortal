@@ -16,7 +16,7 @@ use lib @dir_arr;
 
 {
 	package ScriptAppArgs;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use IMG::Util::File;
 	with 'IMG::App::Role::ErrorMessages';
 	use Routes::ProPortal;
@@ -59,7 +59,7 @@ use lib @dir_arr;
 
 {
 	package ProPortal::App::ProPortalRoutes;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use ScriptAppArgs;
 	use AppCore;
 	use Dancer2;
@@ -99,7 +99,7 @@ use lib @dir_arr;
 }
 
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2;
 use IMG::App::Role::ErrorMessages qw( script_die );
 use Getopt::Long;

@@ -14,7 +14,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use File::stat;
 use_ok('IMG::Util::File');
 my $msg;
@@ -198,7 +198,7 @@ subtest 'readable, writable, etc.' => sub {
 		throws_ok { $to_do->( undef ) } qr[No file or directory specified];
 
 		if ( 'file_exists' eq $f ) {
-			is( 0, $to_do->( 'A file I made up earlier' ), 'test: ' . $f );
+			is( undef, $to_do->( 'A file I made up earlier' ), 'test: ' . $f );
 		}
 		else {
 			my $msg = err({

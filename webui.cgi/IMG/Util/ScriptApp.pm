@@ -1,6 +1,6 @@
 package IMG::Util::ScriptApp;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use ScriptAppArgs;
 
 has 'args' => (
@@ -25,7 +25,7 @@ IMG::Util::ScriptApp
 This module provides a simple wrapper for script-based applications. It should be used to create a custom class by creating a 'ScriptAppArgs' object with the appropriate properties.
 
 {	package ScriptAppArgs;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 
 	has 'switch' => (
 		is => 'ro',
@@ -40,7 +40,7 @@ This module provides a simple wrapper for script-based applications. It should b
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use ScriptAppArgs;
 	extends 'IMG::Util::ScriptApp';
 }

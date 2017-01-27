@@ -1,6 +1,6 @@
 package IMG::App::Role::LinkManager;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::Views::Links;
 use IMG::Views::ExternalLinks;
 use utf8;

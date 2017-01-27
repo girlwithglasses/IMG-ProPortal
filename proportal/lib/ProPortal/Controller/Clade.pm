@@ -1,34 +1,69 @@
 package ProPortal::Controller::Clade;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class'; #'MooRole';
 
 use Template::Plugin::JSON::Escape;
 
+extends 'ProPortal::Controller::Filtered';
+
 with 'IMG::Util::Text';
 
-has 'controller_args' => (
-	is => 'lazy',
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# #			class => 'ProPortal::Controller::Filtered',
+# 			page_id => 'proportal/clade',
+# 			tmpl => 'pages/proportal/clade.tt',
+# 			tmpl_includes => {
+# 				tt_scripts => qw( clade ),
+# 				tt_styles  => qw( clade ),
+# 			},
+# 			filters => {
+# 				subset => 'coccus'
+# 			},
+# 			valid_filters => {
+# 				subset => {
+# 					enum => [ qw( prochlor synech coccus ) ],
+# 				}
+# 			},
+# 		};
+# 	}
+# );
+
+
+has '+page_id' => (
+	default => 'proportal/clade'
+);
+
+# has '+tmpl' => (
+# 	default => 'pages/proportal/clade.tt',
+# );
+#
+has '+tmpl_includes' => (
 	default => sub {
-#		say 'running default controller args';
 		return {
-			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/proportal/clade.tt',
-			tmpl_includes => {
-				tt_scripts => qw( clade ),
-				tt_styles  => qw( clade ),
-			},
-			filters => {
-				subset => 'coccus'
-			},
-			valid_filters => {
-				subset => {
-					enum => [ qw( prochlor synech coccus ) ],
-				}
-			},
+			tt_scripts => qw( clade ),
+			tt_styles  => qw( clade ),
 		};
 	}
 );
 
+has '+filters' => (
+	default => sub {
+		return { subset => 'coccus' };
+	}
+);
+
+has '+valid_filters' => (
+	default => sub {
+		return {
+			subset => {
+				enum => [ qw( prochlor synech coccus ) ]
+			}
+		};
+	}
+);
 
 =head3 render
 
@@ -36,11 +71,13 @@ Requires JSON plugin for rendering data set
 
 =cut
 
-sub render {
+my $render_sub = sub {
 	my $self = shift;
 
+#	say 'self: ' . Dumper $self;
+
 	# get all distinct clade names
-	my $clades = $self->run_query({
+	my $clades = $self->_core->run_query({
 		query => 'distinct_clade',
 		filters => { subset => 'coccus' }
 	});
@@ -67,31 +104,32 @@ sub render {
 		push @{$data->{ $r->{genus} }{ $r->{generic_clade} }{genomes}}, $r;
 	}
 
-	return $self->add_defaults_and_render({
+	return { results => {
 		js => { data => $data, clade_arr => [ sort keys %$clade_h ] }
-	});
+	} };
 
-# 	return {
-# 		results => {
-# 			js => { data => $data, original_data => $res }
-# 		}
-# 	};
+};
 
-}
-
-sub get_data {
+my $get_data_sub = sub {
+#sub get_data {
 	my $self = shift;
-
-	my $res = $self->run_query({
+	my $res = $self->_core->run_query({
 		query => 'clade',
 		filters => $self->filters,
 	});
 
 #	return $res;
-
 #	only required for badly-populated dbs
 	return [ grep { $_->{clade} =~ /\w/ } @$res ];
+#}
+};
 
+sub _render {
+	return $render_sub->( @_ );
+}
+
+sub get_data {
+	return $get_data_sub->( @_ );
 }
 
 1;

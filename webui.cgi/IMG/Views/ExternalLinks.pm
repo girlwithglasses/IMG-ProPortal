@@ -1,6 +1,6 @@
 package IMG::Views::ExternalLinks;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 our (@ISA, @EXPORT_OK);
 

@@ -2,7 +2,7 @@
 
 use FindBin qw/ $Bin /;
 use lib ( "$Bin/..", "$Bin/../../proportal/lib", "$Bin/lib" );
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 ok( 1, 'this passes');
 

@@ -11,7 +11,7 @@ BEGIN {
 }
 use lib @dir_arr;
 use FindBin qw/ $Bin /;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use File::Temp;
 use JSONProxy;

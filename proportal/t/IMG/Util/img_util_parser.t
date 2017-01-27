@@ -15,7 +15,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Dancer2;
 
 my $test_dir = $dir . '/proportal/t/';

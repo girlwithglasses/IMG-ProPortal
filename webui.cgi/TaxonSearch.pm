@@ -2,7 +2,7 @@
 # TaxonSearch.pm - Set up for keyword search for taxons.
 # --es 12/22/2004
 #
-# $Id: TaxonSearch.pm 35309 2016-02-24 21:23:18Z jinghuahuang $
+# $Id: TaxonSearch.pm 36513 2017-01-18 05:37:04Z jinghuahuang $
 ############################################################################
 package TaxonSearch;
 my $section = "TaxonSearch";
@@ -28,6 +28,7 @@ my $swiss_prot_base_url  = $env->{ swiss_prot_base_url };
 my $img_internal         = $env->{img_internal};
 my $img_lite             = $env->{img_lite};
 my $in_file              = $env->{in_file};
+my $user_restricted_site = $env->{user_restricted_site};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
 my $preferences_url      = "$main_cgi?section=MyIMG&page=preferences";
@@ -195,11 +196,11 @@ lower( tx.sequencing_gold_id ) like ? or
     my ($restrictClause, @bindList_res) = TaxonSearchUtil::getPreferenceRestrictClause();
 
 
-    my ($rclause, @bindList_ur) = urClauseBind("tx");
-    my $imgClause = WebUtil::imgClause('tx');
+    my ($rclause, @bindList_ur) = WebUtil::urClauseBind("tx");
+    my $imgClause = WebUtil::imgClause('tx', 0, 1);
    
     my $sql = qq{
-       select distinct tx.taxon_oid, $filedClause
+       select distinct tx.taxon_oid, tx.is_public, $filedClause
            '', '', '', ''
        from taxon tx
        where 1 = 1 and (
@@ -209,6 +210,7 @@ lower( tx.sequencing_gold_id ) like ? or
        $rclause
        $imgClause
     };
+    #print "printTaxonList sql=$sql<br/>\n";
    
     my @bindList = ();
     if (scalar(@bindList_eq) > 0) {
@@ -230,36 +232,51 @@ lower( tx.sequencing_gold_id ) like ? or
     my @recs;
     my %done;
     my $count = 0;
+    my $privateCount = 0;
     my %found_indexes; # hash of column index where matches are found
     for( ;; ) {
-       my( $taxon_oid, @terms ) = $cur->fetchrow( );
-       last if !$taxon_oid;
-       next if $done{ $taxon_oid } ne "";
-       $count++;
+        my( $taxon_oid, $is_public, @terms ) = $cur->fetchrow( );
+        last if !$taxon_oid;
 
-       my $rec = join( "\t", @terms );
-       $done{ $taxon_oid } = $taxon_oid;
+        if ( !$user_restricted_site ) {
+           if (lc($is_public) eq lc('No')) {
+               $privateCount++;
+               next;
+           }
+        }
 
-       push( @recs, $rec );
+        next if $done{ $taxon_oid } ne "";
+        $count++;
+       
+        my $rec = join( "\t", @terms );
+        $done{ $taxon_oid } = $taxon_oid;
+
+        push( @recs, $rec );
       
-       for (my $i = 2; $i<scalar(@terms); $i++) {
-          # skip genome name $i=0 since $proposal_name, genome name column always printed
-          # find column index of column with the last match
-          if($terms[$i] =~ /$searchTermLiteral/i) {
-              $found_indexes{$i} = $i;
-          }
-       }
+        for (my $i = 2; $i<scalar(@terms); $i++) {
+            # skip genome name $i=0 since $proposal_name, genome name column always printed
+            # find column index of column with the last match
+            if ($terms[$i] =~ /$searchTermLiteral/i) {
+                $found_indexes{$i} = $i;
+            }
+        }
+    }
+    
+    #print "privateCount=$privateCount.<br/>\n";
+    if ( $privateCount > 0 && !$user_restricted_site ) {
+        my $homeUrl = $env->{https_cgi_url} = "https://" . $env->{domain_name} . "/cgi-bin/mer/" . $env->{main_cgi};
+        my $homeLink = alink( $homeUrl, "IMG/MER home" );
+        print "<p>\n$privateCount private genome(s).  Please use $homeLink to access the private genomes.\n</p>";
     }
 
     ### start html printing
-    if( $count == 0 ) {
+    if ( $count == 0 ) {
     	OracleUtil::truncTable( $dbh, "gtt_taxon_oid" ) 
         	if ( $toidEqClause =~ /gtt_taxon_oid/i );
-		#$dbh->disconnect();
 
         # DO NOT move this check as codes below assume that 
         # the number of taxon_oids is larger than zero.
-        print "<p>\n0 genomes retrieved.\n</p>\n";
+        print "<p>\n0 genomes retrieved.\n</p>";
         
         my $hideViruses = getSessionParam("hideViruses");
         $hideViruses = "Yes" if $hideViruses eq "";

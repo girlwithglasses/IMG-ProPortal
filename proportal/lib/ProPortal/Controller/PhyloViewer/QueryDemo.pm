@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::QueryDemo;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 with qw( ProPortal::Controller::PhyloViewer::Query );
 with qw( ProPortal::Controller::PhyloViewer::DemoData );

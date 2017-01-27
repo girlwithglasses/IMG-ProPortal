@@ -14,14 +14,14 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Text::CSV_XS qw( csv );
 
 use_ok('IMG::Util::FileAppender');
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App';
 	with qw(
 		IMG::Util::FileAppender
@@ -32,7 +32,7 @@ use_ok('IMG::Util::FileAppender');
 
 {
 	package OtherTestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App';
 	with qw(
 		IMG::Util::FileAppender

@@ -20,6 +20,7 @@ I have installed it in my home directory with the base directory renamed `webUI`
 
 	git clone https://github.com/ialarmedalien/IMG-ProPortal.git ~/webUI
 
+
 ## Dependencies ##
 
 ### Perl! ###
@@ -201,7 +202,6 @@ in ~/.profile or ~/.bashrc:
 
 	export PATH=/webfs/projectdirs/microbial/img/npm-global:$PATH
 
-
 When you have done this, you can install bower globally:
     `npm install -g bower`
 
@@ -211,14 +211,19 @@ Now `cd` to the `proportal` directory, and run
 If you look in the `public` folder, you should find a `bower` directory with various sub-directories containing javascript and css.
 
 
-### Other software ###
+## Other software ##
 
-Install JBrowse:
+This software is not required for the ProPortal, but refers to extra software that can be set up on the Genepool servers.
 
-download JBrowse from http://jbrowse.org
+### JBrowse ###
+
+The JBrowse backend requires access to data files that only exist in the `webfs` file system, so attempting to install it on a local system without those files will fail.
+
+Download the latest JBrowse release from http://jbrowse.org.
 
 
 
+### Galaxy ###
 
 
 
@@ -237,9 +242,9 @@ http://www.benjamenwhite.com/2015/07/biojs2galaxy-a-step-by-step-guide/
 	biojs2galaxy msa -o <path2galaxy>/config/plugins/visualizations/
 
 
-## Installing JBrowse
 
-Download the latest JBrowse release from http://jbrowse.org.
+
+
 
 
 ## Usage

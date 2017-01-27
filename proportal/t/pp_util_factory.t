@@ -10,13 +10,13 @@ BEGIN {
 	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib proportal/t/lib );
 }
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use IMG::Util::Factory;
 use ProPortal::Util::Factory;
 
-my $c = IMG::Util::Factory::create( 'IMG::Util::Base' );
-isa_ok $c, 'IMG::Util::Base';
+my $c = IMG::Util::Factory::create( 'IMG::Util::Import' );
+isa_ok $c, 'IMG::Util::Import';
 
 my $l = ProPortal::Util::Factory::create_pp_component( 'model', 'filter', { id => 'test', type => 'slider', label => 'test filter' });
 isa_ok $l, 'ProPortal::Model::Filter';

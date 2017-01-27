@@ -1,6 +1,6 @@
 package ProPortal::Views::ProPortalMenu;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 with 'IMG::App::Role::MenuManager';
 

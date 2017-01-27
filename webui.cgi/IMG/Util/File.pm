@@ -1,11 +1,12 @@
 package IMG::Util::File;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Scalar::Util qw(tainted);
 use IMG::Util::Untaint;
 use IMG::App::Role::ErrorMessages qw( err );
 use Text::CSV_XS;
 use Storable;
+use IO::All;
 
 our ( @ISA, @EXPORT_OK, %EXPORT_TAGS );
 
@@ -235,18 +236,19 @@ Warns if the file could not be touched; dies if file does not exist
 sub file_touch {
 	my $file_path = shift // die err({ err => 'missing', subject => 'file' });
 
-	die err({ err => 'not_found', subject => $file_path }) if ! -e $file_path;
+	die err({ err => 'not_found', subject => $file_path }) if ! io( $file_path )->exists;
 
 	# untaint path if necessary
-	if ( tainted($file_path) ) {
-		$file_path = IMG::Util::Untaint::check_file( $file_path )
-	}
+#	if ( tainted($file_path) ) {
+#		$file_path = IMG::Util::Untaint::check_file( $file_path )
+#	}
 
-	utime( undef, undef, $file_path ) || warn "Could not touch $file_path: $!";
+	io( $file_path )->touch;
+
 	return;
 }
 
-=head3
+=head3 file_exists
 
 does $d exist?
 
@@ -257,9 +259,8 @@ does $d exist?
 =cut
 
 sub file_exists {
-	my $d = shift // die 'No file or directory specified';
-	return 1 if -e $d;
-	return 0;
+	my $d = shift // die err({ err => 'missing', subject => 'file_dir' });
+	return io( $d )->exists;
 }
 
 =head3 is_readable
@@ -273,8 +274,8 @@ is $d readable?
 =cut
 
 sub is_readable {
-	my $d = shift // die 'No file or directory specified';
-	return -r $d if file_exists($d);
+	my $d = shift // die err({ err => 'missing', subject => 'file_dir' });
+	return io( $d )->is_readable if io( $d )->exists;
 	die err({ err => 'not_found', subject => $d });
 }
 
@@ -285,8 +286,8 @@ is $d writable?
 =cut
 
 sub is_writable {
-	my $d = shift // die 'No file or directory specified';
-	return -w $d if file_exists($d);
+	my $d = shift // die err({ err => 'missing', subject => 'file_dir' });
+	return io( $d )->is_writable if io( $d )->exists;
 	die err({ err => 'not_found', subject => $d });
 }
 
@@ -297,8 +298,8 @@ is $d a directory?
 =cut
 
 sub is_dir {
-	my $d = shift // die 'No file or directory specified';
-	return -d $d if file_exists($d);
+	my $d = shift // die err({ err => 'missing', subject => 'file_dir' });
+	return io( $d )->is_dir if io( $d )->exists;
 	die err({ err => 'not_found', subject => $d });
 }
 
@@ -309,8 +310,10 @@ is $d readable and writable?
 =cut
 
 sub is_rw {
-	my $d = shift // die 'No file or directory specified';
-	return -r $d && -w _ if file_exists($d);
+	my $d = shift // die err({ err => 'missing', subject => 'file_dir' });
+	if ( io($d)->exists ) {
+		return io( $d )->is_readable && io( $d )->is_writeable;
+	}
 	die err({ err => 'not_found', subject => $d });
 }
 

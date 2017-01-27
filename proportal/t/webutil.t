@@ -2,7 +2,7 @@
 
 use FindBin qw/ $Bin /;
 use lib "$Bin/../";
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use Sub::Override;
 use Test::MockModule;

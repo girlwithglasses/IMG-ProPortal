@@ -1,11 +1,11 @@
 ###########################################################################
 #
-# $Id: JGISessionClient.pm 36088 2016-08-31 21:32:28Z aireland $
+# $Id: JGISessionClient.pm 36523 2017-01-26 17:53:41Z aireland $
 #
 ############################################################################
 package IMG::App::Role::JGISessionClient;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use JSON;
 use IMG::Model::Contact;
 use IMG::Util::File;

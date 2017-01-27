@@ -1,7 +1,7 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 35086 2016-01-21 22:04:10Z klchu $
+# $Id: Help.pm 36509 2017-01-17 18:12:31Z klchu $
 ############################################################################
 package Help;
 use strict;
@@ -794,25 +794,25 @@ sub printFindFunctionsMap {
   #    </tr>
   #    };
 
-    print qq{
-	<tr class='img' valign='top'>
-	    <td class='img' NOWRAP> 
-	    &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$main_cgi?section=FindFunctions&page=ffoAllTc">
-		Transporter Classification </a>
-	    </td>
-	    <td class='img'>
-	    List of Transporter Classification families
-	    </td>
-            <td class='img'>
-	    <a href='$base_url/../docs/TransporterClassification.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'transporter class']);">
-	    <img width="20" height="14" border="0" 
-	    style="margin-left: 20px; vertical-align:middle" 
-	    src="$base_url/images/help_book.gif"> 
-	    </a>
-            </td>
-	</tr>
-	
+
+#	<tr class='img' valign='top'>
+#	    <td class='img' NOWRAP> 
+#	    &nbsp; &nbsp; &nbsp; &nbsp;
+#	    <a href="$main_cgi?section=FindFunctions&page=ffoAllTc">
+#		Transporter Classification </a>
+#	    </td>
+#	    <td class='img'>
+#	    List of Transporter Classification families
+#	    </td>
+#            <td class='img'>
+#	    <a href='$base_url/../docs/TransporterClassification.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'transporter class']);">
+#	    <img width="20" height="14" border="0" 
+#	    style="margin-left: 20px; vertical-align:middle" 
+#	    src="$base_url/images/help_book.gif"> 
+#	    </a>
+#            </td>
+#	</tr>
+    print qq{	
 	<tr class='img' valign='top'>
 	    <td class='img'> 
 	    &nbsp; &nbsp; &nbsp; &nbsp;

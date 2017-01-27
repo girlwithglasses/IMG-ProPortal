@@ -1,23 +1,34 @@
 package ProPortal::Controller::DataType;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class';#'MooRole';
 
-#extends 'ProPortal::Controller::Filtered';
+extends 'ProPortal::Controller::Filtered';
 
 use Template::Plugin::JSON::Escape;
 
-has 'controller_args' => (
-	is => 'lazy',
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Filtered',
+# 			tmpl => 'pages/proportal/data_type.tt',
+# 			tmpl_includes => {
+# 				tt_scripts => qw( data_type )
+# 			}
+# 		};
+# 	}
+# );
+
+has '+page_id' => (
+	default => 'proportal/data_type'
+);
+
+has '+tmpl_includes' => (
 	default => sub {
-		return {
-			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/proportal/data_type.tt',
-			tmpl_includes => {
-				tt_scripts => qw( data_type )
-			}
-		};
+		return { tt_scripts => qw( data_type ) };
 	}
 );
+
 
 =head3 data_type
 
@@ -25,7 +36,7 @@ has 'controller_args' => (
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 	my $data;
 
@@ -36,7 +47,7 @@ sub render {
 		push @{$data->{ $_->{genome_type} }{ $_->{ecosystem_subtype} || 'Unclassified' }}, $_;
 	}
 
-	return $self->add_defaults_and_render({ sorted_data => $data, array => $res });
+	return { results => { sorted_data => $data, array => $res } };
 }
 
 
@@ -44,7 +55,7 @@ sub get_data {
 	my $self = shift;
 
 	# run taxon_oid_display_name for each of the members
-	return $self->run_query({
+	return $self->_core->run_query({
 		query => 'taxon_oid_display_name',
 		filters => $self->filters,
 	});

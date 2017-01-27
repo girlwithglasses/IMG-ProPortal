@@ -1,20 +1,68 @@
 package ProPortal::Controller::Base;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 with 'IMG::App::Role::ErrorMessages';
 
-# has '_core' => (
-# 	is => 'ro',
-# 	predicate => 1,
-# 	handles => [ qw(
-# 		config schema http_ua session user run_query
-# 	) ],
-# );
+=head3 _core
+
+Reference to the core IMG::App object and methods
+
+=cut
+
+has '_core' => (
+	is => 'rw',
+	lazy => 1,
+#	is => 'ro',
+	weak_ref => 1
+);
+
+=head3 page_id
+
+the ID of the page, as referenced in Links.pm and MenuManager.pm
+
+=cut
+
+has 'page_id' => (
+	is => 'lazy'
+);
+
+sub _build_page_id {
+	my $self = shift;
+	$self->choke({
+		err => 'missing',
+		subject => 'page_id'
+	});
+}
+
+
+=head3 page_group
+
+The group under which the page appears in the menu structure
+
+=cut
+
+has 'page_group' => (
+	is => 'rwp',
+	lazy => 1,
+	default => ''
+);
+
+
+=head3 page_wrapper
+
+the layout template for the page
+
+=cut
+
+has 'page_wrapper' => (
+	is => 'lazy',
+	default => 'layouts/default.html.tt'
+);
 
 =head3 tmpl
 
-templates to use for rendering the page
+template to use for rendering the page
 
 =cut
 
@@ -24,10 +72,11 @@ has 'tmpl' => (
 
 sub _build_tmpl {
 	my $self = shift;
-	$self->choke({
-		err => 'missing',
-		subject => 'template name'
-	});
+	return 'pages/' . $self->page_id . '.tt';
+# 	$self->choke({
+# 		err => 'missing',
+# 		subject => 'template name'
+# 	});
 }
 
 =head3 tmpl_includes
@@ -38,53 +87,50 @@ templates to include in the page
 
 has 'tmpl_includes' => (
 	is => 'lazy',
+	default => sub { return {}; }
 );
-
-sub _build_tmpl_includes {
-	return {};
-}
 
 sub BUILDARGS {
 	my $class = shift;
-
-#	say __PACKAGE__ . " buildargs: config: " . Dumper [ @_ ];
-
 	my $args = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // {};
+
+	say 'BUILDARGS class: ' . Dumper $class;
+#	say 'BUILDARGS args:  ' . Dumper $args;
 
 	return $args;
 }
 
+sub BUILD {
+	my ( $self, $args ) = @_;
+	say 'running controller BUILD!';
+	say 'self: ' . $self;
+#	say 'args: ' . Dumper $args;
+	if ( $args->{controller_role} ) {
+		$self->add_controller_role( $args->{controller_role} );
+	}
+#	say 'post controller BUILD self: ' . Dumper $self;
+}
 
-=head3 add_defaults_and_render
+=head3 render
 
-Note that if you pass in a data hash which has identical keys to those added by
-this method, the existing data hash values will overwrite those that this sub
-attempts to add
+Calls _render in the controller.
 
-@param  $data   (opt)   data hash to add the defaults to
+Slight hack to ensure that the tmpl_includes and page_wrapper get added to the results.
 
-@output $data           data hash with lots of extra information added
+@return   $output  -- results data structure; see docs/Docs.md for details
 
 =cut
 
-
-sub add_defaults_and_render {
+sub render {
 	my $self = shift;
 
-	my $rtn = {
-		results => $_[0] // {}
-	};
-
-	$rtn->{tmpl_includes} = $self->tmpl_includes;
-
-# 	if ( $self->can('filters') ) {
-# 		$rtn->{data_filters}{active} = $self->filters;
-# 		$rtn->{data_filters}{all} = $self->valid_filters;
-# 	}
-
-	return $rtn;
-
+	my $output = $self->_render(@_);
+	for ( qw( tmpl_includes page_wrapper page_id ) ) {
+		if ( $self->$_ ) {
+			$output->{$_} = $self->$_;
+		}
+	}
+	return $output;
 }
-
 
 1;

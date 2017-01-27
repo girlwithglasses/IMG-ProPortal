@@ -15,12 +15,12 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 #use Dancer2;
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App::Core';
 	with qw(
 		IMG::App::Role::DbConnection

@@ -5,7 +5,7 @@
 # Ported to Perl from PHP version from Yahoo! Datatable example
 # -BSJ 10/13/09
 #
-# $Id: json_proxy.pl 34103 2015-08-24 20:33:28Z klchu $
+# $Id: JSONProxy.pm 36521 2017-01-24 22:41:12Z aireland $
 ###############################################################
 package JSONProxy;
 use strict;

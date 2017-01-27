@@ -1,6 +1,6 @@
 package ProPortalTestData;
 
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use Acme::Damn;
 use Scalar::Util qw[ blessed ];

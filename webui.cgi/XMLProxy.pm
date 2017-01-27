@@ -3,7 +3,7 @@
 # It follows the same logic as main.pl and inner.pl
 # see xml.cgi
 #
-# $Id: xml.pl 33401 2015-05-22 17:59:24Z klchu $
+# $Id: XMLProxy.pm 36521 2017-01-24 22:41:12Z aireland $
 ############################################################################
 package XMLProxy;
 use strict;

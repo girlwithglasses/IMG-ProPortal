@@ -1,5 +1,5 @@
 package TestApp;
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 use AE;
 use Dancer2;

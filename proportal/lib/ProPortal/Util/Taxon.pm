@@ -1,6 +1,6 @@
 package ProPortal::Util::Taxon;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 requires 'config', 'run_query', 'choke';
 

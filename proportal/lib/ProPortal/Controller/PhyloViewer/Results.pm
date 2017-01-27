@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::Results;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 with 'ProPortal::Controller::PhyloViewer::Pipeline';
 
@@ -28,7 +28,7 @@ Will require JSON plugin for rendering data set
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 	my $args = shift || $self->args;
 
@@ -88,7 +88,7 @@ sub render {
 #	say 'Finished tree pruning: tree now:';
 #	say Dumper $ds;
 
-	return $self->add_defaults_and_render( {
+	return { results => {
 		js => {
 			gene_data => $uniq->{gene},
 			taxon_data => $taxon_data,
@@ -97,7 +97,7 @@ sub render {
 			max_length => $max,
 			n_leaves => $leaves,
 		}
-	} );
+	} };
 
 }
 

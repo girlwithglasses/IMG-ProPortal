@@ -1,6 +1,6 @@
 package IMG::Util::Text;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::App::Role::ErrorMessages qw( err );
 use utf8;
 

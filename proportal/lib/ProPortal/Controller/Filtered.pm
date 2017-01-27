@@ -1,7 +1,8 @@
 package ProPortal::Controller::Filtered;
 
-use IMG::Util::Base 'Class';
+# use IMG::Util::Import 'MooRole';
 
+use IMG::Util::Import 'Class';
 extends 'ProPortal::Controller::Base';
 
 =head3 filters
@@ -87,20 +88,9 @@ Set the filters for a query. Checks that the filter setting is valid and throws 
 
 sub set_filters {
 	my $self = shift;
-#	my $filters = shift // return;
 
 	my $filters = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // return;
 
-#	say 'filters: ' . Dumper $filters;
-
-# 	if ( ! $self->has_valid_filters ) {
-# 		# no valid filters for this query
-# 		$self->choke({
-# 			err => 'invalid',
-# 			subject => 'ZOMG! This',
-# 			type => 'query to filter'
-# 		});
-# 	}
 	for my $f ( keys %$filters ) {
 		if ( ! $self->filter_schema->{ $f } ) {
 			$self->choke({
@@ -128,6 +118,19 @@ sub set_filters {
 	return;
 }
 
+around 'render' => sub {
+	my $orig = shift;
+	my $self = shift;
+	my $rtn = $orig->( $self, @_ );
+
+	if ( $self->can('filters') ) {
+		$rtn->{data_filters}{active} = $self->filters;
+		$rtn->{data_filters}{all} = $self->filter_schema;
+	}
+	return $rtn;
+
+};
+
 # after 'add_defaults_and_return' => sub {
 #
 # 	if ( $self->can('filters') ) {
@@ -142,18 +145,8 @@ sub set_filters {
 #
 # };
 
-around 'add_defaults_and_render' => sub {
-	my $orig = shift;
-	my $self = shift;
-	my $rtn = $orig->($self, @_);
+# requires ( 'render' );
 
-	if ( $self->can('filters') ) {
-		$rtn->{data_filters}{active} = $self->filters;
-		$rtn->{data_filters}{all} = $self->filter_schema;
-	}
-	return $rtn;
-
-};
 
 
 

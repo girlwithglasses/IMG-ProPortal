@@ -1,6 +1,6 @@
 package ProPortal::Model::Filter;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 # the id of the domain to be filtered
 has 'id' => (
@@ -40,7 +40,7 @@ sub execute {
 
 package ProPortal::Model::DiscreteFilter;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 extends 'ProPortal::Model::Filter';
 
@@ -56,7 +56,7 @@ has 'values' => (
 
 package ProPortal::Model::FilterValue;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 has 'id' => (
 	is => 'ro',
@@ -84,7 +84,7 @@ has 'is_on' => (
 
 package ProPortal::Model::ContinuousFilter;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 extends 'ProPortal::Model::Filter';
 

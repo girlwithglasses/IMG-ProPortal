@@ -15,7 +15,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'NetTest';
+use IMG::Util::Import 'NetTest';
 
 use ProPortalPackage;
 use Test::More;

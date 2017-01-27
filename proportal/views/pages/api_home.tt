@@ -1,0 +1,18 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal API';
+%]
+<h2>API</h2>
+
+<p>Welcome to the experimental ProPortal API. The following queries are currently available as JSON downloads; please note that not all subsets are available for each query, as is reflected in the UI.</p>
+<ul>
+[%	FOREACH q IN queries.sort %]
+	<li><a href="/api/proportal/[% q %]">[% q %]</a>
+		<ul>
+[%		FOREACH s IN apps.$q.controller.valid_filters.subset.enum %]
+			<li>subset: <a href="/api/proportal/[% q %]/[% s %]">[% s %]</a></li>
+[%		END; %]
+		</ul>
+	</li>
+[%	END %]
+</ul>
+[% END %]

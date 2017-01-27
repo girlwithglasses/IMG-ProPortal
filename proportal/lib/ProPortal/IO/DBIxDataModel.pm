@@ -1,6 +1,6 @@
 package ProPortal::IO::DBIxDataModel;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 use Time::HiRes;
 use IMG::Model::UnitConverter;
@@ -17,7 +17,7 @@ has 't0' => (
 
 sub _build_t0 {
 	my $self = shift;
-	return [ Time::HiRes::gettimeofday ];
+	return Time::HiRes::gettimeofday;
 }
 
 
@@ -28,7 +28,7 @@ Run a database query
 If there is no database handle set, takes care of doing the login first
 
 This is a thin wrapper around DBIx::DataModel; see that module for
-specifics on how to specific SQL.
+specifics on how to write specific SQL.
 
 https://metacpan.org/pod/DBIx::DataModel
 
@@ -803,6 +803,55 @@ sub news {
 #            "&group_id=$group_id&news_id=$news_id";
 }
 
+=cut
 
+** For Transcriptome:
+
+->('RnaseqDataset')
+->select(
+	-columns =>
+	-where => { dataset_type => [ 'Transcriptome', 'Metatranscriptome' ] }
+)
+
+Name                Null     Type
+------------------- -------- --------------
+DATASET_OID         NOT NULL NUMBER(38)
+SAMPLE_OID                   VARCHAR2(100)
+REFERENCE_TAXON_OID NOT NULL NUMBER(38)
+NOTES                        VARCHAR2(1000)
+GOLD_ID                      VARCHAR2(20)
+ER_PROJECT_ID                NUMBER(38)
+ER_SAMPLE_ID                 NUMBER(38)
+ANALYSIS_PROJECT_ID          VARCHAR2(20)
+ADD_DATE                     DATE
+IS_PUBLIC                    VARCHAR2(10)
+SUBMISSION_ID                NUMBER(38)
+IN_FILE                      VARCHAR2(10)
+OBSOLETE_FLAG                VARCHAR2(10)
+DATASET_TYPE                 VARCHAR2(20)
+RELEASE_DATE                 DATE
+
+
+
+
+select dataset_oid from rnaseq_dataset where dataset_type = 'Transcriptome';
+
+The detailed expression data is in the rnaseq_expression table (join by dataset_oid).
+
+** For Metatranscriptome, we have 2 types of data.
+
+(1) The same as above, but dataset_type = 'Metatranscriptome'.
+
+(2) select t.taxon_oid from taxon t, gold_sequencing_project s where t.sequencing_gold_id = s.gold_id and t.obsolete_flag = 'No' and s.sequencing_strategy = 'Metatranscriptome';
+
+->('Taxon')
+
+single cells:
+
+select sp.uncultured_type from taxon t, gold_sequencing_project sp
+  2  where t.sequencing_gold_id = sp.gold_id
+  3  and t.taxon_oid = 2645728132;
+
+=cut
 
 1;

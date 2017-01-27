@@ -14,25 +14,28 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Dancer2;
 use AppCore; # basic app stuff
 use ProPortal::Controller::Filtered;
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App';
+	with 'IMG::App::Role::Controller';
+	1;
 }
 
 {	package MiniController;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	with 'IMG::App::Role::Controller';
+	1;
 }
 
 {
 	package Controller::FilteredRole;
-	use IMG::Util::Base 'MooRole';
+	use IMG::Util::Import 'MooRole';
 
 	has 'controller_args' => (
 		is => 'lazy',
@@ -47,19 +50,104 @@ use ProPortal::Controller::Filtered;
 	);
 
 	sub random_function {
-		say 'I can do random_function!';
+		return 'I can do random_function!';
 	}
+
+	sub render {
+		return {
+			1 => 'hello',
+			2 => 'world'
+		};
+	}
+
+	1;
+}
+
+{	package ProPortal::Controller::FilteredClass;
+	use IMG::Util::Import 'Class';
+	extends 'ProPortal::Controller::Filtered';
+
+	has '+tmpl_includes' => (
+		default => sub { return { tt_scripts => qw( clade ) } }
+	);
+
+	has '+filters' => (
+		default => 'coccus'
+	);
+
+	has 'render_sub' => (
+		is => 'rwp',
+		default => sub { return sub { 'render sub' } }
+	);
+
+	has 'get_data_sub' => (
+		is => 'rwp',
+		default => sub { return sub { my @args = @_; return 'get data sub'; }; }
+	);
+
+	sub render {
+		my $self = shift;
+		return $self->render_sub->( @_ );
+	}
+
+	sub get_data {
+		my $self = shift;
+		return $self->get_data_sub->( @_ );
+	}
+
+	1;
+}
+
+
+{	package ProPortal::Controller::MoreFilteredClass;
+	use IMG::Util::Import 'Class';
+	extends 'ProPortal::Controller::FilteredClass';
+
+	has '+tmpl_includes' => (
+		default => sub { return { tt_scripts => qw( clade ) } }
+	);
+
+	has '+filters' => (
+		default => 'coccus'
+	);
+
+	has '+render_sub' => (
+		default => sub {
+			return sub {
+				my @args = shift;
+				return $args[1] if $args[1];
+				return 'more render sub';
+			};
+		}
+	);
+
+	has '+get_data_sub' => (
+		default => sub {
+			return sub { return 'more get data sub' };
+		}
+	);
+
+	1;
 }
 
 subtest 'default controllers' => sub {
 
 	my $base = ProPortal::Controller::Base->new();
 	my $filt = ProPortal::Controller::Filtered->new();
+	my $fc = ProPortal::Controller::FilteredClass->new();
 
 	my $test = TestApp->new();
 	my $app2 = TestApp->new( controller => 'ProPortal::Controller::Filtered' );
 	my $app3 = TestApp->new( controller => $filt );
 	my $app4 = TestApp->new( controller => { pip => 'pop' } );
+	my $app5 = TestApp->new( controller => 'ProPortal::Controller::FilteredClass' );
+	my $app6 = TestApp->new( controller => $fc );
+	my $app7 = TestApp->new( controller => 'ProPortal::Controller::MoreFilteredClass' );
+
+	say 'app7: ' . Dumper $app7;
+	say 'app3: ' . Dumper $app3;
+	ok( $app3->can('_core'), 'app3 can _core');
+	ok( $app7->can('_core'), 'app7 can _core');
 
 	ok( ! $base->can("filters"), 'Checking that directly-created model does not have filters' );
 	ok( ! $test->controller->can('filters'), 'Checking that test app does not have filters' );
@@ -75,7 +163,15 @@ subtest 'default controllers' => sub {
 	is_deeply( $app3->controller->filters, { subset => 'all_proportal' }, 'Checking that directly-created controller has filters' );
 
 	is_deeply( $app4->controller->{pip}, 'pop', 'Checking a hashref' );
-	ok( ! defined $app4->controller->{filters}, 'Checking there are no filters' );
+	ok( ! defined $app4->controller->filters, 'Checking there are no filters' );
+
+	is_deeply( $app5->controller->filters, 'coccus', 'Checking the filters' );
+
+	is_deeply( $app6->controller->get_data_sub, 'random sub', 'Checking the random sub' );
+
+	ok( $app5->render() eq 'render sub', 'Checking that the render sub is correct' );
+	ok( $app7->render() eq 'more render sub', 'Checking that the render sub is correct' );
+	ok( $app7->render('cookies') eq 'cookies', 'Checking that the render sub is correct' );
 
 };
 
@@ -133,6 +229,8 @@ subtest 'filter validity' => sub {
 						synech => 'Synechococcus',
 						prochlor_phage => 'Prochlorococcus phage',
 						synech_phage => 'Synechococcus phage',
+						phage => 'Prochlorococcus and Synechococcus phages',
+						coccus => 'Prochlorococcus and Synechococcus',
 						isolate => 'All ProPortal isolates',
 						metagenome => 'Marine metagenomes',
 						all_proportal => 'All isolates and metagenomes'
@@ -146,6 +244,42 @@ subtest 'filter validity' => sub {
 };
 
 subtest 'controllers and roles' => sub {
+
+	subtest 'Controller::FilteredRole' => sub {
+		my $test = TestApp->new();
+		subtest 'app, no controller' => sub {
+			ok( ! $test->has_controller, 'Checking test does not have a controller' );
+			ok( ! $test->can('random_function'), 'cannot random_function' );
+			ok( ! $test->can('tmpl'), 'cannot tmpl' );
+		};
+
+		$test->_set_controller( 'ProPortal::Controller::FilteredClass' );
+#		$test->add_controller_role('Controller::FilteredRole');
+
+		subtest 'controller added' => sub {
+			ok( $test->controller->can('random'), 'cntrlr can do random_function' );
+
+			ok( ! $test->can('random'), 'test cannot random_function' );
+#			ok( $test->controller->random_function eq 'I can do random_function!', 'checking random_function' );
+			isa_ok( $test->controller, 'ProPortal::Controller::Filtered' );
+			is_deeply( $test->controller->tmpl_includes, {
+				tt_scripts => qw( clade )
+			}, 'checking tmpl_includes' );
+			is_deeply( $test->controller->filters, 'coccus', 'checking filters' );
+		};
+
+		$test->clear_controller;
+
+		subtest 'controller removed' => sub {
+			ok( ! $test->has_controller, 'Checking test does not have a controller' );
+			ok( ! $test->can('random'), 'cannot random_function' );
+			ok( ! $test->can('tmpl'), 'cannot tmpl' );
+		};
+	};
+
+
+
+
 
 	# if we apply a role that has controller_args, use the values controller_args
 	# to set the controller
@@ -272,18 +406,6 @@ subtest 'controllers and roles' => sub {
 
 		};
 
-	};
-
-	subtest 'Controller::FilteredRole' => sub {
-		my $test = TestApp->new();
-		ok( ! $test->can('random_function'), 'cannot random_function' );
-		$test->add_controller_role('Controller::FilteredRole');
-		ok( $test->can('random_function'), 'can random_function' );
-		isa_ok( $test->controller, 'ProPortal::Controller::Filtered' );
-		is_deeply( $test->controller->tmpl_includes, {
-			tt_scripts => qw( data_type )
-		}, 'checking tmpl_includes' );
-		is_deeply( $test->controller->filters, { subset => 'all_proportal' }, 'checking filters' );
 	};
 
 	subtest 'ProPortal::Controller::DataType' => sub {

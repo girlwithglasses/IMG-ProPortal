@@ -1,6 +1,6 @@
 package IMG::Util::DBIxConnector;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 use DBIx::Connector;
 use IMG::App::Role::ErrorMessages qw( err );
@@ -50,7 +50,7 @@ sub __connector {
 		$arg_h->{username} // $arg_h->{user} // undef,
 		$arg_h->{password} // $arg_h->{pass} // undef,
 		$arg_h->{options} // $arg_h->{dbi_params} // { RaiseError => 1 }
-	) or die err ({ err => 'db_conn_err', msg => $DBI::errstr });
+	) || die err ({ err => 'db_conn_err', msg => $DBI::errstr });
 
 }
 

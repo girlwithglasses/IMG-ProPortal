@@ -1,6 +1,6 @@
 package DataModel::IMG_Gold;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use DBIx::DataModel;
 use IMG::Model::UnitConverter;
 

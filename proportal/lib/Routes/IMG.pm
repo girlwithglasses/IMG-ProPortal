@@ -1,5 +1,5 @@
 package Routes::IMG;
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
 use parent 'AppCore';
 
@@ -39,7 +39,7 @@ prefix '/cgi-bin' => sub {
 
 =cut
 	my $n_taxa;
-	my $core = setting('_core');
+	my $core = setting('img_app');
 
 	if ( config->{async} ) {
 

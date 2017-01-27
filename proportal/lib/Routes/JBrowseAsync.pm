@@ -1,5 +1,5 @@
 package Routes::JBrowseAsync;
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
 use parent 'AppCore';
 our $VERSION = '0.1.0';
@@ -81,8 +81,7 @@ prefix '/jbrowse' => sub {
 
 		die err({ err => 'missing', subject => 'taxon_oid' }) unless $taxon_oid;
 
-		my $pp = #setting('_core') ||
-			AppCore::create_core();
+		my $pp = img_app;
 		my @roles = qw(
 			ProPortal::IO::DBIxDataModel
 			ProPortal::Util::JBrowseFilePrep

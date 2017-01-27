@@ -1,6 +1,6 @@
 {
 	package ScriptAppArgs;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	with 'IMG::App::Role::ErrorMessages';
 	use IMG::Util::File;
 	use Text::CSV_XS qw[ csv ];
@@ -54,7 +54,7 @@
 {
 
 package ProPortal::App::GetTaxonMetadata;
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 use ScriptAppArgs;
 use IMG::App::Role::ErrorMessages qw( err script_die );
 extends 'IMG::App';

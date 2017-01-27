@@ -7,12 +7,11 @@
 ############################################################################
 package IMG::IO::Galaxy;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 our $VERSION = 0.1.0;
 
 requires 'http_ua';
-
 
 has 'galaxy_api_key' => (
 	required => 1,
@@ -37,7 +36,6 @@ sub _build_workflow_id_h {
 
 sub get_api_key {
 	my $self = shift;
-	$self->
 
 
 }
@@ -60,7 +58,14 @@ sub init_jbrowse {
 		});
 	}
 
-# python workflow_execute.py <api_key> <galaxy_url>/api/workflows <workflow_id> 'hist_id=<history_id>' '38=hda=<file_id>' 'param=tool=name=value'
+	# assemble the params
+
+	'param=jbrowse_fetch_files=taxon_oid=' . $args->{taxon_oid};
+
+# python workflow_execute.py
+$self->galaxy_api_key
+$self->config->galaxy . '/api/workflows'
+$workflow_id 'hist_id=<history_id>' '38=hda=<file_id>' 'param=tool=name=value'
 # python workflow_execute_parameters.py <api_key> http://localhost:8080/api/workflows 1cd8e2f6b131e891 'Test API' '69=ld=a799d38679e985db' '70=ld=33b43b4e7093c91f' 'param=peakcalling_spp=aligner=bowtie' 'param=bowtie_wrapper=suppressHeader=True' 'param=peakcalling_spp=window_size=1000'
 
 

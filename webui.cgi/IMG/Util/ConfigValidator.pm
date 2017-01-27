@@ -1,28 +1,84 @@
 package IMG::Util::ConfigValidator;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import;
+use File::Spec::Functions qw( catdir catfile );
+use Config::Any;
+use WebConfig ();
 
-requires 'config';
+#	schema  => # schema data -- which db connection to use for which schema
+#	db      => # database connection details
+#	img_cfg => # IMG config stuff, probably from WebConfig::getEnv()
+#	debug   => # debugging stuff
 
-has 'schema' => (
-	is => 'ro',
-	isa => Map[ Str => Dict[ module => Str, db => Str ]],
-);
+sub make_config {
 
-has 'db' => (
-	is => 'ro',
-	isa => Map[ Str => Dict[
-		database => Str,
-		driver => Str,
-		[user|username] => Optional[Str],
-		password => Optional[Str],
-		dbi_options => Optional[HashRef]
-		] ],
-);
+	my $args = shift;
 
-has 'session' => (
-	is => 'ro',
-);
+	my $img_conf = WebConfig::getEnv();
+
+	my @pieces = qw( schema db debug );
+
+	my @files = map { catfile( $args->{dir}, 'proportal/environments', $_  ) }
+				grep { exists $args->{$_} } @pieces;
+
+	my $cfg = Config::Any->load_stems({
+		stems => [ @files ],
+		use_ext => 1,
+	#	flatten_to_hash => 1,
+	});
+
+#	say 'cfg: ' . Dumper $cfg;
+
+	my $hash = {};
+	for ( @$cfg ) {
+		my $vals = ( values %$_ )[0];
+		if ( $vals->{ schema } ) {
+			$img_conf->{schema} = $vals->{schema};
+		}
+		elsif ( $vals->{db} ) {
+			$img_conf->{db} = $vals->{db};
+		}
+		else {
+			$hash = { %$hash, %$vals };
+		}
+	}
+
+#	$hash->{img_app_cfg} = $img_conf;
+
+	say 'Made a hash of things!';
+	$hash->{plugins}{Adapter}{img_app} = {
+		class => 'ProPortalPackage',
+		scope => 'singleton',
+		options => { config => $img_conf }
+	};
+
+#	say Dumper $hash;
+
+	return $hash;
+}
+#
+#
+# requires 'config';
+#
+# has 'schema' => (
+# 	is => 'ro',
+# 	isa => Map[ Str => Dict[ module => Str, db => Str ]],
+# );
+#
+# has 'db' => (
+# 	is => 'ro',
+# 	isa => Map[ Str => Dict[
+# 		database => Str,
+# 		driver => Str,
+# 		[user|username] => Optional[Str],
+# 		password => Optional[Str],
+# 		dbi_options => Optional[HashRef]
+# 		] ],
+# );
+#
+# has 'session' => (
+# 	is => 'ro',
+# );
 
 
 

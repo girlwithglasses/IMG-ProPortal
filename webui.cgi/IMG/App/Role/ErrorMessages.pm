@@ -3,11 +3,11 @@
 #
 #	Standardised error messages
 #
-#	$Id: ErrorMessages.pm 36366 2016-10-25 21:42:35Z aireland $
+#	$Id: ErrorMessages.pm 36523 2017-01-26 17:53:41Z aireland $
 ############################################################################
 package IMG::App::Role::ErrorMessages;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 our ( @ISA, @EXPORT_OK, %EXPORT_TAGS );
 
@@ -112,6 +112,11 @@ sub err {
 		},
 
 	# FILE ERRORS
+		not_known => sub {
+			return 'File ' . $args->{subject}
+			. ' is unknown';
+		},
+
 		not_found => sub {
 			return $args->{subject}
 			. ' could not be found';
@@ -301,6 +306,8 @@ sub dict {
 		db_conf => 'database configuration',
 		dbh => 'database handle',
 
+		file_dir => 'file or directory',
+		file_fmt => 'file format',
 		fread_sub => 'file parsing subroutine',
 
 		gene_oid => 'gene ID',

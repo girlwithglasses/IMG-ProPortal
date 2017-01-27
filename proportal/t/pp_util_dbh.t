@@ -3,7 +3,7 @@
 
 use FindBin qw/ $Bin /;
 use lib "$Bin/../lib";
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use Config::Any;
 use Try::Tiny;

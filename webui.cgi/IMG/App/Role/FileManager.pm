@@ -1,9 +1,11 @@
 package IMG::App::Role::FileManager;
 
-use IMG::Util::Base 'MooRole';
-use Scalar::Util qw(tainted);
+use IMG::Util::Import 'MooRole';
+use Scalar::Util qw( tainted );
+use IO::All;
 use IMG::Util::File;
 use File::Spec::Functions qw( catdir catfile );
+use IMG::App::Role::ErrorMessages qw( err );
 use Storable;
 requires 'config', 'session', 'choke';
 
@@ -51,8 +53,10 @@ sub get_dirname {
 		return $self->get_workspace_dirname();
 	}
 
-	if ( 'web_data_dir' eq $dir ) {
-		return $self->config->{web_data_dir};
+	my @config_dirs = qw( web_data_dir oracle_config_dir );
+
+	if ( grep { $dir eq $_ } @config_dirs ) {
+		return $self->config->{$dir};
 	}
 
 	my $sess_subdirs = {
@@ -158,17 +162,17 @@ sub get_taxon_file {
 	}) unless $self->config->{web_data_dir};
 
 	my $f_names = {
-		aa_seq => sub { return 'taxon.faa/' . +shift->{taxon_oid} . '.faa'; },
-		dna_seq => sub { return 'taxon.fna/' . +shift->{taxon_oid} . '.fna'; },
-#		lin_seq => sub { return 'taxon.lin.fna/' . +shift . '.lin.fna'; },
-#		genes => sub { return 'taxon.genes.fna/' . +shift . '.fna'; },
-		gff => sub { return 'tab.files/gff/' . +shift->{taxon_oid} . '.gff'; },
-		cog => sub { return 'tab.files/cog/' . +shift->{taxon_oid} . '.cog.tab.txt' },
-		kog => sub { return 'tab.files/kog/' . +shift->{taxon_oid} . '.kog.tab.txt' },
-		pfam => sub { return 'tab.files/pfam/' . +shift->{taxon_oid} . '.pfam.tab.txt' },
-		tigrfam => sub { return 'tab.files/tigrfam/' . +shift->{taxon_oid} . '.tigrfam.tab.txt' },
-		ipr => sub { return 'tab.files/ipr/' . +shift->{taxon_oid} . '.ipr.tab.txt' },
-		kegg => sub { return 'tab.files/ko/' . +shift->{taxon_oid} . '.ko.tab.txt' },
+		aa_seq =>	sub { return 'taxon.faa/' . +shift->{taxon_oid} . '.faa'; },
+		dna_seq =>	sub { return 'taxon.fna/' . +shift->{taxon_oid} . '.fna'; },
+#		lin_seq =>	sub { return 'taxon.lin.fna/' . +shift . '.lin.fna'; },
+#		genes =>	sub { return 'taxon.genes.fna/' . +shift . '.fna'; },
+		gff =>		sub { return 'tab.files/gff/' . +shift->{taxon_oid} . '.gff'; },
+		cog =>		sub { return 'tab.files/cog/' . +shift->{taxon_oid} . '.cog.tab.txt' },
+		kog =>		sub { return 'tab.files/kog/' . +shift->{taxon_oid} . '.kog.tab.txt' },
+		pfam =>		sub { return 'tab.files/pfam/' . +shift->{taxon_oid} . '.pfam.tab.txt' },
+		tigrfam =>	sub { return 'tab.files/tigrfam/' . +shift->{taxon_oid} . '.tigrfam.tab.txt' },
+		ipr =>		sub { return 'tab.files/ipr/' . +shift->{taxon_oid} . '.ipr.tab.txt' },
+		kegg =>		sub { return 'tab.files/ko/' . +shift->{taxon_oid} . '.ko.tab.txt' },
 	};
 
 	# aliases
@@ -196,38 +200,57 @@ my $file_index = {
 
 	genome_cart_state => {
 		dirname => 'cart',
-		fn_sub => sub { my $self = shift; return 'genomeCart.' . $self->session->id . '.stor'; },
+		fn_sub => sub { return 'genomeCart.' . +shift->session->id . '.stor'; },
 		fmt => 'aoa'
 	},
 
 	gene_cart_col_ids => {
 		dirname => 'cart',
-		fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.colid'; },
+		fn_sub => sub { return 'geneCart.' . +shift->session->id . '.colid'; },
 		fmt => 'array'
 	},
 
 	gene_cart_state => {
 		dirname => 'cart',
-		fn_sub => sub { my $self = shift; return 'geneCart.' . $self->session->id . '.stor'; },
+		fn_sub => sub { return 'geneCart.' . +shift->session->id . '.stor'; },
 		fmt => 'aoa'
 	},
 
 	scaf_cart_state => {
-		dirname => 'cart', fn_sub => sub { my $self = shift; return 'scaffoldCart.' . $self->session->id . '.stor'; }, fmt => 'aoa'
+		dirname => 'cart',
+		fn_sub => sub { return 'scaffoldCart.' . +shift->session->id . '.stor'; },
+		fmt => 'aoa'
 	},
 
 	# returns the actual cart object!
 	cura_cart_state => {
-		dirname => 'cart', fn_sub => sub { my $self = shift; return 'curaCart.' . $self->session->id . '.stor'; }, fmt => 'storable'
+		dirname => 'cart',
+		fn_sub => sub { return 'curaCart.' . +shift->session->id . '.stor'; },
+		fmt => 'storable'
 	},
 
 	func_cart_state => {
-		dirname => 'cart', fn_sub => sub { my $self = shift; return 'funcCart.' . $self->session->id . '.stor'; }, fmt => 'storable'
+		dirname => 'cart',
+		fn_sub => sub { return 'funcCart.' . +shift->session->id . '.stor'; },
+		fmt => 'storable'
 	},
 
-
-
-#	genes_fna => // img_web_data/taxon.genes.fna/TAXON_OID.fna
+	# set environment variables
+	img_gold => {
+		dirname => 'oracle',
+		fn  => 'web.imgsg_dev.config',
+		fmt => 'pl_env'
+	},
+	img_core => {
+		dirname => 'oracle',
+		fn  => 'web.img_core_v400.config',
+		fmt => 'pl_env'
+	},
+	img_i_taxon => {
+		dirname => 'oracle',
+		fn  => 'web.img_i_taxon.config',
+		fmt => 'pl_env'
+	}
 
 };
 
@@ -235,10 +258,21 @@ my $file_index = {
 
 
 my $read_h = {
-	hash  => sub { return IMG::Util::File::file_to_hash( $_[0] ); },
-	aoa   => sub { return IMG::Util::File::file_to_aoa( $_[0] ); },
-	array => sub { return IMG::Util::File::file_to_aoa( $_[0], ',' )->[0] // []; },
+	hash     => sub { return IMG::Util::File::file_to_hash( $_[0] ); },
+	aoa      => sub { return IMG::Util::File::file_to_aoa( $_[0] ); },
+	array    => sub { return IMG::Util::File::file_to_aoa( $_[0], ',' )->[0] // []; },
 	storable => sub { return retrieve( $_[0] ); },
+	pl_env   => sub {
+		local $@;
+		eval { require $_[0]; };
+		if ($@) {
+			die err({
+				err => 'not_readable',
+				subject => $_[0],
+				msg => $@
+			});
+		}
+	},
 };
 
 =head3 read_file
@@ -263,9 +297,12 @@ sub get_file_fmt {
 	my $self = shift;
 	my $file = shift // $self->choke({ err => 'missing', subject => 'file' });
 	if ( $file_index->{$file} ) {
-		return $file_index->{$file}{fmt} || die 'No format specified';
+		return $file_index->{$file}{fmt} || $self->choke({ err => 'missing', subject => 'file_fmt' });
 	}
-	die 'File ' . $file . ' is unknown';
+	$self->choke({
+		err => 'not_known',
+		subject => $file
+	});
 }
 
 =head3 get_filename
@@ -295,7 +332,10 @@ sub get_filename {
 			return catfile( $path, $file_index->{$file}{fn_sub}->( $self ) );
 		}
 	}
-	die 'File ' . $file . ' is unknown';
+	$self->choke({
+		err => 'not_known',
+		subject => $file
+	});
 }
 
 =head3 touch

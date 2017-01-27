@@ -1,20 +1,35 @@
 package ProPortal::Controller::Location;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class';#'MooRole';
+
+extends 'ProPortal::Controller::Filtered';
+
 use Template::Plugin::JSON::Escape;
 
-has 'controller_args' => (
-	is => 'lazy',
-	default => sub {
-		return {
-			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/proportal/location.tt',
-			tmpl_includes => {
-				tt_scripts => qw( location ),
-			}
-		};
-	},
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Filtered',
+# 			tmpl => 'pages/proportal/location.tt',
+# 			tmpl_includes => {
+# 				tt_scripts => qw( location ),
+# 			}
+# 		};
+# 	},
+# );
+
+has '+page_id' => (
+	default => 'proportal/location'
 );
+
+has '+tmpl_includes' => (
+	default => sub {
+		return { tt_scripts => qw( location ) };
+	}
+);
+
+
 
 =head3 render
 
@@ -22,7 +37,7 @@ Requires JSON plugin for rendering data set on a Google map
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 
 	my $res = $self->get_data;
@@ -47,13 +62,13 @@ sub render {
 
 	}
 
-	return $self->add_defaults_and_render([ values %$data ]);
+	return { results => [ values %$data ] };
 
 }
 
 sub get_data {
 	my $self = shift;
-	return $self->run_query({
+	return $self->_core->run_query({
 		query => 'location',
 		filters => $self->filters,
 	});

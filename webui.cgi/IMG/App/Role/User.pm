@@ -1,11 +1,11 @@
 ###########################################################################
 #
-# $Id: User.pm 35833 2016-07-06 02:42:03Z aireland $
+# $Id: User.pm 36523 2017-01-26 17:53:41Z aireland $
 #
 ############################################################################
 package IMG::App::Role::User;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use Acme::Damn;
 
 with 'IMG::App::Role::ErrorMessages';

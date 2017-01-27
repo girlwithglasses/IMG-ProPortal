@@ -1,6 +1,6 @@
 package IMG::App::Role::Controller;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use ProPortal::Util::Factory;
 use ProPortal::Controller::Base;
 use Scalar::Util qw( blessed );
@@ -10,34 +10,30 @@ has 'controller' => (
 	is => 'rwp',
 	lazy => 1,
 	predicate => 1,
+	clearer => 1,
 	coerce => sub {
-#		say 'running coerce controller';
+		say 'running coerce controller';
 #		say Dumper \@_;
-		# allow objects to be passed in
 		if ( @_ ) {
 
 			if ( 1 == scalar @_ ) {
 
-#				say 'one arg only';
-
+				# object
 				if ( blessed $_[0] ) {
-#					say 'I am blessed!';
 					return shift;
 				}
+				# class name
 				elsif ( ! ref $_[0] ) {
-
-#					say 'Got the name of the module to load!';
 					# must be a class, not a role
 					IMG::Util::Factory::load_module( $_[0] );
 					return +shift->new()
 				}
+				# hashref
 				else {
-#					say 'Got a hashref with keys ' .  join ", ", keys %{$_[0]};
 					my $href = shift;
 					if ( $href->{class} ) {
 						my $class = $href->{class};
 						IMG::Util::Factory::load_module( $class );
-#						say 'Class: ' . $class;
 						return $class->new( $href );
 					}
 					return $href;
@@ -51,56 +47,91 @@ has 'controller' => (
 		die 'No controller supplied!';
 	},
 	default => sub {
-#		say 'running controller default';
+		say 'running controller default';
 #		say Dumper \@_;
 
 		my $self = shift;
 		if ( $self->can( 'controller_args' ) ) {
-#			say 'I can controller args! ' . Dumper $self->controller_args;
+			say 'I can controller args! ' . Dumper $self->controller_args;
 
 			return $self->_set_controller( $self->controller_args );
 		}
 		return ProPortal::Controller::Base->new();
 	},
 
-	handles => [ qw( set_filters filters add_defaults_and_render ) ]
+	handles => [ qw( set_filters filters ) ]
 
 );
 
-sub _build_controller {
-#	say 'Running build controller!';
-#	say 'args: ' . Dumper( \@_ );
-	return ProPortal::Controller::Base->new();
-}
+# sub _build_controller {
+# 	say 'Running build controller!';
+# #	say 'args: ' . Dumper( \@_ );
+# 	return ProPortal::Controller::Base->new();
+# }
 
 sub BUILD {
-#	say 'running BUILD!';
-#	say 'args: ' . Dumper \@_;
-	my ($self, $args) = @_;
+	my ( $self, $args ) = @_;
+	say 'running controller BUILD!';
+#	say 'self: ' . $self;
+#	say 'args: ' . Dumper $args;
+	# is this for Galaxy modules?
 	if ( $args->{controller_role} ) {
+		say 'found a controller role!';
 		$self->add_controller_role( $args->{controller_role} );
 	}
-
+	$self->controller->_core( $self );
+#	say 'post BUILD self: ' . Dumper $self;
 }
+
+sub add_controller {
+	my $self = shift;
+	say 'running add_controller';
+#	confess 'caller: ' . caller;
+	my $class = $self->_prepare_controller( @_ );
+#	if ( $class !~ /Controller/ ) {
+#		$class = ProPortal::Util::Factory::_rename( 'Controller', $class );
+#	}
+#	IMG::Util::Factory::load_module( $class );
+	$self->_set_controller( $class );
+	$self->controller->_core( $self );
+	if ( $self->controller->can('controller_args') ) {
+		$self->_set_controller( $self->controller->controller_args );
+	}
+	return $self;
+}
+
 
 sub add_controller_role {
 	my $self = shift;
-	my $role = shift;
-	if ( $role !~ /Controller/ ) {
-		$role = ProPortal::Util::Factory::_rename( 'Controller', $role );
-	}
-
-	IMG::Util::Factory::load_module( $role );
+	say 'running add_controller_role';
+	my $role = $self->_prepare_controller( @_ );
+#	if ( $role !~ /Controller/ ) {
+#		$role = ProPortal::Util::Factory::_rename( 'Controller', $role );
+#	}
+#	IMG::Util::Factory::load_module( $role );
 
 	Role::Tiny->apply_roles_to_object( $self, $role );
 
-#	say 'controller args: ' . Dumper $self->controller_args;
+	say 'self now: ' . Dumper $self;
 
-# if ( $self->controller_args ) {
-# 	$self->_set_controller( $self->controller_args );
-# }
+	if ( $self->controller_args ) {
+		$self->_set_controller( $self->controller_args );
+	}
+	$self->controller->_core( $self );
+#	say 'self now: ' . Dumper $self;
 
 	return $self;
+}
+
+
+sub _prepare_controller {
+	my $self = shift;
+	my $module = shift;
+	if ( $module !~ /Controller/ ) {
+		$module = ProPortal::Util::Factory::_rename( 'Controller', $module );
+	}
+	IMG::Util::Factory::load_module( $module );
+	return $module;
 }
 
 1;

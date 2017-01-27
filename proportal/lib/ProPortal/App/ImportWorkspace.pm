@@ -1,6 +1,6 @@
 {
 	package ScriptAppArgs;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 #	use IMG::App::Role::ErrorMessages qw( err );
 	with qw[
 		IMG::App::Role::ErrorMessages
@@ -34,7 +34,7 @@
 
 package ProPortal::App::ImportWorkspace;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 use ScriptAppArgs;
 use IMG::App::Role::ErrorMessages qw( err );
 extends 'IMG::App';

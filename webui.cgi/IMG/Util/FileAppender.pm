@@ -1,6 +1,6 @@
 package IMG::Util::FileAppender;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::Util::File qw( :all );
 use Text::CSV_XS;
 

@@ -1,6 +1,6 @@
 package ProPortal::Util::Schema;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 with 'ProPortal::Util::DBH';
 
@@ -12,7 +12,7 @@ requires 'config';
 
 package ProPortal::Util::DBH;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 use ProPortal::Util::Factory;
 
@@ -145,7 +145,7 @@ sub db_connect {
 
 package ProPortal::Util::DBI;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use DBI;
 
 sub new {
@@ -178,7 +178,7 @@ sub new {
 
 package ProPortal::Util::DBIxConnector;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use IMG::Util::DBIxConnector;
 
 =head3 new

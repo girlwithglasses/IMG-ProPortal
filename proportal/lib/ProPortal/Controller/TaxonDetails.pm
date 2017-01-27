@@ -1,24 +1,32 @@
-# NOT YET IMPLEMENTED (Oct 2016)
-
 package ProPortal::Controller::TaxonDetails;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'Class'; #'MooRole';
+
+extends 'ProPortal::Controller::Base';
 
 with 'IMG::Model::DataManager';
 
-has 'controller_args' => (
-	is => 'lazy',
-	default => sub {
-		return {
-			class => 'ProPortal::Controller::Filtered',
-			tmpl => 'pages/taxon_details.tt',
-			tmpl_includes => {
-#				tt_scripts => qw( data_type )
-			}
-		};
-	}
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Filtered',
+# 			page_id => 'taxon_details',
+# 			tmpl => 'pages/taxon_details.tt',
+# 			tmpl_includes => {},
+# 			page_wrapper => 'layouts/default_wide.html.tt',
+# 		};
+# 	}
+# );
+
+
+has '+page_id' => (
+	default => 'taxon_details'
 );
 
+has '+page_wrapper' => (
+	default => 'layouts/default_wide.html.tt'
+);
 
 =head3 render
 
@@ -28,7 +36,7 @@ Details page for a taxon / metagenome
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 	my $args = shift;
 
@@ -39,7 +47,7 @@ sub render {
 		});
 	}
 
-	my $res = $self->run_query({
+	my $res = $self->_core->run_query({
 		query => 'taxon_details',
 		%$args
 	});
@@ -57,6 +65,7 @@ sub render {
 		gold_sp_collaborators
 		gold_sp_diseases
 		gold_sp_energy_sources
+ 		gold_sp_genome_publications
 		gold_sp_habitats
 		gold_sp_metabolisms
 		gold_sp_phenotypes
@@ -66,13 +75,11 @@ sub render {
 		gold_sp_study_gold_ids
 	);
 
-# 		gold_sp_genome_publications
 # 		goldanaproj
 
 
 	for my $assoc (@associated) {
 		if ( $res->can( $assoc ) ) {
-			say 'can do ' . $assoc;
 			my $r = $res->$assoc;
 			if ($r && scalar @$r) {
 				$res->{$assoc} = $r;
@@ -80,7 +87,7 @@ sub render {
 		}
 	}
 
-	return $self->add_defaults_and_render({ taxon => $res, label_data => $self->get_label_data });
+	return { results => { taxon => $res, label_data => $self->get_label_data } };
 
 }
 

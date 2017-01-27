@@ -6,7 +6,7 @@ package TestServer;
 
 use FindBin qw/ $Bin /;
 use lib "$Bin/../lib";
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Data::Dumper::Concise;
 use Dancer2;
 use Dancer2::Session::CGISession;
@@ -78,7 +78,7 @@ get '/logout' => sub {
 package main;
 use FindBin qw/ $Bin /;
 use lib "$Bin/../lib";
-use IMG::Util::Base 'NetTest';
+use IMG::Util::Import 'NetTest';
 use ProPortal;
 use Dancer2;
 

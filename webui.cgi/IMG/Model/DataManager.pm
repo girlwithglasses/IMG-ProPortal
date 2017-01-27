@@ -1,6 +1,6 @@
 package IMG::Model::DataManager;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 sub get_label_data {
 

@@ -1,6 +1,6 @@
 package ProPortal::Util::DataStructure;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 requires 'choke';
 

@@ -1,0 +1,9 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'Advanced Search';
+%]
+
+<h2>Advanced Search</h2>
+<p> Coming soon!</p>
+
+
+[%	END; %]

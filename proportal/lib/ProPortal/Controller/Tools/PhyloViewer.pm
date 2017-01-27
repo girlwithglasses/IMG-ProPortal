@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::SubmitDemo;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 extends 'ProPortal::Controller::PhyloViewer::Submit';
 with 'ProPortal::Controller::PhyloViewer::DemoData';

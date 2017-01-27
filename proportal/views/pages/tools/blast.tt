@@ -1,0 +1,6 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: BLAST';
+%]
+<h2>BLAST</h2>
+<p> Coming soon: BLAST your sequences against ProPortal genomes.</p>
+[%	END; %]

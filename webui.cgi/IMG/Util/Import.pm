@@ -1,4 +1,4 @@
-package IMG::Util::Base;
+package IMG::Util::Import;
 
 use parent 'Import::Base';
 
@@ -47,6 +47,29 @@ our %IMPORT_BUNDLES = (
 
 	],
 
+	psgi => [
+		'Dancer2',
+		'AppCorePlugin',
+		'File::Basename',
+		'Plack::Builder',
+		'Plack::Middleware::Conditional',
+		# speed up Dancer2
+		'Class::XSAccessor',
+		'URL::Encode::XS',
+		'CGI::Deurl::XS',
+		'HTTP::Parser::XS',
+		'YAML::XS',
+
+#		'JSON::MaybeXS',
+#		'Cpanel::JSON::XS',
+
+		'HTTP::XSCookies',
+		'Math::Random::ISAAC::XS',
+		'Crypt::URandom',
+		'Scope::Upper',
+		'EV',
+	]
+
 );
 
 # $IMPORT_BUNDLES{ TestVerbose } = [ @{$IMPORT_BUNDLES{ Test }}, 'Carp::Always' ];
@@ -71,14 +94,14 @@ sub new {
 
 =head1 NAME
 
-IMG::Util::Base - Basic object instantiation
+IMG::Util::Import - Basic object instantiation
 
 This module is not intended for direct use; instead, you can use it as a base
 for classes to get a free constructor and set of basic modules.
 
 	package MyCoolObject;
 
-	use IMG::Util::Base;
+	use IMG::Util::Import;
 
 This module always imports the following into your namespace:
 
@@ -100,9 +123,9 @@ Currently the 5.16 feature bundle
 
 =head3 new
 
-	my $obj = IMG::Util::Base->new();
+	my $obj = IMG::Util::Import->new();
 
-@return IMG::Util::Base object
+@return IMG::Util::Import object
 
 =cut
 

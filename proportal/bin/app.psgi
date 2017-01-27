@@ -18,12 +18,8 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base;
-use IMG::Util::File qw( :all );
-use Dancer2;
+use IMG::Util::Import 'psgi';
 
-use Plack::Builder;
-use Plack::Middleware::Conditional;
 #use Log::Contextual qw(:log);
 # $ENV{PLACK_URLMAP_DEBUG} = 1;
 # $ENV{TWIGGY_DEBUG} = 1;
@@ -38,17 +34,18 @@ use Plack::Middleware::Conditional;
 
 =cut
 
-{	package ProPortalPackage;
-	use IMG::Util::Base;
+{	package ProPortalApp;
+	use IMG::Util::Import;
 	use Dancer2 appname => 'ProPortal';
-	use parent 'AppCore';
+#	use parent 'AppCore';
 
 	our $VERSION = '0.1.0';
-
-	#use Routes::Ajax;
+	use AppCore;
+	use AppCorePlugin;
+	use Routes::Ajax;
 	use Routes::MenuPages;
-	use Routes::JBrowse;
-	# use Routes::IMG;
+#	use Routes::JBrowse;
+#	use Routes::IMG;
 	use Routes::API;
 	use Routes::ProPortal;
 	use Routes::TestStuff;
@@ -68,6 +65,6 @@ builder {
 #	mount "/pod" => sub { $server->run(@_) };
 
 #     mount "/testapp" => TestApp->to_app;
-	mount "/" => ProPortalPackage->to_app;
+	mount "/" => ProPortalApp->to_app;
 
 };

@@ -14,7 +14,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Dancer2;
 
 use File::Temp qw/ tempfile tempdir /;
@@ -28,7 +28,7 @@ use IMG::App::Role::ErrorMessages qw( err );
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App::Core';
 	with 'IMG::Util::Timed', 'IMG::App::Role::PreFlight';
 }

@@ -11,12 +11,12 @@ BEGIN {
 }
 use lib @dir_arr;
 use FindBin qw/ $Bin /;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use IMG::App::Role::Templater;
 
 {   package TemplateApp;
-    use IMG::Util::Base 'Class';
+    use IMG::Util::Import 'Class';
     has 'config' => ( is => 'ro' );
     with 'IMG::App::Role::LinkManager', 'IMG::App::Role::Templater';
     1;

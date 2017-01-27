@@ -1,6 +1,6 @@
 package TestUtils;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 use Acme::Damn;
 use Scalar::Util qw[ blessed ];

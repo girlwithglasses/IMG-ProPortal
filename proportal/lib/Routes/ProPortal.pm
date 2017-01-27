@@ -1,10 +1,9 @@
 package Routes::ProPortal;
-use IMG::Util::Base;
+use IMG::Util::Import 'Class';
 use Dancer2 appname => 'ProPortal';
-use parent 'AppCore';
-use IMG::Util::Base 'Class';
+#use parent 'AppCore';
 use ProPortal::Util::Factory;
-
+use AppCorePlugin;
 our $VERSION = '0.1.0';
 
 has 'active_components' => (
@@ -39,9 +38,7 @@ any '/offline' => sub {
 	var menu_grp => 'proportal';
 	var page_id => 'proportal';
 
-	my $pp = AppCore::bootstrap( 'Home' );
-
-	return template "pages/offline", $pp->render();
+	return template "pages/offline";
 
 };
 
@@ -58,21 +55,16 @@ prefix '/proportal' => sub {
 		my $c = captures;
 		my $p = $c->{query};
 
-		var menu_grp => $group;
-		var page_id  => $group . "/$p";
-
-		my $app = AppCore::create_core();
-		$app->add_controller_role( $p );
+		bootstrap( $p );
 
 		if ( $c->{subset} ) {
-			$app->set_filters( subset => $c->{subset} );
+			img_app->set_filters( subset => $c->{subset} );
 		}
 
-#		debug 'page: ' . $p
-#			. '; subset: ' . ( $c->{subset} || 'none' )
-#			. '; template: ' . $app->controller->tmpl;
+		var menu_grp => $group;
+		var page_id  => img_app->controller->page_id;
 
-		return template $app->controller->tmpl, $app->render;
+		return template img_app->controller->tmpl, img_app->controller->render;
 
 	};
 
@@ -86,13 +78,12 @@ The home page.
 		/?
 		}x => sub {
 
-		var menu_grp => $group;
-		var page_id => $group;
+		bootstrap( 'Home' );
 
-		my $app = AppCore::bootstrap( 'Home' );
-		my $rslts = $app->render;
-		$rslts->{page_wrapper} = 'layouts/default_wide.html.tt';
-		return template $app->controller->tmpl, $rslts;
+		var menu_grp => $group;
+		var page_id => img_app->controller->page_id;
+
+		return template img_app->controller->tmpl, img_app->controller->render;
 
 	};
 
@@ -100,11 +91,11 @@ The home page.
 
 get '/taxon/:taxon_oid' => sub {
 
-	my $pp = AppCore::bootstrap( 'TaxonDetails' );
+	bootstrap( 'TaxonDetails' );
 
-	my $rslts = $pp->render({ taxon_oid => params->{taxon_oid} });
-	$rslts->{page_wrapper} = 'layouts/default_wide.html.tt';
-	return template $pp->controller->tmpl, $rslts;
+	var page_id => img_app->controller->page_id;
+
+	return template img_app->controller->tmpl, img_app->controller->render({ taxon_oid => params->{taxon_oid} });
 
 };
 
@@ -119,8 +110,6 @@ prefix '/tools' => sub {
 
 		my $c = captures;
 		my $p = $c->{query};
-		var menu_grp => $group;
-		var page_id  => $group . "/$p";
 
 		# phyloviewer: gene cart
 		# krona:
@@ -133,14 +122,12 @@ prefix '/tools' => sub {
 			galaxy => 'Galaxy'
 		};
 
-		my $app = AppCore::bootstrap( 'Tools::' . $h->{$p} );
-#		$app->add_controller_role(  );
+		bootstrap( 'Tools::' . $h->{$p} );
 
-		say 'page: ' . $p
-			. '; subset: ' . ( $c->{subset} || 'none' )
-			. '; template: ' . $app->controller->tmpl;
+		var menu_grp => $group;
+		var page_id  => $group . "/$p";
 
-		return template $app->controller->tmpl, $app->render;
+		return template img_app->controller->tmpl, img_app->controller->render;
 	};
 
 =head3 PhyloViewer
@@ -173,7 +160,7 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 			my $p = delete $c->{query};
 			my $module = $p && 'demo' eq $p ? 'QueryDemo' : 'Query';
 
-			my $pp = AppCore::bootstrap( 'PhyloViewer::' . $module );
+			my $pp = bootstrap( 'PhyloViewer::' . $module );
 
 			return template $pp->controller->tmpl, $pp->render();
 		};
@@ -189,7 +176,7 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 			for my $p ( qw( gp input msa tree ) ) {
 				$params->{$p} = [ body_parameters->get_all($p) ];
 			}
-			my $pp = AppCore::bootstrap( 'PhyloViewer::Submit' );
+			my $pp = bootstrap( 'PhyloViewer::Submit' );
 
 			return template $pp->controller->tmpl, $pp->render( $params );
 
@@ -207,7 +194,7 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 			var page_id  => $group. '/phyloviewer';
 			my $tmpl = 'pages/proportal/phylo_viewer/results';
 
-			my $pp = AppCore::bootstrap( 'PhyloViewer::' . $module );
+			my $pp = bootstrap( 'PhyloViewer::' . $module );
 
 			return template $pp->controller->tmpl, $pp->render();
 		};
@@ -221,7 +208,6 @@ my $page_h = {
 	user_guide => [ qw( api_manual browsing getting_started searching using_tools ) ],
 	support => [ qw( news about ) ]
 };
-
 
 for my $prefix ( keys %$page_h ) {
 

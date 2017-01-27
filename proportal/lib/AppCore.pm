@@ -1,26 +1,15 @@
 package AppCore;
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
 use Dancer2::Session::CGISession;
 
 use Sys::Hostname;
 use IMG::App;
 use ProPortal::Util::Factory;
-# use ProPortal::CoreAppAdapter;
-# use Dancer2::Plugin::LogContextual;
-# use Dancer2::Plugin::AppRole::Helper;
-# use Log::Contextual::SimpleLogger;
-# use Log::Contextual qw( :log set_logger );
+use AppCorePlugin;
 
 our $VERSION = '0.1.0';
 
-# my $logger = Log::Contextual::SimpleLogger->new({
-# 	levels => [qw( trace debug info warn error fatal )],
-# 	coderef => sub { say 'OOPS! ' . join "\n", @_ }
-# });
-#
-# set_logger $logger;
-# set lc_logger => $logger;
 
 sub init {
 	my $class = shift;
@@ -29,54 +18,6 @@ sub init {
 #	log_debug { 'running init code!' };
 	# set optional configuration override
 	set $_ => $opts{ $_ } for keys %opts;
-
-}
-
-=head3 create_core
-
-Create a new IMG::App instance. Stored in the Dancer2 app as '_core'
-
-=cut
-
-sub create_core {
-#	log_trace { 'running create core' };
-	my $class = Role::Tiny->create_class_with_roles( 'IMG::App',
-	qw( ProPortal::Views::ProPortalMenu
-		IMG::App::Role::MenuManager
-		ProPortal::IO::DBIxDataModel
-		ProPortal::IO::ProPortalFilters
-	) );
-	my $core = $class->new( config => config, psgi_req => request, session => session );
-	set "_core" => $core;
-	return setting('_core');
-
-}
-
-
-=head3 bootstrap
-
-Initialise a ProPortal::Controller for running a query; see
-ProPortal::Controller::Base for an example of the default controller.
-
-@param  $c_type - the controller to instantiate; defaults to 'Base'
-@param  $args   - arguments for the controller (e.g. filters)
-
-@return $c      - a controller instance
-
-=cut
-
-sub bootstrap {
-	my ( $c_type, $args ) = @_;
-	$c_type ||= 'Base';
-
-#	debug 'Application: ';
-#	debug Dumper app;
-
-	debug "Running bootstrap...";
-
-	my $core = setting('_core') || create_core();
-	set '_core' => $core->add_controller_role($c_type);
-	return $core;
 
 }
 
@@ -90,12 +31,14 @@ hook 'before' => sub {
 
 	debug "Running before hook for " . request->dispatch_path;
 
-	# should we bother with checks for logout?
-	return if request->dispatch_path =~ m!^/log(in|out|ged_in)!;
+	# should we bother with checks for logout? no.
+	return if request->dispatch_path =~ m!^/(log(in|out|ged_in)|offline)!;
 
-	my $core = create_core();
+	debug 'running checks!';
 
-	my $resp = $core->run_checks();
+	img_app->clear_controller;
+
+	my $resp = img_app->run_checks();
 	if ( $resp ) {
 		my $error = Dancer2::Core::Error->new( %$resp );
 		$error->throw();
@@ -103,16 +46,16 @@ hook 'before' => sub {
 
 #	debug "response: " . Dumper $resp;
 
-	if ( config->{sso_enabled} ) {
+	if ( img_app->config->{sso_enabled} ) {
 
-#		debug "sso is enabled";
+		debug "sso is enabled";
 		#	we have the JGI session cookie
 		# JGI SSO returns a cookie with ID jgi_session
 		if ( cookies && cookies->{jgi_session} ) {
 			if ( session('jgi_session_id') ) {
 				# make sure that the session is still valid
 				local $@;
-				my $ok = eval { $core->check_jgi_session( session('jgi_session_id') ) };
+				my $ok = eval { img_app->check_jgi_session( session('jgi_session_id') ) };
 
 				if ( $@ ) {
 					debug 'Got an error';
@@ -131,9 +74,9 @@ hook 'before' => sub {
 				do_login() if ! $ok;
 
 				# load the user data and create a new user object
-				my $user_h = $core->run_user_checks( cookies->{jgi_session}->value );
+				my $user_h = img_app->run_user_checks( cookies->{jgi_session}->value );
 
-				$core->set_up_session( $user_h );
+				img_app->set_up_session( $user_h );
 
 			}
 			else {
@@ -142,7 +85,7 @@ hook 'before' => sub {
 
 				# reinstantiate user object if it doesn't exist
 				local $@;
-				my $user_h = eval { $core->run_user_checks( cookies->{jgi_session}->value ) };
+				my $user_h = eval { img_app->run_user_checks( cookies->{jgi_session}->value ) };
 				if ( $@ ) {
 					debug 'Got an error: ' . Dumper $@;
 					my $err = $@;
@@ -157,7 +100,7 @@ hook 'before' => sub {
 					debug 'No local error found!';
 				}
 
-				$core->set_up_session( $user_h );
+				img_app->set_up_session( $user_h );
 
 				debug "We got " . ( $@ || "through the checks" );
 
@@ -169,7 +112,7 @@ hook 'before' => sub {
 		}
 	}
 
-#	debug "Finished the pre hook checks!";
+	debug "Finished the pre hook checks!";
 
 	return;
 
@@ -186,6 +129,11 @@ See get_tmpl_vars for details
 
 hook before_template_render => sub {
 
+	debug 'Running before_template_render';
+
+	my $page_id = var 'page_id';
+	my $menu_grp = var 'menu_grp';
+
 	my $out = get_menu_vars( @_ );
 	get_tmpl_vars ( $out );
 
@@ -196,12 +144,14 @@ sub get_menu_vars {
 	my $page_id = var 'page_id';
 	my $menu_grp = var 'menu_grp';
 
+	## TODO: check whether user is logged in or not
+
+
+
 #	say 'page_id: ' . ( $page_id // 'is undefined' )
 #	. ' menu_grp: ' . ( $menu_grp // 'is undefined' );
 
-	my $core = setting('_core') // create_core();
-
-	my $rslt = $core->make_menu({ group => $menu_grp, page => $page_id });
+	my $rslt = img_app->make_menu({ group => $menu_grp, page => $page_id });
 
 # 	if ( ! $menu_grp && defined $rslt->{group} ) {
 # 		$menu_grp = $rslt->{group};
@@ -231,17 +181,9 @@ sub get_menu_vars {
 		}
 	}
 
-	return { output => $output, core => $core };
+	return { output => $output, core => img_app };
 
 }
-
-hook after_template_render => sub {
-	# delete the core
-	# clean up DB connections
-	my $core = setting('_core');
-	$core->disconnect_all;
-	set('_core') => undef;
-};
 
 
 =head3 get_tmpl_vars
@@ -264,12 +206,14 @@ sub get_tmpl_vars {
 	my $output = $args->{output};
 	my $core = $args->{core};
 
-	$output->{sw_version} = $VERSION;
-	$output->{ext_link} = sub { return $core->ext_link( @_ ) };
 	$output->{link} = sub { return $core->img_link_tt( @_ ) };
-	$output->{breadcrumbs}++;
+	$output->{ext_link} = sub { return $core->ext_link( @_ ) };
+
+	$output->{sw_version} = $VERSION;
 	$output->{server_name} = hostname;
 	$output->{ora_service} = $ENV{ORA_SERVICE} || 'The Oracle is silent';
+	$output->{breadcrumbs}++;
+	$output->{copyright_year} = ( localtime(time) )[5] + 1900;
 
 #	$output->{img_cfg} = $core->img_cfg;
 	return $output;
@@ -280,29 +224,29 @@ sub get_tmpl_vars {
 any '/login' => sub {
 
 	# no sso_domain configuration
-	if ( ! config->{sso_domain} ) {
+	if ( ! img_app->config->{sso_domain} ) {
 		forward '/';
 	}
 
 	# Display a login page; the original URL they requested is available as
 	# param('post_login'), so could be put in a hidden field in the form
-	my $path = param('post_login') // '';
+	my $path = query_parameters->get('post_login') // '';
 	$path =~ s!^/!!;
 	$path ||= 'logged_in';
 
 #	delete cookies->{jgi_return} if cookies && exists cookies->{jgi_return};
 
-	debug 'uri_for ' . $path . ' = ' . uri_for( $path );
-
 	my $c = Dancer2::Core::Cookie->new(
 		name => 'jgi_return',
-		value => uri_for( $path ),
-		domain => config->{sso_domain},
+		value => img_app->config->{ top_base_url } . $path,
+		domain => img_app->config->{sso_domain},
 		path => '/',
 		expires => '5 mins'
 	);
 
 	push_response_header 'Set-Cookie' => $c->to_header();
+
+	debug 'cookie: ' . $c->to_header();
 
 	redirect 'https://signon.jgi.doe.gov';
 
@@ -310,7 +254,7 @@ any '/login' => sub {
 
 get '/logged_in' => sub {
 
-	delete cookies->{jgi_return} if cookies && cookies->{jgi_return};
+#	delete cookies->{jgi_return} if cookies && cookies->{jgi_return};
 
 	# initialise the session
 #	set_session_user_data( cookies->{jgi_session}->value );
@@ -325,7 +269,7 @@ any qr{
 
 	app->destroy_session;
 
-	redirect 'https://signon.jgi-psf.org/signon/destroy';
+	redirect 'https://signon.jgi.doe.gov/signon/destroy';
 };
 
 sub do_login {

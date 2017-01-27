@@ -1,6 +1,6 @@
 package ProPortal::IO::ProPortalFilters;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 =head2 subset_filter
 

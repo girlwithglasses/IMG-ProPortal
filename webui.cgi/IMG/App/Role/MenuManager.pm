@@ -1,6 +1,6 @@
 package IMG::App::Role::MenuManager;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 with 'IMG::App::Role::LinkManager';
 

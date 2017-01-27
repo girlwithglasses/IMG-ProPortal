@@ -1,6 +1,6 @@
 {
 	package ScriptAppArgs;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	with 'IMG::App::Role::ErrorMessages';
 	use IMG::Util::File;
 
@@ -166,7 +166,7 @@ stockholm
 
 package ProPortal::App::BioPerlConverter;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 use ScriptAppArgs;
 extends 'IMG::App';
 with qw(

@@ -17,29 +17,25 @@ BEGIN {
 	);
 }
 use lib @dir_arr;
-use IMG::Util::Base;
-use IMG::Util::File qw( :all );
+use IMG::Util::Import 'psgi';
 
-use JBlibs;
+#use JBlibs;
 #use CGI::Compile;
 #use CGI::Emulate::PSGI;
-use File::Basename;
-use Plack::Builder;
-use Plack::Middleware::Conditional;
 #use Log::Contextual qw( :log );
 #use Config::Any;
-use Dancer2;
 
-{	package ProPortalPackage;
-	use IMG::Util::Base;
+{	package ProPortalApp;
+	use IMG::Util::Import;
 	use Dancer2 appname => 'ProPortal';
-	use parent 'AppCore';
 
+	use AppCore;
+	use AppCorePlugin;
 	our $VERSION = '0.1.0';
 
 	#use Routes::Ajax;
 	use Routes::MenuPages;
-	use Routes::JBrowse;
+	# use Routes::JBrowse;
 	# use Routes::IMG;
 	use Routes::API;
 	use Routes::ProPortal;
@@ -111,7 +107,7 @@ builder {
 # 		'Response',
 # 		[
 # 			'Profiler::NYTProf',
-# 			base_URL => 'https://img-proportal-dev.jgi-psf.org/nyt',
+# 			base_URL => 'https://img-proportal-dev.jgi.doe.gov/nyt',
 # 			root     => "$base/public/nyt",
 # 			exclude  => [qw( .*\.css .*\.png .*\.ico .*\.js .*\.jpg .*\.gif )],
 # 		]
@@ -138,7 +134,7 @@ builder {
 # 		mount "/" => $apps->{img_gold}{main};
 # 	};
 
-	mount '/' => ProPortalPackage->to_app;
+	mount '/' => ProPortalApp->to_app;
 
 # 	mount '/pristine' => Plack::App::CGIBin->new(root => catdir( $home, "pristine/webUI/webui.cgi" ) )->to_app;
 

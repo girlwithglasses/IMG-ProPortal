@@ -1,6 +1,6 @@
 package ProPortal::IO::DBIxDemoDataModel;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use Class::Method::Modifiers;
 use Text::CSV_XS qw( csv );
 

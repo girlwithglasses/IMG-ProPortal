@@ -1,6 +1,6 @@
 package DataModel::IMG_Core;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use DBIx::DataModel;
 use IMG::Model::UnitConverter;
 
@@ -222,9 +222,24 @@ DataModel::IMG_Core->metadm->define_table(
 );
 
 DataModel::IMG_Core->metadm->define_table(
-  class       => 'ContactTaxonPermissions',
-  db_name     => 'CONTACT_TAXON_PERMISSIONS',
+  class       => 'TaxonTypeVw',
+  db_name     => 'VW_TAXON_TYPE',
 );
+
+DataModel::IMG_Core->metadm->define_table(
+	class       => 'ContactTaxonPermissions',
+	db_name     => 'CONTACT_TAXON_PERMISSIONS',
+);
+
+DataModel::IMG_Core->metadm->define_table(
+	class       => 'RnaSeqDataset',
+	db_name     => 'RNASEQ_DATASET',
+# DATASET_OID          NOT NULL NUMBER(38)
+# REFERENCE_TAXON_OID  NOT NULL NUMBER(38)
+);
+
+
+
 
 DataModel::IMG_Core
 #---------------------------------------------------------------------#
@@ -352,7 +367,6 @@ DataModel::IMG_Core
 ->Association(
   [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
   [qw/GoldSpDisease              gold_sp_diseases             *    gold_id                 /])
-
 ;
 
 #---------------------------------------------------------------------#

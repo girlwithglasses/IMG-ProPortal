@@ -1,6 +1,6 @@
 package IMG::App::Role::HttpClient;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 use HTTP::Tiny;
 use Scalar::Util qw(blessed);

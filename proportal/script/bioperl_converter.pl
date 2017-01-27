@@ -12,7 +12,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 # use Dancer2;
 use IMG::App::Role::ErrorMessages qw( script_die );

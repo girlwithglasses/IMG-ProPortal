@@ -1,6 +1,6 @@
 package Routes::Ajax;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
 use parent 'AppCore';
 use Dancer2::Plugin::Ajax;

@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::Schema;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 
 sub get_query_schema {

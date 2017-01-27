@@ -15,14 +15,14 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 use Dancer2;
 use Test::MockObject::Extends;
 my $base = "$dir/proportal/t/files";
 
 {
 	package TestApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App', 'Dancer2::Session::CGISession';
  	with 'Dancer2::Core::Role::SessionFactory', 'ProPortal::IO::DBIxDataModel';
 	has "driver_params" => (

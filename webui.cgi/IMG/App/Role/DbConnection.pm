@@ -1,6 +1,6 @@
 package IMG::App::Role::DbConnection;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::Util::DBIxConnector;
 use IMG::Util::Timed qw( time_this );
 
@@ -20,7 +20,7 @@ in IMG::App::Demo:
 
 	package IMG::App::Demo;
 
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App::Core';
 	with 'IMG::App::Role::DbConnection';
 
@@ -289,7 +289,7 @@ sub create_db_conn {
 
 =head3 disconnect_db_conn
 
-Get a database connection; if the connection is not present, it will be created.
+Disconnect a database connection.
 
 @param  $h  name of the connection
 
@@ -324,18 +324,6 @@ sub disconnect_all {
 		}
 	}
 }
-
-=head3 DEMOLISH
-
-remove all database connections
-
-=cut
-
-sub DEMOLISH {
-	my $self = shift;
-	$self->disconnect_all;
-}
-
 
 1;
 

@@ -3,7 +3,7 @@
 #  Handle the options under the "Find Genomes" tab menu.
 #    --es 07/07/2005
 #
-# $Id: FindGenomes.pm 36206 2016-09-22 19:13:34Z jinghuahuang $
+# $Id: FindGenomes.pm 36513 2017-01-18 05:37:04Z jinghuahuang $
 ############################################################################
 package FindGenomes;
 my $section = "FindGenomes";
@@ -44,6 +44,7 @@ my $img_lite             = $env->{img_lite};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $cgi_tmp_dir          = $env->{cgi_tmp_dir};
 my $in_file              = $env->{in_file};
+my $user_restricted_site = $env->{user_restricted_site};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
 
@@ -342,7 +343,7 @@ sub printFindGenomeResults {
     }
 
     my ($rclause, @bindList_ur) = WebUtil::urClauseBind('tx');
-    my $imgClause = WebUtil::imgClause('tx');
+    my $imgClause = WebUtil::imgClause('tx', 0, 1);
 
     my @bindList = ();
     my $sql;
@@ -354,7 +355,7 @@ sub printFindGenomeResults {
         my @filter_types = ( "ext_accession", "scaffold_oid" );
         if ( grep( /^$taxonSearchFilter$/, @filter_types ) ) {
             $sql = qq{
-                select distinct tx.taxon_oid, tx.domain, tx.seq_status, 
+                select distinct tx.taxon_oid, tx.is_public, tx.domain, tx.seq_status, 
                     tx.proposal_name, tx.taxon_display_name, tx.seq_center, 
                     $inFileClause scf.$taxonSearchFilter $outColClause
                 from taxon tx, taxon_stats stn, scaffold scf
@@ -368,7 +369,7 @@ sub printFindGenomeResults {
         }
         else {
             $sql = qq{
-                select distinct tx.taxon_oid, tx.domain, tx.seq_status, 
+                select distinct tx.taxon_oid, tx.is_public, tx.domain, tx.seq_status, 
                     tx.proposal_name, tx.taxon_display_name, tx.seq_center, 
                    $inFileClause tx.$taxonSearchFilter $outColClause
                from taxon tx, taxon_stats stn
@@ -437,7 +438,7 @@ sub printFindGenomeResults {
 	    if ( $taxonSearchFilter eq "ext_accession" || $taxonSearchFilter eq "scaffold_oid") {
 	    	if ($anyStn == 1) {
 	            $sql = qq{
-                    select distinct tx.taxon_oid, tx.domain, tx.seq_status, 
+                    select distinct tx.taxon_oid, tx.is_public, tx.domain, tx.seq_status, 
                         tx.proposal_name, tx.taxon_display_name, tx.seq_center, 
 	                    $inFileClause scf.$taxonSearchFilter $outColClause
 	                from taxon tx, taxon_stats stn, scaffold scf
@@ -452,7 +453,7 @@ sub printFindGenomeResults {
 	    	}
 	    	else {
 	            $sql = qq{
-                    select distinct tx.taxon_oid, tx.domain, tx.seq_status, 
+                    select distinct tx.taxon_oid, tx.is_public, tx.domain, tx.seq_status, 
                         tx.proposal_name, tx.taxon_display_name, tx.seq_center, 
 	                    $inFileClause scf.$taxonSearchFilter $outColClause
 	                from taxon tx, scaffold scf
@@ -469,7 +470,7 @@ sub printFindGenomeResults {
 	    else {
             if ($anyStn == 1) {
 	            $sql = qq{
-                   select distinct tx.taxon_oid, tx.domain, tx.seq_status, 
+                   select distinct tx.taxon_oid, tx.is_public, tx.domain, tx.seq_status, 
                         tx.proposal_name, tx.taxon_display_name, tx.seq_center, 
 	                   $inFileClause tx.$taxonSearchFilter $outColClause
 	               from taxon tx, taxon_stats stn
@@ -483,7 +484,7 @@ sub printFindGenomeResults {
             }
             else {
 	            $sql = qq{
-                   select distinct tx.taxon_oid, tx.domain, tx.seq_status, 
+                   select distinct tx.taxon_oid, tx.is_public, tx.domain, tx.seq_status, 
                         tx.proposal_name, tx.taxon_display_name, tx.seq_center, 
 	                   $inFileClause tx.$taxonSearchFilter $outColClause
 	               from taxon tx
@@ -506,6 +507,7 @@ sub printFindGenomeResults {
     my $cur = WebUtil::execSqlBind( $dbh, $sql, \@bindList, $verbose );
 
     ### Retrieve data from SQL output
+    my $privateCount;
     my @recs;
     my @tOids;
     my %tOids2SubmissionIds  = (); #submissionIds, goldIds
@@ -514,11 +516,18 @@ sub printFindGenomeResults {
     my %taxons_in_file;
 
     for ( ; ; ) {
-        my ( $taxon_oid, $domain, $seq_status, 
+        my ( $taxon_oid, $is_public, $domain, $seq_status, 
             $proposal_name, $taxon_display_name, $seq_center, 
             $in_file_val, $fieldVal, @outColVals
            ) = $cur->fetchrow();
         last if !$taxon_oid;
+
+        if ( !$user_restricted_site ) {
+           if (lc($is_public) eq lc('No')) {
+               $privateCount++;
+               next;
+           }
+        }
 
         if ( $in_file_val eq 'Yes' ) {
             $taxons_in_file{$taxon_oid} = 1;
@@ -565,10 +574,12 @@ sub printFindGenomeResults {
     }
     $cur->finish();
 
-    my %tOids2Meta = GoldDataEntryUtil::getMetadataForAttrs_new_2_0( 
-                  \%tOids2SubmissionIds, \%tOids2GoldIds, 
-                  \@mOutCol, \%tOids2ProjectGoldIds )
-             if ( $mOutStartIdx >= 0 );
+    #print "privateCount=$privateCount.<br/>\n";
+    if ( $privateCount > 0 && !$user_restricted_site ) {
+        my $homeUrl = $env->{https_cgi_url} = "https://" . $env->{domain_name} . "/cgi-bin/mer/" . $env->{main_cgi};
+        my $homeLink = alink( $homeUrl, "IMG/MER home" );
+        print "<p>\n$privateCount private genome(s).  Please use $homeLink to access the private genomes.\n</p>";
+    }
 
     if ( scalar(@recs) == 0 ) {
         print "<p>0 genomes retrieved.</p>\n";
@@ -592,6 +603,12 @@ sub printFindGenomeResults {
         WebUtil::printStatusLine( "0 genomes retrieved.", 2 );
         return;
     }
+
+    my %tOids2Meta = GoldDataEntryUtil::getMetadataForAttrs_new_2_0( 
+                  \%tOids2SubmissionIds, \%tOids2GoldIds, 
+                  \@mOutCol, \%tOids2ProjectGoldIds )
+             if ( $mOutStartIdx >= 0 );
+
     my $txTableName = "GenomeSearch";  # name of current instance of taxon table
     TaxonSearchUtil::printNotes();
     TaxonSearchUtil::printButtonFooter($txTableName);

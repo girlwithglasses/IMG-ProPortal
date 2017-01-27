@@ -32,6 +32,7 @@ my $conf = WebConfig_img_proportal::make_config({
 
 #$conf->{sso_url_prefix} = 'https://signon.';
 #$conf->{sso_domain} = 'jgi.doe.gov';
+
 $conf->{sso_enabled} = 0;
 
 sub getEnv {

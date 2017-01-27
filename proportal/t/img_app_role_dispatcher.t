@@ -10,7 +10,7 @@ BEGIN {
 	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib proportal/t/lib );
 }
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use IMG::App::Role::Dispatcher;
 use CGI;

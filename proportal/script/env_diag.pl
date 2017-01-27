@@ -12,7 +12,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 my $out;
 if ( $ARGV[0] ) {

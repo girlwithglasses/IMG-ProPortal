@@ -3,11 +3,11 @@
 #
 #	Core attributes, etc.
 #
-#	$Id: Core.pm 36174 2016-09-15 13:29:13Z aireland $
+#	$Id: Core.pm 36523 2017-01-26 17:53:41Z aireland $
 ############################################################################
 package IMG::App::Core;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 use IMG::Model::Contact;
 use Time::HiRes;
 
@@ -18,7 +18,7 @@ has 'id' => (
 );
 
 sub _build_id {
-	return [ Time::HiRes::gettimeofday ];
+	return Time::HiRes::gettimeofday;
 }
 
 has 'config' => (

@@ -187,7 +187,7 @@ function fn(res,d,gm,MarkerClusterer,links) {
 			+ '<p>' + pt.latitude + ', ' + pt.longitude + '</p>';
 			pt.html += "<ul>";
 			for (i=0,ml=pt.genomes.length;i<ml;i++) {
-				pt.html += '<li><a href="' + links.taxon + pt.genomes[i].taxon_oid + '">' + pt.genomes[i].taxon_display_name + "</a>";
+				pt.html += '<li><a href="' + links.taxon + '/' + pt.genomes[i].taxon_oid + '">' + pt.genomes[i].taxon_display_name + "</a>";
 				if (pt.genomes[i].genome_type !== "") {
 					pt.html += " (" + pt.genomes[i].genome_type + ")";
 				}
@@ -232,7 +232,7 @@ function fn(res,d,gm,MarkerClusterer,links) {
 					else {
 						str += '<p>Altitude/depth not specified</p>';
 					}
-					str += '<p><a href="' + links.taxon + g.taxon_oid + '">' + g.taxon_display_name + '</a></p>';
+					str += '<p><a href="' + links.taxon + '/' + g.taxon_oid + '">' + g.taxon_display_name + '</a></p>';
 				}
 				pt.info = str;
 			}

@@ -1,6 +1,6 @@
 package IMG::Model::Taxon;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 use Scalar::Util qw( blessed );
 use Acme::Damn;
 with 'IMG::App::Role::ErrorMessages';

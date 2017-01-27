@@ -1,6 +1,6 @@
 package IMG::Views::Links;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use IMG::Views::ExternalLinks;
 use IMG::App::Role::ErrorMessages qw( err );
 use utf8;

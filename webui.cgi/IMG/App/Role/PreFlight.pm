@@ -3,16 +3,16 @@
 #
 #	Run preflight checks to ensure app is ready for action
 #
-#	$Id: PreFlight.pm 35789 2016-06-16 19:26:50Z aireland $
+#	$Id: PreFlight.pm 36523 2017-01-26 17:53:41Z aireland $
 ############################################################################
 package IMG::App::Role::PreFlight;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 use IMG::Util::File;
 use IMG::Util::Timed;
 use IMG::App::Role::ErrorMessages qw( err );
 
-requires 'config', 'remote_addr', 'user_agent';
+requires 'config'; # 'remote_addr', 'user_agent';
 
 has 'remote_addr' => (
 	is => 'lazy',
@@ -50,6 +50,7 @@ Run preflight checks for IMG apps
 	my $errors = IMG::App::Role::PreFlight::run_checks( config => $config, cgi => $cgi );
 
 @param  config => configuration hash
+
 @param  http_params => hash of parameters
     OR  cgi  => $cgi_object
     OR  psgi => $psgi_env_hash
@@ -67,7 +68,7 @@ sub run_checks {
 	my $self = shift;
 	my $args = shift || {};
 
-	croak __PACKAGE__ . " requires parameters 'config' and either 'cgi' or 'psgi'" unless defined $self->config && ( defined $self->cgi || defined $self->psgi_req || defined $self->http_params ) ;
+#	croak __PACKAGE__ . " requires parameters 'config' and either 'cgi' or 'psgi'" unless defined $self->config && ( defined $self->cgi || defined $self->psgi_req || defined $self->http_params ) ;
 
 #	warn "http_params: " . Dumper ( $http_params || {} );
 
@@ -75,11 +76,12 @@ sub run_checks {
 
 	my @checks = qw(
 		db_lock_check
-		block_bots
-		block_ip_address
 		max_cgi_process_check
 		check_dir
 	);
+#	removed as are covered by Apache config
+# 		block_bots
+# 		block_ip_address
 
 	while ( ! defined $resp && @checks) {
 		my $fn = shift @checks;
@@ -111,6 +113,8 @@ Check for a database lock file, $self->config->{dblock_file}
 sub db_lock_check {
 	my $self = shift;
 
+##	TODO: move this to the file manager!
+
 	return undef unless $self->config->{dblock_file} && -e $self->config->{dblock_file};
 
 	# check whether there is a message in the lock file
@@ -135,6 +139,10 @@ Block bots, held in $config->{bot_patterns}
 =head3 bots_allowed_here
 
 Pages where bots are allowed
+
+=comment
+
+Should be dealt with by the Apache config now
 
 =cut
 
@@ -218,6 +226,10 @@ Block users by IP address; blocked IPs are in $self->config->{block_ip_address_f
 
 @return undef or a hashref with error information
 
+=comment
+
+Should be dealt with by Apache config
+
 =cut
 
 sub block_ip_address {
@@ -297,6 +309,8 @@ Make sure that a directory is accessible
 sub check_dir {
 	my $self = shift;
 	my $dir  = shift;
+
+##	TODO: move this sub into IMG::Util::File
 
 	return undef unless defined $dir;
 

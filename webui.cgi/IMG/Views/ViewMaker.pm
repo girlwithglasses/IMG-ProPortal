@@ -1,6 +1,6 @@
 package IMG::Views::ViewMaker;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use Dancer2::Plugin;
 
 use Template;

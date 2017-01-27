@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::Query;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 has 'controller_args' => (
 	is => 'lazy',
@@ -25,7 +25,7 @@ Create the PhyloViewer submission form
 
 =cut
 
-sub render {
+sub _render {
 	my $self = shift;
 
 	# get the contents of the gene cart
@@ -90,7 +90,7 @@ sub render {
 
 	my $form = [ qw( input gp msa tree ) ];
 
-	return $self->add_defaults_and_render({
+	return { results => {
 		schema => $self->get_query_schema,
 		transform => $transform,
 		form => [ qw( gp )],
@@ -98,7 +98,7 @@ sub render {
 			table_headers => $headers,
 			array => $genes
 		}
-	});
+	} };
 }
 
 

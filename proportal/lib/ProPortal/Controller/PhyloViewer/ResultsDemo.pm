@@ -1,6 +1,6 @@
 package ProPortal::Controller::PhyloViewer::ResultsDemo;
 
-use IMG::Util::Base 'MooRole';
+use IMG::Util::Import 'MooRole';
 
 with 'ProPortal::Controller::PhyloViewer::Results';
 with 'ProPortal::Controller::PhyloViewer::DemoData';

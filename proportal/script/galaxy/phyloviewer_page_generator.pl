@@ -14,7 +14,7 @@ use lib @dir_arr;
 
 {
 	package ScriptAppArgs;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use Getopt::Long qw( GetOptionsFromArray );
 	with 'IMG::App::Role::ErrorMessages';
 	use IMG::Util::File;
@@ -81,7 +81,7 @@ use lib @dir_arr;
 
 {
 	package PhyloViewerApp;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	use ScriptAppArgs;
 	use AppCore;
 	extends 'IMG::App';

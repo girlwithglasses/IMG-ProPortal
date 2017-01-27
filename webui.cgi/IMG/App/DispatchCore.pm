@@ -3,11 +3,11 @@
 #
 #	Core dispatcher code
 #
-#	$Id: DispatchCore.pm 36423 2016-11-16 06:57:15Z aireland $
+#	$Id: DispatchCore.pm 36523 2017-01-26 17:53:41Z aireland $
 ############################################################################
 package IMG::App::DispatchCore;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 use IMG::Util::Factory;
 
 =head3 prepare_dispatch_coderef

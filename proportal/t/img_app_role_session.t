@@ -10,7 +10,7 @@ BEGIN {
 	our @dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib proportal/t/lib );
 }
 use lib @dir_arr;
-use IMG::Util::Base 'Test';
+use IMG::Util::Import 'Test';
 
 use IMG::App::Role::User;
 use IMG::App::Core;
@@ -25,7 +25,7 @@ use DataModel::IMG_Test;
 
 {
 	package IMG::App::Role::UserObj;
-	use IMG::Util::Base 'Class';
+	use IMG::Util::Import 'Class';
 	extends 'IMG::App';
 #	with qw(
 #		IMG::App::Role::Session

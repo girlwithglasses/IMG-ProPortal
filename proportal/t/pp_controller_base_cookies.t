@@ -15,7 +15,7 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Base 'NetTest';
+use IMG::Util::Import 'NetTest';
 use Dancer2;
 use HTTP::CookieJar;
 use Test::MockModule;

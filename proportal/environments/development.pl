@@ -14,41 +14,17 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use strict;
-use warnings;
-use feature ':5.16';
-use Data::Dumper;
+use IMG::Util::Import;
 use WebConfig qw();
 use Config::Any;
+use IMG::Util::ConfigValidator;
 
-my $conf = WebConfig::getEnv();
-
-# valid levels: production, development, testing
-my @pieces = qw( schema_local db debug );
-#
-# {
-# 	schema => 'schemafile.pl',
-# 	level  => 'development'
-# }
-
-my @files = map { catfile( $dir, 'proportal/environments', $_  ) } @pieces;
-
-my $cfg = Config::Any->load_stems({
-	stems => [ @files ],
-	use_ext => 1,
-#	flatten_to_hash => 1,
+my $cnf = IMG::Util::ConfigValidator::make_config({
+	dir => $dir,
+	schema => 'schema_local',
+	db => 'db',
+	debug => 'debug'
 });
 
-my $hash = {};
-for ( @$cfg ) {
-	my $vals = ( values %$_ )[0];
-	$hash = { %$hash, %$vals };
-}
-$hash->{logger} = 'Console';
-
-my $rtn = { %$conf, %$hash };
-
-#say Dumper $rtn;
-
-# return { img => $conf, %$hash };
-return { %$conf, %$hash };
+$cnf->{logger} = 'Console';
+return $cnf;
