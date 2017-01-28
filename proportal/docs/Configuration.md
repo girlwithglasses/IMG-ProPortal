@@ -39,12 +39,12 @@ Taxonomic subsets
 
 * Transcriptomes:
 
-  * `rnaseq_dataset.dataset_type = 'Transcriptome'` -- detailed expression data in `rnaseq_expression` table
+  * `rnaseq_dataset.dataset_type = 'Transcriptome'`
 
 * Metatranscriptomes:
 
-  * `rnaseq_dataset.dataset_type = 'Metatranscriptome'` -- loaded as RNASeq data (i.e. read depths, etc.)
-  * `gold_sequencing_project.sequencing_strategy = 'Metatranscriptome` -- loaded as if they are metagenomes (with genes, etc.)
+  * `rnaseq_dataset.dataset_type = 'Metatranscriptome'` -- loaded as RNASeq data
+  * `gold_sequencing_project.sequencing_strategy = 'Metatranscriptome'` -- loaded as metagenomes
 
 * Single cells:
 
