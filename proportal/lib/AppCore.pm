@@ -129,13 +129,21 @@ See get_tmpl_vars for details
 
 hook before_template_render => sub {
 
-	debug 'Running before_template_render';
+	debug 'Running before_template_render at ' . Time::HiRes::gettimeofday;
 
 	my $page_id = var 'page_id';
 	my $menu_grp = var 'menu_grp';
 
 	my $out = get_menu_vars( @_ );
 	get_tmpl_vars ( $out );
+
+	debug 'Finished before_template_render at ' . Time::HiRes::gettimeofday;
+
+};
+
+hook after_template_render => sub {
+
+	debug 'Running after_template_render at ' . Time::HiRes::gettimeofday;
 
 };
 

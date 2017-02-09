@@ -8,30 +8,6 @@ extends 'ProPortal::Controller::Filtered';
 
 with 'IMG::Util::Text';
 
-# has 'controller_args' => (
-# 	is => 'lazy',
-# 	default => sub {
-# 		return {
-# #			class => 'ProPortal::Controller::Filtered',
-# 			page_id => 'proportal/clade',
-# 			tmpl => 'pages/proportal/clade.tt',
-# 			tmpl_includes => {
-# 				tt_scripts => qw( clade ),
-# 				tt_styles  => qw( clade ),
-# 			},
-# 			filters => {
-# 				subset => 'coccus'
-# 			},
-# 			valid_filters => {
-# 				subset => {
-# 					enum => [ qw( prochlor synech coccus ) ],
-# 				}
-# 			},
-# 		};
-# 	}
-# );
-
-
 has '+page_id' => (
 	default => 'proportal/clade'
 );
@@ -59,7 +35,7 @@ has '+valid_filters' => (
 	default => sub {
 		return {
 			subset => {
-				enum => [ qw( prochlor synech coccus ) ]
+				enum => [ qw( pro syn coccus ) ]
 			}
 		};
 	}
@@ -70,8 +46,7 @@ has '+valid_filters' => (
 Requires JSON plugin for rendering data set
 
 =cut
-
-my $render_sub = sub {
+sub _render {
 	my $self = shift;
 
 #	say 'self: ' . Dumper $self;
@@ -82,12 +57,13 @@ my $render_sub = sub {
 		filters => { subset => 'coccus' }
 	});
 
-#	say 'Clades: ' . Dumper $clades;
+	say 'Clades: ' . Dumper $clades;
 
 	my $data;
 	my $clade_h;
 
 	for my $c ( @$clades ) {
+		next unless $c->{clade} =~ /\w/;
 		$data->{ $c->{genus} }{ $c->{generic_clade} } = {
 			id => 'clade_' . $self->make_text_web_safe( $c->{generic_clade} ),
 			label => $c->{generic_clade},
@@ -108,10 +84,9 @@ my $render_sub = sub {
 		js => { data => $data, clade_arr => [ sort keys %$clade_h ] }
 	} };
 
-};
+}
 
-my $get_data_sub = sub {
-#sub get_data {
+sub get_data {
 	my $self = shift;
 	my $res = $self->_core->run_query({
 		query => 'clade',
@@ -122,14 +97,6 @@ my $get_data_sub = sub {
 #	only required for badly-populated dbs
 	return [ grep { $_->{clade} =~ /\w/ } @$res ];
 #}
-};
-
-sub _render {
-	return $render_sub->( @_ );
-}
-
-sub get_data {
-	return $get_data_sub->( @_ );
 }
 
 1;

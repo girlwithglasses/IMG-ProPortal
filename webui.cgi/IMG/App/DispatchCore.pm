@@ -28,6 +28,8 @@ sub prepare_dispatch_coderef {
 	my $module = $arg_h->{module} || die err ({ err => 'missing', subject => 'module' });
 	my $sub = $arg_h->{sub} || die err ({ err => 'missing', subject => 'sub' });
 
+	# initialise IMG session, dbhs, etc.
+
 	IMG::Util::Factory::load_module( $module );
 
 	# make sure that we can run the sub:
@@ -41,11 +43,10 @@ sub prepare_dispatch_coderef {
 
 #	getPageTitle
 #	getAppHeaderData
-	my $pageTitle = $section->getPageTitle();
-
-	my @appArgs = $section->getAppHeaderData();
-	my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
-	$section->dispatch($numTaxons);
+# 	my $pageTitle = $section->getPageTitle();
+# 	my @appArgs = $section->getAppHeaderData();
+# 	my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
+# 	$section->dispatch($numTaxons);
 
 
 	my $to_do;

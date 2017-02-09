@@ -18,7 +18,7 @@
 		'{}';
 	END;
 		%],filters:[%
-	IF data_filters && data_filters.all;
+	IF data_filters;
 		data_filters.json;
 	ELSE;
 		'{}';

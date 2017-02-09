@@ -63,7 +63,7 @@ sub run {
 	}
 
 	# check taxon is public
-	my $t_data = $self->get_taxon_data({ taxon_oid => $self->args->taxon_oid });
+	my $t_data = $self->get_taxon_name_public({ taxon_oid => $self->args->taxon_oid });
 
 	# copy / soft link the sequence file
 	my $seq_src = $self->get_taxon_file({ type => 'dna_seq', taxon_oid => $self->args->taxon_oid });

@@ -4,6 +4,7 @@ use IMG::Util::Import;
 use File::Spec::Functions qw( catdir catfile );
 use Config::Any;
 use WebConfig ();
+use IMG::Util::DB;
 
 #	schema  => # schema data -- which db connection to use for which schema
 #	db      => # database connection details
@@ -27,8 +28,6 @@ sub make_config {
 	#	flatten_to_hash => 1,
 	});
 
-#	say 'cfg: ' . Dumper $cfg;
-
 	my $hash = {};
 	for ( @$cfg ) {
 		my $vals = ( values %$_ )[0];
@@ -43,26 +42,44 @@ sub make_config {
 		}
 	}
 
-#	$hash->{img_app_cfg} = $img_conf;
+#	say 'img_conf schema: ' . Dumper $img_conf->{schema};
+#	say 'img_conf db: ' . Dumper $img_conf->{db};
 
-	say 'Made a hash of things!';
+	# check that we have the relevant DB config params
+	for my $db ( keys %{$img_conf->{schema}} ) {
+		if ( ! $img_conf->{db}{ $img_conf->{schema}{$db}{db} } ) {
+			if ( 'img_core' eq $img_conf->{schema}{$db}{db} || 'img_gold' eq $img_conf->{schema}{$db}{db} ) {
+				my $dbh = IMG::Util::DB::get_oracle_connection_params({ database => $img_conf->{schema}{$db}{db} });
+				$dbh->{dbi_params} = { RaiseError => 1, FetchHashKeyName => 'NAME_lc' };
+				$img_conf->{db}{ $img_conf->{schema}{$db}{db} } = $dbh;
+			}
+			else {
+				say 'No config for ' . $img_conf->{schema}{$db}{db};
+			}
+		}
+	}
+#	say 'Made a hash of things!';
 	$hash->{plugins}{Adapter}{img_app} = {
 		class => 'ProPortalPackage',
 		scope => 'singleton',
 		options => { config => $img_conf }
 	};
 
-#	say Dumper $hash;
-
 	return $hash;
 }
 #
 #
 # requires 'config';
+# has 'img_cfg
 #
 # has 'schema' => (
 # 	is => 'ro',
 # 	isa => Map[ Str => Dict[ module => Str, db => Str ]],
+#	coerce => sub {
+#		my $cfg = Config::Any->load_stems({
+#			stems => [  ],
+#			use_ext => 1
+#		})
 # );
 #
 # has 'db' => (

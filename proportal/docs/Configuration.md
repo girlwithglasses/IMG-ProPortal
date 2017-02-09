@@ -13,17 +13,20 @@
 
 Taxonomic subsets
 
-* Prochlorococcus spp
-  * `genome_type = 'isolate' AND genus = 'Prochlorococcus'`
+For isolate genomes (`taxon.genome_type = 'isolate'`):
 
-* Synechococcus spp
-  * `genome_type = 'isolate' AND taxon.genus = 'Synechococcus' AND ( lower(ecosystem_subtype) = 'marginal sea' OR lower(ecosystem_subtype) = 'pelagic')`
+* `taxon_display_name` starts with 'Prochlorococcus':
+  * `domain` is bacteria: subset Prochlorococcus
+  * `domain` is viruses: subset Prochlorococcus phage
 
-* Synechococcus spp
-  * `genome_type = 'isolate' AND lower(taxon_display_name) LIKE 'synechococcus%' AND taxon.domain = 'Viruses'`
+* `taxon_display_name` start with 'synechococcus':
+  * `domain` is bacteria: subset Synechococcus
+  * `domain` is viruses: subset Synechococcus phage
 
-* Prochlorococcus phage
-  * `genome_type = 'isolate' AND lower(taxon_display_name) LIKE 'prochlorococcus%' AND taxon.domain = 'Viruses'`
+* `ecosystem_subtype` is 'marginal sea' or 'pelagic':
+  * `domain` is bacteria: subset other
+  * `domain` is viruses: subset other phage
+
 
 * Isolates: all the above
 
@@ -37,6 +40,10 @@ Taxonomic subsets
 
 ### Data type ###
 
+* Single cells:
+
+  * `taxon.genome_type = 'isolate' AND gold_sequencing_project.uncultured_type = 'Single Cell'`
+
 * Transcriptomes:
 
   * `rnaseq_dataset.dataset_type = 'Transcriptome'`
@@ -45,9 +52,5 @@ Taxonomic subsets
 
   * `rnaseq_dataset.dataset_type = 'Metatranscriptome'` -- loaded as RNASeq data
   * `gold_sequencing_project.sequencing_strategy = 'Metatranscriptome'` -- loaded as metagenomes
-
-* Single cells:
-
-  * `gold_sequencing_project.uncultured_type = 'Single Cell'`
 
 * Other: the `genome_type` (isolate or metagenome) designator is used

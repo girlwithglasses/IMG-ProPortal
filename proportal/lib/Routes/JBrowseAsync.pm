@@ -140,7 +140,7 @@ sub generate_jbrowse_data_async {
 		create_scratch_dir_async( $taxid ),
 		do_async( \&create_ref_seq, $taxid ),
 		do_async( \&create_gff_track, $taxid ),
-#		get_taxon_data( $taxid ),
+#		get_taxon_name_public( $taxid ),
 		do_async( \&get_gene_oids_from_gff, $taxid ),
 
 	)->then( sub {

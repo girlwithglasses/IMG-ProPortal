@@ -49,17 +49,29 @@ prefix '/proportal' => sub {
 	# filterable queries
 	get qr{
 		/ (?<query> clade | data_type | ecosystem | ecotype | location | phylogram | big_ugly_taxon_table )
-		/? (?<subset> \w+.* )?
+		/?
+		(subset=)?
+		(?<subset>\w+)?
+		/?
+		(dataset_type=)?
+		(?<dataset_type>\w+)?
+		/?
 		}x => sub {
 
+#	<= subset=SUBSET
+#	<= dataset_type=DST
+
 		my $c = captures;
-		my $p = $c->{query};
+		my $p = delete $c->{query};
+
+		say 'captures: ' . Dumper $c;
 
 		bootstrap( $p );
 
-		if ( $c->{subset} ) {
-			img_app->set_filters( subset => $c->{subset} );
-		}
+		img_app->set_filters( $c );
+#		if ( $c->{subset} ) {
+#			img_app->set_filters( subset => $c->{subset} );
+#		}
 
 		var menu_grp => $group;
 		var page_id  => img_app->controller->page_id;

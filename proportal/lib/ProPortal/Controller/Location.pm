@@ -57,7 +57,7 @@ sub _render {
 			};
 		}
 		else {
-			push @{$data->{ $_->{latitude} ."_". $_->{longitude}}{genomes}}, $_; #damn $_;
+			push @{$data->{ $_->{latitude} ."_". $_->{longitude} } {genomes} }, $_; #damn $_;
 		}
 
 	}

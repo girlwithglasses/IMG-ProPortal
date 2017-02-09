@@ -1,6 +1,6 @@
 package UserPreferences;
 
-use IMG::Util::Base 'Class';
+use IMG::Util::Import 'Class';
 
 require WorkspaceUtil;
 my $workspaceSharingOptions = WorkspaceUtil::getContactImgGroupsOptions();
@@ -148,7 +148,7 @@ my $prefs = {
 
 package MyIMG::Preferences;
 
-use IMG::Util::Base;
+use IMG::Util::Import;
 
 
 

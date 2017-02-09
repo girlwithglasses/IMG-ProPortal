@@ -16,7 +16,7 @@ prefix '/api/proportal' => sub {
 
 	my @valid_queries = qw( location clade data_type phylogram ecosystem ecotype big_ugly_taxon_table );
 
-	my @subsets = qw( metagenome isolate prochlor synech prochlor_phage synech_phage );
+	my @subsets = qw( metagenome isolate pro syn pro_phage syn_phage );
 
 	my $re = join '|', @valid_queries;
 

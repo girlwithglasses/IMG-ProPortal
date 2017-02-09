@@ -41,13 +41,13 @@ has '+tmpl_includes' => (
 
 has '+filters' => (
 	default => sub {
-		return { subset => 'prochlor' };
+		return { subset => 'pro' };
 	}
 );
 
 has '+valid_filters' => (
 	default => sub {
-		return { subset => { enum => [ qw( prochlor ) ] } };
+		return { subset => { enum => [ qw( pro ) ] } };
 	}
 );
 

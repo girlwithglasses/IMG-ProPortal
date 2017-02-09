@@ -20,7 +20,7 @@ sub get_dbix_connector {
 	my $arg_h = shift // die err ({ err => 'missing', subject => 'connection parameters' });
 
 	if (! ref $arg_h || ref $arg_h ne 'HASH' ) {
-		die err({ err => 'format_err', subject => 'database connection parameters', fmt => 'hashref' });
+		die err({ err => 'format_err', subject => 'db_conn_params', fmt => 'hashref' });
 	}
 
 	if (! $arg_h->{dsn} ) {

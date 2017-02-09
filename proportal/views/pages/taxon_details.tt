@@ -3,15 +3,10 @@
 	self = results.taxon;
 %]
 
-<head>
-<!--   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
-  <!-- script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script -->
-
 <style>
-	
-/* RESPONSIVE GRID SIZING  */	
-	
+
+/* RESPONSIVE GRID SIZING  */
+
 /* Resets */
 *,
 *:before,
@@ -23,7 +18,7 @@
 	content: "";
 	display: table;
 	clear: both;
-}	
+}
 
 .row {
 	display: flex;
@@ -41,8 +36,8 @@
 	width: 100%;
 
 }
-	
-	
+
+
 /* Small screen */
 @media all and (max-width: 1023px) {
   .infoBox {
@@ -59,8 +54,8 @@
 	}
 }
 
- 
-/* GLOBAL */ 
+
+/* GLOBAL */
 h2, h3, h4, h5, h6 {
  	margin: 0;
  	padding: 0;
@@ -84,12 +79,12 @@ button {
 
 .normal {
 	font-weight: normal;
-} 
-	
+}
+
 .border {
 	border: 1px solid blue;
 }
-	
+
 .underline {
 	border-bottom: 2px solid black;
 }
@@ -112,8 +107,8 @@ button {
 #buttonBar {
 	float: right;
 	clear: both;
-}	
-	
+}
+
 
 /* INFOBOX
 
@@ -131,7 +126,7 @@ button {
 .infoBox {
 	padding: 0 20px 20px 20px;
 
-	
+
 }
 
 .infoBoxTitle {
@@ -141,7 +136,7 @@ button {
 
 .infoBox table {
 	table-layout: fixed;
-	width: 100%;	
+	width: 100%;
 	border-collapse: collapse;
 }
 
@@ -177,11 +172,7 @@ button {
 	padding: 10px;
 	font-size: 75%;
 }
-
 </style>
-
-</head>
-
 <div class="thisWrapper">
 	<div id="pageHeader">
 		<div id="title" class="underline">
@@ -189,7 +180,7 @@ button {
 			<h4 class="normal">
 			[% IF self.genome_type=="isolate"; %]
 				Isolate genome
-			[% ELSIF self.genome_type=="metagenome"; %]	
+			[% ELSIF self.genome_type=="metagenome"; %]
 				Metagenome
 			[% END %]
 			</h4>
@@ -199,7 +190,7 @@ button {
 		</div>
 		<div id="buttonBar">
 			<button>Add to Cart</button>
-<!-- 			<button>Export</button> 	** develop this later **			-->		
+<!-- 			<button>Export</button> 	** develop this later **			-->
 		</div>
 
 	</div>
@@ -209,10 +200,10 @@ button {
 
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Natural Isolation Information</h4></div>
-		
+
 		<table>
 			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
-		
+
 			<tr><td>Date collected</td> 	<td>[% self.date_collected %]</td></tr>
 			<tr><td>Latitude / longitude</td>	<td>[% self.latitude %]&#176;N, [% self.longitude %]&#176;E</td></tr>
 			<tr><td>Depth</td>	<td>[% self.depth %]</td></tr>
@@ -223,11 +214,11 @@ button {
 				END %]</td></tr>
 			<tr><td>NOAA Sea Name</td>	<td>[% self.geo_location %]</td></tr>
 			<tr><td>Ocean</td>	<td>[% self.proport_ocean %]</td></tr>
-			
+
 			<tr><td colspan="2"><h6 class="subheader">Ecological Information</h6></td>
 			<tr><td class="panelTable">Clade</td>	<td>[% self.clade %]</td></tr>
 			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
-			
+
 			<tr><td colspan="2"><h6 class="subheader">Ecosystem Hierarchy</h6></td>
 			</tr>
 				[%
@@ -241,17 +232,17 @@ button {
 				FOR e IN eco_hier; %]
 				<tr><td class="indent">[% e | replace('_', ' ') | ucfirst %]</td>	<td> [% self.$e %]</td>	</tr>
 				[%	END; %]
-				
-			
+
+
 		</table>
 	</div>	<!-- infoTable -->
-	
+
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Environmental Measurements</h4></div>
-		
+
 		<table>
 		<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
-		
+
 		<tr><td colspan="2"><h6 class="subheader">Direct Measurements</h6>
 				</td></tr>
 			[%	env_meas = [
@@ -282,7 +273,7 @@ button {
 			[%	END %]
 			<tr>
 				<td colspan="2"><h6 class="subheader">World Ocean Atlas Averages</h6>
-	<!-- 
+	<!--
 			<div class="help">
 					?
 				</div>
@@ -317,21 +308,21 @@ button {
 			[%	END %]
 		</table>
 	</div>
-		
+
 </div>
 
-<div class="row">	
+<div class="row">
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Ecological Information</h4></div>
-			
+
 		<table>
 			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
 			<tr><td>Clade</td>	<td>[% self.clade %]</td></tr>
 			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
-			
+
 			<tr><td colspan="2"><h6 class="subheader">NCBI Taxonomy</h6></td></tr>
 			[% ncbi = [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ];
-				
+
 			FOR n IN ncbi;
 				n_field = 'ncbi_' _ n;%]
 			<tr><td> [% n | ucfirst %]</td>	<td>[% self.$n_field %]</td></tr>
@@ -341,19 +332,19 @@ button {
 
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Identification and External Links</h4></div>
-		
+
 		<table>
 		<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
 		<tr><td>IMG Taxon ID</td>	<td>[% self.taxon_oid %]</td></tr>
 		<tr><td>Project Status</td>	<td>[% self.project_status %]</td></tr>
 		<tr><td colspan="2"><h6 class="subheader">GOLD details</h6></td></tr>
-		<tr><td>Study ID</td>	
+		<tr><td>Study ID</td>
 			<td>[%	IF self.study_gold_id %]
 				<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
 				[%	END %]
 			</td>
 		</tr>
-		<tr><td>Sequencing Project ID</td>	
+		<tr><td>Sequencing Project ID</td>
 			<td>
 				<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
 			</td>
@@ -421,7 +412,7 @@ button {
 <div class="row">
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Sequence Information</h4></div>
-			
+
 		<table>
 			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
 			<!-- <tr><td>Project Type</td>	<td> ... </td> -->
@@ -429,7 +420,7 @@ button {
 			<tr><td>Culture Type</td>	<td>[% self.culture_type %]</td></tr>
 			<tr><td>Quality</td>	<td>[% self.seq_quality %]</td></tr>
 			<tr><td>Publicly Available</td>	<td>[% self.is_public %]</td></tr>
-			
+
 			<tr><td colspan="2"><h6 class="subheader">Sequencing details</h6></td></tr>
 			<tr><td>Sequencing Status</td>	<td>[% self.seq_status %]</td></tr>
 			<tr><td class="indent">Sequencing Center</td>
@@ -445,17 +436,17 @@ button {
 					'; END; ELSE; '
 				<td>Not specified</td>
 					'; END; %]	</tr>
-					
+
 			<tr><td colspan="2"><h6 class="subheader">Curation Details</h6></td></tr>
 			<tr><td>Submission Type</td>	<td>
-<!-- 
+<!--
 				<p class="noteToSelf">
 					add
 				</p>
  -->
 				</td></tr>
 			<tr><td>IMG Release</td>	<td>
-<!-- 
+<!--
 				<p class="noteToSelf">
 					add
 				</p>
@@ -465,7 +456,7 @@ button {
 			<tr><td>Add Date</td>	<td>[% self.add_date %]</td></tr>
 			<tr><td>Modified Date</td>	<td>[% self.mod_date %]</td></tr>
 			<tr><td class="indent">Distance Matrix Calculation Date</td>	<td>
-<!-- 
+<!--
 				<p class="noteToSelf">
 					add
 				</p>

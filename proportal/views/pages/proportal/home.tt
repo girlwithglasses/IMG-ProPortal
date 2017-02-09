@@ -158,11 +158,11 @@ td {
 <tr><th>Category</th><th>Count</th></th></tr>
 </thead>
 <tbody>
-[%	FOR fd IN data_filters.all.keys.sort;
-		FOR f IN data_filters.all.$fd.enum;
+[%	FOR fd IN data_filters.valid.keys.sort;
+		FOR f IN data_filters.valid.$fd.enum;
 			IF results.stats.subsets.$f;
 				s = results.stats.subsets.$f; %]
-		<tr><td>[% data_filters.all.$fd.enum_map.$f %]</td>
+		<tr><td>[% data_filters.schema.$fd.enum_map.$f %]</td>
 			<td>[% s.count %]</td>
 		</tr>
 [%			END;
@@ -213,11 +213,11 @@ td {
 	</thead>
 	<tbody>
 [%	IF results.stats.subsets.size > 0;
-		FOR fd IN data_filters.all.keys.sort;
-			FOR f IN data_filters.all.$fd.enum;
+		FOR fd IN data_filters.schema.keys.sort;
+			FOR f IN data_filters.valid.$fd.enum;
 				IF results.stats.subsets.$f;
 					s = results.stats.subsets.$f; %]
-			<tr><td>[% data_filters.all.$fd.enum_map.$f %]</td>
+			<tr><td>[% data_filters.schema.$fd.enum_map.$f %]</td>
 				<td>[% s.count %]</td>
 			</tr>
 	[%			END;
@@ -240,8 +240,8 @@ td {
 			s = results.stats.data_types.$s_key;
 			s_type = s.proportal_subset; %]
 <tr>
-<td>[% s.data_type %]</td>
-<td>[% data_filters.all.subset.enum_map.$s_type %]</td>
+<td>[% s.dataset_type %]</td>
+<td>[% data_filters.schema.subset.enum_map.$s_type %]</td>
 <td class="R">[% s.public_count %]</td><td class="R">[% s.count %]</td>
 </tr>
 [%	END;

@@ -25,7 +25,7 @@ has '+valid_filters' => (
 	default => sub {
 		return {
 			subset => {
-				enum => [ qw( prochlor synech prochlor_phage synech_phage isolate ) ],
+				enum => [ qw( pro syn pro_phage syn_phage other other_phage isolate ) ],
 			}
 		};
 	}
@@ -65,56 +65,46 @@ sub _render {
 			-columns => [ 'proportal_subset', 'count(taxon_oid)|count' ],
 			-group_by => 'proportal_subset',
 			-where => {
-				proportal_subset => { '!=', undef }
+				proportal_subset => { '!=', undef },
+#				is_public => 'Yes'
 			},
 			-result_as => ['hashref' => 'proportal_subset' ]
 		);
 
 	# counts, grouped by proportal subset and data types
-	$stats->{data_types_all} = $self->_core->schema('img_core')->table('TaxonTypeVw')
-		->select(
-			-columns => [ 'proportal_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|count' ],
-			-group_by => ['proportal_subset', 'data_type' ],
-			-where => {
-				proportal_subset => { '!=', undef }
-			},
-		);
-
-	for ( @{$stats->{data_types_all}} ) {
-		$stats->{data_types}{ $_->{data_type} .'\0'. $_->{proportal_subset} } = $_;
-	}
-
-	$stats->{data_types_public} = $self->_core->schema('img_core')->table('TaxonTypeVw')
-		->select(
-			-columns => [ 'proportal_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|public_count' ],
-			-group_by => ['proportal_subset', 'data_type' ],
-			-where => {
-				proportal_subset => { '!=', undef },
-				is_public => 'Yes'
-			},
-		);
-
-	$stats->{data_types} = {};
-	for ( @{$stats->{data_types_all}}, @{$stats->{data_types_public}} ) {
-		my $key = $_->{data_type} ."\0". $_->{proportal_subset};
-		if ( $stats->{data_types}{ $key } ) {
-			$stats->{data_types}{ $key }{public_count} = $_->{public_count};
-		}
-		else {
-			$stats->{data_types}{ $key } = $_;
-		}
-	}
-
-	$stats->{data_types_public} = $self->_core->schema('img_core')->table('TaxonTypeVw')
-		->select(
-			-columns => [ 'proportal_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|count' ],
-			-group_by => ['proportal_subset', 'data_type' ],
-			-where => {
-				proportal_subset => { '!=', undef },
-				is_public => 'Yes'
-			},
-		);
-
+# 	$stats->{data_types_all} = $self->_core->schema('img_core')->table('TaxonTypeVw')
+# 		->select(
+# 			-columns => [ 'proportal_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|count' ],
+# 			-group_by => ['proportal_subset', 'data_type' ],
+# 			-where => {
+# 				proportal_subset => { '!=', undef }
+# 			},
+# 		);
+#
+# 	for ( @{$stats->{data_types_all}} ) {
+# 		$stats->{data_types}{ $_->{data_type} .'\0'. $_->{proportal_subset} } = $_;
+# 	}
+#
+# 	$stats->{data_types_public} = $self->_core->schema('img_core')->table('TaxonTypeVw')
+# 		->select(
+# 			-columns => [ 'proportal_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|public_count' ],
+# 			-group_by => ['proportal_subset', 'data_type' ],
+# 			-where => {
+# 				proportal_subset => { '!=', undef },
+# 				is_public => 'Yes'
+# 			},
+# 		);
+#
+# 	$stats->{data_types} = {};
+# 	for ( @{$stats->{data_types_all}}, @{$stats->{data_types_public}} ) {
+# 		my $key = $_->{data_type} ."\0". $_->{proportal_subset};
+# 		if ( $stats->{data_types}{ $key } ) {
+# 			$stats->{data_types}{ $key }{public_count} = $_->{public_count};
+# 		}
+# 		else {
+# 			$stats->{data_types}{ $key } = $_;
+# 		}
+# 	}
 
 	# counts, grouped by longhurst code
 	$stats->{by_longhurst} = $self->_core->schema('img_core')->table('GoldTaxonVw')
@@ -123,7 +113,8 @@ sub _render {
 			-group_by => [ qw( longhurst_code longhurst_description ) ],
 			-order_by => [ 'longhurst_description' ],
 			-where => {
-				proportal_subset => { '!=', undef }
+				proportal_subset => { '!=', undef },
+#				is_public => 'Yes'
 			},
 			-result_as => ['hashref' => 'longhurst_description' ]
 		);
@@ -138,7 +129,8 @@ sub _render {
 			-group_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-where => {
-				proportal_subset => 'metagenome'
+				proportal_subset => 'metagenome',
+#				is_public => 'Yes'
 			},
 		);
 
@@ -148,7 +140,8 @@ sub _render {
 			-group_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype ) ],
 			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype ) ],
 			-where => {
-				proportal_subset => 'metagenome'
+				proportal_subset => 'metagenome',
+#				is_public => 'Yes'
 			},
 		);
 

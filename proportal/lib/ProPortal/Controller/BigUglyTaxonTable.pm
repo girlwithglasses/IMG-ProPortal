@@ -4,8 +4,6 @@ use IMG::Util::Import 'Class'; #'MooRole';
 
 extends 'ProPortal::Controller::Filtered';
 
-use JSON qw( encode_json decode_json );
-
 use Template::Plugin::JSON::Escape;
 
 has 'controller_args' => (

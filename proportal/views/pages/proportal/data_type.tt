@@ -9,48 +9,44 @@
 [%	IF data_filters;
 		PROCESS 'inc/filters.tt';
 	END;
-	genomes = results.sorted_data.isolate;
-	metagen = results.sorted_data.metagenome; %]
+%]
 <section id="primary">
 	<h3>Data Type</h3>
-	<h4>Genomes</h4>
-[%	WRAPPER 'inc/cart_genome_add.tt';
-	IF genomes && genomes.keys.size > 0 %]
+[%	WRAPPER 'inc/cart_genome_add.tt' %]
+[%
+
+	USE Dumper;
+#	'<pre>' _ Dumper.dump( data_filters ) _ '</pre>';
+
+	# how results are sorted
+	sort_by = results.sort_by;
+	sorted_data = results.data.subset_dataset_type;
+	alt_sorted_data = results.data.dataset_type_subset;
+	# indexed by data type then subset
+
+	FOR dt IN data_filters.schema.${sort_by.0}.enum; %]
+	<h4>[% data_filters.schema.${sort_by.0}.enum_map.$dt | ucfirst %]</h4>
+[%		IF sorted_data.$dt && sorted_data.$dt.keys.size > 0; %]
 	<ul role="tree">
-[%		FOREACH es IN genomes.keys.sort %]
-		<li>[% es %] ([% genomes.$es.size %])
+[%			FOR pps IN data_filters.schema.${sort_by.1}.enum;
+				IF sorted_data.$dt.$pps; %]
+		<li>[% data_filters.schema.${sort_by.1}.enum_map.$pps %] ([% sorted_data.$dt.$pps.size %])
 			<ul>
-[%			FOREACH s IN genomes.$es %]
+[%					FOR t IN sorted_data.$dt.$pps;
+						taxon = results.data.ix.$t; %]
 				<li>
-				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" />
-				<a href="[% link( 'taxon', { taxon_oid => s.taxon_oid } ) %]">[% s.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => s.taxon_oid } ) %]">JBrowse</a --></li>
-[%			END %]
+				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% taxon.taxon_oid %]" id="cbox_[% taxon.taxon_oid %]" />
+				<a href="[% link( 'taxon', { taxon_oid => taxon.taxon_oid } ) %]">[% taxon.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => taxon.taxon_oid } ) %]">JBrowse</a --></li>
+[%					END %]
 			</ul>
 		</li>
-[%		END %]
+[%				END; # end IF sorted_data.$dt.$pps
+			END; # end FOR pps %]
 	</ul>
-[%	ELSE; %]
+[%		ELSE; # END if... %]
 <p>No genomes found</p>
-[%	END; %]
-<!-- metagenome data -->
-	<h4>Metagenomes</h4>
-[%	IF metagen && metagen.keys.size > 0 %]
-	<ul role="tree">
-[%		FOREACH es IN metagen.keys.sort %]
-		<li>[% es %] ([% metagen.$es.size %])
-			<ul>
-[%			FOREACH m IN metagen.$es %]
-				<li>
-				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% m.taxon_oid %]" id="cbox_[% m.taxon_oid %]" />
-				<a href="[% link( 'taxon', { taxon_oid => m.taxon_oid } ) %]">[% m.taxon_display_name %]</a></li>
-[%			END %]
-			</ul>
-		</li>
-[%		END %]
-	</ul>
-[%	ELSE; %]
-<p>No metagenomes found</p>
-[%	END;
+[%		END;
+	END; # end FOR dt IN ...
 	END; # end wrapper %]
 </section>
 <section id="info" role="complementary">
@@ -64,28 +60,24 @@
 	<tr><th class="L">Genomes</th><th class="L">Count</th></tr>
 	</thead>
 	<tbody>
-[%	IF genomes && genomes.keys.size > 0;
-		FOREACH es IN genomes.keys.sort %]
-		<tr><td><!-- a href="[% link( 'genome_list', { class => es } ) %]" -->[% es %]<!-- /a --></td>
-			<td>[% genomes.$es.size %]</td>
-		</tr>
+[%	FOR dt IN data_filters.schema.${sort_by.1}.enum; %]
+	<tr>
+		<td><strong>[% data_filters.schema.${sort_by.1}.enum_map.$dt | ucfirst %]</strong></td>
+		<td></td>
+	</tr>
+[%		IF alt_sorted_data.$dt && alt_sorted_data.$dt.keys.size > 0;
+			FOR pps IN data_filters.schema.${sort_by.0}.enum;
+				IF alt_sorted_data.$dt.$pps; %]
+	<tr>
+		<td>[% data_filters.schema.${sort_by.0}.enum_map.$pps %]</td>
+		<td>[% alt_sorted_data.$dt.$pps.size %]</td>
+	</tr>
+[%				END; # end IF sorted_data.$dt.$pps
+			END; # end FOR pps
+		ELSE; # END if... %]
+<tr><td colspan="2">No genomes found</td></tr>
 [%		END;
-	ELSE %]
-		<tr><td colspan="2">No genomes found</td></tr>
-[%	END; %]
-	</tbody>
-	<tbody>
-		<tr><th class="L">Metagenomes</th><th class="L">Count</th></tr>
-[%	IF metagen && metagen.keys.size > 0;
-		FOREACH es IN metagen.keys.sort %]
-		<tr>
-			<td><!-- a href="[% link( 'genome_list_ecosystem', { ecosystem_subtype => es } ) %]" -->[% es %]<!-- /a --></td>
-			<td>[% metagen.$es.size %]</td>
-		</tr>
-[%		END;
-	ELSE; %]
-		<tr><td colspan="2">No metagenomes found</td></tr>
-[%	END; %]
+	END; # end FOR dt IN ... %]
 	</tbody>
 	</table>
 </section>

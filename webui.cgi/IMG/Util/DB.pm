@@ -1,11 +1,14 @@
 package IMG::Util::DB;
 
 use IMG::Util::Import;
-use JSON;
-use MIME::Base64;
 use IMG::App::Role::ErrorMessages qw( err );
+use MIME::Base64;
+use JSON::MaybeXS;
 
+use File::Spec::Functions;
+use IMG::Util::File;
 use IMG::Util::DBIxConnector;
+use IO::All;
 
 my $dir = '/webfs/projectdirs/microbial/img/img_rdbms/config/';
 
@@ -18,10 +21,11 @@ Current contents: img_core, img_gold
 =cut
 
 my $common = {
-	img_core => 'web.img_core_v400.config',
-	gemini_1 => 'oracle.img_core_v400_gem1_shared.config',
-	gemini_2 => 'oracle.img_core_v400_gem2_shared.config',
-	img_gold => 'oracle.imgsg_dev.config',
+	img_core => 'web.img_core_v400.config', # alias pointing to gemini_1 or _2
+	img_core_gem1 => 'oracle.img_core_v400_gem1_shared.config',
+	img_core_gem2 => 'oracle.img_core_v400_gem2_shared.config',
+	img_gold => 'web.imgsg_dev.config',
+	i_taxon  => 'web.img_i_taxon.config'
 };
 
 #     $e->{ oracle_config } = $e->{ oracle_config_dir } . "web.$dbTag.config";
@@ -30,6 +34,23 @@ my $common = {
 #     $e->{ img_i_taxon_oracle_config } = $e->{ oracle_config_dir } . "web.img_i_taxon.config";
 
 
+=head3 set_oracle_cfg_dir
+
+Set the path of the directory containing the Oracle cfg files
+
+=cut
+
+sub set_oracle_cfg_dir {
+	my $cfg_dir = shift // die err({ err => 'missing', subject => 'Oracle config directory' });
+	# dies if the dir doesn't exist
+	if ( IMG::Util::File::is_dir( $cfg_dir ) ) {
+		$dir = $cfg_dir;
+	}
+	else {
+		die err({ err => 'invalid', subject => $cfg_dir, type => 'directory' });
+	}
+	return $dir;
+}
 
 =head3 get_oracle_cfg_dir
 
@@ -54,7 +75,7 @@ includes the directory path
 sub get_oracle_cfg_files {
 
 	my %file_h;
-	@file_h{ keys %$common } = map { $dir.$_ } values %$common;
+	@file_h{ keys %$common } = map { catfile( $dir, $_ ) } values %$common;
 
 	return \%file_h;
 
@@ -87,8 +108,20 @@ params from a file with the cleaning them up using clean_oracle_params
 
 sub get_oracle_connection_params {
 
-	my $db = shift // croak "No database or file specified";
+	my $db = shift // die err({ err => 'missing', subject => 'database identifier' });
 
+	if ( 'ARRAY' eq ref $db ) {
+		for my $d ( @$db ) {
+			if ( ! ref $d ) {
+				$d = clean_oracle_params( _read_oracle_connection_file({ database => $d }) );
+			}
+			else {
+				$d = clean_oracle_params( _read_oracle_connection_file( $d ) );
+			}
+		}
+#		say 'db now: ' . Dumper $db;
+		return $db;
+	}
 	# open the file, read the connection params, clean them up
 
 	return clean_oracle_params( _read_oracle_connection_file( $db ) );
@@ -121,32 +154,38 @@ Parse Oracle connection params from files that set them in $ENV.
 =cut
 
 sub _read_oracle_connection_file {
-	my $db = shift // croak "No database specified!";
+	my $db = shift // die err({ err => 'missing', subject => 'db' });
 
 	if (! ref $db || ref $db ne 'HASH' || ( ! $db->{file} && ! $db->{database} ) ) {
-		croak "_read_oracle_connection_file expects a hash ref with key 'file' and value '/path/to/config/file' or key 'database' and value 'img_core' or 'img_gold' as input";
-	}
-	if ($db->{database}) {
-		if (! $common->{ $db->{database} }) {
-		croak "No config file for " . $db->{database} unless $common->{ $db->{database} };
-		}
-		$db->{file} = $dir . $common->{ $db->{database} };
+#		croak "_read_oracle_connection_file expects a hash ref with key 'file' and value '/path/to/config/file' or key 'database' and value 'img_core' or 'img_gold' as input";
+
+		die err({ err => 'invalid_enum',
+			subject => $db,
+			type => 'input to _read_oracle_connection_file',
+			enum => [ "a hash ref with key 'file' and value '/path/to/config/file', or key 'database' and value 'img_core' or 'img_gold'" ]
+		});
 	}
 
-	my @env = qw( ORA_DBI_DSN ORA_USER ORA_PASSWORD ORA_PORT ORA_HOST ORA_SID );
-	for ( @env ) {
-		delete $ENV{$_};
+
+	if ($db->{database}) {
+		if (! $common->{ $db->{database} }) {
+			die err({ err => 'missing', subject => 'config file for ' . $db->{database} })
+			unless $common->{ $db->{database} };
+		}
+		$db->{file} = catfile( $dir, $common->{ $db->{database} } );
 	}
-	eval {
-		require $db->{file};
-	};
-	if ($@) {
-		croak "Could not read " . $db->{file} . ": $@";
-	}
-	# get the data
-	# ENV{ ORA_USER || ORA_PASSWORD || ORA_DBI_DSN }
-	for (@env) {
-		$db->{ lc( $_ ) } = $ENV{$_} if $ENV{$_};
+
+	for ( io( $db->{file} )->chomp->slurp ) {
+		if (/
+		^\$ENV\{\s?
+		(ORA_\w+?)(_GOLD)?
+		\s?}
+		\s*=\s*
+		"(.+)";
+		/x) {
+			$db->{ lc( $1 ) } = $3;
+#			say 'setting ' . $1 . ' to ' . $3;
+		}
 	}
 
 #	say "_read_oracle_connection_file: " . Dumper $db;
@@ -162,14 +201,25 @@ turn the Oracle connection params into something a little more sane
 
 @return $h - tidied up params
 
+	$h may include
+
+	dsn
+	username
+	password
+	options
+
 =cut
 
 sub clean_oracle_params {
-	my $db_data = shift // croak "No database connection parameters specified!";
+	my $db_data = shift // die err({ err => 'missing', subject => 'db_conn_params'});
 
 	if (! ref $db_data || ref $db_data ne 'HASH') {
-		croak "clean_oracle_params expects a hash ref as input";
-
+#		croak "clean_oracle_params expects a hash ref as input";
+		die err({ err => 'invalid_enum',
+			subject => $db_data,
+			type => 'input to clean_oracle_params',
+			enum => [ "a hash ref" ]
+		});
 	}
 
 	if (! $db_data->{ora_dbi_dsn} && ! $db_data->{ora_sid} && ! $db_data->{ora_host} && ! $db_data->{ora_user}) {
@@ -178,9 +228,11 @@ sub clean_oracle_params {
 	}
 
 	# convert to something understandable
-	my $h = {
-		options => $db_data->{options} || { RaiseError => 1 } ,
-	};
+	my $h = {};
+
+	if ( $db_data->{options} ) {
+		$h->{options} = $db_data->{options};
+	}
 
 	if ( $db_data->{ora_user} ) {
 		$h->{username} = $db_data->{ora_user};
@@ -212,7 +264,8 @@ sub write_oracle_connection_params {
 	my $output = shift;
 	my $h = clean_oracle_params( shift );
 
-	open( my $fh, ">", $output ) or croak "Could not open $output: $!";
+	open( my $fh, ">", $output ) or die err({ err => 'not_writable', subject => $output,
+		msg => $! });
 	# write the params out as JSON
 	print { $fh } encode_json $h;
 	return;
@@ -247,17 +300,25 @@ Create the Oracle dsn string, using host, port, and SID or $ENV{ORA_DBI_DSN}
 =cut
 
 sub make_dsn_str {
-	my $arg_h = shift // croak "No parameters specified!";
+	my $arg_h = shift // die err({ err => 'missing', subject => 'db_conn_params'});
 
 	if (! ref $arg_h || ref $arg_h ne 'HASH') {
-		croak "make_dsn_str expects a hash ref as input";
+#		croak "make_dsn_str expects a hash ref as input";
+		die err({ err => 'invalid_enum',
+			subject => $arg_h,
+			type => 'input to make_dsn_str',
+			enum => [ "a hash ref" ]
+		});
+
 	}
 
-	if ( $arg_h->{ora_dbi_dsn} ) {
-		if ( $arg_h->{ora_dbi_dsn} =~ /\Adbi:Oracle:/i ) {
-			return $arg_h->{ora_dbi_dsn};
+	for my $x ( qw( ora_dbi_dsn ora_service ) ) {
+		if ( $arg_h->{$x} ) {
+			if ( $arg_h->{$x} =~ /\Adbi:Oracle:/i ) {
+				return $arg_h->{$x};
+			}
+			return 'dbi:Oracle:' . $arg_h->{$x};
 		}
-		return 'dbi:Oracle:' . $arg_h->{ora_dbi_dsn};
 	}
 
 	my @extras = qw( host port sid );
@@ -274,7 +335,7 @@ sub make_dsn_str {
 		}
 	}
 
-	croak "No appropriate DSN information found";
+	die err({ err => 'missing', subject => 'DSN information' });
 
 }
 
@@ -292,15 +353,21 @@ Create a database handle for an Oracle DB using the config file settings
 =cut
 
 sub get_oracle_dbh {
-	my $arg_h = shift // croak "No connection parameters specified!";
+	my $arg_h = shift // die err({ err => 'missing', subject => 'db_conn_params'});
 
 	if (! ref $arg_h || ref $arg_h ne 'HASH') {
-		croak "get_oracle_dbh expects a hash ref as input";
+#		croak "get_oracle_dbh expects a hash ref as input";
+		die err({ err => 'invalid_enum',
+			subject => $arg_h,
+			type => 'input to get_oracle_dbh',
+			enum => [ "a hash ref" ]
+		});
+
 	}
 
-	croak "No database specified!" unless $arg_h->{database};
+	die err({ err => 'missing', subject => 'db' }) unless $arg_h->{database};
 
-	croak "No config file for " . $arg_h->{database} unless $common->{ $arg_h->{database} };
+	die err({ err => 'missing', subject => 'config file for ' . $arg_h->{database} }) unless $common->{ $arg_h->{database} };
 
 	my $h = get_oracle_connection_params( $arg_h );
 

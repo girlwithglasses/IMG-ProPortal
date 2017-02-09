@@ -10,14 +10,15 @@ Filters apply to the 'VW_GOLD_TAXON' table (view)
 
 Current filters:
 
-prochlor
-prochlor_phage
-synech
-synech_phage
+pro
+pro_phage
+syn
+syn_phage
 metagenome
 
-coccus -- prochlor + synech
-phage  -- prochlor_phage + synech_phage
+coccus -- pro + syn
+bacteria -- pro + syn + other
+phage  -- pro_phage + syn_phage
 
 isolate -- coccus + phage
 
@@ -32,70 +33,28 @@ sub subset_filter {
 		subject => 'filter'
 	});
 
-	my $filters = {
+	my $filters;
 
-		prochlor => sub {
-			return {
-				ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-				genome_type => 'isolate',
-				genus => 'Prochlorococcus',
-				domain => 'Bacteria',
-			};
-		},
+	for ( qw( pro syn other pro_phage syn_phage other_phage ) ) {
+		$filters->{$_} = $_;
+	}
 
-		synech => sub {
-			return {
-				ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-				genome_type => 'isolate',
-				genus => 'Synechococcus',
-				domain => 'Bacteria',
-			};
-		},
+	$filters->{coccus} = [ qw( pro syn ) ];
+	$filters->{bacteria} = [ qw( pro syn other ) ];
+	$filters->{phage} = [ qw( pro_phage syn_phage other_phage ) ];
 
-		prochlor_phage => sub {
-			return {
-			#	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-				genome_type => 'isolate',
-				taxon_display_name => { -like => 'Prochlorococcus%' },
-				domain => 'Viruses',
-			};
-		},
-
-		synech_phage => sub {
-			return {
-			#	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
-				genome_type => 'isolate',
-				taxon_display_name => { -like => 'Synechococcus%' },
-				domain => 'Viruses',
-			};
-		},
-
-		metagenome => sub {
-			return {
-				genome_type => 'metagenome',
-				ecosystem_type => 'Marine',
-			};
-		},
-	};
-
-	$filters->{coccus} = sub {
-		return [ map { $filters->{$_}->() } qw( prochlor synech ) ];
-	};
-
-	$filters->{phage} = sub {
-		return [ map { $filters->{$_}->() } qw( prochlor_phage synech_phage ) ];
-	};
-
-	$filters->{isolate} = sub {
-		return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage ) ];
-	};
-
-	$filters->{all_proportal} = sub {
-		return [ map { $filters->{$_}->() } qw( prochlor synech prochlor_phage synech_phage metagenome ) ];
-	};
-
+	$filters->{isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
 	$filters->{isolates} = $filters->{isolate};
+	$filters->{metagenome} = 'metagenome';
 	$filters->{metagenomes} = $filters->{metagenome};
+	$filters->{all_proportal} = { '!=' => undef };
+
+#	$filters->{pp_metagenome} = 'metagenome';
+#	$filters->{pp_isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
+#	$filters->{pp_isolates} = $filters->{pp_isolate};
+#	$filters->{pp_metagenomes} = $filters->{pp_metagenome};
+#	$filters->{proportal} = { '!=' => undef };
+
 
 	$self->choke({
 		err => 'invalid',
@@ -103,7 +62,95 @@ sub subset_filter {
 		subject => $f_name
 	}) unless defined $filters->{$f_name};
 
-	return { -where => $filters->{$f_name}->() };
+#	say 'Filters: ' . Dumper $filters;
+
+	return { proportal_subset => $filters->{$f_name} };
+
+}
+
+sub subset_default {
+	return { subset => 'all_proportal' };
+}
+
+sub subset_valid {
+	return [ qw( pro syn other pro_phage syn_phage other_phage isolate metagenome all_proportal ) ];
+
+#	return [ qw( pro syn other pro_phage syn_phage other_phage pp_isolate pp_metagenome proportal ) ];
+}
+
+sub subset_schema {
+	return {
+#		subset => {
+			id => 'subset',
+			type  => 'enum',
+			title => 'subset',
+			control => 'checkbox',
+			enum => subset_valid(),
+			enum_map => {
+				pro => 'Prochlorococcus',
+				syn => 'Synechococcus',
+				pro_phage => 'Prochlorococcus phage',
+				syn_phage => 'Synechococcus phage',
+				other => 'Other bacteria',
+				other_phage => 'Other phages',
+				phage => 'Phages from Prochlorococcus, Synechococcus, and others',
+				coccus => 'Prochlorococcus and Synechococcus',
+				bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
+				isolate => 'All ProPortal isolates',
+				metagenome => 'Marine metagenomes',
+				pp_isolate => 'All ProPortal isolates',
+				pp_metagenome => 'Marine metagenomes',
+				proportal => 'All isolates and metagenomes',
+				all_proportal => 'All isolates and metagenomes'
+			}
+#		}
+	};
+}
+
+
+sub dataset_type_valid {
+	return [ qw( isolate single_cell metagenome metatranscriptome transcriptome ) ];
+}
+
+sub dataset_type_default {
+	return { dataset_type => 'all' };
+}
+
+sub dataset_type_schema {
+
+	return {
+#		dataset_type => {
+			id => 'dataset_type',
+			type => 'enum',
+			title => 'data type',
+			control => 'checkbox',
+			enum => dataset_type_valid(),
+			enum_map => {
+				'single cell' => 'Single cell',
+				single_cell => 'Single cell',
+				isolate => 'Isolate',
+				metagenome => 'Metagenome',
+				transcriptome => 'Transcriptome',
+				metatranscriptome => 'Metatranscriptome'
+			}
+#		}
+	};
+}
+
+sub dataset_type_filter {
+	my $self = shift;
+	my $f_name = shift // $self->choke({
+		err => 'missing',
+		subject => 'filter'
+	});
+
+	$self->choke({
+		err => 'invalid',
+		type => 'data type filter',
+		subject => $f_name
+	}) unless grep { $f_name eq $_ } @{ dataset_type_valid() };
+
+	return { dataset_type => $f_name };
 
 }
 

@@ -132,6 +132,11 @@ DataModel::IMG_Core->metadm->define_table(
 );
 
 DataModel::IMG_Core->metadm->define_table(
+  class       => 'TaxonExtLinks',
+  db_name     => 'TAXON_EXT_LINKS'
+);
+
+DataModel::IMG_Core->metadm->define_table(
   class       => 'GoldSpEnergySource',
   db_name     => 'GOLD_SP_ENERGY_SOURCE',
 #  primary_key => '',
@@ -227,6 +232,11 @@ DataModel::IMG_Core->metadm->define_table(
 );
 
 DataModel::IMG_Core->metadm->define_table(
+  class       => 'GoldDataTypeVw',
+  db_name     => 'PP_DATA_TYPE_VIEW',
+);
+
+DataModel::IMG_Core->metadm->define_table(
 	class       => 'ContactTaxonPermissions',
 	db_name     => 'CONTACT_TAXON_PERMISSIONS',
 );
@@ -270,6 +280,10 @@ DataModel::IMG_Core
 ->Association(
   [qw/Taxon                      taxon                        1    taxon_oid                 /],
   [qw/TaxonStats                 taxon_stats                  1    taxon_oid      /])
+
+->Association(
+  [qw/Taxon                      taxon                        1    taxon_oid                 /],
+  [qw/TaxonExtLinks              taxon_extlinks               *    taxon_oid      /])
 
 ->Association(
   [qw/GoldSequencingProject      gold                         1    gold_id                 /],

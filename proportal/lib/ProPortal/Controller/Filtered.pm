@@ -3,6 +3,7 @@ package ProPortal::Controller::Filtered;
 # use IMG::Util::Import 'MooRole';
 
 use IMG::Util::Import 'Class';
+
 extends 'ProPortal::Controller::Base';
 
 =head3 filters
@@ -34,8 +35,11 @@ has 'valid_filters' => (
 	default => sub {
 		return {
 			subset => {
-				enum => [ qw( prochlor synech prochlor_phage synech_phage isolate metagenome all_proportal ) ]
-			}
+				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
+			},
+#			dataset_type => {
+#				enum => [ 'isolate', 'single cell', qw( metagenome transcriptome metatranscriptome ) ]
+#			},
 		};
 	}
 );
@@ -54,26 +58,54 @@ sub _build_filter_schema {
 	my $self = shift;
 	my $valid = $self->valid_filters;
 
-	return {
-		subset => {
-			id => 'subset',
-			type  => 'enum',
-			title => 'subset',
-			control => 'checkbox',
-			enum => $valid->{subset}{enum},
-			enum_map => {
-				prochlor => 'Prochlorococcus',
-				synech => 'Synechococcus',
-				prochlor_phage => 'Prochlorococcus phage',
-				synech_phage => 'Synechococcus phage',
-				phage => 'Prochlorococcus and Synechococcus phages',
-				coccus => 'Prochlorococcus and Synechococcus',
-				isolate => 'All ProPortal isolates',
-				metagenome => 'Marine metagenomes',
-				all_proportal => 'All isolates and metagenomes'
-			}
+	my $schema;
+
+	for ( qw( subset dataset_type ) ) {
+		my $fn = $_ . '_schema';
+		$schema->{$_} = $self->_core->$fn;
+		if ( $valid->{$_} ) {
+			$schema->{$_}{enum} = $valid->{$_}{enum};
 		}
-	};
+	}
+
+	return $schema;
+
+# 	return {
+# 		subset => {
+# 			id => 'subset',
+# 			type  => 'enum',
+# 			title => 'subset',
+# 			control => 'checkbox',
+# 			enum => $valid->{subset}{enum},
+# 			enum_map => {
+# 				pro => 'Prochlorococcus',
+# 				syn => 'Synechococcus',
+# 				pro_phage => 'Prochlorococcus phage',
+# 				syn_phage => 'Synechococcus phage',
+# 				other => 'Other bacteria',
+# 				other_phage => 'Other phages',
+# 				phage => 'Prochlorococcus, Synechococcus, and other phages',
+# 				coccus => 'Prochlorococcus, Synechococcus, and other bacteria',
+# 				isolate => 'All ProPortal isolates',
+# 				metagenome => 'Marine metagenomes',
+# 				all_proportal => 'All isolates and metagenomes'
+# 			}
+# 		},
+# 		dataset_type => {
+# 			id => 'dataset_type',
+# 			type => 'enum',
+# 			title => 'data type',
+# 			control => 'checkbox',
+# 			enum => $valid->{dataset_type}{enum},
+# 			enum_map => {
+# 				'single cell' => 'Single cell',
+# 				isolate => 'Isolate',
+# 				metagenome => 'Metagenome',
+# 				transcriptome => 'Transcriptome',
+# 				metatranscriptome => 'Metatranscriptome'
+# 			}
+# 		}
+# 	};
 }
 
 =head3 set_filters
@@ -92,7 +124,7 @@ sub set_filters {
 	my $filters = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // return;
 
 	for my $f ( keys %$filters ) {
-		if ( ! $self->filter_schema->{ $f } ) {
+		if ( ! $self->valid_filters->{ $f } ) {
 			$self->choke({
 				err => 'invalid',
 				subject => $f,
@@ -124,8 +156,12 @@ around 'render' => sub {
 	my $rtn = $orig->( $self, @_ );
 
 	if ( $self->can('filters') ) {
-		$rtn->{data_filters}{active} = $self->filters;
-		$rtn->{data_filters}{all} = $self->filter_schema;
+		$rtn->{data_filters} = {
+			active => $self->filters,
+			valid  => $self->valid_filters,
+			all    => $self->filter_schema,
+			schema => $self->filter_schema
+		};
 	}
 	return $rtn;
 

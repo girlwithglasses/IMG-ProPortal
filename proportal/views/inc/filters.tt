@@ -1,21 +1,23 @@
 <!-- output the page filters -->
-[%
-	IF ! mode || mode != 'galaxy';
-		IF data_filters && data_filters.all; %]
+[%	IF ! mode || mode != 'galaxy';
+		IF data_filters %]
 <section class="filters">
-<p>Filter by subset:</p>
-<ul class="subset-filters">
 [%	# filter domain
-	FOR fd IN data_filters.all.keys.sort;
-		FOR f IN data_filters.all.$fd.enum; %]
-	<li class="subset-filters__item"><a class="subset-filters__link" href="[% link( current_page ) %]/[% f %]">[% data_filters.all.$fd.enum_map.$f || f %]</a>[%
+
+	sorted_filters = data_filters.sorted || data_filters.valid.keys;
+
+	FOR fd IN sorted_filters; %]
+	<p>Filter by [% data_filters.schema.$fd.title %]:</p>
+	<ul class="[% fd %]-filters">
+[%		FOR f IN data_filters.valid.$fd.enum; %]
+	<li class="[% fd %]-filters__item"><a class="[% fd %]-filters__link" href="[% link( current_page ) %]/[% fd %]=[% f %]">[% data_filters.schema.$fd.enum_map.$f || f %]</a>[%
 			IF data_filters.active && data_filters.active.$fd == f;
-		%] <span class="subset-filters__current">(currently displayed)</span>[%
+		%] <span class="[% fd %]-filters__current">(currently displayed)</span>[%
 			END; %]
 	</li>
-[%		END;
-	END; %]
-</ul>
+[%		END; # end FOR f%]
+	</ul>
+[%	END; # end FOR fd %]
 </section><!-- /end section filters -->
 [%	END;
 	END %]

@@ -4,7 +4,7 @@ use IMG::Util::Import 'MooRole';
 
 requires 'config', 'run_query', 'choke';
 
-=head3 get_taxon_data
+=head3 get_taxon_name_public
 
 Given a taxon ID, gets the taxon display name and checks whether the taxon is public or not
 
@@ -16,7 +16,7 @@ Given a taxon ID, gets the taxon display name and checks whether the taxon is pu
 
 =cut
 
-sub get_taxon_data {
+sub get_taxon_name_public {
 	my $self = shift;
 	my $args = shift // {};
 

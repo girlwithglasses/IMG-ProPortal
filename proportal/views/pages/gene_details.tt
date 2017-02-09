@@ -1,0 +1,12 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: ' _ self.display_name;
+	self = results.gene;
+%]
+
+<h2>[% self.display_name %]</h2>
+
+<h3>Gene Details<h3>
+Gene ID
+Locus tag
+
+[%	END %]

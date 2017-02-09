@@ -1,4 +1,4 @@
-package ProPortal::Controller::TaxonDetails;
+package ProPortal::Controller::GeneDetails;
 
 use IMG::Util::Import 'Class'; #'MooRole';
 
@@ -6,8 +6,22 @@ extends 'ProPortal::Controller::Base';
 
 with 'IMG::Model::DataManager';
 
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Filtered',
+# 			page_id => 'taxon_details',
+# 			tmpl => 'pages/taxon_details.tt',
+# 			tmpl_includes => {},
+# 			page_wrapper => 'layouts/default_wide.html.tt',
+# 		};
+# 	}
+# );
+
+
 has '+page_id' => (
-	default => 'taxon_details'
+	default => 'gene_details'
 );
 
 has '+page_wrapper' => (
@@ -16,7 +30,7 @@ has '+page_wrapper' => (
 
 =head3 render
 
-Details page for a taxon / metagenome
+Details page for a gene
 
 @param taxon_oid
 
@@ -26,22 +40,31 @@ sub _render {
 	my $self = shift;
 	my $args = shift;
 
-	if ( ! $args || ! $args->{taxon_oid} ) {
+	if ( ! $args || ! $args->{gene_oid} ) {
 		$self->choke({
 			err => 'missing',
-			subject => 'taxon_oid'
+			subject => 'gene_oid'
 		});
 	}
 
+	my $results = $self->run_query({
+		query => 'taxon_name_public',
+		where => {
+			taxon_permissions => $args->{taxon_oid} // $self->taxon_oid,
+			contact_oid => $self->user->contact_oid
+		}
+	});
+
+
 	my $res = $self->_core->run_query({
-		query => 'taxon_details',
+		query => 'gene_details',
 		%$args
 	});
 
 	if ( scalar @$res != 1 ) {
 		$self->choke({
 			err => 'no_results',
-			subject => 'IMG taxon ' . ( $args->{taxon_oid} || 'unspecified' )
+			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )
 		});
 	}
 	$res = $res->[0];
@@ -59,7 +82,6 @@ sub _render {
 		gold_sp_seq_centers
 		gold_sp_seq_methods
 		gold_sp_study_gold_ids
-		taxon_extlinks
 	);
 
 # 		goldanaproj
@@ -74,9 +96,7 @@ sub _render {
 		}
 	}
 
-
-
-	return { results => { taxon => $res, label_data => $self->get_label_data } };
+	return { results => { gene => $res, label_data => $self->get_label_data } };
 
 }
 

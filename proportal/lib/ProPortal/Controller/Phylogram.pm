@@ -8,27 +8,6 @@ with 'ProPortal::Util::DataStructure';
 
 use Template::Plugin::JSON::Escape;
 
-# has 'controller_args' => (
-# 	is => 'lazy',
-# 	default => sub {
-# 		return {
-# 			class => 'ProPortal::Controller::Filtered',
-# 			tmpl => 'pages/proportal/phylogram.tt',
-# 			tmpl_includes => {
-# 				tt_scripts => qw( phylogram ),
-# 			},
-# 			filters => {
-# 				subset => 'isolate'
-# 			},
-# 			valid_filters => {
-# 				subset => {
-# 					enum => [ qw( prochlor synech prochlor_phage synech_phage isolate ) ],
-# 				}
-# 			}
-# 		}
-# 	}
-# );
-
 has '+page_id' => (
 	default => 'proportal/phylogram'
 );
@@ -43,7 +22,7 @@ has '+valid_filters' => (
 	default => sub {
 		return {
 			subset => {
-				enum => [ qw( prochlor synech prochlor_phage synech_phage isolate ) ],
+				enum => [ qw( pro syn pro_phage syn_phage other other_phage isolate ) ],
 			}
 		};
 	}

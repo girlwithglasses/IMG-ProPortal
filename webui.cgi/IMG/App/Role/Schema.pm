@@ -116,7 +116,7 @@ sub _init_schema {
 =cut
 	# set up the module...
 	my %module_args = (
-#		debug => 1,
+		debug => 1,
 		dbi_prepare_method => 'prepare_cached',
 	);
 

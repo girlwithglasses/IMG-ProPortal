@@ -109,7 +109,7 @@ subtest 'composition' => sub {
 		$app->_set_taxon_oid( 12345 );
 		ok( 12345 == $app->taxon_oid, 'Checking taxon ID' );
 		ok( $app->can('_build_jbrowse_tracklist'), 'checking for build jbrowse tracklist' );
-		ok( $app->can('get_taxon_data'), 'checking for get taxon data' );
+		ok( $app->can('get_taxon_name_public'), 'checking for get taxon data' );
 
 	};
 };
@@ -244,7 +244,7 @@ subtest 'check taxon permissions' => sub {
 	};
 };
 
-subtest 'get_taxon_data' => sub {
+subtest 'get_taxon_name_public' => sub {
 
 	subtest 'error states' => sub {
 		$msg = err({
@@ -253,24 +253,24 @@ subtest 'get_taxon_data' => sub {
 			type => 'taxon_oid'
 		});
 		throws_ok {
-			test( taxon_oid => $args->{invalid_taxon_oid} )->get_taxon_data;
+			test( taxon_oid => $args->{invalid_taxon_oid} )->get_taxon_name_public;
 		} qr[$msg], 'Invalid taxon ID';
 
 		$msg = err({ err => 'private_data' });
 		throws_ok {
-			test( taxon_oid => $args->{private_taxon_oid} )->get_taxon_data;
+			test( taxon_oid => $args->{private_taxon_oid} )->get_taxon_name_public;
 		} qr[$msg], 'Taxon is not public, user not logged in';
 
 		# add user
 		throws_ok {
 			test( user => $args->{user}, taxon_oid => $args->{private_taxon_oid} )
-				->get_taxon_data;
+				->get_taxon_name_public;
 		} qr[$msg], 'Taxon is not public, user not permitted access';
 	};
 
 	subtest 'valid' => sub {
 		$temp = test( user => $args->{user}, taxon_oid => $args->{private_ok} );
-		my $got = clean_db_output( $temp->get_taxon_data );
+		my $got = clean_db_output( $temp->get_taxon_name_public );
 		# restricted taxon access
 		is_deeply(
 			$got,
@@ -287,7 +287,7 @@ subtest 'get_taxon_data' => sub {
 			$temp->taxon_display_name,
 			'checking taxon name' );
 
-		$got = clean_db_output( $temp->get_taxon_data );
+		$got = clean_db_output( $temp->get_taxon_name_public );
 
 		is_deeply(
 			$got,
