@@ -24,7 +24,7 @@ use IMG::Util::Import 'psgi';
 # $ENV{PLACK_URLMAP_DEBUG} = 1;
 # $ENV{TWIGGY_DEBUG} = 1;
 
-#=comment
+=comment
 
 # Mojolicious pod renderer
 use Mojo::Server::PSGI;
@@ -32,7 +32,7 @@ use Mojo::Server::PSGI;
 my $server = Mojo::Server::PSGI->new;
 $server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 
-#=cut
+=cut
 
 {	package ProPortalApp;
 	use IMG::Util::Import;
@@ -42,7 +42,7 @@ $server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 	our $VERSION = '0.1.0';
 	use AppCore;
 	use AppCorePlugin;
-	use Routes::Ajax;
+#	use Routes::Ajax;
 	use Routes::MenuPages;
 #	use Routes::JBrowse;
 #	use Routes::IMG;
@@ -62,7 +62,7 @@ builder {
 
 #	mount "/cgi-bin" => $old_img->();
 
-	mount "/pod" => sub { $server->run(@_) };
+#	mount "/pod" => sub { $server->run(@_) };
 
 #     mount "/testapp" => TestApp->to_app;
 	mount "/" => ProPortalApp->to_app;
