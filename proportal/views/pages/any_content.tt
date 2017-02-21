@@ -3,9 +3,6 @@
 #	title = title;
 %]
 <div class="cf">
-[%	USE Dumper;
-	'<pre>';
-	Dumper.dump( content );
-	'</pre>'; %]
+[%	content %]
 </div>
 [%	END; %]
