@@ -321,7 +321,7 @@ td {
 	</tbody>
 </table>
 
-[%	IF results.stats.data_types.size > 0 %]
+[%	IF results.stats.data_types %]
 <table>
 <caption>Genomes by sample type</caption>
 <thead>
