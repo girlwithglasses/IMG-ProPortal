@@ -145,6 +145,18 @@ sub _render {
 			},
 		);
 
+	# metagenome count for all Marine metagenomes
+	$stats ->{metagenomes_marine} = $self->_core->schema('img_core')->table('GoldTaxonVw')
+		->select(
+			-columns  => [ 'count(taxon_oid)|count', qw( ecosystem_type ) ],
+			-group_by => [ qw( ecosystem_type ) ],
+			-order_by => [ qw( ecosystem_type ) ],
+			-where => {
+				ecosystem_type => 'Marine',
+				proportal_subset => 'metagenome',	
+			},
+		);	
+		
 	return { results => {
 		news => $news // undef,
 		stats => $stats

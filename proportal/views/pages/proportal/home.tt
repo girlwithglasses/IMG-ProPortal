@@ -69,9 +69,28 @@ article section {
 	}
 }
 
-h3 {
-	margin: 0;
+/* from taxon_details.tt style --> */
+h2, h3, h4, h5, h6 {
+     margin: 0;
+     padding: 0;
+
 }
+
+tr,td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+td {
+	padding: 0 0 4px 0px;	
+}
+
+.indent {
+	padding: 0 0 0 30px;
+}
+
+/* <--- */
 
 select {
 	color: black;
@@ -89,10 +108,10 @@ input {
 	float: right;
 }
 
+/* 
 th {
 	padding: 4px 0 4px 10px;
-	/* border-bottom: 1px solid lightgray; */
-}
+	border-bottom: 1px solid lightgray;}
 
 tr {
 	border: 0;
@@ -101,6 +120,9 @@ tr {
 td {
 	padding: 4px 0 4px 30px;
 }
+ */
+
+
 
 .category {
 	font-weight: bold;
@@ -152,25 +174,93 @@ td {
 <h3>IMG/ProPortal Data Sets</h3>
 <div class="section-content">
 [%	IF results.stats.subsets.size > 0; %]
-<table>
-<caption>Isolate and Single Cell Genomes</caption>
+
+<!-- <h6> Isolate and Single Cell Genomes </h6> -->
+
+<!-- <caption>Isolate and Single Cell Genomes</caption> -->
+<!-- 
 <thead>
 <tr><th>Category</th><th>Count</th></th></tr>
 </thead>
-<tbody>
+ -->
+<table>
+
+<tr><td colspan="2"><h6> Isolate and Single Cell Genomes </h6></td></tr>
 [%	FOR fd IN data_filters.valid.keys.sort;
 		FOR f IN data_filters.valid.$fd.enum;
 			IF results.stats.subsets.$f;
 				s = results.stats.subsets.$f; %]
-		<tr><td>[% data_filters.schema.$fd.enum_map.$f %]</td>
+		<tr><td class="indent">[% data_filters.schema.$fd.enum_map.$f %]</td>
 			<td>[% s.count %]</td>
 		</tr>
 [%			END;
 		END;
-	END %]
-</tbody>
+	END; 
+	END; %]
+
+<tr><td><h6> Metagenomes </h6></td>
+	<td>[% results.stats.metagenomes_marine.0.count %]</td></tr>	
+
+<!-- WE WILL ADD THESE BACK WHEN THE DATA GETS HOOKED UP!
+<tr><td colspan="2"><h6> Transcriptomes </h6></td></tr>
+<tr><td class="indent"> Metatranscriptomes </td><td> ~~ </td></tr>
+<tr><td class="indent"> Experimental RNASeq experiments</td><td> ~~ </td></tr>
+<tr><td class="indent"> Microarray experiments </td><td> ~~ </td></tr>
+<tr><td colspan="2"><h6> Proteomes </h6></td></tr>
+ -->
+
+<!-- 
+	
+	[% IF results.stats.metagenomes_by_eco.size > 0;
+		FOREACH r IN results.stats.metagenomes_by_eco %]
+		<tr><td>[%
+			( r.ecosystem_type || '(unclassified)' )
+			%] > [%
+			( r.ecosystem_subtype || '(unclassified)' )
+			%] > [%
+			( r.specific_ecosystem || '(unclassified)' )
+			%]</td>
+			<td>[% r.count %]</td>
+		</tr>
+[%		END; END; %]
+ -->
+	
+	
+
+
+
 </table>
+</section>
+
+<!-- 
+
+<section class="mg_by_eco clear">
+	<table>
+	<caption>Metagenome Counts by Ecosystem</caption>
+	<thead>
+	<tr><th class="L">Ecosystem</th><th class="L">Count</th></tr>
+	</thead>
+	<tbody>
+[%	eco = [ 'ecosystem', 'ecosystem_category', 'ecosystem_type', 'ecosystem_subtype', 'specific_ecosystem' ];
+	IF results.stats.metagenomes_by_eco.size > 0;
+		FOREACH r IN results.stats.metagenomes_by_eco %]
+		<tr><td>[%
+			( r.ecosystem_type || '(unclassified)' )
+			%] > [%
+			( r.ecosystem_subtype || '(unclassified)' )
+			%] > [%
+			( r.specific_ecosystem || '(unclassified)' )
+			%]</td>
+			<td>[% r.count %]</td>
+		</tr>
+[%		END;
+	ELSE %]
+		<tr><td colspan="2">No statistics found!</td></tr>
 [%	END; %]
+	</tbody>
+	</table>
+</section>
+
 
 <table>
 <caption>Metagenomes by Marine Ecosystem Subtype</caption>
@@ -192,6 +282,7 @@ td {
 </table>
 </div>
 </section>
+ -->
 
 
 
@@ -204,6 +295,7 @@ td {
 <!--
  -->
 
+<!-- 
 
 <section class="subset-stats clear">
 	<table>
@@ -303,6 +395,7 @@ td {
 	</tbody>
 	</table>
 </section>
+ -->
 </div>
 
 [% END; %]
