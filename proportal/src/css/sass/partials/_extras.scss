@@ -4,3 +4,20 @@
 .instructions { display: none; }
 .init .instructions { display: block; }
 
+.noteToSelf {
+	background-color: #FFFF99;
+	font-style: italic;
+	padding: 0.3em 1em 0.3em 1em;
+	display: inline;
+}
+.help {
+	background-color: #8899dd;
+	color: white;
+	font-weight: bold;
+	border-radius: 12px;
+	padding: 0.1em 0.3em 0.1em 0.3em;
+	/* margin: 0.2em; */
+	display: inline;
+	float: right;
+}
+

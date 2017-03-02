@@ -4,40 +4,6 @@
 	USE Dumper;
 %]
 
-<head>
-<style>
-
-div.grid {
-	float: left;
-}
-
-a.grid:link, a.grid:visited {
-	background: #eee;
-	color: #343434;			/* IMG "black" */
-
-	width: 230px;
-	height: 250px;
-    padding: 25px;
-    margin: 5px;
-    text-decoration: none;
-    display: inline-block;
-    border: 0;
-    clear: both;
-
-}
-
-
-a.grid:hover, a.grid:active {
-  background: #648DAA;
-
-  color: white;
-  cursor: pointer;
-}
-
-
-</style>
-</head>
-
 <div class="cf">
 [%	PROCESS inc/tool_descriptions.tt;
 

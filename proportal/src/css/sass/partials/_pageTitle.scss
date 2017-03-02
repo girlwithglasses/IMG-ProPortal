@@ -1,0 +1,13 @@
+/* partials/pageTitle
+page title for a details page	
+*/
+
+#pageTitle {
+	float: left;
+	width: 100%;
+	border-bottom: $underline;
+
+	.normal {
+		font-weight: normal; }
+
+}	

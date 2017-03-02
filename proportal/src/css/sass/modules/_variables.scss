@@ -36,9 +36,11 @@ $neg-gutter: -.75rem;
 // set up page widths
 
 $nar-: 479px;
-$nar: 480px;	// narrow = 30rem
+$nar: 480px;		// narrow = 30rem
 $med-: 767px;
-$med: 768px;	// medium = 48rem
+$med: 768px;		// medium = 48rem
+$half-: 1023px;		
+$half: 1024px; 
 
 /*
 60rem: narrower
@@ -46,6 +48,10 @@ $med: 768px;	// medium = 48rem
 
 
 */
+
+// visual styles used throughout the site
+$underline: 2px solid black;
+
 // width at which menu starts wrapping
 $menu-wrap-width: 71rem;
 

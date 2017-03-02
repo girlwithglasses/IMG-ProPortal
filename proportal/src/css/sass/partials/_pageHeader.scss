@@ -1,0 +1,10 @@
+/* partials/pageHeader
+usually a container for pageTitle and buttonBar
+*/
+
+#pageHeader {
+	display: table;
+	padding: 0 10px;
+	margin-top: 20px;
+	width: 100%;
+}

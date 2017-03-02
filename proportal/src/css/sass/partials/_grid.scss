@@ -1,0 +1,32 @@
+/* partials/grid
+grid of cards found on auto-generated pages 
+*/
+
+div.grid {
+	float: left;
+}
+
+a.grid:link, a.grid:visited {
+	background: map-get( $jgi-palette, dk_blue );	//#eee;
+	color: white;	//map-get( $jgi-palette, black );		
+
+	width: 230px;
+	height: 250px;
+    padding: 25px;
+    margin: 5px;
+    text-decoration: none;
+    display: inline-block;
+    border: 0;
+    clear: both;
+
+}
+
+
+a.grid:hover, a.grid:active {
+  background: white;	//map-get( $jgi-palette, dk_blue );
+  color: map-get( $jgi-palette, dk_blue );
+  border: 2px solid map-get( $jgi-palette, dk_blue );
+  
+  
+  cursor: pointer;
+}

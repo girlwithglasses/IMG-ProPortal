@@ -1,0 +1,12 @@
+/* partials/buttonBar
+button bar usually found under pageTitle	
+*/
+
+#buttonBar {
+	float: right;
+	clear: both;
+
+	button {
+		padding: 10px;
+		font-size: 75%; }
+}	

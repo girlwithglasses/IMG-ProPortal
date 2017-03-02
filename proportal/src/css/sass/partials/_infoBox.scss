@@ -1,0 +1,46 @@
+/* partials/infoBox
+found on details pages 
+*/
+
+.infoBox {
+	padding: 0 20px 20px 20px;
+
+	table {
+		table-layout: fixed;
+		width: 100%;
+		border-collapse: collapse; }
+	
+	tr,td {
+		margin: 0;
+		padding: 0;
+		border: 0; }
+
+	td {
+		padding: 4px 0px 4px 0px; }
+	
+	.infoBoxTitle {
+		margin: 10px 0 5px 0;
+		border-bottom: $underline }
+	
+	.col1 {
+		width: 200px; }
+
+	.subheader {
+		margin-top: 10px; }
+		
+		
+	/* this may need to be defined somewhere else... */	
+	/* Small screen */
+	@media all and (max-width: $half-) {
+		width: 100%;
+		margin-left: 0;
+		margin-right: 0;
+	}
+
+	/* Large screen */
+	@media all and (min-width: $half) {
+		width: 50%; 
+	}
+	
+}
+

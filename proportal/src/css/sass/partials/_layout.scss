@@ -6,6 +6,23 @@ article {
 	clear: both;
 }
 
+.row {
+	display: flex;
+	flex-flow: row wrap;
+	margin: 0 -10px;
+	margin-bottom: 10px;
+
+	.row:last-child {
+		margin-bottom: 0;
+	}
+
+	[class*="col-"] {
+		padding: 10px;
+		width: 100%;
+
+	}
+}
+
 @include maxw( $nar- ) {
 
 	#about, #user-guide, #news, .content, #tool-input__section, #tool-info__section {
