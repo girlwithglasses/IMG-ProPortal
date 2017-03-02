@@ -623,14 +623,14 @@ sub gene_details {
 		->select(
 			-columns => [ '*' ],
 			-where   => $args->{where},
-			-result_as => [ 'hashref' => 'gene_oid' ]
-		);
+			-result_as => 'statement'
+		)->all;
 
 	my %tax_h;
-	if ( scalar keys %$gene > 0 ) {
+	if ( scalar @$gene > 0 ) {
 		# make sure that we have permission to view the gene
-		for ( keys %$gene ) {
-			$tax_h{ taxon_oid } = $gene->{$_}{taxon};
+		for ( @$gene ) {
+			$tax_h{ taxon_oid } = $_->{taxon};
 		}
 	}
 
@@ -645,7 +645,7 @@ sub gene_details {
 		}
 	}
 
-	return { gene => $gene, taxon => $results };
+	return { gene => $gene->[0] // undef, taxon => $results->[0] // undef };
 }
 
 =head3 taxon_accessible

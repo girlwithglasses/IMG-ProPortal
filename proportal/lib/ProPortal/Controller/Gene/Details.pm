@@ -61,7 +61,7 @@ sub _render {
 # 		}
 # 	});
 
-	if ( scalar keys %{$res->{gene}} != 1 ) {
+	if ( ! $res->{gene} ) {
 		$self->choke({
 			err => 'no_results',
 			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )

@@ -47,11 +47,11 @@ $server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 
 	use AppCore;
 	use AppCorePlugin;
-	use Routes::Ajax;
-	use Routes::MenuPages;
+#	use Routes::Ajax;
+#	use Routes::IMG;
 #	use Routes::JBrowse;
-	use Routes::IMG;
 	use Routes::API;
+	use Routes::MenuPages;
 	use Routes::ProPortal;
 	use Routes::TestStuff;
 
