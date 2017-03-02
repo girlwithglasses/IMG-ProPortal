@@ -10,6 +10,7 @@ requires 'CGI', 0;								# for legacy code
 requires 'CGI::Compile', 0;						# ditto
 requires 'CGI::Deurl::XS', 0;
 requires 'CGI::Emulate::PSGI', 0;				# ditto
+requires 'CGI::PSGI', 0;						# ditto
 requires 'Dancer2::Plugin::Ajax', 0;
 requires 'Dancer2::Plugin::AppRole::Helper', 0;
 requires 'Dancer2::Plugin::Adapter', 0;
@@ -17,7 +18,9 @@ requires 'Dancer2::Plugin::LogContextual', 0;
 requires 'Dancer2::Session::CGISession', '0.04';
 requires 'Dancer2', '0.2';
 requires 'Data::Dumper::Concise', 0;
-# requires 'DBD::Oracle', 0;					# IMG server only!
+
+requires 'DBD::Oracle', 0;					# IMG server only!
+
 requires 'DBD::SQLite', 0;
 requires 'DBIx::Connector', '0.50';
 requires 'DBIx::DataModel', '2.46';
@@ -31,7 +34,9 @@ requires 'IPC::System::Simple', 0;
 requires 'JSON::MaybeXS';
 requires 'JSON', '2.90';
 requires 'JSON::XS', 0;
-# requires 'Log::Log4perl', 0;
+
+requires 'Log::Log4perl', 0;
+
 requires 'Moo', '2.000002';
 requires 'Module::Runtime', 0;
 requires 'Net::SSLeay', 0;
@@ -55,6 +60,21 @@ requires 'URL::Encode::XS', 0;
 requires 'XML::LibXML', 0;						# for XML script
 requires 'YAML', 0;
 
+# old IMG code
+requires 'Archive::Zip', 0;
+requires 'Array::Utils', 0; # BiosyntheticStats
+requires 'BerkeleyDB', 0;
+requires 'CGI::Cache', 0;
+requires 'Date::Format', 0;
+requires 'Email::Valid', 0;
+requires 'GD', 0;
+requires 'GraphViz', 0; # ANI
+requires 'MIME::Lite', 0;
+requires 'Number::Format', 0;
+requires 'REST::Client', 0;
+requires 'System::Command', 0;
+requires 'XML::Simple', 0; # Caliban
+
 # speed hacks
 requires 'CGI::Deurl::XS', 0;
 requires 'Class::XSAccessor', 0;
@@ -76,6 +96,9 @@ feature 'async', 'asynchronous operation' => sub {
 	requires 'EV', 0;
 	recommends 'Mojo::Server::PSGI', 0;
 	requires 'Promises', 0;
+	requires 'WebAPI::DBIC', 0;
+	requires 'Alien::Web::HalBrowser', 0;
+
 
 };
 

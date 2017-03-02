@@ -39,8 +39,8 @@ prefix '/jbrowse' => sub {
 		/?
 		}x => sub {
 
-		var menu_grp => 'proportal';
-		var page_id => 'proportal/jbrowse';
+		img_app->current_query->_set_page_id( 'proportal/jbrowse' );
+		img_app->current_query->_set_menu_group( 'proportal' );
 
 		my $c = captures;
 		my $taxon_oid = delete $c->{taxon_oid};
@@ -73,8 +73,8 @@ prefix '/jbrowse' => sub {
 		/?
 		}x => sub {
 
-		var menu_grp => 'proportal';
-		var page_id => 'proportal/jbrowse';
+		img_app->current_query->_set_page_id( 'proportal/jbrowse' );
+		img_app->current_query->_set_menu_group( 'proportal' );
 
 		my $c = captures;
 		my $taxon_oid = $c->{taxon_oid};

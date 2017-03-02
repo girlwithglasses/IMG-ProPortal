@@ -33,9 +33,6 @@ $cnf->{engines}{logger}{File} = {
 	log_level => 'debug',
 	log_file  => 'proportal_test.log'
 };
-
-say 'logger conf: ' . Dumper $cnf->{engines};
-
 $cnf->{sso_url_prefix} = 'https://signon.';
 $cnf->{sso_domain} = 'jgi.doe.gov';
 

@@ -19,6 +19,8 @@ use Getopt::Long;
 use ProPortal::App::JBrowseGalaxyPrep;
 use Dancer2;
 
+say '@INC: ' . join "\n", @INC;
+
 my $args = {};
 my $opt = GetOptions( $args,
 	"taxon_oid|t=s",
@@ -29,7 +31,7 @@ my $opt = GetOptions( $args,
 ) or script_die( 255, "Error in command line arguments" );
 
 eval {
-	ProPortal::App::JBrowseGalaxyPrep->new( config => config, args => $args )->run();
+	ProPortal::App::JBrowseGalaxyPrep->new( dancer_config => config, args => $args )->run();
 };
 
 script_die( 255, [ $@ ] ) if $@;

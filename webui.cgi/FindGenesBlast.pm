@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 36345 2016-10-21 16:14:00Z klchu $
+# $Id: FindGenesBlast.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -2390,7 +2390,7 @@ sub printGenomeSelectionMessage {
 <span style="font-size: 14px; font-weight: bold;">All isolate genomes in IMG will be used: </span>
 (This was equivalent to the old 'All IMG Genes - one large database' option)
     <ul style="font-size: 13px;">
-        <li> If there is no genome or metagenome selection. 
+        <li> If there is no genome(s) or metagenome(s) selected. 
         </li>
         <li> If the selection is more than <b>$blast_max_genome</b> 
              genomes / metagenomes.

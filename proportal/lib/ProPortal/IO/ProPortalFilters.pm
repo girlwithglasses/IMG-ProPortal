@@ -1,3 +1,157 @@
+# {
+# 	package ProPortal::IO::ProPortalFilter::Subset;
+#
+# 	use IMG::Util::Import 'Class';
+# 	extends 'IMG::Model::EnumFilter';
+#
+# 	has '+id' => (
+# 		default => 'subset'
+# 	);
+#
+# 	# the current query value
+# 	has '+current' => (
+# 		default => 'all_proportal'
+# 	);
+#
+# 	# all valid values
+# 	has '+valid' => (
+# 		default => sub {
+# 			return [ qw( pro syn other pro_phage syn_phage other_phage isolate metagenome all_proportal ) ];
+# 		}
+# 	);
+#
+# 	sub schema {
+# 		my $self = shift;
+# 		return {
+# 			id => $self->id,
+# 			type  => 'enum',
+# 			title => $self->title,
+# 			control => 'checkbox',
+# 			enum => $self->valid,
+# 			enum_map => {
+# 				pro => 'Prochlorococcus',
+# 				syn => 'Synechococcus',
+# 				other => 'Other bacteria',
+# 				pro_phage => 'Prochlorococcus phage',
+# 				syn_phage => 'Synechococcus phage',
+# 				other_phage => 'Other phages',
+# 				coccus => 'Prochlorococcus and Synechococcus',
+# 				bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
+# 				phage => 'Phages from Prochlorococcus, Synechococcus, and others',
+# 				isolate => 'All ProPortal isolates',
+# 				metagenome => 'Marine metagenomes',
+# 				pp_isolate => 'All ProPortal isolates',
+# 				pp_metagenome => 'Marine metagenomes',
+# 				proportal => 'All isolates and metagenomes',
+# 				all_proportal => 'All isolates and metagenomes'
+# 			}
+# 		};
+#
+# 	}
+#
+# 	sub sql_filter {
+# 		my $self = shift;
+# 		my $f_name = shift // $self->choke({
+# 			err => 'missing',
+# 			subject => 'filter'
+# 		});
+#
+# 		my $filters;
+#
+# 		for ( qw( pro syn other pro_phage syn_phage other_phage ) ) {
+# 			$filters->{$_} = $_;
+# 		}
+#
+# 		$filters->{coccus} = [ qw( pro syn ) ];
+# 		$filters->{bacteria} = [ qw( pro syn other ) ];
+# 		$filters->{phage} = [ qw( pro_phage syn_phage other_phage ) ];
+#
+# 		$filters->{isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
+# 		$filters->{isolates} = $filters->{isolate};
+# 		$filters->{metagenome} = 'metagenome';
+# 		$filters->{metagenomes} = $filters->{metagenome};
+# 		$filters->{all_proportal} = { '!=' => undef };
+#
+# 	#	$filters->{pp_metagenome} = 'metagenome';
+# 	#	$filters->{pp_isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
+# 	#	$filters->{pp_isolates} = $filters->{pp_isolate};
+# 	#	$filters->{pp_metagenomes} = $filters->{pp_metagenome};
+# 	#	$filters->{proportal} = { '!=' => undef };
+#
+# 		$self->choke({
+# 			err => 'invalid',
+# 			type => 'subset filter',
+# 			subject => $f_name
+# 		}) unless defined $filters->{$f_name};
+#
+# 	#	say 'Filters: ' . Dumper $filters;
+#
+# 		return { proportal_subset => $filters->{$f_name} };
+#
+# 	}
+#
+# 	1;
+# }
+#
+# {
+# 	package ProPortal::IO::ProPortalFilter::DatasetType;
+#
+# 	use IMG::Util::Import 'Class';
+# 	use IMG::Model::Filter;
+# 	extends 'IMG::Model::EnumFilter';
+#
+# 	has '+id' => (
+# 		default => 'dataset_type'
+# 	);
+#
+# 	sub sql_filter {
+# 		my $self = shift;
+# 		my $f_name = shift // $self->choke({
+# 			err => 'missing',
+# 			subject => 'filter'
+# 		});
+#
+# 		$self->choke({
+# 			err => 'invalid',
+# 			type => 'data type filter',
+# 			subject => $f_name
+# 		}) unless grep { $f_name eq $_ } @{ $self->valid };
+#
+# 		return { dataset_type => $f_name };
+# 	}
+#
+# 	sub default {
+# 		return;
+# 	}
+#
+# 	sub valid {
+# 		return [ qw( isolate single_cell metagenome metatranscriptome transcriptome ) ];
+# 	}
+#
+# 	sub schema {
+# 		my $self = shift;
+# 		return {
+# 			id => 'dataset_type',
+# 			type => 'enum',
+# 			title => 'data type',
+# 			control => 'checkbox',
+# 			enum => $self->valid,
+# 			enum_map => {
+# 				'single cell' => 'Single cell',
+# 				single_cell => 'Single cell',
+# 				isolate => 'Isolate',
+# 				metagenome => 'Metagenome',
+# 				transcriptome => 'Transcriptome',
+# 				metatranscriptome => 'Metatranscriptome'
+# 			}
+# 		};
+# 	}
+#
+# 	1;
+# }
+#
+#
+#
 package ProPortal::IO::ProPortalFilters;
 
 use IMG::Util::Import 'MooRole';

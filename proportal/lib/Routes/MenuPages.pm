@@ -32,7 +32,7 @@ prefix '/menu' => sub {
 		}xi => sub {
 
 		my $p = captures->{page};
-		var page_id => 'menu/' . $p;
+		img_app->current_query->_set_page_id( 'menu/' . $p );
 
 		my $content = menu_maker( 'menu/' . $p );
 		my $data;

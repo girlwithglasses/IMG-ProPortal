@@ -1,7 +1,7 @@
 ############################################################################
 # Utility functions to support to generate GenBank/EMBL file.
 #
-# $Id: GenerateArtemisFile.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: GenerateArtemisFile.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
 ############################################################################
 package GenerateArtemisFile;
 
@@ -810,12 +810,16 @@ sub processFastaFile {
     my $nOids = scalar(@$oids_ref);
     if ( $nOids > $switchNum ) {
         if ($isFromWorkspace) {
-            main::printAppHeader("AnaCart");
+            #main::printAppHeader("AnaCart");
+            WebUtil::webErrorHeader("Please enter your email address since you have selected over $switchNum entries.")
+              if ( blankStr($myEmail) );
+            WebUtil::webErrorHeader("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
         }
-
-        webError("Please enter your email address since you have selected over $switchNum entries.")
-          if ( blankStr($myEmail) );
-        webError("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
+        else {
+            webError("Please enter your email address since you have selected over $switchNum entries.")
+              if ( blankStr($myEmail) );
+            webError("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
+        }
 
         my $title;
         my $ext;
@@ -1040,12 +1044,16 @@ sub processDataFile {
     my $nOids = scalar(@$oids_ref);
     if ( $nOids > $switchNum ) {
         if ($isFromWorkspace) {
-            main::printAppHeader("AnaCart");
+            #main::printAppHeader("AnaCart");
+            WebUtil::webErrorHeader("Please enter your email address since you have selected over $switchNum entries.")
+              if ( blankStr($myEmail) );
+            WebUtil::webErrorHeader("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );            
         }
-
-        webError("Please enter your email address since you have selected over $switchNum entries.")
-          if ( blankStr($myEmail) );
-        webError("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
+        else {
+            webError("Please enter your email address since you have selected over $switchNum entries.")
+              if ( blankStr($myEmail) );
+            webError("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );            
+        }
 
         my $title;
         my $ext;

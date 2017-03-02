@@ -3,24 +3,14 @@
 #
 #	Parse query params and run the appropriate code
 #
-#	$Id: Dispatcher.pm 36523 2017-01-26 17:53:41Z aireland $
+#	$Id: Dispatcher.pm 36602 2017-02-28 21:51:26Z aireland $
 ############################################################################
 package IMG::App::Role::Dispatcher;
 
 use IMG::Util::Import 'MooRole';
-use IMG::App::DispatchCore;
-
-my %valid_sections =
-
-
-sub prepare_to_parse {
-	my $dsl = shift;
-	my $req = shift;
-	my $app = $dsl->app;
-	my $prep_args = parse_params( $app, $req );
-
-	return $prep_args;
-}
+use IMG::Util::Factory;
+use Sub::Override;
+use Carp;
 
 =head3 prepare_dispatch
 
@@ -37,16 +27,223 @@ Parse the parameters, load the module, and get ready to dispatch the code!
 =cut
 
 sub prepare_dispatch {
+	my $self = shift;
+	my $args = shift;
 
-	my $dsl = shift;
-	my $req = shift;
-	my $app = $dsl->app;
+	my $prep_args = $self->parse_params( $args->{request} );
 
-	my $prep_args = parse_params( $app, $req );
+	my $sub_to_run = $self->prepare_dispatch_coderef( $prep_args );
 
-	my $sub_to_run = IMG::App::DispatchCore::prepare_dispatch_coderef( $prep_args ) unless defined $prep_args->{sub_to_run} && 'CODE' eq ref $prep_args->{sub_to_run};
+	my @app_arg_arr = ( qw( current noMenu gwtModule yui_js scripts help redirect_url ) );
+	my %arg_h;
+	@arg_h{ qw( current noMenu gwtModule yui_js scripts help redirect_url ) } = $prep_args->{module}->getAppHeaderData();
 
-	return { %$prep_args, sub_to_run => $sub_to_run || $prep_args->{sub_to_run} };
+#	my @appArgs = $prep_args->{module}->getAppHeaderData();
+	say 'appArgs: ' . Dumper \%arg_h;
+
+	my $tmpl_inc;
+
+	for my $x ( 'yui_js', 'scripts' ) {
+		if ( $arg_h{ $x } ) {
+			$tmpl_inc->{extra_javascript} .= $arg_h{$x};
+#			push @{$tmpl_inc->{scripts}}, $arg_h{ $x };
+		}
+	}
+
+	if ( $arg_h{help} ) {
+		$tmpl_inc->{help} = $arg_h{help};
+	}
+
+	$tmpl_inc->{title} = $prep_args->{module}->getPageTitle();
+
+# 	my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
+#	returns number of taxons
+
+# sub printHTMLHead {
+#     my ( $current, $title, $gwt, $content_js, $yahoo_js, $numTaxons ) = @_;
+#
+#     my $str = 0;
+#     if ( $numTaxons ne '' ) {
+#         my $url = "$main_cgi?section=GenomeCart&page=genomeCart";
+#         $url = alink( $url, $numTaxons );
+#         $str = "$url";
+#     }
+#
+#     if ( $current eq "logout" || $current eq "login" ) {
+#         $str = "";
+#     }
+#
+#     my $enable_google_analytics = $env->{enable_google_analytics};
+#     my $googleStr;
+#     if ($enable_google_analytics) {
+#         my ( $server, $google_key ) = WebUtil::getGoogleAnalyticsKey();
+#         $googleStr = googleAnalyticsJavaScript2( $server, $google_key );
+#         $googleStr = "" if ( $google_key eq "" );
+#     }
+#
+#     my $template;
+#
+#     #if($img_ken) {
+#     $template = HTML::Template->new( filename => "$base_dir/header-v41.html" );
+#
+#     #} else {
+#     #    $template = HTML::Template->new( filename => "$base_dir/header-v40.html" );
+#     #}
+#     $template->param( title        => $title );
+#     $template->param( gwt          => $gwt );
+#     $template->param( base_url     => $base_url );
+#     $template->param( YUI          => $YUI );
+#     $template->param( content_js   => $content_js );
+#     $template->param( yahoo_js     => $yahoo_js );
+#     $template->param( googleStr    => $googleStr );
+#     $template->param( top_base_url => $top_base_url );
+#     print $template->output;
+#
+#         # if ( $current ne "logout" && $current ne "login" ) {
+#         my $enable_autocomplete = $env->{enable_autocomplete};
+#         if ($enable_autocomplete) {
+#             print qq{
+#         <div id="quicksearch">
+#         <form name="taxonSearchForm" enctype="application/x-www-form-urlencoded" action="main.cgi" method="post">
+#             <input type="hidden" value="orgsearch" name="page">
+#             <input type="hidden" value="TaxonSearch" name="section">
+#
+#             <a style="color: black;" href="$base_url/orgsearch.html">
+#             <font style="color: black;"> Quick Genome Search: </font>
+#             </a><br/>
+#             <div id="myAutoComplete" >
+#             <input id="myInput" type="text" style="width: 110px; height: 20px;" name="taxonTerm" size="12" maxlength="256">
+#             <input type="submit" alt="Go" value='Go' name="_section_TaxonSearch_x" style="vertical-align: middle; margin-left: 125px;">
+#             <div id="myContainer"></div>
+#             </div>
+#         </form>
+#         </div>
+#             };
+#
+#             # https://localhost/~kchu/preComputedData/autocompleteAll.php
+#             my $autocomplete_url = "$top_base_url" . "api/";
+#
+#             #my $autocomplete_url = "https://localhost/~kchu/api/";
+#
+#             if ($include_metagenomes) {
+#                 $autocomplete_url .= 'autocompleteAll.php';
+#             } elsif ($img_nr) {
+#                 $autocomplete_url .= 'autocompleteNR.php';
+#             } else {
+#                 $autocomplete_url .= 'autocompleteIsolate.php';
+#             }
+#
+#             print <<EOF;
+# <script type="text/javascript">
+# YAHOO.example.BasicRemote = function() {
+#     // Use an XHRDataSource
+#     var oDS = new YAHOO.util.XHRDataSource("$autocomplete_url");
+#     // Set the responseType
+#     oDS.responseType = YAHOO.util.XHRDataSource.TYPE_TEXT;
+#     // Define the schema of the delimited results
+#     oDS.responseSchema = {
+#         recordDelim: "\\n",
+#         fieldDelim: "\\t"
+#     };
+#     // Enable caching
+#     oDS.maxCacheEntries = 5;
+#
+#     // Instantiate the AutoComplete
+#     var oAC = new YAHOO.widget.AutoComplete("myInput", "myContainer", oDS);
+#
+#     return {
+#         oDS: oDS,
+#         oAC: oAC
+#     };
+# }();
+# </script>
+#
+# EOF
+#         }
+#
+#         #}
+#
+#         if ($enable_carts) {
+#
+#             require ScaffoldCart;
+#             my $ssize = ScaffoldCart::getSize();
+#             if ( $ssize > 0 ) {
+#                 $ssize = alink( 'main.cgi?section=ScaffoldCart&page=index', $ssize );
+#             }
+#
+#             require FuncCartStor;
+#             my $c     = new FuncCartStor();
+#             my $fsize = $c->getSize();
+#             if ( $fsize > 0 ) {
+#                 $fsize = alink( 'main.cgi?section=FuncCartStor&page=funcCart', $fsize );
+#             }
+#
+#             require GeneCartStor;
+#             my $gsize = GeneCartStor::getSize();
+#             if ( $gsize > 0 ) {
+#                 $gsize = alink( 'main.cgi?section=GeneCartStor&page=geneCart', $gsize );
+#             }
+#
+#             my $genomeUrl    = alink( 'main.cgi?section=GenomeCart&page=genomeCart', 'Genomes' );
+#             my $scaffoldUrl  = alink( 'main.cgi?section=ScaffoldCart&page=index',    'Scaffolds' );
+#             my $functionsUrl = alink( 'main.cgi?section=FuncCartStor&page=funcCart', 'Functions' );
+#             my $genesUrl     = alink( 'main.cgi?section=GeneCartStor&page=geneCart', 'Genes' );
+#
+#             my $isEditor = 0;
+#             my $cursize  = 0;
+#             if ($user_restricted_site) {
+#                 $isEditor = WebUtil::isImgEditorWrap();
+#             }
+#             if ($isEditor) {
+#                 require CuraCartStor;
+#                 my $c = new CuraCartStor();
+#                 $cursize = $c->getSize();
+#                 if ( $cursize > 0 ) {
+#                     $cursize = alink( 'main.cgi?section=CuraCartStor&page=curaCart', $cursize );
+#                 }
+#             }
+#             my $bcCartSize = 0;
+#             if ( $abc || $img_ken ) {
+#                 require WorkspaceBcSet;
+#                 $bcCartSize = WorkspaceBcSet::getSize();
+#             }
+#
+#             print qq{
+# <div id="cart">
+#  &nbsp;&nbsp; <span title="Carts are unsaved sets and sets are lost during session logouts">My Analysis Carts**:</span>
+#  &nbsp;&nbsp; <span id='genome_cart'>$str</span> $genomeUrl &nbsp;&nbsp;
+# |&nbsp;&nbsp; <span id='scaffold_cart'>$ssize</span> $scaffoldUrl &nbsp;&nbsp;
+# |&nbsp;&nbsp; <span id='function_cart'>$fsize</span> $functionsUrl &nbsp;&nbsp;
+# |&nbsp;&nbsp; <span id='gene_cart'>$gsize</span> $genesUrl
+#         };
+#
+#             if ($isEditor) {
+#                 my $curationUrl = alink( 'main.cgi?section=CuraCartStor&page=curaCart', 'Curation' );
+#                 print qq{
+#   &nbsp;&nbsp; |&nbsp;&nbsp; <span id='curation_cart'>$cursize</span> $curationUrl
+#           };
+#             }
+#
+#             if ( $abc || $img_ken ) {
+#                 my $bcurl = alink( 'main.cgi?section=WorkspaceBcSet&page=viewCart', 'BC' );
+#                 print qq{
+#   &nbsp;&nbsp; |&nbsp;&nbsp; <span id='bc_cart'>$bcCartSize</span> $bcurl
+#           };
+#             }
+#
+#             print "</div>";
+#         } # end if ($enable_carts)
+#
+#     } # end if ( $current eq "logout" || $current eq "login" ) "else" section
+#
+#     print qq{
+#     <div id="myclear"></div>
+#     };
+# }
+
+# 	$module->dispatch($numTaxons);
+
+	return { tmpl_args => $tmpl_inc, %$prep_args, sub_to_run => $sub_to_run };
 
 };
 
@@ -57,114 +254,48 @@ template, and template arguments to use.
 
 @return hashref with keys
 
-		sub    - subroutine to run
-		module - module to load
-		tmpl   - outer page template to use (defaults to 'default')
-		tmpl_args  - template arguments
-
+		module  - module to load
+		sub     - subroutine to run
+		page_id - the ID of the page
 =cut
 
 sub parse_params {
-
 	my $self = shift;
 	my $req = shift;
+
+	coerce_section( $req );
 #	my $self = $dsl->app;
 
 	my $module;           # the module to load
-	my %tmpl_args;        # arguments for populating page templates
-	my $sub = 'dispatch'; # subroutine to run (if not dispatch)
-	my $tmpl = 'default'; # which template to use for the page
-	my $hdrs;             # page headers to set
-	my $code_ref;         # directly set the code ref to be run
 
-#	say 'request: ' . Dumper $req;
-
-	my $page = $req->params->{page} || "";
-	my $section = $req->params->{section};
+	my $page = $req->param('page') || "";
+	my $section = $req->param('section');
 
 	say "page: $page; section: $section";
 
-
-=cut
-		# this should all be dealt with by Caliban!
-        elsif ( ( $self->config->{public_login} || $self->config->{user_restricted_site} ) && $cgi->param("logout") ) {
-
-            #        if ( !$oldLogin && $self->config->{sso_enabled} ) {
-            #
-            #            # do no login log here
-            #        } else {
-            #            WebUtil::loginLog( 'logout main.pl', 'img' );
-            #        }
-
-            $self->session->write( "blank_taxon_filter_oid_str", "1" );
-            $self->session->write( "oldLogin",                   0 );
-            setTaxonSelections("");
-            print_app_header( current => "logout" );
-
-            print "<div id='message'>\n";
-            print "<p>\n";
-            print "Logged out.\n";
-            print "</p>\n";
-            print "</div>\n";
-            print qq{
-				<p>
-				<a href='main.cgi'>Sign in</a>
-				</p>
-			};
-
-            # sso
-            if ( ! $self->config->{oldLogin} && $self->config->{sso_enabled} ) {
-                $module = 'Caliban';
-                $sub = sub {
-                	$module::sso_logout;
-                };
-#                Caliban::logout(1);
-            }
-            else {
-                $module = 'Caliban';
-                $sub = sub {
-                	$module::logout;
-                };
-#                Caliban::logout();
-            }
-        }
-    }
-    else {
-        my $rurl = $cgi->param("redirect");
-        if ( ( $self->config->{public_login} || $self->config->{user_restricted_site} ) && $rurl ) {
-            redirecturl($rurl);
-        }
-        else {
-            $self->config->{homePage} = 1;
-            %tmpl_args = ( current => "Home" );
-        }
-    }
-=cut
-
+	if ( $module = is_valid_module( $section ) ) {
+		if ( $req->param("exportGenes") || $req->param("exportGeneData") ) {
+			$module = 'Export';
+		} elsif ( $req->param("setTaxonFilter") ) {
+			$module = 'GenomeList';
+		}
+	}
 	else {
-		# render the main page instead
-		$self->config->{homePage} = 1;
-		%tmpl_args = ( current => 'Home' );
+		$self->choke({
+			msg => 'Could not parse request params'
+		});
 	}
 
-	warn "Returning from prepare with args sub: $sub, module: $module, tmpl: $tmpl";
-
-#	$self->set_tmpl_args( \%tmpl_args );
-    my $page_id = ( defined $page && lc( $page ) ne 'home')
-        ? $module . '/' . $page
-        : $module;
-    say 'page_id: ' . $page_id;
+	my $page_id = ( defined $page && lc( $page ) ne 'home')
+		? $module . '/' . $page
+		: $module;
+	say 'page_id: ' . $page_id;
 
 	return {
-	    page_id   => $page_id,
-		sub       => $sub,
-		module    => $module,
-		tmpl_args => \%tmpl_args,
-		tmpl       => $tmpl,
-		headers    => $hdrs,
-		sub_to_run => $code_ref,
+		module => $module,
+		sub => 'dispatch',
+		page_id => $page_id
 	};
-
 }
 
 =head3 prepare_dispatch_coderef
@@ -177,21 +308,105 @@ Load the module and prepare a coderef for dispatch
 
 @return  $to_do  coderef to execute
 
+=cut
+
 sub prepare_dispatch_coderef {
+	my $self = shift;
 	my $arg_h = shift;
 
-	my $module = $arg_h->{module} || croak "No module defined!";
-	my $sub = $arg_h->{sub} || croak "No sub defined!";
+	my $module = $arg_h->{module} || $self->choke({ err => 'missing', subject => 'module' });
+	my $sub = $arg_h->{sub} || $self->choke({ err => 'missing', subject => 'sub' });
 
-	my ($ok, $err) = try_load_class( $module );
-	$ok or croak "Unable to load class " . $module . ": $err";
+	# initialise IMG session, dbhs, etc.
+	IMG::Util::Factory::require_module( 'WebUtil' );
+
+#	say 'Loaded WebUtil';
+	WebUtil::init_from_proportal( $self );
+
+# 	my $errs;
+# 	my $mods = $self->valid_modules;
+# 	for my $m ( sort keys %$mods ) {
+# 		local $@;
+# 		say 'loading ' . $mods->{$m};
+# 		eval {
+# 			IMG::Util::Factory::require_module( $mods->{$m} );
+# 		};
+# 		$errs->{$m} = $@ if $@;
+# 	}
+# 	if ( $errs ) {
+# 		for ( sort keys %$errs ) {
+# 			say $_;
+# 			say $errs->{$_};
+# 		}
+# 	}
+
+	my $override = Sub::Override->new;
+
+	my $sub_h = {
+		webError => sub {
+	#		say 'running WebUtil::WebError';
+			confess $_[0];
+		},
+		webDie => sub {
+	#		say 'running WebUtil::webDie';
+			confess $_[0];
+		},
+		webErrorHeader => sub {
+	#		say 'running WebUtil::webErrorHeader';
+			return WebUtil::webError( @_ );
+		},
+		webExit => sub {
+	#		say 'running WebUtil::webExit';
+			return;
+		},
+		webLog => sub {
+			warn $_[0];
+			return;
+		},
+		webErrLog => sub {
+			carp $_[0];
+			return;
+		},
+		loginLog => sub {
+			warn $_[0];
+			return;
+		},
+		getSessionParam => sub {
+			return WebUtil::getSession()->read( @_ );
+		},
+		setSessionParam => sub {
+			return WebUtil::getSession()->write( @_ );
+		},
+	};
+
+# 	my $module = Test::MockModule->new('WebUtil');
+# 	Module::Name::subroutine(@args); # mocked
+# 	$mock->mock(foo => sub { print "Foo!\n"; });
+
+	for my $sub ( keys %$sub_h ) {
+		for my $prefix ( 'WebUtil' ) { #, 'WebPrint' ) {
+			if ( $prefix ) {
+				$override->replace( "$prefix::$sub", $sub_h->{$sub} );
+			}
+			else {
+				$override->replace( $sub, $sub_h->{$sub} );
+			}
+		}
+	}
+
+	IMG::Util::Factory::require_module( $module );
 
 	# make sure that we can run the sub:
 	if ( ! $module->can( $sub ) ) {
-		croak "$module does not have $sub implemented!";
+		$self->choke({
+			err => 'module_err',
+			subject => $module,
+			msg => "module does not have $sub implemented!"
+		});
 	}
 
-#	warn "Loaded module OK!";
+	say 'Loaded ' . $module;
+
 
 	my $to_do;
 	if (! ref $sub ) {
@@ -205,28 +420,28 @@ sub prepare_dispatch_coderef {
 	return $to_do;
 
 }
-=cut
 
 
-sub paramMatch {
-
+sub coerce_section {
 	my $req = shift;
-	my $p = shift;
-
-	carp "running paramMatch: p: $p";
+#	return if $req->param('section');
 
 	for my $k ( keys %{$req->params} ) {
-		return $k if $k =~ /$p/;
+		if ( $k =~ /^_section/ ) {
+			$req->param( "section", ( split /_/, $k )[2] );
+			last;
+		}
 	}
-	return undef;
-
+	return;
 }
+
 
 sub is_valid_module {
 	my $m = shift;
 	my $valid = valid_modules();
 	return $valid->{$m} || 0;
 }
+
 
 sub valid_modules {
 

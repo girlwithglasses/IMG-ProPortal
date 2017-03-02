@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: Session.pm 36523 2017-01-26 17:53:41Z aireland $
+# $Id: Session.pm 36602 2017-02-28 21:51:26Z aireland $
 #
 ############################################################################
 package IMG::App::Role::Session;
@@ -10,10 +10,10 @@ use IMG::Util::Import 'MooRole';
 requires 'config';
 
 has 'session' => (
-	is => 'rw',
+	is => 'rwp',
 	isa => Object,
 	predicate => 1,
-	writer => 'set_session',
+	clearer => 1
 );
 
 

@@ -18,11 +18,11 @@ use Template::Plugin::JSON::Escape;
 # 				tt_scripts => qw( ecotype ),
 # 			},
 # 			filters => {
-# 				subset => 'prochlor'
+# 				subset => 'pro'
 # 			},
 # 			valid_filters => {
 # 				subset => {
-# 					enum => [ qw( prochlor ) ],
+# 					enum => [ qw( pro ) ],
 # 				}
 # 			}
 # 		};

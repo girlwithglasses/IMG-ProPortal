@@ -58,8 +58,8 @@ prefix '/api/proportal' => sub {
 			$v_q->{$_} = MiniContr->new()->add_controller( $_ );
 		}
 
-		var menu_grp => 'proportal';
-		var page_id => 'proportal';
+		img_app->current_query->_set_menu_group( 'proportal' );
+		img_app->current_query->_set_page_id( 'proportal' );
 		return template 'pages/api_home', { queries => [ @valid_queries ], subsets => [ @subsets ], apps => $v_q };
 
 	}

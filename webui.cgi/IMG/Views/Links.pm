@@ -1116,6 +1116,30 @@ my $dynamic_links = {
 		}
 	},
 
+	gene_list => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				return $_[0]->{base} . 'gene/list' .
+				( $_[0] && $_[0]->{params}
+				? '/' . shift->{params}{taxon_oid}
+				: '' );
+			},
+		};
+	},
+
+	gene_details => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				return $_[0]->{base} . 'gene/details' .
+				( $_[0] && $_[0]->{params}
+				? '/' . shift->{params}{gene_oid}
+				: '' );
+			},
+		};
+	},
+
 	# example.com/taxon/1234568
 	taxon => sub {
 		return {

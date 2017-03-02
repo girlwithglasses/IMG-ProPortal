@@ -12,7 +12,7 @@ requires 'link_data', 'config';
 
 =head1 NAME
 
-IMG::App::Role::Menu - role conferring basic navigation-related functionality
+IMG::App::Role::MenuManager - role conferring basic navigation-related functionality
 
 =head1 VERSION
 
@@ -49,6 +49,8 @@ sub make_menu {
 	my $menu_grp = $args->{group} || undef;
 	my $page_id = $args->{page} || undef;
 
+	say 'Looking for group ' . ( $menu_grp || 'undefined' ) . ' and page ' . ( $page_id || 'undefined' );
+
 	# if the ID is not defined, return the default menu
 #	if ( not defined $page_id ) {
 #		warn "page ID is not defined: group was " . Dumper $menu_grp;
@@ -63,7 +65,6 @@ sub make_menu {
 	# get the menu data structures and populate the links
 	my $menu_ds = $self->get_menu_items();
 
-#	say 'Looking for group ' . ( $menu_grp || 'undefined' ) . ' and page ' . ( $page_id || 'undefined' );
 
 	my $fn = sub {
 		my $l = shift;

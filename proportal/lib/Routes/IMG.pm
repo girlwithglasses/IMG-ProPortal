@@ -1,41 +1,56 @@
 package Routes::IMG;
 use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
-use parent 'AppCore';
+use AppCorePlugin;
 
 # use IMG::App::Role::Dispatcher;
 # use IMG::Views::ViewMaker;
-use Filter::Handle qw( Filter UnFilter) ;
-
-# menu pages
+use Filter::Handle qw( Filter UnFilter subs ) ;
+use CGI::Emulate::PSGI;
 
 prefix '/cgi-bin' => sub {
 
 	any '/main.cgi?**' => sub {
 
-		my $rtn; # = prep_parse_params( request );
+		my $rtn = img_app->prepare_dispatch({
+			'session' => session,
+			'request' => request
+		});
 
 		# get template variables
-		var menu_grp => $rtn->{tmpl_args}{current};
-		var page_id => $rtn->{page_id};
+		img_app->current_query->_set_page_params({
+			page_id => $rtn->{page_id},
+			menu_group => $rtn->{tmpl_args}{current}
+		});
 
-		my $tmpl_inc;
+# 	my @appArgs = $section->getAppHeaderData();
+# 	my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
+# 	$section->dispatch($numTaxons);
 
-		for my $x ( 'yui_js', 'scripts' ) {
-			if ( $rtn->{tmpl_args}{ $x } ) {
-				push @{$tmpl_inc->{scripts}}, $rtn->{tmpl_args}{ $x };
-			}
-		}
 
-		if ( $rtn->{tmpl_args}{ include_styles} ) {
-			push @{$tmpl_inc->{styles}}, $rtn->{tmpl_args}{include_styles};
+		my $output;
+		{
+			local $@;
+			eval {
+				open local *STDOUT, ">", \$output or die "Could not open STDOUT: $!";
+				$rtn->{sub_to_run}->( );
+
+				warn 'STDOUT: ' . $output;
+
+#				close local *STDOUT;
+#				close *STDOUT;
+			};
+			die $@ if $@;
 		}
 
 		template "pages/any_content", {
 			title => $rtn->{tmpl_args}{title},
-			tmpl_includes => $tmpl_inc,
-			content => $rtn
+			tmpl_includes => $rtn->{tmpl_args},
+			extra_javascript => $rtn->{extra_javascript} // '',
+			page_head_img => 1,
+			content => $output
 		};
+
 
 =cut
 	my $n_taxa;
@@ -120,15 +135,15 @@ prefix '/cgi-bin' => sub {
 	};
 
 
-	any '/main.cgi' => sub {
+#	any '/main.cgi' => sub {
 		# home pages
 # 		my $tmpl_args = get_tmpl_vars();
 #
 # 		img_render( tmpl_args => $tmpl_args, request => request );
 
-		return;
+#		return;
 
-	};
+#	};
 
 };
 

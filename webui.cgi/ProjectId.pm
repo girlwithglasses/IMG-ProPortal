@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: ProjectId.pm 34123 2015-08-27 21:32:44Z klchu $
+# $Id: ProjectId.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package ProjectId;
 
@@ -51,8 +51,8 @@ sub printProjectList {
     
     my $sql = qq{
         select t.taxon_oid
-        from taxon t
-        where t.jgi_project_id = ?
+        from taxon t2
+        where t2.jgi_project_id = ?
     };
     
     my $title = "Project ID $projectId Genome List";

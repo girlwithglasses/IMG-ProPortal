@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeList.pm 36508 2017-01-12 17:17:35Z klchu $
+# $Id: GenomeList.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package GenomeList;
 
@@ -50,25 +50,10 @@ my $mySamplePrefs             = 'mySamplePrefs';                     # filename
 my $myTaxonStatsPrefs         = 'myTaxonStatsPrefs';                 # filename
 my $top_base_url              = $env->{top_base_url};
 
-#my $projectMetadataDir                 = "/webfs/scratch/img/gold/";
-#my $project_info_project_relevanceFile = $projectMetadataDir . 'project_info_project_relevance';
-#my $project_info_cell_arrangementFile  = $projectMetadataDir . 'project_info_cell_arrangement';
-#my $project_info_diseasesFile          = $projectMetadataDir . 'project_info_diseases';
-#my $project_info_energy_sourceFile     = $projectMetadataDir . 'project_info_energy_source';
-#my $project_info_metabolismFile        = $projectMetadataDir . 'project_info_metabolism';
-#my $project_info_phenotypesFile        = $projectMetadataDir . 'project_info_phenotypes';
-#my $project_info_habitatFile           = $projectMetadataDir . 'project_info_habitat';
-#my $project_info_seq_methodFile        = $projectMetadataDir . 'project_info_seq_method';
-#my $sample_body_siteFile               = $projectMetadataDir . 'sample_body_site';
-#my $sample_body_subsiteFile            = $projectMetadataDir . 'sample_body_subsite';
 
 my $cacheDir = "/webfs/scratch/img/gold/";
 my $database = $cacheDir . "projectInfo2.db";    # see ../preComputedData/ProjectMetadata3.pl
 
-#$dir .= "/$section";
-#if ( !( -e "$dir" ) ) {
-#    mkdir "$dir" or webError("Can not make $dir!");
-#}
 $cgi_tmp_dir = $dir;
 
 # get the subdirectory of the file
@@ -142,37 +127,51 @@ my @genomeColumnsOrder = (
     't.domain',                              't.seq_status',
     't.proposal_name',                       't.taxon_display_name',
     't.seq_center',                          't.taxon_oid',
+    
     't.phylum',                              't.ir_class',
     't.ir_order',                            't.family',
     't.genus',                               't.species',
-    't.ncbi_taxon_id',                       't.refseq_project_id',
-    't.gbk_project_id',                      't.submission_id',
-    't.jgi_project_id',                      
-    't.analysis_product_name',
     
-    't.study_gold_id',
-    't.sequencing_gold_id',                  't.analysis_project_id',
+    't.img_product_flag',                      
+    't.img_version',                         
+    't.submission_id',
+    
+    't.jgi_project_id',                      
+    't.analysis_product_name',     
+    't.analysis_project_type',
 
-    'gap.gold_analysis_project_type',        'gap.is_gene_primp',
-    'gap.submission_type',                   'gap.assembly_method',
-    't.strain',                              't.funding_agency',
-    't.is_public',                           't.comments',
-    't.img_version',                         't.img_product_flag',
-    't.high_quality_flag',                   "to_char(t.add_date, 'yyyy-mm-dd')",
-    "to_char(t.release_date, 'yyyy-mm-dd')", "to_char(t.distmatrix_date, 'yyyy-mm-dd')",
-    "t.genome_completion"
+    't.analysis_project_id',
+    'gap.gold_analysis_project_type',            
+    't.sequencing_gold_id',
+    't.study_gold_id',
+
+
+    "to_char(t.add_date, 'yyyy-mm-dd')",
+    'gap.assembly_method',                  
+    't.combined_sample_flag',
+    't.comments',
+    "to_char(t.distmatrix_date, 'yyyy-mm-dd')",
+    't.funding_agency',
+    'gap.is_gene_primp',
+    "t.genome_completion", 
+    't.high_quality_flag',
+    't.is_public',
+    't.ncbi_taxon_id',
+    't.gbk_project_id',                       
+    't.refseq_project_id',
+    
+    "to_char(t.release_date, 'yyyy-mm-dd')",    
+    't.strain',
+    'gap.submission_type',                   
 );
 
-if ($include_metagenomes) {
-    push( @genomeColumnsOrder, 't.combined_sample_flag' );
-}
 if ($user_restricted_site) {
     push( @genomeColumnsOrder, 'c.username' );
 }
 if ( getSuperUser() eq 'Yes' ) {
-    push( @genomeColumnsOrder, 'c.submittername' );
     push( @genomeColumnsOrder, 't.in_file' );
     push( @genomeColumnsOrder, 't.is_nr' );
+    push( @genomeColumnsOrder, 'c.submittername' );
 }
 
 # genome file db column names and ui display label
@@ -214,6 +213,7 @@ my %genomeColumns = (
     'gap.assembly_method'                      => 'Assembly Method',
     't.genome_completion'                      => 'Genome Completeness %',
     't.analysis_product_name'  => 'JGI Analysis Product Name',
+    't.analysis_project_type'  => 'JGI Analysis Project Type',
 );
 
 if ($user_restricted_site) {
@@ -225,9 +225,9 @@ if ($user_restricted_site) {
 }
 
 if ( getSuperUser() eq 'Yes' ) {
-    $genomeColumns{'c.submittername'} = 'Submitter Name*';
-    $genomeColumns{'t.in_file'}       = 'In File*';
-    $genomeColumns{'t.is_nr'}         = 'Is NR*';
+    $genomeColumns{'t.in_file'}       = '** In File';
+    $genomeColumns{'t.is_nr'}         = '** Is NR';
+    $genomeColumns{'c.submittername'} = '** Submitter Name';
 }
 
 # how to align data in the display table
@@ -273,6 +273,7 @@ my %genomeColumnsAlign = (
     'gap.assembly_method'                      => 'char asc left',
     't.genome_completion'                      => 'char asc left',
     't.analysis_product_name'  => 'char asc left',
+    't.analysis_project_type'  => 'char asc left',
 
 );
 

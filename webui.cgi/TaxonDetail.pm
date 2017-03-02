@@ -5,8 +5,8 @@
 #  Also has the link outs to groups of genes by various categories
 #  from the statistics page.
 #      --es 09/17/2004
-#
-# $Id: TaxonDetail.pm 35983 2016-08-09 21:29:10Z aratner $
+# - new gold field
+# $Id: TaxonDetail.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package TaxonDetail;
 my $section = "TaxonDetail";
@@ -1220,7 +1220,7 @@ sub printTaxonDetail_ImgGold {
     	 tx.submission_id, tx.img_product_flag, tx.proposal_name,
     	 tx.sample_gold_id, tx.in_file, to_char(tx.distmatrix_date, 'yyyy-mm-dd'),
     	 tx.high_quality_flag, tx.analysis_project_id, tx.study_gold_id, tx.sequencing_gold_id,
-    	 tx.genome_completion
+    	 tx.genome_completion, tx.analysis_product_name, tx.analysis_project_type
         from taxon tx
         where tx.taxon_oid = ?
         $rclause
@@ -1236,7 +1236,8 @@ sub printTaxonDetail_ImgGold {
         $env_sample,     $is_big_euk,     $is_proxygene_set,   $release_date,       $add_date,
         $mod_date,       $obsolete_flag,  $submission_id,      $img_product_flag,   $proposal_name,
         $sample_gold_id, $in_file, $distmatrix_date, $high_quality_flag, $analysis_project_id,
-        $study_gold_id, $sequencing_gold_id, $genome_completion
+        $study_gold_id, $sequencing_gold_id, $genome_completion, $analysis_product_name, 
+        $analysis_project_type
       )
       = $cur->fetchrow();
     $cur->finish();
@@ -1500,6 +1501,15 @@ sub printTaxonDetail_ImgGold {
         printAttrRow( "GOLD Analysis Project Type",  $projectType);
         printAttrRow( "Submission Type",  $submissionType);
     }
+
+    if($analysis_product_name) {
+        printAttrRow( "JGI Analysis Product Name",  $analysis_product_name);
+    }
+
+    if($analysis_project_type) {
+    	printAttrRow( "JGI Analysis Project Type",  $analysis_project_type);
+    }
+
 
     print $strrow;
 

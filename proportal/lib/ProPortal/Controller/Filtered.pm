@@ -146,7 +146,9 @@ sub set_filters {
 			## TODO
 		}
 	}
-	$self->_set_filters( $filters );
+	if ( keys %$filters ) {
+		$self->_set_filters( $filters );
+	}
 	return;
 }
 

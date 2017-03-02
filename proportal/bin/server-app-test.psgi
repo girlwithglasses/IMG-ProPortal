@@ -15,6 +15,8 @@ BEGIN {
 		jbrowse/src/perl5
 		jbrowse/extlib/lib/perl5
 	);
+	my $home = dirname( $dir );
+	unshift @dir_arr,  catdir( $home, 'ken-branch/webui.cgi' );
 }
 use lib @dir_arr;
 use IMG::Util::Import 'psgi';
@@ -31,14 +33,14 @@ use Dancer2;
 {	package ProPortalApp;
 	use IMG::Util::Import;
 	use Dancer2 appname => 'ProPortal';
+	our $VERSION = '0.1.0';
 	use AppCore;
 	use AppCorePlugin;
-	our $VERSION = '0.1.0';
 
-	#use Routes::Ajax;
+	use Routes::Ajax;
 	use Routes::MenuPages;
-	# use Routes::JBrowse;
-	# use Routes::IMG;
+#	use Routes::JBrowse;
+	use Routes::IMG;
 	use Routes::API;
 	use Routes::ProPortal;
 	use Routes::TestStuff;
@@ -119,21 +121,6 @@ builder {
 # 		]
 # 	];
 
-# 	enable 'Static',
-# 		path => sub { s!^/jbrowse_assets!! },
-# 		root => catdir( $home, 'webUI/jbrowse' );
-
-	# jbrowse data directory
-#	scratch_dir => '/global/homes/a/aireland/tmp/jbrowse/',
-
-# 	enable 'Static',
-# 		path => sub { s!^/data_dir!! },
-# 		root => catdir( $home, 'tmp/jbrowse' );
-
-# 	enable 'Static',
-# 		path => qr#^/yui282#x,
-# 		root => '/webfs/projectdirs/microbial/img/public-web/vhosts/img-stage.jgi-psf.org/htdocs/';
-
 	mount "/img_core" => builder {
 		mount "/browser" => $apps->{img_core}{hal};
 		mount "/" => $apps->{img_core}{main};
@@ -144,7 +131,5 @@ builder {
 	};
 
 	mount '/' => ProPortalApp->to_app;
-
-# 	mount '/pristine' => Plack::App::CGIBin->new(root => catdir( $home, "pristine/webUI/webui.cgi" ) )->to_app;
 
 };

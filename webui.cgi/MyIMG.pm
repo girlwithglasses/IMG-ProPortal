@@ -1,7 +1,7 @@
 ###########################################################################
 # MyImg.pm - Functions supporting MyIMG utilty.
 #    --es 04/16/2005
-# $Id: MyIMG.pm 36056 2016-08-25 18:03:20Z klchu $
+# $Id: MyIMG.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
 ############################################################################
 package MyIMG;
 my $section = "MyIMG";
@@ -365,8 +365,8 @@ sub dispatch {
     } elsif ( paramMatch("dbUpdateMyGene") ne "" ) {
         my $mygene_oid = param('mygene_oid');
         if ( !$mygene_oid ) {
-            main::printAppHeader("MyIMG");
-            WebUtil::webError("Please select a missing gene annotation to update.");
+            #main::printAppHeader("MyIMG");
+            WebUtil::webErrorHeader("Please select a missing gene annotation to update.");
         }
         dbAddUpdateMyGene($mygene_oid);
 
@@ -390,8 +390,8 @@ sub dispatch {
     } elsif ( paramMatch("dbDeleteMyGene") ne "" ) {
         my $mygene_oid = param('mygene_oid');
         if ( !$mygene_oid ) {
-            main::printAppHeader("MyIMG");
-            WebUtil::webError("Please select a missing gene annotation to delete.");
+            #main::printAppHeader("MyIMG");
+            WebUtil::webErrorHeader("Please select a missing gene annotation to delete.");
         }
         dbDeleteMyGene($mygene_oid);
 
@@ -431,12 +431,12 @@ sub dispatch {
         listPotentialMissingGenes();
     } elsif ( paramMatch("dbAddPotentialGene") ne "" ) {
         my $msg = dbAddPotentialGene();
-        main::printAppHeader("MyIMG");
         if ( isInt($msg) && $msg > 0 ) {
+            main::printAppHeader("MyIMG");
             my $mygene_oid = $msg;
             addUpdateMyTaxonMissingGeneForm($mygene_oid);
         } else {
-            WebUtil::webError($msg);
+            WebUtil::webErrorHeader($msg);
         }
     } elsif ( $page eq "scaffoldMissingGene"
         || paramMatch("scaffoldMissingGene") ne "" )
@@ -444,12 +444,12 @@ sub dispatch {
         listScaffoldMissingGenes();
     } elsif ( paramMatch("dbAddScaffoldGene") ne "" ) {
         my $msg = dbAddScaffoldGene();
-        main::printAppHeader("MyIMG");
         if ( isInt($msg) && $msg > 0 ) {
+            main::printAppHeader("MyIMG");
             my $mygene_oid = $msg;
             addUpdateMyTaxonMissingGeneForm($mygene_oid);
         } else {
-            WebUtil::webError($msg);
+            WebUtil::webErrorHeader($msg);
         }
     } elsif ( $page eq "computePhyloDistOnDemand"
         || paramMatch("computePhyloDistOnDemand") ne "" )
@@ -5527,15 +5527,15 @@ sub printCompareAnnotField {
 sub exportMyAnnotations {
     my $contact_oid = WebUtil::getContactOid();
     if ( blankStr($contact_oid) ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Your login has expired.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("No genes have been selected.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("No genes have been selected.");
         return;
     }
 
@@ -6807,21 +6807,21 @@ sub dbUpdateAnnotation {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Session expired.  Please log in again.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     my @gene_oids = param("gene_oid");
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError( "No gene selected for update. " . "Please select at least one gene." );
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader( "No gene selected for update. " . "Please select at least one gene." );
         return;
     }
     if ( $nGenes > $max_gene_annotation_batch ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError( "Number of genes in batch to annotate exceeded. "
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader( "Number of genes in batch to annotate exceeded. "
               . "Please enter no more than $max_gene_annotation_batch genes." );
         return;
     }
@@ -6853,15 +6853,15 @@ sub dbUpdateAnnotation {
             if ( $fld eq 'ec_number' ) {
                 my $res = DataEntryUtil::checkECNumber($val);
                 if ( !blankStr($res) ) {
-                    main::printAppHeader("MyIMG");
-                    WebUtil::webError( "ERROR: " . $res );
+                    #main::printAppHeader("MyIMG");
+                    WebUtil::webErrorHeader( "ERROR: " . $res );
                     return;
                 }
             } elsif ( $fld eq 'pubmed_id' ) {
                 my $res = DataEntryUtil::checkPubmedId($val);
                 if ( !blankStr($res) ) {
-                    main::printAppHeader("MyIMG");
-                    WebUtil::webError( "ERROR: " . $res );
+                    #main::printAppHeader("MyIMG");
+                    WebUtil::webErrorHeader( "ERROR: " . $res );
                     return;
                 }
             }
@@ -6975,8 +6975,8 @@ sub dbUpdateAnnotation {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("SQL Error: $sql");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
 
@@ -7024,8 +7024,8 @@ sub dbUpdateMyIMGSharing {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         my $sql = $sqlList[ $err - 1 ];
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("SQL Error: $sql");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
 }
@@ -7038,19 +7038,19 @@ sub dbDeleteAnnotation {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Session expired.  Please log in again.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Session expired.  Please log in again.");
     }
 
     my @gene_oids = param("gene_oid");
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError( "No gene selected for update. " . "Please select at least one gene." );
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader( "No gene selected for update. " . "Please select at least one gene." );
     }
     if ( $nGenes > $max_gene_annotation_batch ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError( "Number of genes in batch to annotate exceeded. "
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader( "Number of genes in batch to annotate exceeded. "
               . "Please enter no more than $max_gene_annotation_batch genes." );
     }
 
@@ -7116,8 +7116,8 @@ sub dbDeleteAnnotation {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("SQL Error: $sql");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
 
@@ -10413,16 +10413,16 @@ sub dbAddUpdateMyGene {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Session expired.  Please log in again.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     # check taxon selection
     my $taxon_oid = param('taxon_oid');
     if ( !$taxon_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Please select a genome.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Please select a genome.");
         return;
     }
 
@@ -10459,12 +10459,12 @@ sub dbAddUpdateMyGene {
                     $fld_display = "DNA Coordinates";
                 }
 
-                main::printAppHeader("MyIMG");
-                WebUtil::webError( "ERROR: Please enter a value for " . $fld_display );
+                #main::printAppHeader("MyIMG");
+                WebUtil::webErrorHeader( "ERROR: Please enter a value for " . $fld_display );
                 return;
             } elsif ( $fld eq 'scaffold' ) {
-                main::printAppHeader("MyIMG");
-                WebUtil::webError( "ERROR: Please select a value for " . $fld );
+                #main::printAppHeader("MyIMG");
+                WebUtil::webErrorHeader( "ERROR: Please select a value for " . $fld );
                 return;
             }
         } else {
@@ -10473,14 +10473,14 @@ sub dbAddUpdateMyGene {
             if ( $fld eq 'ec_number' ) {
                 my $res = DataEntryUtil::checkECNumber($val);
                 if ( !blankStr($res) ) {
-                    main::printAppHeader("MyIMG");
-                    WebUtil::webError( "ERROR: " . $res );
+                    #main::printAppHeader("MyIMG");
+                    WebUtil::webErrorHeader( "ERROR: " . $res );
                     return;
                 }
             } elsif ( $fld eq 'start_coord' || $fld eq 'end_coord' ) {
                 if ( !isInt($val) ) {
-                    main::printAppHeader("MyIMG");
-                    WebUtil::webError("ERROR: $fld must be an integer.");
+                    #main::printAppHeader("MyIMG");
+                    WebUtil::webErrorHeader("ERROR: $fld must be an integer.");
                     return;
                 }
             } elsif ( $fld eq 'dna_coords' ) {
@@ -10488,14 +10488,14 @@ sub dbAddUpdateMyGene {
                 #		my $s2 = checkDNACoords($val);
                 my ( $s_coord, $e_coord, $partial_gene, $s2 ) = WebUtil::parseDNACoords($val);
                 if ($s2) {
-                    main::printAppHeader("MyIMG");
-                    WebUtil::webError("ERROR: $s2.");
+                    #main::printAppHeader("MyIMG");
+                    WebUtil::webErrorHeader("ERROR: $s2.");
                     return;
                 }
             } elsif ( $fld eq 'hitgene_oid' ) {
                 if ( !isInt($val) ) {
-                    main::printAppHeader("MyIMG");
-                    WebUtil::webError("ERROR: Hit Gene ID must be an integer.");
+                    #main::printAppHeader("MyIMG");
+                    WebUtil::webErrorHeader("ERROR: Hit Gene ID must be an integer.");
 
                     return;
                 }
@@ -10505,8 +10505,8 @@ sub dbAddUpdateMyGene {
 
                 #$dbh->disconnect();
                 if ( !$cnt1 ) {
-                    main::printAppHeader("MyIMG");
-                    WebUtil::webError("ERROR: Hit Gene ID is incorrect (not such gene).");
+                    #main::printAppHeader("MyIMG");
+                    WebUtil::webErrorHeader("ERROR: Hit Gene ID is incorrect (not such gene).");
 
                     return;
                 }
@@ -10523,8 +10523,8 @@ sub dbAddUpdateMyGene {
                     if ( !isInt($g2) ) {
 
                         #$dbh->disconnect();
-                        main::printAppHeader("MyIMG");
-                        WebUtil::webError("ERROR: Replacing Gene ID must be an integer.");
+                        #main::printAppHeader("MyIMG");
+                        WebUtil::webErrorHeader("ERROR: Replacing Gene ID must be an integer.");
                         return;
                     }
 
@@ -10533,8 +10533,8 @@ sub dbAddUpdateMyGene {
                     if ( !$cnt1 ) {
 
                         #$dbh->disconnect();
-                        main::printAppHeader("MyIMG");
-                        WebUtil::webError("ERROR: Gene ID $g2 is incorrect (not such gene).");
+                        #main::printAppHeader("MyIMG");
+                        WebUtil::webErrorHeader("ERROR: Gene ID $g2 is incorrect (not such gene).");
 
                         return;
                     }
@@ -10619,8 +10619,8 @@ sub dbAddUpdateMyGene {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("SQL Error: $sql");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
 
@@ -10822,14 +10822,14 @@ sub dbDeleteMyGene {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Session expired.  Please log in again.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     if ( !$mygene_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Please select a missing gene annotation.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Please select a missing gene annotation.");
         return;
     }
 
@@ -10845,8 +10845,8 @@ sub dbDeleteMyGene {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("SQL Error: $sql");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
 
@@ -12550,15 +12550,15 @@ sub dbUpdateMyIMGGeneTerms {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Session expired.  Please log in again.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("No gene has been selected.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("No gene has been selected.");
         return;
     }
     my $source_page = param("source_page");
@@ -12590,8 +12590,8 @@ sub dbUpdateMyIMGGeneTerms {
     #$dbh->disconnect();
 
     if ( scalar( keys %gene_name_h ) == 0 ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("You cannot update the gene(s).");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("You cannot update the gene(s).");
         return;
     }
 
@@ -12682,8 +12682,8 @@ sub dbUpdateMyIMGGeneTerms {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("SQL Error: $sql");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
 }
@@ -12986,15 +12986,15 @@ sub dbUpdateMissingGeneTerms {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("Session expired.  Please log in again.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     my $mygene_oid = param("mygene_oid");
     if ( !$mygene_oid ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("No gene has been selected.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("No gene has been selected.");
         return;
     }
     my $source_page     = param("source_page");
@@ -13010,8 +13010,8 @@ sub dbUpdateMissingGeneTerms {
     #$dbh->disconnect();
 
     if ( !$gene_oid2 ) {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("You cannot update this gene.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("You cannot update this gene.");
         return;
     } elsif ( $created_by == $contact_oid ) {
 
@@ -13020,8 +13020,8 @@ sub dbUpdateMissingGeneTerms {
 
         # super user can update public missing gene
     } else {
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("You cannot update this gene.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("You cannot update this gene.");
         return;
     }
 
@@ -13109,8 +13109,8 @@ sub dbUpdateMissingGeneTerms {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        main::printAppHeader("MyIMG");
-        WebUtil::webError("SQL Error: $sql");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
 }

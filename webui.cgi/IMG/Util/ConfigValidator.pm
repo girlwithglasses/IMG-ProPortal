@@ -58,6 +58,11 @@ sub make_config {
 			}
 		}
 	}
+
+	# log files??
+	# currently have web_err_log, web_log, login_log, etc.
+
+
 #	say 'Made a hash of things!';
 	$hash->{plugins}{Adapter}{img_app} = {
 		class => 'ProPortalPackage',
@@ -65,6 +70,8 @@ sub make_config {
 		options => { config => $img_conf }
 	};
 
+#	say 'config: ' . Dumper $img_conf;
+#	say 'other stuff: ' . Dumper $hash;
 	return $hash;
 }
 #

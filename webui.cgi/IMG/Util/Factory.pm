@@ -2,14 +2,14 @@ package IMG::Util::Factory;
 
 use IMG::Util::Import;
 use IMG::App::Role::ErrorMessages qw( :all );
-use Module::Runtime 'use_module';
+use Module::Runtime;
 
 sub create {
 	my $class = shift;
 
 #	my ( $ok, $error ) = try_load_class($class);
 
-	eval { use_module( $class ); 1 } or die err({
+	eval { Module::Runtime::use_module( $class ); 1 } or die err({
 		err => 'module_load',
 		subject => $class,
 		msg => $@
@@ -22,10 +22,20 @@ sub load_module {
 
 	my $module = shift;
 
-#	my ( $ok, $error ) = try_load_class( $module );
-#	$ok or die err({
+	eval { Module::Runtime::use_module( $module ); 1 } or die err({
+		err => 'module_load',
+		subject => $module,
+		msg => $@
+	});
+	return;
 
-	eval { use_module( $module ); 1 } or die err({
+}
+
+sub require_module {
+
+	my $module = shift;
+
+	eval { Module::Runtime::require_module( $module ); 1 } or die err({
 		err => 'module_load',
 		subject => $module,
 		msg => $@

@@ -52,28 +52,28 @@ sub filter {
 	my $filter_h = $self->filters;
 
 	my $f_types = {
-		prochlor => {
+		pro => {
 			ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
 			genome_type => 'isolate',
 			genus => 'Prochlorococcus',
 			domain => 'Bacteria',
 		},
 
-		synech => {
+		syn => {
 			ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
 			genome_type => 'isolate',
 			genus => 'Synechococcus',
 			domain => 'Bacteria',
 		},
 
-		prochlor_phage => {
+		pro_phage => {
 		#	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
 			genome_type => 'isolate',
 			taxon_display_name => sub { shift =~ m/Prochlorococcus/i ? 1 : 0; },
 			domain => 'Viruses',
 		},
 
-		synech_phage => {
+		syn_phage => {
 		#	ecosystem_subtype => [ 'Marginal Sea', 'Pelagic' ],
 			genome_type => 'isolate',
 			taxon_display_name => sub { shift =~ m/Synechococcus/i ? 1 : 0; },

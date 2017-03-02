@@ -2,7 +2,7 @@
 # TaxonList - Show list of taxons in alphabetical or phylogenetic order.
 # --es 09/17/2004
 #
-# $Id: TaxonList.pm 35739 2016-06-03 20:47:44Z klchu $
+# $Id: TaxonList.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package TaxonList;
 my $section = "TaxonList";
@@ -87,6 +87,22 @@ sub dispatch {
         printTaxonTable();
     } elsif($page eq 'lastupdated') {
         printLastUpdated();
+    
+    
+    
+    } elsif($page eq "isolateList"){
+        printIsolateList();
+    
+    } elsif($page eq "metaCatList"){
+        printMetaCatList();
+    
+    } elsif($page eq "metaXCatList"){
+        printMetaXCatList();
+    
+    
+    } elsif ( $page eq "taxonListAlpha2") {
+    	printTaxonTable2();
+    
     } elsif ( $page eq "taxonListAlpha"
               || paramMatch("setTaxonOutputCol") ne "" )
     {
@@ -104,11 +120,7 @@ sub dispatch {
     } elsif ( $page eq "categoryBrowser" ) {
     	require FindGenomesByMetadata;
     	FindGenomesByMetadata::printMetadataCategoryChartResults ();
-        #if ($use_img_gold) {
-        #    printCategoryBrowser_ImgGold();
-        #} else {
-        #    printCategoryBrowser();
-        #}
+
     } elsif ( $page eq "genomeCategories" ) {
         if ($use_img_gold) {
             printGenomeCategories();
@@ -153,16 +165,136 @@ sub dispatch {
         printEcoList();
 
     } else {
-
-        # --es 01/02/2006 because of AppHeader has to be handled in main.pl.
-        #elsif( paramMatch( "uploadTaxonSelections" ) ne "" ) {
-        #   my $taxon_filter_oid_str = uploadTaxonSelections( );
-        #   setTaxonSelections( $taxon_filter_oid_str );
-        #   printTaxonTable( );
-        #}
         printTaxonTable();
     }
 }
+
+# new home page table
+#
+#   my @a1 = ("Bacteria isolates", "Bacteria SAGs", "Bacteria GFMs");
+#    my @a2 = ("Archaea isolates", "Archaea SAGs" , "Archaea GFMs" );
+#    my @a3 = ("Eukaryota isolates", "Eukaryota SAGs", "Eukaryota GFMs" );
+#    my @a4 = ("Viruses isolates", "Viruses SAGs", "Viruses GFMs" );
+sub printIsolateList {
+    my $seq_center = param('seq_center');    # JGI vs Non-JGI
+    my $domain = param('domain');
+    my($domain, $type) = split(/\s/, $domain);
+    
+    my @bind = ($domain);
+    
+    my $title = "$domain";
+    
+    my $domainClause = 'and t2.domain = ?';
+    
+    my $typeClause = '';
+    if($type eq 'isolates') {
+    	$title .= " - Genome Analysis"; 
+        $typeClause = "and t2.analysis_project_type = 'Genome Analysis'";
+    } elsif($type eq 'SAGs') {
+    	$title .= " - Single Cell Analysis (screened and unscreened)";
+        $typeClause = "and t2.analysis_project_type in( 'Single Cell Analysis (unscreened)' , 'Single Cell Analysis (screened)')";    	
+    } elsif($type eq 'GFMs') {
+    	$title .= " - Genome from Metagenome";
+        $typeClause = "and t2.analysis_project_type = 'Genome from Metagenome'";
+    } else {
+    	WebUtil::webError('Oops');
+    }
+
+    
+    my $seqClause = '';
+    $seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+    
+    my $imgClause = WebUtil::imgClause('t2');
+    my $urClasue = WebUtil::urClause('t2');
+    
+    my $sql = qq{
+    	select t2.taxon_oid
+    	from taxon t2
+    	where 1 = 1
+    	$imgClause
+    	$urClasue
+    	$seqClause
+    	$domainClause
+    	$typeClause
+    }; 
+    
+    GenomeList::printGenomesViaSql( '', $sql, $title, \@bind );
+}
+
+
+sub printMetaCatList {
+	my $domain = param('domain');
+	my $seq_center = param('seq_center');
+	my $phylum = param('phylum');
+	my $ir_class = param('ir_class');
+    my $seqClause = '';
+    $seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+    my $imgClause = WebUtil::imgClause('t2');
+    my $urClasue = WebUtil::urClause('t2');
+
+
+    my @bind = ($phylum);
+    my $irclassClause = '';
+    if($ir_class) {
+        $irclassClause = "and t2.ir_class = ?";
+        push(@bind, $ir_class);
+    } 
+ 
+    WebUtil::webError('Oops') if(!$domain);
+ 
+    my $sql = qq{
+select t2.taxon_oid
+from taxon t2
+where 1 = 1
+and t2.phylum = ?
+and t2.analysis_project_type in ('Metagenome Analysis', 'Metagenome - Cell Enrichment', 'Metagenome - Single Particle Sort')
+$irclassClause
+$seqClause
+$imgClause
+$urClasue
+    };
+    
+    
+    GenomeList::printGenomesViaSql( '', $sql, "$domain $phylum $ir_class - $seq_center", \@bind );
+}
+
+sub printMetaXCatList {
+    my $domain = param('domain');
+    my $seq_center = param('seq_center');
+    my $phylum = param('phylum');
+    my $ir_class = param('ir_class');
+    my $seqClause = '';
+    $seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+    my $imgClause = WebUtil::imgClause('t2');
+    my $urClasue = WebUtil::urClause('t2');
+
+
+    my @bind = ($phylum);
+    my $irclassClause = '';
+    if($ir_class) {
+        $irclassClause = "and t2.ir_class = ?";
+        push(@bind, $ir_class);
+    } 
+ 
+    WebUtil::webError('Oops') if(!$domain);
+ 
+    my $sql = qq{
+select t2.taxon_oid
+from taxon t2
+where 1 = 1
+and t2.phylum = ?
+and t2.analysis_project_type = 'Metatranscriptome Analysis'
+$irclassClause
+$seqClause
+$imgClause
+$urClasue
+    };
+    
+    
+    GenomeList::printGenomesViaSql( '', $sql, "$domain $phylum $ir_class - $seq_center", \@bind );
+}
+
+
 
 sub printEcoList {
     my $seq_strag = param('seq_strag');
@@ -348,6 +480,54 @@ $imgclause
     GenomeList::printGenomesViaSql($dbh, $sql, $title);
 }
 
+
+sub printTaxonTable2 {
+	my $seq_center = param('seq_center');    # JGI vs Non-JGI
+	my $domain = param('domain');
+	my $title = '';
+	
+	my $seqClause = '';
+	$seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+	
+	my $imgClause = WebUtil::imgClause('t2');
+	my $urClasue = WebUtil::urClause('t2');
+	
+	my $aptClause = '';
+	if($domain eq 'Metatranscriptome') {
+		$title = "Metatranscriptome";
+		$aptClause = "and t2.analysis_project_type = 'Metatranscriptome Analysis'";
+	} elsif($domain eq 'sps') {
+		$title = "Metagenome - Single Particle Sort";
+		$aptClause = "and t2.analysis_project_type = 'Metagenome - Single Particle Sort'";
+    } elsif($domain eq 'cell') {
+    	$title = "Metagenome - Cell Enrichment";
+        $aptClause = "and t2.analysis_project_type = 'Metagenome - Cell Enrichment'";
+    } elsif($domain eq '*Microbiome') {
+    	
+    	# THIS one will should all analysis_project_type not defined - eg null -
+    	# the left stats count in imgHomePage_v42.pl should do count null too
+    	# *Microbiome domain minus Metatranscriptome Analysis types
+    	
+    	$title = "Metagenome";
+    	$aptClause = "and t2.genome_type = 'metagenome' and (t2.analysis_project_type != 'Metatranscriptome Analysis' or t2.analysis_project_type is null)";
+	} else {
+		WebUtil::webError('Oops');
+	}
+	
+	my $sql = qq{
+		select t2.taxon_oid
+		from taxon t2
+		where 1 = 1
+		$aptClause
+		$seqClause
+		$imgClause
+		$urClasue
+	};
+    
+    $title .= ' JGI Sequenced' if ($seq_center eq 'jgi');
+    GenomeList::printGenomesViaSql( '', $sql, $title, '', 'TaxonList' );	
+}
+
 ############################################################################
 # printTaxonTable - Show taxon list in table format.  Columns are
 #   configurable as output columns.
@@ -362,40 +542,7 @@ sub printTaxonTable {
     my ( $geba, $selected ) = @_;
 
     my $seq_center = param('seq_center');    # JGI vs Non-JGI
-#    my $seq_center_clause;
-#    if ( $seq_center eq "JGI" ) {
-#        $seq_center_clause = " and nvl(tx.seq_center, 'na') like 'DOE%' ";
-#    } elsif ( $seq_center eq "Non-JGI" ) {
-#        $seq_center_clause = " and nvl(tx.seq_center, 'na') not like 'DOE%' ";
-#    } elsif($seq_center eq 'jgi') {
-#        $seq_center_clause = " and tx.jgi_project_id > 0 and tx.jgi_project_id is not null ";
-#    }
-
-#    my $gebaClause    = "";
     my @bindList_geba = ();
-#    if ( $geba == 1 ) {
-#        my $seq_status   = param("seq_status");
-#        my $clause       = "";
-#        my @bindList_seq = ();
-#        if (    $seq_status eq "Finished"
-#             || $seq_status eq "Draft"
-#             || $seq_status eq "Permanent Draft" )
-#        {
-#            $clause = " and tx.seq_status = ? ";
-#            push( @bindList_seq, "$seq_status" );
-#        }
-#        $gebaClause = qq{
-#	        and tx.taxon_oid in (
-#	        select c1.taxon_permissions
-#	        from contact_taxon_permissions c1, contact c2
-#	        where c1.contact_oid = c2.contact_oid
-#	        and c2.username = ?
-#	        )
-#	        $clause
-#       };
-#        push( @bindList_geba, "GEBA" );
-#        push( @bindList_geba, @bindList_seq );
-#    }
 
     my $selectedOnlyClause = "";
     my @bindList_txs       = ();

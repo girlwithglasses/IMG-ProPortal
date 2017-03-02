@@ -6,7 +6,7 @@
 #
 # for workspace the temp cart file is teh unsaved buffer file
 #
-# $Id: WorkspaceBcSet.pm 36225 2016-09-26 19:05:04Z jinghuahuang $
+# $Id: WorkspaceBcSet.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
 ########################################################################
 package WorkspaceBcSet;
 
@@ -1438,8 +1438,8 @@ sub exportInCart {
     my @bc_ids = param("bc_id");
 
     if ( $#bc_ids < 0 ) {
-        main::printAppHeader();
-        webError("You must select at least one BC to export.");
+        #main::printAppHeader();
+        WebUtil::webErrorHeader("You must select at least one BC to export.");
     }
 
     WebUtil::printExcelHeader("bccart_export$$.xls");

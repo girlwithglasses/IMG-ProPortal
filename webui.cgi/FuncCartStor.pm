@@ -6,7 +6,7 @@
 #     1: func_name
 #     2: batch_id
 #    --es 01/06/2007
-# $Id: FuncCartStor.pm 35713 2016-06-01 19:44:22Z jinghuahuang $
+# $Id: FuncCartStor.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
 ############################################################################
 package FuncCartStor;
 my $section = "FuncCartStor";
@@ -2777,8 +2777,8 @@ sub printExportFuncCart {
     #     webLog(" ======= " . @func_ids  . "\n");
 
     if ( scalar(@func_ids) == 0 ) {
-        main::printAppHeader();
-        webError("You must select at least one function to export.");
+        #main::printAppHeader();
+        WebUtil::webErrorHeader("You must select at least one function to export.");
     }
     my %func_ids_h = WebUtil::array2Hash(@func_ids);
 

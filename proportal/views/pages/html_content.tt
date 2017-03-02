@@ -1,0 +1,8 @@
+[%
+	WRAPPER 'inc/page_wrapper.tt';
+#	title = title;
+%]
+<div class="cf">
+[%	html_content %]
+</div>
+[%	END; %]

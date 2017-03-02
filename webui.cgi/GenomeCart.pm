@@ -1,6 +1,6 @@
 ###########################################################################
 # GenomeCart.pm
-# $Id: GenomeCart.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: GenomeCart.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package GenomeCart;
 
@@ -310,9 +310,9 @@ sub printGenomeCart_new {
     print "</p>\n";
 
     # limit genome data to those in cart
-    my $selectedOnlyClause = txsClause( "tx", $dbh );
-    my $rclause = WebUtil::urClause('tx');
-    my $imgClause = WebUtil::imgClause('tx');
+    my $selectedOnlyClause = txsClause( "tx2", $dbh );
+    my $rclause = WebUtil::urClause('tx2');
+    my $imgClause = WebUtil::imgClause('tx2');
 
     # TODO bug can't disconnect here since the gtt_taxon_oid temp is used
     ##$dbh->disconnect();
@@ -323,8 +323,8 @@ sub printGenomeCart_new {
 
     # TODO genomelist
     my $sql1 = qq{
-        select tx.taxon_oid
-        from taxon tx
+        select tx2.taxon_oid
+        from taxon tx2
         where 1 = 1
         $selectedOnlyClause
         $rclause
@@ -730,8 +730,8 @@ sub exportGenomesInCart {
     my @genome_oids2 = param('taxon_filter_oid');
     push(@tx_ids, @genome_oids2);
     if ( scalar(@tx_ids) == 0 ) {
-        main::printAppHeader();
-        webError("You must select at least one genome to export.");
+        #main::printAppHeader();
+        WebUtil::webErrorHeader("You must select at least one genome to export.");
     }
 
     WebUtil::printExcelHeader("genomecart_export$$.xls");

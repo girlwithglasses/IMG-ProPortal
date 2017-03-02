@@ -1,7 +1,6 @@
 package Routes::ProPortal;
 use IMG::Util::Import 'Class';
 use Dancer2 appname => 'ProPortal';
-#use parent 'AppCore';
 use ProPortal::Util::Factory;
 use AppCorePlugin;
 our $VERSION = '0.1.0';
@@ -35,20 +34,17 @@ get '/' => sub {
 # any qr{ /.* }x => sub {
 any '/offline' => sub {
 
-	var menu_grp => 'proportal';
-	var page_id => 'proportal';
-
-	return template "pages/offline";
+	return template 'pages/offline';
 
 };
 
 prefix '/proportal' => sub {
 
-	my $group = 'proportal';
+	my $prefix = 'proportal';
 
 	# filterable queries
 	get qr{
-		/ (?<query> clade | data_type | ecosystem | ecotype | location | phylogram | big_ugly_taxon_table )
+		/ (?<query> clade | data_type | ecosystem | ecotype | location | longhurst | phylogram | big_ugly_taxon_table )
 		/?
 		(subset=)?
 		(?<subset>\w+)?
@@ -64,17 +60,16 @@ prefix '/proportal' => sub {
 		my $c = captures;
 		my $p = delete $c->{query};
 
-		say 'captures: ' . Dumper $c;
+#		say 'captures: ' . Dumper $c;
 
 		bootstrap( $p );
 
 		img_app->set_filters( $c );
-#		if ( $c->{subset} ) {
-#			img_app->set_filters( subset => $c->{subset} );
-#		}
 
-		var menu_grp => $group;
-		var page_id  => img_app->controller->page_id;
+		img_app->current_query->_set_page_params({
+			page_id => img_app->controller->page_id,
+			menu_group => $prefix
+		});
 
 		return template img_app->controller->tmpl, img_app->controller->render;
 
@@ -92,8 +87,10 @@ The home page.
 
 		bootstrap( 'Home' );
 
-		var menu_grp => $group;
-		var page_id => img_app->controller->page_id;
+		img_app->current_query->_set_page_params({
+			page_id => img_app->controller->page_id,
+			menu_group => $prefix
+		});
 
 		return template img_app->controller->tmpl, img_app->controller->render;
 
@@ -105,15 +102,63 @@ get '/taxon/:taxon_oid' => sub {
 
 	bootstrap( 'TaxonDetails' );
 
-	var page_id => img_app->controller->page_id;
+	img_app->current_query->_set_page_params({
+		page_id => img_app->controller->page_id
+	});
 
 	return template img_app->controller->tmpl, img_app->controller->render({ taxon_oid => params->{taxon_oid} });
 
 };
 
+
+prefix '/gene' => sub {
+
+	get '/details/:gene_oid' => sub {
+
+		bootstrap( 'Gene::Details' );
+
+		img_app->current_query->_set_page_params({
+			page_id => img_app->controller->page_id
+		});
+
+		return template img_app->controller->tmpl, img_app->controller->render({ gene_oid => params->{gene_oid} });
+
+	};
+
+	get qr{
+		/list
+		/?
+		(subset=)?
+		(?<subset>\w+)?
+		/?
+		(dataset_type=)?
+		(?<dataset_type>\w+)?
+		/?
+		(taxon=)?
+		(?<taxon_oid>\w+)?
+		/?
+		}x => sub {
+
+		bootstrap( 'Gene::List' );
+
+		say 'captures: ' . Dumper captures;
+		say 'params: ' . Dumper params->{taxon_oid};
+
+#		img_app->set_filters( captures );
+
+		img_app->current_query->_set_page_params({
+			page_id => img_app->controller->page_id
+		});
+
+		return template img_app->controller->tmpl, img_app->controller->render({ taxon_oid => captures->{taxon_oid} });
+
+	};
+
+};
+
 prefix '/tools' => sub {
 
-	my $group = 'tools';
+	my $prefix = 'tools';
 
 	get qr{
 		/ (?<query> krona | jbrowse | galaxy )
@@ -136,8 +181,10 @@ prefix '/tools' => sub {
 
 		bootstrap( 'Tools::' . $h->{$p} );
 
-		var menu_grp => $group;
-		var page_id  => $group . "/$p";
+		img_app->current_query->_set_page_params({
+			page_id => $prefix . "/$p",
+			menu_group => $prefix
+		});
 
 		return template img_app->controller->tmpl, img_app->controller->render;
 	};
@@ -165,24 +212,29 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 			}x => sub {
 
 			say 'running query code!';
-			var menu_grp => $group;
-			var page_id  => 'phyloviewer';
+
+			img_app->current_query->_set_page_params({
+				page_id => $prefix . '/phyloviewer',
+				menu_group => $prefix
+			});
 
 			my $c = captures;
 			my $p = delete $c->{query};
 			my $module = $p && 'demo' eq $p ? 'QueryDemo' : 'Query';
 
-			my $pp = bootstrap( 'PhyloViewer::' . $module );
+			bootstrap( 'PhyloViewer::' . $module );
 
-			return template $pp->controller->tmpl, $pp->render();
+			return template img_app->controller->tmpl, img_app->controller->render();
 		};
 
 		post qr{
 			/query
 			}x => sub {
 
-			var menu_grp => $group;
-			var page_id  => $group . '/phyloviewer';
+			img_app->current_query->_set_page_params({
+				page_id => $prefix . '/phyloviewer',
+				menu_group => $prefix
+			});
 
 			my $params;
 			for my $p ( qw( gp input msa tree ) ) {
@@ -190,7 +242,7 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 			}
 			my $pp = bootstrap( 'PhyloViewer::Submit' );
 
-			return template $pp->controller->tmpl, $pp->render( $params );
+			return template $pp->controller->tmpl, $pp->controller->render( $params );
 
 		};
 
@@ -202,13 +254,16 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 			my $p = delete $c->{query_id};
 			my $module = $p && 'demo' eq $p ? 'ResultsDemo' : 'Results';
 
-			var menu_grp => $group;
-			var page_id  => $group. '/phyloviewer';
+			img_app->current_query->_set_page_params({
+				page_id => $prefix . '/phyloviewer',
+				menu_group => $prefix
+			});
+
 			my $tmpl = 'pages/proportal/phylo_viewer/results';
 
 			my $pp = bootstrap( 'PhyloViewer::' . $module );
 
-			return template $pp->controller->tmpl, $pp->render();
+			return template $pp->controller->tmpl, $pp->controller->render();
 		};
 	};
 
@@ -223,7 +278,7 @@ my $page_h = {
 
 for my $prefix ( keys %$page_h ) {
 
-	prefix '/'.$prefix => sub {
+	prefix "/$prefix" => sub {
 
 		my $re = join '|', @{ $page_h->{$prefix} };
 
@@ -232,8 +287,12 @@ for my $prefix ( keys %$page_h ) {
 		}x => sub {
 			my $c = captures;
 			my $p = $c->{query};
-			var menu_grp => $prefix;
-			var page_id => $prefix . "/" . $p;
+
+			img_app->current_query->_set_page_params({
+				page_id => $prefix . "/$p",
+				menu_group => $prefix
+			});
+
 			return template "pages/". $prefix . "/" . captures->{query};
 		};
 	};

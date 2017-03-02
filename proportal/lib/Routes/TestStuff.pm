@@ -142,10 +142,10 @@ any '/blastoff' => sub {
 
 get '/test' => sub {
 
-    var menu_grp => 'proportal';
-    var page_id => 'proportal/test';
+	img_app->current_query->_set_menu_group( 'proportal' );
+	img_app->current_query->_set_page_id( 'proportal/test' );
 
-    return template 'pages/test', {};
+	return template 'pages/test', {};
 
 };
 

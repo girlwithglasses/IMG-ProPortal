@@ -34,9 +34,7 @@ hook 'before' => sub {
 	# should we bother with checks for logout? no.
 	return if request->dispatch_path =~ m!^/(log(in|out|ged_in)|offline)!;
 
-	debug 'running checks!';
-
-	img_app->clear_controller;
+	img_app->init_current_query( app );
 
 	my $resp = img_app->run_checks();
 	if ( $resp ) {
@@ -50,7 +48,7 @@ hook 'before' => sub {
 
 		debug "sso is enabled";
 		#	we have the JGI session cookie
-		# JGI SSO returns a cookie with ID jgi_session
+		#	JGI SSO returns a cookie with ID jgi_session
 		if ( cookies && cookies->{jgi_session} ) {
 			if ( session('jgi_session_id') ) {
 				# make sure that the session is still valid
@@ -129,42 +127,34 @@ See get_tmpl_vars for details
 
 hook before_template_render => sub {
 
-	debug 'Running before_template_render at ' . Time::HiRes::gettimeofday;
+#	debug 'Running before_template_render at ' . Time::HiRes::gettimeofday;
 
-	my $page_id = var 'page_id';
-	my $menu_grp = var 'menu_grp';
+	my $args = get_menu_vars();
 
-	my $out = get_menu_vars( @_ );
-	get_tmpl_vars ( $out );
+	my $tmpl_extras = get_tmpl_vars ( $args );
 
-	debug 'Finished before_template_render at ' . Time::HiRes::gettimeofday;
+	# merge the two
+	$_[0]->{$_} = $tmpl_extras->{$_} for keys %$tmpl_extras;
 
-};
-
-hook after_template_render => sub {
-
-	debug 'Running after_template_render at ' . Time::HiRes::gettimeofday;
+#	debug 'Finished before_template_render at ' . Time::HiRes::gettimeofday;
 
 };
+
+#hook after_template_render => sub {
+#	debug 'Running after_template_render at ' . Time::HiRes::gettimeofday;
+#};
 
 sub get_menu_vars {
-	my $output = shift // {};
-	my $page_id = var 'page_id';
-	my $menu_grp = var 'menu_grp';
+	my $output;
 
-	## TODO: check whether user is logged in or not
+#	say 'Current query: ' . Dumper img_app->current_query;
+#	say 'page_id: ' . img_app->current_query->page_id;
+#	say 'menu_grp: ' . img_app->current_query->menu_group;
 
-
-
-#	say 'page_id: ' . ( $page_id // 'is undefined' )
-#	. ' menu_grp: ' . ( $menu_grp // 'is undefined' );
-
-	my $rslt = img_app->make_menu({ group => $menu_grp, page => $page_id });
-
-# 	if ( ! $menu_grp && defined $rslt->{group} ) {
-# 		$menu_grp = $rslt->{group};
-# 	}
-
+	my $rslt = img_app->make_menu({
+		page  => img_app->current_query->page_id,
+		group => img_app->current_query->menu_group
+	});
 	my $class;
 	for ( @{$rslt->{menu}} ) {
 		$class++ if defined $_->{class};
@@ -180,14 +170,7 @@ sub get_menu_vars {
 		$output->{no_sidebar} = 1;
 #		say 'Setting no_sidebar!';
 	}
-	$output->{current_page} = $page_id;
-	if ( session->data ) {
-	#	debug "session data: " . Dumper session->data;
-		if ( session('name') ) {
-			debug "session name: " . Dumper session('name');
-			$output->{name} = session('name');
-		}
-	}
+	$output->{current_page} = img_app->current_query->page_id;
 
 	return { output => $output, core => img_app };
 
@@ -223,6 +206,14 @@ sub get_tmpl_vars {
 	$output->{breadcrumbs}++;
 	$output->{copyright_year} = ( localtime(time) )[5] + 1900;
 
+	if ( session->data ) {
+	#	debug "session data: " . Dumper session->data;
+		if ( session('name') ) {
+			debug "session name: " . Dumper session('name');
+			$output->{name} = session('name');
+		}
+	}
+
 #	$output->{img_cfg} = $core->img_cfg;
 	return $output;
 }
@@ -240,14 +231,14 @@ any '/login' => sub {
 	# param('post_login'), so could be put in a hidden field in the form
 	my $path = query_parameters->get('post_login') // '';
 	$path =~ s!^/!!;
-	$path ||= 'logged_in';
+	$path ||= 'proportal';
 
 #	delete cookies->{jgi_return} if cookies && exists cookies->{jgi_return};
 
 	my $c = Dancer2::Core::Cookie->new(
 		name => 'jgi_return',
 		value => img_app->config->{ top_base_url } . $path,
-		domain => img_app->config->{sso_domain},
+		domain => img_app->config->{ sso_domain },
 		path => '/',
 		expires => '5 mins'
 	);
@@ -267,7 +258,10 @@ get '/logged_in' => sub {
 	# initialise the session
 #	set_session_user_data( cookies->{jgi_session}->value );
 
-	return 'Congratulations, you are logged in!';
+#	var menu_grp => 'proportal';
+#	var page_id => 'proportal';
+
+	return template 'pages/logged_in';
 
 };
 

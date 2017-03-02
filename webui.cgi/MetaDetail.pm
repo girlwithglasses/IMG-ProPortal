@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 36437 2016-11-17 08:16:30Z jinghuahuang $
+# $Id: MetaDetail.pm 36612 2017-03-01 18:40:47Z klchu $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -1430,7 +1430,8 @@ sub printTaxonDetail_ImgGold {
          to_char(tx.mod_date, 'yyyy-mm-dd'), tx.obsolete_flag,
      tx.submission_id, tx.proposal_name, tx.img_product_flag, tx.in_file, tx.combined_sample_flag,
      to_char(tx.distmatrix_date, 'yyyy-mm-dd'), tx.high_quality_flag,  tx.analysis_project_id,
-     tx.study_gold_id, tx.sequencing_gold_id, tx.genome_completion
+     tx.study_gold_id, tx.sequencing_gold_id, tx.genome_completion, tx.analysis_product_name,
+     tx.analysis_project_type
       from taxon tx
       where tx.taxon_oid = ?
       $rclause
@@ -1446,7 +1447,8 @@ sub printTaxonDetail_ImgGold {
         $sample_gold_id,   $env_sample,     $is_big_euk,           $is_proxygene_set,   $release_date,
         $add_date,         $mod_date,       $obsolete_flag,        $submission_id,      $proposal_name,
         $img_product_flag, $in_file,        $combined_sample_flag, $distmatrix_date,    $high_quality_flag,
-        $analysis_project_id, $study_gold_id, $sequencing_gold_id, $genome_completion
+        $analysis_project_id, $study_gold_id, $sequencing_gold_id, $genome_completion, $analysis_product_name,
+        $analysis_project_type
       )
       = $cur->fetchrow();
     $cur->finish();
@@ -1749,6 +1751,14 @@ sub printTaxonDetail_ImgGold {
         printAttrRow( "GOLD Analysis Project Type",  $projectType);
         printAttrRow( "Submission Type",  $submissionType);
     }
+
+    if($analysis_product_name) {
+        printAttrRow( "JGI Analysis Product Name",  $analysis_product_name);
+    }
+    
+    if($analysis_project_type) {
+        printAttrRow( "JGI Analysis Project Type",  $analysis_project_type);
+    }    
 
     if ( $combined_sample_flag eq 'Yes' ) {
         $db_gold = WebUtil::dbGoldLogin() if ( $db_gold eq '' );

@@ -1,6 +1,6 @@
 ############################################################################
 # hmp taxon list data
-# $Id: HmpTaxonList.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: HmpTaxonList.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package HmpTaxonList;
 my $section = "HmpTaxonList";
@@ -785,11 +785,11 @@ sub printTaxonList {
     if ( $genome_type eq "metag" ) {
 
         # make first query to return 0 rows
-        $genomeTypeClause = "where genome_type = 'metagenome' ";
+        $genomeTypeClause = "where t2.genome_type = 'metagenome' ";
     } elsif ( $genome_type eq "isolate" ) {
-        $genomeTypeClause = "where genome_type = 'isolate' ";
+        $genomeTypeClause = "where t2.genome_type = 'isolate' ";
     } else {
-        $genomeTypeClause = "where t.domain in ('Bacteria', 'Archaea' ,'Eukaryota')";
+        $genomeTypeClause = "where t2.domain in ('Bacteria', 'Archaea' ,'Eukaryota')";
     }
 
     #
@@ -831,13 +831,13 @@ sub printTaxonList {
 
     # for new genome list
     my $sqlNew    = qq{
-        select distinct t.taxon_oid
-        from project_info_gold p, taxon t, project_info_body_sites\@imgsg_dev b
+        select distinct t2.taxon_oid
+        from project_info_gold p, taxon t2, project_info_body_sites\@imgsg_dev b
         $genomeTypeClause
         and p.project_oid = b.project_oid (+)
-        and t.is_public = 'Yes'
-        and t.obsolete_flag = 'No'
-        and p.gold_stamp_id = t.gold_id
+        and t2.is_public = 'Yes'
+        and t2.obsolete_flag = 'No'
+        and p.gold_stamp_id = t2.gold_id
         and p.host_name = '$HOST_NAME'
         and p.gold_stamp_id is not null
         $bodySiteClause
@@ -859,13 +859,13 @@ sub printTaxonList {
         # for new genome list
         $sqlNew = $sqlNew . qq{
             union all
-            select distinct t.taxon_oid 
-            from project_info_gold p, env_sample_gold esg, taxon t
+            select distinct t2.taxon_oid 
+            from project_info_gold p, env_sample_gold esg, taxon t2
             where p.project_oid = esg.project_info
-            and t.sample_gold_id = esg.gold_id
+            and t2.sample_gold_id = esg.gold_id
             and esg.gold_id is not null
-            and t.genome_type = 'metagenome'
-            and t.is_public = 'Yes'
+            and t2.genome_type = 'metagenome'
+            and t2.is_public = 'Yes'
             and esg.host_name = '$HOST_NAME' 
             $bodySiteMetagClause
             $fundedMetagClause

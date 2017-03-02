@@ -5,8 +5,6 @@ use ProPortalPackage;
 
 use Dancer2::Plugin::Adapter;
 
-my %obj_h;
-
 plugin_keywords qw/
 	bootstrap
 	img_app

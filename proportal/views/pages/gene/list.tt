@@ -1,0 +1,32 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: Gene List';
+%]
+<h2>Gene Inventory</h2>
+<section class="info--data_type page-intro">
+	<p>This page provides an overview of all the genes from datasets in IMG relevant to the ProPortal project. This comprises <i>Prochlorococcus</i>, <i>Synechococcus</i>, cyanophage species and metagenomes from marine environments.
+	</p>
+</section>
+[%	IF data_filters;
+		PROCESS 'inc/filters.tt';
+	END;
+%]
+<section id="primary">
+	<h3>Gene List for [% results.taxon.taxon_display_name %]</h3>
+[%	IF results.genes.size > 0;
+		WRAPPER 'inc/cart_gene_add.tt' %]
+	<ul>
+[%		FOR g IN results.genes %]
+		<li>
+		<input type="checkbox" class="sample-data__cbox" name="gene_oid[]" value="[% g.gene_oid %]" id="cbox_[% g.gene_oid %]" />
+		<a href="[% link( 'gene_details', { gene_oid => g.gene_oid } ) %]">[% g.gene_oid %]</a></li>
+[%		END %]
+	</ul>
+[%		END; # end wrapper
+	ELSE; # END if... %]
+<p>No genes found</p>
+[%
+	END; %]
+</section>
+
+
+[%	END %]

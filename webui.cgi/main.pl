@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 36500 2016-12-13 20:38:59Z klchu $
+# $Id: main.pl 36612 2017-03-01 18:40:47Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -555,12 +555,13 @@ if ( param() ) {
             $section = 'Export';
         } elsif ( param("setTaxonFilter") ne "" ) {
             $section = 'GenomeList';
-        }
+        } 
 
         load $section;
         $pageTitle = $section->getPageTitle();
 
         my @appArgs = $section->getAppHeaderData();
+
         my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
         $section->dispatch($numTaxons);
 
@@ -570,6 +571,7 @@ if ( param() ) {
 
     } else {
         $homePage = 1;
+        #WebUtil::webLog("inside param 1 homePage=$homePage<br/>\n");
         printAppHeader("Home");
     }
 } else {
@@ -578,6 +580,7 @@ if ( param() ) {
         redirecturl($rurl);
     } else {
         $homePage = 1;
+        #WebUtil::webLog("inside param 2 homePage=$homePage<br/>\n");
         printAppHeader("Home");
     }
 }
@@ -855,6 +858,28 @@ EOF
                 $bcCartSize = WorkspaceBcSet::getSize();
             }
 
+# delete icon <img onclick=>
+            my $clearallButton = '';
+            if($str || $ssize || $fsize || $gsize || $bcCartSize) {
+                $clearallButton = qq{
+&nbsp;&nbsp; |&nbsp;&nbsp; 
+<img onclick="ConfirmDelete()" title='Clear All Analysis Carts' src='$top_base_url/images/cancel.png'
+style="width: 15px;height: 15px;vertical-align: middle; cursor:pointer;">
+<script>
+function ConfirmDelete()
+{
+  var x = confirm("Are you sure you want to delete?");
+  if (x) {
+      alert("do delete now - TODO");
+      return true;
+  } else {
+    return false;
+  }
+}
+</script>
+                };
+            }
+
             print qq{
 <div id="cart">
  &nbsp;&nbsp; <span title="Carts are unsaved sets and are lost during session logouts">My Analysis Carts**:</span>
@@ -877,6 +902,8 @@ EOF
   &nbsp;&nbsp; |&nbsp;&nbsp; <span id='bc_cart'>$bcCartSize</span> $bcurl
           };
             }
+
+            print $clearallButton if($img_ken);
 
             print "</div>";
         } # end if ($enable_carts)
@@ -1421,6 +1448,12 @@ sub printContentEnd {
 sub printAppHeader {
     my ( $current, $noMenu, $gwtModule, $yuijs, $content_js, $help, $redirecturl ) = @_;
 
+    if ( $virus && WebUtil::paramMatch("noHeader") ne "" ) {
+        #WebUtil::webLog("main::printAppHeader() noHeader<br/>\n"); 
+        require Viral;
+        return;
+    }
+        
     # sso
     my $cookie_return = '';
     if ( $sso_enabled && $current eq "login" && $sso_url ne "" ) {
@@ -1523,43 +1556,66 @@ Small organic molecules produced<br/>by living organisms<br/>
     } elsif ( $virus && $current eq "Home" ) {
         # caching home page
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-        printMenuDiv( );
+        printMenuDiv();
         printErrorDiv();
 
         my $page = param('page');
+        #print "main::printAppHeader() page=$page<br/>\n";
         require Viral;
-	if ( $page eq "isoHostDetail" ||
-	     paramMatch("isoHostDetail") ne "" ||
-	     $page eq "metaHostDetail" ||
-	     paramMatch("metaHostDetail") ne "" ||
-	     $page eq "bothHostDetail" ||
-	     paramMatch("bothHostDetail") ne "" ||
-	     $page eq "mvcHostDetail" ||
-	     paramMatch("mvcHostDetail") ne "" ) {
-	    return;
-	}
+    	if ( $page eq "isoHostDetail" ||
+    	     paramMatch("isoHostDetail") ne "" ||
+    	     $page eq "metaHostDetail" ||
+    	     paramMatch("metaHostDetail") ne "" ||
+    	     $page eq "bothHostDetail" ||
+    	     paramMatch("bothHostDetail") ne "" ||
+    	     $page eq "mvcHostDetail" ||
+    	     paramMatch("mvcHostDetail") ne "" ) {
+    	    return;
+    	}
         elsif ( ! $page || $page eq 'googlemap' ) {
-	    Viral::printViralHome();
+    	    Viral::printViralHome();
         }
-    } elsif ( $img_proportal && $current eq "Home" ) {
+
+
+    } elsif ( $img_ken && $current eq "Home" ) {
+        # TODO new home page testing - ken
+
+        # caching home page
+        my $sid  = getContactOid();
+        my $time = 3600 * 24;         # 24 hour cache
+        
         printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
         printMenuDiv(  );
         printErrorDiv();
-        printContentHome();
-        my $section = param("section");
-        if ( $section eq '' ) {
 
-            # home page url
-            my $class = param("class");
-            if ( !$class ) {
-                $class = 'datamart';
-            }
-            my $new_url = $main_cgi . "?section=Home";
-            HtmlUtil::cgiCacheInitialize( "homepage_" . $class );
-            HtmlUtil::cgiCacheStart() or return;
-            require ProPortal;
-            ProPortal::googleMap_new( $class, $new_url );
-            HtmlUtil::cgiCacheStop();
+    
+        print "NEW home page TODO<br>\n"; 
+       
+        my $cnt = 0;
+        my $img_mer = 1;
+        $img_mer = 0 if (param('public') == 1); # testing - ken
+        if($img_mer) {
+        	$cnt = WebUtil::getSessionParam('myprivatescnt');
+        	if(!$cnt) {
+        		$cnt = MainPageStats::getPrivateCounts();
+        		WebUtil::setSessionParam('myprivatescnt', $cnt);
+        	}
+        }
+
+        my $vars = {
+            private => $cnt,
+            img_mer => $img_mer,
+        };
+
+        my $tt = Template->new({
+            INCLUDE_PATH => "/webfs/projectdirs/microbial/img/web_data/stats/",
+            INTERPOLATE  => 1,
+        }) or die "$Template::ERROR\n";
+    
+        if($img_mer) {
+    	   $tt->process("homepage_mer.tt", $vars) or die $tt->error();
+        } else {
+    	   $tt->process("homepage_m.tt", $vars) or die $tt->error();
         }
 
     } elsif ( $current eq "Home" ) {
@@ -1595,16 +1651,14 @@ Small organic molecules produced<br/>by living organisms<br/>
         my $piechar_str;
         my $piechar2_str;
         my $table_str;
-        if ($include_metagenomes) {
+        
+        if ($include_metagenomes && !$img_hmp) {
 
             # mer / m
             my $file = $webfs_data_dir . "/hmp/img_m_home_page_v400.txt";
 
-                        if($img_ken) {
-                            $file = "/webfs/projectdirs/microbial/img/klchu/v2/webUI/img_m_home_page_v400.txt";
-                        }
-
             if ( $env->{home_page} ) {
+            	# mer 03
                 $file = $webfs_data_dir . "/hmp/" . $env->{home_page};
             }
 
@@ -1614,16 +1668,6 @@ Small organic molecules produced<br/>by living organisms<br/>
             my $x = MainPageStats::getMetagenomeEcoSystemCnt();
             $table_str =~ s/__table__/$x/;
 
-        } elsif ($img_edu) {
-
-            # edu
-            my $file = $webfs_data_dir . "/hmp/img_edu_home_page_v400.txt";
-            $table_str = file2Str( $file, 1 );
-        } elsif ( !$user_restricted_site && !$include_metagenomes && !$img_hmp && !$img_edu ) {
-
-            # w
-            my $file = $webfs_data_dir . "/hmp/img_w_home_page_v400.txt";
-            $table_str = file2Str( $file, 1 );
         }
 
         my $rfh = newReadFileHandle($templateFile);

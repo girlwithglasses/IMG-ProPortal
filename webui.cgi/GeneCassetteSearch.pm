@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: GeneCassetteSearch.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: GeneCassetteSearch.pm 36537 2017-01-31 06:09:50Z klchu $
 
 package GeneCassetteSearch;
 my $section = "GeneCassetteSearch";
@@ -49,6 +49,8 @@ my $nvl       = getNvl();
 my $top_base_url = $env->{top_base_url};
 # batch query that have in stmt with more than 1000 items
 my $BATCH_SIZE = 999;
+
+my $MAX_genome = 100;
 
 sub getPageTitle {
     return 'Phylogenetic Profiler';
@@ -155,6 +157,11 @@ sub printRunSearch {
     }
     if ( $searchtext !~ /[a-zA-Z0-9]+/ ) {
         webError("Search term should have some alphanumeric characters.");
+    }
+
+    my @taxonSelections = param('genomeFilterSelections'); #OracleUtil::processTaxonSelectionParam("genomeFilterSelections");
+    if ( scalar(@taxonSelections) > $MAX_genome ) {
+        WebUtil::webError("Max. of $MAX_genome genomes can be selected.");
     }
 
     my @searchTerms = WebUtil::splitTerm( $searchtext, 0, 0 );
@@ -963,6 +970,9 @@ sub printSearchForm3 {
         <h1>
         Cassette Search
         </h1>
+        <p>
+        Max. of $MAX_genome genomes can be selected.
+        </p>
     };
 
     printStatusLine( "Loading ...", 1 );
@@ -1302,6 +1312,10 @@ sub searchCassette {
       @_;
 
     my @taxonSelections = param('genomeFilterSelections'); #OracleUtil::processTaxonSelectionParam("genomeFilterSelections");
+    if ( scalar(@taxonSelections) > $MAX_genome ) {
+        WebUtil::webError("Max. of $MAX_genome genomes can be selected.");
+    }
+
 
     #print "searchCassette \@taxonSelections: @taxonSelections\n";
     my $taxon_filter_oid_str = '';

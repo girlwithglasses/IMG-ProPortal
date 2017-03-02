@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: ImgStatsOverview.pm 36288 2016-10-07 02:46:25Z aratner $
+# $Id: ImgStatsOverview.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package ImgStatsOverview;
 
@@ -4419,7 +4419,7 @@ sub printTreeStatsList {
     #        print "$x<br/>\n";
     #    }
 
-    my $imgClause = WebUtil::imgClause('t');
+    my $imgClause = WebUtil::imgClause('t2');
     my $domainClause;
     my $phylumClause;
     my $classClause;
@@ -4435,47 +4435,47 @@ sub printTreeStatsList {
         if ( $i == 0 ) {
             my $domain = $a[$i];
             $domain =~ s/^0\d //;
-            $domainClause = "where t.domain = ?";
+            $domainClause = "where t2.domain = ?";
             push( @bind, $domain );
         } elsif ( $i == 1 ) {
-            $phylumClause = "and t.phylum = ?";
+            $phylumClause = "and t2.phylum = ?";
             if ( $a[$i] eq 'unknown' ) {
-                $phylumClause = "and t.phylum is null";
+                $phylumClause = "and t2.phylum is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 2 ) {
-            $classClause = "and t.ir_class = ?";
+            $classClause = "and t2.ir_class = ?";
             if ( $a[$i] eq 'unknown' ) {
-                $classClause = "and t.ir_class is null";
+                $classClause = "and t2.ir_class is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 3 ) {
-            $orderClause = "and t.ir_order = ?";
+            $orderClause = "and t2.ir_order = ?";
             if ( $a[$i] eq 'unknown' ) {
-                $orderClause = "and t.ir_order is null";
+                $orderClause = "and t2.ir_order is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 4 ) {
-            $familyClause = "and t.family = ?";
+            $familyClause = "and t2.family = ?";
             if ( $a[$i] eq 'unknown' ) {
-                $familyClause = "and t.family is null";
+                $familyClause = "and t2.family is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 5 ) {
-            $genusClause = "and t.genus = ?";
+            $genusClause = "and t2.genus = ?";
             if ( $a[$i] eq 'unknown' ) {
-                $genusClause = "and t.genus is null";
+                $genusClause = "and t2.genus is null";
             } else {
                 push( @bind, $a[$i] );
             }
         } elsif ( $i == 6 ) {
-            $speciesClause = "and t.species = ?";
+            $speciesClause = "and t2.species = ?";
             if ( $a[$i] eq 'unknown' ) {
-                $speciesClause = "and t.species is null";
+                $speciesClause = "and t2.species is null";
             } else {
                 push( @bind, $a[$i] );
             }
@@ -4483,8 +4483,8 @@ sub printTreeStatsList {
     }
 
     my $sql = qq{
-select t.taxon_oid
-from taxon t
+select t2.taxon_oid
+from taxon t2
 $domainClause
 $phylumClause
 $classClause

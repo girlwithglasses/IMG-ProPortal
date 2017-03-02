@@ -122,13 +122,19 @@ sub my_img {
 		};
 	}
 
-	return {
+	my $menu = {
 		id => 'menu/MyIMG',
 		submenu =>
 		[	'MyIMG/preferences',
 			'login'
 		]
 	};
+
+	# SSO enabled: allow login
+	if ( $self->config->{sso_enabled} ) {
+		push @{$menu->{submenu}}, 'login';
+	}
+	return $menu;
 }
 
 sub support {

@@ -2,9 +2,10 @@
 #	IMG::App.pm
 #
 #	Core IMG application to run pre-flight checks, check the user, initiate
-#	the session, parse params, and dispatch the appropriate app.
+#	the session, parse params, and dispatch the appropriate app. This module
+#	is basically the container for all the functionality
 #
-#	$Id: App.pm 36523 2017-01-26 17:53:41Z aireland $
+#	$Id: App.pm 36557 2017-02-15 23:31:43Z aireland $
 ############################################################################
 package IMG::App;
 
@@ -25,19 +26,32 @@ with
 	'IMG::App::Role::ErrorMessages',   # standard error messages
 #	'IMG::App::Cache',                 # to write!
 #	'IMG::App::Logger',                # to write!
+	'IMG::App::Role::Dispatcher',
 	'IMG::App::Role::User',            # user
 	'IMG::App::Role::UserChecks',
 	'IMG::App::Role::FileManager',
 	'IMG::App::Role::LinkManager',
-#	'IMG::App::Role::MenuManager',     # menu manager: only needed for web output
-
-#	'IMG::App::Role::Controller',      # web query controller
 	'IMG::App::Role::Schema';          # schema_h
+
+#	'IMG::App::Role::MenuManager',     # menu manager: only needed for web output
+#	'IMG::App::Role::Controller',      # web query controller
 
 
 sub BUILDARGS {
 	my $class = shift;
 	my $args = ( @_ && scalar( @_ ) > 1 ) ? { @_ } : shift || {};
+
+	say 'IMG::App BUILDARGS: ' . Dumper $args;
+
+	# coerce from dancer
+	if ( $args->{dancer_config} ) {
+		say 'Coercing from dancer config!';
+
+		$args->{config} = $args->{dancer_config}{plugins}{Adapter}{img_app}{options}{config};
+
+	}
+
+
 	return $args;
 }
 

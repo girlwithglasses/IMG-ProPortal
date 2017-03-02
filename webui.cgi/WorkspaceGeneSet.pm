@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGeneSet.pm
-# $Id: WorkspaceGeneSet.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: WorkspaceGeneSet.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
 ###########################################################################
 package WorkspaceGeneSet; 
  
@@ -1226,8 +1226,8 @@ sub getGeneSetGeneNames {
 sub exportSelectedGeneFasta {
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
@@ -1362,8 +1362,8 @@ sub exportSelectedGeneFasta {
 sub exportSelectedGeneAA {
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
@@ -1373,7 +1373,7 @@ sub exportSelectedGeneAA {
     my $folder = $GENE_FOLDER;
 
     if ( scalar(@gene_oids) == 0 ) {
-        webError("Select at least one gene to export.");
+        WebUtil::webErrorHeader("Select at least one gene to export.");
         return;
     }
 

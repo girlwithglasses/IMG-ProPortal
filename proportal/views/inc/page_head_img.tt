@@ -1,0 +1,20 @@
+<!-- Individual yui_dir_28 JS files -->
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/connection/connection-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/dragdrop/dragdrop-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/history/history-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/element/element-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/paginator/paginator-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/datatable/datatable-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/json/json-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/animation/animation-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/container/container-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/progressbar/progressbar-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/dom/dom-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/button/button-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/tabview/tabview-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/element/element-min.js"></script>
+<script type="text/javascript" src="[% settings.yui_dir_28 %]/build/autocomplete/autocomplete-min.js"></script>
+<script type="text/javascript" src="[% settings.base_url %]/../js/header.js"></script>
+[%	extra_javascript %]

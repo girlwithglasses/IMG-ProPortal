@@ -2,7 +2,7 @@
 # MainPageStats - Statistics for genomes in main/home page.
 #    --es 02/01/2005
 #
-# $Id: MainPageStats.pm 35739 2016-06-03 20:47:44Z klchu $
+# $Id: MainPageStats.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package MainPageStats;
 my $section = "MainPageStats";
@@ -1203,7 +1203,24 @@ and t.is_public     = 'Yes'
 # tablePrivateGenomeStats - Show stats for private genomes.
 ############################################################################
 sub tablePrivateGenomeStats {
+    my $cnt = getPrivateCounts();
+    
+    webLog("done my private genome sql \n");
 
+    my $s = "<tr >\n";
+    $s .= "<td colspan='2'>My Private Datasets</td>\n";
+    my $url = "$main_cgi?section=TaxonList&page=privateGenomeList";
+    my $cntLink = alink( $url, $cnt );
+    $cntLink = $cnt if $cnt == 0;
+    $s .= "<td align='right'>$cntLink</td>\n";
+    $s .= "</tr>\n";
+
+    #$dbh->disconnect();
+    return $s;
+}
+
+sub getPrivateCounts {
+	
     my $contact_oid = getContactOid();
     my $super_user  = getSuperUser();
 
@@ -1218,30 +1235,20 @@ sub tablePrivateGenomeStats {
     $tclause = "" if $super_user eq "Yes";
     my $imgclause = WebUtil::imgClause('tx');
     my $sql       = qq{
-	select count( distinct ctp.taxon_permissions )
-	from contact_taxon_permissions ctp, taxon tx
-	where ctp.taxon_permissions = tx.taxon_oid
-	and tx.is_public = 'No'
-	$tclause
-	$imgclause
+    select count( distinct ctp.taxon_permissions )
+    from contact_taxon_permissions ctp, taxon tx
+    where ctp.taxon_permissions = tx.taxon_oid
+    and tx.is_public = 'No'
+    $tclause
+    $imgclause
     };
     my $cur = execSql( $dbh, $sql, $verbose );
     my ($cnt) = $cur->fetchrow();
-    $cur->finish();
-
-    webLog("done my private genome sql \n");
-
-    my $s = "<tr >\n";
-    $s .= "<td colspan='2'>My Private Datasets</td>\n";
-    my $url = "$main_cgi?section=TaxonList&page=privateGenomeList";
-    my $cntLink = alink( $url, $cnt );
-    $cntLink = $cnt if $cnt == 0;
-    $s .= "<td align='right'>$cntLink</td>\n";
-    $s .= "</tr>\n";
-
-    #$dbh->disconnect();
-    return $s;
+    $cur->finish();	
+	
+	return $cnt;
 }
+
 
 1;
 

@@ -44,7 +44,7 @@ You're now using perl version 5.18.4 and any extra modules you install will be i
 
 Install the ProPortal dependencies using `cpanm`. You'll need to locate the path to `cpanfile` in the `proportal` folder; in this example, it's in my home directory within  the folder `webUI`.
 
-	cpanm --installdeps ~/webUI/proportal/
+	cpanm --installdeps ~/webUI/proportal/ --with-feature all
 
 Some modules may fail installation and need to be installed manually or using the `--force` flag (e.g. an issue with `Scalar::Does` meant it needed to be installed using `cpanm --force Scalar::Does`). Rerunning the command `cpanm --installdeps ~/webUI/proportal/` will redo the installation of any modules that were not installed previously.
 

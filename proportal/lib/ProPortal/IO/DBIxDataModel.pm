@@ -322,6 +322,55 @@ sub location {
 }
 
 
+=head3 longhurst_counts
+
+
+
+=cut
+
+sub longhurst_counts {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+	->select(
+		-columns  => [ 'count(taxon_oid)|count', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
+		-group_by => [ qw( longhurst_code longhurst_description ) ],
+		-order_by => [ 'longhurst_description' ],
+		-where => {
+			proportal_subset => { '!=', undef },
+#				is_public => 'Yes'
+		},
+		-result_as => 'statement'
+#		-result_as => ['hashref' => 'longhurst_description' ]
+	);
+
+}
+
+=head3 longhurst
+
+
+
+=cut
+
+sub longhurst {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+	->select(
+		-columns  => [ 'taxon_oid', 'taxon_display_name', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
+#		-group_by => [ qw( longhurst_code longhurst_description ) ],
+		-order_by => [ 'longhurst_description', 'taxon_display_name' ],
+		-where => {
+			proportal_subset => { '!=', undef },
+#				is_public => 'Yes'
+		},
+		-result_as => 'statement'
+#		-result_as => ['hashref' => 'longhurst_description' ]
+	);
+
+}
+
+
 =head3 ecosystem
 
 Query for ecosystem
@@ -528,6 +577,28 @@ sub gene_oid_taxon_oid {
 		);
 }
 
+=head3 gene_list
+
+Get all genes by taxon_oid (or other criterion)
+
+@param taxon_oid => nnnnnnnnn
+
+@return arrayref of gene objects
+
+=cut
+
+sub gene_list {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_core')->table('Gene')
+		->select(
+			-columns => [ '*' ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
 =head3 gene_details
 
 Given an array of gene IDs, get the gene data
@@ -538,7 +609,7 @@ Given an array of gene IDs, get the gene data
 
 @return arrayref of results in the format
 
-	{ gene_oid => #####, taxon_oid => ##### }
+	{ gene => #####, taxon => ##### }
 
 =cut
 
@@ -547,20 +618,23 @@ sub gene_details {
 	my $self = shift;
 	my $args = shift;
 
+#	my $gene = $self->schema('img_core')->table('PPGeneDetails')
 	my $gene = $self->schema('img_core')->table('Gene')
 		->select(
 			-columns => [ '*' ],
 			-where   => $args->{where},
 			-result_as => [ 'hashref' => 'gene_oid' ]
-		)->all;
+		);
 
-	if ( scalar @$gene > 0 ) {
+	my %tax_h;
+	if ( scalar keys %$gene > 0 ) {
 		# make sure that we have permission to view the gene
-
-
+		for ( keys %$gene ) {
+			$tax_h{ taxon_oid } = $gene->{$_}{taxon};
+		}
 	}
 
-	my $results = $self->taxon_name_public( $args )->all;
+	my $results = $self->taxon_name_public( \%tax_h )->all;
 
 	if ( scalar @$results > 0) {
 		if ( $results->[0]->{viewable} eq 'private' ) {
@@ -569,23 +643,9 @@ sub gene_details {
 				err => 'private_data'
 			});
 		}
-
-
-
 	}
 
-	$self->choke({
-		err => 'invalid',
-		subject => $args->{taxon_oid},
-		type => 'taxon_oid'
-	});
-
-
-
-
-
-
-
+	return { gene => $gene, taxon => $results };
 }
 
 =head3 taxon_accessible

@@ -84,7 +84,7 @@ sub get_cart_contents {
 
 	my $res = $self->_core->run_query({
 		query => 'clade',
-		filters => { subset => 'prochlor' },
+		filters => { subset => 'pro' },
 	});
 
 	return $res;

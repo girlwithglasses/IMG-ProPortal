@@ -3,7 +3,7 @@
 #
 #	Core dispatcher code
 #
-#	$Id: DispatchCore.pm 36523 2017-01-26 17:53:41Z aireland $
+#	$Id: DispatchCore.pm 36602 2017-02-28 21:51:26Z aireland $
 ############################################################################
 package IMG::App::DispatchCore;
 
@@ -23,14 +23,16 @@ Load the module and prepare a coderef for dispatch
 =cut
 
 sub prepare_dispatch_coderef {
+	my $self = shift;
 	my $arg_h = shift;
 
 	my $module = $arg_h->{module} || die err ({ err => 'missing', subject => 'module' });
 	my $sub = $arg_h->{sub} || die err ({ err => 'missing', subject => 'sub' });
 
 	# initialise IMG session, dbhs, etc.
-
 	IMG::Util::Factory::load_module( $module );
+
+	WebUtil::init_from_proportal( img_app );
 
 	# make sure that we can run the sub:
 	if ( ! $module->can( $sub ) ) {

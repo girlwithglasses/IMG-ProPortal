@@ -1,6 +1,6 @@
 <tool id="env_debug" name="Env Debug" version="0.1.0">
 <description>Print out Perl environment</description>
-<command>perl /global/homes/a/aireland/webUI/proportal/script/env_diag.pl
+<command>source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc; perl /global/homes/a/aireland/webUI/proportal/script/env_diag.pl
 	--outfile "$outfile"</command>
   <outputs>
     <data name="outfile" format="txt" label="Environment" />

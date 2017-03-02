@@ -7,7 +7,7 @@
 # filenames with white spaces     $filename =~ s/\s/_/g;
 # - ken
 #
-# $Id: Workspace.pm 36003 2016-08-12 21:06:56Z jinghuahuang $
+# $Id: Workspace.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
 #
 ############################################################################
 package Workspace;
@@ -4004,8 +4004,8 @@ sub readFile {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) == 0 ) {
-        main::printAppHeader("MyIMG");
-        webError("Please select at least one data set to load.");
+        #main::printAppHeader("MyIMG");
+        WebUtil::webErrorHeader("Please select at least one data set to load.");
         return;
     }
 
@@ -5912,15 +5912,15 @@ sub exportGeneFiles {
     
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("Select at least one gene set to export.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Select at least one gene set to export.");
         return;
     }
 
@@ -5958,8 +5958,8 @@ sub exportGeneFiles {
 
     my @keys = ( keys %genes );
     if ( scalar(@keys) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("No genes have been selected.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("No genes have been selected.");
         return;
     }
 
@@ -6005,14 +6005,14 @@ sub getScaffoldsFromSets {
 
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) == 0 ) {
-        webError("Select at least one scaffold set to export.");
+        WebUtil::webErrorHeader("Select at least one scaffold set to export.");
         return;
     }
 
@@ -6048,8 +6048,8 @@ sub getScaffoldsFromSets {
 
     my @keys = ( keys %scaffolds );
     if ( scalar(@keys) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("No scaffolds have been selected.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
 
@@ -6628,7 +6628,7 @@ sub exportWorkspace {
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) == 0 ) {
         #main::printAppHeader("MyIMG");
-        webError("Please select at least one data set to export.");
+        WebUtil::webErrorHeader("Please select at least one data set to export.");
         return;
     }
 

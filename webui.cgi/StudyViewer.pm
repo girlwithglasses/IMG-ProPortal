@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: StudyViewer.pm 35667 2016-05-20 18:30:03Z klchu $
+# $Id: StudyViewer.pm 36612 2017-03-01 18:40:47Z klchu $
 ############################################################################
 package StudyViewer;
 use strict;
@@ -114,40 +114,6 @@ sub dispatch {
     }
 }
 
-#sub printProjectList {
-#    my $domain = param('domain');
-#    my $type = param('type');
-#    
-#    my $domainClause = '';
-#    my @bind = ();
-#    if($domain eq 'Plasmid') {
-#        $domainClause = "and t.domain like 'Plasmid%'";
-#    } elsif($domain eq 'GFragment') {
-#        $domainClause = "and t.domain like 'GFragment%'";
-#    } elsif($domain eq 'Metagenome') {
-#        $domainClause = "and t.domain = '*Microbiome'";
-#    } else {
-#        $domainClause = "and t.domain = ?";
-#        push(@bind, $domain);
-#    }
-#    
-#    
-#    # TODO I need a list of Gs or Gp or Ga to genome counts
-#    
-#    my $sql = qq{
-#select t.taxon_oid
-#from taxon t
-#where t.OBSOLETE_FLAG = 'No'
-#$domainClause
-#    };
-#    
-#    my $title = "$domain List";
-#    if($#bind > -1) {
-#       GenomeList::printGenomesViaSql( '', $sql, $title, \@bind ); 
-#    } else {
-#        GenomeList::printGenomesViaSql( '', $sql, $title );
-#    }
-#}
 
 sub printProjectSampleList {
     my $projectId = param('projectid');

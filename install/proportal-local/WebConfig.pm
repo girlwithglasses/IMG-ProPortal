@@ -1,6 +1,6 @@
 package WebConfig;
 #
-# $Id: WebConfig.pm 36455 2016-12-04 19:43:07Z aireland $
+# $Id: WebConfig.pm 36613 2017-03-01 19:25:44Z aireland $
 #
 #	Configuration for testing ProPortal pieces or whole
 
@@ -31,6 +31,7 @@ my $webui_dir = dirname $pp_dir;
 
 my $conf = {
 
+	verbose => 3,
 	domain_name => 'img-proportal.dev',
 	base_url => 'http://img-proportal.dev',
 
@@ -44,6 +45,9 @@ my $conf = {
 
 	# main.cgi location
 	main_cgi_url => 'http://img-proportal.dev/cgi-bin/main.cgi',
+
+	cgi_tmp_dir => '/tmp/cgi_tmp_dir',
+	base_dir => catdir( $webui_dir, 'webui.htd' ),
 
 	webUI_dir => $webui_dir,
 	scratch_dir => '/tmp/jbrowse',

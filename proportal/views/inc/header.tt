@@ -3,18 +3,14 @@
     	<img src="/images/logo-proportal.png" alt="DOE Joint Genome Institute's IMG ProPortal logo" />
     </a>
 
-
+[%	IF settings.sso_enabled; %]
     <ul class="user-links">
-[%	IF settings.sso_enabled;
-		IF session && session.name %]
+[%		IF session && session.name %]
 		<li class="user-links__item">Hello [% session.name %]!</li>
 		<li class="user-links__item"><a href="[% link('logout') %]">Log out</a></li>
 [%		ELSE %]
 		<li class="user-links__item"><a href="[% link('login') %]">Log in</a></li>
-[%		END;
-    ELSE; %]
-        <li class="user-links__item"><a href="#">Hello world!</a></li>
-		<li class="user-links__item"><a href="[% link('login') %]">Log in</a></li>
-[%	END; %]
+[%		END; %]
 	</ul>
+[%	END; %]
 </header>

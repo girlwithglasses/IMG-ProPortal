@@ -1,6 +1,6 @@
 ############################################################################
 # ScaffoldCart.pm - Cart for Scaffolds
-# $Id: ScaffoldCart.pm 36437 2016-11-17 08:16:30Z jinghuahuang $
+# $Id: ScaffoldCart.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
 ############################################################################
 package ScaffoldCart;
 
@@ -69,18 +69,18 @@ sub getPageTitle {
 sub getAppHeaderData {
     my ($self) = @_;
     my @a = ();
-        if (   WebUtil::paramMatch("exportScaffoldCart") ne ""
-            || WebUtil::paramMatch("exportFasta") ne "" )
-        {
+    if (   WebUtil::paramMatch("exportScaffoldCart") ne ""
+        || WebUtil::paramMatch("exportFasta") ne "" )
+    {
 
-            # export excel
-            WebUtil::setSessionParam( "lastCart", "scaffoldCart" );
-        } elsif ( WebUtil::paramMatch("addSelectedToGeneCart") ne "" ) {
-            # 
-        } else {
-            WebUtil::setSessionParam( "lastCart", "scaffoldCart" );
-            @a = ("AnaCart");
-        }
+        # export excel
+        WebUtil::setSessionParam( "lastCart", "scaffoldCart" );
+    } elsif ( WebUtil::paramMatch("addSelectedToGeneCart") ne "" ) {
+        # 
+    } else {
+        WebUtil::setSessionParam( "lastCart", "scaffoldCart" );
+        @a = ("AnaCart");
+    }
     return @a;
 }
 
@@ -94,6 +94,7 @@ sub dispatch {
     timeout( 60 * 60 );
 
     my $page = param("page");
+    #print "page=$page<br/>\n";
     $contact_oid = getContactOid();
 
     if ( $page eq "addToScaffoldCart"
@@ -825,14 +826,14 @@ sub printScaffoldDetail {
 
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     if ( !$scaffold_oid ) {
-        main::printAppHeader("AnaCart");
-        webError("No scaffold has been selected.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("No scaffold has been selected.");
         return;
     }
 
@@ -2075,15 +2076,15 @@ sub exportScaffoldCart {
 
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my $scaffold_oids_aref = getSelectedCartOids();
     if ( scalar(@$scaffold_oids_aref) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("No scaffolds have been selected.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
 
@@ -2326,8 +2327,8 @@ sub fastaFileForScaffolds {
 
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
@@ -2335,8 +2336,8 @@ sub fastaFileForScaffolds {
     my @scaffold_oids = @$oids_aref;
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("No scaffolds have been selected.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
 
@@ -2371,15 +2372,15 @@ sub exportFasta {
 sub exportFasta_old {
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        main::printAppHeader("AnaCart");
-        webError("Your login has expired.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my @scaffold_oids = param('scaffold_oid');
     if ( scalar(@scaffold_oids) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("No scaffolds have been selected.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
 
@@ -2526,8 +2527,8 @@ sub addSelectedScaffoldGenesToCart {
     my @scaffold_oids = param('scaffold_oid');
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        main::printAppHeader("AnaCart");
-        webError("No scaffolds have been selected.");
+        #main::printAppHeader("AnaCart");
+        WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
 

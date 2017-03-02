@@ -166,7 +166,7 @@ function fn(res,d,gm,MarkerClusterer,links) {
 				}
 				pt.html += '<dt>Ecotype</dt>'
 				+ '<dd>' + ( g.ecotype || 'not specified' ) + '</dd></dl>'
-				+ '<p><a href="' + links.taxon + g.taxon_oid + '">View taxon details</a></p>';
+				+ '<p><a href="' + links.taxon + '/' + g.taxon_oid + '">View taxon details</a></p>';
 			}
 			ppMap.info_div.innerHTML = pt.html;
 		},

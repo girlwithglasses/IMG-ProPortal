@@ -1,21 +1,27 @@
 package ProPortal::Controller::PhyloViewer::Query;
 
-use IMG::Util::Import 'MooRole';
+use IMG::Util::Import 'Class'; #'MooRole';
 
-has 'controller_args' => (
-	is => 'lazy',
-	default => sub {
-		return {
-			class => 'ProPortal::Controller::Base',
-			tmpl => 'pages/proportal/phylo_viewer/query.tt',
-			tmpl_includes => {
-#				tt_scripts => qw( data_type )
-			}
-		};
-	}
-);
+# has 'controller_args' => (
+# 	is => 'lazy',
+# 	default => sub {
+# 		return {
+# 			class => 'ProPortal::Controller::Base',
+# 			tmpl => 'pages/proportal/phylo_viewer/query.tt',
+# 			tmpl_includes => {
+# #				tt_scripts => qw( data_type )
+# 			}
+# 		};
+# 	}
+# );
+
+extends 'ProPortal::Controller::Base';
 
 with qw( ProPortal::Controller::PhyloViewer::Schema );
+
+has '+page_id' => (
+	default => 'proportal/phylo_viewer/query'
+);
 
 # use IMG::App::Cart;
 
