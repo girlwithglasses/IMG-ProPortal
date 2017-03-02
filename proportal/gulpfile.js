@@ -16,9 +16,9 @@ var gulp = require( "gulp" ),
 	/** @type {Object of Array} CSS source files to concatenate and minify */
 	cssminSrc = [
         /** Normalize */
-        target + "bower/normalize.css/normalize.css",
+        "node_modules/normalize.css/normalize.css",
         /** colorbrewer */
-        target + "bower/colorbrewer.css",
+        target + "assets/colorbrewer/colorbrewer.css",
         /** Theme style */
         source + "css/" + ppcss
     ],
