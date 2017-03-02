@@ -6,7 +6,9 @@
 <h2>[% self.display_name %]</h2>
 
 <h3>Gene Details<h3>
-Gene ID
-Locus tag
+[%	USE Dumper(Indent = 1);
+	'<h4>Gene object</h4><pre>'; Dumper.dump( results.gene ); '</pre>';
+	'<h4>Taxon object</h4><pre>'; Dumper.dump( results.taxon ); '</pre>';
+%]
 
 [%	END %]
