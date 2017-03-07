@@ -15,6 +15,7 @@
 <body>
 
 <div id="header"><h2 class="sg"> PP Style Guide </h2></div>
+
 <div id="wrap">
 
 <div id="sidebar">
@@ -23,8 +24,14 @@
 		<li><a href="#typography">Typography</a></li>
 		<li><a href="#colors">Colors</a></li>
 		<li><a href="#buttons">Buttons</a></li>
+		<li><a href="#navigation">Navigation</a></li>
+			<ul>
+				<li><a href="#nav_tabs">Tabs</a></li>
+<!-- 				<li><a href="#nav_localNav">Local Navigation</a></li> -->
+			</ul>
 	</ul>
-</div>
+
+</div> <!-- sidebar -->
 
 
 <div id="main">
@@ -121,136 +128,180 @@
 	<br><br>
 	
 	
-	<button class="pp_standard"> Standard </button>
-	<button class="pp_orange"> Orange Button </button>
-	<button class="pp_disabled"> Disabled </button>
-	<p class="sg"> Various button colors.</p>
-	
-	<button class="pp_standard"> Add to Cart </button>
-	<button class="pp_clicked"> Added! </button>
-	<p class="sg"> An example you would find on a gene or genome details page.</p>
+	<button class="pp_btn_std"> Standard </button>
+	<button class="pp_btn_orange"> Orange Button </button>
+	<button class="pp_btn_disabled"> Disabled </button>
+	<p class="sg"> Various button colors with a solid background.</p>
 
-	<button class="pp_add"> + </button>
-	<button class="pp_remove"> - </button>
+	<button class="pp_btn_std_outline"> Standard </button>
+	<button class="pp_btn_orange_outline"> Orange Button </button>
+	<button class="pp_btn_disabled_outline"> Disabled </button>
+	<p class="sg"> Various buttons styled with a color outline.</p>
+	
+	<button class="pp_btn_std_outline"> Add to Cart </button>
+	<button class="pp_btn_std"> Added! </button>
+	<p class="sg"> An example you would find on a gene or genome details page.  Outline
+	buttons can be used to indicate that a button has been clicked and the action has been
+	executed. </p>
+
+
+	<button class="pp_btn_add"> + </button>
+	<button class="pp_btn_remove"> - </button>
 	<p class="sg"> These buttons are used for adding or removing genes, genomes,
-	functions or scaffolds to the cart when those items are viewed in a list.
-	Below is an example of how they look in a table of genomes. </p>
+	functions or scaffolds to the cart when those items are viewed in a list.  They are 
+	analogous to the buttons in the example above.  Below is an example of how they look in a table of genomes. </p>
 	
 	<table class="pp_table">
 		
 		<tr><th> Genome name </th> <th> Ocean </th> <th> + / -</th></tr>
-		<tr><td> Prochlorococcus sp. MIT0601 </td><td>Atlantic Ocean </td><td> <button class="pp_add"> + </button></td></tr>
-		<tr><td> Prochlorococcus sp. MIT0602 </td><td>Pacific Ocean </td><td> <button class="pp_add"> + </button></td></tr>
-		<tr><td> Prochlorococcus sp. MIT0603 </td><td>Indian Ocean </td><td> <button class="pp_remove"> - </button></td></tr>
+		<tr><td> Prochlorococcus sp. MIT0601 </td><td>Atlantic Ocean </td><td> <button class="pp_btn_add"> + </button></td></tr>
+		<tr><td> Prochlorococcus sp. MIT0602 </td><td>Pacific Ocean </td><td> <button class="pp_btn_add"> + </button></td></tr>
+		<tr><td> Prochlorococcus sp. MIT0603 </td><td>Indian Ocean </td><td> <button class="pp_btn_remove"> - </button></td></tr>
 		
 	</table>
 		
 </section>	
 
-<!-- 
-<section>
-<div id="pageHeader" >
-	<div id="pageTitle">
-		<!~~ Write taxon source (need query for taxon display name) ~~>
-		<h4 class="normal"> Taxon <h4>
+<section id="navigation">
+	<h3 class="sg underline_sg"> Navigation </h3>
+	<br></br>
+	
+	<section id="nav_tabs">
+		<h3 class="sg"> Tabs </h3>	
+		<br>
 		
-		<!~~ Write gene name ~~>
-		<h2>Gene</h2>
-	</div>
-	<div id="buttonBar">
-		<button>View in JBrowse</button>
-		<button>Add to Cart</button>
-	</div>
-</div>
-</section>
+		<h4 class="sg"><i>Standard</i></h4>
+		<span class="sg"> A familiar base tab style. </span>
+				
+		<div class="pp_nav_tabs_std">
+			<!-- Tabs -->
+			<input type="radio" name="tabs_std" id="std_tab1" checked >
+			<label for="std_tab1">Genes</label>
+			
+			<input type="radio" name="tabs_std" id="std_tab2">
+			<label for="std_tab2">Genomes</label>
+			
+			<input type="radio" name="tabs_std" id="std_tab3">
+			<label for="std_tab3">Functions</label>
+			
+			<input type="radio" name="tabs_std" id="std_tab4">
+			<label for="std_tab4">Scaffolds</label>
+			
+			<!-- Content -->
+			<div id="tab-content1_std" class="tab-content">
+				<h4> Genes </h4>
+				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
+			</div>	
+			<div id="tab-content2_std" class="tab-content">
+				<h4> Genomes </h4>
+				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
+			</div>	
+			<div id="tab-content3_std" class="tab-content">
+				<h4>Functions </h4>
+				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
+			</div>
+			<div id="tab-content4_std" class="tab-content">
+				<h4> Scaffolds </h4>
+				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
+			</div>	
+
+		</div>
+		
+		<br>
+		<h4 class="sg"><i>Minimal</i></h4>
+		<span class="sg"> A streamlined style with minimal styling. </span>
+			
+		<div class="pp_nav_tabs_minimal">
+			<!-- Tabs -->
+			<input type="radio" name="tabs_min" id="min_tab1" checked >
+			<label for="min_tab1">Genes</label>
+			
+			<input type="radio" name="tabs_min" id="min_tab2">
+			<label for="min_tab2">Genomes</label>
+			
+			<input type="radio" name="tabs_min" id="min_tab3">
+			<label for="min_tab3">Functions</label>
+			
+			<input type="radio" name="tabs_min" id="min_tab4">
+			<label for="min_tab4">Scaffolds</label>
+			
+			<!-- Content -->
+			<div id="tab-content1_min" class="tab-content">
+				<h4> Genes </h4>
+				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
+			</div>	
+			<div id="tab-content2_min" class="tab-content">
+				<h4> Genomes </h4>
+				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
+			</div>	
+			<div id="tab-content3_min" class="tab-content">
+				<h4>Functions </h4>
+				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
+			</div>
+			<div id="tab-content4_min" class="tab-content">
+				<h4> Scaffolds </h4>
+				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
+			</div>					
+		</div>
+		
+		<br>
+		<h4 class="sg"><i>Pill</i></h4>
+		<span class="sg"> A pill tab style that is a bit more colorful than the other two styles. </span>
+					
+		<div class="pp_nav_tabs_pill">
+			<!-- Tabs -->
+			<input type="radio" name="tabs_pill" id="pill_tab1" checked >
+			<label for="pill_tab1">Genes</label>
+			
+			<input type="radio" name="tabs_pill" id="pill_tab2">
+			<label for="pill_tab2">Genomes</label>
+			
+			<input type="radio" name="tabs_pill" id="pill_tab3">
+			<label for="pill_tab3">Functions</label>
+			
+			<input type="radio" name="tabs_pill" id="pill_tab4">
+			<label for="pill_tab4">Scaffolds</label>
+			<!-- Content -->
+			<div id="tab-content1_pill" class="tab-content">
+				<h4> Genes </h4>
+				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
+			</div>	
+			<div id="tab-content2_pill" class="tab-content">
+				<h4> Genomes </h4>
+				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
+			</div>	
+			<div id="tab-content3_pill" class="tab-content">
+				<h4>Functions </h4>
+				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
+			</div>
+			<div id="tab-content4_pill" class="tab-content">
+				<h4> Scaffolds </h4>
+				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
+			</div>
+
+		</div>
+		<br>
+	</section>
+	
+<!-- 
+	<section id="nav_localNav">
+		<h4 class="sg"> Local Navigation </h4>
+		<br></br>
+	</section>
+	
  -->
 
+</section>
 
 </div> <!-- main -->
 
-<!-- 
+
 <div id="footer">
-<p>Footer</p>
-</div>
-</div>
- -->
-
-
-
-<!-- 
-<div class="infoBox">
-	<div class="infoBoxTitle"><h4>Typography</h4></div>
-
- -->
-<!-- 
-<section>
-	<h3 class="sg"> 1. Typography </h3>
 	
-	<br></br>
-	<h1  class="L"> Header 1</h1>
-	<p class="sg">Size, width, font, etc.</p>
-	
-	<h2> Header 2</h2>
-	<p class="sg">Size, width, font, etc.</p>
-	
-	<h3> Header 3</h3>
-	<p class="sg">Size, width, font, etc.</p>
-	
-	<h4> Header 4</h4>
-	<p class="sg">Size, width, font, etc.</p>
-	
-	<h5> Header 5</h5>
-	<p class="sg">Size, width, font, etc.</p>
-	
-	<h6> Header 6</h6>
-	<p class="sg">Size, width, font, etc.</p>
-	
-	<p>This is body text. Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. Non viverra pharetra aliquam ac, a scelerisque aliquam ut sed euismod, quis mauris lobortis ultricies id lacinia, eros magnis eget dolorum. Id assumenda pellentesque felis arcu. Vehicula curabitur sodales quisque dui, consectetuer non maecenas per nulla quis nec, ornare magna, pellentesque pulvinar praesent, nam et. Amet orci nulla mattis facilisis wisi. Tortor nullam fusce vel.</p>
-	<p class="sg">Size, width, font, etc.</p>
-</section>
-
-
-</div> 
- --><!-- main -->
-<!-- 
-
-<div id="pageHeader">
-	<div id="pageTitle">
-		<!~~ Write taxon source (need query for taxon display name) ~~>
-		<h4 class="normal"> Taxon <h4>
-		
-		<!~~ Write gene name ~~>
-		<h2>Gene</h2>
-	</div>
-	<div id="buttonBar">
-		<button>View in JBrowse</button>
-		<button>Add to Cart</button>
-	</div>
 </div>
 
+</div>	<!-- wrap -->
 
-<div class="row">
-	<div class="infoBox"> 
-	
-		<div class="infoBoxTitle"><h4>An infoBox</h4></div>
-	</div>
-</div>	
-
- -->
-
-<!-- 
-<div id="sidebar">
-<h2>Column 2</h2>
-<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit...</p>
-<ul>
-<li><a href="#">Link 1</a></li>
-<li><a href="#">Link 2</a></li>
-...
-</ul>
-
-</div> <!~~ sidebar ~~>
-</div> <!~~ wrap ~~>
- -->
 
 </body>
 </html>
