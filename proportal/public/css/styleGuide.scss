@@ -1,0 +1,326 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
+
+// STYLE GUIDE VARIABLES
+// $font-family_sg: "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-family_sg: 'Roboto', sans-serif;
+$font-variant_sg: none; //small-caps;
+$font-weight_sg: lighter;
+
+$padding_sg: 50px;
+$sidebar_width: 300px;
+
+
+
+// COLORS
+$font-color_sg: #959595;
+$bg-color: #648caa;
+
+$line_sg: 2px solid $font-color_sg;
+
+
+$color1: #648caa; 	// rgb(100,140,170);	// map-get( $jgi-palette, dk_blue );
+$color2: #d3691b;	//map-get( $jgi-palette, reddish);	// 	#d3691b, // rgb(211,105,27);
+$color3: #99bd3c; 	//map-get( $jgi-palette, green);	//  #99bd3c, // rgb(153,189,60);
+$color4: #fdba57;	//map-get( $jgi-palette, lite_or); 	//	#fdba57 // rgb(253,186,87);
+$color5: #343434; 	//map-get( $jgi-palette, black);	//	#343434, // rgb(52,52,52);
+$color6: #5a5a5a;	//map-get( $jgi-palette, dk_grey); 	//	#5a5a5a, // rgb(90,90,90);
+$color7: #919090;	//map-get( $jgi-palette, midgrey); 	//	#919090, // rgb(145,144,144);
+
+
+// STYLEGUIDE SECTIONS
+#wrap {
+    margin: auto;
+    width: 1300px;
+}
+
+#header {
+	color: white;
+	padding: 30px;
+	padding-left: $padding_sg;
+	text-align: left;
+	border-bottom: $line_sg;
+}
+
+// #nav {
+// 	padding: $padding_sg;
+// 	
+// 	float: left;
+// 	text-align: right;	
+// }
+
+#main {
+	margin-left: $sidebar_width;
+	padding: 60px $padding_sg 0 $padding_sg;
+}
+
+#sidebar {
+	float:left;
+	width: $sidebar_width;
+	padding: $padding_sg;
+	padding-top: 60px;
+	position: -webkit-sticky;  // required for Safari
+	position: sticky;
+	top: 0; // required as well.
+}
+
+#footer {
+	clear:both;
+	padding:5px 10px;
+}
+#footer p {
+	margin:0;
+}
+
+
+// GENERAL STYLEGUIDE STYLED ELEMENTS
+
+section {
+	float: left;
+	width: 100%;
+	padding-bottom: 50px;
+}
+
+.underline_sg {
+	border-bottom: $line_sg;	
+}
+
+.sg {
+  font-family: $font-family_sg;
+  font-variant: $font-variant_sg;
+  font-weight: $font-weight_sg;
+  color: $font-color_sg;
+  font-style: normal;
+}
+
+p.sg {
+  font-family: $font-family_sg;
+  font-variant: $font-variant_sg;
+  font-weight: $font-weight_sg;
+  color: $font-color_sg;
+  font-size: 16px;
+  font-style: normal;
+  padding: 10px 0;
+}
+
+h1.sg, h2.sg, h3.sg, h4.sg, h5.sg, h6.sg {
+  font-family: $font-family_sg;
+  font-variant: $font-variant_sg;
+  font-weight: $font-weight_sg;
+  color: $font-color_sg;
+}
+
+//	STYLEGUIDE SIDE NAV
+ul.nav_sg {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	
+	> li {
+		float: left;
+		clear: both;
+	
+		> a {
+			display: block;
+			color: $font-color_sg;
+			font-family: $font-family_sg;
+			font-variant: $font-variant_sg;
+			font-weight: $font-weight_sg;
+			font-size: 1.5rem;
+			padding: 10px 0;
+			
+			&:hover {
+				display: block;
+				color: darken( $font-color_sg, 20% )
+				
+			}
+		}
+	
+	}
+}	
+
+// STYLEGUIDE COLORSWATCH LIST
+
+ul.colorSwatch-list_sg {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	
+	> li {
+		text-align: center;
+		margin: 0 20px 20px 0;
+		float: left;
+	
+		> a {
+			display: block;
+		}
+	}
+	
+	.colorSwatch_sg {
+		position: relative;
+		padding: 20px;
+		width: 200px;
+		border: $line_sg;
+
+		.colorCircle_sg {
+  			margin: auto;
+			width: 160px;
+			height: 160px;
+			border-radius: 50%;
+		}
+		
+		.colorLabel_sg {
+			width: 100%;
+			margin-top: 20px;
+			
+			> p {
+				text-align: center;	
+				margin: 0;
+				padding: 0;
+				font-size: 18px;
+			}
+		}
+	}
+}
+
+#color1 {	background: $color1;	}
+#color2 {	background: $color2;	}
+#color3 {	background: $color3;	}
+#color4 {	background: $color4;	}
+#color5 {	background: $color5;	}
+#color6 {	background: $color6;	}
+#color7 {	background: $color7;	}
+
+//----------------------------------------------------------------------
+// 		PLAYGROUND!  USE THIS TO STYLE NEW ELEMENTS FOR PROPORTAL.
+//----------------------------------------------------------------------
+
+
+// PP VARIABLES
+
+$element-border-width: 3px;
+
+
+
+// PP BUTTONS
+button, 
+html input[type="button"], 
+	input[type="reset"], 
+	input[type="submit"]{
+	
+//   background: $color2;	// lite_or
+//   color: white;
+  
+  font-size: 14px;
+  padding: 0.75rem 1.5rem;
+  text-transform: uppercase;
+  vertical-align: middle;
+  line-height: 1.5rem; 
+  border: 2px solid transparent;
+  
+  &:hover {
+  	background: darken( $color2, 10% )
+  }
+}
+
+
+.pp_standard {
+  background: $color1;	// lite_or
+  color: white;
+  
+  &:hover {
+  	background: darken( $color1, 10% );
+  }
+}
+
+.pp_clicked {
+	background: white;
+	color: $color1;
+	border: $element-border-width solid $color1;
+	
+  &:hover {
+  	color: darken( $color1, 10% );
+  	background: white;
+  	border: $element-border-width solid darken( $color1, 10% );
+  }	
+}
+
+.pp_orange {	
+  background: $color2;	// lite_or
+  color: white;
+	
+  &:hover {
+  	background: darken( $color1, 10% );
+  }	 
+}
+
+.pp_disabled {	
+  background: $color7;	// midgrey
+  color: white;
+  
+  &:hover {	
+  	background: $color7;
+  }
+}
+
+.pp_add {
+	display: inline-block;
+	width: 35px;
+	height: 35px;
+	padding: 0;
+	background: $color1;
+	
+	font-size: 24px;
+	text-align: center;
+	vertical-align: middle;
+	
+	color: darken( $color1, 10% );
+	background: white;
+	border: $element-border-width solid $color1;
+	
+	&:hover {
+		color: darken( $color1, 10% );
+		background: white;
+		border: $element-border-width solid darken( $color1, 10% );
+  	}	
+}
+
+.pp_remove {
+	display: inline-block;
+	width: 35px;
+	height: 35px;
+	padding: 0;
+	background: $color1;
+	
+	font-size: 24px;
+// 	text-align: center;
+// 	vertical-align: middle;
+	
+	&:hover {
+// 		color: darken( $color1, 10% );
+		background: darken( $color1, 10% );
+		border: 3px solid darken( $color1, 10% );
+  	}	
+}
+
+table.pp_table{
+	width: 0;
+
+	tr {
+		
+	}
+	
+	th {
+		text-align: left;
+		border-bottom: 2px solid $color6;
+	}
+	
+}
+
+
+
+
+
+
+

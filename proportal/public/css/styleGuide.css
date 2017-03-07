@@ -1,0 +1,210 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto");
+#wrap {
+  margin: auto;
+  width: 1300px; }
+
+#header {
+  color: white;
+  padding: 30px;
+  padding-left: 50px;
+  text-align: left;
+  border-bottom: 2px solid #959595; }
+
+#main {
+  margin-left: 300px;
+  padding: 60px 50px 0 50px; }
+
+#sidebar {
+  float: left;
+  width: 300px;
+  padding: 50px;
+  padding-top: 60px;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0; }
+
+#footer {
+  clear: both;
+  padding: 5px 10px; }
+
+#footer p {
+  margin: 0; }
+
+section {
+  float: left;
+  width: 100%;
+  padding-bottom: 50px; }
+
+.underline_sg {
+  border-bottom: 2px solid #959595; }
+
+.sg {
+  font-family: "Roboto", sans-serif;
+  font-variant: none;
+  font-weight: lighter;
+  color: #959595;
+  font-style: normal; }
+
+p.sg {
+  font-family: "Roboto", sans-serif;
+  font-variant: none;
+  font-weight: lighter;
+  color: #959595;
+  font-size: 16px;
+  font-style: normal;
+  padding: 10px 0; }
+
+h1.sg, h2.sg, h3.sg, h4.sg, h5.sg, h6.sg {
+  font-family: "Roboto", sans-serif;
+  font-variant: none;
+  font-weight: lighter;
+  color: #959595; }
+
+ul.nav_sg {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; }
+  ul.nav_sg > li {
+    float: left;
+    clear: both; }
+    ul.nav_sg > li > a {
+      display: block;
+      color: #959595;
+      font-family: "Roboto", sans-serif;
+      font-variant: none;
+      font-weight: lighter;
+      font-size: 1.5rem;
+      padding: 10px 0; }
+      ul.nav_sg > li > a:hover {
+        display: block;
+        color: #626262; }
+
+ul.colorSwatch-list_sg {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  ul.colorSwatch-list_sg > li {
+    text-align: center;
+    margin: 0 20px 20px 0;
+    float: left; }
+    ul.colorSwatch-list_sg > li > a {
+      display: block; }
+  ul.colorSwatch-list_sg .colorSwatch_sg {
+    position: relative;
+    padding: 20px;
+    width: 200px;
+    border: 2px solid #959595; }
+    ul.colorSwatch-list_sg .colorSwatch_sg .colorCircle_sg {
+      margin: auto;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%; }
+    ul.colorSwatch-list_sg .colorSwatch_sg .colorLabel_sg {
+      width: 100%;
+      margin-top: 20px; }
+      ul.colorSwatch-list_sg .colorSwatch_sg .colorLabel_sg > p {
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        font-size: 18px; }
+
+#color1 {
+  background: #648caa; }
+
+#color2 {
+  background: #d3691b; }
+
+#color3 {
+  background: #99bd3c; }
+
+#color4 {
+  background: #fdba57; }
+
+#color5 {
+  background: #343434; }
+
+#color6 {
+  background: #5a5a5a; }
+
+#color7 {
+  background: #919090; }
+
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  font-size: 14px;
+  padding: 0.75rem 1.5rem;
+  text-transform: uppercase;
+  vertical-align: middle;
+  line-height: 1.5rem;
+  border: 2px solid transparent; }
+  button:hover,
+  html input[type="button"]:hover,
+  input[type="reset"]:hover,
+  input[type="submit"]:hover {
+    background: #a65315; }
+
+.pp_standard {
+  background: #648caa;
+  color: white; }
+  .pp_standard:hover {
+    background: #4e728d; }
+
+.pp_clicked {
+  background: white;
+  color: #648caa;
+  border: 3px solid #648caa; }
+  .pp_clicked:hover {
+    color: #4e728d;
+    background: white;
+    border: 3px solid #4e728d; }
+
+.pp_orange {
+  background: #d3691b;
+  color: white; }
+  .pp_orange:hover {
+    background: #4e728d; }
+
+.pp_disabled {
+  background: #919090;
+  color: white; }
+  .pp_disabled:hover {
+    background: #919090; }
+
+.pp_add {
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  background: #648caa;
+  font-size: 24px;
+  text-align: center;
+  vertical-align: middle;
+  color: #4e728d;
+  background: white;
+  border: 3px solid #648caa; }
+  .pp_add:hover {
+    color: #4e728d;
+    background: white;
+    border: 3px solid #4e728d; }
+
+.pp_remove {
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  background: #648caa;
+  font-size: 24px; }
+  .pp_remove:hover {
+    background: #4e728d;
+    border: 3px solid #4e728d; }
+
+table.pp_table {
+  width: 0; }
+  table.pp_table th {
+    text-align: left;
+    border-bottom: 2px solid #5a5a5a; }
+
+/*# sourceMappingURL=styleGuide.css.map */
