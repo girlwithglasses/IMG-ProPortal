@@ -143,3 +143,140 @@ p:not(#foo) {
 // - sidebar nav never shown
 // - horiz-bar and jgi-links turn into a single set of links accessed by a toggle
 // styling is identical for these sets of links
+
+
+
+/* --------------------------------------
+
+			NAVIGATION TABS
+
+-----------------------------------------
+
+*** nav_tabs ***
+
+The base style for nav_tabs.  Use together with (nav_tabs_std), nav_tabs_minimal 
+and nav_tabs_pill to define the style of the tabs.
+
+IMPORTANT! Using this class requires that you put some local style code onto the 
+html page you are coding to prevent "cross-talk" between multiple instances of tab
+groups.  See the following example for a tab group called "boxA":
+
+INCLUDE THIS IN THE HTML HEAD:
+	<style>
+		#tab1_boxA:checked ~ #tabContent1_boxA,
+		#tab2_boxA:checked ~ #tabContent2_boxA {
+			display: block;
+		}
+	</style>	
+
+HTML BODY CODE SNIPPET:
+	<input type="radio" name="boxA" id="tab1_boxA" checked >
+	<label for="tab1_boxA">Tab1</label>
+
+	<input type="radio" name="boxA" id="tab2_boxA">
+	<label for="tab2_boxA">Tab2</label>
+
+	<div id="tabContent1_boxA" class="tabContent">
+		<p> Tab1 content here. </p>
+	</div>
+
+	<div id="tabContent2_boxA" class="tabContent">
+		<p> Tab1 content here. </p>
+	</div>	
+
+*/
+
+.nav_tabs {
+    float: none;
+    list-style: none;
+    position: relative; 
+    min-height: 200px;
+    margin: 25px 0;
+    
+     > label {
+     	display: block;
+		float: left;
+		position: relative;
+    	padding: 10px 20px;
+		margin-right: 10px;
+   		top: $element-border-width - 1;
+		vertical-align: middle;
+		line-height: 1.5rem;
+		font-size: 14px;
+		text-transform: uppercase;
+		background: white;
+		color: $element-border-color;
+		border-bottom: $element-border-width solid transparent;
+
+		&:hover {	color: darken( $element-border-color, 50% );	}
+	}
+	
+	> input[type=radio] {	display: none;	}  
+	
+	> .tabContent {
+		display: none;
+		
+		width: 100%;
+		float: left;	
+		border-top: $element-border-width solid $element-border-color;		// This codes the line at the base of the tabs
+		background: white;
+		padding: 20px 0; 
+	}	
+}
+
+// nav_tabs_std
+//
+//	ADD HERE...
+
+.nav_tabs_std {
+
+    > label {
+		color: $element-border-color;
+		border: $element-border-width solid $element-border-color;
+		border-top-left-radius: 3px;
+		border-top-right-radius: 3px;
+	}
+		
+	> [id^="tab"]:checked + label {	
+		border-bottom: $element-border-width solid transparent;	
+	} 
+// 		
+}
+
+
+// nav_tabs_minimal
+//
+// Use together with nav_tabs base class.  Style inspired by Mailchimp: 
+// http://ux.mailchimp.com/patterns/navigation#tabs 
+
+.nav_tabs_minimal {
+
+    > [id^="tab"]:checked + label {	
+    	color: darken( $element-border-color, 50% );
+    	border-bottom: $element-border-width+2 solid darken( $element-border-color, 50% );	
+    } 
+
+}
+
+// nav_tabs_pill
+//
+// A pill tab style.  A bit more colorful than the other two styles. Use when you have
+// more visual space to work with or need a pop of color.
+
+.nav_tabs_pill {
+
+    > label {	
+    	margin: 0 10px 10px 0;	
+//     	padding: 10px 20px;
+    }
+
+    > [id^="tab"]:checked + label {	
+    	background: map-get( $jgi-palette, dk_blue );
+    	color: white; //darken( $element-border-color, 50% );
+    	border-radius: 3px;	
+    } 
+}
+
+
+
+

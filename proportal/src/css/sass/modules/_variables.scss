@@ -50,7 +50,15 @@ $half: 1024px;
 */
 
 // visual styles used throughout the site
-$underline: 2px solid black;
+$underline: 2px solid map-get( $jgi-palette, dk_grey );		// switch over to using b-border mixin.
+
+// elements have a standard border color and width
+$element-border-width: 2px;
+$element-border-color: map-get( $jgi-palette, dk_grey );
+
+$border-lighter: lighten( $element-border-color, 40% );
+
+
 
 // width at which menu starts wrapping
 $menu-wrap-width: 71rem;

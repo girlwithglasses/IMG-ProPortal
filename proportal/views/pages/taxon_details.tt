@@ -1,6 +1,8 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: ' _ self.display_name;
 	self = results.taxon;
+	#title = 'IMG ProPortal: ' _ self.display_name;
+	title = 'IMG ProPortal: Taxon Details';
+	
 %]
 
 <div class="thisWrapper">
@@ -31,7 +33,7 @@
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Natural Isolation Information</h4></div>
 
-		<table>
+		<table class="condensed">
 			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
 
 			<tr><td>Date collected</td> 	<td>[% self.date_collected %]</td></tr>
@@ -44,37 +46,37 @@
 				END %]</td></tr>
 			<tr><td>NOAA Sea Name</td>	<td>[% self.geo_location %]</td></tr>
 			<tr><td>Ocean</td>	<td>[% self.proport_ocean %]</td></tr>
+			</table>
 
-			<tr><td colspan="2"><h6 class="subheader">Ecological Information</h6></td>
-			<tr><td class="panelTable">Clade</td>	<td>[% self.clade %]</td></tr>
+			<div class="tableTitle"><h6>Ecological Information</h6></div>
+			<table class="condensed">
+			<tr><td class="col1">Clade</td>	<td>[% self.clade %]</td></tr>
 			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
+		</table>
 
-			<tr><td colspan="2"><h6 class="subheader">Ecosystem Hierarchy</h6></td>
-			</tr>
-				[%
-					eco_hier = [ 'ecosystem',
-						'ecosystem_category',
-						'ecosystem_type',
-						'ecosystem_subtype',
-						'specific_ecosystem'
-					];
+		<div class="tableTitle"><h6>Ecosystem Hierarchy</h6></div>
+		<table class="condensed">
+			[%
+				eco_hier = [ 'ecosystem',
+					'ecosystem_category',
+					'ecosystem_type',
+					'ecosystem_subtype',
+					'specific_ecosystem'
+				];
 
-				FOR e IN eco_hier; %]
-				<tr><td class="indent">[% e | replace('_', ' ') | ucfirst %]</td>	<td> [% self.$e %]</td>	</tr>
-				[%	END; %]
-
-
+			FOR e IN eco_hier; %]
+			<tr><td class="col1">[% e | replace('_', ' ') | ucfirst %]</td>	<td> [% self.$e %]</td>	</tr>
+			[%	END; %]
 		</table>
 	</div>	<!-- infoTable -->
 
 	<div class="infoBox">
+
 		<div class="infoBoxTitle"><h4>Environmental Measurements</h4></div>
 
-		<table>
-		<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
+		<div class="tableTitle"><h6>Direct Measurements</h6></div>
+		<table class="condensed">
 
-		<tr><td colspan="2"><h6 class="subheader">Direct Measurements</h6>
-				</td></tr>
 			[%	env_meas = [
 				'salinity',
 				'oxygen_concentration',
@@ -86,7 +88,7 @@
 
 			FOR e in env_meas; %]
 			<tr>
-				<td>
+				<td class="col1">
 				[%	IF results.label_data.$e && results.label_data.$e.label;
 						results.label_data.$e.label;
 					ELSE;
@@ -101,15 +103,11 @@
 				%]</td>
 			</tr>
 			[%	END %]
-			<tr>
-				<td colspan="2"><h6 class="subheader">World Ocean Atlas Averages</h6>
-	<!--
-			<div class="help">
-					?
-				</div>
- -->
-				</td>
-			</tr>
+			</table>
+			
+			<div class="tableTitle"><h6>World Ocean Atlas Averages</h6></div>
+			<table class="condensed">
+			
 			[%	woa_fields = [
 				'salinity',
 				'temperature',
@@ -121,7 +119,7 @@
 			FOR e in woa_fields;
 				e = 'proport_woa_' _ e; %]
 			<tr>
-				<td>
+				<td class="col1">
 				[%	IF results.label_data.$e && results.label_data.$e.label;
 						results.label_data.$e.label;
 					ELSE;
@@ -145,17 +143,19 @@
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Ecological Information</h4></div>
 
-		<table>
+		<table class="condensed">
 			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
 			<tr><td>Clade</td>	<td>[% self.clade %]</td></tr>
 			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
-
-			<tr><td colspan="2"><h6 class="subheader">NCBI Taxonomy</h6></td></tr>
+		</table>
+		
+		<div class="tableTitle"><h6>NCBI Taxonomy</h6></div>
+		<table class="condensed">
 			[% ncbi = [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ];
 
 			FOR n IN ncbi;
 				n_field = 'ncbi_' _ n;%]
-			<tr><td> [% n | ucfirst %]</td>	<td>[% self.$n_field %]</td></tr>
+			<tr><td class="col1"> [% n | ucfirst %]</td>	<td>[% self.$n_field %]</td></tr>
 			[%	END %]
 		</table>
 	</div> <!-- infoBox -->
@@ -163,29 +163,36 @@
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Identification and External Links</h4></div>
 
-		<table>
-		<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
-		<tr><td>IMG Taxon ID</td>	<td>[% self.taxon_oid %]</td></tr>
-		<tr><td>Project Status</td>	<td>[% self.project_status %]</td></tr>
-		<tr><td colspan="2"><h6 class="subheader">GOLD details</h6></td></tr>
-		<tr><td>Study ID</td>
-			<td>[%	IF self.study_gold_id %]
-				<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
-				[%	END %]
-			</td>
-		</tr>
-		<tr><td>Sequencing Project ID</td>
-			<td>
-				<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
-			</td>
-		</tr>
-		<tr><td>Analysis Project ID</td>
-			<td>[% IF self.analysis_project_id %]
-				<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
-				[%	END; %]
-			</td>
-		</tr>
-		<tr><td colspan="2"><h6 class="subheader">External Links</h6></td></tr>
+		<table class="condensed">
+			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
+			<tr><td>IMG Taxon ID</td>	<td>[% self.taxon_oid %]</td></tr>
+			<tr><td>Project Status</td>	<td>[% self.project_status %]</td></tr>
+		</table>
+		
+		<div class="tableTitle"><h6 class="subheader">GOLD details</h6></div>
+		<table class="condensed">
+			<tr><td class="col1">Study ID</td>
+				<td>[%	IF self.study_gold_id %]
+					<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
+					[%	END %]
+				</td>
+			</tr>
+			<tr><td>Sequencing Project ID</td>
+				<td>
+					<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
+				</td>
+			</tr>
+			<tr><td>Analysis Project ID</td>
+				<td>[% IF self.analysis_project_id %]
+					<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
+					[%	END; %]
+				</td>
+			</tr>
+		</table>
+		
+		<div class="tableTitle"><h6 class="subheader">External Links</h6></div>
+		<table class="condensed">			
+		
 		[%	ext_urls = [
 			'bioproject_accession',
 			'biosample_accession',
@@ -193,7 +200,7 @@
 			'ncbi_project_id',
 		];
 		FOR e in ext_urls; %]
-		<tr><td>
+		<tr><td class="col1">
 			[%	IF results.label_data.$e && results.label_data.$e.label;
 					results.label_data.$e.label;
 				ELSE;
@@ -243,16 +250,18 @@
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Sequence Information</h4></div>
 
-		<table>
+		<table class="condensed">
 			<tr><td class="col1"></td><td></td></tr> <!-- Sets first column width -->
 			<!-- <tr><td>Project Type</td>	<td> ... </td> -->
 			</tr>
 			<tr><td>Culture Type</td>	<td>[% self.culture_type %]</td></tr>
 			<tr><td>Quality</td>	<td>[% self.seq_quality %]</td></tr>
 			<tr><td>Publicly Available</td>	<td>[% self.is_public %]</td></tr>
-
-			<tr><td colspan="2"><h6 class="subheader">Sequencing details</h6></td></tr>
-			<tr><td>Sequencing Status</td>	<td>[% self.seq_status %]</td></tr>
+		</table>
+		
+		<div class="tableTitle"><h6 class="subheader">Sequencing Details</h6></div>
+		<table class="condensed">
+			<tr><td class="col1">Sequencing Status</td>	<td>[% self.seq_status %]</td></tr>
 			<tr><td class="indent">Sequencing Center</td>
 				[% IF self.gold_sp_seq_centers.size > 0;
 					FOR sc IN self.gold_sp_seq_centers; '
@@ -266,32 +275,16 @@
 					'; END; ELSE; '
 				<td>Not specified</td>
 					'; END; %]	</tr>
-
-			<tr><td colspan="2"><h6 class="subheader">Curation Details</h6></td></tr>
-			<tr><td>Submission Type</td>	<td>
-<!--
-				<p class="noteToSelf">
-					add
-				</p>
- -->
-				</td></tr>
-			<tr><td>IMG Release</td>	<td>
-<!--
-				<p class="noteToSelf">
-					add
-				</p>
- -->
-				</td></tr>
+		</table>
+		
+		<div class="tableTitle"><h6 class="subheader">Curation Details</h6></div>
+		<table class="condensed">			
+			<tr><td class="col1">Submission Type</td>	<td></td></tr>
+			<tr><td>IMG Release</td>	<td></td></tr>
 			<tr><td>Release Date</td>	<td>[%	self.release_date %]</td></tr>
 			<tr><td>Add Date</td>	<td>[% self.add_date %]</td></tr>
 			<tr><td>Modified Date</td>	<td>[% self.mod_date %]</td></tr>
-			<tr><td class="indent">Distance Matrix Calculation Date</td>	<td>
-<!--
-				<p class="noteToSelf">
-					add
-				</p>
- -->
-				</td></tr>
+			<tr><td class="indent">Distance Matrix Calculation Date</td>	<td></td></tr>
 		</table>
 	</div>
 

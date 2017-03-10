@@ -1,16 +1,44 @@
 // tables
 
+
 table {
+	table-layout: fixed;
+	border-collapse: collapse; 
 	width: 100%;
+	margin-bottom: 0;
+
+	// make our tables nice and spacious!
+	th, td {
+		padding: $gutter;
+		padding-left: 0;	
+	}
+
+	.clearStyle {	
+		border: 0;
+	}
+
 }
 
-// make our tables nice and spacious!
-th, td {
-	padding: $gutter;
+table.condensed {
+	td {	padding: 6px 0px 6px 0px; 		}	
 }
 
-tr {
-	border-bottom: 1px solid #999;
+table.lined {
+	td {	@include b_border(1px, $border-lighter);	}
+}
+
+.col1 {
+	width: 200px; }
+
+.subheader {
+	margin-top: 10px; }
+
+// This doesn't go in the table, but sits above it.  Styles a div.
+div.tableTitle {
+	width: 100%;
+	padding: 30px 0 10px 0;
+	margin-bottom: 6px;
+	@include b_border(1px, $border-lighter);
 }
 
 caption {
@@ -21,6 +49,7 @@ caption {
 //	margin: 0;
 	padding: 0 $gutter 0;
 }
+
 
 // table header font, background colour
 thead tr {

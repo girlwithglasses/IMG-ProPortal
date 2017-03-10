@@ -11,7 +11,38 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Some information about the IMG ProPortal here">
+
+	<style>
+	
+	/* Put nav-tabs class hookups here */
+	
+	/* Hookups for nav_tabs_example_std */
+ 	#tab1_nav_tabs_example_std:checked ~ #tabContent1_nav_tabs_example_std,
+ 	#tab2_nav_tabs_example_std:checked ~ #tabContent2_nav_tabs_example_std,
+ 	#tab3_nav_tabs_example_std:checked ~ #tabContent3_nav_tabs_example_std,
+ 	#tab4_nav_tabs_example_std:checked ~ #tabContent4_nav_tabs_example_std {
+ 		display: block;
+  	}
+  	
+  	/* Hookups for nav_tabs_example_minimal */
+ 	#tab1_nav_tabs_example_minimal:checked ~ #tabContent1_nav_tabs_example_minimal,
+ 	#tab2_nav_tabs_example_minimal:checked ~ #tabContent2_nav_tabs_example_minimal,
+ 	#tab3_nav_tabs_example_minimal:checked ~ #tabContent3_nav_tabs_example_minimal,
+ 	#tab4_nav_tabs_example_minimal:checked ~ #tabContent4_nav_tabs_example_minimal {
+ 		display: block;
+  	}
+  		/* Hookups for nav_tabs_example_pill */
+ 	#tab1_nav_tabs_example_pill:checked ~ #tabContent1_nav_tabs_example_pill,
+ 	#tab2_nav_tabs_example_pill:checked ~ #tabContent2_nav_tabs_example_pill,
+ 	#tab3_nav_tabs_example_pill:checked ~ #tabContent3_nav_tabs_example_pill,
+ 	#tab4_nav_tabs_example_pill:checked ~ #tabContent4_nav_tabs_example_pill {
+ 		display: block;
+  	}	
+	</style>
+
 </head>
+
+
 <body>
 
 <div id="header"><h2 class="sg"> PP Style Guide </h2></div>
@@ -173,113 +204,117 @@
 		<h4 class="sg"><i>Standard</i></h4>
 		<span class="sg"> A familiar base tab style. </span>
 				
-		<div class="pp_nav_tabs_std">
-			<!-- Tabs -->
-			<input type="radio" name="tabs_std" id="std_tab1" checked >
-			<label for="std_tab1">Genes</label>
+		<div class="nav_tabs nav_tabs_std">
+			<input type="radio" name="nav_tabs_example_std" id="tab1_nav_tabs_example_std" checked >
+			<label for="tab1_nav_tabs_example_std">Genes</label>
 			
-			<input type="radio" name="tabs_std" id="std_tab2">
-			<label for="std_tab2">Genomes</label>
+			<input type="radio" name="nav_tabs_example_std" id="tab2_nav_tabs_example_std">
+			<label for="tab2_nav_tabs_example_std">Genomes</label>
 			
-			<input type="radio" name="tabs_std" id="std_tab3">
-			<label for="std_tab3">Functions</label>
+			<input type="radio" name="nav_tabs_example_std" id="tab3_nav_tabs_example_std" >
+			<label for="tab3_nav_tabs_example_std">Functions</label>
 			
-			<input type="radio" name="tabs_std" id="std_tab4">
-			<label for="std_tab4">Scaffolds</label>
-			
-			<!-- Content -->
-			<div id="tab-content1_std" class="tab-content">
+			<input type="radio" name="nav_tabs_example_std" id="tab4_nav_tabs_example_std">
+			<label for="tab4_nav_tabs_example_std">Scaffolds</label>
+					
+								
+			<div id="tabContent1_nav_tabs_example_std" class="tabContent">
 				<h4> Genes </h4>
 				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
-			</div>	
-			<div id="tab-content2_std" class="tab-content">
-				<h4> Genomes </h4>
+			</div>			
+			<div id="tabContent2_nav_tabs_example_std" class="tabContent">
+				<h4> Genes </h4>
 				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
 			</div>	
-			<div id="tab-content3_std" class="tab-content">
-				<h4>Functions </h4>
+			<div id="tabContent3_nav_tabs_example_std" class="tabContent">
+				<h4> Genes </h4>
 				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
-			</div>
-			<div id="tab-content4_std" class="tab-content">
-				<h4> Scaffolds </h4>
+			</div>	
+			<div id="tabContent4_nav_tabs_example_std" class="tabContent">
+				<h4> Genes </h4>
 				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
 			</div>	
-
+				
 		</div>
 		
 		<br>
 		<h4 class="sg"><i>Minimal</i></h4>
 		<span class="sg"> A streamlined style with minimal styling. </span>
 			
-		<div class="pp_nav_tabs_minimal">
-			<!-- Tabs -->
-			<input type="radio" name="tabs_min" id="min_tab1" checked >
-			<label for="min_tab1">Genes</label>
+	
+		<div class="nav_tabs nav_tabs_minimal">
+			<input type="radio" name="nav_tabs_example_minimal" id="tab1_nav_tabs_example_minimal" checked >
+			<label for="tab1_nav_tabs_example_minimal">Genes</label>
 			
-			<input type="radio" name="tabs_min" id="min_tab2">
-			<label for="min_tab2">Genomes</label>
+			<input type="radio" name="nav_tabs_example_minimal" id="tab2_nav_tabs_example_minimal">
+			<label for="tab2_nav_tabs_example_minimal">Genomes</label>
 			
-			<input type="radio" name="tabs_min" id="min_tab3">
-			<label for="min_tab3">Functions</label>
+			<input type="radio" name="nav_tabs_example_minimal" id="tab3_nav_tabs_example_minimal" >
+			<label for="tab3_nav_tabs_example_minimal">Functions</label>
 			
-			<input type="radio" name="tabs_min" id="min_tab4">
-			<label for="min_tab4">Scaffolds</label>
-			
-			<!-- Content -->
-			<div id="tab-content1_min" class="tab-content">
+			<input type="radio" name="nav_tabs_example_minimal" id="tab4_nav_tabs_example_minimal">
+			<label for="tab4_nav_tabs_example_minimal">Scaffolds</label>
+					
+								
+			<div id="tabContent1_nav_tabs_example_minimal" class="tabContent">
 				<h4> Genes </h4>
 				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
-			</div>	
-			<div id="tab-content2_min" class="tab-content">
-				<h4> Genomes </h4>
+			</div>			
+			<div id="tabContent2_nav_tabs_example_minimal" class="tabContent">
+				<h4> Genes </h4>
 				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
 			</div>	
-			<div id="tab-content3_min" class="tab-content">
-				<h4>Functions </h4>
+			<div id="tabContent3_nav_tabs_example_minimal" class="tabContent">
+				<h4> Genes </h4>
 				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
-			</div>
-			<div id="tab-content4_min" class="tab-content">
-				<h4> Scaffolds </h4>
+			</div>	
+			<div id="tabContent4_nav_tabs_example_minimal" class="tabContent">
+				<h4> Genes </h4>
 				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
-			</div>					
+			</div>	
+				
 		</div>
+		
+		
+		
 		
 		<br>
 		<h4 class="sg"><i>Pill</i></h4>
 		<span class="sg"> A pill tab style that is a bit more colorful than the other two styles. </span>
+		
+		<div class="nav_tabs nav_tabs_pill">
+			<input type="radio" name="nav_tabs_example_pill" id="tab1_nav_tabs_example_pill" checked >
+			<label for="tab1_nav_tabs_example_pill">Genes</label>
+			
+			<input type="radio" name="nav_tabs_example_pill" id="tab2_nav_tabs_example_pill">
+			<label for="tab2_nav_tabs_example_pill">Genomes</label>
+			
+			<input type="radio" name="nav_tabs_example_pill" id="tab3_nav_tabs_example_pill" >
+			<label for="tab3_nav_tabs_example_pill">Functions</label>
+			
+			<input type="radio" name="nav_tabs_example_pill" id="tab4_nav_tabs_example_pill">
+			<label for="tab4_nav_tabs_example_pill">Scaffolds</label>
 					
-		<div class="pp_nav_tabs_pill">
-			<!-- Tabs -->
-			<input type="radio" name="tabs_pill" id="pill_tab1" checked >
-			<label for="pill_tab1">Genes</label>
-			
-			<input type="radio" name="tabs_pill" id="pill_tab2">
-			<label for="pill_tab2">Genomes</label>
-			
-			<input type="radio" name="tabs_pill" id="pill_tab3">
-			<label for="pill_tab3">Functions</label>
-			
-			<input type="radio" name="tabs_pill" id="pill_tab4">
-			<label for="pill_tab4">Scaffolds</label>
-			<!-- Content -->
-			<div id="tab-content1_pill" class="tab-content">
+								
+			<div id="tabContent1_nav_tabs_example_pill" class="tabContent">
 				<h4> Genes </h4>
 				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
-			</div>	
-			<div id="tab-content2_pill" class="tab-content">
-				<h4> Genomes </h4>
+			</div>			
+			<div id="tabContent2_nav_tabs_example_pill" class="tabContent">
+				<h4> Genes </h4>
 				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
 			</div>	
-			<div id="tab-content3_pill" class="tab-content">
-				<h4>Functions </h4>
+			<div id="tabContent3_nav_tabs_example_pill" class="tabContent">
+				<h4> Genes </h4>
 				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
-			</div>
-			<div id="tab-content4_pill" class="tab-content">
-				<h4> Scaffolds </h4>
+			</div>	
+			<div id="tabContent4_nav_tabs_example_pill" class="tabContent">
+				<h4> Genes </h4>
 				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
-			</div>
-
+			</div>	
+				
 		</div>
+		
 		<br>
 	</section>
 	

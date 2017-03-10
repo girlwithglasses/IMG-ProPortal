@@ -7,11 +7,11 @@ h1, h2, h3, h4, h5, h6, caption, .h2, .h3, .h4, .h5, .h6 {
 // 	margin: 0 0 $line-ht;
 	
 	// from taxon_details.tt
+	padding: 0;
 	margin: 0;
- 	padding: 0;
 
 }
-
+	
 /** "Golden rhythm" font sizes
 $h1-font-size: 4.25rem; // 68px
 $h1-lines: 3;
@@ -71,6 +71,11 @@ h6, .h6 {
 small, .small, pre.debug {
 	font-size: .75rem;
 	line-height: $line-ht;
+}
+
+// Draw a line under an element (mostly used for h1-6
+.underline {
+	@include b-border(1px, $border-lighter);
 }
 
 

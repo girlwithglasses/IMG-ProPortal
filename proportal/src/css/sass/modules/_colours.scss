@@ -93,6 +93,14 @@ $nav-link-bg: #9ce;
 	border-left: $w solid $col;
 }
 
+@mixin b-border( $w, $col ) {
+	border-bottom: $w solid $col;
+}
+
+@mixin t-border( $w, $col ) {
+	border-top: $w solid $col;
+}
+
 @mixin borders( $w, $col ) {
 	border: $w solid $col;
 }

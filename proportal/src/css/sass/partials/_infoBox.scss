@@ -3,30 +3,21 @@ found on details pages
 */
 
 .infoBox {
-	padding: 0 20px 20px 20px;
-
-	table {
-		table-layout: fixed;
+	padding: 0 20px 20px 20px; 
+		
+	// for displaying FASTA sequences, for example
+ 	.textDisplay {
 		width: 100%;
-		border-collapse: collapse; }
-	
-	tr,td {
-		margin: 0;
-		padding: 0;
-		border: 0; }
+		height: 450px;
+		padding: 10px 20px;
+		overflow: auto;
+		@include borders( $element-border-width, $border-lighter );
+		
+	}
 
-	td {
-		padding: 4px 0px 4px 0px; }
-	
 	.infoBoxTitle {
 		margin: 10px 0 5px 0;
 		border-bottom: $underline }
-	
-	.col1 {
-		width: 200px; }
-
-	.subheader {
-		margin-top: 10px; }
 		
 		
 	/* this may need to be defined somewhere else... */	
@@ -41,6 +32,4 @@ found on details pages
 	@media all and (min-width: $half) {
 		width: 50%; 
 	}
-	
 }
-

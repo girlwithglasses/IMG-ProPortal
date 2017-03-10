@@ -5,7 +5,7 @@ page title for a details page
 #pageTitle {
 	float: left;
 	width: 100%;
-	border-bottom: $underline;
+	@include b_border($element-border-width, $element-border-color);
 
 	.normal {
 		font-weight: normal; }
