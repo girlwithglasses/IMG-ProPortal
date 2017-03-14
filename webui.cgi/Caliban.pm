@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: Caliban.pm 36346 2016-10-21 18:50:09Z klchu $
+# $Id: Caliban.pm 36698 2017-03-13 17:46:58Z klchu $
 #
 ############################################################################
 package Caliban;
@@ -94,9 +94,9 @@ sub dispatch {
         my $sso_enabled = $env->{sso_enabled};
         my $oldLogin    = WebUtil::getSessionParam("oldLogin");
         if ( !$oldLogin && $sso_enabled ) {
-            logout(1);
+            logout(1, 4);
         } else {
-            logout();
+            logout(0, 5);
         }
     } elsif ( $page eq 'migrateForm' ) {
 
@@ -111,6 +111,8 @@ sub dispatch {
 }
 
 sub printSsoForm {
+	my ($errorCode) = @_;
+	
     my $imgOnlyLogin = param('imgOnlyLogin');
 
     #my $url = $cgi_url . "/main.cgi?oldLogin=true";
@@ -129,6 +131,10 @@ sub printSsoForm {
         #    $template->param( base_url => $base_url );
         #    $template->param( cgi_url  => $cgi_url );
         #    $template->param( sso_url  => $sso_url );
+        if($errorCode) {
+        	$template->param( errorCode  => "<br> JGI SSO error $errorCode" );
+        }
+        
         print $template->output;
 
     } elsif($abc) {
@@ -146,6 +152,11 @@ sub printSsoForm {
         #$template->param( cgi_url      => $cgi_url );
         $template->param( sso_url      => $sso_url );
         $template->param( top_base_url => $top_base_url );
+
+        if($errorCode) {
+            $template->param( errorCode  => "<br> JGI SSO error $errorCode" );
+        }        
+        
         print $template->output;
     }
 }
@@ -165,14 +176,16 @@ sub validateUser {
 
     my %cookies = CGI::Cookie->fetch;
 
-    #webLog "here 1 <br/>\n";
-    return 0 if ( !exists $cookies{$sso_session_cookie_name} );
+    if ( !exists $cookies{$sso_session_cookie_name} ) {
+        WebUtil::loginLog( 'Caliban.pm logout', "sso 12" );
+        return 0 ;    
+    }
+    
     my $id = $cookies{$sso_session_cookie_name}->value;
-
-    #webLog "here 2 <br/>\n";
-    return 0 if ( $id eq "" );
-
-    #webLog "here 3 <br/>\n";
+    if ( $id eq "" ) {
+        WebUtil::loginLog( 'Caliban.pm logout', "sso 13" );
+        return 0;
+    }
 
     # the cookie has the sub path in id
     # https://signon.jgi.doe.gov/api/sessions/e29a0ea6ac80f6b8
@@ -198,7 +211,7 @@ sub validateUser {
 
     #webLog("here 4 $url\n");
     
-    # TODO 404 errors reported here on Oct 9 2016
+    # 404 errors reported here on Oct 9 2016
     # maybe pause for 1 sec to let sso finish its db stuff??? - Ken
     webLog("\n\nStatus1: JGI SSO $url\n\n");
     webLog("\n\nStatus1: sleep for 2 sec \n\n");
@@ -254,7 +267,10 @@ sub validateUser {
             ( $contact_oid, $username, $super_user, $name, $email2, $jgi_user, $img_editor ) = getContactOidDb( $dbh, $user_id );
         }
 
-        return 0 if ( $contact_oid eq "" || $contact_oid eq "0" );
+        if (!$contact_oid || $contact_oid eq "" || $contact_oid eq "0" ) {
+            WebUtil::loginLog( 'Caliban.pm logout', "sso 14" );
+            return 0;
+        }
 
         setSessionParam( "contact_oid",       $contact_oid );
         setSessionParam( "super_user",        $super_user );
@@ -272,6 +288,7 @@ sub validateUser {
             setSessionParam( "editor", 0 );
         }
         
+       
         return 1;
         
     } elsif($code eq "410" || $code eq "404") {
@@ -285,11 +302,11 @@ $tipText
         };
         
         
-        logout();
+        logout(1, 6);
         #WebUtil::printSessionExpired($text);
         return 0;
     } else {
-        # TODO sso issue?
+        # sso issue?
         my $content = $res->content;
         
         webLog("Error1: ====================\n\n");
@@ -306,7 +323,7 @@ Please login again.
 $tipText
         };
         
-        logout();
+        logout(1, "7 $code");
         WebUtil::webErrorHeader($text, -1, 1);
     }
     return 0;
@@ -587,7 +604,7 @@ select cv_term from countrycv
 
     main::printContentEnd();
     main::printMainFooter();
-    Caliban::logout(1);
+    Caliban::logout(1, 8);
     WebUtil::webExit(0);
 }
 
@@ -616,20 +633,60 @@ sub getContactOidDb {
     return ( $contact_oid, $username, $super_user, $name, $email, $jgi_user, $img_editor );
 }
 
+        
+# TODO reset session param
+# last_jgisso_ping to current time
+# we will ping sso every 30 mins instead of every ui refresh or form submit
+# - ken
+sub doPingJgiSso {
+    # get current time
+	my $currTime = time();
+	
+	my $lastTime = WebUtil::getSessionParam("last_jgisso_ping");
+	if(!$lastTime) {
+		
+		# user has just logged in or user was login in the Portal and
+		# came to IMG - ken  
+		$lastTime = $currTime;
+		WebUtil::setSessionParam("last_jgisso_ping", $currTime);
+		return 1; 
+	} 
+	
+	my $diff = $currTime - $lastTime;
+	my $maxtime = 30 * 60; # 30 mins in secs
+	
+	if($diff < $maxtime) {
+		# no ping
+		webLog("\nNo ping diff: $diff ,  $maxtime\n\n");
+		return 0;
+	}
+
+    WebUtil::setSessionParam("last_jgisso_ping", $currTime);
+    return 1; # yes do jgi sso ping
+}
+
+
 #
-# is a session valid and do a "touch" too
+# is a session valid and do a "touch" or ping too
 #
 sub isValidSession {
-
+	if(!doPingJgiSso()) {
+		webLog("\nStatus: NO JGI SSO PING\n\n");
+		return 1;
+	}
+	webLog("\nStatus: YES do a JGI SSO PING\n\n");
+	
     my $sid = getSessionParam("jgi_session_id");
 
+    # logout( 1, 10 )
     webLog("isValidSession \n");
-    return 0 if ( $sid eq "" || $sid eq 0 );
+    return 10 if ( $sid eq "" || $sid eq 0 );
 
     # make sure the jgi_Session cookie exists
     # if gone the user logout eg closed browser
+    # logout( 1, 11 )
     my %cookies = CGI::Cookie->fetch;
-    return 0 if ( !exists $cookies{$sso_session_cookie_name} );
+    return 11 if ( !exists $cookies{$sso_session_cookie_name} );
 
 
     # https://signon.jgi-psf.org/api/sessions/
@@ -655,11 +712,11 @@ sub isValidSession {
     if ( $code eq "200" || $code eq "204" ) {
         return 1;
     } elsif ($code eq "410" || $code eq "404") {
-        return 0;
-        
+
+        return $code;        
     } else {
         
-        # TODO sso issue? - SHOULD I even validate - lets just continue? 
+        # sso issue? - SHOULD I even validate - lets just continue? 
         # what about portal logins
         my $content = $res->content;
 
@@ -674,7 +731,7 @@ Please try again<br><br>
 
 $tipText
         };
-        logout();
+        logout(1, "2 $code");
         WebUtil::webErrorHeader($text, 1);
     }
 }
@@ -693,17 +750,16 @@ $tipText
 #}
 
 sub logout {
-    my ( $sso_logout, $portal ) = @_;
+    my ( $sso_logout, $code ) = @_;
 
-    if ($sso_logout) {
-        WebUtil::loginLog( 'Caliban.pm logout', 'sso' );
-    } elsif ($portal) {
+    if ($sso_logout ) {
         # logout from portal or other jgi sso site
-        WebUtil::loginLog( 'Caliban.pm logout portal', 'sso' );
+        WebUtil::loginLog( 'Caliban.pm logout', "sso $code" );
+
     } else {
 
         # portal logout is here ? or above
-        WebUtil::loginLog( 'Caliban.pm logout', 'img' );
+        WebUtil::loginLog( 'Caliban.pm logout', "img $code" );
     }
 
     WebUtil::clearSession();
@@ -889,7 +945,7 @@ imgsupp at lists.jgi-psf.org (imgsupp\@lists.jgi-psf.org)
             print $text;
             main::printContentEnd();
             main::printMainFooter();
-            Caliban::logout(1);
+            Caliban::logout(1, 3);
             WebUtil::webExit(0);
         }
     }

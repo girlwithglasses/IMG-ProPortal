@@ -1,0 +1,67 @@
+[%
+	show_sidebar = 0;
+%]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>[% title %]</title>
+[%
+    PROCESS 'inc/page_head.tt';
+	IF tmpl_includes;
+		IF tmpl_includes.tt_styles;
+			FOREACH s IN tmpl_includes.tt_styles;
+				f_name = 'inc/styles_' _ s _ '.tt';
+				PROCESS $f_name;
+			END;
+		END;
+		IF tmpl_includes.head;
+			# render style content
+		END;
+	END; %]
+</head>
+<body[% body_class %]>
+<!-- template: [% template.name %] -->
+<div class="wrapper">
+[%
+	PROCESS 'inc/header.tt';
+	PROCESS 'inc/nav_container.tt';
+%]
+	<article class="content cf full" role="main">
+[%
+	IF settings.message;
+		PROCESS 'inc/message.tt';
+	END;
+	content;	# the page content
+
+%]
+	</article>
+[%
+    PROCESS 'inc/nav_sidebar.tt';
+    PROCESS 'inc/footer.tt';
+%]
+</div>
+[%	IF settings.debug;
+		PROCESS 'inc/debug.tt';
+	END;
+
+	IF tmpl_includes;
+		IF tmpl_includes.foot;
+			FOREACH x IN tmpl_includes.foot;
+                INCLUDE x;
+			END;
+		END;
+		IF tmpl_includes.tt_scripts;
+			FOREACH s IN tmpl_includes.tt_scripts;
+				f_name = 'scripts/' _ s _ '.tt';
+				PROCESS $f_name;
+			END;
+		END;
+	END;
+
+	IF settings.enable_google_analytics;
+		PROCESS 'inc/google_analytics.tt';
+	END;
+%]
+<!-- end [% template.name %] -->
+</body>
+</html>

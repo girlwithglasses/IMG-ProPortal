@@ -33,19 +33,17 @@ sub _set_page_params {
 	my $self = shift;
 	my $params = shift;
 
-	say 'params: ' . Dumper $params;
-
 	for ( qw( page_id menu_group ) ) {
 		if ( $params->{$_} ) {
 			my $p = '_set_' . $_;
-			say 'running ' . $p;
+#			say 'running ' . $p;
 
 			$self->$p( $params->{$_} );
 		}
 	}
 
-	say 'page_id: ' . Dumper $self->page_id;
-	say 'menu_group: ' . Dumper $self->menu_group;
+#	say 'page_id: ' . Dumper $self->page_id;
+#	say 'menu_group: ' . Dumper $self->menu_group;
 
 }
 

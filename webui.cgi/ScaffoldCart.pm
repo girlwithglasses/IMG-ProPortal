@@ -1,6 +1,6 @@
 ############################################################################
 # ScaffoldCart.pm - Cart for Scaffolds
-# $Id: ScaffoldCart.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
+# $Id: ScaffoldCart.pm 36615 2017-03-01 19:56:28Z klchu $
 ############################################################################
 package ScaffoldCart;
 
@@ -3042,6 +3042,10 @@ sub printHistogramJS {
 	}
     </script>
 END_JS
+}
+
+sub clearAll {
+     unlink(getStateFile());
 }
 
 1;

@@ -1,6 +1,7 @@
 <!--#include file="header.shtml" -->
 	<article class="content cf" role="main">
 		<h2>Server Offline</h2>
+		<h3>Error 503</h3>
 		<p class="error">
 			The IMG ProPortal server is currently unavailable. Please try again later.
 		</p>

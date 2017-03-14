@@ -1,5 +1,5 @@
 [%	IF ! page_wrapper;
-		page_wrapper = 'layouts/default.html.tt';
+		page_wrapper = 'layouts/default.tt';
 	END;
 	WRAPPER $page_wrapper;
 	title = 'Sample Demo';

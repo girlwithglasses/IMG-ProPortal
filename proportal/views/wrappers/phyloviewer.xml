@@ -1,6 +1,6 @@
 <tool id="phyloviewer" name="PhyloViewer" version="0.1.0">
 <description>PhyloViewer phylogeny and metadata viewer</description>
-<command>source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc; DANCER_ENVIRONMENT="galaxy" perl /global/homes/a/aireland/webUI/proportal/script/galaxy/phyloviewer_page_gen.pl
+<command>source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc; DANCER_ENVIRONMENT="proportal-galaxy" perl /global/homes/a/aireland/webUI/proportal/script/galaxy/phyloviewer_page_gen.pl
 	--newick "$newick"
 	--gene_taxon_file "$gene_taxon_file"
 	--metadata "$metadata_file"

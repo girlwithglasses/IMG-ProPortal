@@ -43,7 +43,7 @@ return {
 				cookie_name => 'CGISESSID_proportal',
 				cookie_duration => '1.5 hours',
 				driver_params => {
-					Directory => '/tmp',
+					Directory => 'tmp',
 				},
 			},
 		},

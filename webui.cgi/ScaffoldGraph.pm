@@ -3,7 +3,7 @@
 #   chromosomal viewers.
 # --es 09/17/2004
 #
-# $Id: ScaffoldGraph.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: ScaffoldGraph.pm 36695 2017-03-10 20:35:44Z aratner $
 ############################################################################
 package ScaffoldGraph;
 my $section = "ScaffoldGraph";
@@ -42,12 +42,10 @@ my $scaffold_page_size   = $env->{scaffold_page_size};
 my $pageSize             = $scaffold_page_size;
 my $user_restricted_site = $env->{user_restricted_site};
 my $YUI                  = $env->{yui_dir_28};
-my $top_base_url = $env->{top_base_url};
-# No. bp's for whole page.
-#my $blockSize = 25000;
-my $blockSize = 30000;
+my $top_base_url         = $env->{top_base_url};
 
-# No aa's for one Scaffold Panel line.
+# No. bp's for whole page.
+my $blockSize = 30000;
 
 my %cogFuncFilter;
 
@@ -129,7 +127,6 @@ sub printPreScaffoldGraph {
     my ($gene_oid, $start_coord, $end_coord, $scf_seq_length) 
 	= $cur->fetchrow();
     $cur->finish();
-    #$dbh->disconnect();
 
     my $large_flank_length = 200000;
     my $scf_start_coord = $start_coord - $large_flank_length;
@@ -327,7 +324,7 @@ sub printScaffoldGraph {
     	    print "</p>";
     	    
     	    $exp_profile = getExpressionProfile
-        		($dbh, $sample, $study, $taxon_oid, $scaffold_oid);
+		($dbh, $sample, $study, $taxon_oid, $scaffold_oid);
     
         } elsif ($study eq "rnaseq") {
     	    require RNAStudies;
@@ -342,7 +339,7 @@ sub printScaffoldGraph {
     	    print "</p>"; 
     	    
     	    $exp_profile = getExpressionProfile
-        		($dbh, $sample, $study, $taxon_oid, $scaffold_oid);
+		($dbh, $sample, $study, $taxon_oid, $scaffold_oid);
     	}
     }
 
@@ -367,8 +364,14 @@ sub printScaffoldGraph {
 
     print qq{
         <script language='javascript' type='text/javascript'>
-        function chromoColor(myurl) {
+        function chromoColor(myurl, mycolor) {
             var e = document.getElementById("chromoColorBy");
+            if (mycolor !== null && mycolor !== undefined && mycolor !== "") {
+                e.options[mycolor].selected = true;
+                return;
+            }
+
+            e.selected = true;
             if (e.value == 'label') {
                 return;
             }
@@ -381,26 +384,32 @@ sub printScaffoldGraph {
     # Chromosome Viewer colored by section
     if ( !$noTitle ) {
         print qq{
-            <p>
-            Switch coloring to: &nbsp;
+            <p>Switch coloring to: &nbsp;
             <select onchange="chromoColor('$url');" name="chromoColorBy" id="chromoColorBy">
-            <option selected="true" value="label"> --- Select Function --- </option>
-            <option value="cog"> COG </option>
-            <option value="gc"> GC </option>
-            <option value="kegg"> KEGG </option>
-            <option value="pfam"> Pfam </option>
-            <option value="tigrfam"> TIGRfam </option>
-            <option value="phylodist"> Phylo Distribution </option>
+            <option value="label"> --- Select Function --- </option>
+            <option value="cog" id="cog"> COG </option>
+            <option value="gc" id="gc"> GC </option>
+            <option value="kegg" id="kegg"> KEGG </option>
+            <option value="pfam" id="pfam"> Pfam </option>
+            <option value="tigrfam" id="tigrfam"> TIGRfam </option>
+            <option value="phylodist" id="phylodist"> Phylo Distribution </option>
         };
         if ($sample ne "") {
             if ($study eq "methylomics") {
-                print "<option value='methylation'> Methylation </option>";
+                print "<option value='methylation' id='methylation'> Methylation </option>";
             } else {
-                print "<option value='expression'> Expression </option>";
+                print "<option value='expression' id='expression'> Expression </option>";
             }
         }    
         print "</select>\n";
         print "</p>\n";
+
+
+    print qq{
+        <script type='text/javascript'>
+        YAHOO.util.Event.addListener(window, "load", chromoColor('$url', '$color'));
+        </script>
+    };
     }
 
     # end of switch color
@@ -443,7 +452,7 @@ sub printScaffoldGraph {
         webLog "cogFuncFilter:1: $i\n" if $verbose >= 3;
     }
 
-    # By another means.
+    # By another means
     my @cogFuncs2 = split( //, $cog_func_filter_str );
     for my $i (@cogFuncs2) {
         $cogFuncFilter{$i} = $i;
@@ -488,6 +497,9 @@ sub printScaffoldGraph {
             }
         }
     }
+    my $colorFuncStrSuffix = "";
+    $colorFuncStrSuffix = ".x$colorFuncStr$color"
+	if !blankStr($colorFuncStr);
 
     webLog "Run sql " . currDateTime() . "\n" if $verbose >= 1;
 
@@ -623,52 +635,52 @@ sub printScaffoldGraph {
     	my $cat_name = "";
     	if ( $color eq 'phylodist' ) {
     	    if ( $genome_type eq 'metagenome' ) {
-        		my $tid = getGeneHomoTaxon( $gene_oid, $taxon_oid, "assembled" );
-        		if ( $tid ) { 
-        		    $phylo_h{$tid} = $tid;
-        		    my $sql3 = "select taxon_oid, domain, phylum, ir_class from taxon " .
-        			"where taxon_oid = ? "; 
-        		    my $cur3 = execSql( $dbh, $sql3, $verbose, $tid );
-        		    my ($tid3, $domain3, $phylum3, $ir_class3) = $cur3->fetchrow();
-        		    $cur3->finish();
-        
-        		    if ( $domain3 ) { 
-            			$cat_name = "[" . substr($domain3, 0, 1) . "]" . $phylum3;
-            
-            			my $cat_id = 0; 
-            			if ( $phylo_h{$cat_name} ) { 
-            			    $cat_id = $phylo_h{$cat_name};
-            			} 
-            			else {
-            			    $phylo_cnt++; 
-            			    $phylo_h{$cat_name} = $phylo_cnt;
-            			    $cat_id = $phylo_cnt; 
-            			    $cat_id_href->{$cat_id} = $cat_name;
-            
-            			    # $data_id_href->{$cat_name} = $cat_id;
-            			    my $func_id = $cat_name;
-            			    if(exists $data_id_href->{$func_id}) { 
-                				my $href = $data_id_href->{$func_id};
-                				$href->{$cat_id} = $cat_name;
-            			    } else { 
-                				my %tmp;
-                				$tmp{$cat_id} = $cat_name;
-                				$data_id_href->{$func_id} = \%tmp; 
-            			    }
-            			} 
-            
-            			$ko_id = $cat_name;
-        		    }
-        		}
+		my $tid = getGeneHomoTaxon( $gene_oid, $taxon_oid, "assembled" );
+		if ( $tid ) { 
+		    $phylo_h{$tid} = $tid;
+		    my $sql3 = "select taxon_oid, domain, phylum, ir_class from taxon " .
+			"where taxon_oid = ? "; 
+		    my $cur3 = execSql( $dbh, $sql3, $verbose, $tid );
+		    my ($tid3, $domain3, $phylum3, $ir_class3) = $cur3->fetchrow();
+		    $cur3->finish();
+
+		    if ( $domain3 ) { 
+			$cat_name = "[" . substr($domain3, 0, 1) . "]" . $phylum3;
+
+			my $cat_id = 0; 
+			if ( $phylo_h{$cat_name} ) { 
+			    $cat_id = $phylo_h{$cat_name};
+			} 
+			else {
+			    $phylo_cnt++; 
+			    $phylo_h{$cat_name} = $phylo_cnt;
+			    $cat_id = $phylo_cnt; 
+			    $cat_id_href->{$cat_id} = $cat_name;
+
+			    # $data_id_href->{$cat_name} = $cat_id;
+			    my $func_id = $cat_name;
+			    if(exists $data_id_href->{$func_id}) { 
+				my $href = $data_id_href->{$func_id};
+				$href->{$cat_id} = $cat_name;
+			    } else { 
+				my %tmp;
+				$tmp{$cat_id} = $cat_name;
+				$data_id_href->{$func_id} = \%tmp; 
+			    }
+			} 
+
+			$ko_id = $cat_name;
+		    }
+		}
     	    }
 
     	    else {
-        		my $domain3 = $ko_id;
-        		my $phylum3 = $extra1;
-        		my $ir_class3 = $extra2;
-        		$cat_name = "[" . substr($domain3, 0, 1) . "]" . $phylum3;
-        		$cat_name .= " - " . $ir_class3 if $ir_class3 ne "";
-        		$ko_id = $cat_name;
+		my $domain3 = $ko_id;
+		my $phylum3 = $extra1;
+		my $ir_class3 = $extra2;
+		$cat_name = "[" . substr($domain3, 0, 1) . "]" . $phylum3;
+		$cat_name .= " - " . $ir_class3 if $ir_class3 ne "";
+		$ko_id = $cat_name;
     	    }
     	}
 
@@ -717,15 +729,15 @@ sub printScaffoldGraph {
                 $hint .= $tmp;
     
     	    } elsif ( $sample ne "" && $color eq "expression" ) {
-        		$hint .= "<img src='$base_url/images/colorstrip.100.png' ";
-        		$hint .= "width='200' style='left: 0px; top: 5px;' />";
-        		$hint .= " &nbsp;&nbsp;red-high to green-low expression<br/>";
-        		$hint .= "Query gene in <font color='red'><u>red</u></font>, ";
-        		$hint .= "RNAs in <u><b>black</b></u>, ";
-        		$hint .= "Pseudo genes in <u>white</u><br/>";
-        		$hint .= $tmp;
-        		$hint .= "Query gene is marked by a ";
-        		$hint .= "<font color='red'><u>red</u></font> bar<br/>";
+		$hint .= "<img src='$base_url/images/colorstrip.100.png' ";
+		$hint .= "width='200' style='left: 0px; top: 5px;' />";
+		$hint .= " &nbsp;&nbsp;red-high to green-low expression<br/>";
+		$hint .= "Query gene in <font color='red'><u>red</u></font>, ";
+		$hint .= "RNAs in <u><b>black</b></u>, ";
+		$hint .= "Pseudo genes in <u>white</u><br/>";
+		$hint .= $tmp;
+		$hint .= "Query gene is marked by a ";
+		$hint .= "<font color='red'><u>red</u></font> bar<br/>";
             } else {
                 $hint .= "Query gene in <font color='red'><u>red</u></font>, ";
                 $hint .= "RNAs in <u><b>black</b></u>, ";
@@ -750,6 +762,7 @@ sub printScaffoldGraph {
 
             my $id = "$scaffold_oid.$color.$block_coord1.x.$block_coord2";
             $id .= "$cogFuncFilterStrSuffix";
+	    $id .= "$colorFuncStrSuffix";
 
     	    print "<br/>";
 
@@ -762,11 +775,10 @@ sub printScaffoldGraph {
                 $data_id_href, $cat_id_href,   \%ids_colored, 
                 $exp_profile,  $sample
             );
-            #print "printScaffoldGraph() crisprCount=$crisprCount, block_coord1=$block_coord1, block_coord2=$block_coord2<br/>\n";
             
             $block_coord1 = $block_coord2 + 1;
             $block_coord1 =
-        		$block_coord1 < $start_coord ? $block_coord1 : $start_coord;
+		$block_coord1 < $start_coord ? $block_coord1 : $start_coord;
             $block_coord2 += $blockSize;
 
             @recs = @retain;
@@ -811,6 +823,8 @@ sub printScaffoldGraph {
 
         my $id = "$scaffold_oid.$color.$block_coord1.x.$block_coord2";
         $id .= "$cogFuncFilterStrSuffix";
+	$id .= "$colorFuncStrSuffix";
+
         my ($crisprCount, @retain) = flushRecs(
             $dbh,          $scaffold_oid, $id,
             $block_coord1, $block_coord2, $old_scf_seq_length,
@@ -820,14 +834,12 @@ sub printScaffoldGraph {
             $data_id_href, $cat_id_href,  \%ids_colored, 
             $exp_profile,  $sample
         );
-        #print "printScaffoldGraph() crisprCount=$crisprCount, block_coord1=$block_coord1, block_coord2=$block_coord2<br/>\n";
         $crispr_cnt += $crisprCount;
     }
 
     if ( $count == 0 ) {
         print "<p>\n";
-        print
-          "No genes were found to display for this coordinate range.<br/>\n";
+        print "No genes were found to display for this coordinate range.<br/>\n";
         print "</p>\n";
         my $crisprCount = printNoGenePanel(
               $dbh,               $scaffold_oid,
@@ -839,12 +851,6 @@ sub printScaffoldGraph {
     }
     webLog "Add panels " . currDateTime() . "\n" if $verbose >= 1;
     $cur->finish();
-
-    if ( $crispr_cnt > 0 ) {
-        require ScaffoldDetail;
-        ScaffoldDetail::printScaffoldCrisprDetail( $dbh, $scaffold_oid, $start_coord0, $end_coord0 );            
-        #print "printScaffoldGraph() crispr_cnt=$crispr_cnt, start_coord0=$start_coord0, end_coord0=$end_coord0<br/>\n";
-    }
 
     # Next and previous buttons.
     my $end_coord1   = $start_coord0 - 1;
@@ -865,8 +871,8 @@ sub printScaffoldGraph {
     }
     $prevUrl .= "&color=$color";
     if ( $taxon_gc_pc > -1 || $color eq "kegg" ||  
+	 $color eq "phylodist" ||
 	 $color eq "pfam" || $color eq "tigrfam") {
-        #$prevUrl .= "&color=$color";
         if ( $colorFuncStr ne "" ) {
             $prevUrl .= "&colorFuncStr=$colorFuncStr";
         }
@@ -887,7 +893,6 @@ sub printScaffoldGraph {
     if ( $taxon_gc_pc > -1 || $color eq "kegg" || 
 	 $color eq "phylodist" ||
 	 $color eq "pfam" || $color eq "tigrfam") {
-        #$nextUrl .= "&color=$color";
         if ( $colorFuncStr ne "" ) {
             $nextUrl .= "&colorFuncStr=$colorFuncStr";
         }
@@ -899,6 +904,7 @@ sub printScaffoldGraph {
 
     if ( $start_coord0 > 1 && $marker_gene eq "" && !$userEntered ) {
         print buttonUrl( $prevUrl, "&lt; Previous Range", "smbutton" );
+	print "&nbsp;";
     }
     if (    $end_coord0 < $seq_length
          && $seq_length > 0
@@ -936,8 +942,12 @@ sub printScaffoldGraph {
     	print "<script src='$top_base_url/js/overlib.js'></script>\n";
     	printStatusLine( "Loaded.", 2 ); 
     	print end_form(); 
-    	#$dbh->disconnect();
     	return;
+    }
+
+    if ( $crispr_cnt > 0 ) {
+	printCrisprDetails
+	    ( $dbh, $scaffold_oid, $start_coord0, $end_coord0 );            
     }
 
     if ( $color eq "gc" ) {
@@ -985,11 +995,11 @@ sub printScaffoldGraph {
     		. "padding-left:0.5em; margin-left:0.5em'>[";
     
             if ( $key > 0 ) {
-        		print " +";
+		print " +";
             } elsif ( $key == 0 ) {
-        		print " +2 -2";
+		print " +2 -2";
             } else {
-        		print " ";
+		print " ";
             }
     
     	    print $key if $key; # don't print if key = 0
@@ -1003,12 +1013,12 @@ sub printScaffoldGraph {
 
             if ( $key == 0 ) {
                 my $tmp = $taxon_gc_pc * 100;
-        		print "$tmp% characteristic GC% (cgc) &plusmn;2";
+		print "$tmp% characteristic GC% (cgc) &plusmn;2";
             } else {
                 if ( $key > 0 ) {
-        		    print "cgc +$key";
+		    print "cgc +$key";
                 } else {
-        		    print "cgc $key";
+		    print "cgc $key";
                 }
             }
     	    print "%";
@@ -1105,7 +1115,7 @@ sub printScaffoldGraph {
         print "</table>\n";
     	print "</div>\n";
 
-    } elsif( $color eq "pfam") {
+    } elsif ( $color eq "pfam") {
         print "<h2>Pfam Categories Coloring</h2>\n";
 
     	printYUITableHeader();
@@ -1188,7 +1198,7 @@ sub printScaffoldGraph {
         print "</table>\n";        
     	print "</div>\n";
 
-    } elsif( $color eq "tigrfam") {
+    } elsif ( $color eq "tigrfam") {
         print "<h2>TIGRfam Categories Coloring</h2>\n";
 
     	printYUITableHeader();
@@ -1228,7 +1238,7 @@ sub printScaffoldGraph {
 
             my $ck;
             $ck = "checked='checked'"
-        		if ( $all_boolean || exists( $colorKeys_hash{$id} ) );
+		if ( $all_boolean || exists( $colorKeys_hash{$id} ) );
 
             my ( $r, $g, $b );
             if (exists $ids_colored{$id}) {
@@ -1271,7 +1281,7 @@ sub printScaffoldGraph {
         print "</table>\n";                       
     	print "</div>\n";
 
-    } elsif( $color eq "phylodist") {
+    } elsif ( $color eq "phylodist") {
         print "<h2>Phylo Distribution Coloring</h2>\n";
 
     	printYUITableHeader();
@@ -1311,13 +1321,13 @@ sub printScaffoldGraph {
     
             my $ck;
             $ck = "checked='checked'"
-        		if ( $all_boolean || exists( $colorKeys_hash{$id} ) );
+		if ( $all_boolean || exists( $colorKeys_hash{$id} ) );
     
             my ( $r, $g, $b );
             if (exists $ids_colored{$id}) {
                 ( $r, $g, $b ) = $im->rgb( $ids_colored{$id} );
             } else {
-        		my $color = $id;
+		my $color = $id;
                 ( $r, $g, $b ) = $im->rgb( $color );
             }
     
@@ -1366,7 +1376,7 @@ sub printScaffoldGraph {
     	my $idx = 0;
     	my $classStr;
 
-        for my $k (@keys) {
+        foreach my $k (@keys) {
     	    last if !$k;
     
     	    $classStr = !$idx ? "yui-dt-first ":"";
@@ -1382,7 +1392,7 @@ sub printScaffoldGraph {
     	    print "<tr class='$classStr'>\n";
     	    print "<td class='$classStr'>\n";
     	    print "<div class='yui-dt-liner' style='text-align: center;'>";
-                print "<input type='checkbox' name='cogFunc' value='$k' $ck>";
+	    print "<input type='checkbox' name='cogFunc' value='$k' $ck>";
     	    print "</div>\n";
     	    print "</td>\n";
 
@@ -1458,6 +1468,51 @@ sub printScaffoldGraph {
     print end_form();
 }
 
+############################################################################
+# printCrisprDetail - Show/Hide crispr detail
+############################################################################
+sub printCrisprDetails {
+    my( $dbh, $scaffold_oid, $start_coord0, $end_coord0 ) = @_;
+            
+    print qq{
+	<script type='text/javascript'
+	        src='$YUI/build/yahoo-dom-event/yahoo-dom-event.js'>
+	</script>
+
+        <script language='JavaScript' type='text/javascript'>
+       	function showCrispr(type) {
+            if (type == 'no') {
+                document.getElementById('showcrispr').style.display = 'none';
+                document.getElementById('hidecrispr').style.display = 'block';
+            } else {
+                document.getElementById('showcrispr').style.display = 'block';
+                document.getElementById('hidecrispr').style.display = 'none';
+            }
+        }
+        </script>
+    };
+
+    print "<div id='hidecrispr' style='display: block;'>";
+    print "<input type='button' class='medbutton' name='view'"
+	. " value='Show Crispr Details'"
+	. " onclick='showCrispr(\"yes\")' />";
+    print "</div>\n";
+
+    print "<div id='showcrispr' style='display: none;'>";
+    print "<input type='button' class='medbutton' name='view'"
+	. " value='Hide Crispr Details'"
+	. " onclick='showCrispr(\"no\")' />";
+    print "<p>";
+    
+    require ScaffoldDetail;
+    ScaffoldDetail::printScaffoldCrisprDetail
+	( $dbh, $scaffold_oid, $start_coord0, $end_coord0 );            
+    
+    print "</p>";
+    print "</div>";
+    print "<br/>";
+}
+
 sub printYUITableHeader {
     print <<YUI;
     
@@ -1528,6 +1583,7 @@ sub flushRecs {
     webLog ">>> Panel id='$id' $scf_start_coord $scf_end_coord\n"
       if $verbose >= 5;
     printStatusLine("Loading ...");
+
     my @cogFuncs  = keys(%cogFuncFilter);
     my $nCogFuncs = @cogFuncs;
 
@@ -1659,7 +1715,7 @@ sub flushRecs {
                 if ( $kegg_id ne "" ) {
                     # for color selection table
                     $ids_colored_href->{$kegg_id} = $color;
-                } elsif($ko_id ne "") {
+                } elsif ($ko_id ne "") {
                     #webLog("===== $ko_id \n");
                     # unclassified pfam id
                     $ids_colored_href->{"z"} = $sp->{color_cyan};
@@ -1686,7 +1742,7 @@ sub flushRecs {
                 if ( $cat_id ne "" ) {
                     # for color selection table
                     $ids_colored_href->{$cat_id} = $color;
-                } elsif($ko_id ne "") {
+                } elsif ($ko_id ne "") {
                     #webLog("===== $ko_id \n");
                     # unclassified pfam id
                     $ids_colored_href->{"z"} = $sp->{color_cyan};
@@ -1714,7 +1770,7 @@ sub flushRecs {
                 if ( $cat_id ne "" ) {
                     # for color selection table
                     $ids_colored_href->{$cat_id} = $color;
-                } elsif($ko_id ne "") {
+                } elsif ($ko_id ne "") {
                     #webLog("===== $ko_id \n");
                     # unclassified tigrfam id
                     $ids_colored_href->{"z"} = $sp->{color_cyan};
@@ -1737,12 +1793,12 @@ sub flushRecs {
                     last;
                 }
                 #$color = HtmlUtil::getTigrfamCatColor($sp, $cat_id); 
-        		$color = $cat_id;
+		$color = $cat_id;
 
                 if ( $cat_id ne "" ) {
                     # for color selection table
                     $ids_colored_href->{$cat_id} = $color;
-                } elsif($ko_id ne "") {
+                } elsif ($ko_id ne "") {
                     # unclassified tigrfam id
                     $ids_colored_href->{"z"} = $sp->{color_cyan};
                     $color = $sp->{color_cyan};
@@ -1756,7 +1812,7 @@ sub flushRecs {
                     $color = $sp->{color_yellow};
                 }
             } elsif ( $color_view eq "expression" ) {
-        		$color = getExpressionColor( $sp, $gene_oid, $exp_profile );
+		$color = getExpressionColor( $sp, $gene_oid, $exp_profile );
     	    }
 
             if ( $gene_oid eq $marker_gene ) {
@@ -1819,7 +1875,7 @@ sub flushRecs {
     	}
 
         webLog "gene: $gene_oid $start_coord $end_coord $strand\n"
-          if $verbose >= 5;
+	    if $verbose >= 5;
         if ( $gene_oid eq "phantom" ) {
             $sp->addPhantomGene
 		( $gene_oid, $start_coord, $end_coord, $strand );
@@ -1858,7 +1914,7 @@ sub flushRecs {
             $sp->addBox
 		( $start_coord, $end_coord, $sp->{color_blue},
 		  $strand,      "Gene in Gene Cart $label", $gene_oid, );
-        } elsif(exists $protein_href->{$gene_oid} &&
+        } elsif (exists $protein_href->{$gene_oid} &&
 		$gene_oid ne $marker_gene) {
             # gene with protein
             $sp->addBox
@@ -1948,12 +2004,12 @@ sub flushRecs {
 				      $sample );
     }
 
-    ScaffoldDataUtil::addNxFeatures( $dbh, $scaffold_oid, $sp, "+",
-			    $scf_start_coord, $scf_end_coord );
-    my $crisprCount = ScaffoldDataUtil::addCrisprRepeats( $dbh, $scaffold_oid, $sp, "+",
-			 $scf_start_coord, $scf_end_coord );
-    ScaffoldDataUtil::addIntergenic( $dbh, $scaffold_oid, $sp, "+",
-			    $scf_start_coord, $scf_end_coord );
+    ScaffoldDataUtil::addNxFeatures
+	( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord, $scf_end_coord );
+    my $crisprCount = ScaffoldDataUtil::addCrisprRepeats
+	( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord, $scf_end_coord );
+    ScaffoldDataUtil::addIntergenic
+	( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord, $scf_end_coord );
 
     my $s = $sp->getMapHtml("overlib");
     print "$s\n";
@@ -2445,7 +2501,6 @@ sub printScaffoldDna {
 
     #}
     printStatusLine( "Loaded.", 2 );
-    #$dbh->disconnect();
 }
 
 ############################################################################  
@@ -2676,10 +2731,10 @@ sub printNoGenePanel {
         $sp->addPhantomGene( $gene_oid, $phantom_start_coord,
                              $phantom_end_coord, $phantom_strand );
     }
-    ScaffoldDataUtil::addNxFeatures( $dbh, $scaffold_oid, $sp, "+",
-			    $scf_start_coord, $scf_end_coord );
-    my $crisprCount = ScaffoldDataUtil::addCrisprRepeats( $dbh, $scaffold_oid, $sp, "+",
-			 $scf_start_coord, $scf_end_coord );
+    ScaffoldDataUtil::addNxFeatures
+	( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord, $scf_end_coord );
+    my $crisprCount = ScaffoldDataUtil::addCrisprRepeats
+	( $dbh, $scaffold_oid, $sp, "+", $scf_start_coord, $scf_end_coord );
     my $s = $sp->getMapHtml("overlib");
     print "$s\n";
     
@@ -2729,7 +2784,7 @@ sub printAlignment {
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid, $ext_accession );
     my ( $scaffold_oid, $scf_seq_length ) = $cur->fetchrow();
     $cur->finish();
-    #$dbh->disconnect();
+
     if ( $scaffold_oid eq "" || $scf_seq_length == 0 ) {
         warn("printAlignement: scaffold for '$scaffold_id'\n");
         return;

@@ -85,7 +85,7 @@ sub run {
 
 	my $rslts = $self->render( $self->args );
 	$rslts->{settings} = $self->config;
-	$rslts->{page_wrapper} = 'layouts/contents_only.html.tt';
+	$rslts->{page_wrapper} = 'layouts/contents_only.tt';
 	$rslts = AppCore::get_tmpl_vars({ core => $self, output => $rslts });
 
 	print { $self->args->outfile } $self->render_template({

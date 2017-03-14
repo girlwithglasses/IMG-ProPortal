@@ -2,7 +2,7 @@
 	title = 'IMG ProPortal: Location Map';
 %]
 <h2>Sample Distribution by Depth</h2>
-[%	INCLUDE inc/show_data_set_selection_section.html.tt %]
+[%	INCLUDE inc/show_data_set_selection_section.tt %]
 <p>
 	There are [% number %] public genomes, of which [% displayed %] are displayed on the map below. Only public projects that have provided longitude latitude coordinates are displayed; if the coordinates are incorrect, the project will not appear on the map.
 </p>

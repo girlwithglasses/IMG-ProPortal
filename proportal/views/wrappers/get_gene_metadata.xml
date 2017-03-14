@@ -1,6 +1,6 @@
 <tool id="get_gene_metadata" name="Get gene metadata" version="0.1.0">
   <description>Retrieve the details for a set of gene IDs</description>
-  <command>source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc; DANCER_ENVIRONMENT="galaxy" perl /global/homes/a/aireland/webUI/proportal/script/galaxy/get_gene_metadata.pl
+  <command>source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc; DANCER_ENVIRONMENT="proportal-galaxy" perl /global/homes/a/aireland/webUI/proportal/script/galaxy/get_gene_metadata.pl
 --infile
 #if $source.reference_source_selector == "paste":
 "$infile" --infile_format "tsv"

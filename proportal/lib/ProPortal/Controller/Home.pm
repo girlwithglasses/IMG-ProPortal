@@ -13,7 +13,7 @@ extends 'ProPortal::Controller::Filtered';
 # 			class => 'ProPortal::Controller::Base',
 # 			page_id => 'proportal',
 # 			tmpl => 'pages/proportal/home.tt',
-# 			page_wrapper => 'layouts/default_wide.html.tt',
+# 			page_wrapper => 'layouts/default_wide.tt',
 # 			tmpl_includes => {
 # 				tt_scripts => qw( data_type )
 # 			},
@@ -40,7 +40,7 @@ has '+tmpl' => (
 );
 
 has '+page_wrapper' => (
-	default => 'layouts/default_wide.html.tt'
+	default => 'layouts/default_wide.tt'
 );
 
 =head3 stats
@@ -54,8 +54,7 @@ sub _render {
 	my $data;
 
 	# news query (only for logged-in users...)
-	local $@;
-	my $news = eval { $self->_core->run_query({ query => 'news' }); };
+	my $news = $self->_core->run_query({ query => 'news' });
 
 	my $stats;
 
@@ -153,10 +152,10 @@ sub _render {
 			-order_by => [ qw( ecosystem_type ) ],
 			-where => {
 				ecosystem_type => 'Marine',
-				proportal_subset => 'metagenome',	
+				proportal_subset => 'metagenome',
 			},
-		);	
-		
+		);
+
 	return { results => {
 		news => $news // undef,
 		stats => $stats

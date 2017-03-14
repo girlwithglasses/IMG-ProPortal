@@ -37,8 +37,6 @@ prefix '/menu' => sub {
 		my $content = menu_maker( 'menu/' . $p );
 		my $data;
 
-		debug 'p: ' . $p;
-
 		if ( $menu_page_subs->{$p} ) {
 			my $rtn = $menu_page_subs->{$p}->();
 			$content->{tmpl_includes}{content_tmpl} = $rtn->{tmpl};

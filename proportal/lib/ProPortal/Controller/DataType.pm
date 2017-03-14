@@ -47,9 +47,16 @@ sub _render {
 	# arrange by genome type, dataset_type, proportal_subset, and then by ecosystem subtype
 
 	for (@$res) {
+		local $@;
+		eval {
 		push @{$data->{subset_dataset_type}{ $_->{proportal_subset} }{ $_->{dataset_type} }}, $_->{taxon_oid};
 		push @{$data->{dataset_type_subset}{ $_->{dataset_type} }{ $_->{proportal_subset} }}, $_->{taxon_oid};
 		$data->{ix}{ $_->{taxon_oid} } = $_;
+		};
+		if ($@) {
+			say Dumper $_;
+			die 'error with ' . $_ . ": " . $@ ;
+		}
 	}
 
 	say 'Sorted. Returning at ' . Time::HiRes::gettimeofday;

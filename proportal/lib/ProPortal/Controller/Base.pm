@@ -1,7 +1,6 @@
 package ProPortal::Controller::Base;
 
 use IMG::Util::Import 'Class';
-
 with 'IMG::App::Role::ErrorMessages';
 
 =head3 _core
@@ -57,7 +56,7 @@ the layout template for the page
 
 has 'page_wrapper' => (
 	is => 'lazy',
-	default => 'layouts/default.html.tt'
+	default => 'layouts/default.tt'
 );
 
 =head3 tmpl
@@ -90,26 +89,25 @@ has 'tmpl_includes' => (
 	default => sub { return {}; }
 );
 
-sub BUILDARGS {
-	my $class = shift;
-	my $args = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // {};
-
-	say 'BUILDARGS class: ' . Dumper $class;
-#	say 'BUILDARGS args:  ' . Dumper $args;
-
-	return $args;
-}
-
-sub BUILD {
-	my ( $self, $args ) = @_;
-	say 'running controller BUILD!';
-	say 'self: ' . $self;
-#	say 'args: ' . Dumper $args;
-	if ( $args->{controller_role} ) {
-		$self->add_controller_role( $args->{controller_role} );
-	}
-#	say 'post controller BUILD self: ' . Dumper $self;
-}
+# sub BUILDARGS {
+# 	my $class = shift;
+# 	my $args = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // {};
+#
+# 	log_debug { 'BUILDARGS class: ' . Dumper $class };
+# 	log_debug { 'BUILDARGS args:  ' . Dumper $args };
+#
+# 	return $args;
+# }
+#
+# sub BUILD {
+# 	my ( $self, $args ) = @_;
+# 	log_debug { 'running ' . $self . ' BUILD!' };
+# #	log_debug { 'args: ' . Dumper $args };
+# 	if ( $args->{controller_role} ) {
+# 		$self->add_controller_role( $args->{controller_role} );
+# 	}
+# #	log_debug { 'post controller BUILD self: ' . Dumper $self };
+# }
 
 =head3 render
 

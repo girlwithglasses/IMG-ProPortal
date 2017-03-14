@@ -14,7 +14,7 @@ with 'IMG::Model::DataManager';
 # 			page_id => 'taxon_details',
 # 			tmpl => 'pages/taxon_details.tt',
 # 			tmpl_includes => {},
-# 			page_wrapper => 'layouts/default_wide.html.tt',
+# 			page_wrapper => 'layouts/default_wide.tt',
 # 		};
 # 	}
 # );
@@ -25,7 +25,7 @@ has '+page_id' => (
 );
 
 has '+page_wrapper' => (
-	default => 'layouts/default_wide.html.tt'
+	default => 'layouts/default_wide.tt'
 );
 
 =head3 render
@@ -47,11 +47,40 @@ sub _render {
 		});
 	}
 
-	my $res = $self->_core->gene_details({
-		where => $args
+	# get the genes
+	my $genes = $self->_core->run_query({
+		query => 'gene_list',
+		where => {
+			gene_oid => $args->{gene_oid}
+		}
 	});
 
-	say 'results: ' . Dumper $res;
+	if ( ! scalar @$genes ) {
+		$self->choke({
+			err => 'no_results',
+			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )
+		});
+	}
+
+	my $tax_h;
+	for ( @$genes ) {
+		say 'gene: ' . Dumper $_;
+		$tax_h->{ $_->{taxon} }++;
+	}
+
+	say 'taxon: ' . $genes->[0]{taxon};
+
+	my @arr = keys %$tax_h;
+
+	# make sure the taxon is public; get basic info
+	my $taxon = $self->_core->run_query({
+		query => 'taxon_name_public',
+		where => {
+			taxon_oid => $genes->[0]{taxon}
+		}
+	});
+
+	say 'results: ' . Dumper $taxon;
 
 # 	make sure the taxon is public; get basic info
 # 	my $taxon = $self->_core->run_query({
@@ -61,14 +90,8 @@ sub _render {
 # 		}
 # 	});
 
-	if ( ! $res->{gene} ) {
-		$self->choke({
-			err => 'no_results',
-			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )
-		});
-	}
 
-	return { results => $res };
+	return { results => { taxon => $taxon->[0], gene => $genes->[0] } };
 
 }
 

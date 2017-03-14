@@ -2,7 +2,7 @@
 # MainPageStats - Statistics for genomes in main/home page.
 #    --es 02/01/2005
 #
-# $Id: MainPageStats.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: MainPageStats.pm 36635 2017-03-02 21:05:04Z klchu $
 ############################################################################
 package MainPageStats;
 my $section = "MainPageStats";
@@ -410,8 +410,7 @@ and tx.OBSOLETE_FLAG = 'No'
 and tx.PHYLUM is not null
 and tx.PHYLUM != 'unclassified'
 and tx.PHYLUM != 'Unclassified'
-and tx.jgi_project_id > 0
-and tx.jgi_project_id is not null
+and tx.seq_center like '\%Joint Genome\%'
 $imgclause
 $urclause
 group by tx.PHYLUM,  p.SEQUENCING_STRATEGY
@@ -507,8 +506,7 @@ sub getJgiSeqCounts {
     my $sql = qq{
 select t.domain, count(*)
 from taxon t
-where t.jgi_project_id > 0
-and t.jgi_project_id is not null
+where t.seq_center like '\%Joint Genome\%'
 and t.OBSOLETE_FLAG = 'No'
 $imgclause
 group by t.domain

@@ -33,7 +33,7 @@ Some queries have extra properties, specific to that query.
 
 All ProPortal HTML content is stored in template files, held in [`proportal/views/`](../views/).
 
-Most pages use a template in [`views/pages/`](../views/pages/) with a name that corresponds to the page ID; e.g. the `clade` page (ID `proportal/clade`) uses the template [`pages/proportal/clade.tt`](../views/pages/proportal/clade.tt). By default, pages use the wrapper [`layouts/default.html.tt`](../views/layouts/default.html.tt), which adds the page header, footer, menus, breadcrumbs, and other shared elements to the page. To specify a different wrapper, set the template variable `page_wrapper` to the appropriate layout.
+Most pages use a template in [`views/pages/`](../views/pages/) with a name that corresponds to the page ID; e.g. the `clade` page (ID `proportal/clade`) uses the template [`pages/proportal/clade.tt`](../views/pages/proportal/clade.tt). By default, pages use the wrapper [`layouts/default.tt`](../views/layouts/default.tt), which adds the page header, footer, menus, breadcrumbs, and other shared elements to the page. To specify a different wrapper, set the template variable `page_wrapper` to the appropriate layout.
 
 Reusable page components are stored in [`views/inc/`](../views/inc/).
 

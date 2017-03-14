@@ -3,7 +3,7 @@
 #
 #	Core attributes, etc.
 #
-#	$Id: Core.pm 36174 2016-09-15 13:29:13Z aireland $
+#	$Id: Core.pm 36639 2017-03-03 15:52:57Z aireland $
 ############################################################################
 package IMG::App::Core;
 
@@ -38,36 +38,5 @@ has 'user' => (
 		return IMG::Model::Contact->new( @_ );
 	},
 );
-
-# has 'http_params' => (
-# 	is => 'lazy',
-# 	isa => HashRef,
-# );
-#
-# has 'cgi' => (
-# 	is => 'ro',
-# 	isa => InstanceOf['CGI'],
-# 	predicate => 1,
-# );
-#
-# has 'psgi_req' => (
-# 	is => 'ro',
-# 	isa => InstanceOf['Dancer2::Core::Request'],
-# 	predicate => 1,
-# );
-
-# sub _build_http_params {
-#
-# 	my $self = shift;
-#
-# 	if ( $self->has_psgi_req ) {
-# 		return $self->psgi_req->env;
-# 	}
-# 	elsif ( $self->has_cgi ) {
-# 		my %params = $self->cgi->Vars;
-# 		return \%params;
-# 	}
-# 	return {};
-# }
 
 1;

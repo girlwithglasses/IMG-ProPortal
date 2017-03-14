@@ -4,6 +4,7 @@ use IMG::Util::Import 'MooRole';
 use ProPortal::Util::Factory;
 use ProPortal::Controller::Base;
 use Scalar::Util qw( blessed );
+#use IMG::App::Role::Logger;
 #use Dancer2;
 
 has 'controller' => (
@@ -12,12 +13,12 @@ has 'controller' => (
 	predicate => 1,
 	clearer => 1,
 	coerce => sub {
-		say 'running coerce controller';
-#		say Dumper \@_;
+#		my @args = @_;
+		log_debug { 'running coerce controller' };
+#		log_debug { Dumper \@args };
 		if ( @_ ) {
 
 			if ( 1 == scalar @_ ) {
-
 				# object
 				if ( blessed $_[0] ) {
 					return shift;
@@ -25,6 +26,7 @@ has 'controller' => (
 				# class name
 				elsif ( ! ref $_[0] ) {
 					# must be a class, not a role
+				#	log_debug { 'single scalar arg' };
 					IMG::Util::Factory::load_module( $_[0] );
 					return +shift->new()
 				}
@@ -39,20 +41,19 @@ has 'controller' => (
 					return $href;
 				}
 			}
-#			say 'found ' . ( scalar @_ ) . ' args. About to shift...';
+			log_debug { 'found ' . ( scalar @_ ) . ' args. About to shift...' };
 			my $cl = shift;
-#			say Dumper $_[0];
+#			log_debug { Dumper $_[0] };
 			return $cl->new( %{ +shift } );
 		}
 		die 'No controller supplied!';
 	},
 	default => sub {
-		say 'running controller default';
-#		say Dumper \@_;
-
 		my $self = shift;
+		log_debug { 'running controller default' };
+
 		if ( $self->can( 'controller_args' ) ) {
-			say 'I can controller args! ' . Dumper $self->controller_args;
+			log_debug { 'I can controller args! ' . Dumper $self->controller_args };
 
 			return $self->_set_controller( $self->controller_args );
 		}
@@ -64,36 +65,20 @@ has 'controller' => (
 );
 
 # sub _build_controller {
-# 	say 'Running build controller!';
-# #	say 'args: ' . Dumper( \@_ );
+# 	log_debug { 'Running build controller!' };
+# #	log_debug { 'args: ' . Dumper( \@_ ) };
 # 	return ProPortal::Controller::Base->new();
 # }
 
-sub BUILD {
-	my ( $self, $args ) = @_;
-	say 'running controller BUILD!';
-#	say 'self: ' . $self;
-#	say 'args: ' . Dumper $args;
-	# is this for Galaxy modules?
-	if ( $args->{controller_role} ) {
-		say 'found a controller role!';
-		$self->add_controller_role( $args->{controller_role} );
-	}
-	$self->controller->_core( $self );
-#	say 'post BUILD self: ' . Dumper $self;
-}
-
 sub add_controller {
 	my $self = shift;
-	say 'running add_controller';
-#	confess 'caller: ' . caller;
-	my $class = $self->_prepare_controller( @_ );
-#	if ( $class !~ /Controller/ ) {
-#		$class = ProPortal::Util::Factory::_rename( 'Controller', $class );
-#	}
-#	IMG::Util::Factory::load_module( $class );
-	$self->_set_controller( $class );
-	$self->controller->_core( $self );
+	my $class = $self->_prepare_controller( shift );
+	log_debug { 'running _set_controller' };
+
+	$self->_set_controller({ class => $class, _core => $self });
+
+#	log_debug { 'controller now: ' . Dumper $self->controller };
+
 	if ( $self->controller->can('controller_args') ) {
 		$self->_set_controller( $self->controller->controller_args );
 	}
@@ -103,22 +88,17 @@ sub add_controller {
 
 sub add_controller_role {
 	my $self = shift;
-	say 'running add_controller_role';
-	my $role = $self->_prepare_controller( @_ );
-#	if ( $role !~ /Controller/ ) {
-#		$role = ProPortal::Util::Factory::_rename( 'Controller', $role );
-#	}
-#	IMG::Util::Factory::load_module( $role );
-
+	log_debug { 'running add_controller_role' };
+	my $role = $self->_prepare_controller( shift );
 	Role::Tiny->apply_roles_to_object( $self, $role );
 
-	say 'self now: ' . Dumper $self;
+	log_debug { 'self now: ' . Dumper $self };
 
 	if ( $self->controller_args ) {
 		$self->_set_controller( $self->controller_args );
 	}
 	$self->controller->_core( $self );
-#	say 'self now: ' . Dumper $self;
+#	log_debug { 'self now: ' . Dumper $self };
 
 	return $self;
 }
@@ -130,7 +110,6 @@ sub _prepare_controller {
 	if ( $module !~ /Controller/ ) {
 		$module = ProPortal::Util::Factory::_rename( 'Controller', $module );
 	}
-	IMG::Util::Factory::load_module( $module );
 	return $module;
 }
 

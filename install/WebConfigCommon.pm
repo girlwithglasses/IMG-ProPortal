@@ -2,7 +2,7 @@
 # NEW for 3.4  - Common WebConfig param between all sites
 # Params can be overridden in the site's Webconfig.pm
 #
-# $Id: WebConfigCommon.pm 36314 2016-10-13 06:00:20Z aireland $
+# $Id: WebConfigCommon.pm 36635 2017-03-02 21:05:04Z klchu $
 #
 #
 package WebConfigCommon;
@@ -52,8 +52,8 @@ sub common {
     $e->{common_tmp_dir} = "/global/projectb/scratch/img/www-data/service/tmp";
 
     # version
-    $e->{img_version}    = "4.560";
-    $e->{copyright_year} = "2016";
+    $e->{img_version}    = "4.570";
+    $e->{copyright_year} = "2017";
     $e->{version_year}   = "Version " . $e->{img_version} . " Mar. " . $e->{copyright_year};
 
     # --------------------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ local $@;
 
 eval {
 	ProPortal::App::GetGeneMetadata->new(
-		config => config,
+		dancer_config => config,
 		args => $args,
 	)->run();
 };

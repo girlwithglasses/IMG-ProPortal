@@ -29,7 +29,7 @@ prefix '/jbrowse' => sub {
 	# temporary fix for JBrowse path issues
 
 #	get qr{/(img|plugins)/.*?} => sub {
-#		my $path = request->dispatch_path;
+#		my $path = request->path;
 #		$path =~ s!/jbrowse/!/jbrowse_assets/!;
 #		redirect $path;
 #	};
@@ -63,7 +63,7 @@ prefix '/jbrowse' => sub {
 	# temporary fix for JBrowse path issues
 
 #	get qr{/(img|plugins)/.*?} => sub {
-#		my $path = request->dispatch_path;
+#		my $path = request->path;
 #		$path =~ s!/jbrowse/!/jbrowse_assets/!;
 #		redirect $path;
 #	};

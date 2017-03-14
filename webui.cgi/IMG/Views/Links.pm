@@ -1103,31 +1103,20 @@ my $dynamic_links = {
 		return {
 			style => 'new',
 			fn => sub {
-				my $argh = shift;
+				my $h = shift;
 				return
 				( $base_url_h->{jbrowse}
 				? $base_url_h->{jbrowse}
 				: $base_url_h->{base_url} . '/jbrowse' )
 				.
-				( $argh && $argh->{params}
-				? '/' . $argh->{params}{taxon_oid}
+				( $h && $h->{params}
+				? '/' . $h->{params}{taxon_oid}
 				: '' );
 			}
 		}
 	},
 
-	gene_list => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				return $_[0]->{base} . 'gene/list' .
-				( $_[0] && $_[0]->{params}
-				? '/' . shift->{params}{taxon_oid}
-				: '' );
-			},
-		};
-	},
-
+	# /gene/details/12345678
 	gene_details => sub {
 		return {
 			style => 'new',
@@ -1140,19 +1129,46 @@ my $dynamic_links = {
 		};
 	},
 
-	# example.com/taxon/1234568
-	taxon => sub {
+	# /taxon/details/1234568
+	taxon_details => sub {
 		return {
 			style => 'new',
-			url_h => {
-				section => 'TaxonDetail',
-				page => 'taxonDetail',
-				taxon_oid => ''
-			},
 			fn => sub {
-				return $_[0]->{base} . 'taxon' .
+				return $_[0]->{base} . 'taxon/details' .
 				( $_[0] && $_[0]->{params}
 				? '/' . shift->{params}{taxon_oid}
+				: '' );
+			},
+		};
+	},
+
+	# /gene/list/<criteria>
+	gene_list => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				my $h = shift;
+				return $h->{base} . 'gene/list' .
+				( $h->{params}
+				? '/' . join "&amp;", map {
+						$_ . "=" . escape( $h->{params}{$_} )
+					} keys %{$h->{params}}
+				: '' );
+			},
+		};
+	},
+
+	# /taxon/list/<criteria>
+	taxon_list => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				my $h = shift;
+				return $h->{base} . 'taxon/list' .
+				( $h->{params}
+				? '/' . join "&amp;", map {
+						$_ . "=" . escape( $h->{params}{$_} )
+					} keys %{$h->{params}}
 				: '' );
 			},
 		};
@@ -1384,11 +1400,11 @@ sub get_img_link {
 }
 
 sub escape {
-    my $toencode = shift;
-    return undef unless defined($toencode);
-    utf8::encode($toencode);
-    $toencode=~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
-    return $toencode;
+	my $toencode = shift;
+	return undef unless defined($toencode);
+	utf8::encode($toencode);
+	$toencode=~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+	return $toencode;
 }
 
 
@@ -1402,7 +1418,7 @@ To use in a template, specify the link ID as the first argument, and any extra p
 
 # http://example.com/cgi-bin/main.cgi?section=MyIMG&amp;page=preferences
 
-[% link( 'taxon', { taxon_oid => 1234567 } %]
+[% link( 'taxon_details', { taxon_oid => 1234567 } %]
 
 # http://example.com/cgi-bin/main.cgi?section=TaxonDetail&amp;page=taxonDetail&taxon_oid=1234567
 

@@ -19,7 +19,7 @@ use Getopt::Long;
 use ProPortal::App::JBrowseGalaxyPrep;
 use Dancer2;
 
-say '@INC: ' . join "\n", @INC;
+#say '@INC: ' . join "\n", @INC;
 
 my $args = {};
 my $opt = GetOptions( $args,

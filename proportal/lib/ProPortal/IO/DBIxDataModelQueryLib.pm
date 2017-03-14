@@ -1,6 +1,6 @@
 package ProPortal::IO::DBIxDataModelQueryLib;
 
-use IMG::Util::Import 'Class';
+use IMG::Util::Import 'MooRole';
 
 use Time::HiRes;
 use IMG::Model::UnitConverter;
@@ -9,11 +9,11 @@ use DBIx::DataModel;
 use DataModel::IMG_Core;
 use DataModel::IMG_Gold;
 
-has _core => (
-	is => 'ro',
-	weak_ref => 1,
-	required => 1
-);
+# has _core => (
+# 	is => 'ro',
+# 	weak_ref => 1,
+# 	required => 1
+# );
 
 =head3 clade
 
@@ -26,7 +26,7 @@ No additional arguments
 sub clade {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
 			-where    => {
@@ -47,12 +47,13 @@ Collect all clades from the ProPortal set
 sub distinct_clade {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns => [ 'distinct genus || clade', 'clade', 'clade|generic_clade', 'genus' ],
+			-columns => [ qw( clade clade|generic_clade genus ) ],
 			-where    => {
-				clade => { '!=', undef },
+				clade => { '!=' => undef },
 			},
+			-group_by => [ qw( clade genus ) ],
 			-result_as => 'statement'
 		);
 }
@@ -70,7 +71,7 @@ Queries the GoldTaxonVw table, which is restricted to public taxa
 sub location {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype proportal_subset ) ],
 			-where    => {
@@ -80,6 +81,55 @@ sub location {
 			-order_by => [ qw( latitude longitude genome_type taxon_display_name ) ],
 			-result_as => 'statement',
 		);
+}
+
+
+=head3 longhurst_counts
+
+
+
+=cut
+
+sub longhurst_counts {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+	->select(
+		-columns  => [ 'count(taxon_oid)|count', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
+		-group_by => [ qw( longhurst_code longhurst_description ) ],
+		-order_by => [ 'longhurst_description' ],
+		-where => {
+			proportal_subset => { '!=', undef },
+#				is_public => 'Yes'
+		},
+		-result_as => 'statement'
+#		-result_as => ['hashref' => 'longhurst_description' ]
+	);
+
+}
+
+=head3 longhurst
+
+
+
+=cut
+
+sub longhurst {
+	my $self = shift;
+
+	return $self->schema('img_core')->table('GoldTaxonVw')
+	->select(
+		-columns  => [ 'taxon_oid', 'taxon_display_name', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
+#		-group_by => [ qw( longhurst_code longhurst_description ) ],
+		-order_by => [ 'longhurst_description', 'taxon_display_name' ],
+		-where => {
+			proportal_subset => { '!=', undef },
+#				is_public => 'Yes'
+		},
+		-result_as => 'statement'
+#		-result_as => ['hashref' => 'longhurst_description' ]
+	);
+
 }
 
 
@@ -94,7 +144,7 @@ No additional arguments
 sub ecosystem {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain genus ), map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ecotype geo_location ) ],
 			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem taxon_display_name ) ],
@@ -111,7 +161,7 @@ Query for ecotype
 sub ecotype {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ qw( taxon_display_name taxon_oid clade clade|generic_clade ecotype ) ],
 			-where => {
@@ -124,7 +174,7 @@ sub ecotype {
 
 =head3 taxon_oid_display_name
 
-Query from data_type_graph
+Pulls in data from VW_GOLD_TAXON table
 
 @param  $args   -
 
@@ -177,10 +227,24 @@ proportal_subset
 sub taxon_oid_display_name {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ '*' ],
 			-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
+			-result_as => 'statement',
+		);
+}
+
+
+sub taxon_dataset_type {
+	my $self = shift;
+
+	# fetch
+
+	return $self->schema('img_core')->table('GoldDataTypeVw')
+		->select(
+			-columns  => [ '*' ],
+			-order_by => [ qw( dataset_type genome_type proportal_subset taxon_display_name ) ],
 			-result_as => 'statement',
 		);
 }
@@ -200,7 +264,7 @@ proportal_subset => ..., count => ...
 sub subset_stats {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns => [ 'proportal_subset', 'count(distinct taxon_oid)|count' ],
 			-group_by => 'proportal_subset',
@@ -213,7 +277,7 @@ sub subset_stats {
 sub metagenomes_by_ecosystem {
 	my $self = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
 			-columns  => [ 'count(distinct taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-group_by => [ qw( ecosystem ecosystem_category ) ],
@@ -240,7 +304,7 @@ sub taxon_metadata {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->_core->schema('img_core')->table('GoldTaxonVw')
+	return $self->schema('img_core')->table('GoldTaxonVw')
 	->select(
 		-columns  => [ '*' ],
 		-where    => $args->{where},
@@ -248,30 +312,6 @@ sub taxon_metadata {
 	);
 }
 
-
-=cut
-
-=head3 taxon_details
-
-Taxon details from taxon and gold_sequencing_project tables
-
-=cut
-
-sub taxon_details {
-
-	my $self = shift;
-	my $args = shift;
-	my $data;
-
-	# taxonomic info
-	return $self->_core->schema('img_core')->join( qw[ GoldSequencingProject => taxa => taxon_stats ] )
-
-		->select(
-			-columns => [ '*' ],
-			-where => { 'taxon.taxon_oid' => $args->{taxon_oid} },
-			-result_as => 'statement',
-		);
-}
 
 =head3 gene_oid_taxon_oid
 
@@ -292,9 +332,31 @@ sub gene_oid_taxon_oid {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->_core->schema('img_core')->table('Gene')
+	return $self->schema('img_core')->table('Gene')
 		->select(
 			-columns => [ qw( gene_oid taxon|taxon_oid ) ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
+=head3 gene_list
+
+Get all genes by taxon_oid (or other criterion)
+
+@param taxon_oid => nnnnnnnnn
+
+@return arrayref of gene objects
+
+=cut
+
+sub gene_list {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_core')->table('Gene')
+		->select(
+			-columns => [ '*' ],
 			-where   => $args->{where},
 			-result_as => 'statement'
 		);
@@ -310,7 +372,7 @@ Given an array of gene IDs, get the gene data
 
 @return arrayref of results in the format
 
-	{ gene_oid => #####, taxon_oid => ##### }
+	{ gene => #####, taxon => ##### }
 
 =cut
 
@@ -319,13 +381,75 @@ sub gene_details {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->_core->schema('img_core')->table('Gene')
+#	my $gene = $self->schema('img_core')->table('PPGeneDetails')
+	my $gene = $self->schema('img_core')->table('Gene')
 		->select(
-			-columns => [ qw( gene_oid gene_symbol gene_display_name product_name locus_tag locus_type scaffold description taxon|taxon_oid obsolete_flag ) ],
+			-columns => [ '*' ],
 			-where   => $args->{where},
 			-result_as => 'statement'
-		);
+		)->all;
+
+	my %tax_h;
+	if ( scalar @$gene > 0 ) {
+		# make sure that we have permission to view the gene
+		for ( @$gene ) {
+			$tax_h{ taxon_oid } = $_->{taxon};
+		}
+	}
+
+	my $results = $self->taxon_name_public({ where => \%tax_h })->all;
+
+	if ( scalar @$results > 0) {
+		if ( $results->[0]->{viewable} eq 'private' ) {
+			# dies if there is a permissions error
+			$self->choke({
+				err => 'private_data'
+			});
+		}
+	}
+
+	return { gene => $gene->[0] // undef, taxon => $results->[0] // undef };
 }
+
+=head3 taxon_details
+
+Taxon details from taxon and gold_sequencing_project tables
+
+=cut
+
+sub taxon_details {
+
+	my $self = shift;
+	my $args = shift;
+
+	my $results = $self->taxon_name_public( $args )->all;
+
+	if ( scalar @$results > 0) {
+		if ( $results->[0]->{viewable} eq 'private' ) {
+			# dies if there is a permissions error
+			$self->choke({
+				err => 'private_data'
+			});
+		}
+
+		# otherwise, return taxonomic info
+		return $self->schema('img_core')->join( qw[ GoldSequencingProject <=> taxa ] )
+		->select(
+			-columns => [ '*' ],
+			-where => { 'taxon.taxon_oid' => $args->{where}{taxon_oid} },
+			-result_as => 'statement',
+		);
+	}
+
+	$self->choke({
+		err => 'invalid',
+		subject => $args->{where}{taxon_oid},
+		type => 'taxon_oid'
+	});
+
+}
+
+
 
 =head3 taxon_name_public
 
@@ -335,7 +459,11 @@ sub gene_details {
 
 @return arrayref of results in the format
 
-	{ taxon_oid => #####, taxon_display_name => #####, is_public => 'Yes|No' }
+	{	taxon_oid => #####,
+		taxon_display_name => #####,
+		is_public => 'Yes|No',
+		viewable => 'public|private|accessible'
+	}
 
 =cut
 
@@ -343,12 +471,39 @@ sub taxon_name_public {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->_core->schema('img_core')->table('Taxon')
+	my $case_sql;
+
+	if ( $self->can('user') && defined $self->user && defined $self->user->contact_oid ) {
+		my $u_id = "= $self->user->contact_oid";
+		my $tax_str = '= taxon.taxon_oid';
+
+		$case_sql = 'WHEN EXISTS (' .
+			$self->schema('img_core')->table('ContactTaxonPermissions')
+				->select(
+					-columns => [ '1' ],
+					-where => {
+						taxon_permissions => \ '= taxon.taxon_oid',
+						contact_oid => \$u_id
+					},
+					-result_as => 'sql'
+				)
+			. ") THEN 'accessible' ";
+	}
+
+	my $case = q!CASE
+  WHEN taxon.is_public = 'Yes' THEN 'public'
+! . ( $case_sql || '' ) . q!
+  ELSE 'private'
+  END
+AS viewable!;
+
+	return $self->schema('img_core')->table('Taxon')
 	->select(
-		-columns => [ qw( taxon_oid taxon_display_name is_public ) ],
-		-where   => $args->{where},
+		-columns => [ $case, qw( taxon_oid taxon_display_name is_public ) ],
+		-where   => { taxon_oid => $args->{where}{taxon_oid} },
 		-result_as => 'statement'
 	);
+
 }
 
 
@@ -374,7 +529,7 @@ sub taxon_permissions_by_contact_oid {
 
 	$args->{where}{taxon_permissions} = delete $args->{where}{taxon_oid} if $args->{where}{taxon_oid};
 
-	return $self->_core->schema('img_core')->table('ContactTaxonPermissions')
+	return $self->schema('img_core')->table('ContactTaxonPermissions')
 		->select(
 			-columns => [ qw( contact_oid taxon_permissions ) ],
 			-where   => $args->{where},
@@ -402,7 +557,7 @@ sub user_data {
 
 	my @cols = qw( contact_oid username name super_user email img_editor img_group img_editing_level );
 
-	return $self->_core->schema('img_core')->table('Contact')
+	return $self->schema('img_core')->table('Contact')
 		->select(
 			-columns  => [ @cols ],
 			-where    => $args->{where},
@@ -425,7 +580,7 @@ sub banned_users {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->_core->schema('img_gold')->table('CancelledUser')
+	return $self->schema('img_gold')->table('CancelledUser')
 		->select(
 			-where => $args->{where},
 			-columns => [ qw( username email ) ],
@@ -446,38 +601,37 @@ sub news {
 
 	my $g_id = 26;
 
-	# TODO: fail more nicely!
-
-	return unless $self->_core->can('user') && defined $self->_core->user;
-#	die unless $self->can('user') && defined $self->user;
-	say 'user: ' . Dumper $self->_core->user;
-
-	my $c_id = $self->_core->user->contact_oid;
-	die unless $c_id;
-
-#	my $sql = "select role from contact_img_groups\@imgsg_dev where contact_oid = ? and img_group = ? ";
-
-
-
-	my $role = $self->_core->schema('img_core')->table('ContactImgGroups')
-		->select(
-			-columns => [ 'role' ],
-			-where => {
-				contact_oid => $c_id,
-				img_group   => $g_id,
-			},
-			-result_as => 'firstrow',
-		);
-
-	say 'role: ' . Dumper $role;
-
 	my $where = { group_id => $g_id };
 
-	if (! $role && ! $self->_core->user->is_superuser) {
+# select * from img_group_news where group_id = 26 AND
+# ( is_public = 'Yes' OR exists (select 1 from contact_img_groups WHERE img_group = 26 AND contact_oid = 4 ) );
+
+	if ( $self->can('user') && defined $self->user && defined $self->user->contact_oid ) {
+
+		if ( ! $self->user->is_superuser ) {
+			my $exists_stt =
+				'( ' .
+				$self->schema('img_core')->table('ContactImgGroups')
+					->select(
+						-columns => [ '1' ],
+						-where => {
+							contact_oid => \ "= $self->user->contact_oid",
+#							contact_oid => \ '= 110602',
+							img_group   => \ "= $g_id",
+						},
+						-result_as => 'sql' ) . ' )';
+
+			$where = { '-and' => {
+				group_id => $g_id,
+				'-or' => [ { is_public => 'Yes' }, { 'exists' => \$exists_stt } ]
+			} };
+		}
+	}
+	else {
 		$where->{is_public} = 'Yes';
 	}
 
-	return $self->_core->schema('img_core')->table('ImgGroupNews')
+	return $self->schema('img_core')->table('ImgGroupNews')
 		->select(
 			-columns   => [ qw( news_id title add_date ) ],
 			-where     => $where,
@@ -485,66 +639,6 @@ sub news {
 			-result_as => 'statement',
 		);
 
-#    my $cond = "and n.is_public = 'Yes'" if ! $role || $super_user_flag eq 'No';
-#    $sql = "select n.news_id, n.title, n.add_date " .
-#	"from img_group_news\@imgsg_dev n " .
-#	"where n.group_id = ? " . $cond .
-#	" order by 3 desc ";
-
-#	my $news_url = "main.cgi?section=ImgGroup" .
-#	    "&page=showNewsDetail" .
-#            "&group_id=$group_id&news_id=$news_id";
 }
-
-=cut
-
-** For Transcriptome:
-
-->('RnaseqDataset')
-->select(
-	-columns =>
-	-where => { dataset_type => [ 'Transcriptome', 'Metatranscriptome' ] }
-)
-
-Name                Null     Type
-------------------- -------- --------------
-DATASET_OID         NOT NULL NUMBER(38)
-SAMPLE_OID                   VARCHAR2(100)
-REFERENCE_TAXON_OID NOT NULL NUMBER(38)
-NOTES                        VARCHAR2(1000)
-GOLD_ID                      VARCHAR2(20)
-ER_PROJECT_ID                NUMBER(38)
-ER_SAMPLE_ID                 NUMBER(38)
-ANALYSIS_PROJECT_ID          VARCHAR2(20)
-ADD_DATE                     DATE
-IS_PUBLIC                    VARCHAR2(10)
-SUBMISSION_ID                NUMBER(38)
-IN_FILE                      VARCHAR2(10)
-OBSOLETE_FLAG                VARCHAR2(10)
-DATASET_TYPE                 VARCHAR2(20)
-RELEASE_DATE                 DATE
-
-
-
-
-select dataset_oid from rnaseq_dataset where dataset_type = 'Transcriptome';
-
-The detailed expression data is in the rnaseq_expression table (join by dataset_oid).
-
-** For Metatranscriptome, we have 2 types of data.
-
-(1) The same as above, but dataset_type = 'Metatranscriptome'.
-
-(2) select t.taxon_oid from taxon t, gold_sequencing_project s where t.sequencing_gold_id = s.gold_id and t.obsolete_flag = 'No' and s.sequencing_strategy = 'Metatranscriptome';
-
-->('Taxon')
-
-single cells:
-
-select sp.uncultured_type from taxon t, gold_sequencing_project sp
-  2  where t.sequencing_gold_id = sp.gold_id
-  3  and t.taxon_oid = 2645728132;
-
-=cut
 
 1;

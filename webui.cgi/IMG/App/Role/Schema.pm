@@ -111,16 +111,19 @@ sub _init_schema {
 	my $schema_mod = $self->config->{schema}{$schema}{module};
 
 =cut
+
 # $schema->debug(1);             # will warn for each SQL statement
 # $schema->debug($debug_object); # will call $debug_object->debug($sql)
+
 =cut
+
 	# set up the module...
 	my %module_args = (
 		debug => 1,
 		dbi_prepare_method => 'prepare_cached',
 	);
 
-	if ( $self->config->{environment} && 'production' eq $self->config->{environment} ) {
+	if ( ! exists $self->config->{show_sql_verbosity_level} || ! $self->config->{show_sql_verbosity_level} ) {
 		delete $module_args{debug};
 	}
 

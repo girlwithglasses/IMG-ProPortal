@@ -27,7 +27,7 @@
 [%			FOREACH t IN results.by_lh.$lh;
 				r = results.ix.$t; %]
 		<tr>
-			<td colspan="2"><a href="[% link( 'taxon', { taxon_oid => r.taxon_oid } ) %]">[% r.taxon_display_name %]</a></td>
+			<td colspan="2"><a href="[% link( 'taxon_details', { taxon_oid => r.taxon_oid } ) %]">[% r.taxon_display_name %]</a></td>
 		</tr>
 [%			END; %]
 [%		END;

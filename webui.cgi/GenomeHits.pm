@@ -1,7 +1,7 @@
 ###########################################################################
 # New Phylogenetic Distribution of Genes from taxon detail page
 #
-# $Id: GenomeHits.pm 34545 2015-10-20 21:36:40Z klchu $
+# $Id: GenomeHits.pm 36634 2017-03-02 20:09:55Z klchu $
 ###########################################################################
 package GenomeHits;
 
@@ -1190,7 +1190,7 @@ sub printHits {
         }
         if ($show_perc) {
             my $x = $cnt * 100 / $totalGeneCount;
-            $x = sprintf "%.2f%", $x;
+            $x = sprintf "%.2f", $x;
             $r .= $x . $sd . $x . "\t";
         }
         if ( $show_hist ne "" ) {
@@ -1212,7 +1212,7 @@ sub printHits {
         }
         if ($show_perc) {
             my $x = $cnt * 100 / $totalGeneCount;
-            $x = sprintf "%.2f%", $x;
+            $x = sprintf "%.2f", $x;
             $r .= $x . $sd . $x . "\t";
         }
         if ( $show_hist ne "" ) {
@@ -1231,7 +1231,7 @@ sub printHits {
         }
         if ($show_perc) {
             my $x = $cnt * 100 / $totalGeneCount;
-            $x = sprintf "%.2f%", $x;
+            $x = sprintf "%.2f", $x;
             $r .= $x . $sd . $x . "\t";
         }
         if ( $show_hist ne "" ) {

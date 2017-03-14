@@ -1,6 +1,6 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	self = results.gene;
-	
+
 	#title = 'IMG ProPortal: ' _ self.display_name;
 	title = 'IMG ProPortal: Gene Details';
 
@@ -26,7 +26,7 @@
 	<div id="pageTitle">
 		<!-- Write taxon source (need query for taxon display name) -->
 		<h4 class="normal"> [% results.taxon.taxon_display_name %] <h4>
-		
+
 		<!-- Write gene name -->
 		<h2>[% self.gene_display_name %]</h2>
 	</div>
@@ -37,8 +37,8 @@
 </div>
 
 <div class="row">
-	<div class="infoBox"> 
-	
+	<div class="infoBox">
+
 		<div class="infoBoxTitle"><h4>Gene Information</h4></div>
 
 		<div class="tableTitle"><h6>Gene Details</h6></div>
@@ -51,139 +51,139 @@
 			<tr><td>Pseudogene</td> <td> [% self.is_pseudogene %] </td></tr>
 			<tr><td>Estimated Copy</td> <td> [% self.est_copy %] </td></tr>
 			<tr><td>DNA Coordinates</td>	<td>[% self.start_coord %] .. [%self.end_coord %] ([% self.strand %]) <div class="noteToSelf"> * </div></td></tr>
-			<tr><td>Gene Length</td>	<td>[% self.dna_seq_length %] bp</td></tr>	
+			<tr><td>Gene Length</td>	<td>[% self.dna_seq_length %] bp</td></tr>
 			<tr><td>Protein Length </td> <td> [% self.aa_seq_length %] aa</td></tr>
 			<tr><td>GC Content</td>	<td>[% self.gc_percent %]</td></tr>
 			<tr><td>Date Modified</td>	<td> [% self.mod_date %]</td></tr>
 		</table>
-		
+
 		<div class="tableTitle"><h6>Genome and Scaffold Details</h6></div>
 		<table class="condensed">
-			<tr><td class="col1">Taxon ID</td>	<td> <a href="[% link( 'taxon', { taxon_oid => taxon.taxon_oid } ) %]">[% results.taxon.taxon_oid %]</a></td></tr>
+			<tr><td class="col1">Taxon ID</td>	<td> <a href="[% link( 'taxon_details', { taxon_oid => taxon.taxon_oid } ) %]">[% results.taxon.taxon_oid %]</a></td></tr>
 			<tr><td>Taxon</td>	<td> [% results.taxon.taxon_display_name %] </td></tr>
 			<tr><td>Scaffold ID</td>	<td> [% self.scaffold %] <div class="noteToSelf"> * </div></td></tr>
 			<tr><td>Scaffold</td>	<td> <div class="noteToSelf"> * </div></td></tr>
 		</table>
-		
+
 		<div class="tableTitle"><h6>External Links</h6></div>
 		<table class="condensed">
 			<tr><td class="col1"> NCBI</td> <td><a>[% self.dt_protein_seq_accid_lc %]</a> <div class="noteToSelf"> * </div></td></tr>
 			<tr><td>GI</td> <td><a>124024713</a><div class="noteToSelf"> * </div></td></tr>
 			<tr><td>GeneID</td> <td><a>4780657</a><div class="noteToSelf"> * </div></td></tr>
-			<tr><td>UniProtKB</td> <td><a>A2BZA4</a> <div class="noteToSelf"> * </div></td></tr> 
+			<tr><td>UniProtKB</td> <td><a>A2BZA4</a> <div class="noteToSelf"> * </div></td></tr>
 			</td></tr>
-		</table>			
-	
+		</table>
+
 	</div> <!-- infoBox -->
-	
+
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Protein Functional Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
-		
+
 		<table class="lined">
 		<tr><td class="col1">CyCOG</td> 	<td> <a>COG0592</a>: DNA polymerase III sliding clamp (beta) subunit, PCNA homolog</td></tr>
 		<tr><td>KOG</td> 	<td> <a>KOG789</a>: a verbose description of this KOG will go here: Lorem ipsum dolor sit amet, consectetur adipiscing elit</td></tr>
 		<tr><td>Enzyme</td> <td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>
-		<tr><td>Pfam</td> 	
-			<td> 
+		<tr><td>Pfam</td>
+			<td>
 				<a>pfam00712</a>: DNA_pol3_beta <br>
 				<a>pfam02767</a>: DNA_pol3_beta_2 <br>
 				<a>pfam02768</a>: DNA_pol3_beta_3 <br>
-			</td>	
+			</td>
 		</tr>
-		<tr><td>TIGRfam</td> 	
-			<td> 
+		<tr><td>TIGRfam</td>
+			<td>
 				<a>TIGR00663</a>:  DNA polymerase III, beta subunit<br>
-			</td>	
+			</td>
 		</tr>
-		<tr><td>InterPro</td> 	
-			<td> 
+		<tr><td>InterPro</td>
+			<td>
 				<a>IPR001001</a>:  DNA polymerase III, beta chain (SMART SM00480)<br>
 				<a>IPR022634</a>:  DNA polymerase III, beta chain, N-terminal (Pfam PF00712)<br>
 				<a>IPR022635</a>:  DNA polymerase III, beta chain, C-terminal (Pfam PF02768)<br>
 				<a>IPR022637</a>:  DNA polymerase III, beta chain, central (Pfam PF02767)<br>
 				<a>IPR024693</a>:  DNA polymerase III beta, domain (Gene3D G3DSA:3.10.150.10)<br>
-			</td>	
+			</td>
 		</tr>
-		<tr><td>GO Terms</td> 	
-			<td> 
+		<tr><td>GO Terms</td>
+			<td>
 				<a>GO:0008408</a>: 3'-5' exonuclease activity [evidence=IEA]<br>
 				<a>GO:0003677</a>: DNA binding [evidence=IEA]<br>
 				<a>GO:0003887</a>: DNA-directed DNA polymerase activity [evidence=IEA]<br>
 				<a>GO:0003887</a>: DNA-directed DNA polymerase activity [evidence=IEA]<br>
 				<a>GO:0016779</a>: nucleotidyltransferase activity [evidence=IEA]<br>
 				<a>GO:0016740</a>: transferase activity [evidence=IEA]<br>
-			</td>	
+			</td>
 		</tr>
-		
-		<tr><td>PANTHER</td> 	
-			<td> 
-				<a>PTHR30478</a> <br>  
-			</td>	
+
+		<tr><td>PANTHER</td>
+			<td>
+				<a>PTHR30478</a> <br>
+			</td>
 		</tr>
-		<tr><td>Superfamily</td> 	
-			<td> 
+		<tr><td>Superfamily</td>
+			<td>
 				<a>SSF55979</a>:  DNA clamp<br>
-			</td>	
+			</td>
 		</tr>
 		<tr><td>SEED</td> 	<td> [DNA polymerase III beta subunit (EC 2.7.7.7)]   fig|167555.5.peg.1   </td></tr>
 		<tr><td>IMG Term</td> <td> DNA polymerase III, beta subunit (EC 2.7.7.7) (IMG_PIPELINE 2015-09-04)</td></tr>
-		
+
 		</table>
 
 	</div> <!-- infoBox -->
-	
-			
+
+
 </div> <!-- row -->
 
 <div class="row">
-	
+
 	<div class="infoBox">
 	<div class="infoBoxTitle"><h4>Pathway Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
 		<table class="lined">
 		<tr><td class="col1">KEGG Orthology</td> 	<td> <a>KO:K02338</a>: DPO3B, dnaN DNA polymerase III subunit beta [EC:2.7.7.7] </td></tr>
-		<tr><td>KEGG Pathways</td> 	
-			<td> 
+		<tr><td>KEGG Pathways</td>
+			<td>
 				<a>DNA replication</a><br>
 				<a>Homologous recombination</a><br>
 				<a>Mismatch repair</a><br>
 				<a>Purine metabolism</a><br>
 				<a>Pyrimidine metabolism</a><br>
-			</td>	
+			</td>
 		</tr>
-		<tr><td>KEGG Modules</td> 	
-			<td> 
+		<tr><td>KEGG Modules</td>
+			<td>
 				<a>DNA polymerase III complex, bacteria</a><br>
-			</td>	
-		</tr>	
-		<tr><td>MetaCyc Pathways</td> 	
-			<td> 
-				
-			</td>	
-		</tr>	
-		<tr><td>IMG Pathways</td> 	
-			<td> 
+			</td>
+		</tr>
+		<tr><td>MetaCyc Pathways</td>
+			<td>
+
+			</td>
+		</tr>
+		<tr><td>IMG Pathways</td>
+			<td>
 				<a>Bacterial replication sliding clamp</a> (not asserted)<br>
 				<a>Leading strand DNA replication</a> (not asserted)
-			</td>	
-		</tr>	
-		
+			</td>
+		</tr>
+
 		</table>
 	</div> <!-- infobox -->
-	
+
 	<div class="infoBox">
 	<div class="infoBoxTitle"><h4>Gene Sequence</h4></div>
-	
+
 		<div class="nav_tabs nav_tabs_minimal">
 			<input type="radio" name="seqData" id="tab1_seqData" checked >
 			<label for="tab1_seqData">DNA</label>
-			
+
 			<input type="radio" name="seqData" id="tab2_seqData">
 			<label for="tab2_seqData">Amino Acid</label>
-			
-			
+
+
 			<div id="tabContent1_seqData" class="tabContent">
 				<!-- <h4> DNA </h4> -->
-				<div class="textDisplay"> 
+				<div class="textDisplay">
 				<code> <span style="color: blue">>640083263 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819] (+)strand</span>
 				ATGAAATTAAATTGTTCTCAATCTGAATTAAATAATGCTCTTCAATTGGT
 				TAGTAGAGCTGTTTCTAATCGACCGACGCACCCTGTATTAGCTAATGTTT
@@ -212,9 +212,9 @@
 				</code>
 				</div>
 			</div>
-			
+
 			<div id="tabContent2_seqData" class="tabContent">
-				<div class="textDisplay"> 
+				<div class="textDisplay">
 				<code> <span style="color: blue">>640083263 YP_001013829 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819]</span>
 				MKLNCSQSELNNALQLVSRAVSNRPTHPVLANVLLAADEVTGKLRLTGFD
 				LSLGIQTSISASIESSGAITLPAKLFGEIVSKLSNDSPLVLTSDETSQQV
@@ -226,20 +226,19 @@
 				NLIKLSCNSPTTPAVFSPINSDVNFTYLVMPIQIRN
 				</code>
 				</div>
-			</div>	
-				
+			</div>
+
 		</div>
 
-	</div> <!-- infoBox -->	
-		
+	</div> <!-- infoBox -->
+
 </div>	<!-- row -->
 
 
 
 [%	END %]
 
- 
 
 
-		
-		
+
+

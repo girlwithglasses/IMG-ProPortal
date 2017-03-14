@@ -274,15 +274,15 @@ DataModel::IMG_Core
   [qw/GoldApGenbank              gold_ap_genbanks             *    gold_analysis_project_id/])
 
 ->Association(
-  [qw/GoldSequencingProject      goldseqproj                  1    gold_id                 /],
-  [qw/Taxon                      taxa                         *    sequencing_gold_id      /])
+  [qw/GoldSequencingProject      goldseqproj                  1    gold_id             /],
+  [qw/Taxon                      taxa                         *    sequencing_gold_id  /])
 
 ->Association(
-  [qw/Taxon                      taxon                        1    taxon_oid                 /],
+  [qw/Taxon                      taxon                        1    taxon_oid      /],
   [qw/TaxonStats                 taxon_stats                  1    taxon_oid      /])
 
 ->Association(
-  [qw/Taxon                      taxon                        1    taxon_oid                 /],
+  [qw/Taxon                      taxon                        1    taxon_oid      /],
   [qw/TaxonExtLinks              taxon_extlinks               *    taxon_oid      /])
 
 ->Association(
@@ -381,6 +381,11 @@ DataModel::IMG_Core
 ->Association(
   [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
   [qw/GoldSpDisease              gold_sp_diseases             *    gold_id                 /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    taxon_oid      /],
+  [qw/TaxonExtLinks              taxon_extlinks               *    taxon_oid      /])
+
 ;
 
 #---------------------------------------------------------------------#

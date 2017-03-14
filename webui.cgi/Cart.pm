@@ -1,6 +1,6 @@
 ############################################################################
 # img-act web services package, using xml.cgi xml.pl
-# $Id: Cart.pm 35653 2016-05-17 02:09:35Z aratner $
+# $Id: Cart.pm 36615 2017-03-01 19:56:28Z klchu $
 ############################################################################
 package Cart;
 
@@ -59,7 +59,32 @@ sub dispatch {
         clearGene();
     }  elsif($page eq "refresh") {
         printTracker();
+    } elsif($page eq 'clearAllCarts') {
+    	print header( -type => "text/html" );
+    	clearAllCarts();
     }
+}
+
+
+sub clearAllCarts {
+	require GenomeCart;
+	GenomeCart::clearAll();
+	
+    require ScaffoldCart;
+    ScaffoldCart::clearAll();
+
+    require FuncCartStor;
+    FuncCartStor::clearAll();
+
+    require GeneCartStor;
+    GeneCartStor::clearAll();
+	
+	if($env->{abc}) {
+		require WorkspaceBcSet;
+		WorkspaceBcSet::deleteBufferFile();
+	}
+	
+	print "0";
 }
 
 sub clearNeighborhood {

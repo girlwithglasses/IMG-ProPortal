@@ -27,7 +27,6 @@ prefix '/cgi-bin' => sub {
 # 	my $numTaxons = printAppHeader(@appArgs) if $#appArgs > -1;
 # 	$section->dispatch($numTaxons);
 
-
 		my $output;
 		{
 			local $@;

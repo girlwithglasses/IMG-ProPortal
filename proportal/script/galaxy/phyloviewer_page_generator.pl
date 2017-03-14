@@ -122,7 +122,7 @@ use lib @dir_arr;
 }
 
 use Dancer2;
-my $out = PhyloViewerApp->new( config => config, args => \@ARGV, controller_role => 'PhyloViewer::Results' );
+my $out = PhyloViewerApp->new( config => dancer_config, args => \@ARGV, controller_role => 'PhyloViewer::Results' );
 $out->run();
 
 exit(0);

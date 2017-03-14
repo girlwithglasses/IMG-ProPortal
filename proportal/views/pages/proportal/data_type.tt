@@ -36,7 +36,7 @@
 						taxon = results.data.ix.$t; %]
 				<li>
 				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% taxon.taxon_oid %]" id="cbox_[% taxon.taxon_oid %]" />
-				<a href="[% link( 'taxon', { taxon_oid => taxon.taxon_oid } ) %]">[% taxon.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => taxon.taxon_oid } ) %]">JBrowse</a --></li>
+				<a href="[% link( 'taxon_details', { taxon_oid => taxon.taxon_oid } ) %]">[% taxon.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => taxon.taxon_oid } ) %]">JBrowse</a --></li>
 [%					END %]
 			</ul>
 		</li>

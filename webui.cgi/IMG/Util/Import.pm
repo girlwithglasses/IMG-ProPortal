@@ -20,9 +20,13 @@ $Data::Dumper::Indent = 1;
 
 our %IMPORT_BUNDLES = (
 
-	Class =>   [ 'Moo', 'Types::Standard' => [qw( :all )] ],
+#	Class =>   [ 'Moo', 'Types::Standard' => [qw( :all )] ],
 
-	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )] ],
+#	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )] ],
+
+	Class =>   [ 'Moo', 'Types::Standard' => [qw( :all )], 'IMG::App::Role::Logger' ],
+
+	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )], 'IMG::App::Role::Logger' ],
 
 	Test  =>   [
 		'File::Temp' => [ qw( tempfile tempdir )],

@@ -36,7 +36,7 @@ if ( ! $args->{infile_format} || 'arr' eq $args->{infile_format} ) {
 
 local $@;
 eval {
-	ProPortal::App::GetTaxonMetadata->new( config => config, args => $args )->run();
+	ProPortal::App::GetTaxonMetadata->new( dancer_config => config, args => $args )->run();
 };
 
 script_die( 255, [ $@ ] ) if $@;

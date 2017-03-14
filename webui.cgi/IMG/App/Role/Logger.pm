@@ -10,7 +10,7 @@ use Log::Log4perl;
 
 # Configuration in a string ...
 my $conf = q(
-	log4perl.rootLogger          = DEBUG, Logfile, Screen
+	log4perl.rootLogger                = DEBUG, Logfile, Screen
 
 	log4perl.appender.Logfile          = Log::Log4perl::Appender::File
 	log4perl.appender.Logfile.filename = /Users/gwg/webUI/proportal/log/proportal-log4perl.log

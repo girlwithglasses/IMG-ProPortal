@@ -6,7 +6,7 @@
 #     1: func_name
 #     2: batch_id
 #    --es 01/06/2007
-# $Id: FuncCartStor.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
+# $Id: FuncCartStor.pm 36615 2017-03-01 19:56:28Z klchu $
 ############################################################################
 package FuncCartStor;
 my $section = "FuncCartStor";
@@ -7752,6 +7752,10 @@ sub removeDuplicate {
     }
 
     return (keys %entries);
+}
+
+sub clearAll {
+     unlink(getStateFile());
 }
 
 1;

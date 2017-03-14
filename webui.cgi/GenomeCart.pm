@@ -1,6 +1,6 @@
 ###########################################################################
 # GenomeCart.pm
-# $Id: GenomeCart.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: GenomeCart.pm 36615 2017-03-01 19:56:28Z klchu $
 ############################################################################
 package GenomeCart;
 
@@ -1330,6 +1330,12 @@ sub getGenomeOidsFromScaffoldOids {
     return \%foundIds;
 }
 
-
+sub clearAll {
+    require GenomeList;
+    GenomeList::clearCache();
+    
+    unlink( getColIdFile());
+    unlink(getStateFile());
+}
 
 1;

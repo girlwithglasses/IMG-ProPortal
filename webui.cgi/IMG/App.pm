@@ -5,7 +5,7 @@
 #	the session, parse params, and dispatch the appropriate app. This module
 #	is basically the container for all the functionality
 #
-#	$Id: App.pm 36557 2017-02-15 23:31:43Z aireland $
+#	$Id: App.pm 36642 2017-03-03 16:01:25Z aireland $
 ############################################################################
 package IMG::App;
 
@@ -41,11 +41,11 @@ sub BUILDARGS {
 	my $class = shift;
 	my $args = ( @_ && scalar( @_ ) > 1 ) ? { @_ } : shift || {};
 
-	say 'IMG::App BUILDARGS: ' . Dumper $args;
+#	say 'IMG::App BUILDARGS: ' . Dumper $args;
 
 	# coerce from dancer
 	if ( $args->{dancer_config} ) {
-		say 'Coercing from dancer config!';
+#		say 'Coercing from dancer config!';
 
 		$args->{config} = $args->{dancer_config}{plugins}{Adapter}{img_app}{options}{config};
 

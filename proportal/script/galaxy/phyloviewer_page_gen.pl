@@ -32,7 +32,7 @@ GetOptions(
 
 eval {
 
-ProPortal::App::PhyloViewerPageGenerator->new( config => config, args => $args, controller_role => 'PhyloViewer::Results' )->run();
+ProPortal::App::PhyloViewerPageGenerator->new( dancer_config => config, args => $args, controller_role => 'PhyloViewer::Results' )->run();
 
 };
 

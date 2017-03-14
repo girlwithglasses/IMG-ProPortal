@@ -44,7 +44,7 @@ if ( ! $args->{infile_format} || 'arr' eq $args->{infile_format} ) {
 
 eval {
 
-	ProPortal::App::GeneIdToFasta->new( config => config, args => $args )->run();
+	ProPortal::App::GeneIdToFasta->new( dancer_config => config, args => $args )->run();
 
 };
 

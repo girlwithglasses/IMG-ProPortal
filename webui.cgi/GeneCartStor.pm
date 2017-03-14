@@ -16,7 +16,7 @@
 #    12: scaffold read depth
 #    --es 03/22/2007
 #
-# $Id: GeneCartStor.pm 36404 2016-11-07 17:58:06Z klchu $
+# $Id: GeneCartStor.pm 36615 2017-03-01 19:56:28Z klchu $
 ############################################################################
 package GeneCartStor;
 my $section = "GeneCartStor";
@@ -1900,6 +1900,14 @@ sub removeFromFile {
     }
 
     return $cnt;
+}
+
+
+sub clearAll {
+	
+     unlink(getSelectedFile());
+     unlink(getStateFile());
+     unlink( getColIdFile());
 }
 
 1;

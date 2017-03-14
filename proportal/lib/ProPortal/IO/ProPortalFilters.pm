@@ -180,6 +180,7 @@ all_proportal -- isolate + metagenome
 
 =cut
 
+
 sub subset_filter {
 	my $self = shift;
 	my $f_name = shift // $self->choke({
@@ -227,38 +228,67 @@ sub subset_default {
 }
 
 sub subset_valid {
+
 	return [ qw( pro syn other pro_phage syn_phage other_phage isolate metagenome all_proportal ) ];
 
-#	return [ qw( pro syn other pro_phage syn_phage other_phage pp_isolate pp_metagenome proportal ) ];
 }
 
-sub subset_schema {
-	return {
-#		subset => {
-			id => 'subset',
-			type  => 'enum',
-			title => 'subset',
-			control => 'checkbox',
-			enum => subset_valid(),
-			enum_map => {
-				pro => 'Prochlorococcus',
-				syn => 'Synechococcus',
-				pro_phage => 'Prochlorococcus phage',
-				syn_phage => 'Synechococcus phage',
-				other => 'Other bacteria',
-				other_phage => 'Other phages',
-				phage => 'Phages from Prochlorococcus, Synechococcus, and others',
-				coccus => 'Prochlorococcus and Synechococcus',
-				bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
-				isolate => 'All ProPortal isolates',
-				metagenome => 'Marine metagenomes',
-				pp_isolate => 'All ProPortal isolates',
-				pp_metagenome => 'Marine metagenomes',
-				proportal => 'All isolates and metagenomes',
-				all_proportal => 'All isolates and metagenomes'
-			}
-#		}
-	};
+my $schema = {
+	subset => {
+		id => 'subset',
+		type  => 'enum',
+		title => 'subset',
+		control => 'checkbox',
+		enum => subset_valid(),
+		enum_map => {
+			pro => 'Prochlorococcus',
+			syn => 'Synechococcus',
+			pro_phage => 'Prochlorococcus phage',
+			syn_phage => 'Synechococcus phage',
+			other => 'Other bacteria',
+			other_phage => 'Other phages',
+			phage => 'Phages from Prochlorococcus, Synechococcus, and others',
+			coccus => 'Prochlorococcus and Synechococcus',
+			bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
+			isolate => 'All ProPortal isolates',
+			metagenome => 'Marine metagenomes',
+			pp_isolate => 'All ProPortal isolates',
+			pp_metagenome => 'Marine metagenomes',
+			proportal => 'All isolates and metagenomes',
+			all_proportal => 'All isolates and metagenomes'
+		}
+	},
+	dataset_type => {
+		id => 'dataset_type',
+		type => 'enum',
+		title => 'data type',
+		control => 'checkbox',
+		enum => dataset_type_valid(),
+		enum_map => {
+			'single cell' => 'Single cell',
+			single_cell => 'Single cell',
+			isolate => 'Isolate',
+			metagenome => 'Metagenome',
+			transcriptome => 'Transcriptome',
+			metatranscriptome => 'Metatranscriptome'
+		}
+	}
+};
+
+sub filter_schema {
+	my $self = shift;
+	my $f = shift // $self->choke({
+		err => 'missing',
+		subject => 'filter schema'
+	});
+
+	if ( $schema->{$f} ) {
+		return $schema->{$f};
+	}
+	$self->choke({
+		err => 'missing',
+		subject => 'json schema for ' . $f
+	});
 }
 
 
@@ -268,27 +298,6 @@ sub dataset_type_valid {
 
 sub dataset_type_default {
 	return { dataset_type => 'all' };
-}
-
-sub dataset_type_schema {
-
-	return {
-#		dataset_type => {
-			id => 'dataset_type',
-			type => 'enum',
-			title => 'data type',
-			control => 'checkbox',
-			enum => dataset_type_valid(),
-			enum_map => {
-				'single cell' => 'Single cell',
-				single_cell => 'Single cell',
-				isolate => 'Isolate',
-				metagenome => 'Metagenome',
-				transcriptome => 'Transcriptome',
-				metatranscriptome => 'Metatranscriptome'
-			}
-#		}
-	};
 }
 
 sub dataset_type_filter {

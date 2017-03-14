@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 36612 2017-03-01 18:40:47Z klchu $
+# $Id: main.pl 36687 2017-03-08 21:33:36Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -228,14 +228,14 @@ if ( !$oldLogin && $sso_enabled ) {
 
     # logout in genome portal i still have contact oid
     # I have to fix and relogin
+    # only an $ans or '1' is a vaildate session any other number will 
+    # log you out
     my $ans = Caliban::isValidSession();
-    if ( !$ans ) {
-
+    if ( $ans != 1) {
+        
         printAppHeader("login");
-        Caliban::logout( 1, 1 );
-
-
-        Caliban::printSsoForm();
+        Caliban::logout( 1, $ans );
+        Caliban::printSsoForm($ans);
         printContentEnd();
         printMainFooter(1);
         WebUtil::webExit(0);
@@ -269,7 +269,7 @@ if ( !$oldLogin && $sso_enabled ) {
         require MyIMG;
         my $b = MyIMG::validateUserPassword( $username, $password );
         if ( !$b ) {
-            Caliban::logout();
+            Caliban::logout(0, 9);
             printAppHeader( "login", '', '', '', '', '', $redirecturl );
             print qq{
 <p>
@@ -331,12 +331,12 @@ if ( param("deleteAllCartGenes") ne "" ) {
 #
 # lets touch user's chart files
 #
-touchCartFiles();
+#touchCartFiles();
 
 # for w and m use the public autocomplete file
 #
 # create a private autocomplete file
-#
+# 
 # this feature is not used yet - ken
 #
 #if ( $user_restricted_site && $enable_workspace ) {
@@ -839,73 +839,57 @@ EOF
             my $functionsUrl = alink( 'main.cgi?section=FuncCartStor&page=funcCart', 'Functions' );
             my $genesUrl     = alink( 'main.cgi?section=GeneCartStor&page=geneCart', 'Genes' );
 
+            my $var = {
+            	str => $str,
+            	genomeUrl => $genomeUrl,
+            	ssize => $ssize,
+            	scaffoldUrl => $scaffoldUrl,
+            	fsize => $fsize,
+            	functionsUrl => $functionsUrl,
+            	gsize => $gsize,
+            	genesUrl => $genesUrl,
+            };
+
             my $isEditor = 0;
-            my $cursize  = 0;
             if ($user_restricted_site) {
                 $isEditor = WebUtil::isImgEditorWrap();
             }
+            
             if ($isEditor) {
                 require CuraCartStor;
                 my $c = new CuraCartStor();
-                $cursize = $c->getSize();
-                if ( $cursize > 0 ) {
-                    $cursize = alink( 'main.cgi?section=CuraCartStor&page=curaCart', $cursize );
-                }
+                my $cursize = $c->getSize();
+                my $curationUrl = alink( 'main.cgi?section=CuraCartStor&page=curaCart', 'Curation' );
+                $var->{isEditor} = 1;
+                $var->{cursize} = $cursize;
+                $var->{curationUrl} = $curationUrl;
+                
             }
+            
             my $bcCartSize = 0;
             if ( $abc || $img_ken ) {
                 require WorkspaceBcSet;
                 $bcCartSize = WorkspaceBcSet::getSize();
-            }
-
-# delete icon <img onclick=>
-            my $clearallButton = '';
-            if($str || $ssize || $fsize || $gsize || $bcCartSize) {
-                $clearallButton = qq{
-&nbsp;&nbsp; |&nbsp;&nbsp; 
-<img onclick="ConfirmDelete()" title='Clear All Analysis Carts' src='$top_base_url/images/cancel.png'
-style="width: 15px;height: 15px;vertical-align: middle; cursor:pointer;">
-<script>
-function ConfirmDelete()
-{
-  var x = confirm("Are you sure you want to delete?");
-  if (x) {
-      alert("do delete now - TODO");
-      return true;
-  } else {
-    return false;
-  }
-}
-</script>
-                };
-            }
-
-            print qq{
-<div id="cart">
- &nbsp;&nbsp; <span title="Carts are unsaved sets and are lost during session logouts">My Analysis Carts**:</span>
- &nbsp;&nbsp; <span id='genome_cart'>$str</span> $genomeUrl &nbsp;&nbsp;
-|&nbsp;&nbsp; <span id='scaffold_cart'>$ssize</span> $scaffoldUrl &nbsp;&nbsp;
-|&nbsp;&nbsp; <span id='function_cart'>$fsize</span> $functionsUrl &nbsp;&nbsp;
-|&nbsp;&nbsp; <span id='gene_cart'>$gsize</span> $genesUrl
-        };
-
-            if ($isEditor) {
-                my $curationUrl = alink( 'main.cgi?section=CuraCartStor&page=curaCart', 'Curation' );
-                print qq{
-  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='curation_cart'>$cursize</span> $curationUrl
-          };
-            }
-
-            if ( $abc || $img_ken ) {
                 my $bcurl = alink( 'main.cgi?section=WorkspaceBcSet&page=viewCart', 'BC' );
-                print qq{
-  &nbsp;&nbsp; |&nbsp;&nbsp; <span id='bc_cart'>$bcCartSize</span> $bcurl
-          };
+                $var->{abc} = 1;
+                $var->{bcCartSize} = $bcCartSize;
+                $var->{bcurl} = $bcurl;
             }
 
-            print $clearallButton if($img_ken);
+            if($str || $ssize || $fsize || $gsize || $bcCartSize) {
+                $var->{clearAllCartsButton} = 1;
+                $var->{top_base_url} = $top_base_url;              
+            }
 
-            print "</div>";
+            # TODO clear all button
+        my $tt = Template->new({
+            INCLUDE_PATH => "$base_dir",
+            INTERPOLATE  => 1,
+        }) or die "$Template::ERROR\n";
+    
+       $tt->process("MyAnalysisCarts.tt", $var) or die $tt->error();
+            
+
         } # end if ($enable_carts)
 
     } # end if ( $current eq "logout" || $current eq "login" ) "else" section
@@ -932,7 +916,7 @@ sub printMenuDiv {
     print qq{
         </div> <!-- end menu div -->
 <div id="myclear"></div>
-<div id="container">
+<div id="container">        
     };
 }
 
@@ -972,7 +956,7 @@ sub printMenuRow {
         next if ( $virus               && exists $not_avaiable_href->{'vr'} );
         next if ( $include_metagenomes && !$user_restricted_site && exists $not_avaiable_href->{'m'} );
         next if (!$img_ken && $include_metagenomes && $user_restricted_site && exists $not_avaiable_href->{'mer'} );
-        next if (exists $not_avaiable_href->{'public'} && !$public_login && !$user_restricted_site);
+        next if (exists $not_avaiable_href->{'public'} && !$public_login && !$user_restricted_site); 
 
         my $arrowStr = '';
         if ( $arrow eq 'right' ) {
@@ -1335,7 +1319,7 @@ sub printStatsTableDiv {
     &nbsp;&nbsp;Genome<br>
     &nbsp;&nbsp;Metagenome
     </td>
-
+    
     <td style="font-size:10px; border-top-width: 0px;">
     <a href='main.cgi?section=TaxonList&page=lastupdated&erDate=true'>$maxErDate</a><br>
     <a href='main.cgi?section=TaxonList&page=lastupdated'>$maxAddDate</a>
@@ -1378,13 +1362,6 @@ sub printStatsTableDiv {
             Metagenomics Workshop</a>
 
     };
-
-    #    if ( $homePage && !$img_hmp && !$img_edu && !$abc && !$img_proportal ) {
-    #
-    #        # news section on the home for all data marts except hmp, edu and proportal
-    #        print "</p>\n";
-    #        printNewsDiv();
-    #    }
 
     print "</div>\n";    # end of training
 
@@ -1469,10 +1446,10 @@ sub printAppHeader {
         }
 
         $cookie_return = WebUtil::makeCookieSsoReturn($url);
-
+        
     } elsif ($sso_enabled) {
         my $url = $cgi_url . "/" . $main_cgi . '?oldLogin=false';
-        $cookie_return = WebUtil::makeCookieSsoReturn($url);
+        $cookie_return = WebUtil::makeCookieSsoReturn($url); 
     }
 
     my $cookie_host = WebUtil::makeCookieHostname();
@@ -1503,12 +1480,8 @@ sub printAppHeader {
         HtmlUtil::cgiCacheInitialize("homepage");
         HtmlUtil::cgiCacheStart() or return;
         
-        my $dbh = dbLogin();
-        my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
-
-        #print qq{
-        #  <div style='width:2000px'>
-        #};
+        #my $dbh = dbLogin();
+        #my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
 
         printContentHome();
 
@@ -1516,7 +1489,7 @@ sub printAppHeader {
         my $template = HTML::Template->new( filename => $templateFile );
         print $template->output;
 
-        print qq{
+        print qq{  
 <div class='largeWidthDiv'>
 
 <div class="shadow" id='bcHomeDiv'>
@@ -1547,7 +1520,7 @@ Small organic molecules produced<br/>by living organisms<br/>
         print qq{
     </div>
 </div>
-</div>
+</div> 
 };
 
         # </div>
@@ -1576,49 +1549,9 @@ Small organic molecules produced<br/>by living organisms<br/>
     	    Viral::printViralHome();
         }
 
-
-    } elsif ( $img_ken && $current eq "Home" ) {
-        # TODO new home page testing - ken
-
-        # caching home page
-        my $sid  = getContactOid();
-        my $time = 3600 * 24;         # 24 hour cache
-        
-        printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
-        printMenuDiv(  );
-        printErrorDiv();
-
-    
-        print "NEW home page TODO<br>\n"; 
-       
-        my $cnt = 0;
-        my $img_mer = 1;
-        $img_mer = 0 if (param('public') == 1); # testing - ken
-        if($img_mer) {
-        	$cnt = WebUtil::getSessionParam('myprivatescnt');
-        	if(!$cnt) {
-        		$cnt = MainPageStats::getPrivateCounts();
-        		WebUtil::setSessionParam('myprivatescnt', $cnt);
-        	}
-        }
-
-        my $vars = {
-            private => $cnt,
-            img_mer => $img_mer,
-        };
-
-        my $tt = Template->new({
-            INCLUDE_PATH => "/webfs/projectdirs/microbial/img/web_data/stats/",
-            INTERPOLATE  => 1,
-        }) or die "$Template::ERROR\n";
-    
-        if($img_mer) {
-    	   $tt->process("homepage_mer.tt", $vars) or die $tt->error();
-        } else {
-    	   $tt->process("homepage_m.tt", $vars) or die $tt->error();
-        }
-
-    } elsif ( $current eq "Home" ) {
+    } elsif ($img_hmp && $current eq "Home" ) {
+        # old home page turned off 
+        # - but still used for hmp and mer03 - ken
 
         # caching home page
         my $sid  = getContactOid();
@@ -1737,7 +1670,7 @@ in particular, the workspace and background computation capabilities  available 
         my $newsStr = getNewsHeaders(10);
 
         print qq{
-
+            
 <fieldset class='newsFieldset'>
 <legend class='newsLegend'>News</legend>
 $newsStr
@@ -1750,6 +1683,47 @@ $newsStr
         # no need to print end div for width div above, its printed later - ken
 
         HtmlUtil::cgiCacheStop();
+        
+    } elsif ($current eq "Home" ) {
+        # TODO new home page testing - ken
+        
+        printHTMLHead( $current, "JGI IMG Home", $gwtModule, "", "", $numTaxons );
+        printMenuDiv(  );
+        printErrorDiv();
+           
+        my $cnt = 0;
+        my $img_mer = 0;
+        $img_mer = 1 if ($user_restricted_site); # testing - ken
+        if($img_mer) {
+            $cnt = WebUtil::getSessionParam('myprivatescnt');
+            if(!$cnt) {
+                $cnt = MainPageStats::getPrivateCounts();
+                WebUtil::setSessionParam('myprivatescnt', $cnt);
+            }
+        }
+
+        my $newsStr = getNewsHeaders(10);
+        my $vars = {
+            private => $cnt,
+            img_mer => $img_mer,
+            img_news => $newsStr,
+        };
+
+        my $tt = Template->new({
+            INCLUDE_PATH => "/webfs/projectdirs/microbial/img/web_data/stats/",
+            INTERPOLATE  => 1,
+        }) or die "$Template::ERROR\n";
+    
+    
+        if($env->{home_page}) {
+        	# mer03
+        	$tt->process("homepage_mer03.tt", $vars) or die $tt->error();
+        } elsif($img_mer) {
+           $tt->process("homepage_mer.tt", $vars) or die $tt->error();
+        } else {
+           $tt->process("homepage_m.tt", $vars) or die $tt->error();
+        }        
+        
     } else {
         printHTMLHead( $current, $pageTitle, $gwtModule, $content_js, $yuijs, $numTaxons );
         printMenuDiv();
@@ -1766,24 +1740,6 @@ $newsStr
     return $numTaxons;
 }
 
-sub printNewsDiv {
-
-    # read news  file
-    my $file = '/webfs/scratch/img/news.html';
-    if ( -e $file ) {
-        print qq{
-            <span id='news2'>News</span>
-            <div id='news'>
-        };
-
-        print getNewsHeaders(3);
-
-        print qq{
-            <a href='main.cgi?section=Help&page=news'>Read more...</a>
-            </div>
-        };
-    }
-}
 
 sub getNewsHeaders {
     my ($maxLines) = @_;

@@ -87,7 +87,7 @@ use lib @dir_arr;
 			},
 			tmpl_data => { %$rslts,
 				settings => $self->config,
-				page_wrapper => 'layouts/contents_only.html.tt',
+				page_wrapper => 'layouts/contents_only.tt',
 				mode => 'galaxy'
 			},
 			tmpl => $self->controller->tmpl
@@ -118,7 +118,7 @@ $cfg->{pp_assets} = 'https://img-galaxy-test.jgi.doe.gov/';
 
 eval {
 
-	ProPortal::App::ProPortalRoutes->new( config => $cfg, args => $args )->run();
+	ProPortal::App::ProPortalRoutes->new( dancer_config => $cfg, args => $args )->run();
 
 };
 

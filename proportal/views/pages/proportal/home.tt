@@ -1,142 +1,6 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Home';
 %]
-<style>
-
-#quick-search, #gallery {
-	color: white;
-}
-#quick-search {
-	background: #648DAA;
-}
-#gallery {
-	color: white;
-	background: #204977;
-}
-
-@media only screen and (max-width: 479px) {
-  #about, #news, #quick-search, #gallery, .content {
-    width: 100%;
-    padding: 0;
-  }
-}
-
-@media only screen and (min-width: 480px) and (max-width: 767px) {
-
-	#quick-search, #gallery, #about, #news {
-		width: 100%;				/* 50%; */
-		margin: .5rem 0 0 0;  		/* makes white space between stacked sections. */
-		padding: 2.5rem;
-		float: left;
-	}
-}
-
-article section {
-	padding: 1rem;
-}
-@media only screen and (min-width: 480px) {
-  .longhurst-stats, .subset-stats {
-  	width: 50%;
-	float: left;
- }
-}
-
-.longhurst-stats table, .subset-stats table {
-	padding: 0 1rem;
-}
-
-@media only screen and (min-width: 768px) {
-	#news, #about, #stats {
-		width: 33.3%;					/*  33.3%; */
-		float: left;
-		padding: 30px;
-	/*  padding: 0 0.75rem; */
-	}
-	#about {
-		clear: left;
-	}
-	#quick-search {
-		width: 400px;
-		height: 340px;
-		padding: 30px;
-		float: left;
-	}
-	#gallery {
-		padding: 30px;
-		margin-left: 412px; /* width of #quick-search + 12px; */
-		height: 340px;
-	/* float: left; */
-	}
-}
-
-/* from taxon_details.tt style --> */
-h2, h3, h4, h5, h6 {
-     margin: 0;
-     padding: 0;
-
-}
-
-tr,td {
-	margin: 0;
-	padding: 0;
-	border: 0;
-}
-
-td {
-	padding: 0 0 4px 0px;	
-}
-
-.indent {
-	padding: 0 0 0 30px;
-}
-
-/* <--- */
-
-select {
-	color: black;
-	width: 100%;
-}
-
-input {
-	color: black;
-	width: 100%;
-}
-
-.quick-search {		/* button */
-	background: #204977;
-	padding: .5rem 1rem;
-	float: right;
-}
-
-/* 
-th {
-	padding: 4px 0 4px 10px;
-	border-bottom: 1px solid lightgray;}
-
-tr {
-	border: 0;
-}
-
-td {
-	padding: 4px 0 4px 30px;
-}
- */
-
-
-
-.category {
-	font-weight: bold;
-	padding: 10px 0 4px 15px;
-
-}
-
-.section-content {
-	padding: 15px 0;
-	border-top: 2px solid lightgray;
-	border-bottom: 2px solid lightgray;
-}
-</style>
-
 <!-- First row, quick search and image gallery. -->
 <div class="cf">
 
@@ -178,7 +42,7 @@ td {
 <!-- <h6> Isolate and Single Cell Genomes </h6> -->
 
 <!-- <caption>Isolate and Single Cell Genomes</caption> -->
-<!-- 
+<!--
 <thead>
 <tr><th>Category</th><th>Count</th></th></tr>
 </thead>
@@ -195,11 +59,11 @@ td {
 		</tr>
 [%			END;
 		END;
-	END; 
+	END;
 	END; %]
 
 <tr><td><h6> Metagenomes </h6></td>
-	<td>[% results.stats.metagenomes_marine.0.count %]</td></tr>	
+	<td>[% results.stats.metagenomes_marine.0.count %]</td></tr>
 
 <!-- WE WILL ADD THESE BACK WHEN THE DATA GETS HOOKED UP!
 <tr><td colspan="2"><h6> Transcriptomes </h6></td></tr>
@@ -209,8 +73,8 @@ td {
 <tr><td colspan="2"><h6> Proteomes </h6></td></tr>
  -->
 
-<!-- 
-	
+<!--
+
 	[% IF results.stats.metagenomes_by_eco.size > 0;
 		FOREACH r IN results.stats.metagenomes_by_eco %]
 		<tr><td>[%
@@ -224,15 +88,15 @@ td {
 		</tr>
 [%		END; END; %]
  -->
-	
-	
+
+
 
 
 
 </table>
 </section>
 
-<!-- 
+<!--
 
 <section class="mg_by_eco clear">
 	<table>
@@ -295,7 +159,7 @@ td {
 <!--
  -->
 
-<!-- 
+<!--
 
 <section class="subset-stats clear">
 	<table>

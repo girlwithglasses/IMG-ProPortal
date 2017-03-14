@@ -19,7 +19,7 @@ has 'filters' => (
 	lazy => 1,
 	default => sub {
 		return { subset => 'all_proportal' };
-	}
+	},
 );
 
 =head3 valid_filters
@@ -60,11 +60,10 @@ sub _build_filter_schema {
 
 	my $schema;
 
-	for ( qw( subset dataset_type ) ) {
-		my $fn = $_ . '_schema';
-		$schema->{$_} = $self->_core->$fn;
-		if ( $valid->{$_} ) {
-			$schema->{$_}{enum} = $valid->{$_}{enum};
+	for my $fn ( qw( subset dataset_type ) ) {
+		$schema->{$fn} = $self->_core->filter_schema( $fn );
+		if ( $valid->{$fn} ) {
+			$schema->{$fn}{enum} = $valid->{$fn}{enum};
 		}
 	}
 
@@ -123,6 +122,8 @@ sub set_filters {
 
 	my $filters = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // return;
 
+	log_debug { 'filters: ' . $filters };
+
 	for my $f ( keys %$filters ) {
 		if ( ! $self->valid_filters->{ $f } ) {
 			$self->choke({
@@ -168,24 +169,5 @@ around 'render' => sub {
 	return $rtn;
 
 };
-
-# after 'add_defaults_and_return' => sub {
-#
-# 	if ( $self->can('filters') ) {
-# #	if ($self->has_filters) {
-# 		$rtn->{data_filters}{active} = $self->filters;
-# #	}
-#
-# #	if ($self->has_valid_filters) {
-# 		$rtn->{data_filters}{all} = $self->valid_filters;
-# #	}
-# 	}
-#
-# };
-
-# requires ( 'render' );
-
-
-
 
 1;

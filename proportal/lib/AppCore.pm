@@ -7,6 +7,7 @@ use Sys::Hostname;
 use IMG::App;
 use ProPortal::Util::Factory;
 use AppCorePlugin;
+use IMG::App::Role::Logger;
 
 our $VERSION = '0.1.0';
 
@@ -29,10 +30,10 @@ Shared code to run before every request
 
 hook 'before' => sub {
 
-	debug "Running before hook for " . request->dispatch_path;
+	log_debug { "Running before hook for " . request->path };
 
 	# should we bother with checks for logout? no.
-	return if request->dispatch_path =~ m!^/(log(in|out|ged_in)|offline)!;
+	return if request->path =~ m!^/(log(in|out|ged_in)|offline)!;
 
 	img_app->init_current_query( app );
 
@@ -42,11 +43,11 @@ hook 'before' => sub {
 		$error->throw();
 	}
 
-#	debug "response: " . Dumper $resp;
+#	log_debug { "response: " . Dumper $resp };
 
 	if ( img_app->config->{sso_enabled} ) {
 
-		debug "sso is enabled";
+		log_debug { "sso is enabled" };
 		#	we have the JGI session cookie
 		#	JGI SSO returns a cookie with ID jgi_session
 		if ( cookies && cookies->{jgi_session} ) {
@@ -56,19 +57,19 @@ hook 'before' => sub {
 				my $ok = eval { img_app->check_jgi_session( session('jgi_session_id') ) };
 
 				if ( $@ ) {
-					debug 'Got an error';
+					log_debug { 'Got an error' };
 
-					if ( ref $@  && 'HASH' eq ref $@ && $@->{status} && 404 == ref $@->{status} ) {
-						debug 'found a 404 error';
+					if ( ref $@  && 'HASH' eq ref $@ && $@->{status} && 404 == $@->{status} ) {
+						log_debug { 'found a 404 error' };
 						do_login();
 					}
 				}
 				else {
-					debug 'No local error found!';
+					log_debug { 'No local error found!' };
 				}
 				# we need to log back in again
-#				forward '/login', { post_login => request->dispatch_path } if ! $ok;
-				debug 'Not OK!';
+#				forward '/login', { post_login => request->path } if ! $ok;
+				log_debug { 'Not OK!' };
 				do_login() if ! $ok;
 
 				# load the user data and create a new user object
@@ -79,38 +80,38 @@ hook 'before' => sub {
 			}
 			else {
 				# use the cookie value to get user info
-				debug "found a JGI session cookie!";
+				log_debug { "found a JGI session cookie!" };
 
 				# reinstantiate user object if it doesn't exist
 				local $@;
 				my $user_h = eval { img_app->run_user_checks( cookies->{jgi_session}->value ) };
 				if ( $@ ) {
-					debug 'Got an error: ' . Dumper $@;
+					log_debug { 'Got an error: ' . Dumper $@ };
 					my $err = $@;
 
 
 					if ( ref $err && 'HASH' eq ref $err && defined $err->{status} && 404 == $err->{status} ) {
-						debug 'found a 404 error';
+						log_debug { 'found a 404 error' };
 						do_login();
 					}
 				}
 				else {
-					debug 'No local error found!';
+					log_debug { 'No local error found!' };
 				}
 
 				img_app->set_up_session( $user_h );
 
-				debug "We got " . ( $@ || "through the checks" );
+				log_debug { "We got " . ( $@ || "through the checks" ) };
 
 			}
 		}
 		else {
-			debug "sending the request on to 'login'";
-			forward '/login', { post_login => request->dispatch_path };
+			log_debug { "sending the request on to 'login'" };
+			forward '/login', { post_login => request->path };
 		}
 	}
 
-	debug "Finished the pre hook checks!";
+	log_debug { "Finished the pre hook checks!" };
 
 	return;
 
@@ -127,8 +128,6 @@ See get_tmpl_vars for details
 
 hook before_template_render => sub {
 
-#	debug 'Running before_template_render at ' . Time::HiRes::gettimeofday;
-
 	my $args = get_menu_vars();
 
 	my $tmpl_extras = get_tmpl_vars ( $args );
@@ -136,25 +135,16 @@ hook before_template_render => sub {
 	# merge the two
 	$_[0]->{$_} = $tmpl_extras->{$_} for keys %$tmpl_extras;
 
-#	debug 'Finished before_template_render at ' . Time::HiRes::gettimeofday;
-
 };
-
-#hook after_template_render => sub {
-#	debug 'Running after_template_render at ' . Time::HiRes::gettimeofday;
-#};
 
 sub get_menu_vars {
 	my $output;
-
-#	say 'Current query: ' . Dumper img_app->current_query;
-#	say 'page_id: ' . img_app->current_query->page_id;
-#	say 'menu_grp: ' . img_app->current_query->menu_group;
 
 	my $rslt = img_app->make_menu({
 		page  => img_app->current_query->page_id,
 		group => img_app->current_query->menu_group
 	});
+
 	my $class;
 	for ( @{$rslt->{menu}} ) {
 		$class++ if defined $_->{class};
@@ -168,7 +158,6 @@ sub get_menu_vars {
 
 	if ( ! $class ) {
 		$output->{no_sidebar} = 1;
-#		say 'Setting no_sidebar!';
 	}
 	$output->{current_page} = img_app->current_query->page_id;
 
@@ -209,7 +198,7 @@ sub get_tmpl_vars {
 	if ( session->data ) {
 	#	debug "session data: " . Dumper session->data;
 		if ( session('name') ) {
-			debug "session name: " . Dumper session('name');
+			log_debug { "session name: " . Dumper session('name') };
 			$output->{name} = session('name');
 		}
 	}
@@ -245,7 +234,7 @@ any '/login' => sub {
 
 	push_response_header 'Set-Cookie' => $c->to_header();
 
-	debug 'cookie: ' . $c->to_header();
+	log_debug { 'cookie: ' . $c->to_header() };
 
 	redirect 'https://signon.jgi.doe.gov';
 
@@ -276,8 +265,8 @@ any qr{
 
 sub do_login {
 
-	debug 'running do_login';
-	forward '/login', { post_login => request->dispatch_path };
+	log_debug { 'running do_login' };
+	forward '/login', { post_login => request->path };
 
 }
 

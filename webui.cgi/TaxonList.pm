@@ -2,7 +2,7 @@
 # TaxonList - Show list of taxons in alphabetical or phylogenetic order.
 # --es 09/17/2004
 #
-# $Id: TaxonList.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: TaxonList.pm 36635 2017-03-02 21:05:04Z klchu $
 ############################################################################
 package TaxonList;
 my $section = "TaxonList";
@@ -202,7 +202,7 @@ sub printIsolateList {
 
     
     my $seqClause = '';
-    $seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+    $seqClause = "and t2.seq_center like '\%Joint Genome\%'" if($seq_center eq 'jgi');
     
     my $imgClause = WebUtil::imgClause('t2');
     my $urClasue = WebUtil::urClause('t2');
@@ -228,7 +228,7 @@ sub printMetaCatList {
 	my $phylum = param('phylum');
 	my $ir_class = param('ir_class');
     my $seqClause = '';
-    $seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+    $seqClause = "and t2.seq_center like '\%Joint Genome\%'" if($seq_center eq 'jgi');
     my $imgClause = WebUtil::imgClause('t2');
     my $urClasue = WebUtil::urClause('t2');
 
@@ -264,7 +264,7 @@ sub printMetaXCatList {
     my $phylum = param('phylum');
     my $ir_class = param('ir_class');
     my $seqClause = '';
-    $seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+    $seqClause = "and t2.seq_center like '\%Joint Genome\%'" if($seq_center eq 'jgi');
     my $imgClause = WebUtil::imgClause('t2');
     my $urClasue = WebUtil::urClause('t2');
 
@@ -353,8 +353,7 @@ sub printEco {
     my $jgiseqclause = '';
     if($jgiseq eq 'jgi') {
        $jgiseqclause = qq{
-and tx.jgi_project_id > 0
-and tx.jgi_project_id is not null           
+and tx.seq_center like '\%Joint Genome\%'
        };
     }   
     
@@ -399,8 +398,7 @@ sub printMetatranscriptome {
     my $jgiseqclause = '';
     if($jgiseq) {
        $jgiseqclause = qq{
-and tx.jgi_project_id > 0
-and tx.jgi_project_id is not null           
+and tx.seq_center like '\%Joint Genome\%'           
        };
     }
     
@@ -487,7 +485,7 @@ sub printTaxonTable2 {
 	my $title = '';
 	
 	my $seqClause = '';
-	$seqClause = 'and t2.jgi_project_id > 0' if($seq_center eq 'jgi');
+	$seqClause = "and t2.seq_center like '\%Joint Genome\%'" if($seq_center eq 'jgi');
 	
 	my $imgClause = WebUtil::imgClause('t2');
 	my $urClasue = WebUtil::urClause('t2');
@@ -509,7 +507,11 @@ sub printTaxonTable2 {
     	# *Microbiome domain minus Metatranscriptome Analysis types
     	
     	$title = "Metagenome";
-    	$aptClause = "and t2.genome_type = 'metagenome' and (t2.analysis_project_type != 'Metatranscriptome Analysis' or t2.analysis_project_type is null)";
+    	$aptClause = qq{
+    		and t2.genome_type = 'metagenome' 
+    		and (t2.analysis_project_type = 'Metagenome Analysis' 
+    		    or t2.analysis_project_type is null)
+    	};
 	} else {
 		WebUtil::webError('Oops');
 	}
@@ -1319,7 +1321,7 @@ sub getParamRestrictionClause {
             $restrictClause .= "and nvl(tx.seq_center, 'na') not like ? ";
             push( @bindList, 'DOE%' );
         } elsif ($seq_center eq 'jgi') {
-            $restrictClause .= " and tx.jgi_project_id > 0 and tx.jgi_project_id is not null ";
+            $restrictClause .= " and tx.seq_center like '\%Joint Genome\%' ";
         } else {
             $restrictClause .= "and tx.seq_center = ? ";
             push( @bindList, "$seq_center" );

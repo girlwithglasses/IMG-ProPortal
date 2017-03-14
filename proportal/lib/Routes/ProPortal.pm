@@ -60,7 +60,7 @@ prefix '/proportal' => sub {
 		my $c = captures;
 		my $p = delete $c->{query};
 
-#		say 'captures: ' . Dumper $c;
+		log_debug { 'captures: ' . Dumper $c };
 
 		bootstrap( $p );
 
@@ -98,9 +98,9 @@ The home page.
 
 };
 
-get '/taxon/:taxon_oid' => sub {
+sub taxon_details {
 
-	bootstrap( 'TaxonDetails' );
+	bootstrap( 'Taxon::Details' );
 
 	img_app->current_query->_set_page_params({
 		page_id => img_app->controller->page_id
@@ -108,51 +108,51 @@ get '/taxon/:taxon_oid' => sub {
 
 	return template img_app->controller->tmpl, img_app->controller->render({ taxon_oid => params->{taxon_oid} });
 
-};
+}
 
+sub gene_details {
+
+	bootstrap( 'Gene::Details' );
+
+	img_app->current_query->_set_page_params({
+		page_id => img_app->controller->page_id
+	});
+
+	return template img_app->controller->tmpl, img_app->controller->render({ gene_oid => params->{gene_oid} });
+
+}
+
+sub gene_list {
+
+	bootstrap( 'Gene::List' );
+
+	my %args = map {
+		split '=', $_;
+	} ( split '&', params->{args} );
+	say 'args: ' . Dumper \%args;
+
+	img_app->current_query->_set_page_params({
+		page_id => img_app->controller->page_id
+	});
+
+	return template img_app->controller->tmpl, img_app->controller->render( \%args );
+
+}
+
+
+prefix '/taxon' => sub {
+
+	get '/details/:taxon_oid' => \&taxon_details;
+
+	get '/:taxon_oid' => \&taxon_details;
+
+};
 
 prefix '/gene' => sub {
 
-	get '/details/:gene_oid' => sub {
+	get '/details/:gene_oid' => \&gene_details;
 
-		bootstrap( 'Gene::Details' );
-
-		img_app->current_query->_set_page_params({
-			page_id => img_app->controller->page_id
-		});
-
-		return template img_app->controller->tmpl, img_app->controller->render({ gene_oid => params->{gene_oid} });
-
-	};
-
-	get qr{
-		/list
-		/?
-		(subset=)?
-		(?<subset>\w+)?
-		/?
-		(dataset_type=)?
-		(?<dataset_type>\w+)?
-		/?
-		(taxon=)?
-		(?<taxon_oid>\w+)?
-		/?
-		}x => sub {
-
-		bootstrap( 'Gene::List' );
-
-		say 'captures: ' . Dumper captures;
-		say 'params: ' . Dumper params->{taxon_oid};
-
-#		img_app->set_filters( captures );
-
-		img_app->current_query->_set_page_params({
-			page_id => img_app->controller->page_id
-		});
-
-		return template img_app->controller->tmpl, img_app->controller->render({ taxon_oid => captures->{taxon_oid} });
-
-	};
+	get '/list/:args' => \&gene_list;
 
 };
 
@@ -213,34 +213,34 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 
 			say 'running query code!';
 
-			img_app->current_query->_set_page_params({
-				page_id => $prefix . '/phyloviewer',
-				menu_group => $prefix
-			});
-
 			my $c = captures;
 			my $p = delete $c->{query};
 			my $module = $p && 'demo' eq $p ? 'QueryDemo' : 'Query';
 
 			bootstrap( 'PhyloViewer::' . $module );
 
-			return template img_app->controller->tmpl, img_app->controller->render();
+			img_app->current_query->_set_page_params({
+				page_id => $prefix . '/phyloviewer',
+				menu_group => $prefix
+			});
+
+			return template img_app->controller->tmpl, img_app->controller->render;
 		};
 
 		post qr{
 			/query
 			}x => sub {
 
-			img_app->current_query->_set_page_params({
-				page_id => $prefix . '/phyloviewer',
-				menu_group => $prefix
-			});
-
 			my $params;
 			for my $p ( qw( gp input msa tree ) ) {
 				$params->{$p} = [ body_parameters->get_all($p) ];
 			}
 			my $pp = bootstrap( 'PhyloViewer::Submit' );
+
+			img_app->current_query->_set_page_params({
+				page_id => $prefix . '/phyloviewer',
+				menu_group => $prefix
+			});
 
 			return template $pp->controller->tmpl, $pp->controller->render( $params );
 
@@ -254,16 +254,16 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 			my $p = delete $c->{query_id};
 			my $module = $p && 'demo' eq $p ? 'ResultsDemo' : 'Results';
 
+			my $tmpl = 'pages/proportal/phylo_viewer/results';
+
+			my $pp = bootstrap( 'PhyloViewer::' . $module );
+
 			img_app->current_query->_set_page_params({
 				page_id => $prefix . '/phyloviewer',
 				menu_group => $prefix
 			});
 
-			my $tmpl = 'pages/proportal/phylo_viewer/results';
-
-			my $pp = bootstrap( 'PhyloViewer::' . $module );
-
-			return template $pp->controller->tmpl, $pp->controller->render();
+			return template $pp->controller->tmpl, $pp->controller->render;
 		};
 	};
 

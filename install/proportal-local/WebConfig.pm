@@ -31,7 +31,11 @@ my $webui_dir = dirname $pp_dir;
 
 my $conf = {
 
-	verbose => 3,
+	show_sql_verbosity_level => 1,
+	verbose => 1,
+#	$e->{show_sql_verbosity_level} = 1;
+#	verbose => 3,
+
 	domain_name => 'img-proportal.dev',
 	base_url => 'http://img-proportal.dev',
 
