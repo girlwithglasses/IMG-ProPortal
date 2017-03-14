@@ -5,6 +5,19 @@
 	
 %]
 
+<style>
+
+/* shift to sass files... */
+
+.indent1 {	text-indent: 20px;	}
+.indent2 {	text-indent: 40px;	}
+.indent3 {	text-indent: 60px;	}
+
+.col1_wide {	width: 85%;		}
+.rightAlign {	text-align: right;	}
+</style>
+
+
 <div class="thisWrapper">
 	<div id="pageHeader">
 		<div id="pageTitle" >
@@ -69,7 +82,40 @@
 			[%	END; %]
 		</table>
 	</div>	<!-- infoTable -->
+	
+	<div class="infoBox">
+		<div class="infoBoxTitle"><h4>Genes and Scaffolds</h4></div>
+			<table class="condensed">
+			<tr><td class="col1_wide"></td><td></td></tr> <!-- Sets first column width -->
 
+			<tr><td><b>Total Scaffolds</b></td> 	<td><a>1</a></td></tr>	
+			
+			<tr><td><b>Total Genes</b></td> 	<td><a>1944</a></td></tr>
+				<tr><td class="indent1"><b>Protein Coding Genes</b></td> 	<td><a>1886</a></td></tr>
+					<tr><td class="indent2">Genes with functional prediction</td> 	<td><a>1330</a></td></tr>
+					<tr><td class="indent2">Genes without functional prediction</td> 	<td><a>566</a></td></tr>
+					<tr><td class="indent2">Fused protein coding genes</td> 	<td><a>103</a></td></tr>
+					<tr><td class="indent2">Coding signal proteins</td> 	<td><a>33</a></td></tr>
+					<tr><td class="indent2">Coding transmembrane proteins</td> 	<td><a>491</a></td></tr>
+				<tr><td class="indent1"><b>RNA Genes</b></td> 	<td><a>89</a></td></tr>
+					<tr><td class="indent2">rRNA Genes</td> 	<td><a>4</a></td></tr>
+						<tr><td class="indent3">Internal transcribed spacer (ITS)</td> 	<td><a>1</a></td></tr>
+						<tr><td class="indent3">5S rRNA Genes</td> 	<td><a>1</a></td></tr>
+						<tr><td class="indent3">16S rRNA Genes</td> 	<td><a>1</a></td></tr>
+						<tr><td class="indent3">23S rRNA Genes</td> 	<td><a>1</a></td></tr>
+						<tr><td class="indent3">5S rRNA Genes</td> 	<td><a>1</a></td></tr>
+					<tr><td class="indent2">tRNA Genes</td> 	<td><a>38</a></td></tr>
+					<tr><td class="indent2">Other RNA Genes</td> 	<td><a>48</a></td></tr>	
+				<tr><td class="indent1"><b>Pseudo Genes</b></td> 	<td><a>4</a></td></tr>
+				<tr><td class="indent1"><b>Chromosomal Cassettes</b></td> 	<td><a>170</a></td></tr>
+				<tr><td class="indent1"><b>Biosynthetic Clusters</b></td> 	<td><a>5</a></td></tr>
+			</table>
+	</div>	
+	
+	
+</div> <!-- row -->
+
+<div class="row">
 	<div class="infoBox">
 
 		<div class="infoBoxTitle"><h4>Environmental Measurements</h4></div>
@@ -137,9 +183,7 @@
 		</table>
 	</div>
 
-</div>
 
-<div class="row">
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Ecological Information</h4></div>
 
@@ -160,6 +204,10 @@
 		</table>
 	</div> <!-- infoBox -->
 
+</div> <!-- row -->
+
+
+<div class="row">
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Identification and External Links</h4></div>
 
@@ -243,10 +291,7 @@
 		</tr>
 		</table>
 	</div> <!-- infoBox -->
-</div> <!-- row -->
 
-
-<div class="row">
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Sequence Information</h4></div>
 
