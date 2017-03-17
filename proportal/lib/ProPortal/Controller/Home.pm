@@ -24,7 +24,7 @@ extends 'ProPortal::Controller::Filtered';
 has '+valid_filters' => (
 	default => sub {
 		return {
-			subset => {
+			pp_subset => {
 				enum => [ qw( pro syn pro_phage syn_phage other other_phage isolate ) ],
 			}
 		};
@@ -58,45 +58,45 @@ sub _render {
 
 	my $stats;
 
-	# counts, grouped by proportal subset
-	$stats->{subsets} = $self->_core->schema('img_core')->table('GoldTaxonVw')
+	# counts, grouped by proportal pp_subset
+	$stats->{pp_subsets} = $self->_core->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns => [ 'proportal_subset', 'count(taxon_oid)|count' ],
-			-group_by => 'proportal_subset',
+			-columns => [ 'pp_subset', 'count(taxon_oid)|count' ],
+			-group_by => 'pp_subset',
 			-where => {
-				proportal_subset => { '!=', undef },
+				pp_subset => { '!=', undef },
 #				is_public => 'Yes'
 			},
-			-result_as => ['hashref' => 'proportal_subset' ]
+			-result_as => ['hashref' => 'pp_subset' ]
 		);
 
-	# counts, grouped by proportal subset and data types
+	# counts, grouped by proportal pp_subset and data types
 # 	$stats->{data_types_all} = $self->_core->schema('img_core')->table('TaxonTypeVw')
 # 		->select(
-# 			-columns => [ 'proportal_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|count' ],
-# 			-group_by => ['proportal_subset', 'data_type' ],
+# 			-columns => [ 'pp_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|count' ],
+# 			-group_by => ['pp_subset', 'data_type' ],
 # 			-where => {
-# 				proportal_subset => { '!=', undef }
+# 				pp_subset => { '!=', undef }
 # 			},
 # 		);
 #
 # 	for ( @{$stats->{data_types_all}} ) {
-# 		$stats->{data_types}{ $_->{data_type} .'\0'. $_->{proportal_subset} } = $_;
+# 		$stats->{data_types}{ $_->{data_type} .'\0'. $_->{pp_subset} } = $_;
 # 	}
 #
 # 	$stats->{data_types_public} = $self->_core->schema('img_core')->table('TaxonTypeVw')
 # 		->select(
-# 			-columns => [ 'proportal_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|public_count' ],
-# 			-group_by => ['proportal_subset', 'data_type' ],
+# 			-columns => [ 'pp_subset', 'lower(data_type)|data_type', 'count(taxon_oid)|public_count' ],
+# 			-group_by => ['pp_subset', 'data_type' ],
 # 			-where => {
-# 				proportal_subset => { '!=', undef },
+# 				pp_subset => { '!=', undef },
 # 				is_public => 'Yes'
 # 			},
 # 		);
 #
 # 	$stats->{data_types} = {};
 # 	for ( @{$stats->{data_types_all}}, @{$stats->{data_types_public}} ) {
-# 		my $key = $_->{data_type} ."\0". $_->{proportal_subset};
+# 		my $key = $_->{data_type} ."\0". $_->{pp_subset};
 # 		if ( $stats->{data_types}{ $key } ) {
 # 			$stats->{data_types}{ $key }{public_count} = $_->{public_count};
 # 		}
@@ -112,7 +112,7 @@ sub _render {
 			-group_by => [ qw( longhurst_code longhurst_description ) ],
 			-order_by => [ 'longhurst_description' ],
 			-where => {
-				proportal_subset => { '!=', undef },
+				pp_subset => { '!=', undef },
 #				is_public => 'Yes'
 			},
 			-result_as => ['hashref' => 'longhurst_description' ]
@@ -128,7 +128,7 @@ sub _render {
 			-group_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-where => {
-				proportal_subset => 'metagenome',
+				pp_subset => 'metagenome',
 #				is_public => 'Yes'
 			},
 		);
@@ -139,7 +139,7 @@ sub _render {
 			-group_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype ) ],
 			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype ) ],
 			-where => {
-				proportal_subset => 'metagenome',
+				pp_subset => 'metagenome',
 #				is_public => 'Yes'
 			},
 		);
@@ -152,7 +152,7 @@ sub _render {
 			-order_by => [ qw( ecosystem_type ) ],
 			-where => {
 				ecosystem_type => 'Marine',
-				proportal_subset => 'metagenome',
+				pp_subset => 'metagenome',
 			},
 		);
 

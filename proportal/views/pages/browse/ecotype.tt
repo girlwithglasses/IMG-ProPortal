@@ -45,7 +45,7 @@
 	<ul>
 [%			FOREACH taxid IN results.output.$ecotype.$clade.sort;
 				s = results.output.$ecotype.$clade.$taxid; %]
-		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a href="[% link( 'taxon_details', { taxon_oid => s.taxon_oid } ) %]">[% s.taxon_display_name %]</a></li>
+		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a href="[% link( 'details', { type => 'taxon', taxon_oid => s.taxon_oid } ) %]">[% s.taxon_display_name %]</a></li>
 [%			END; %]
 	</ul>
 [%		END;

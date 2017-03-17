@@ -13,7 +13,7 @@ my $conf = q(
 	log4perl.rootLogger                = DEBUG, Logfile, Screen
 
 	log4perl.appender.Logfile          = Log::Log4perl::Appender::File
-	log4perl.appender.Logfile.filename = /Users/gwg/webUI/proportal/log/proportal-log4perl.log
+	log4perl.appender.Logfile.filename = /global/homes/a/aireland/webUI/proportal/log/proportal-log4perl.log
 	log4perl.appender.Logfile.mode     = append
 	log4perl.appender.Logfile.layout   = Log::Log4perl::Layout::PatternLayout
 	log4perl.appender.Logfile.layout.ConversionPattern = [%r] %F %L %c - %m%n

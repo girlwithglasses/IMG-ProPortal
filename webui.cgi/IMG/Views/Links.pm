@@ -3,7 +3,9 @@ package IMG::Views::Links;
 use IMG::Util::Import;
 use IMG::Views::ExternalLinks;
 use IMG::App::Role::ErrorMessages qw( err );
+use IMG::App::Role::Logger;
 use utf8;
+use Carp;
 
 our (@ISA, @EXPORT_OK);
 
@@ -1116,59 +1118,100 @@ my $dynamic_links = {
 		}
 	},
 
-	# /gene/details/12345678
-	gene_details => sub {
+	details => sub {
 		return {
 			style => 'new',
 			fn => sub {
-				return $_[0]->{base} . 'gene/details' .
-				( $_[0] && $_[0]->{params}
-				? '/' . shift->{params}{gene_oid}
+				my $h = shift;
+	#			log_debug { 'h: ' . Dumper $h };
+				return $h->{base}
+				. 'details/'
+				. $h->{params}{type}
+				.
+				( $h->{params}
+				? '/' . $h->{params}{ $h->{params}{type} . '_oid' }
 				: '' );
 			},
 		};
 	},
 
-	# /taxon/details/1234568
+	list => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				my $h = shift;
+				return $h->{base}
+				. 'list/'
+				. $h->{params}{type}
+				.
+				( $h->{params}
+				? '?' . join "&amp;", map {
+						$_ . "=" . escape( $h->{params}{$_} )
+					} sort keys %{$h->{params}}
+				: '' );
+			},
+		};
+	},
 	taxon_details => sub {
 		return {
 			style => 'new',
 			fn => sub {
-				return $_[0]->{base} . 'taxon/details' .
+				return $_[0]->{base} . 'details/taxon' .
 				( $_[0] && $_[0]->{params}
 				? '/' . shift->{params}{taxon_oid}
 				: '' );
 			},
 		};
 	},
-
-	# /gene/list/<criteria>
-	gene_list => sub {
+	gene_details => sub {
 		return {
 			style => 'new',
 			fn => sub {
-				my $h = shift;
-				return $h->{base} . 'gene/list' .
-				( $h->{params}
-				? '/' . join "&amp;", map {
-						$_ . "=" . escape( $h->{params}{$_} )
-					} keys %{$h->{params}}
+				return $_[0]->{base} . 'details/gene' .
+				( $_[0] && $_[0]->{params}
+				? '/' . shift->{params}{gene_oid}
 				: '' );
 			},
 		};
 	},
-
-	# /taxon/list/<criteria>
 	taxon_list => sub {
 		return {
 			style => 'new',
 			fn => sub {
 				my $h = shift;
-				return $h->{base} . 'taxon/list' .
+				return $h->{base} . 'list/gene' .
 				( $h->{params}
-				? '/' . join "&amp;", map {
+				? '?' . join "&amp;", map {
 						$_ . "=" . escape( $h->{params}{$_} )
-					} keys %{$h->{params}}
+					} sort keys %{$h->{params}}
+				: '' );
+			},
+		};
+	},
+	gene_list => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				my $h = shift;
+				return $h->{base} . 'list/gene' .
+				( $h->{params}
+				? '?' . join "&amp;", map {
+						$_ . "=" . escape( $h->{params}{$_} )
+					} sort keys %{$h->{params}}
+				: '' );
+			},
+		};
+	},
+	'list/gene' => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				my $h = shift;
+				return $h->{base} . 'list/gene' .
+				( $h->{params}
+				? '?' . join "&amp;", map {
+						$_ . "=" . escape( $h->{params}{$_} )
+					} sort keys %{$h->{params}}
 				: '' );
 			},
 		};
@@ -1201,12 +1244,89 @@ my $dynamic_links = {
 		};
 	},
 
-	# add news link!
 
-	# add to cart
+#	https://img-proportal-test.jgi.doe.gov/details/taxon/main.cgi?section=GeneCassette&page=occurrence&taxon_oid=2634166547
+	chr_cassette_genes => sub {
+		return {
+			section => 'GeneCassette',
+			page => 'occurrence',
+			taxon_oid => $_[0]->{params}{taxon_oid}
+		};
+	},
 
+	biosyn_cluster_genes => sub {
+# 	https://img.jgi.doe.gov/cgi-bin/m/main.cgi?section=BiosyntheticDetail&page=biosynthetic_clusters&taxon_oid=637000212
+		return {
+			section => 'BiosyntheticDetail',
+			page => 'biosynthetic_clusters',
+			taxon_oid => $_[0]->{params}{taxon_oid}
+		};
+	}
 
 };
+
+# /gene/details/12345678
+# $dynamic_links->{gene_details} = sub {
+# 	my $args = shift;
+# 	say 'args: ' . Dumper $args;
+# 	return $dynamic_links->{details}->( { type => 'gene', %$args } );
+# };
+#
+# $dynamic_links->{taxon_details} = sub {
+# 	my $args = shift;
+# 	say 'args: ' . Dumper $args;
+# 	return $dynamic_links->{details}->( { type => 'taxon', %$args } );
+# };
+#
+
+	# /taxon/details/1234568
+# 	taxon_details => sub {
+# 		return {
+# 			style => 'new',
+# 			fn => sub {
+# 				return $_[0]->{base} . 'details/taxon' .
+# 				( $_[0] && $_[0]->{params}
+# 				? '?' . shift->{params}{taxon_oid}
+# 				: '' );
+# 			},
+# 		};
+# 	},
+
+	# /gene/list/<criteria>
+# $dynamic_links->{gene_list} = sub {
+# 	my $args = shift;
+# 	say 'args: ' . Dumper $args;
+# 	return $dynamic_links->{list}->( { type => 'gene', %$args } );
+# # 	return {
+# # 		style => 'new',
+# # 		fn => sub {
+# # 			my $h = shift;
+# # 			return $h->{base} . 'gene/list' .
+# # 			( $h->{params}
+# # 			? '?' . join "&amp;", map {
+# # 					$_ . "=" . escape( $h->{params}{$_} )
+# # 				} sort keys %{$h->{params}}
+# # 			: '' );
+# # 		},
+# # 	};
+# };
+
+	# /taxon/list/<criteria>
+# $dynamic_links->{taxon_list} = sub {
+# 	return {
+# 		style => 'new',
+# 		fn => sub {
+# 			my $h = shift;
+# 			return $h->{base} . 'taxon/list' .
+# 			( $h->{params}
+# 			? '/' . join "&amp;", map {
+# 					$_ . "=" . escape( $h->{params}{$_} )
+# 				} sort keys %{$h->{params}}
+# 			: '' );
+# 		},
+# 	};
+# };
+
 
 =head3 $link_library
 
@@ -1283,7 +1403,7 @@ my $link_gen_h = {
 	old => sub {
 		my $l_hash = shift;
 		my %temp;
-#		say 'old: ' . Dumper $l_hash;
+		say 'old: ' . Dumper $l_hash;
 		return $l_hash->{base} . "?"
 		. join "&amp;",
 			map {
@@ -1338,8 +1458,9 @@ sub get_img_link {
 		});
 	}
 
+
 	# get the link data or die trying
-	my $l_data = $link_library->{ $args->{id} } || die err({
+	my $l_data = $link_library->{ $args->{id} } || confess err({
 		err => 'invalid',
 		type => 'link ID',
 		subject => $args->{id}
@@ -1418,7 +1539,7 @@ To use in a template, specify the link ID as the first argument, and any extra p
 
 # http://example.com/cgi-bin/main.cgi?section=MyIMG&amp;page=preferences
 
-[% link( 'taxon_details', { taxon_oid => 1234567 } %]
+[% link( 'details', { type => 'taxon', taxon_oid => 1234567 } %]
 
 # http://example.com/cgi-bin/main.cgi?section=TaxonDetail&amp;page=taxonDetail&taxon_oid=1234567
 

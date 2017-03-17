@@ -93,44 +93,44 @@ sub filter {
 
 	};
 
-	if ( ! $f_types->{ $filter_h->{subset} } ) {
-		die 'Filter ' . $filter_h->{subset} . ' is not defined';
+	if ( ! $f_types->{ $filter_h->{pp_subset} } ) {
+		die 'Filter ' . $filter_h->{pp_subset} . ' is not defined';
 	}
 
-	if ( ! keys %{$f_types->{ $filter_h->{subset} } } ) {
-		say 'Could not find any filters for ' . $filter_h->{subset};
+	if ( ! keys %{$f_types->{ $filter_h->{pp_subset} } } ) {
+		say 'Could not find any filters for ' . $filter_h->{pp_subset};
 		return $data;
 	}
 
 	my @test;
-	for my $k ( keys %{$f_types->{ $filter_h->{subset} }} ) {
+	for my $k ( keys %{$f_types->{ $filter_h->{pp_subset} }} ) {
 		say 'Looking at ' . $k;
-		if ( ! ref $f_types->{ $filter_h->{subset} }{$k} ) {
+		if ( ! ref $f_types->{ $filter_h->{pp_subset} }{$k} ) {
 			push @test, sub {
 				my $t = shift;
 				say 'looking for '
 				. $k . ' to equal '
-				. $f_types->{ $filter_h->{subset} }{$k}
+				. $f_types->{ $filter_h->{pp_subset} }{$k}
 				. '; it is ' . $t->{$k};
 
 				return 1 if ! exists $t->{ $k };
 
-				say 'test: ' . $f_types->{ $filter_h->{subset} }{$k}
+				say 'test: ' . $f_types->{ $filter_h->{pp_subset} }{$k}
 				. ' equal to ' . $t->{$k} . ': '
-				. ( $f_types->{ $filter_h->{subset} }{$k} eq $t->{$k} ) ;
-				return $f_types->{ $filter_h->{subset} }{$k} eq $t->{$k} ? 1 : 0;
+				. ( $f_types->{ $filter_h->{pp_subset} }{$k} eq $t->{$k} ) ;
+				return $f_types->{ $filter_h->{pp_subset} }{$k} eq $t->{$k} ? 1 : 0;
 			};
 		}
-		elsif ( 'ARRAY' eq ref $f_types->{ $filter_h->{subset} }{$k} ) {
+		elsif ( 'ARRAY' eq ref $f_types->{ $filter_h->{pp_subset} }{$k} ) {
 			push @test, sub {
 				my $t = shift;
-				say 'looking for ' . $k . ' to be one of: ' . join ", ", @{$f_types->{ $filter_h->{subset} }{$k}};
+				say 'looking for ' . $k . ' to be one of: ' . join ", ", @{$f_types->{ $filter_h->{pp_subset} }{$k}};
 				return 1 if ! exists $t->{ $k };
-				return scalar grep { $t->{$k} eq $_ } @{$f_types->{ $filter_h->{subset} }{$k}};
+				return scalar grep { $t->{$k} eq $_ } @{$f_types->{ $filter_h->{pp_subset} }{$k}};
 			};
 		}
-		elsif ( 'CODE' eq ref $f_types->{ $filter_h->{subset} }{$k} ) {
-			push @test, $f_types->{ $filter_h->{subset} }{$k};
+		elsif ( 'CODE' eq ref $f_types->{ $filter_h->{pp_subset} }{$k} ) {
+			push @test, $f_types->{ $filter_h->{pp_subset} }{$k};
 		}
 	}
 

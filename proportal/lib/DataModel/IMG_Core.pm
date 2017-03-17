@@ -258,8 +258,16 @@ DataModel::IMG_Core
 #     Class                      Role                         Mult Join
 #     =====                      ====                         ==== ====
 ->Association(
-  [qw/Gene                       gene                         1    scaffold                 /],
+  [qw/Gene                       gene                         1    scaffold     /],
   [qw/Scaffold                   scaffold                     *    scaffold_oid /])
+
+->Association(
+  [qw/Gene                       gene                         *    taxon     /],
+  [qw/Taxon                      taxon                        1    taxon_oid /])
+
+->Association(
+  [qw/Gene                       gene                         *    taxon     /],
+  [qw/GoldTaxonVw                gold_tax                     1    taxon_oid /])
 
 ->Association(
   [qw/GoldAnalysisProject        reference_gold_ap            0..1 gold_analysis_project_id/],

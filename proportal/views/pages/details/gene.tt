@@ -59,7 +59,7 @@
 
 		<div class="tableTitle"><h6>Genome and Scaffold Details</h6></div>
 		<table class="condensed">
-			<tr><td class="col1">Taxon ID</td>	<td> <a href="[% link( 'taxon_details', { taxon_oid => taxon.taxon_oid } ) %]">[% results.taxon.taxon_oid %]</a></td></tr>
+			<tr><td class="col1">Taxon ID</td>	<td> <a href="[% link( 'details', { type => 'taxon', taxon_oid => taxon.taxon_oid } ) %]">[% results.taxon.taxon_oid %]</a></td></tr>
 			<tr><td>Taxon</td>	<td> [% results.taxon.taxon_display_name %] </td></tr>
 			<tr><td>Scaffold ID</td>	<td> [% self.scaffold %] <div class="noteToSelf"> * </div></td></tr>
 			<tr><td>Scaffold</td>	<td> <div class="noteToSelf"> * </div></td></tr>
@@ -216,14 +216,7 @@
 			<div id="tabContent2_seqData" class="tabContent">
 				<div class="textDisplay">
 				<code> <span style="color: blue">>640083263 YP_001013829 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819]</span>
-				MKLNCSQSELNNALQLVSRAVSNRPTHPVLANVLLAADEVTGKLRLTGFD
-				LSLGIQTSISASIESSGAITLPAKLFGEIVSKLSNDSPLVLTSDETSQQV
-				ELTSKSGTYQVRGMVSDDFPDLPLVESGNSFKLNPLLLSNAIKSTLFASS
-				TDEAKQLLTGVNLTFDGYGIESAATDGHRLAVLNLNNILSDSKEIDSSTK
-				FEKFSITLPSKSLREVEKFLSTCDISQPINFFVDKGQVVFISVEDIITIR
-				ALEGSYPNYSQLLPDTFENELEFDRKEFISSLERIAVLADQHNNVIKVTT
-				DGSANLIKISTDAQDIGTGYESLPVSYKGDSFQIAFNVRYLLDGLKVIDS
-				NLIKLSCNSPTTPAVFSPINSDVNFTYLVMPIQIRN
+				[% self.aa_residue %]
 				</code>
 				</div>
 			</div>

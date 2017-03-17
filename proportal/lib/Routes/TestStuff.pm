@@ -73,14 +73,14 @@ for my $f ( qw[ demo ] ) {
 #
 # 	my @valid_queries = qw( location clade data_type phylogram ecosystem ecotype big_ugly_taxon_table );
 #
-# 	my @subsets = qw( metagenome isolate prochlor synech prochlor_phage synech_phage );
+# 	my @pp_subsets = qw( metagenome isolate prochlor synech prochlor_phage synech_phage );
 #
 # 	my $re = join '|', @valid_queries;
 #
 # 	# filterable queries
 # 	get qr{
 # 		/ (?<page> $re )
-# 		/? (?<subset> \w+.* )?
+# 		/? (?<pp_subset> \w+.* )?
 # 		}x => sub {
 #
 # 		my $c = captures;
@@ -88,8 +88,8 @@ for my $f ( qw[ demo ] ) {
 #
 #
 # 		bootstrap( $p );
-# 		if ( $c->{subset} ) {
-# 			img_app->set_filters({ subset => $c->{subset} });
+# 		if ( $c->{pp_subset} ) {
+# 			img_app->set_filters({ pp_subset => $c->{pp_subset} });
 # 		}
 #
 # 		my $rslt = img_app->get_data();
@@ -125,7 +125,7 @@ for my $f ( qw[ demo ] ) {
 # 		my $results = {
 # 			valid => $v_q,
 # 			queries => [ @valid_queries ],
-# 			subsets => [ @subsets ]
+# 			pp_subsets => [ @pp_subsets ]
 # 		};
 #
 # 		say 'results: ' . Dumper $results;

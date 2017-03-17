@@ -154,13 +154,13 @@ subtest 'default controllers' => sub {
 
 	is_deeply(
 		$filt->filters,
-		{ subset => 'all_proportal' },
+		{ pp_subset => 'all_proportal' },
 		'Checking that directly-created controller has filters'
 	);
 
-	is_deeply( $app2->controller->filters, { subset => 'all_proportal' }, 'Checking that directly-created controller has filters' );
+	is_deeply( $app2->controller->filters, { pp_subset => 'all_proportal' }, 'Checking that directly-created controller has filters' );
 
-	is_deeply( $app3->controller->filters, { subset => 'all_proportal' }, 'Checking that directly-created controller has filters' );
+	is_deeply( $app3->controller->filters, { pp_subset => 'all_proportal' }, 'Checking that directly-created controller has filters' );
 
 	is_deeply( $app4->controller->{pip}, 'pop', 'Checking a hashref' );
 	ok( ! defined $app4->controller->filters, 'Checking there are no filters' );
@@ -199,7 +199,7 @@ subtest 'filter validity' => sub {
 			type => 'filter value'
 		});
 		throws_ok {
-			$filt->set_filters( subset => $f );
+			$filt->set_filters( pp_subset => $f );
 		} qr[$msg];
 	};
 
@@ -209,7 +209,7 @@ subtest 'filter validity' => sub {
 
 		is_deeply(
 			$filt->valid_filters,
-			{	subset => {
+			{	pp_subset => {
 					enum => [ qw( prochlor synech prochlor_phage synech_phage isolate metagenome all_proportal ) ]
 				}
 			},
@@ -218,10 +218,10 @@ subtest 'filter validity' => sub {
 		is_deeply(
 			$filt->filter_schema,
 			{
-				subset => {
-					id => 'subset',
+				pp_subset => {
+					id => 'pp_subset',
 					type  => 'enum',
-					title => 'subset',
+					title => 'ProPortal subset',
 					control => 'checkbox',
 					enum => [ qw( prochlor synech prochlor_phage synech_phage isolate metagenome all_proportal ) ],
 					enum_map => {
@@ -314,13 +314,13 @@ subtest 'controllers and roles' => sub {
 			}, 'checking tmpl_includes' );
 
 			is_deeply( $test->controller->valid_filters, {
-				subset => {
+				pp_subset => {
 					enum => [ qw( prochlor synech isolate ) ],
 				}
 			}, 'checking valid filters' );
 
 			is_deeply( $test->controller->filters, {
-				subset => 'isolate'
+				pp_subset => 'isolate'
 			}, 'checking default value' );
 
 		};
@@ -342,7 +342,7 @@ subtest 'controllers and roles' => sub {
 
 			is_deeply(
 				$test->filters,
-				{ subset => 'isolate' },
+				{ pp_subset => 'isolate' },
 				'checking filter is unchanged'
 			);
 
@@ -352,31 +352,31 @@ subtest 'controllers and roles' => sub {
 				type => 'filter value'
 			});
 			throws_ok {
-				$test->set_filters( subset => $f );
+				$test->set_filters( pp_subset => $f );
 			} qr[$msg];
 			throws_ok {
-				$test->set_filters({ subset => $f });
+				$test->set_filters({ pp_subset => $f });
 			} qr[$msg];
 		};
 
 		subtest 'valid' => sub {
 
 			lives_ok {
-				$test->set_filters({ subset => 'prochlor' });
+				$test->set_filters({ pp_subset => 'prochlor' });
 			};
 
 			is_deeply(
 				$test->filters,
-				{ subset => 'prochlor' },
+				{ pp_subset => 'prochlor' },
 				'checking the filters are set correctly'
 			);
 
 			lives_ok {
-				$test->set_filters( subset => 'synech' );
+				$test->set_filters( pp_subset => 'synech' );
 			};
 			is_deeply(
 				$test->filters,
-				{ subset => 'synech' },
+				{ pp_subset => 'synech' },
 				'checking the filters are set correctly'
 			);
 
@@ -386,21 +386,21 @@ subtest 'controllers and roles' => sub {
 				type => 'filter value'
 			});
 			throws_ok {
-				$test->set_filters( subset => 'blob' );
+				$test->set_filters( pp_subset => 'blob' );
 			} qr[$msg];
 
 			is_deeply(
 				$test->filters,
-				{ subset => 'synech' },
+				{ pp_subset => 'synech' },
 				'checking the filters have not changed'
 			);
 
 			lives_ok {
-				$test->set_filters( subset => 'isolate' );
+				$test->set_filters( pp_subset => 'isolate' );
 			};
 			is_deeply(
 				$test->filters,
-				{ subset => 'isolate' },
+				{ pp_subset => 'isolate' },
 				'checking the filters are set correctly'
 			);
 
@@ -419,7 +419,7 @@ subtest 'controllers and roles' => sub {
 		is_deeply( $test->controller->tmpl_includes, {
 			tt_scripts => qw( data_type )
 		}, 'checking tmpl_includes' );
-		is_deeply( $test->controller->filters, { subset => 'all_proportal' }, 'checking filters' );
+		is_deeply( $test->controller->filters, { pp_subset => 'all_proportal' }, 'checking filters' );
 	};
 
 	subtest 'ProPortal::Controller::Phylogram' => sub {
@@ -433,13 +433,13 @@ subtest 'controllers and roles' => sub {
 		is_deeply( $test->controller->tmpl_includes, {
 			tt_scripts => qw( phylogram )
 		}, 'checking tmpl_includes' );
-		is_deeply( $test->controller->filters, { subset => 'isolate' }, 'checking filters' );
+		is_deeply( $test->controller->filters, { pp_subset => 'isolate' }, 'checking filters' );
 		is_deeply( $test->controller->valid_filters,
-		{ subset => {
+		{ pp_subset => {
 			enum => [ qw( prochlor synech prochlor_phage synech_phage isolate ) ]
 		}	}, 'checking valid filters' );
-		$test->set_filters( subset => 'prochlor_phage' );
-		is_deeply( $test->controller->filters, { subset => 'prochlor_phage' }, 'checking filters post-setting' );
+		$test->set_filters( pp_subset => 'prochlor_phage' );
+		is_deeply( $test->controller->filters, { pp_subset => 'prochlor_phage' }, 'checking filters post-setting' );
 		$msg = err({
 			err => 'invalid',
 			subject => 'metagenome',
@@ -447,13 +447,13 @@ subtest 'controllers and roles' => sub {
 		});
 
 		throws_ok {
-			$test->set_filters( subset => 'metagenome' )
+			$test->set_filters( pp_subset => 'metagenome' )
 		} qr[$msg], 'Checking invalid filter';
 
 		$test = TestApp->new();
 		$test->add_controller_role('phylogram');
-		$test->set_filters( subset => 'isolate' );
-		is_deeply( $test->controller->filters, { subset => 'isolate' }, 'checking filters post-setting' );
+		$test->set_filters( pp_subset => 'isolate' );
+		is_deeply( $test->controller->filters, { pp_subset => 'isolate' }, 'checking filters post-setting' );
 	};
 
 	subtest 'custom controller_args' => sub {
@@ -489,10 +489,10 @@ subtest 'controllers and roles' => sub {
 			say 'test now: ' . Dumper $test;
 			isa_ok( $test->controller, 'ProPortal::Controller::Filtered' );
 			is_deeply( $test->controller->filters,
-				{ subset => 'prochlor' },
+				{ pp_subset => 'prochlor' },
 				'testing default for ecotype controller'
 			);
-			is_deeply( $test->controller->valid_filters->{subset},
+			is_deeply( $test->controller->valid_filters->{pp_subset},
 			{ enum => [ 'prochlor' ] },
 			'testing valid filters'
 			);

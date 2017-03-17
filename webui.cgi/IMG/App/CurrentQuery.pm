@@ -3,7 +3,7 @@
 #
 #	Interface to the current query
 #
-#	$Id: CurrentQuery.pm 36576 2017-02-24 19:08:01Z aireland $
+#	$Id: CurrentQuery.pm 36722 2017-03-17 16:58:25Z aireland $
 ############################################################################
 package IMG::App::CurrentQuery;
 

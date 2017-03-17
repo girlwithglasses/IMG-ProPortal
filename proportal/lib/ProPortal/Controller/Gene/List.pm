@@ -11,7 +11,7 @@ has '+page_id' => (
 );
 
 has '+page_wrapper' => (
-	default => 'layouts/default_wide.tt'
+	default => 'layouts/default_wide.html.tt'
 );
 
 =head3 render
@@ -19,22 +19,6 @@ has '+page_wrapper' => (
 List of all genes in the ProPortal, possibly filtered in some manner
 
 @param taxon_oid
-
-@param type =>
-
-proteinCodingGenes
-withFunc
-withoutFunc
-fusedGenes
-signalpGeneList
-transmembraneGeneList
-pseudoGenes  -> IS_PSEUDOGENE
-geneCassette
-biosynthetic_genes
-
-type = rnas
-rnas, locus_type => ( rRNA | tRNA | xRNA )
-rnas, locus_type => rRNA, gene_symbol => xxx
 
 =cut
 
@@ -58,37 +42,24 @@ sub _render {
 	});
 
 	# get the genes
-	my $genes = $self->get_data( $args );
+	my $genes = $self->_core->run_query({
+		query => 'gene_list',
+		where => {
+			taxon => $args->{taxon_oid}
+		}
+	});
 
-	return { results => { genes => $genes, taxon => $taxon, params => $args, label_data => $self->get_label_data } };
+	return { results => { genes => $genes, taxon => $taxon, label_data => $self->get_label_data } };
 
 }
 
 sub get_data {
 	my $self = shift;
-	my $args = shift;
 
-	my $q_hash = {
-		taxon => $args->{taxon_oid}
-	};
-
-	if ( $args->{locus_type} && 'xrna' eq lc( $args->{locus_type} ) ) {
-		$q_hash->{locus_type} = {
-			like => '%RNA',
-			not_in => [ qw( rRNA tRNA ) ]
-		};
-		delete $args->{locus_type};
-	}
-
-	for ( qw ( is_pseudogene locus_type gene_symbol ) ) {
-		$q_hash->{$_} = $args->{$_} if defined $args->{$_};
-	}
-
-
-	return $self->_core->run_query({
-		query => 'gene_list',
-		where => $q_hash
-	});
+# 	my $res = $self->_core->run_query({
+# 		query => 'gene_list',
+# 		%$args
+# 	});
 
 }
 

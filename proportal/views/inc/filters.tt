@@ -4,13 +4,13 @@
 <section class="filters">
 [%	# filter domain
 
-	sorted_filters = data_filters.sorted || data_filters.valid.keys;
+	sorted_filters = data_filters.sorted || data_filters.valid.keys.sort;
 
 	FOR fd IN sorted_filters; %]
 	<p>Filter by [% data_filters.schema.$fd.title %]:</p>
 	<ul class="[% fd %]-filters">
 [%		FOR f IN data_filters.valid.$fd.enum; %]
-	<li class="[% fd %]-filters__item"><a class="[% fd %]-filters__link" href="[% link( current_page ) %]/[% fd %]=[% f %]">[% data_filters.schema.$fd.enum_map.$f || f %]</a>[%
+	<li class="[% fd %]-filters__item"><a class="[% fd %]-filters__link" href="[% link( current_page ) %]?[% fd %]=[% f %]">[% data_filters.schema.$fd.enum_map.$f || f %]</a>[%
 			IF data_filters.active && data_filters.active.$fd == f;
 		%] <span class="[% fd %]-filters__current">(currently displayed)</span>[%
 			END; %]

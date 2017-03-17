@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Data Type Inventory';
+	title = 'IMG ProPortal: Taxon List';
 %]
 <h2>Data Type Inventory</h2>
 <section class="info--data_type page-intro">

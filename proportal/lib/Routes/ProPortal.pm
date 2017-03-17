@@ -42,25 +42,21 @@ prefix '/proportal' => sub {
 
 	my $prefix = 'proportal';
 
-	# filterable queries
 	get qr{
 		/ (?<query> clade | data_type | ecosystem | ecotype | location | longhurst | phylogram | big_ugly_taxon_table )
-		/?
-		(subset=)?
-		(?<subset>\w+)?
-		/?
-		(dataset_type=)?
-		(?<dataset_type>\w+)?
-		/?
+		\?
+		.*
 		}x => sub {
 
-#	<= subset=SUBSET
+#	<= pp_subset=SUBSET
 #	<= dataset_type=DST
 
 		my $c = captures;
 		my $p = delete $c->{query};
 
-		log_debug { 'captures: ' . Dumper $c };
+		my $p_hash = params('query');
+		log_debug { 'params: ' . Dumper params };
+		log_debug { 'query params: ' . Dumper $p_hash };
 
 		bootstrap( $p );
 
@@ -74,6 +70,43 @@ prefix '/proportal' => sub {
 		return template img_app->controller->tmpl, img_app->controller->render;
 
 	};
+
+	# filterable queries
+	get qr{
+		/ (?<query> clade | data_type | ecosystem | ecotype | location | longhurst | phylogram | big_ugly_taxon_table )
+		/?
+		(pp_subset=)?
+		(?<pp_subset>\w+)?
+		/?
+		(dataset_type=)?
+		(?<dataset_type>\w+)?
+		/?
+		}x => sub {
+
+#	<= pp_subset=SUBSET
+#	<= dataset_type=DST
+
+		my $c = captures;
+		my $p = delete $c->{query};
+
+		log_debug { 'captures: ' . Dumper $c };
+		my $p_hash = params('query');
+		log_debug { 'params: ' . Dumper params };
+		log_debug { 'query params: ' . Dumper $p_hash };
+
+		bootstrap( $p );
+
+		img_app->set_filters( $p_hash );
+
+		img_app->current_query->_set_page_params({
+			page_id => img_app->controller->page_id,
+			menu_group => $prefix
+		});
+
+		return template img_app->controller->tmpl, img_app->controller->render;
+
+	};
+
 
 =head3 Home page
 
@@ -98,62 +131,99 @@ The home page.
 
 };
 
-sub taxon_details {
-
-	bootstrap( 'Taxon::Details' );
-
-	img_app->current_query->_set_page_params({
-		page_id => img_app->controller->page_id
-	});
-
-	return template img_app->controller->tmpl, img_app->controller->render({ taxon_oid => params->{taxon_oid} });
-
-}
-
-sub gene_details {
-
-	bootstrap( 'Gene::Details' );
-
-	img_app->current_query->_set_page_params({
-		page_id => img_app->controller->page_id
-	});
-
-	return template img_app->controller->tmpl, img_app->controller->render({ gene_oid => params->{gene_oid} });
-
-}
-
-sub gene_list {
-
-	bootstrap( 'Gene::List' );
-
-	my %args = map {
-		split '=', $_;
-	} ( split '&', params->{args} );
-	say 'args: ' . Dumper \%args;
-
-	img_app->current_query->_set_page_params({
-		page_id => img_app->controller->page_id
-	});
-
-	return template img_app->controller->tmpl, img_app->controller->render( \%args );
-
-}
-
-
-prefix '/taxon' => sub {
-
-	get '/details/:taxon_oid' => \&taxon_details;
-
-	get '/:taxon_oid' => \&taxon_details;
-
+my $h = {
+	gene => 'Gene',
+	taxon => 'Taxon',
+	details => 'Details',
+	list => 'List'
 };
 
-prefix '/gene' => sub {
+sub generic {
+	my $args = shift;
 
-	get '/details/:gene_oid' => \&gene_details;
+	bootstrap( $h->{ $args->{prefix} } . '::' . $h->{ $args->{domain} } );
 
-	get '/list/:args' => \&gene_list;
+	img_app->current_query->_set_page_params({
+		page_id => img_app->controller->page_id
+	});
 
+	log_debug { 'args: ' . Dumper $args };
+
+	if ( $args->{extra} ) {
+		for my $p ( split '&', $args->{extra} ) {
+			my ( $k, $v ) = split "=", $p, 2;
+			push @{$args->{params}{$k}}, $v;
+		}
+
+	}
+
+	return template img_app->controller->tmpl, img_app->controller->render( $args->{params} );
+
+}
+
+
+# /?foo=hello
+# get '/' => sub {
+# my $name = query_parameters->get('foo');
+# };
+#
+# /?name=Alice&name=Bob
+# get '/' => sub {
+# my @names = query_parameters->get_all('name');
+# };
+#
+# // get all parameters as a single hash
+# my %all_parameters = params;
+#
+# // request all parmameters from a specific source: body, query, route
+# my %body_parameters  = params('body');
+# my %route_parameters = params('route');
+# my %query_parameters = params('query');
+
+
+prefix "/list/" => sub {
+
+	for my $domain ( qw( gene taxon ) ) {
+
+		prefix $domain => sub {
+			# base query
+			get qr{
+				^/?$
+				}x => sub {
+				return generic({ prefix => 'list', domain => $domain });
+			};
+
+			# standard ? query
+			get '?:stuff' => sub {
+
+				my $p_hash = params('query');
+				log_debug { 'params: ' . Dumper params };
+				log_debug { 'query params: ' . Dumper $p_hash };
+				log_debug { 'stuff: ' . Dumper params->{stuff} };
+
+				return generic({ prefix => 'list', domain => $domain, params => $p_hash });
+			};
+		};
+	}
+};
+
+
+prefix "/details/" => sub {
+
+	get qr{
+		(?<domain> gene | taxon )
+		[\?/]
+		(?<oid> .* )
+		/?
+		}x => sub {
+
+			say 'captures: ' . Dumper captures;
+
+			return generic({
+				prefix => 'details',
+				domain => captures->{domain},
+				params => { captures->{domain} . '_oid' => captures->{oid} } });
+	};
 };
 
 prefix '/tools' => sub {

@@ -22,6 +22,22 @@ use CGI;
 
 use Test::Taint;
 
+
+
+
+
+sub parse_params {
+	my $self = shift;
+	my $req = shift;
+
+	coerce_section( $req );
+
+
+
+}
+
+
+
 my $VAR1 = bless( {
   _body_params => {},
   _chunk_size => 4096,
@@ -69,7 +85,7 @@ my $VAR1 = bless( {
     HTTP_COOKIE => "plack_debug_panel=hide",
     HTTP_DNT => 1,
     HTTP_HOST => "localhost:5000",
-    HTTP_REFERER => "http://img-proportal.dev/proportal/data_type/subset=all_proportal",
+    HTTP_REFERER => "http://img-proportal.dev/proportal/data_type/pp_subset=all_proportal",
     HTTP_UPGRADE_INSECURE_REQUESTS => 1,
     HTTP_USER_AGENT => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/602.4.8 (KHTML, like Gecko) Version/10.0.3 Safari/602.4.8",
     HTTP_X_FORWARDED_FOR => "127.0.0.1",

@@ -37,7 +37,7 @@
 <section id="stats">
 <h3>IMG/ProPortal Data Sets</h3>
 <div class="section-content">
-[%	IF results.stats.subsets.size > 0; %]
+[%	IF results.stats.pp_subsets.size > 0; %]
 
 <!-- <h6> Isolate and Single Cell Genomes </h6> -->
 
@@ -52,8 +52,8 @@
 <tr><td colspan="2"><h6> Isolate and Single Cell Genomes </h6></td></tr>
 [%	FOR fd IN data_filters.valid.keys.sort;
 		FOR f IN data_filters.valid.$fd.enum;
-			IF results.stats.subsets.$f;
-				s = results.stats.subsets.$f; %]
+			IF results.stats.pp_subsets.$f;
+				s = results.stats.pp_subsets.$f; %]
 		<tr><td class="indent">[% data_filters.schema.$fd.enum_map.$f %]</td>
 			<td>[% s.count %]</td>
 		</tr>
@@ -168,11 +168,11 @@
 	<tr><th class="L">Subset</th><th class="L">Count</th></tr>
 	</thead>
 	<tbody>
-[%	IF results.stats.subsets.size > 0;
+[%	IF results.stats.pp_subsets.size > 0;
 		FOR fd IN data_filters.schema.keys.sort;
 			FOR f IN data_filters.valid.$fd.enum;
-				IF results.stats.subsets.$f;
-					s = results.stats.subsets.$f; %]
+				IF results.stats.pp_subsets.$f;
+					s = results.stats.pp_subsets.$f; %]
 			<tr><td>[% data_filters.schema.$fd.enum_map.$f %]</td>
 				<td>[% s.count %]</td>
 			</tr>
@@ -194,10 +194,10 @@
 <tbody>
 [%		FOREACH s_key IN results.stats.data_types.keys.sort;
 			s = results.stats.data_types.$s_key;
-			s_type = s.proportal_subset; %]
+			s_type = s.pp_subset; %]
 <tr>
 <td>[% s.dataset_type %]</td>
-<td>[% data_filters.schema.subset.enum_map.$s_type %]</td>
+<td>[% data_filters.schema.pp_subset.enum_map.$s_type %]</td>
 <td class="R">[% s.public_count %]</td><td class="R">[% s.count %]</td>
 </tr>
 [%	END;

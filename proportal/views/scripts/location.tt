@@ -13,7 +13,7 @@
 	END;
 	',int_links='; # this should be links.taxon
 
-        t_link = { taxon => link('taxon_details') };
+        t_link = { taxon => settings.pp_app _ '/details/taxon' };
 
 		t_link.json;
 	';';

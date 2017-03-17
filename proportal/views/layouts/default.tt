@@ -34,9 +34,9 @@
 %]
 	<article class="content cf" role="main">
 [%
-	IF settings.message;
+#	IF settings.message;
 		PROCESS 'inc/message.tt';
-	END;
+#	END;
 	content;	# the page content
 
 %]

@@ -27,14 +27,14 @@ has '+tmpl_includes' => (
 
 has '+filters' => (
 	default => sub {
-		return { subset => 'coccus' };
+		return { pp_subset => 'coccus' };
 	}
 );
 
 has '+valid_filters' => (
 	default => sub {
 		return {
-			subset => {
+			pp_subset => {
 				enum => [ qw( pro syn coccus ) ]
 			}
 		};
@@ -54,7 +54,7 @@ sub _render {
 	# get all distinct clade names
 	my $clades = $self->_core->run_query({
 		query => 'distinct_clade',
-		filters => { subset => 'coccus' }
+		filters => { pp_subset => 'coccus' }
 	});
 
 	say 'Clades: ' . Dumper $clades;

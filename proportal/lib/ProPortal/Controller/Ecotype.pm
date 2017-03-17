@@ -18,10 +18,10 @@ use Template::Plugin::JSON::Escape;
 # 				tt_scripts => qw( ecotype ),
 # 			},
 # 			filters => {
-# 				subset => 'pro'
+# 				pp_subset => 'pro'
 # 			},
 # 			valid_filters => {
-# 				subset => {
+# 				pp_subset => {
 # 					enum => [ qw( pro ) ],
 # 				}
 # 			}
@@ -41,13 +41,13 @@ has '+tmpl_includes' => (
 
 has '+filters' => (
 	default => sub {
-		return { subset => 'pro' };
+		return { pp_subset => 'pro' };
 	}
 );
 
 has '+valid_filters' => (
 	default => sub {
-		return { subset => { enum => [ qw( pro ) ] } };
+		return { pp_subset => { enum => [ qw( pro ) ] } };
 	}
 );
 

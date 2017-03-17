@@ -3,7 +3,7 @@
 <command>source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc;
 DANCER_ENVIRONMENT="proportal-galaxy" perl /global/homes/a/aireland/webUI/proportal/script/galaxy/proportal_vis.pl
 	--query "$visualisation.query"
-	--subset "$visualisation.subset"
+	--pp_subset "$visualisation.pp_subset"
 	--outfile "$outfile"
 </command>
 <inputs>
@@ -16,14 +16,14 @@ DANCER_ENVIRONMENT="proportal-galaxy" perl /global/homes/a/aireland/webUI/propor
 		<option value="phylogram">phylogram</option>
 	</param>
 	<when value="clade">
-		<param name="subset" type="select" label="Select the subset to visualise">
+		<param name="pp_subset" type="select" label="Select the subset to visualise">
 			<option value="isolate">All ProPortal isolates</option>
 			<option value="prochlor">Prochlorococcus species</option>
 			<option value="synech">Synechococcus species</option>
 		</param>
 	</when>
 	<when value="ecosystem">
-		<param name="subset" type="select" label="Select the subset to visualise">
+		<param name="pp_subset" type="select" label="Select the subset to visualise">
 			<option value="all_proportal">All isolates and metagenomes</option>
 			<option value="isolate">All ProPortal isolates</option>
 			<option value="prochlor">Prochlorococcus species</option>
@@ -34,12 +34,12 @@ DANCER_ENVIRONMENT="proportal-galaxy" perl /global/homes/a/aireland/webUI/propor
 		</param>
 	</when>
 	<when value="ecotype">
-		<param name="subset" type="select" label="Select the subset to visualise">
+		<param name="pp_subset" type="select" label="Select the subset to visualise">
 			<option value="prochlor">Prochlorococcus species</option>
 		</param>
 	</when>
 	<when value="location">
-		<param name="subset" type="select" label="Select the subset to visualise">
+		<param name="pp_subset" type="select" label="Select the subset to visualise">
 			<option value="all_proportal">All isolates and metagenomes</option>
 			<option value="isolate">All ProPortal isolates</option>
 			<option value="prochlor">Prochlorococcus species</option>
@@ -50,7 +50,7 @@ DANCER_ENVIRONMENT="proportal-galaxy" perl /global/homes/a/aireland/webUI/propor
 		</param>
 	</when>
 	<when value="phylogram">
-		<param name="subset" type="select" label="Select the subset to visualise">
+		<param name="pp_subset" type="select" label="Select the subset to visualise">
 			<option value="isolate">All ProPortal isolates</option>
 			<option value="prochlor">Prochlorococcus species</option>
 			<option value="synech">Synechococcus species</option>

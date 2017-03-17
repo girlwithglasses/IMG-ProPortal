@@ -18,8 +18,16 @@ has 'filters' => (
 	is => 'rwp',
 	lazy => 1,
 	default => sub {
-		return { subset => 'all_proportal' };
+		return { pp_subset => 'all_proportal' };
 	},
+);
+
+has 'filter_domains' => (
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		return [ qw( pp_subset ) ];
+	}
 );
 
 =head3 valid_filters
@@ -34,7 +42,7 @@ has 'valid_filters' => (
 	is => 'lazy',
 	default => sub {
 		return {
-			subset => {
+			pp_subset => {
 				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
 			},
 #			dataset_type => {
@@ -60,58 +68,22 @@ sub _build_filter_schema {
 
 	my $schema;
 
-	for my $fn ( qw( subset dataset_type ) ) {
+	for my $fn ( @{$self->filter_domains} ) {
 		$schema->{$fn} = $self->_core->filter_schema( $fn );
-		if ( $valid->{$fn} ) {
+		if ( $valid->{$fn} && $valid->{$fn}{enum} ) {
 			$schema->{$fn}{enum} = $valid->{$fn}{enum};
 		}
 	}
 
 	return $schema;
 
-# 	return {
-# 		subset => {
-# 			id => 'subset',
-# 			type  => 'enum',
-# 			title => 'subset',
-# 			control => 'checkbox',
-# 			enum => $valid->{subset}{enum},
-# 			enum_map => {
-# 				pro => 'Prochlorococcus',
-# 				syn => 'Synechococcus',
-# 				pro_phage => 'Prochlorococcus phage',
-# 				syn_phage => 'Synechococcus phage',
-# 				other => 'Other bacteria',
-# 				other_phage => 'Other phages',
-# 				phage => 'Prochlorococcus, Synechococcus, and other phages',
-# 				coccus => 'Prochlorococcus, Synechococcus, and other bacteria',
-# 				isolate => 'All ProPortal isolates',
-# 				metagenome => 'Marine metagenomes',
-# 				all_proportal => 'All isolates and metagenomes'
-# 			}
-# 		},
-# 		dataset_type => {
-# 			id => 'dataset_type',
-# 			type => 'enum',
-# 			title => 'data type',
-# 			control => 'checkbox',
-# 			enum => $valid->{dataset_type}{enum},
-# 			enum_map => {
-# 				'single cell' => 'Single cell',
-# 				isolate => 'Isolate',
-# 				metagenome => 'Metagenome',
-# 				transcriptome => 'Transcriptome',
-# 				metatranscriptome => 'Metatranscriptome'
-# 			}
-# 		}
-# 	};
 }
 
 =head3 set_filters
 
 Set the filters for a query. Checks that the filter setting is valid and throws an error if it is not.
 
-@param  $filters      filter hash in the form { param => value }, e.g. { subset => 'isolate' }
+@param  $filters      filter hash in the form { param => value }, e.g. { pp_subset => 'isolate' }
 
 @output dies if there is an error; otherwise filters are set on the controller
 
@@ -122,35 +94,98 @@ sub set_filters {
 
 	my $filters = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // return;
 
-	log_debug { 'filters: ' . $filters };
+	log_debug { 'filters: ' . Dumper $filters };
+	log_debug { 'filter schema: ' . Dumper $self->filter_schema };
+	log_debug { 'valid filters: ' . Dumper $self->valid_filters };
 
-	for my $f ( keys %$filters ) {
-		if ( ! $self->valid_filters->{ $f } ) {
-			$self->choke({
-				err => 'invalid',
-				subject => $f,
-				type => 'query dimension to filter'
-			});
-		}
+# 	for my $f ( keys %$filters ) {
+# 		log_debug { 'f: ' . $f };
+# 		if ( ! $self->valid_filters->{ $f } ) {
+# 			$self->choke({
+# 				err => 'invalid',
+# 				subject => $f,
+# 				type => 'query dimension to filter'
+# 			});
+# 		}
+# 	}
+	my $tested;
+
+	for my $f ( @{$self->filter_domains} ) {
+
 		# now check the value
-		if ( 'enum' eq $self->filter_schema->{$f}{type} ) {
-			if ( ! grep { $_ eq  $filters->{$f} } @{$self->filter_schema->{$f}{enum}} ) {
-				$self->choke({
-					err => 'invalid',
-					subject => $filters->{$f},
-					type => 'filter value'
-				});
+		if ( $filters->{$f} ) {
+			if ( 'enum' eq $self->filter_schema->{$f}{type} ) {
+
+				$self->test_enum({ schema => $self->filter_schema->{$f}, test => $filters->{$f} });
 			}
+			# what other types might we have?
+			elsif ( $self->filter_schema->{$f}{pattern} ) {
+				## TODO
+
+			}
+			elsif ( 'number' eq $self->filter_schema->{$f}{type} ) {
+
+			}
+			$tested->{$f} = $filters->{$f};
 		}
-		# what other types might we have?
-		else {
-			## TODO
+		elsif ( $self->filter_schema->{$f}{default} ) {
+			$tested->{$f} = $self->filter_schema->{$f}{default};
 		}
 	}
 	if ( keys %$filters ) {
-		$self->_set_filters( $filters );
+		$self->_set_filters( $tested );
+	}
+
+	log_debug { 'filters post-setting: ' . Dumper $self->filters };
+
+#	die;
+
+	return;
+}
+
+sub test_enum {
+	my $self = shift;
+	my $args = shift;
+
+	if ( ! grep { $_ eq  $args->{test} } @{$args->{schema}{enum}} ) {
+		$self->choke({
+			err => 'invalid',
+			subject => $args->{test},
+			type => 'filter value'
+		});
 	}
 	return;
+}
+
+sub test_number {
+	my $self = shift;
+	my $args = shift;
+
+	$self->choke({
+		err => 'invalid',
+		subject => $args->{test},
+		type => 'filter value'
+	}) unless $args->{test} =~ m!^\d+$!;
+}
+
+sub test_string {
+	my $self = shift;
+	my $args = shift;
+
+	$self->choke({
+		err => 'invalid',
+		subject => $args->{test},
+		type => 'filter value'
+	}) unless $args->{test} =~ m!\w+!;
+
+}
+
+sub test_pattern {
+	my $self = shift;
+	my $args = shift;
+
+
+
 }
 
 around 'render' => sub {

@@ -32,7 +32,7 @@ use lib @dir_arr;
 		}
 	);
 
-	has 'subset' => (
+	has 'pp_subset' => (
 		is => 'ro',
 	);
 
@@ -75,7 +75,7 @@ use lib @dir_arr;
 		my $self = shift;
 
 		$self->add_controller_role( $self->args->query );
-		$self->set_filters( subset => $self->args->subset );
+		$self->set_filters( pp_subset => $self->args->pp_subset );
 
 		my $rslts = $self->render;
 		$rslts = AppCore::get_tmpl_vars({ core => $self, output => $rslts });
@@ -107,7 +107,7 @@ use Getopt::Long;
 my $args = {};
 GetOptions(
 	$args,
-	"subset|s=s",
+	"pp_subset|s=s",
 	"query|q=s",
 	"outfile|o=s",
 	"test|t"         # flag for test mode

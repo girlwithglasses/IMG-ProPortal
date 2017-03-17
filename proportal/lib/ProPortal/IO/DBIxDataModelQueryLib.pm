@@ -73,7 +73,7 @@ sub location {
 
 	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype proportal_subset ) ],
+			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype pp_subset ) ],
 			-where    => {
 				latitude  => { '!=' => undef },
 				longitude => { '!=' => undef },
@@ -99,7 +99,7 @@ sub longhurst_counts {
 		-group_by => [ qw( longhurst_code longhurst_description ) ],
 		-order_by => [ 'longhurst_description' ],
 		-where => {
-			proportal_subset => { '!=', undef },
+			pp_subset => { '!=', undef },
 #				is_public => 'Yes'
 		},
 		-result_as => 'statement'
@@ -123,7 +123,7 @@ sub longhurst {
 #		-group_by => [ qw( longhurst_code longhurst_description ) ],
 		-order_by => [ 'longhurst_description', 'taxon_display_name' ],
 		-where => {
-			proportal_subset => { '!=', undef },
+			pp_subset => { '!=', undef },
 #				is_public => 'Yes'
 		},
 		-result_as => 'statement'
@@ -220,7 +220,7 @@ ecosystem_category
 ecosystem_type
 ecosystem_subtype
 specific_ecosystem
-proportal_subset
+pp_subset
 
 =cut
 
@@ -244,7 +244,7 @@ sub taxon_dataset_type {
 	return $self->schema('img_core')->table('GoldDataTypeVw')
 		->select(
 			-columns  => [ '*' ],
-			-order_by => [ qw( dataset_type genome_type proportal_subset taxon_display_name ) ],
+			-order_by => [ qw( dataset_type genome_type pp_subset taxon_display_name ) ],
 			-result_as => 'statement',
 		);
 }
@@ -257,7 +257,7 @@ Count of number of genomes in each of the proportal subset types
 
 @return $resultset, with fields:
 
-proportal_subset => ..., count => ...
+pp_subset => ..., count => ...
 
 =cut
 
@@ -266,8 +266,8 @@ sub subset_stats {
 
 	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns => [ 'proportal_subset', 'count(distinct taxon_oid)|count' ],
-			-group_by => 'proportal_subset',
+			-columns => [ 'pp_subset', 'count(distinct taxon_oid)|count' ],
+			-group_by => 'pp_subset',
 			-result_as => 'statement'
 		);
 }
@@ -282,7 +282,7 @@ sub metagenomes_by_ecosystem {
 			-columns  => [ 'count(distinct taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 			-group_by => [ qw( ecosystem ecosystem_category ) ],
 			-where => {
-				proportal_subset => 'metagenome'
+				pp_subset => 'metagenome'
 			},
 			-result_as => 'statement',
 		);
@@ -354,9 +354,20 @@ sub gene_list {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->schema('img_core')->table('Gene')
+	$args->{where}{'gene.obsolete_flag'} = 'No';
+
+	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax ] )
 		->select(
-			-columns => [ '*' ],
+			-columns => [ qw(
+				gene_oid
+				gene_symbol
+				gene_display_name
+				product_name
+				description
+				taxon_oid
+				taxon_display_name
+				pp_subset
+			) ],
 			-where   => $args->{where},
 			-result_as => 'statement'
 		);
@@ -382,10 +393,13 @@ sub gene_details {
 	my $args = shift;
 
 #	my $gene = $self->schema('img_core')->table('PPGeneDetails')
-	my $gene = $self->schema('img_core')->table('Gene')
+	my $gene = $self->schema('img_core')->join( qw[ Gene <=> taxon ] )
 		->select(
-			-columns => [ '*' ],
-			-where   => $args->{where},
+			-columns => [ 'gene.*', 'taxon.taxon_oid', 'taxon.taxon_display_name' ],
+			-where   => {
+				%{$args->{where}},
+				'taxon.is_public' => 'Yes'
+			},
 			-result_as => 'statement'
 		)->all;
 

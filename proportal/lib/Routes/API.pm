@@ -16,14 +16,14 @@ prefix '/api/proportal' => sub {
 
 	my @valid_queries = qw( location clade data_type phylogram ecosystem ecotype big_ugly_taxon_table );
 
-	my @subsets = qw( metagenome isolate pro syn pro_phage syn_phage );
+	my @pp_subsets = qw( metagenome isolate pro syn pro_phage syn_phage );
 
 	my $re = join '|', @valid_queries;
 
 	# filterable queries
 	get qr{
 		/ (?<page> $re )
-		/? (?<subset> \w+.* )?
+		/? (?<pp_subset> \w+.* )?
 		}x => sub {
 
 		my $c = captures;
@@ -31,8 +31,8 @@ prefix '/api/proportal' => sub {
 
 		bootstrap( $p );
 
-		if ( $c->{subset} ) {
-			img_app->set_filters({ subset => $c->{subset} });
+		if ( $c->{pp_subset} ) {
+			img_app->set_filters({ pp_subset => $c->{pp_subset} });
 		}
 
 		my $rslt = img_app->controller->get_data();
@@ -60,7 +60,7 @@ prefix '/api/proportal' => sub {
 
 		img_app->current_query->_set_menu_group( 'proportal' );
 		img_app->current_query->_set_page_id( 'proportal' );
-		return template 'pages/api_home', { queries => [ @valid_queries ], subsets => [ @subsets ], apps => $v_q };
+		return template 'pages/api_home', { queries => [ @valid_queries ], pp_subsets => [ @pp_subsets ], apps => $v_q };
 
 	}
 };

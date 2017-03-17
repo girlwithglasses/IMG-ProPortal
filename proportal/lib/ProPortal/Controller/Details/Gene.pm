@@ -1,4 +1,4 @@
-package ProPortal::Controller::Gene::Details;
+package ProPortal::Controller::Details::Gene;
 
 use IMG::Util::Import 'Class'; #'MooRole';
 
@@ -14,31 +14,33 @@ with 'IMG::Model::DataManager';
 # 			page_id => 'taxon_details',
 # 			tmpl => 'pages/taxon_details.tt',
 # 			tmpl_includes => {},
-# 			page_wrapper => 'layouts/default_wide.html.tt',
+# 			page_wrapper => 'layouts/default_wide.tt',
 # 		};
 # 	}
 # );
 
 
 has '+page_id' => (
-	default => 'gene/details'
+	default => 'details/gene'
 );
 
 has '+page_wrapper' => (
-	default => 'layouts/default_wide.html.tt'
+	default => 'layouts/default_wide.tt'
 );
 
 =head3 render
 
 Details page for a gene
 
-@param taxon_oid
+@param gene_oid
 
 =cut
 
 sub _render {
 	my $self = shift;
 	my $args = shift;
+
+	log_debug { 'args: ' . Dumper $args };
 
 	if ( ! $args || ! $args->{gene_oid} ) {
 		$self->choke({

@@ -1,4 +1,4 @@
-package ProPortal::Controller::DataType;
+package ProPortal::Controller::List::Taxon;
 
 use IMG::Util::Import 'Class';#'MooRole';
 
@@ -7,14 +7,14 @@ extends 'ProPortal::Controller::Filtered';
 use Template::Plugin::JSON::Escape;
 
 has '+page_id' => (
-	default => 'proportal/data_type'
+	default => 'list/taxon'
 );
 
-has '+filter_domains' => (
-	default => sub {
-		return [ qw( pp_subset dataset_type ) ];
-	}
-);
+# has '+filters' => (
+# 	default => sub {
+# 		return { pp_subset => 'all_proportal' };
+# 	},
+# );
 
 has '+valid_filters' => (
 	default => sub {
@@ -46,22 +46,9 @@ sub _render {
 
 	# arrange by genome type, dataset_type, pp_subset, and then by ecosystem subtype
 
-	for (@$res) {
-		local $@;
-		eval {
-		push @{$data->{subset_dataset_type}{ $_->{pp_subset} }{ $_->{dataset_type} }}, $_->{taxon_oid};
-		push @{$data->{dataset_type_subset}{ $_->{dataset_type} }{ $_->{pp_subset} }}, $_->{taxon_oid};
-		$data->{ix}{ $_->{taxon_oid} } = $_;
-		};
-		if ($@) {
-			say Dumper $_;
-			die 'error with ' . $_ . ": " . $@ ;
-		}
-	}
-
 	say 'Sorted. Returning at ' . Time::HiRes::gettimeofday;
 
-	return { results => { data => $data, sort_by => [ 'pp_subset', 'dataset_type' ] } };
+	return { results => { data => $res } };
 }
 
 

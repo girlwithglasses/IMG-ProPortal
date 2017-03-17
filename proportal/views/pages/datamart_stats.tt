@@ -12,8 +12,8 @@
 [%	FOREACH q IN queries.sort %]
 	<li><a href="/api/proportal/[% q %]">[% q %]</a>
 		<ul>
-[%		FOREACH s IN subsets; %]
-			<li>subset: <a href="/api/proportal/[% q %]/[% s %]">[% s %]</a></li>
+[%		FOREACH s IN pp_subsets; %]
+			<li>pp_subset: <a href="/api/proportal/[% q %]/[% s %]">[% s %]</a></li>
 [%		END; %]
 		</ul>
 	</li>
@@ -21,8 +21,8 @@
 [%	FOREACH q IN valid_filters.keys.sort %]
 	<li><a href="/api/proportal/[% q %]">[% q %]</a>
 		<ul>
-[%		FOREACH s IN valid_filters.$q.subset.enum; %]
-			<li>subset: <a href="/api/proportal/[% q %]/[% s %]">[% s %]</a></li>
+[%		FOREACH s IN valid_filters.$q.pp_subset.enum; %]
+			<li>pp_subset: <a href="/api/proportal/[% q %]/[% s %]">[% s %]</a></li>
 [%		END; %]
 		</ul>
 	</li>

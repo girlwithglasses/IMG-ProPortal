@@ -32,7 +32,7 @@
 	<p><a class="clade-details__link--genome_list_clade" href="[% link('genome_list_clade', { clade => c.label } ) %]">View species in table browser</a></p>
 	<ul>
 	[%		FOREACH s IN c.genomes %]
-		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a class="clade-details__link--taxon" href="[% link('taxon_details', { taxon_oid => s.taxon_oid }) %]">[% s.taxon_display_name %]</a></li>
+		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a class="clade-details__link--taxon" href="[% link('details', { type => 'taxon', taxon_oid => s.taxon_oid }) %]">[% s.taxon_display_name %]</a></li>
 	[%		END %]
 	</ul>
 </li>

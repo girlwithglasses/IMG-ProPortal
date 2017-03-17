@@ -50,15 +50,15 @@ subtest 'filters' => sub {
 			err => 'missing',
 			subject => 'filter'
 		});
-		throws_ok { $test->subset_filter() } qr[$msg];
+		throws_ok { $test->pp_subset_filter() } qr[$msg];
 
 		$msg = err({
 			err => 'invalid',
 			subject => 'blob',
-			type => 'subset filter'
+			type => 'pp_subset filter'
 
 		});
-		throws_ok { $test->subset_filter( 'blob' ) } qr[$msg];
+		throws_ok { $test->pp_subset_filter( 'blob' ) } qr[$msg];
 
 	};
 
@@ -72,23 +72,23 @@ subtest 'filters' => sub {
 
 		my $filters;
 		for ( qw( prochlor synech prochlor_phage synech_phage ) ) {
-			my $f = $test->subset_filter( $_ );
+			my $f = $test->pp_subset_filter( $_ );
 			push @$filters, $f->{-where};
 		}
 		is_deeply(
-			$test->subset_filter('isolates'),
+			$test->pp_subset_filter('isolates'),
 			{ -where => $filters },
 			'Checking isolate filter'
-		) or diag explain $test->subset_filter('isolates');
+		) or diag explain $test->pp_subset_filter('isolates');
 
-		my $mg = $test->subset_filter('metagenomes');
+		my $mg = $test->pp_subset_filter('metagenomes');
 		push @$filters, $mg->{-where};
 
 		is_deeply(
-			$test->subset_filter('all_proportal'),
+			$test->pp_subset_filter('all_proportal'),
 			{ -where => $filters },
 			'Checking all_proportal filter'
-		) or diag explain $test->subset_filter('all_proportal');
+		) or diag explain $test->pp_subset_filter('all_proportal');
 	};
 
 };

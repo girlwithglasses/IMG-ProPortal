@@ -78,7 +78,7 @@ for my $p ( @{$active->{filtered}} ) {
 			url => "$p/$f"
 		};
 
-		if ( grep { $f eq $_ } @{$valid->{subset}{enum}} ) {
+		if ( grep { $f eq $_ } @{$valid->{pp_subset}{enum}} ) {
 			$arguments->{valid} = 1;
 		}
 		test_filter_page( $arguments );

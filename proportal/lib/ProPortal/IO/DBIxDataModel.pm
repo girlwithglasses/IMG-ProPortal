@@ -205,7 +205,7 @@ sub check_results {
 
 =head2 add_filters
 
-Add the filters for the ProPortal-specific subset
+Add the filters for the query
 
 @param $args    hashref with keys
 
@@ -238,17 +238,33 @@ sub add_filters {
 	## This is implemented by ProPortal::IO::ProPortalFilters
 	## Not sure this is an ideal way to do this...
 
-	for my $fd ( qw( subset dataset_type ) ) {
-		if ( $args->{filters}{$fd} ) {
-			my $fd_fn = $fd . '_filter';
+	for my $fd ( keys %{$args->{filters}} ) {
+		my $fd_fn = $fd . '_filter';
+		if ( $self->can( $fd_fn ) ) {
 			%f = ( %f,  %{$self->$fd_fn( $args->{filters}{$fd} )} );
+		}
+		else {
+			$f{ $fd } = $args->{filters}{$fd};
 		}
 	}
 
-	## other filters
-	if ( $args->{filters}{taxon_oid} ) {
-		%f = ( %f,  %{$args->{filters}{taxon_oid}} );
-	}
+# 	if ( $args->{locus_type} && 'xrna' eq lc( $args->{locus_type} ) ) {
+# 		$q_hash->{locus_type} = {
+# 			like => '%RNA',
+# 			not_in => [ qw( rRNA tRNA ) ]
+# 		};
+# 		delete $args->{locus_type};
+# 	}
+#
+# 	for ( qw ( is_pseudogene locus_type gene_symbol taxon_oid ) ) {
+# 		$q_hash->{$_} = $args->{$_} if defined $args->{$_};
+# 	}
+
+
+# 	other filters
+# 	if ( $args->{filters}{taxon_oid} ) {
+# 		%f = ( %f,  %{$args->{filters}{taxon_oid}} );
+# 	}
 
 #	say 'where: ' . Dumper \%f;
 

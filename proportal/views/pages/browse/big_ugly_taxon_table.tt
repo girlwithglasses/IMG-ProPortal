@@ -26,7 +26,7 @@
 	<tbody class="data-table__tbody">
 [%		FOREACH t IN results.js.array; %]
 		<tr id="taxon_oid_[% t.taxon_oid %]">
-			<td><a href="[% link( 'taxon_details', { taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
+			<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
 [%			FOREACH th IN headers; %]
 			<td>[%
 				IF th.size == 1;

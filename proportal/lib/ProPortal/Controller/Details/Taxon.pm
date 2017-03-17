@@ -1,4 +1,4 @@
-package ProPortal::Controller::Taxon::Details;
+package ProPortal::Controller::Details::Taxon;
 
 use IMG::Util::Import 'Class'; #'MooRole';
 
@@ -7,7 +7,7 @@ extends 'ProPortal::Controller::Base';
 with 'IMG::Model::DataManager';
 
 has '+page_id' => (
-	default => 'taxon/details'
+	default => 'details/taxon'
 );
 
 has '+page_wrapper' => (
@@ -81,7 +81,7 @@ sub get_data {
 		for my $assoc ( @{ $associated->{$type} } ) {
 			if ( $res->can( $assoc ) ) {
 				my $r = $res->$assoc;
-				log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
+		#		log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
 
 				if ($r
 					&& ( ( 'multi' eq $type && scalar @$r )

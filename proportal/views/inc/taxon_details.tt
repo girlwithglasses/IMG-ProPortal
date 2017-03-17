@@ -44,5 +44,5 @@
 
 
 	END; %]
-	<p><a class="sample_details__link" href="[% link('taxon_details', { taxon_oid => s.taxon_oid }) %]">view taxon details</a></p>
+	<p><a class="sample_details__link" href="[% link( 'details', { type => 'taxon', taxon_oid => s.taxon_oid } ) %]">view taxon details</a></p>
 </fieldset>

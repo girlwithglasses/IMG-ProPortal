@@ -14,14 +14,14 @@ has '+page_id' => (
 
 has '+filters' => (
 	default => sub {
-		return { subset => 'isolate' };
+		return { pp_subset => 'isolate' };
 	}
 );
 
 has '+valid_filters' => (
 	default => sub {
 		return {
-			subset => {
+			pp_subset => {
 				enum => [ qw( pro syn pro_phage syn_phage other other_phage isolate ) ],
 			}
 		};
