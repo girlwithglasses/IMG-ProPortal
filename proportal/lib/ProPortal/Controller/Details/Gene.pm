@@ -49,13 +49,7 @@ sub _render {
 		});
 	}
 
-	# get the genes
-	my $genes = $self->_core->run_query({
-		query => 'gene_list',
-		where => {
-			gene_oid => $args->{gene_oid}
-		}
-	});
+	my $genes = $self->get_data( $args );
 
 	if ( ! scalar @$genes ) {
 		$self->choke({
@@ -64,36 +58,23 @@ sub _render {
 		});
 	}
 
-	my $tax_h;
-	for ( @$genes ) {
-		say 'gene: ' . Dumper $_;
-		$tax_h->{ $_->{taxon} }++;
-	}
+	log_debug { 'results: ' . Dumper $genes };
 
-	say 'taxon: ' . $genes->[0]{taxon};
+	return { results => { gene => $genes->[0] } };
 
-	my @arr = keys %$tax_h;
+}
 
-	# make sure the taxon is public; get basic info
-	my $taxon = $self->_core->run_query({
-		query => 'taxon_name_public',
+sub get_data {
+	my $self = shift;
+	my $args = shift;
+
+	# get the genes
+	return $self->_core->run_query({
+		query => 'gene_details',
 		where => {
-			taxon_oid => $genes->[0]{taxon}
+			gene_oid => $args->{gene_oid}
 		}
 	});
-
-	say 'results: ' . Dumper $taxon;
-
-# 	make sure the taxon is public; get basic info
-# 	my $taxon = $self->_core->run_query({
-# 		query => 'taxon_name_public',
-# 		where => {
-# 			taxon_oid => $args->{taxon_oid},
-# 		}
-# 	});
-
-
-	return { results => { taxon => $taxon->[0], gene => $genes->[0] } };
 
 }
 

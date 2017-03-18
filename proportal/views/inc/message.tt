@@ -1,3 +1,4 @@
+[%	IF settings.message || settings.message_html %]
 <div class="site-message">
 [%	IF settings.message_html;
 		settings.message_html;
@@ -5,5 +6,5 @@
 		'<p class="site-message__p">' _ settings.message _ '</p>';
 	END;
 %]
-	<p>The IMG/ProPortal is being updated at present and may not function as expected.</p>
 </div>
+[%	END %]

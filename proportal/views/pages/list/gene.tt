@@ -8,7 +8,7 @@
 	</p -->
 </section>
 [%	IF data_filters;
-		PROCESS 'inc/filters.tt';
+	#	PROCESS 'inc/filters.tt';
 	END;
 %]
 <section id="primary">

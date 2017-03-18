@@ -393,36 +393,35 @@ sub gene_details {
 	my $args = shift;
 
 #	my $gene = $self->schema('img_core')->table('PPGeneDetails')
-	my $gene = $self->schema('img_core')->join( qw[ Gene <=> taxon ] )
+	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax ] )
 		->select(
-			-columns => [ 'gene.*', 'taxon.taxon_oid', 'taxon.taxon_display_name' ],
-			-where   => {
-				%{$args->{where}},
-				'taxon.is_public' => 'Yes'
-			},
+			-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name' ],
+			-where   => $args->{where},
 			-result_as => 'statement'
-		)->all;
+		);
 
-	my %tax_h;
-	if ( scalar @$gene > 0 ) {
-		# make sure that we have permission to view the gene
-		for ( @$gene ) {
-			$tax_h{ taxon_oid } = $_->{taxon};
-		}
-	}
+# 	my %tax_h;
+# 	if ( scalar @$gene > 0 ) {
+# 		# make sure that we have permission to view the gene
+# 		for ( @$gene ) {
+# 			$tax_h{ taxon_oid } = $_->{taxon};
+# 		}
+# 	}
 
-	my $results = $self->taxon_name_public({ where => \%tax_h })->all;
+# 	my $results = $self->taxon_name_public({ where => \%tax_h })->all;
+#
+# 	if ( scalar @$results > 0) {
+# 		if ( $results->[0]->{viewable} eq 'private' ) {
+# 			# dies if there is a permissions error
+# 			$self->choke({
+# 				err => 'private_data'
+# 			});
+# 		}
+# 	}
+#
+# 	return { gene => $gene->[0] // undef, taxon => $results->[0] // undef };
+# }
 
-	if ( scalar @$results > 0) {
-		if ( $results->[0]->{viewable} eq 'private' ) {
-			# dies if there is a permissions error
-			$self->choke({
-				err => 'private_data'
-			});
-		}
-	}
-
-	return { gene => $gene->[0] // undef, taxon => $results->[0] // undef };
 }
 
 =head3 taxon_details

@@ -131,15 +131,17 @@ The home page.
 
 };
 
-my $h = {
-	gene => 'Gene',
-	taxon => 'Taxon',
-	details => 'Details',
-	list => 'List'
-};
 
 sub generic {
 	my $args = shift;
+
+	my $h = {
+		gene => 'Gene',
+		taxon => 'Taxon',
+		details => 'Details',
+		list => 'List'
+	};
+
 
 	bootstrap( $h->{ $args->{prefix} } . '::' . $h->{ $args->{domain} } );
 
