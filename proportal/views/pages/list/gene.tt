@@ -1,39 +1,87 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Gene List';
 %]
-<h2>Gene List</h2>
-<section class="info--data_type page-intro">
-	<p>This page is currently under development!</p>
-	<!-- p>This page provides an overview of all the genes from datasets in IMG relevant to the ProPortal project. This comprises <i>Prochlorococcus</i>, <i>Synechococcus</i>, cyanophage species and metagenomes from marine environments.
-	</p -->
-</section>
+
+
+<div id="pageHeader">
+	<div id="pageTitle" >
+		<h2>Gene List</h2>
+		
+		<h4 class="normal">
+			
+
+			[%	IF results.params %]
+			
+				<!--  this section needs to be expanded as more links come online -->
+				
+				[% IF results.params.gene_symbol;
+					results.params.gene_symbol;
+				END;	%]	
+			
+				[% IF results.params.locus_type == "xRNA";	%]
+					Other RNA
+				[% ELSE;	
+					results.params.locus_type;	
+				 END; %]
+			
+				[% IF results.params.taxon_oid;	%]
+					for taxon <a href="[% link( 'details', { type => 'taxon', taxon_oid => results.params.taxon_oid } ) %]">[% results.params.taxon_oid %]</a>
+					
+			[% END; %]
+			
+		</h4>
+	</div>
+
+</div>
+
 [%	IF data_filters;
 	#	PROCESS 'inc/filters.tt';
 	END;
 %]
-<section id="primary">
-	<h3>Gene List</h3>
-[%	IF results.params %]
-	<p>Gene list parameters:</p>
-[%	USE Dumper;
-	'<pre>'; Dumper.dump( results.params ); '</pre>';
-	END;
-	IF results.genes.size > 0;
-		WRAPPER 'inc/cart_gene_add.tt' %]
-	<ul>
-[%		FOR g IN results.genes %]
-		<li>
-		<input type="checkbox" class="sample-data__cbox" name="gene_oid[]" value="[% g.gene_oid %]" id="cbox_[% g.gene_oid %]" />
-		<a href="[% link( 'details', { type => 'gene', gene_oid => g.gene_oid } ) %]">[% g.gene_oid %]</a>, [% g.product_name %] from <a href="[% link( 'details', { type => 'taxon', taxon_oid => g.taxon_oid } ) %]">[% g.taxon_display_name %]</a></li>
 
-[%		END %]
-	</ul>
-[%		END; # end wrapper
-	ELSE; # END if... %]
+<div id="main">		
+
+<!-- 
+[%	USE Dumper;
+	'<pre>'; Dumper.dump( results.taxon_oid ); '</pre>';
+	END;	%] -->
+
+
+[%	IF results.genes.size > 0;	%]
+
+<!-- 	add this wrapper back when we implement the cart functionality. -->
+[%		WRAPPER 'inc/cart_gene_add.tt' %]
+
+		<table class="lined">
+			<tr class="underline">
+				<th></th>
+				<th>Gene ID</th>
+				<th>Gene Product Name</th>
+				<th>Genome</th>
+			</tr>		
+			[%	FOR g IN results.genes %]
+			<tr>
+				<td><input type="checkbox" class="sample-data__cbox" name="gene_oid[]" value="[% g.gene_oid %]" id="cbox_[% g.gene_oid %]" /> </td>
+				<td><a href="[% link( 'details', { type => 'gene', gene_oid => g.gene_oid } ) %]">[% g.gene_oid %]</a></td> 
+				<td>[% g.product_name %]</td>
+				<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => g.taxon_oid } ) %]">[% g.taxon_display_name %]</a></td>
+
+			</tr>
+			[%	END %]
+		</table>
+
+
+[%		END; # end wrapper 	%]
+
+[%	ELSE; # END if... %]
 <p>No genes found</p>
 [%
 	END; %]
-</section>
 
+
+
+
+
+</div>
 
 [%	END %]

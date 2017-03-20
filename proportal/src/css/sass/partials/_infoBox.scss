@@ -15,11 +15,11 @@ found on details pages
 		
 	}
 
-	.infoBoxTitle {
+	> .infoBoxTitle {
 		margin: 10px 0 5px 0;
-		border-bottom: $underline }
-		
-		
+		border-bottom: $underline;
+	}
+	
 	/* this may need to be defined somewhere else... */	
 	/* Small screen */
 	@media all and (max-width: $half-) {

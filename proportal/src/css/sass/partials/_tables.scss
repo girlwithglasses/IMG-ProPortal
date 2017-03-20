@@ -2,7 +2,7 @@
 
 
 table {
-	table-layout: fixed;
+// 	table-layout: fixed;
 	border-collapse: collapse; 
 	width: 100%;
 	margin-bottom: 0;
@@ -10,7 +10,8 @@ table {
 	// make our tables nice and spacious!
 	th, td {
 		padding: $gutter;
-		padding-left: 0;	
+		padding-left: 0;
+		text-align: left;	
 	}
 
 	.clearStyle {	
@@ -32,6 +33,18 @@ table.lined {
 
 .subheader {
 	margin-top: 10px; }
+
+.indent1 {
+	text-indent: 30px;
+}
+
+.indent2 {
+	text-indent: 60px;
+}
+
+.indent3 {
+	text-indent: 90px;
+}
 
 // This doesn't go in the table, but sits above it.  Styles a div.
 div.tableTitle {

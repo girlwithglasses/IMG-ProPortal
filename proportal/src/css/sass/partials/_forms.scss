@@ -55,6 +55,29 @@ button, html input[type="button"], input[type="reset"], input[type="submit"] {
 	text-transform: uppercase;
 	vertical-align: middle;
     line-height: $line-ht;
+
+}
+
+.test-button {		// temp location.  need to style all the buttons.
+	padding: 10px 20px;
+	font-size: 75%; 
+	border: $element-border-width solid map-get( $jgi-palette, reddish );
+}
+
+.test-button-outline {		// temp location.  need to style all the buttons.
+	padding: 10px 20px;
+	font-size: 75%; 
+	
+	background: white;
+	color: map-get( $jgi-palette, reddish );
+	border: $element-border-width solid map-get( $jgi-palette, reddish );
+	
+  &:hover {
+  	color: darken( map-get( $jgi-palette, reddish ), 10% );
+  	background: white;
+  	border: $element-border-width solid darken( map-get( $jgi-palette, reddish ), 10% );
+  }	
+  
 }
 
 // checkboxes for the checkbox hack

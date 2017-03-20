@@ -373,6 +373,17 @@ article {
     padding: 10px;
     width: 100%; }
 
+#pageHeader {
+  display: table;
+  padding: 0 10px;
+  margin-top: 20px;
+  width: 100%; }
+
+#main {
+  padding: 0 10px;
+  margin-top: 20px;
+  width: 100%; }
+
 @media only screen and (max-width: 479px) {
   #about, #user-guide, #news, .content, #tool-input__section, #tool-info__section {
     width: 100%;
@@ -544,6 +555,22 @@ button, html input[type="button"], input[type="reset"], input[type="submit"] {
   vertical-align: middle;
   line-height: 1.5rem; }
 
+.test-button {
+  padding: 10px 20px;
+  font-size: 75%;
+  border: 2px solid #d3691b; }
+
+.test-button-outline {
+  padding: 10px 20px;
+  font-size: 75%;
+  background: white;
+  color: #d3691b;
+  border: 2px solid #d3691b; }
+  .test-button-outline:hover {
+    color: #a65315;
+    background: white;
+    border: 2px solid #a65315; }
+
 .nav-trigger {
   display: none; }
 
@@ -583,13 +610,13 @@ button, html input[type="button"], input[type="reset"], input[type="submit"] {
       margin-left: 5rem; } }
 
 table {
-  table-layout: fixed;
   border-collapse: collapse;
   width: 100%;
   margin-bottom: 0; }
   table th, table td {
     padding: 0.75rem;
-    padding-left: 0; }
+    padding-left: 0;
+    text-align: left; }
   table .clearStyle {
     border: 0; }
 
@@ -604,6 +631,15 @@ table.lined td {
 
 .subheader {
   margin-top: 10px; }
+
+.indent1 {
+  text-indent: 30px; }
+
+.indent2 {
+  text-indent: 60px; }
+
+.indent3 {
+  text-indent: 90px; }
 
 div.tableTitle {
   width: 100%;
@@ -1589,7 +1625,7 @@ found on details pages
     padding: 10px 20px;
     overflow: auto;
     border: 2px solid silver; }
-  .infoBox .infoBoxTitle {
+  .infoBox > .infoBoxTitle {
     margin: 10px 0 5px 0;
     border-bottom: 2px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
@@ -1621,15 +1657,6 @@ button bar usually found under pageTitle
     padding: 10px;
     font-size: 75%; }
 
-/* partials/pageHeader
-usually a container for pageTitle and buttonBar
-*/
-#pageHeader {
-  display: table;
-  padding: 0 10px;
-  margin-top: 20px;
-  width: 100%; }
-
 /* partials/grid
 grid of cards found on auto-generated pages 
 */
@@ -1653,6 +1680,34 @@ a.grid:hover, a.grid:active {
   color: #648caa;
   border: 2px solid #648caa;
   cursor: pointer; }
+
+/* 
+/list/ page elements, including item table header and footer.
+*/
+.itemList_controls {
+  float: left;
+  width: 100%;
+  margin: 15px 0; }
+
+.left-elements {
+  float: left;
+  text-align: left;
+  vertical-align: middle; }
+
+.right-elements {
+  float: right;
+  text-align: right; }
+
+.top {
+  border-bottom: 1px solid gray; }
+
+.bottom {
+  border-top: 1px solid gray; }
+
+.itemList_body {
+  float: left;
+  width: 100%;
+  clear: both; }
 
 /* partials/print
  * (from https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css)
