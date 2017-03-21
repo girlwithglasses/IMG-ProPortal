@@ -372,6 +372,20 @@ sub gene_list {
 		);
 }
 
+sub gene_list_count {
+	my $self = shift;
+	my $args = shift;
+
+	$args->{where}{'gene.obsolete_flag'} = 'No';
+
+	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax ] )
+		->select(
+			-columns => [ 'count( gene_oid )' ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
 =head3 gene_details
 
 Given an array of gene IDs, get the gene data

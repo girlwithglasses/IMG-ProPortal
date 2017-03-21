@@ -17,7 +17,7 @@ has '+page_wrapper' => (
 has '+filter_domains' => (
 	is => 'ro',
 	default => sub {
-		return [ qw( pp_subset dataset_type locus_type gene_symbol taxon_oid category is_pseudogene ) ];
+		return [ qw( pp_subset dataset_type locus_type gene_symbol taxon_oid category ) ];
 	}
 );
 
@@ -97,6 +97,11 @@ sub _render {
 	}
 
 	# get the genes
+	my $count = $self->_core->run_query({
+		query => 'gene_list_count',
+# 		where => $q_hash
+		filters => $self->filters
+	});
 	my $genes = $self->get_data( $args );
 
 # 	if ( $args->{taxon_oid} ) {

@@ -265,20 +265,20 @@ sub locus_type_filter {
 		xrna => { like => '%RNA', not_in => [ qw( rRNA tRNA ) ] },
 	};
 
-	$self->choke({
-		err => 'invalid',
-		type => 'data type filter',
-		subject => $f_name
-	}) unless grep { $f_name eq $_ } @{ locus_type_valid() };
-
-	if ( 'xrna' eq lc( $f_name ) ) {
-		return {
-			locus_type => {
-				like => '%RNA',
-				not_in => [ qw( rRNA tRNA ) ]
-			}
-		};
-	}
+# 	$self->choke({
+# 		err => 'invalid',
+# 		type => 'data type filter',
+# 		subject => $f_name
+# 	}) unless grep { $f_name eq $_ } @{ locus_type_valid() };
+#
+# 	if ( 'xrna' eq lc( $f_name ) ) {
+# 		return {
+# 			locus_type => {
+# 				like => '%RNA',
+# 				not_in => [ qw( rRNA tRNA ) ]
+# 			}
+# 		};
+# 	}
 	return { locus_type => [ map { $l_type_f->{ lc($_) } || $_ } @$f_name ] };
 }
 
@@ -291,40 +291,29 @@ sub category_filter {
 	});
 
 	my $filters = {
-		rnas => { locus_type => { like => '%RNA' } },
+		rna => { locus_type => { like => '%RNA' } },
+		pseudogene => { is_pseudogene => 'Yes' }
 	};
 
+	my %h;
 
-	return [ map {
-			$self->choke({
+	for ( @$f_name ) {
+		$self->choke({
 #				err => 'invalid',
 #				type => 'category filter',
 #				subject => $_
-				err => 'not_implemented'
-			}) unless defined $filters->{$_};
-			$filters->{$_}
-		} @$f_name ];
+			err => 'not_implemented'
+		}) unless defined $filters->{$_};
+		%h = ( %h, %{$filters->{$_}} );
+	}
 
+	return \%h;
 
-	$self->choke({
-		err => 'not_implemented'
-	});
-
-	$self->choke({
-		err => 'invalid',
-		type => 'category filter',
-		subject => $f_name
-	}) unless grep { $f_name eq $_ } @{ category_valid() };
-
-#			rnas
-# 			proteinCodingGenes
-# 			withFunc
-# 			withoutFunc
-# 			fusedGenes
-# 			signalpGeneList
-# 			transmembraneGeneList
-# 			geneCassette
-# 			biosynthetic_genes
+# 	$self->choke({
+# 		err => 'invalid',
+# 		type => 'category filter',
+# 		subject => $f_name
+# 	}) unless grep { $f_name eq $_ } @{ category_valid() };
 
 }
 
@@ -409,7 +398,7 @@ my $schema = {
 		title => 'gene type',
 		type => 'enum',
 		enum => [ qw(
-			rnas
+			rna
 			proteinCodingGenes
 			withFunc
 			withoutFunc
@@ -418,9 +407,10 @@ my $schema = {
 			transmembraneGeneList
 			geneCassette
 			biosynthetic_genes
+			pseudogene
 		)],
 		enum_map => {
-			rnas => 'RNA',
+			rna => 'RNA',
 			proteinCodingGenes => 'protein coding genes',
 			withFunc => 'genes with function assignment',
 			withoutFunc => 'genes without function assignment',
@@ -428,17 +418,10 @@ my $schema = {
 			signalpGeneList => 'signalP genes',
 			transmembraneGeneList => 'transmembrane proteins',
 			geneCassette => 'genes in cassette',
-			biosynthetic_genes => 'genes in biosynthetic clusters'
+			biosynthetic_genes => 'genes in biosynthetic clusters',
+			pseudogene => 'pseudogene'
 		}
 	},
-	is_pseudogene => {
-		id => 'is_pseudogene',
-		title => 'Pseudogene',
-		enum => [ qw( Yes No ) ],
-		type => 'enum'
-	}
-
-
 };
 
 =cut filter_schema
@@ -485,6 +468,9 @@ sub filter_sqlize {
 		my $fd_fn = $fd . '_filter';
 		if ( $self->can( $fd_fn ) ) {
 			my @f = $filters->get_all( $fd );
+
+			say 'post-filter: ' . Dumper( $self->$fd_fn( [ @f ] ) );
+
 			%f = ( %f, %{ $self->$fd_fn( [ @f ] ) } );
 		}
 		else {
