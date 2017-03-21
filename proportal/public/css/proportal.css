@@ -384,16 +384,39 @@ article {
   margin-top: 20px;
   width: 100%; }
 
+#home-about {
+  clear: all; }
+
+#home-quick-search-form {
+  width: 100%;
+  margin: 40px 0; }
+
+#home-gallery {
+  background: #343434;
+  color: white; }
+
 @media only screen and (max-width: 479px) {
-  #about, #user-guide, #news, .content, #tool-input__section, #tool-info__section {
+  #home-about, #home-news, #home-stats, #home-gallery, #home-quick-search {
+    width: 100%;
+    clear: both;
+    padding: 1.5rem 0.75rem;
+    margin-top: 0.75rem; }
+
+  .content, #tool-input__section, #tool-info__section {
     width: 100%;
     padding: 0; } }
 @media only screen and (min-width: 480px) and (max-width: 767px) {
-  #about {
-    width: 100%; }
+  #home-about, #home-news, #home-stats, #home-gallery, #home-quick-search {
+    width: 100%;
+    clear: both;
+    padding: 1.5rem 0.75rem;
+    margin-top: 0.75rem; }
 
-  #user-guide, #news, #tool-input__section, #tool-info__section {
-    width: 50%;
+  #home-quick-search {
+    margin-bottom: 50px; }
+
+  #tool-input__section, #tool-info__section {
+    width: 100%;
     float: left; } }
 @media only screen and (min-width: 768px) {
   .content {
@@ -411,15 +434,33 @@ article {
   .footer {
     clear: both; }
 
-  #about, #user-guide, #news {
-    width: 33.3%;
-    padding: 0;
+  #home-quick-search {
+    width: 400px;
     float: left;
-    padding: 0 0.75rem; }
+    padding: 30px;
+    margin: 0 0.75rem 0.75rem 0;
+    border: 1px solid #5a5a5a;
+    height: 400px; }
 
-  #primary, .page-intro {
+  #home-gallery {
+    padding: 5px;
+    margin-left: 410px;
+    float: none;
+    display: block;
+    height: 400px; }
+
+  #home-about, #home-news, #home-stats {
+    width: 32%;
     float: left;
-    width: 66.6%;
+    padding: 1.5rem 0.75rem;
+    margin-left: 0.75rem; }
+
+  #home-stats {
+    clear: both;
+    margin-left: 0; }
+
+  .page-intro {
+    float: left;
     padding: 0 0.75rem;
     margin-bottom: 1.5rem; }
 
@@ -558,18 +599,24 @@ button, html input[type="button"], input[type="reset"], input[type="submit"] {
 .test-button {
   padding: 10px 20px;
   font-size: 75%;
-  border: 2px solid #d3691b; }
+  border: 1px solid #d3691b; }
+
+.test-button-blue {
+  padding: 10px 20px;
+  font-size: 75%;
+  background: #648caa;
+  border: 1px solid #648caa; }
 
 .test-button-outline {
   padding: 10px 20px;
   font-size: 75%;
   background: white;
   color: #d3691b;
-  border: 2px solid #d3691b; }
+  border: 1px solid #d3691b; }
   .test-button-outline:hover {
     color: #a65315;
     background: white;
-    border: 2px solid #a65315; }
+    border: 1px solid #a65315; }
 
 .nav-trigger {
   display: none; }
@@ -827,14 +874,14 @@ HTML BODY CODE SNIPPET:
     position: relative;
     padding: 10px 20px;
     margin-right: 10px;
-    top: 1px;
+    top: 0px;
     vertical-align: middle;
     line-height: 1.5rem;
     font-size: 14px;
     text-transform: uppercase;
     background: white;
     color: #5a5a5a;
-    border-bottom: 2px solid transparent; }
+    border-bottom: 1px solid transparent; }
     .nav_tabs > label:hover {
       color: black; }
   .nav_tabs > input[type=radio] {
@@ -843,21 +890,21 @@ HTML BODY CODE SNIPPET:
     display: none;
     width: 100%;
     float: left;
-    border-top: 2px solid #5a5a5a;
+    border-top: 1px solid #5a5a5a;
     background: white;
     padding: 20px 0; }
 
 .nav_tabs_std > label {
   color: #5a5a5a;
-  border: 2px solid #5a5a5a;
+  border: 1px solid #5a5a5a;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px; }
 .nav_tabs_std > [id^="tab"]:checked + label {
-  border-bottom: 2px solid transparent; }
+  border-bottom: 1px solid transparent; }
 
 .nav_tabs_minimal > [id^="tab"]:checked + label {
   color: black;
-  border-bottom: 4px solid black; }
+  border-bottom: 3px solid black; }
 
 .nav_tabs_pill > label {
   margin: 0 10px 10px 0; }
@@ -1624,10 +1671,10 @@ found on details pages
     height: 450px;
     padding: 10px 20px;
     overflow: auto;
-    border: 2px solid silver; }
+    border: 1px solid silver; }
   .infoBox > .infoBoxTitle {
     margin: 10px 0 5px 0;
-    border-bottom: 2px solid #5a5a5a; }
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .infoBox {
       width: 100%;
@@ -1643,7 +1690,7 @@ page title for a details page
 #pageTitle {
   float: left;
   width: 100%;
-  border-bottom: 2px solid #5a5a5a; }
+  border-bottom: 1px solid #5a5a5a; }
   #pageTitle .normal {
     font-weight: normal; }
 

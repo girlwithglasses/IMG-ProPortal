@@ -36,26 +36,68 @@ article {
 	width: 100%;
 }
 
+#home-about {
+	clear: all;
+}
+
+#home-quick-search {
+// 	height: 350px;
+	
+}
+
+#home-quick-search-form {
+	width: 100%;
+	margin: 40px 0;
+}
+
+#home-gallery {
+	background: map-get( $jgi-palette, black );
+	color: white;
+// 	height: 350px;
+// 	float: left;
+}
+
+// smallest screen
 @include maxw( $nar- ) {
 
-	#about, #user-guide, #news, .content, #tool-input__section, #tool-info__section {
+	// homepage sections.
+	#home-about, #home-news, #home-stats, #home-gallery, #home-quick-search{
+		width: 100%;
+		clear: both;
+		padding: $line-ht $gutter;
+		margin-top: $gutter;
+// 		border: 1px solid black;	//
+	}
+	
+	.content, #tool-input__section, #tool-info__section {
 		width: 100%;
 		padding: 0;
 	}
 }
 
+// medium width screen
 @include minmax( $nar, $med- ) {
 
-	#about {
+	// homepage sections.
+	#home-about, #home-news, #home-stats, #home-gallery, #home-quick-search{
 		width: 100%;
+		clear: both;
+		padding: $line-ht $gutter;
+		margin-top: $gutter;
+// 		border: 1px solid black;	//
 	}
-	#user-guide, #news, #tool-input__section, #tool-info__section {
-		width: 50%;
+	
+	#home-quick-search {
+		margin-bottom: 50px;
+	}
+	#tool-input__section, #tool-info__section {
+		width: 100%;
 		float: left;
 	}
 
 }
 
+// large screen
 @include minw( $med ) {
 	.content { // article
 		width: 100% - $sidebar-width;
@@ -75,15 +117,45 @@ article {
 	.footer {
 		clear: both;
 	}
-	#about, #user-guide, #news {
-		width: 33.3%;
-		padding: 0;
+	
+		// homepage sections.
+		
+	#home-quick-search {
+		width: 400px;
 		float: left;
-		padding: 0 $gutter;
+		padding: 30px;
+		margin: 0 $gutter $gutter 0;
+		border: $element-border-width solid $element-border-color;
+		height: 400px;
 	}
-	#primary, .page-intro {
+		
+	#home-gallery {
+// 		padding: 30px;
+// 		overflow: hidden;
+// 		width: auto;
+		  padding: 5px;
+		  margin-left: 410px;
+		  float: none;
+		  display: block;
+		  height: 400px;
+	}
+		
+	#home-about, #home-news, #home-stats {
+		width: 32%;
 		float: left;
-		width: 66.6%;
+		padding: $line-ht $gutter;
+		margin-left: $gutter;
+// 		border: 1px solid black;	//
+	}
+	
+	#home-stats {
+		clear: both;
+		margin-left: 0;
+	}
+	
+	.page-intro {
+		float: left;
+// 		width: 66.6%;
 		padding: 0 $gutter;
 		margin-bottom: $line-ht;
 	}

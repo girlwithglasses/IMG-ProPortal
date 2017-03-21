@@ -64,6 +64,13 @@ button, html input[type="button"], input[type="reset"], input[type="submit"] {
 	border: $element-border-width solid map-get( $jgi-palette, reddish );
 }
 
+.test-button-blue {		// temp location.  need to style all the buttons.
+	padding: 10px 20px;
+	font-size: 75%; 
+	background: map-get( $jgi-palette, dk_blue );
+	border: $element-border-width solid map-get( $jgi-palette, dk_blue );
+}
+
 .test-button-outline {		// temp location.  need to style all the buttons.
 	padding: 10px 20px;
 	font-size: 75%; 

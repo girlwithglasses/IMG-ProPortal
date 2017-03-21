@@ -1,265 +1,122 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Home';
 %]
-<!-- First row, quick search and image gallery. -->
+
+<style>
+
+/* MOVE TO SASS FILES */
+
+/* labels */
+label.myForm {
+	text-transform: uppercase;	
+	font-size: 14px;
+	display: block;
+	margin: 5px;
+}
+
+label.myForm:after {
+	clear: both;
+	float: left;
+}
+
+select {
+  border: 1px solid #5a5a5a; map-get( $jgi-palette, dk_grey ); 
+  border-radius: 0px;
+  
+  background: transparent;
+  padding:  0 20px;	
+  text-transform: uppercase;	
+  font-size: 14px;
+  height: 3em;
+
+}
+
+input {
+  border: 1px solid #5a5a5a; map-get( $jgi-palette, dk_grey ); 
+  border-radius: 0px;
+  
+  background: transparent;
+  padding:  0 20px;		
+  font-size: 14px;
+  height: 3em;
+}
+
+
+</style>
+
+
 <div class="cf">
 
-<section id="quick-search">
-<h3> Quick Search</h3>
+<div style="height:auto; overflow:hidden;">
+	<div id="home-quick-search">
+		<!-- <div class="infoBox"> -->
+		<div class="infoBoxTitle" style="border-bottom: 1px solid gray;"><h3>Quick Search</h3></div>
 
-<strong>Search category:</strong>
-<select>
-	<option value="genomes"> Genomes </option>
-	<option value="genes"> Genes </option>
-	<option value="functions"> Functions </option>
-</select>
-<p></p>
-<strong>For keyword:</strong>
-<input type="text" />
-<button class="quick-search">Go</button>
-</section>
+		<div id="home-quick-search-form">
+		
+			<div style="margin-bottom: 10px;">
+				<label class="myForm" for="search-domain">Search category</label>
+				<select id="search-domain"  style="width: 100%;">
+					<option value="genomes"> Genomes </option>
+					<option value="genes"> Genes </option>
+					<option value="functions"> Functions </option>
+				</select>
+			</div>	
+		
+			<div style="margin-bottom: 10px;">
+				<label class="myForm" for="search-keyword">For keyword</label>
+				<input id="search-keyword" type="text" style="width: 100%;"/>
+			</div>	
+		
+		
+			<button class="test-button-blue" style="float: right;">Go</button>
 
-<section id="gallery">
-<h3>Image Gallery</h3>
-<p> Image gallery goes here...</p>
-</section>
 
-<section id="about">
-<h3>About IMG/ProPortal</h3>
-	<div class="section-content">
-<p>
-	The marine cyanobacterium <strong><i>Prochlorococcus</i></strong>, which is abundant in the oceans, is a key model system in microbial ecology. <strong>IMG/ProPortal</strong> provides <i>Prochlorococcus</i> and the closely related <i>Synechococcus</i> and <i>Cyanophage</i> genomes integrated with a comprehensive set of publicly-available isolate and single cell genomes, and a rich set of publicly-available metagenome samples. <strong>IMG/ProPortal</strong> includes genomic, transcriptomic, metagenomic and population data from both cultivated strains and wild populations of cyanobacteria and phage.</p>
-<p><strong>IMG/ProPortal</strong> relies on IMG's data warehouse and comparative analysis tools (<a href="http://nar.oxfordjournals.org/content/42/D1/D560" rel="external">Nucleic Acids Research, Volume 42 Issue D1</a>) and is a descendant of <strong>ProPortal</strong> (<a href="http://nar.oxfordjournals.org/content/40/D1/D632" rel="external">Nucleic Acids Research Volume 40 Issue D1</a>).</p>
+
+		</div>
 	</div>
-</section>
 
+	<div id="home-gallery">
 
-<section id="stats">
-<h3>IMG/ProPortal Data Sets</h3>
-<div class="section-content">
-[%	IF results.stats.pp_subsets.size > 0; %]
+	</div>
+</div> <!-- row -->
 
-<!-- <h6> Isolate and Single Cell Genomes </h6> -->
+<div class=" infoBox" id="home-stats">
+	<div class="infoBoxTitle"><h3>IMG/ProPortal Data Sets</h3></div>
 
-<!-- <caption>Isolate and Single Cell Genomes</caption> -->
-<!--
-<thead>
-<tr><th>Category</th><th>Count</th></th></tr>
-</thead>
- -->
-<table>
-
-<tr><td colspan="2"><h6> Isolate and Single Cell Genomes </h6></td></tr>
-[%	FOR fd IN data_filters.valid.keys.sort;
-		FOR f IN data_filters.valid.$fd.enum;
-			IF results.stats.pp_subsets.$f;
-				s = results.stats.pp_subsets.$f; %]
-		<tr><td class="indent">[% data_filters.schema.$fd.enum_map.$f %]</td>
-			<td>[% s.count %]</td>
-		</tr>
-[%			END;
-		END;
-	END;
-	END; %]
-
-<tr><td><h6> Metagenomes </h6></td>
-	<td>[% results.stats.metagenomes_marine.0.count %]</td></tr>
-
-<!-- WE WILL ADD THESE BACK WHEN THE DATA GETS HOOKED UP!
-<tr><td colspan="2"><h6> Transcriptomes </h6></td></tr>
-<tr><td class="indent"> Metatranscriptomes </td><td> ~~ </td></tr>
-<tr><td class="indent"> Experimental RNASeq experiments</td><td> ~~ </td></tr>
-<tr><td class="indent"> Microarray experiments </td><td> ~~ </td></tr>
-<tr><td colspan="2"><h6> Proteomes </h6></td></tr>
- -->
-
-<!--
-
-	[% IF results.stats.metagenomes_by_eco.size > 0;
-		FOREACH r IN results.stats.metagenomes_by_eco %]
-		<tr><td>[%
-			( r.ecosystem_type || '(unclassified)' )
-			%] > [%
-			( r.ecosystem_subtype || '(unclassified)' )
-			%] > [%
-			( r.specific_ecosystem || '(unclassified)' )
-			%]</td>
-			<td>[% r.count %]</td>
-		</tr>
-[%		END; END; %]
- -->
-
-
-
-
-
-</table>
-</section>
-
-<!--
-
-<section class="mg_by_eco clear">
 	<table>
-	<caption>Metagenome Counts by Ecosystem</caption>
-	<thead>
-	<tr><th class="L">Ecosystem</th><th class="L">Count</th></tr>
-	</thead>
-	<tbody>
-[%	eco = [ 'ecosystem', 'ecosystem_category', 'ecosystem_type', 'ecosystem_subtype', 'specific_ecosystem' ];
-	IF results.stats.metagenomes_by_eco.size > 0;
-		FOREACH r IN results.stats.metagenomes_by_eco %]
-		<tr><td>[%
-			( r.ecosystem_type || '(unclassified)' )
-			%] > [%
-			( r.ecosystem_subtype || '(unclassified)' )
-			%] > [%
-			( r.specific_ecosystem || '(unclassified)' )
-			%]</td>
-			<td>[% r.count %]</td>
-		</tr>
-[%		END;
-	ELSE %]
-		<tr><td colspan="2">No statistics found!</td></tr>
-[%	END; %]
-	</tbody>
-	</table>
-</section>
-
-
-<table>
-<caption>Metagenomes by Marine Ecosystem Subtype</caption>
-[% IF results.stats.metagenomes_by_subtype.size > 0 %]
-<thead>
-<tr><th>Category</th><th>Count</th></th></tr>
-</thead>
-<tbody>
-[%		FOREACH r IN results.stats.metagenomes_by_subtype %]
-		<tr><td>[% ( r.ecosystem_subtype || 'not given' ) %]</td>
-			<td>[% r.count %]</td>
-		</tr>
-[%		END;
-	ELSE %]
-	<tbody>
-		<tr><td colspan="2">No statistics found!</td></tr>
-[%	END %]
-</tbody>
-</table>
-</div>
-</section>
- -->
-
-
-
-<section id="news">
-<h3>News</h3>
-<div class="section-content">
-<a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-</div>
-</section>
-<!--
- -->
-
-<!--
-
-<section class="subset-stats clear">
-	<table>
-	<caption>IMG ProPortal Statistics</caption>
-	<thead>
-	<tr><th class="L">Subset</th><th class="L">Count</th></tr>
-	</thead>
-	<tbody>
-[%	IF results.stats.pp_subsets.size > 0;
-		FOR fd IN data_filters.schema.keys.sort;
+		<tr><td colspan="2"><h6> Isolate and Single Cell Genomes </h6></td></tr>
+	[%	FOR fd IN data_filters.valid.keys.sort;
 			FOR f IN data_filters.valid.$fd.enum;
 				IF results.stats.pp_subsets.$f;
 					s = results.stats.pp_subsets.$f; %]
-			<tr><td>[% data_filters.schema.$fd.enum_map.$f %]</td>
+			<tr><td class="indent">[% data_filters.schema.$fd.enum_map.$f %]</td>
 				<td>[% s.count %]</td>
 			</tr>
 	[%			END;
 			END;
-		END;
-	ELSE %]
-		<tr><td colspan="2">No statistics found!</td></tr>
-[%	END; %]
-	</tbody>
-</table>
+		END;%]
 
-[%	IF results.stats.data_types %]
-<table>
-<caption>Genomes by sample type</caption>
-<thead>
-<tr><th>Sample type</th><th>Subset</th><th class="R">Count (public)</th><th class="R">Count (all)</th></tr>
-</thead>
-<tbody>
-[%		FOREACH s_key IN results.stats.data_types.keys.sort;
-			s = results.stats.data_types.$s_key;
-			s_type = s.pp_subset; %]
-<tr>
-<td>[% s.dataset_type %]</td>
-<td>[% data_filters.schema.pp_subset.enum_map.$s_type %]</td>
-<td class="R">[% s.public_count %]</td><td class="R">[% s.count %]</td>
-</tr>
-[%	END;
-	END; %]
-
-
-
-
-</section>
-<section class="longhurst-stats">
-	<table>
-	<caption>Counts by Longhurst Code</caption>
-	<thead>
-	<tr><th class="L">Longhurst Code</th><th class="L">Count</th></tr>
-	</thead>
-	<tbody>
-[%	IF results.stats.by_longhurst.size > 0;
-		FOREACH k IN results.stats.by_longhurst.keys.sort;
-			r = results.stats.by_longhurst.$k; %]
-		<tr><td>[%
-			IF r.longhurst_description;
-				r.longhurst_description _ ' (' _ r.longhurst_code _ ')';
-			ELSE;
-				'(unclassified)';
-			END;
-			%]</td>
-			<td>[% r.count %]</td>
-		</tr>
-[%		END;
-	ELSE %]
-		<tr><td colspan="2">No statistics found!</td></tr>
-[%	END; %]
-	</tbody>
+		<tr><td><h6> Metagenomes </h6></td>
+		<td>[% results.stats.metagenomes_marine.0.count %]</td></tr>
 	</table>
-</section>
-<section class="mg_by_eco clear">
-	<table>
-	<caption>Metagenome Counts by Ecosystem</caption>
-	<thead>
-	<tr><th class="L">Ecosystem</th><th class="L">Count</th></tr>
-	</thead>
-	<tbody>
-[%	eco = [ 'ecosystem', 'ecosystem_category', 'ecosystem_type', 'ecosystem_subtype', 'specific_ecosystem' ];
-	IF results.stats.metagenomes_by_eco.size > 0;
-		FOREACH r IN results.stats.metagenomes_by_eco %]
-		<tr><td>[%
-			( r.ecosystem_type || '(unclassified)' )
-			%] > [%
-			( r.ecosystem_subtype || '(unclassified)' )
-			%] > [%
-			( r.specific_ecosystem || '(unclassified)' )
-			%]</td>
-			<td>[% r.count %]</td>
-		</tr>
-[%		END;
-	ELSE %]
-		<tr><td colspan="2">No statistics found!</td></tr>
-[%	END; %]
-	</tbody>
-	</table>
-</section>
- -->
 </div>
 
+<div class=" infoBox" id="home-about">
+	<div class="infoBoxTitle"><h3>About IMG/ProPortal</h3></div>
+
+	<p>
+	The marine cyanobacterium <strong><i>Prochlorococcus</i></strong>, which is abundant in the oceans, is a key model system in microbial ecology. <strong>IMG/ProPortal</strong> provides <i>Prochlorococcus</i> and the closely related <i>Synechococcus</i> and <i>Cyanophage</i> genomes integrated with a comprehensive set of publicly-available isolate and single cell genomes, and a rich set of publicly-available metagenome samples. <strong>IMG/ProPortal</strong> includes genomic, transcriptomic, metagenomic and population data from both cultivated strains and wild populations of cyanobacteria and phage.</p>
+<p><strong>IMG/ProPortal</strong> relies on IMG's data warehouse and comparative analysis tools (<a href="http://nar.oxfordjournals.org/content/42/D1/D560" rel="external">Nucleic Acids Research, Volume 42 Issue D1</a>) and is a descendant of <strong>ProPortal</strong> (<a href="http://nar.oxfordjournals.org/content/40/D1/D632" rel="external">Nucleic Acids Research Volume 40 Issue D1</a>).</p>
+
+</div>
+
+<div class="infoBox" id="home-news">
+	<div class="infoBoxTitle"><h3>News</h3></div>
+
+	<a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+</div>
+
+</div>
 [% END; %]
