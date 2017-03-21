@@ -1,0 +1,38 @@
+/* 
+/list/ page elements, including item table header and footer.
+*/
+
+.itemList_controls {
+	float: left;
+	width: 100%;
+	margin: 15px 0;
+}
+
+.left-elements {
+	float: left;
+	text-align: left;
+	vertical-align: middle;
+// 		border: 2px solid gray;
+}
+
+.right-elements {
+	float: right;
+	text-align: right;
+	
+// 		border: 2px solid gray;
+}
+	
+.top {
+	border-bottom: 1px solid gray;
+}
+
+.bottom {
+	border-top: 1px solid gray;
+}
+	
+	
+.itemList_body {
+	float: left;
+	width: 100%;
+	clear: both;
+}
