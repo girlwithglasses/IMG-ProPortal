@@ -21,42 +21,43 @@ has '+filter_domains' => (
 	}
 );
 
-has '+valid_filters' => (
-	default => sub {
-		return {
-			pp_subset => {
-				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
-			},
-			dataset_type => {
-				enum => [ qw( isolate single_cell metagenome transcriptome metatranscriptome ) ]
-			},
-			locus_type => {
-				pattern => '[a-z]RNA'
-			},
-			gene_symbol => {
-				pattern => '\w+'
-			},
-			taxon_oid => {
-				pattern => '\d+'
-			},
-			category => {
-				enum => [ qw(
-					proteinCodingGenes
-					withFunc
-					withoutFunc
-					fusedGenes
-					signalpGeneList
-					transmembraneGeneList
-					geneCassette
-					biosynthetic_genes
-				)]
-			},
-			is_pseudogene => {
-				enum => [ qw( Yes No ) ]
-			}
-		};
-	}
-);
+# has '+valid_filters' => (
+# 	default => sub {
+# 		return {
+# 			pp_subset => {
+# 				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
+# 			},
+# 			dataset_type => {
+# 				enum => [ qw( isolate single_cell metagenome transcriptome metatranscriptome ) ]
+# 			},
+# 			locus_type => {
+# 				pattern => '[a-z]RNA'
+# 			},
+# 			gene_symbol => {
+# 				pattern => '\w+'
+# 			},
+# 			taxon_oid => {
+# 				pattern => '\d+'
+# 			},
+# 			category => {
+# 				enum => [ qw(
+# 					rnas
+# 					proteinCodingGenes
+# 					withFunc
+# 					withoutFunc
+# 					fusedGenes
+# 					signalpGeneList
+# 					transmembraneGeneList
+# 					geneCassette
+# 					biosynthetic_genes
+# 				)]
+# 			},
+# 			is_pseudogene => {
+# 				enum => [ qw( Yes No ) ]
+# 			}
+# 		};
+# 	}
+# );
 
 =head3 render
 
@@ -98,6 +99,12 @@ sub _render {
 	# get the genes
 	my $genes = $self->get_data( $args );
 
+# 	if ( $args->{taxon_oid} ) {
+# 		$self->_core->run_query({
+# 			query => 'taxon_display_name'
+#
+# 		});
+# 	}
 	return { results => { genes => $genes, params => $args, label_data => $self->get_label_data } };
 
 }
@@ -105,26 +112,6 @@ sub _render {
 sub get_data {
 	my $self = shift;
 	my $args = shift;
-
-# 	my $q_hash;
-# 	for my $d ( @{$self->filter_domains} ) {
-# 		if ( defined $args->{$d} ) {
-#
-# 		}
-# 	}
-#
-# 	if ( $args->{locus_type} && 'xrna' eq lc( $args->{locus_type} ) ) {
-# 		$q_hash->{locus_type} = {
-# 			like => '%RNA',
-# 			not_in => [ qw( rRNA tRNA ) ]
-# 		};
-# 		delete $args->{locus_type};
-# 	}
-#
-# 	for ( qw ( is_pseudogene locus_type gene_symbol taxon_oid ) ) {
-# 		$q_hash->{$_} = $args->{$_} if defined $args->{$_};
-# 	}
-
 
 	return $self->_core->run_query({
 		query => 'gene_list',

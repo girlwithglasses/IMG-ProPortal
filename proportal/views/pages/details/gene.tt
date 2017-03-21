@@ -59,8 +59,8 @@
 
 		<div class="tableTitle"><h6>Genome and Scaffold Details</h6></div>
 		<table class="condensed">
-			<tr><td class="col1">Taxon ID</td>	<td> <a href="[% link( 'details', { type => 'taxon', taxon_oid => taxon.taxon_oid } ) %]">[% results.taxon.taxon_oid %]</a></td></tr>
-			<tr><td>Taxon</td>	<td> [% results.taxon.taxon_display_name %] </td></tr>
+			<tr><td class="col1">Taxon ID</td>	<td> <a href="[% link( 'details', { type => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_oid %]</a></td></tr>
+			<tr><td>Taxon</td>	<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_display_name %]</a></td></tr>
 			<tr><td>Scaffold ID</td>	<td> [% self.scaffold %] <div class="noteToSelf"> * </div></td></tr>
 			<tr><td>Scaffold</td>	<td> <div class="noteToSelf"> * </div></td></tr>
 		</table>
@@ -81,8 +81,13 @@
 
 		<table class="lined">
 		<tr><td class="col1">CyCOG</td> 	<td> <a>COG0592</a>: DNA polymerase III sliding clamp (beta) subunit, PCNA homolog</td></tr>
+
+
 		<tr><td>KOG</td> 	<td> <a>KOG789</a>: a verbose description of this KOG will go here: Lorem ipsum dolor sit amet, consectetur adipiscing elit</td></tr>
-		<tr><td>Enzyme</td> <td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>
+		<tr>
+		<td>Enzyme</td>
+		<td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>
+
 		<tr><td>Pfam</td>
 			<td>
 				<a>pfam00712</a>: DNA_pol3_beta <br>
@@ -140,7 +145,8 @@
 	<div class="infoBox">
 	<div class="infoBoxTitle"><h4>Pathway Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
 		<table class="lined">
-		<tr><td class="col1">KEGG Orthology</td> 	<td> <a>KO:K02338</a>: DPO3B, dnaN DNA polymerase III subunit beta [EC:2.7.7.7] </td></tr>
+		<tr><td class="col1">KEGG Orthology</td>
+			<td> <a>KO:K02338</a>: DPO3B, dnaN DNA polymerase III subunit beta [EC:2.7.7.7] </td></tr>
 		<tr><td>KEGG Pathways</td>
 			<td>
 				<a>DNA replication</a><br>

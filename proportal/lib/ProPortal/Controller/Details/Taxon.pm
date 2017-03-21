@@ -68,14 +68,13 @@ sub get_data {
 			gold_sp_seq_centers
 			gold_sp_seq_methods
 			gold_sp_study_gold_ids
-			taxon_extlinks
+			taxon_ext_links
 		)],
 		single => [ qw(
 			taxon_stats
 		)]
 	};
 # 		goldanaproj
-
 
 	for my $type ( %$associated ) {
 		for my $assoc ( @{ $associated->{$type} } ) {

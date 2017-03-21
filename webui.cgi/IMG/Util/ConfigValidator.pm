@@ -1,6 +1,6 @@
 package IMG::Util::ConfigValidator;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use File::Spec::Functions qw( catdir catfile );
 use Config::Any;
 use WebConfig ();
@@ -10,6 +10,7 @@ use IMG::Util::DB;
 #	db      => # database connection details
 #	img_cfg => # IMG config stuff, probably from WebConfig::getEnv()
 #	debug   => # debugging stuff
+#	logger  => # logger config
 
 sub make_config {
 
@@ -17,9 +18,9 @@ sub make_config {
 
 	my $img_conf = WebConfig::getEnv();
 
-	my @pieces = qw( schema db debug );
+	my @pieces = qw( schema db debug logger );
 
-	my @files = map { catfile( $args->{dir}, 'proportal/environments', $_  ) }
+	my @files = map { catfile( $args->{dir}, 'proportal/environments', $args->{$_} ) }
 				grep { exists $args->{$_} } @pieces;
 
 	my $cfg = Config::Any->load_stems({
@@ -50,11 +51,16 @@ sub make_config {
 		if ( ! $img_conf->{db}{ $img_conf->{schema}{$db}{db} } ) {
 			if ( 'img_core' eq $img_conf->{schema}{$db}{db} || 'img_gold' eq $img_conf->{schema}{$db}{db} ) {
 				my $dbh = IMG::Util::DB::get_oracle_connection_params({ database => $img_conf->{schema}{$db}{db} });
-				$dbh->{dbi_params} = { RaiseError => 1, FetchHashKeyName => 'NAME_lc' };
+				$dbh->{dbi_params} = {
+					RaiseError => 1,
+					FetchHashKeyName => 'NAME_lc',
+					LongReadLen => 38000,
+					LongTruncOk => 1
+				};
 				$img_conf->{db}{ $img_conf->{schema}{$db}{db} } = $dbh;
 			}
 			else {
-				say 'No config for ' . $img_conf->{schema}{$db}{db};
+				log_error { 'No config for ' . $img_conf->{schema}{$db}{db} };
 			}
 		}
 	}

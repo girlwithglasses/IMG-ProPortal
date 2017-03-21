@@ -11,7 +11,7 @@
 [%	content %]
 		function getJson(){
 			return { results:[%
-	USE JSON.Escape( convert_blessed => 1 );
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
 	IF results.js;
 		results.js.json;
 	ELSE;
@@ -22,7 +22,8 @@
 		data_filters.json;
 	ELSE;
 		'{}';
-	END; %]
+	END;
+%]
 			};
 		}
 	}

@@ -42,15 +42,15 @@
 					self.longhurst_code _ ', ' _ self.longhurst_description;
 				END %]</td></tr>
 			<tr><td>Date collected</td> 	<td>[% self.date_collected %]</td></tr>
-			
+
 		</table>
-		
+
 		<div class="tableTitle"><h6>Ecological Information</h6></div>
 		<table class="condensed">
 			<tr><td class="col1">Clade</td>	<td>[% self.clade %]</td></tr>
 			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
 		</table>
-		
+
 		<div class="tableTitle"><h6>Ecosystem Hierarchy</h6></div>
 		<table class="condensed">
 			<tr><td class="col1"></td><td></td></tr>
@@ -67,14 +67,13 @@
 				[%	END; %]
 		</table>
 	</div>	<!-- infoTable -->
-	
-	
+
+
 <div class="infoBox">
-		<div class="infoBoxTitle"> 
+		<div class="infoBoxTitle">
 			<span class="h4"><b>Genes</b></span>
 			<div class="floatR h6 noteToSelf">Experimental Section</div>
 		</div>
-		
 <table class="condensed">
 	<tr><td><h5>Total Genes</h5></td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid } ) %]"><b>[% self.taxon_stats.total_gene_count %]</a></b></td></tr>
 	<tr><td class="indent1"><h6>Protein Coding Genes</h6></td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, category => 'proteinCodingGenes' } ) %]"><b>[% self.taxon_stats.cds_genes %]</a></b></td></tr>
@@ -83,7 +82,7 @@
 	<tr><td class="indent2">Fused protein coding genes</td>  <td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, category => 'fusedGenes' } ) %]">[% self.taxon_stats.fused_genes %]</a></td></tr>
 	<tr><td class="indent2">Coding signal proteins</td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, category => 'signalpGeneList' } ) %]">[% self.taxon_stats.genes_signalp %]</a></td></tr>
 	<tr><td class="indent2">Coding transmembrane proteins</td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, category => 'transmembraneGeneList' } ) %]">[% self.taxon_stats.genes_transmembrane %]</a></td></tr>
-	
+
 	<tr><td class="indent1"><h6>RNA Genes</h6></td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, category => 'rnas' } ) %]"><b>[% self.taxon_stats.rna_genes %]</b></a></td></tr>
 	<tr><td class="indent2">rRNA Genes</td>
 		<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, locus_type => 'rRNA' } ) %]">[% self.taxon_stats.rrna_genes
@@ -97,7 +96,7 @@
 	<tr><td class="indent2">Other RNA genes</td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, locus_type => 'xRNA' } ) %]">[% self.taxon_stats.other_rna_genes %]</a></td></tr>
 
 	<tr><td class="indent1"><h6>Pseudo Genes</td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, is_pseudogene => 'Yes' } ) %]"><b>[% self.taxon_stats.pseudo_genes %]</b></a></td></tr>
-	
+
 	<tr><td class="indent1"><h6>Chromosomal Cassettes</h6></td>	<td><a href="[% link( 'chr_cassette_genes', { taxon_oid => self.taxon_oid } ) %]"><b>[% self.taxon_stats.total_cassettes %]</b></a></td></tr>
 	<tr><td class="indent2">Genes in Chromosomal Cassettes</td>	<td><a href="[% link( 'list', { type => 'gene', taxon_oid => self.taxon_oid, category => 'geneCassette' } ) %]">[% self.taxon_stats.genes_in_cassettes %]</a></td></tr>
 
@@ -106,7 +105,7 @@
 
 </table>
 
-</div>		
+</div>
 
 </div> 	<!-- row -->
 <div class="row">
@@ -114,7 +113,7 @@
 		<div class="infoBoxTitle"><h4>Environmental Measurements</h4></div>
 
 		<div class="tableTitle"><h6>World Ocean Atlas Averages</h6></div>
-		<table class="condensed">	
+		<table class="condensed">
 			[%	woa_fields = [
 				'salinity',
 				'temperature',
@@ -142,7 +141,7 @@
 			</tr>
 			[%	END %]
 		</table>
-		
+
 		<div class="tableTitle"><h6>Direct Measurements</h6></div>
 		<table class="condensed">
 <!-- 		<tr><td class="col1"></td><td></td></tr> <!~~ Sets first column width ~~> -->
@@ -174,7 +173,7 @@
 			[%	END %]
 			<tr>
 		</table>
-		
+
 	</div>
 
 	<div class="infoBox">
@@ -184,9 +183,9 @@
 			<tr><td class="col1">Clade</td>	<td>[% self.clade %]</td></tr>
 			<tr><td>Ecotype</td>	<td>[% self.ecotype %]</td></tr>
 		</table>
-		
+
 		<div class="tableTitle"><h6>NCBI Taxonomy</h6></div>
-		<table class="condensed">		
+		<table class="condensed">
 			[% ncbi = [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ];
 
 			FOR n IN ncbi;
@@ -210,7 +209,7 @@
 		</table>
 
 		<div class="tableTitle"><h6>GOLD Details</h6></div>
-		<table class="condensed">		
+		<table class="condensed">
 			<tr><td class="col1">Study ID</td>
 				<td>[%	IF self.study_gold_id %]
 					<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
@@ -229,9 +228,9 @@
 				</td>
 			</tr>
 		</table>
-		
+
 		<div class="tableTitle"><h6>External Links</h6></div>
-		<table class="condensed">		
+		<table class="condensed">
 			[%	ext_urls = [
 				'bioproject_accession',
 				'biosample_accession',
@@ -286,14 +285,14 @@
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Sequence Information</h4></div>
 
-		<table class="condensed">	
+		<table class="condensed">
 			<tr><td class="col1">Culture Type</td>	<td>[% self.culture_type %]</td></tr>
 			<tr><td>Quality</td>	<td>[% self.seq_quality %]</td></tr>
 			<tr><td>Publicly Available</td>	<td>[% self.is_public %]</td></tr>
 		</table>
-		
+
 		<div class="tableTitle"><h6>Sequencing Details</h6></div>
-		<table class="condensed">	
+		<table class="condensed">
 			<tr><td class="col1">Sequencing Status</td>	<td>[% self.seq_status %]</td></tr>
 			<tr><td>Sequencing Center</td>
 				[% IF self.gold_sp_seq_centers.size > 0;
@@ -309,9 +308,9 @@
 				<td>Not specified</td>
 					'; END; %]	</tr>
 		</table>
-		
+
 		<div class="tableTitle"><h6>Curation Details</h6></div>
-		<table class="condensed">	
+		<table class="condensed">
 			<tr><td class="col1">Submission Type</td>	<td></td></tr>
 			<tr><td>IMG Release</td>	<td></td></tr>
 			<tr><td>Release Date</td>	<td>[%	self.release_date %]</td></tr>
@@ -325,7 +324,7 @@
 </div> <!-- thisWrapper -->
 
 <div class="row">
-	
+
 </div>
 
 [%	END %]

@@ -1,4 +1,4 @@
-<form action="[% settings.main_cgi_url %]" method="POST" class="sample-data__form">
+<form action="[% img_app_config.main_cgi_url %]" method="POST" class="sample-data__form">
 [% content %]
 <fieldset class="sample-data__controls" id="form_controls">
 <input type="hidden" name="section" value="GenomeCart" />

@@ -33,10 +33,10 @@ use IMG::Util::Import 'psgi';
 #=comment
 
 # Mojolicious pod renderer
-# use Mojo::Server::PSGI;
-#
-# my $server = Mojo::Server::PSGI->new;
-# $server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
+use Mojo::Server::PSGI;
+
+my $server = Mojo::Server::PSGI->new;
+$server->load_app( catdir( $dir, 'proportal/bin/podserver' ) );
 
 #=cut
 
@@ -69,7 +69,7 @@ builder {
 
 #	mount "/cgi-bin" => $old_img->();
 
-#	mount "/pod" => sub { $server->run(@_) };
+	mount "/pod" => sub { $server->run(@_) };
 
 #     mount "/testapp" => TestApp->to_app;
 	mount "/" => ProPortalApp->to_app;

@@ -1,7 +1,6 @@
 package IMG::Util::Text;
 
 use IMG::Util::Import 'MooRole';
-use IMG::App::Role::ErrorMessages qw( err );
 use utf8;
 
 =head3 make_text_web_safe

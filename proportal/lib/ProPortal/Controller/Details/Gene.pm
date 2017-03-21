@@ -49,18 +49,11 @@ sub _render {
 		});
 	}
 
-	my $genes = $self->get_data( $args );
+	my $res = $self->get_data( $args );
 
-	if ( ! scalar @$genes ) {
-		$self->choke({
-			err => 'no_results',
-			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )
-		});
-	}
+#	log_debug { 'results: ' . Dumper $res };
 
-	log_debug { 'results: ' . Dumper $genes };
-
-	return { results => { gene => $genes->[0] } };
+	return { results => { gene => $res } };
 
 }
 
@@ -69,12 +62,65 @@ sub get_data {
 	my $args = shift;
 
 	# get the genes
-	return $self->_core->run_query({
+	my $genes = $self->_core->run_query({
 		query => 'gene_details',
 		where => {
 			gene_oid => $args->{gene_oid}
 		}
 	});
+
+	if ( ! scalar @$genes ) {
+		$self->choke({
+			err => 'no_results',
+			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )
+		});
+	}
+
+	my $res = $genes->[0];
+
+	my $associated = {
+		multi => [ qw(
+			gene_cassette_genes
+			gene_cog_groups
+			gene_eggnogs
+			gene_enzymes
+			gene_ext_links
+			gene_fusion_components
+			gene_go_terms
+			gene_img_interpro_hits
+			gene_kog_groups
+			gene_pdb_xrefs
+			gene_rna_clusters
+			gene_seed_names
+			gene_sig_peptides
+			gene_swissprot_names
+			gene_tc_families
+			gene_tigrfams
+			gene_tmhmm_hits
+			gene_xref_families
+			img_cluster_member_genes
+		)],
+		single => [ qw(
+			scaffold
+		)]
+	};
+
+	return $res;
+
+	for my $type ( %$associated ) {
+		for my $assoc ( @{ $associated->{$type} } ) {
+			if ( $res->can( $assoc ) ) {
+				my $r = $res->$assoc;
+		#		log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
+
+				if ($r
+					&& ( ( 'multi' eq $type && scalar @$r )
+					|| ( 'single' eq $type && defined $r ) ) ) {
+					$res->{$assoc} = $r;
+				}
+			}
+		}
+	}
 
 }
 

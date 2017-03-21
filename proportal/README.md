@@ -68,15 +68,7 @@ https://www.dropbox.com/s/hm3xne8hc3d3vq7/dbschema-img_core.db?dl=0
 
 ### Genepool server set up
 
-* The majority of config parameters are set in `proportal/environments/development.pl`. The parameters that may need to be changed are the database login details and the URLs for the application. To get the current database login details, run the following from the proportal directory:
-
-    `perl script/write_db_config_files.pl`
-
-This will parse the database config files and dump the relevant DB details as JSON files in the `environments` directory.
-
-The database config details (username, password) should be copied into db.pl
-
-TODO: change this to slurp in files named after the DB.
+* `IMG::Util::DB` locates and parses the Oracle DB configuration files to retrieve the database login details.
 
 ### Apache and dnsmasq ###
 

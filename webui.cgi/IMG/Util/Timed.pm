@@ -2,7 +2,6 @@ package IMG::Util::Timed;
 
 use parent Exporter;
 use IMG::Util::Import 'MooRole';
-use IMG::App::Role::ErrorMessages qw( err );
 # use Attribute::Contract -types => [ qw/ Tuple Int CodeRef slurpy Any Optional / ];
 use Time::HiRes 1.9721;
 use Time::Out qw( timeout );

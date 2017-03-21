@@ -1,9 +1,7 @@
 package IMG::Util::DBIxConnector;
 
-use IMG::Util::Import;
-
+use IMG::Util::Import 'LogErr';
 use DBIx::Connector;
-use IMG::App::Role::ErrorMessages qw( err );
 
 =head3 get_dbix_connector
 
@@ -44,6 +42,8 @@ Args validated
 
 sub __connector {
 	my $arg_h = shift;
+
+	log_debug { 'Connecting to ' . $arg_h->{dsn} };
 
 	return DBIx::Connector->new(
 		$arg_h->{dsn},

@@ -24,6 +24,8 @@ our %IMPORT_BUNDLES = (
 
 #	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )] ],
 
+	LogErr =>  [ 'IMG::App::Role::Logger', 'IMG::App::Role::ErrorMessages' => [ 'err' ] ],
+
 	Class =>   [ 'Moo', 'Types::Standard' => [qw( :all )], 'IMG::App::Role::Logger' ],
 
 	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )], 'IMG::App::Role::Logger' ],

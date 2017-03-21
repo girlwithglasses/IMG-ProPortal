@@ -1,6 +1,6 @@
 package IMG::Model::UnitConverter;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 
 sub distance_in_m {
 

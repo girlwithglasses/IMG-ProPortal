@@ -42,10 +42,8 @@ prefix '/proportal' => sub {
 
 	my $prefix = 'proportal';
 
-	get qr{
+	any qr{
 		/ (?<query> clade | data_type | ecosystem | ecotype | location | longhurst | phylogram | big_ugly_taxon_table )
-		\?
-		.*
 		}x => sub {
 
 #	<= pp_subset=SUBSET
@@ -54,13 +52,15 @@ prefix '/proportal' => sub {
 		my $c = captures;
 		my $p = delete $c->{query};
 
+#	    my @names = query_parameters->get_all('name');
+
 		my $p_hash = params('query');
-		log_debug { 'params: ' . Dumper params };
-		log_debug { 'query params: ' . Dumper $p_hash };
+		log_debug { 'params(query): ' . Dumper params };
+		log_debug { 'top query_parameters: ' . Dumper query_parameters };
 
 		bootstrap( $p );
 
-		img_app->set_filters( $c );
+		img_app->set_filters( query_parameters );
 
 		img_app->current_query->_set_page_params({
 			page_id => img_app->controller->page_id,
@@ -72,8 +72,8 @@ prefix '/proportal' => sub {
 	};
 
 	# filterable queries
-	get qr{
-		/ (?<query> clade | data_type | ecosystem | ecotype | location | longhurst | phylogram | big_ugly_taxon_table )
+	any qr{
+		/ (?<page> clade | data_type | ecosystem | ecotype | location | longhurst | phylogram | big_ugly_taxon_table )
 		/?
 		(pp_subset=)?
 		(?<pp_subset>\w+)?
@@ -87,16 +87,17 @@ prefix '/proportal' => sub {
 #	<= dataset_type=DST
 
 		my $c = captures;
-		my $p = delete $c->{query};
+		my $p = delete $c->{page};
 
 		log_debug { 'captures: ' . Dumper $c };
+
 		my $p_hash = params('query');
-		log_debug { 'params: ' . Dumper params };
-		log_debug { 'query params: ' . Dumper $p_hash };
+		log_debug { 'params(query): ' . Dumper params };
+		log_debug { 'second query_parameters: ' . Dumper query_parameters };
 
 		bootstrap( $p );
 
-		img_app->set_filters( $p_hash );
+		img_app->set_filters( query_parameters );
 
 		img_app->current_query->_set_page_params({
 			page_id => img_app->controller->page_id,
@@ -131,6 +132,15 @@ The home page.
 
 };
 
+sub generic_api {
+	my $args = shift;
+	my $rslt = img_app->controller->get_data( $args->{params} );
+	if ( ! $rslt ) {
+		$rslt = { 'error' => 001, 'message' => 'No data returned by query' };
+	}
+	content_type 'application/json';
+	return JSON->new->convert_blessed(1)->encode( $rslt );
+}
 
 sub generic {
 	my $args = shift;
@@ -142,7 +152,6 @@ sub generic {
 		list => 'List'
 	};
 
-
 	bootstrap( $h->{ $args->{prefix} } . '::' . $h->{ $args->{domain} } );
 
 	img_app->current_query->_set_page_params({
@@ -150,14 +159,6 @@ sub generic {
 	});
 
 	log_debug { 'args: ' . Dumper $args };
-
-	if ( $args->{extra} ) {
-		for my $p ( split '&', $args->{extra} ) {
-			my ( $k, $v ) = split "=", $p, 2;
-			push @{$args->{params}{$k}}, $v;
-		}
-
-	}
 
 	return template img_app->controller->tmpl, img_app->controller->render( $args->{params} );
 
@@ -183,13 +184,12 @@ sub generic {
 # my %query_parameters = params('query');
 
 
-prefix "/list/" => sub {
+prefix '/list/' => sub {
 
 	for my $domain ( qw( gene taxon ) ) {
-
 		prefix $domain => sub {
 			# base query
-			get qr{
+			any qr{
 				^/?$
 				}x => sub {
 				return generic({ prefix => 'list', domain => $domain });
@@ -197,36 +197,28 @@ prefix "/list/" => sub {
 
 			# standard ? query
 			get '?:stuff' => sub {
-
-				my $p_hash = params('query');
-				log_debug { 'params: ' . Dumper params };
-				log_debug { 'query params: ' . Dumper $p_hash };
-				log_debug { 'stuff: ' . Dumper params->{stuff} };
-
-				return generic({ prefix => 'list', domain => $domain, params => $p_hash });
+				return generic({ prefix => 'list', domain => $domain, params => query_parameters });
 			};
 		};
 	}
 };
 
 
-prefix "/details/" => sub {
+prefix '/details/' => sub {
 
-	get qr{
+	any qr{
 		(?<domain> gene | taxon )
 		[\?/]
 		(?<oid> .* )
 		/?
 		}x => sub {
-
-			say 'captures: ' . Dumper captures;
-
 			return generic({
 				prefix => 'details',
 				domain => captures->{domain},
 				params => { captures->{domain} . '_oid' => captures->{oid} } });
 	};
 };
+
 
 prefix '/tools' => sub {
 

@@ -7,28 +7,6 @@ with 'IMG::Util::Text';
 
 use Template::Plugin::JSON::Escape;
 
-
-# has 'controller_args' => (
-# 	is => 'lazy',
-# 	default => sub {
-# 		return {
-# 			class => 'ProPortal::Controller::Filtered',
-# 			tmpl => 'pages/proportal/ecotype.tt',
-# 			tmpl_includes => {
-# 				tt_scripts => qw( ecotype ),
-# 			},
-# 			filters => {
-# 				pp_subset => 'pro'
-# 			},
-# 			valid_filters => {
-# 				pp_subset => {
-# 					enum => [ qw( pro ) ],
-# 				}
-# 			}
-# 		};
-# 	}
-# );
-
 has '+page_id' => (
 	default => 'proportal/ecotype'
 );

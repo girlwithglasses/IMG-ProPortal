@@ -1,6 +1,6 @@
 package IMG::Views::ViewMaker;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use Dancer2::Plugin;
 
 use Template;

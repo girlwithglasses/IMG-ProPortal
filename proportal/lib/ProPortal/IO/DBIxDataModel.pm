@@ -233,42 +233,10 @@ sub add_filters {
 		return $args->{statement};
 	}
 
-	my %f;
-
 	## This is implemented by ProPortal::IO::ProPortalFilters
-	## Not sure this is an ideal way to do this...
+	my $f = $self->filter_sqlize( $args->{filters} );
 
-	for my $fd ( keys %{$args->{filters}} ) {
-		my $fd_fn = $fd . '_filter';
-		if ( $self->can( $fd_fn ) ) {
-			%f = ( %f,  %{$self->$fd_fn( $args->{filters}{$fd} )} );
-		}
-		else {
-			$f{ $fd } = $args->{filters}{$fd};
-		}
-	}
-
-# 	if ( $args->{locus_type} && 'xrna' eq lc( $args->{locus_type} ) ) {
-# 		$q_hash->{locus_type} = {
-# 			like => '%RNA',
-# 			not_in => [ qw( rRNA tRNA ) ]
-# 		};
-# 		delete $args->{locus_type};
-# 	}
-#
-# 	for ( qw ( is_pseudogene locus_type gene_symbol taxon_oid ) ) {
-# 		$q_hash->{$_} = $args->{$_} if defined $args->{$_};
-# 	}
-
-
-# 	other filters
-# 	if ( $args->{filters}{taxon_oid} ) {
-# 		%f = ( %f,  %{$args->{filters}{taxon_oid}} );
-# 	}
-
-#	say 'where: ' . Dumper \%f;
-
-	$args->{statement}->refine( -where => \%f );
+	$args->{statement}->refine( -where => $f );
 
 	return $args->{statement};
 

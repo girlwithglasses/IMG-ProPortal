@@ -189,6 +189,7 @@ sub get_tmpl_vars {
 	$output->{link} = sub { return $core->img_link_tt( @_ ) };
 	$output->{ext_link} = sub { return $core->ext_link( @_ ) };
 
+	$output->{img_app_config} = img_app->config;
 	$output->{sw_version} = $VERSION;
 	$output->{server_name} = hostname;
 	$output->{ora_service} = $ENV{ORA_SERVICE} || 'The Oracle is silent';

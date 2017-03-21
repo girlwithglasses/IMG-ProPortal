@@ -55,7 +55,7 @@ sub _render {
 sub get_data {
 	my $self = shift;
 
-	# run taxon_oid_display_name for each of the members
+	# get basic taxon info for each of the members
 	return $self->_core->run_query({
 		query => 'taxon_dataset_type',
 		filters => $self->filters,

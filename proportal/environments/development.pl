@@ -22,7 +22,7 @@ use IMG::Util::ConfigValidator;
 my $cnf = IMG::Util::ConfigValidator::make_config({
 	dir => $dir,
 	schema => 'schema_local',
-	db => 'db',
+	db => 'db_all',
 	debug => 'debug'
 });
 

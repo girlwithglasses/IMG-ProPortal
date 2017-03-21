@@ -8,18 +8,6 @@ with 'ProPortal::Util::DataStructure';
 
 use Template::Plugin::JSON::Escape;
 
-# has 'controller_args' => (
-# 	is => 'lazy',
-# 	default => sub {
-# 		return {
-# 			class => 'ProPortal::Controller::Filtered',
-# 			tmpl => 'pages/proportal/ecosystem.tt',
-# 			tmpl_includes => {
-#     			tt_scripts => qw( ecosystem ),
-# 	    	}
-# 		};
-# 	}
-# );
 has '+page_id' => (
 	default => 'proportal/ecosystem'
 );

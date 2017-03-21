@@ -85,6 +85,8 @@
 
 	#	say 'Filters: ' . Dumper $filters;
 
+
+
 		return { pp_subset => $filters->{$f_name} };
 
 	}
@@ -211,34 +213,41 @@ sub pp_subset_filter {
 #	$filters->{pp_metagenomes} = $filters->{pp_metagenome};
 #	$filters->{proportal} = { '!=' => undef };
 
+	return { pp_subset => [ map {
+			$self->choke({
+				err => 'invalid',
+				type => 'pp_subset filter',
+				subject => $_
+			}) unless defined $filters->{$_};
+			$filters->{$_}
+		} @$f_name ] };
 
-	$self->choke({
-		err => 'invalid',
-		type => 'pp_subset filter',
-		subject => $f_name
-	}) unless defined $filters->{$f_name};
+}
 
-#	say 'Filters: ' . Dumper $filters;
+sub default_filter {
+	my $self = shift;
+	my $args = shift;
+	if ( ! $args || ! $args->{domain} || ! $args->{filter_value} ) {
+		$self->choke({
+			err => 'missing',
+			subject => 'filter'
+		});
+	}
 
-	return { pp_subset => $filters->{$f_name} };
-
+	if ( scalar @{$args->{filter_value}} == 1 ) {
+		return { $args->{domain} => $args->{filter_value}[0] };
+	}
+	else {
+		return { $args->{domain} => $args->{filter_value} };
+	}
 }
 
 sub dataset_type_filter {
 	my $self = shift;
-	my $f_name = shift // $self->choke({
-		err => 'missing',
-		subject => 'filter'
+	return $self->default_filter({
+		domain => 'dataset_type',
+		filter_value => @_
 	});
-
-	$self->choke({
-		err => 'invalid',
-		type => 'data type filter',
-		subject => $f_name
-	}) unless grep { $f_name eq $_ } @{ dataset_type_valid() };
-
-	return { dataset_type => $f_name };
-
 }
 
 sub locus_type_valid {
@@ -252,6 +261,10 @@ sub locus_type_filter {
 		subject => 'filter'
 	});
 
+	my $l_type_f = {
+		xrna => { like => '%RNA', not_in => [ qw( rRNA tRNA ) ] },
+	};
+
 	$self->choke({
 		err => 'invalid',
 		type => 'data type filter',
@@ -259,7 +272,6 @@ sub locus_type_filter {
 	}) unless grep { $f_name eq $_ } @{ locus_type_valid() };
 
 	if ( 'xrna' eq lc( $f_name ) ) {
-
 		return {
 			locus_type => {
 				like => '%RNA',
@@ -267,7 +279,7 @@ sub locus_type_filter {
 			}
 		};
 	}
-	return { locus_type => $f_name };
+	return { locus_type => [ map { $l_type_f->{ lc($_) } || $_ } @$f_name ] };
 }
 
 
@@ -277,6 +289,22 @@ sub category_filter {
 		err => 'missing',
 		subject => 'filter'
 	});
+
+	my $filters = {
+		rnas => { locus_type => { like => '%RNA' } },
+	};
+
+
+	return [ map {
+			$self->choke({
+#				err => 'invalid',
+#				type => 'category filter',
+#				subject => $_
+				err => 'not_implemented'
+			}) unless defined $filters->{$_};
+			$filters->{$_}
+		} @$f_name ];
+
 
 	$self->choke({
 		err => 'not_implemented'
@@ -288,6 +316,7 @@ sub category_filter {
 		subject => $f_name
 	}) unless grep { $f_name eq $_ } @{ category_valid() };
 
+#			rnas
 # 			proteinCodingGenes
 # 			withFunc
 # 			withoutFunc
@@ -380,6 +409,7 @@ my $schema = {
 		title => 'gene type',
 		type => 'enum',
 		enum => [ qw(
+			rnas
 			proteinCodingGenes
 			withFunc
 			withoutFunc
@@ -390,6 +420,7 @@ my $schema = {
 			biosynthetic_genes
 		)],
 		enum_map => {
+			rnas => 'RNA',
 			proteinCodingGenes => 'protein coding genes',
 			withFunc => 'genes with function assignment',
 			withoutFunc => 'genes without function assignment',
@@ -410,6 +441,12 @@ my $schema = {
 
 };
 
+=cut filter_schema
+
+Retrieve the schema for a dimension $f
+
+=cut
+
 sub filter_schema {
 	my $self = shift;
 	my $f = shift // $self->choke({
@@ -420,12 +457,46 @@ sub filter_schema {
 	if ( $schema->{$f} ) {
 		return $schema->{$f};
 	}
+
 	$self->choke({
 		err => 'missing',
 		subject => 'json schema for ' . $f
 	});
 }
 
+
+=cut sql_filter
+
+Retrieve the SQL filter for a dimension $fd
+
+=cut
+
+sub filter_sqlize {
+	my $self = shift;
+	my $filters = shift // $self->choke({
+		err => 'missing',
+		subject => 'filter schema'
+	});
+
+	log_debug { 'filter sqlize: ' . Dumper $filters };
+
+	my %f;
+	for my $fd ( keys %$filters ) {
+		my $fd_fn = $fd . '_filter';
+		if ( $self->can( $fd_fn ) ) {
+			my @f = $filters->get_all( $fd );
+			%f = ( %f, %{ $self->$fd_fn( [ @f ] ) } );
+		}
+		else {
+			$f{ $fd } = $filters->{$fd};
+		}
+	}
+	return \%f;
+# 	$self->choke({
+# 		err => 'missing',
+# 		subject => 'json schema for ' . $f
+# 	});
+}
 
 sub dataset_type_valid {
 	return [ qw( isolate single_cell metagenome metatranscriptome transcriptome ) ];

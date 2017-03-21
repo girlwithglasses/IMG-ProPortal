@@ -31,13 +31,6 @@ sub generic {
 
 	log_debug { 'args: ' . Dumper $args };
 
-	if ( $args->{extra} ) {
-		for my $p ( split '&', $args->{extra} ) {
-			my ( $k, $v ) = split "=", $p, 2;
-			push @{$args->{params}{$k}}, $v;
-		}
-	}
-
 	my $rslt = img_app->controller->get_data( $args->{params} );
 
 	if ( ! $rslt ) {
@@ -119,12 +112,7 @@ prefix '/api' => sub {
 				# standard ? query
 				get '?:stuff' => sub {
 
-					my $p_hash = params('query');
-					log_debug { 'params: ' . Dumper params };
-					log_debug { 'query params: ' . Dumper $p_hash };
-					log_debug { 'stuff: ' . Dumper params->{stuff} };
-
-					return generic({ prefix => 'list', domain => $domain, params => $p_hash });
+					return generic({ prefix => 'list', domain => $domain, params => query_parameters });
 				};
 			};
 		}
@@ -139,8 +127,6 @@ prefix '/api' => sub {
 			(?<oid> .* )
 			/?
 			}x => sub {
-
-				say 'captures: ' . Dumper captures;
 
 				return generic({
 					prefix => 'details',

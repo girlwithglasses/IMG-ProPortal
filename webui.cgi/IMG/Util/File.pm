@@ -1,9 +1,8 @@
 package IMG::Util::File;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use Scalar::Util qw(tainted);
 use IMG::Util::Untaint;
-use IMG::App::Role::ErrorMessages qw( err );
 use Text::CSV_XS;
 use Storable;
 use IO::All;

@@ -1,9 +1,7 @@
 package IMG::Views::Links;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use IMG::Views::ExternalLinks;
-use IMG::App::Role::ErrorMessages qw( err );
-use IMG::App::Role::Logger;
 use utf8;
 use Carp;
 
@@ -1403,7 +1401,7 @@ my $link_gen_h = {
 	old => sub {
 		my $l_hash = shift;
 		my %temp;
-		say 'old: ' . Dumper $l_hash;
+#		say 'old: ' . Dumper $l_hash;
 		return $l_hash->{base} . "?"
 		. join "&amp;",
 			map {

@@ -31,10 +31,7 @@ Get all the GoldTaxonVw table data
 sub _render {
 	my $self = shift;
 
-	# run taxon_oid_display_name for each of the members
-
 	my $res = $self->get_data();
-
     if ( ! $res || ! scalar @$res ) {
 		$self->choke({
 			err => 'no_results',
@@ -59,7 +56,7 @@ sub get_data {
 	my $self = shift;
 #	return decode_json <DATA>;
 	return $self->_core->run_query({
-		query => 'taxon_oid_display_name',
+		query => 'taxon_metadata',
 		filters => $self->filters,
 	});
 }

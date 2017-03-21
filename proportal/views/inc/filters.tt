@@ -11,7 +11,7 @@
 	<ul class="[% fd %]-filters">
 [%		FOR f IN data_filters.valid.$fd.enum; %]
 	<li class="[% fd %]-filters__item"><a class="[% fd %]-filters__link" href="[% link( current_page ) %]?[% fd %]=[% f %]">[% data_filters.schema.$fd.enum_map.$f || f %]</a>[%
-			IF data_filters.active && data_filters.active.$fd == f;
+			IF data_filters.active && data_filters.active.$fd && data_filters.active.$fd.$f;
 		%] <span class="[% fd %]-filters__current">(currently displayed)</span>[%
 			END; %]
 	</li>

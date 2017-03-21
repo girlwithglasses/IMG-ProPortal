@@ -3,6 +3,7 @@ package ProPortal::Controller::Filtered;
 # use IMG::Util::Import 'MooRole';
 
 use IMG::Util::Import 'Class';
+use Hash::MultiValue;
 
 extends 'ProPortal::Controller::Base';
 
@@ -17,6 +18,18 @@ Default filter for a filtered query: full ProPortal dataset
 has 'filters' => (
 	is => 'rwp',
 	lazy => 1,
+	coerce => sub {
+		my $args = shift;
+		say 'running coerce filters, ref $args: ' . ref $args;
+		say Dumper $args;
+		if ( 'Hash::MultiValue' eq ref $args ) {
+			return $args;
+		}
+		else {
+#			my %hash = %$args;
+			return Hash::MultiValue->new( %$args );
+		}
+	},
 	default => sub {
 		return { pp_subset => 'all_proportal' };
 	},
@@ -45,24 +58,21 @@ has 'valid_filters' => (
 			pp_subset => {
 				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
 			},
-#			dataset_type => {
-#				enum => [ 'isolate', 'single cell', qw( metagenome transcriptome metatranscriptome ) ]
-#			},
 		};
 	}
 );
 
-=head3 filter_schema
+=head3 query_filter_schema
 
 The JSON schema compatible representation of the filters for this query
 
 =cut
 
-has 'filter_schema' => (
+has 'query_filter_schema' => (
 	is => 'lazy'
 );
 
-sub _build_filter_schema {
+sub _build_query_filter_schema {
 	my $self = shift;
 	my $valid = $self->valid_filters;
 
@@ -91,48 +101,47 @@ Set the filters for a query. Checks that the filter setting is valid and throws 
 
 sub set_filters {
 	my $self = shift;
+	my $filters = shift;
 
-	my $filters = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // return;
+	# initialise filters
+	my $curr_filters = $self->filters;
 
-	log_debug { 'filters: ' . Dumper $filters };
-	log_debug { 'filter schema: ' . Dumper $self->filter_schema };
-	log_debug { 'valid filters: ' . Dumper $self->valid_filters };
+#	log_debug { 'filters: ' . Dumper $filters };
+#	log_debug { 'filter schema: ' . Dumper $self->filter_schema };
+#	log_debug { 'valid filters: ' . Dumper $self->valid_filters };
+#	log_debug { 'current filts: ' . Dumper $curr_filters };
 
-# 	for my $f ( keys %$filters ) {
-# 		log_debug { 'f: ' . $f };
-# 		if ( ! $self->valid_filters->{ $f } ) {
-# 			$self->choke({
-# 				err => 'invalid',
-# 				subject => $f,
-# 				type => 'query dimension to filter'
-# 			});
-# 		}
-# 	}
-	my $tested;
+	my $tested = Hash::MultiValue->new;
 
 	for my $f ( @{$self->filter_domains} ) {
 
 		# now check the value
 		if ( $filters->{$f} ) {
-			if ( 'enum' eq $self->filter_schema->{$f}{type} ) {
-
-				$self->test_enum({ schema => $self->filter_schema->{$f}, test => $filters->{$f} });
+			log_debug { 'found ' . $f . ', values ' . join ", ", $filters->get_all($f) };
+			if ( 'enum' eq $self->query_filter_schema->{$f}{type} ) {
+				$self->test_enum({ schema => $self->query_filter_schema->{$f}, test => [ $filters->get_all($f) ] });
 			}
 			# what other types might we have?
-			elsif ( $self->filter_schema->{$f}{pattern} ) {
+			elsif ( $self->query_filter_schema->{$f}{pattern} ) {
 				## TODO
 
 			}
-			elsif ( 'number' eq $self->filter_schema->{$f}{type} ) {
+			elsif ( 'number' eq $self->query_filter_schema->{$f}{type} ) {
 
 			}
-			$tested->{$f} = $filters->{$f};
+			$tested->add( $f, $filters->get_all($f) );
 		}
-		elsif ( $self->filter_schema->{$f}{default} ) {
-			$tested->{$f} = $self->filter_schema->{$f}{default};
+		elsif ( $curr_filters->get( $f ) ) {
+			log_debug { 'using existing value for ' . $f };
+			$tested->add( $f, $curr_filters->get( $f ) );
+		}
+		elsif ( $self->query_filter_schema->{$f}{default} ) {
+			log_debug { 'using default for ' . $f };
+			$tested->add( $f, $self->query_filter_schema->{$f}{default} );
 		}
 	}
-	if ( keys %$filters ) {
+
+	if ( $tested->keys ) {
 		$self->_set_filters( $tested );
 	}
 
@@ -147,12 +156,14 @@ sub test_enum {
 	my $self = shift;
 	my $args = shift;
 
-	if ( ! grep { $_ eq  $args->{test} } @{$args->{schema}{enum}} ) {
-		$self->choke({
-			err => 'invalid',
-			subject => $args->{test},
-			type => 'filter value'
-		});
+	for my $t ( @{$args->{test}} ) {
+		if ( ! grep { $_ eq  $t } @{$args->{schema}{enum}} ) {
+			$self->choke({
+				err => 'invalid',
+				subject => $t,
+				type => 'filter value'
+			});
+		}
 	}
 	return;
 }
@@ -193,12 +204,17 @@ around 'render' => sub {
 	my $self = shift;
 	my $rtn = $orig->( $self, @_ );
 
+	my $active_h;
+	for my $k ( keys %{$self->filters} ) {
+		$active_h->{$k}{$_}++ for $self->filters->get_all( $k );
+	}
+
 	if ( $self->can('filters') ) {
 		$rtn->{data_filters} = {
-			active => $self->filters,
+			active => $active_h,
 			valid  => $self->valid_filters,
-			all    => $self->filter_schema,
-			schema => $self->filter_schema
+			all    => $self->query_filter_schema,
+			schema => $self->query_filter_schema
 		};
 	}
 	return $rtn;

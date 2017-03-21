@@ -1,7 +1,6 @@
 package IMG::Util::DB;
 
-use IMG::Util::Import;
-use IMG::App::Role::ErrorMessages qw( err );
+use IMG::Util::Import 'LogErr';
 use MIME::Base64;
 use JSON::MaybeXS;
 

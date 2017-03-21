@@ -1,6 +1,6 @@
 package IMG::Views::ExternalLinks;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 
 our (@ISA, @EXPORT_OK);
 

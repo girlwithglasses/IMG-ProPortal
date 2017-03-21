@@ -172,65 +172,22 @@ sub ecotype {
 		);
 }
 
-=head3 taxon_oid_display_name
-
-Pulls in data from VW_GOLD_TAXON table
-
-@param  $args   -
-
-@return $resultset, with fields:
-
-genome_type
-taxon_oid
-taxon_display_name
-ncbi_taxon_id
-domain
-phylum
-ir_class
-ir_order
-family
-clade
-ncbi_kingdom
-ncbi_phylum
-ncbi_class
-ncbi_order
-ncbi_family
-ncbi_genus
-ncbi_species
-isolation
-oxygen_req
-cell_shape
-motility
-sporulation
-temp_range
-salinity
-geo_location
-latitude
-longitude
-altitude
-depth
-culture_type
-gram_stain
-biotic_rel
-ecotype
-longhurst_code
-longhurst_description
-ecosystem
-ecosystem_category
-ecosystem_type
-ecosystem_subtype
-specific_ecosystem
-pp_subset
-
-=cut
+sub phylogram {
+	my $self = shift;
+	return $self->schema('img_core')->table('GoldTaxonVw')
+		->select(
+			-columns  => [ qw( genome_type taxon_oid taxon_display_name ncbi_taxon_id domain phylum ir_class ir_order family clade ncbi_kingdom ncbi_phylum ncbi_class ncbi_order ncbi_family ncbi_genus ncbi_species pp_subset ) ],
+			-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
+			-result_as => 'statement',
+		);
+}
 
 sub taxon_oid_display_name {
 	my $self = shift;
 
 	return $self->schema('img_core')->table('GoldTaxonVw')
 		->select(
-			-columns  => [ '*' ],
-			-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
+			-columns  => [ 'taxon_oid', 'taxon_display_name' ],
 			-result_as => 'statement',
 		);
 }
@@ -238,8 +195,6 @@ sub taxon_oid_display_name {
 
 sub taxon_dataset_type {
 	my $self = shift;
-
-	# fetch
 
 	return $self->schema('img_core')->table('GoldDataTypeVw')
 		->select(
@@ -297,6 +252,50 @@ taxa), retrieve all associated metadata
 @param  args->{where} should be in the form
 
 	taxon_oid => [ arrayref of taxon IDs ]
+
+@return $resultset, with fields:
+
+genome_type
+taxon_oid
+taxon_display_name
+ncbi_taxon_id
+domain
+phylum
+ir_class
+ir_order
+family
+clade
+ncbi_kingdom
+ncbi_phylum
+ncbi_class
+ncbi_order
+ncbi_family
+ncbi_genus
+ncbi_species
+isolation
+oxygen_req
+cell_shape
+motility
+sporulation
+temp_range
+salinity
+geo_location
+latitude
+longitude
+altitude
+depth
+culture_type
+gram_stain
+biotic_rel
+ecotype
+longhurst_code
+longhurst_description
+ecosystem
+ecosystem_category
+ecosystem_type
+ecosystem_subtype
+specific_ecosystem
+pp_subset
 
 =cut
 
@@ -400,28 +399,6 @@ sub gene_details {
 			-result_as => 'statement'
 		);
 
-# 	my %tax_h;
-# 	if ( scalar @$gene > 0 ) {
-# 		# make sure that we have permission to view the gene
-# 		for ( @$gene ) {
-# 			$tax_h{ taxon_oid } = $_->{taxon};
-# 		}
-# 	}
-
-# 	my $results = $self->taxon_name_public({ where => \%tax_h })->all;
-#
-# 	if ( scalar @$results > 0) {
-# 		if ( $results->[0]->{viewable} eq 'private' ) {
-# 			# dies if there is a permissions error
-# 			$self->choke({
-# 				err => 'private_data'
-# 			});
-# 		}
-# 	}
-#
-# 	return { gene => $gene->[0] // undef, taxon => $results->[0] // undef };
-# }
-
 }
 
 =head3 taxon_details
@@ -462,6 +439,41 @@ sub taxon_details {
 
 }
 
+# extra 'case' statements to add to a query
+
+my $case_stts = {
+
+#	adds a query to check whether the taxon is public or private
+
+	taxon_public => sub {
+		my $self = shift;
+		my $case_sql = '';
+
+		if ( $self->can('user') && defined $self->user && defined $self->user->contact_oid ) {
+			my $u_id = "= $self->user->contact_oid";
+			$case_sql = 'WHEN EXISTS (' .
+				$self->schema('img_core')->table('ContactTaxonPermissions')
+					->select(
+						-columns => [ '1' ],
+						-where => {
+							taxon_permissions => \ '= taxon.taxon_oid',
+							contact_oid => \$u_id
+						},
+						-result_as => 'sql'
+					)
+				. ") THEN 'accessible' ";
+		}
+
+		my $case = q!CASE
+  WHEN taxon.is_public = 'Yes' THEN 'public'
+! . $case_sql . q!
+  ELSE 'private'
+  END
+AS viewable!;
+		return $case;
+	}
+
+};
 
 
 =head3 taxon_name_public
@@ -484,35 +496,9 @@ sub taxon_name_public {
 	my $self = shift;
 	my $args = shift;
 
-	my $case_sql;
-
-	if ( $self->can('user') && defined $self->user && defined $self->user->contact_oid ) {
-		my $u_id = "= $self->user->contact_oid";
-		my $tax_str = '= taxon.taxon_oid';
-
-		$case_sql = 'WHEN EXISTS (' .
-			$self->schema('img_core')->table('ContactTaxonPermissions')
-				->select(
-					-columns => [ '1' ],
-					-where => {
-						taxon_permissions => \ '= taxon.taxon_oid',
-						contact_oid => \$u_id
-					},
-					-result_as => 'sql'
-				)
-			. ") THEN 'accessible' ";
-	}
-
-	my $case = q!CASE
-  WHEN taxon.is_public = 'Yes' THEN 'public'
-! . ( $case_sql || '' ) . q!
-  ELSE 'private'
-  END
-AS viewable!;
-
 	return $self->schema('img_core')->table('Taxon')
 	->select(
-		-columns => [ $case, qw( taxon_oid taxon_display_name is_public ) ],
+		-columns => [ $case_stts->{taxon_public}->( $self ), qw( taxon_oid taxon_display_name is_public ) ],
 		-where   => { taxon_oid => $args->{where}{taxon_oid} },
 		-result_as => 'statement'
 	);

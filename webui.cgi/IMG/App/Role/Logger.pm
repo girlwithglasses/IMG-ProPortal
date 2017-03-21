@@ -2,6 +2,7 @@ package IMG::App::Role::Logger;
 
 use parent 'Log::Contextual';
 use Log::Log4perl;
+#use Dancer2;
 
 ############################################################
 # A simple root logger with a Log::Log4perl::Appender::File

@@ -46,13 +46,13 @@ sub _render {
 	for ( @$res ) {
 		$count++;
 		push @{ $data->{ $_->{genome_type} }
-			{ $_->{domain} || 'unclassified' }
-			{ $_->{phylum} || 'unclassified' }
+			{ $_->{domain}   || 'unclassified' }
+			{ $_->{phylum}   || 'unclassified' }
 			{ $_->{ir_class} || 'unclassified' }
 			{ $_->{ir_order} || 'unclassified' }
-			{ $_->{family} || 'unclassified' }
-			{ $_->{genus} || 'unclassified'}
-			{ $_->{clade} || 'unclassified' } }, { name => $_->{taxon_display_name}, data => $_ };
+			{ $_->{family}   || 'unclassified' }
+			{ $_->{genus}    || 'unclassified'}
+			{ $_->{clade}    || 'unclassified' } }, { name => $_->{taxon_display_name}, data => $_ };
 	}
 
 	my $tree;
@@ -77,7 +77,7 @@ sub _render {
 sub get_data {
 	my $self = shift;
 	return $self->_core->run_query({
-		query => 'taxon_oid_display_name',
+		query => 'phylogram',
 		filters => $self->filters,
 	});
 }

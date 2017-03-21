@@ -1,6 +1,6 @@
 package IMG::Util::Factory;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use IMG::App::Role::ErrorMessages qw( :all );
 use Module::Runtime;
 
