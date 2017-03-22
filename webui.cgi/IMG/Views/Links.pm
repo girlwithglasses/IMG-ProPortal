@@ -1116,6 +1116,22 @@ my $dynamic_links = {
 		}
 	},
 
+	fn_details => sub {
+		return {
+			style => 'new',
+			fn => sub {
+				my $h = shift;
+	#			log_debug { 'h: ' . Dumper $h };
+				return $h->{base}
+				. 'details/function'
+				.
+				( $h->{params}{db}
+				? '/' . $h->{params}{db} . '/' . ( $h->{params}{xref} || '' )
+				: '' );
+			},
+		};
+	},
+
 	details => sub {
 		return {
 			style => 'new',

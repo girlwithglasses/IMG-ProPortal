@@ -18,6 +18,7 @@ sub generic {
 	my $h = {
 		gene => 'Gene',
 		taxon => 'Taxon',
+		function => 'Function',
 		details => 'Details',
 		list => 'List'
 	};
@@ -99,7 +100,7 @@ prefix '/api' => sub {
 
 	prefix "/list/" => sub {
 
-		for my $domain ( qw( gene taxon ) ) {
+		for my $domain ( qw( gene taxon function ) ) {
 
 			prefix $domain => sub {
 				# base query
@@ -119,19 +120,33 @@ prefix '/api' => sub {
 	};
 
 
-	prefix "/details/" => sub {
+	prefix '/details/' => sub {
 
-		get qr{
+		any qr{
 			(?<domain> gene | taxon )
 			[\?/]
 			(?<oid> .* )
 			/?
 			}x => sub {
-
 				return generic({
 					prefix => 'details',
 					domain => captures->{domain},
 					params => { captures->{domain} . '_oid' => captures->{oid} } });
+		};
+
+		any 'function/:db/:xref' => sub {
+
+			log_debug { 'captures: ' . Dumper captures };
+
+			return generic({
+				prefix => 'details',
+				domain => 'function',
+				params => {
+					db => route_parameters->get( 'db' ),
+					xref => route_parameters->get( 'xref' )
+				}
+			});
+
 		};
 	};
 

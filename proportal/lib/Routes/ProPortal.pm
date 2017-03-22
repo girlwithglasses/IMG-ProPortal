@@ -146,6 +146,7 @@ sub generic {
 	my $args = shift;
 
 	my $h = {
+		function => 'Function',
 		gene => 'Gene',
 		taxon => 'Taxon',
 		details => 'Details',
@@ -186,7 +187,7 @@ sub generic {
 
 prefix '/list/' => sub {
 
-	for my $domain ( qw( gene taxon ) ) {
+	for my $domain ( qw( gene taxon function ) ) {
 		prefix $domain => sub {
 			# base query
 			any qr{
@@ -216,6 +217,21 @@ prefix '/details/' => sub {
 				prefix => 'details',
 				domain => captures->{domain},
 				params => { captures->{domain} . '_oid' => captures->{oid} } });
+	};
+
+	any 'function/:db/:xref' => sub {
+
+		log_debug { 'captures: ' . Dumper captures };
+
+		return generic({
+			prefix => 'details',
+			domain => 'function',
+			params => {
+				db => route_parameters->get( 'db' ),
+				xref => route_parameters->get( 'xref' )
+			}
+		});
+
 	};
 };
 

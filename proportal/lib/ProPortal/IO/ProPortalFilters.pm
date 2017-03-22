@@ -158,6 +158,120 @@ package ProPortal::IO::ProPortalFilters;
 
 use IMG::Util::Import 'MooRole';
 
+=head3 schema
+
+The json-schema data structure for the filters
+
+=cut
+
+my $schema = {
+	pp_subset => {
+		id => 'pp_subset',
+		type  => 'enum',
+		title => 'ProPortal subset',
+		control => 'checkbox',
+		enum => pp_subset_valid(),
+		default => 'all_proportal',
+		enum_map => {
+			pro => 'Prochlorococcus',
+			syn => 'Synechococcus',
+			pro_phage => 'Prochlorococcus phage',
+			syn_phage => 'Synechococcus phage',
+			other => 'Other bacteria',
+			other_phage => 'Other phages',
+			phage => 'Phages from Prochlorococcus, Synechococcus, and others',
+			coccus => 'Prochlorococcus and Synechococcus',
+			bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
+			isolate => 'All ProPortal isolates',
+			metagenome => 'Marine metagenomes',
+			pp_isolate => 'All ProPortal isolates',
+			pp_metagenome => 'Marine metagenomes',
+			proportal => 'All isolates and metagenomes',
+			all_proportal => 'All isolates and metagenomes'
+		}
+	},
+	dataset_type => {
+		id => 'dataset_type',
+		type => 'enum',
+		title => 'data type',
+		control => 'checkbox',
+		enum => dataset_type_valid(),
+		enum_map => {
+			'single cell' => 'Single cell',
+			single_cell => 'Single cell',
+			isolate => 'Isolate',
+			metagenome => 'Metagenome',
+			transcriptome => 'Transcriptome',
+			metatranscriptome => 'Metatranscriptome'
+		},
+	},
+
+	taxon_oid => {
+		id => 'taxon_oid',
+		title => 'Taxon ID',
+		type => 'number'
+	},
+
+	gene_oid => {
+		id => 'gene_oid',
+		title => 'Gene ID',
+		type => 'number'
+	},
+
+	locus_type => {
+		id => 'locus_type',
+		title => 'locus type',
+		type => 'string',
+		pattern => "[a-z]RNA"
+	},
+	gene_symbol => {
+		id => 'gene_symbol',
+		title => 'gene symbol',
+		type => 'string',
+		pattern => '\w+'
+	},
+	category => {
+		id => 'category',
+		title => 'gene type',
+		type => 'enum',
+		enum => [ qw(
+			rna
+			proteinCodingGenes
+			withFunc
+			withoutFunc
+			fusedGenes
+			signalpGeneList
+			transmembraneGeneList
+			geneCassette
+			biosynthetic_genes
+			pseudogene
+		)],
+		enum_map => {
+			rna => 'RNA',
+			proteinCodingGenes => 'protein coding genes',
+			withFunc => 'genes with function assignment',
+			withoutFunc => 'genes without function assignment',
+			fusedGenes => 'fused genes',
+			signalpGeneList => 'signalP genes',
+			transmembraneGeneList => 'transmembrane proteins',
+			geneCassette => 'genes in cassette',
+			biosynthetic_genes => 'genes in biosynthetic clusters',
+			pseudogene => 'pseudogene'
+		}
+	},
+	db => {
+		id => 'db',
+		title => 'database',
+		type => 'enum',
+		enum => [ qw(
+			cycog
+		) ],
+		enum_map => {
+			cycog => 'CyCOG'
+		}
+	}
+};
+
 =head2 pp_subset_filter
 
 Get the filters for the ProPortal-specific species
@@ -283,6 +397,8 @@ sub locus_type_filter {
 }
 
 
+
+
 sub category_filter {
 	my $self = shift;
 	my $f_name = shift // $self->choke({
@@ -327,102 +443,6 @@ sub pp_subset_valid {
 
 }
 
-my $schema = {
-	pp_subset => {
-		id => 'pp_subset',
-		type  => 'enum',
-		title => 'ProPortal subset',
-		control => 'checkbox',
-		enum => pp_subset_valid(),
-		default => 'all_proportal',
-		enum_map => {
-			pro => 'Prochlorococcus',
-			syn => 'Synechococcus',
-			pro_phage => 'Prochlorococcus phage',
-			syn_phage => 'Synechococcus phage',
-			other => 'Other bacteria',
-			other_phage => 'Other phages',
-			phage => 'Phages from Prochlorococcus, Synechococcus, and others',
-			coccus => 'Prochlorococcus and Synechococcus',
-			bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
-			isolate => 'All ProPortal isolates',
-			metagenome => 'Marine metagenomes',
-			pp_isolate => 'All ProPortal isolates',
-			pp_metagenome => 'Marine metagenomes',
-			proportal => 'All isolates and metagenomes',
-			all_proportal => 'All isolates and metagenomes'
-		}
-	},
-	dataset_type => {
-		id => 'dataset_type',
-		type => 'enum',
-		title => 'data type',
-		control => 'checkbox',
-		enum => dataset_type_valid(),
-		enum_map => {
-			'single cell' => 'Single cell',
-			single_cell => 'Single cell',
-			isolate => 'Isolate',
-			metagenome => 'Metagenome',
-			transcriptome => 'Transcriptome',
-			metatranscriptome => 'Metatranscriptome'
-		},
-	},
-
-	taxon_oid => {
-		id => 'taxon_oid',
-		title => 'Taxon ID',
-		type => 'number'
-	},
-
-	gene_oid => {
-		id => 'gene_oid',
-		title => 'Gene ID',
-		type => 'number'
-	},
-
-	locus_type => {
-		id => 'locus_type',
-		title => 'locus type',
-		type => 'string',
-		pattern => "[a-z]RNA"
-	},
-	gene_symbol => {
-		id => 'gene_symbol',
-		title => 'gene symbol',
-		type => 'string',
-		pattern => '\w+'
-	},
-	category => {
-		id => 'category',
-		title => 'gene type',
-		type => 'enum',
-		enum => [ qw(
-			rna
-			proteinCodingGenes
-			withFunc
-			withoutFunc
-			fusedGenes
-			signalpGeneList
-			transmembraneGeneList
-			geneCassette
-			biosynthetic_genes
-			pseudogene
-		)],
-		enum_map => {
-			rna => 'RNA',
-			proteinCodingGenes => 'protein coding genes',
-			withFunc => 'genes with function assignment',
-			withoutFunc => 'genes without function assignment',
-			fusedGenes => 'fused genes',
-			signalpGeneList => 'signalP genes',
-			transmembraneGeneList => 'transmembrane proteins',
-			geneCassette => 'genes in cassette',
-			biosynthetic_genes => 'genes in biosynthetic clusters',
-			pseudogene => 'pseudogene'
-		}
-	},
-};
 
 =cut filter_schema
 

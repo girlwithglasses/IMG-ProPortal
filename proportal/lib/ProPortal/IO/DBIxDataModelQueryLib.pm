@@ -386,6 +386,30 @@ sub gene_list_count {
 		);
 }
 
+sub cycog_list {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_cycog')->table('DtCyCog')
+		->select(
+			-columns => [ '*' ],
+			-result_as => 'statement'
+		);
+}
+
+
+sub cycog_details {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_cycog')->table('DtCyCog')
+		->select(
+			-columns => [ '*' ],
+			-where => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
 =head3 gene_details
 
 Given an array of gene IDs, get the gene data
