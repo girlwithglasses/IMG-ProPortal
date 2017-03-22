@@ -2,7 +2,8 @@
 found on details pages 
 */
 
-.infoBox {
+
+.infoBox, .infoBox-double {
 	padding: 0 20px 20px 20px; 
 		
 	// for displaying FASTA sequences, for example
@@ -19,7 +20,14 @@ found on details pages
 		margin: 10px 0 5px 0;
 		border-bottom: $underline;
 	}
-	
+
+}
+
+.infoBox-double {
+	width: 100%;
+}
+
+.infoBox {
 	/* this may need to be defined somewhere else... */	
 	/* Small screen */
 	@media all and (max-width: $half-) {
@@ -30,6 +38,6 @@ found on details pages
 
 	/* Large screen */
 	@media all and (min-width: $half) {
-		width: 50%; 
+		width: 50%;
 	}
-}
+}	

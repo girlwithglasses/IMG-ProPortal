@@ -1,16 +1,24 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Function List';
 %]
-<h2>Function Inventory</h2>
-<section class="info--data_type page-intro">
-	<p>This page provides an overview of the data in IMG relevant to the ProPortal project. This comprises <i>Prochlorococcus</i>, <i>Synechococcus</i>, cyanophage species and metagenomes from marine environments.
-	</p>
-</section>
+
+
+<div id="pageHeader">
+	<div id="pageTitle" >
+		<h2>Function List</h2>
+		
+		<h4 class="normal">
+			CyCOGs
+		</h4>
+	</div>
+
+</div>
 
 <div id="main">
 [%	IF results.functions.size > 0;	%]
+
 <!-- 	add this wrapper back when we implement the cart functionality. -->
-[%	#	WRAPPER 'inc/cart_function_add.tt' %]
+[%		WRAPPER 'inc/cart_gene_add.tt' %]
 
 		<table class="lined">
 			<tr class="underline">
@@ -28,7 +36,11 @@
 			</tr>
 			[%	END %]
 		</table>
-[%	#	END; # end wrapper 	%]
+
+
+[%		END; # end wrapper 	%]
+
+
 
 [%	ELSE; # END if... %]
 <p>No functions found</p>

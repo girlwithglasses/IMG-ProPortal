@@ -3,21 +3,126 @@
 	self = results.function;
 %]
 
-<h2>[% self.name %]</h2>
+<style>
 
-<dl>
-<dt>CyCOG ID</dt><dd>[% self.cycog_oid %]</dd>
-<dt>Name</dt><dd>[% self.name %]</dd>
-<dt>CyCOG version</dt><dd>version [% self.version %]</dd>
-<dt>n clusters</dt><dd>[% self.n_members %]</dd>
-<dt>MIT ID</dt><dd>[% self.mit_oid %]</dd>
-</dl>
+	/* Hookups for seqData tab group and content box */
+ 	#tab1_seqData:checked ~ #tabContent1_seqData,
+ 	#tab2_seqData:checked ~ #tabContent2_seqData {
+ 		display: block;
+  	}
 
-<h3>Genes!</h3>
-<div id="main">
-[%	IF results.genes.size > 0;	%]
-<!-- 	add this wrapper back when we implement the cart functionality. -->
-[%		WRAPPER 'inc/cart_gene_add.tt' %]
+	/* comment this out while working on this to see my dev notes... */
+	.noteToSelf {
+		display: none;
+	}
+
+</style>
+
+<div class="thisWrapper">
+	<div id="pageHeader">
+		<div id="pageTitle" >
+			<!-- Write function type -->
+			<h4 class="normal">
+				CyCOG Function
+			</h4>
+
+			<!-- Write function name -->
+			<h2>[% self.name %]</h2>
+		</div>
+		<div id="buttonBar">
+			<button>Add to Cart</button>
+<!-- 			<button>Export</button> 	** develop this later **			-->
+		</div>
+
+	</div>
+
+
+<div class="row">
+
+<div class="infoBox">
+
+		<div class="infoBoxTitle"><h4>CyCOG Details</h4></div>
+
+		<table class="condensed">
+			<tr><td class="col1">CyCOG ID</td>	<td>[% self.cycog_oid %]</td></tr>
+			<tr><td>Name</td>	<td>[% self.name %]</td></tr>
+			<tr><td>CyCOG version</td>	<td>version [% self.version %]</td></tr>
+			<tr><td>Gene members</td>	<td>[% self.n_members %]</td></tr>
+			<tr><td>MIT ID</td>	<td>[% self.mit_oid %]</td></tr>
+		</table>
+
+</div> <!-- infoBox -->
+
+<div class="infoBox">
+
+
+	<div class="infoBoxTitle"><h4>CyCOG Consensus Sequence</h4></div>
+
+		<div class="nav_tabs nav_tabs_minimal">
+			<input type="radio" name="seqData" id="tab1_seqData" checked >
+			<label for="tab1_seqData">DNA</label>
+
+			<input type="radio" name="seqData" id="tab2_seqData">
+			<label for="tab2_seqData">Amino Acid</label>
+
+
+			<div id="tabContent1_seqData" class="tabContent">
+				<!-- <h4> DNA </h4> -->
+				<div class="textDisplay">
+				<code> <span style="color: blue">>640083263 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819] (+)strand</span>
+				ATGAAATTAAATTGTTCTCAATCTGAATTAAATAATGCTCTTCAATTGGT
+				TAGTAGAGCTGTTTCTAATCGACCGACGCACCCTGTATTAGCTAATGTTT
+				TGCTCGCTGCTGATGAGGTAACTGGAAAACTTCGCCTAACTGGTTTTGAC
+				TTAAGTTTAGGAATACAAACTTCAATATCTGCTTCTATAGAGAGCAGTGG
+				TGCCATAACTTTGCCTGCTAAGTTATTTGGTGAAATTGTTTCGAAATTAT
+				CTAACGACTCACCTCTAGTTCTGACATCAGATGAAACTAGTCAACAAGTC
+				GAGTTGACTAGTAAAAGTGGAACGTATCAAGTAAGAGGGATGGTGTCTGA
+				TGATTTTCCTGATTTACCTTTGGTAGAAAGCGGTAATTCATTTAAATTGA
+				ATCCATTATTATTATCTAATGCAATTAAATCAACTTTATTTGCAAGCAGT
+				ACTGATGAGGCTAAACAATTACTTACTGGTGTTAATCTTACTTTTGACGG
+				ATATGGGATTGAATCTGCAGCAACTGACGGACATAGATTAGCTGTTCTTA
+				ATTTAAATAATATATTATCTGATTCAAAAGAGATAGATAGTTCTACTAAA
+				TTCGAAAAATTTTCTATTACATTACCTTCCAAATCTTTAAGAGAAGTGGA
+				AAAATTTTTAAGTACTTGTGATATTAGTCAGCCAATTAATTTTTTTGTTG
+				ATAAAGGACAAGTAGTTTTTATATCAGTAGAAGATATTATAACTATAAGA
+				GCTTTAGAAGGTTCTTATCCAAATTATTCGCAATTATTACCTGATACTTT
+				TGAAAATGAATTAGAGTTTGATAGGAAAGAATTTATATCTTCATTAGAAC
+				GAATTGCTGTTTTAGCAGATCAGCATAATAATGTTATAAAGGTAACGACT
+				GACGGCTCTGCAAATTTAATCAAAATTAGTACGGATGCCCAAGATATTGG
+				AACAGGTTATGAGTCACTACCTGTCTCTTATAAAGGGGATTCATTTCAAA
+				TAGCATTTAATGTTAGATATTTATTAGATGGACTTAAAGTCATAGATTCA
+				AACTTGATTAAATTAAGTTGTAATTCTCCAACTACACCTGCGGTTTTCTC
+				ACCTATTAATAGTGACGTTAATTTCACTTATCTAGTAATGCCCATACAAA
+				TACGAAATTAA
+				</code>
+				</div>
+			</div>
+
+			<div id="tabContent2_seqData" class="tabContent">
+				<div class="textDisplay">
+				<code> <span style="color: blue">>640083263 YP_001013829 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819]</span>
+				[% self.aa_residue %]
+				</code>
+				</div>
+			</div>
+
+		</div>
+
+
+
+</div> <!-- infoBox -->
+
+</div> <!-- row -->
+
+
+<div class="row">
+
+<div class="infoBox-double">
+
+	<div class="infoBoxTitle"><h4>Gene Members</h4></div>
+	[%	IF results.genes.size > 0;	%]
+	<!-- <!~~ 	add this wrapper back when we implement the cart functionality. ~~> -->
+	[%		WRAPPER 'inc/cart_gene_add.tt' %]
 		<table class="lined">
 			<tr class="underline">
 				<th></th>
@@ -40,6 +145,9 @@
 <p>No genes found</p>
 [%	END; %]
 
-</div>
 
+</div>  <!-- row -->
+
+
+</div> <!-- wrapper -->
 [%	END %]

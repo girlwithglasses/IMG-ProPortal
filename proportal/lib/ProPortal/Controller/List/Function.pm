@@ -6,6 +6,10 @@ extends 'ProPortal::Controller::Filtered';
 
 use Template::Plugin::JSON::Escape;
 
+has '+page_wrapper' => (
+    default => 'layouts/default_wide.tt'
+);
+
 has '+page_id' => (
 	default => 'list/function'
 );

@@ -24,17 +24,23 @@
 
 <div id="pageHeader">
 	<div id="pageTitle">
-		<!-- Write taxon source (need query for taxon display name) -->
-		<h4 class="normal"> [% results.taxon.taxon_display_name %] <h4>
 
 		<!-- Write gene name -->
 		<h2>[% self.gene_display_name %]</h2>
+		
+		<!-- Write taxon source (need query for taxon display name) -->
+		<h4 class="normal"> <a href="[% link( 'details', { type => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_display_name %]</a> </h4>
+		
+		
+				
 	</div>
 	<div id="buttonBar">
 		<button>View in JBrowse</button>
 		<button>Add to Cart</button>
 	</div>
 </div>
+
+
 
 <div class="row">
 	<div class="infoBox">
