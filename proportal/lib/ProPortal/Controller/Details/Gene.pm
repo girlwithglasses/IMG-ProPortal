@@ -6,20 +6,6 @@ extends 'ProPortal::Controller::Base';
 
 with 'IMG::Model::DataManager';
 
-# has 'controller_args' => (
-# 	is => 'lazy',
-# 	default => sub {
-# 		return {
-# 			class => 'ProPortal::Controller::Filtered',
-# 			page_id => 'taxon_details',
-# 			tmpl => 'pages/taxon_details.tt',
-# 			tmpl_includes => {},
-# 			page_wrapper => 'layouts/default_wide.tt',
-# 		};
-# 	}
-# );
-
-
 has '+page_id' => (
 	default => 'details/gene'
 );
@@ -78,6 +64,8 @@ sub get_data {
 
 	my $res = $genes->[0];
 
+	return $res;
+
 	my $associated = {
 		multi => [ qw(
 			gene_cassette_genes
@@ -105,14 +93,11 @@ sub get_data {
 		)]
 	};
 
-	return $res;
-
 	for my $type ( %$associated ) {
 		for my $assoc ( @{ $associated->{$type} } ) {
 			if ( $res->can( $assoc ) ) {
 				my $r = $res->$assoc;
 		#		log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
-
 				if ($r
 					&& ( ( 'multi' eq $type && scalar @$r )
 					|| ( 'single' eq $type && defined $r ) ) ) {
@@ -121,6 +106,7 @@ sub get_data {
 			}
 		}
 	}
+	return $res;
 
 }
 
