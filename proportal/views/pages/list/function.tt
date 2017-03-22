@@ -1,0 +1,44 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: Function List';
+%]
+<h2>Function Inventory</h2>
+<section class="info--data_type page-intro">
+	<p>This page provides an overview of the data in IMG relevant to the ProPortal project. This comprises <i>Prochlorococcus</i>, <i>Synechococcus</i>, cyanophage species and metagenomes from marine environments.
+	</p>
+</section>
+
+<div id="main">
+[%	IF results.functions.size > 0;	%]
+<!-- 	add this wrapper back when we implement the cart functionality. -->
+[%	#	WRAPPER 'inc/cart_function_add.tt' %]
+
+		<table class="lined">
+			<tr class="underline">
+				<th></th>
+				<th>Function ID</th>
+				<th>Function Name</th>
+				<th>CyCOG version</th>
+			</tr>
+			[%	FOR f IN results.functions %]
+			<tr>
+				<td><input type="checkbox" class="sample-data__cbox" name="cycog_oid[]" value="[% f.cycog_oid %]" id="cbox_[% f.cycog_oid %]" /> </td>
+				<td><a href="[% link( 'fn_details', { db => 'cycog', xref => f.cycog_oid } ) %]">[% f.cycog_oid %]</a></td>
+				<td><a href="[% link( 'fn_details', { db => 'cycog', xref => f.cycog_oid } ) %]">[% f.name %]</a></td>
+				<td>[% f.version %]</td>
+			</tr>
+			[%	END %]
+		</table>
+[%	#	END; # end wrapper 	%]
+
+[%	ELSE; # END if... %]
+<p>No functions found</p>
+[%
+	END; %]
+
+
+
+</div>
+
+
+
+[% END %]

@@ -1,0 +1,45 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: ' _ self.display_name;
+	self = results.function;
+%]
+
+<h2>[% self.name %]</h2>
+
+<dl>
+<dt>CyCOG ID</dt><dd>[% self.cycog_oid %]</dd>
+<dt>Name</dt><dd>[% self.name %]</dd>
+<dt>CyCOG version</dt><dd>version [% self.version %]</dd>
+<dt>n clusters</dt><dd>[% self.n_members %]</dd>
+<dt>MIT ID</dt><dd>[% self.mit_oid %]</dd>
+</dl>
+
+<h3>Genes!</h3>
+<div id="main">
+[%	IF results.genes.size > 0;	%]
+<!-- 	add this wrapper back when we implement the cart functionality. -->
+[%		WRAPPER 'inc/cart_gene_add.tt' %]
+		<table class="lined">
+			<tr class="underline">
+				<th></th>
+				<th>Gene ID</th>
+				<th>Gene Product Name</th>
+				<th>Genome</th>
+			</tr>
+			[%	FOR g IN results.genes %]
+			<tr>
+				<td><input type="checkbox" class="sample-data__cbox" name="gene_oid[]" value="[% g.gene_oid %]" id="cbox_[% g.gene_oid %]" /> </td>
+				<td><a href="[% link( 'details', { type => 'gene', gene_oid => g.gene_oid } ) %]">[% g.gene_oid %]</a></td>
+				<td>[% g.product_name %]</td>
+				<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => g.taxon_oid } ) %]">[% g.taxon_display_name %]</a></td>
+			</tr>
+			[%	END %]
+		</table>
+[%		END; # end wrapper 	%]
+
+[%	ELSE; # END if... %]
+<p>No genes found</p>
+[%	END; %]
+
+</div>
+
+[%	END %]
