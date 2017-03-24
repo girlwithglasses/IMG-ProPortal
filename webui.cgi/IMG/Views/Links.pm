@@ -70,7 +70,7 @@ Initialise local URL-generating variables
 sub init {
 	my $config = shift // die err({ err => 'missing', subject => 'config' });
 
-	say 'Initialising!';
+	log_debug { 'Initialising!' };
 
 	if (! ref $config || 'HASH' ne ref $config ) {
 		die err({
@@ -1282,13 +1282,13 @@ my $dynamic_links = {
 # /gene/details/12345678
 # $dynamic_links->{gene_details} = sub {
 # 	my $args = shift;
-# 	say 'args: ' . Dumper $args;
+# 	log_debug { 'args: ' . Dumper $args };
 # 	return $dynamic_links->{details}->( { type => 'gene', %$args } );
 # };
 #
 # $dynamic_links->{taxon_details} = sub {
 # 	my $args = shift;
-# 	say 'args: ' . Dumper $args;
+# 	log_debug { 'args: ' . Dumper $args };
 # 	return $dynamic_links->{details}->( { type => 'taxon', %$args } );
 # };
 #
@@ -1309,7 +1309,7 @@ my $dynamic_links = {
 	# /gene/list/<criteria>
 # $dynamic_links->{gene_list} = sub {
 # 	my $args = shift;
-# 	say 'args: ' . Dumper $args;
+# 	log_debug { 'args: ' . Dumper $args };
 # 	return $dynamic_links->{list}->( { type => 'gene', %$args } );
 # # 	return {
 # # 		style => 'new',
@@ -1386,7 +1386,7 @@ my $link_gen_h = {
 
 	new_static => sub {
 		my $l_hash = shift;
-#		say 'new static: ' . Dumper $l_hash;
+#		log_debug { 'new static: ' . Dumper $l_hash };
 		return $l_hash->{base} .
 			join "/", map {
 				$l_hash->{url_h}{$_}
@@ -1397,8 +1397,8 @@ my $link_gen_h = {
 
 	new_dynamic => sub {
 		my $l_hash = shift;
-#		say 'new dynamic: ' . Dumper $l_hash;
-#		say 'url: ' . $l_hash->{base} . $l_hash->{fn}->( $l_hash );
+#		log_debug { 'new dynamic: ' . Dumper $l_hash };
+#		log_debug { 'url: ' . $l_hash->{base} . $l_hash->{fn}->( $l_hash ) };
 
 		# the function should generate the whole link
 		if ( $l_hash->{fn} ) {
@@ -1417,7 +1417,7 @@ my $link_gen_h = {
 	old => sub {
 		my $l_hash = shift;
 		my %temp;
-#		say 'old: ' . Dumper $l_hash;
+#		log_debug { 'old: ' . Dumper $l_hash };
 		return $l_hash->{base} . "?"
 		. join "&amp;",
 			map {
@@ -1499,12 +1499,12 @@ sub get_img_link {
 		return $base . $l_data->{url};
 	}
 
-#	say 'args: '   . Dumper $args if $jbrowse;
-#	say 'l_data: ' . Dumper $l_data if $jbrowse;
+#	log_debug { 'args: '   . Dumper $args if $jbrowse };
+#	log_debug { 'l_data: ' . Dumper $l_data if $jbrowse };
 
 	$args->{style} ||= $l_data->{style} // 'old';
 
-#	say 'style now: ' . $args->{style};
+#	log_debug { 'style now: ' . $args->{style} };
 
 	if ( 'new' eq $args->{style} ) {
 		$args->{style} .= ( exists $dynamic_links->{ $args->{id} }
@@ -1526,9 +1526,9 @@ sub get_img_link {
 		}
 	}
 
-# 	say 'base: '   . Dumper $base if $jbrowse;
-# 	say 'l_data: ' . Dumper $l_data if $jbrowse;
-# 	say 'args: '   . Dumper $args if $jbrowse;
+# 	log_debug { 'base: '   . Dumper $base if $jbrowse };
+# 	log_debug { 'l_data: ' . Dumper $l_data if $jbrowse };
+# 	log_debug { 'args: '   . Dumper $args if $jbrowse };
 
 	return $link_gen_h->{ $args->{style} }->( { base => $base, %$l_data, %$args } );
 

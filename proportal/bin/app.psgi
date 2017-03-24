@@ -23,6 +23,7 @@ BEGIN {
 
 use lib @dir_arr;
 use IMG::Util::Import 'psgi';
+use IMG::App::Role::Logger;
 
 #use Carp::Always;
 
@@ -41,19 +42,19 @@ use IMG::Util::Import 'psgi';
 #=cut
 
 {	package ProPortalApp;
-	use IMG::Util::Import;
+	use IMG::Util::Import 'LogErr';
 	use Dancer2 appname => 'ProPortal';
 	our $VERSION = '0.1.0';
 
 	use AppCore;
 	use AppCorePlugin;
-#	use Routes::Ajax;
-#	use Routes::IMG;
+	use Routes::Ajax;
+	use Routes::IMG;
 #	use Routes::JBrowse;
 	use Routes::API;
 	use Routes::MenuPages;
 	use Routes::ProPortal;
-	use Routes::TestStuff;
+#	use Routes::TestStuff;
 
 #	say 'Config: ' . Dumper config;
 

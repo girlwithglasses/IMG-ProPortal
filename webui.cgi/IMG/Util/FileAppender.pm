@@ -130,10 +130,10 @@ sub _build_headers {
 	my @hdr = eval { $self->csv_obj->header( $inf ) };
 	# die if there is an error parsing the header
 	if ( $@ ) {
-		say 'found $@';
+		log_debug { 'found $@' };
 #
-# 		say Dumper $self->csv_obj->error_diag();
-# 		say Dumper $@;
+# 		log_debug { Dumper $self->csv_obj->error_diag() };
+# 		log_debug { Dumper $@ };
 #
 		$self->choke({
 			err => 'module_err',

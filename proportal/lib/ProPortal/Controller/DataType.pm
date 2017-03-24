@@ -42,7 +42,7 @@ sub _render {
 
 	my $res = $self->get_data;
 
-	say 'Got ' . scalar @$res . ' results. Sorting at ' . Time::HiRes::gettimeofday;
+	log_debug { 'Got ' . scalar @$res . ' results. Sorting at ' . Time::HiRes::gettimeofday };
 
 	# arrange by genome type, dataset_type, pp_subset, and then by ecosystem subtype
 
@@ -54,12 +54,12 @@ sub _render {
 		$data->{ix}{ $_->{taxon_oid} } = $_;
 		};
 		if ($@) {
-			say Dumper $_;
+			log_debug { Dumper $_ };
 			die 'error with ' . $_ . ": " . $@ ;
 		}
 	}
 
-	say 'Sorted. Returning at ' . Time::HiRes::gettimeofday;
+	log_debug { 'Sorted. Returning at ' . Time::HiRes::gettimeofday };
 
 	return { results => { data => $data, sort_by => [ 'pp_subset', 'dataset_type' ] } };
 }

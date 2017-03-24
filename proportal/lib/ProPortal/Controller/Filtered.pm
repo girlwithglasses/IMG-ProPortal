@@ -20,8 +20,8 @@ has 'filters' => (
 	lazy => 1,
 	coerce => sub {
 		my $args = shift;
-		say 'running coerce filters, ref $args: ' . ref $args;
-		say Dumper $args;
+		log_debug { 'running coerce filters, ref $args: ' . ref $args };
+		log_debug { Dumper $args };
 		if ( 'Hash::MultiValue' eq ref $args ) {
 			return $args;
 		}

@@ -3,7 +3,7 @@
 #
 #	Standardised error messages
 #
-#	$Id: ErrorMessages.pm 36523 2017-01-26 17:53:41Z aireland $
+#	$Id: ErrorMessages.pm 36811 2017-03-23 16:26:34Z aireland $
 ############################################################################
 package IMG::App::Role::ErrorMessages;
 
@@ -279,7 +279,7 @@ sub err {
 		$m->{ 'file_' . $_ } = $m->{$_};
 	}
 
-#	say 'error args: ' . Dumper $args;
+#	log_debug { 'error args: ' . Dumper $args };
 
 	if ( $m->{$err} ) {
 		if ( ! ref $m->{$err} ) {

@@ -43,8 +43,8 @@ sub make_config {
 		}
 	}
 
-#	say 'img_conf schema: ' . Dumper $img_conf->{schema};
-#	say 'img_conf db: ' . Dumper $img_conf->{db};
+#	log_debug { 'img_conf schema: ' . Dumper $img_conf->{schema} };
+#	log_debug { 'img_conf db: ' . Dumper $img_conf->{db} };
 
 	# check that we have the relevant DB config params
 	for my $db ( keys %{$img_conf->{schema}} ) {
@@ -69,15 +69,15 @@ sub make_config {
 	# currently have web_err_log, web_log, login_log, etc.
 
 
-#	say 'Made a hash of things!';
+#	log_debug { 'Made a hash of things!' };
 	$hash->{plugins}{Adapter}{img_app} = {
 		class => 'ProPortalPackage',
 		scope => 'singleton',
 		options => { config => $img_conf }
 	};
 
-#	say 'config: ' . Dumper $img_conf;
-#	say 'other stuff: ' . Dumper $hash;
+#	log_debug { 'config: ' . Dumper $img_conf };
+#	log_debug { 'other stuff: ' . Dumper $hash };
 	return $hash;
 }
 #

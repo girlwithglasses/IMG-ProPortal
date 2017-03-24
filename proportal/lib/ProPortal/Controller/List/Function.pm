@@ -1,6 +1,6 @@
 package ProPortal::Controller::List::Function;
 
-use IMG::Util::Import 'Class';#'MooRole';
+use IMG::Util::Import 'Class';
 
 extends 'ProPortal::Controller::Filtered';
 
@@ -14,21 +14,13 @@ has '+page_id' => (
 	default => 'list/function'
 );
 
-# has '+filters' => (
-# 	default => sub {
-# 		return { pp_subset => 'all_proportal' };
-# 	},
-# );
+has '+filter_domains' => (
+	default => sub {
+		return [ qw( db ) ];
+	}
+);
 
-# has '+filter_domains' => (
-# 	is => 'ro',
-# 	default => sub {
-# 		return [ qw( db ) ];
-# 	}
-# );
-
-
-=head3 data_type
+=head3 function list
 
 
 
@@ -36,27 +28,21 @@ has '+page_id' => (
 
 sub _render {
 	my $self = shift;
-	my $data;
 
-	my $res = $self->get_data;
+# 	count for paging?
+# 	my $count = $self->_core->run_query({
+# 		query => 'function_list_count',
+# 		filters => $self->filters
+# 	});
 
-#	say 'Got ' . scalar @$res . ' results. Sorting at ' . Time::HiRes::gettimeofday;
-
-	# arrange by genome type, dataset_type, pp_subset, and then by ecosystem subtype
-
-#	say 'Sorted. Returning at ' . Time::HiRes::gettimeofday;
-
-	return { results => { functions => $res } };
+	return { results => { functions => $self->get_data } };
 }
 
 
 sub get_data {
 	my $self = shift;
-	my $args = shift;
 
 	my @valid_prefixes = ( qw( cycog cog ) );
-
-
 
 	# get basic function info
 	return $self->_core->run_query({

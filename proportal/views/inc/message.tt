@@ -1,9 +1,9 @@
-[%	IF settings.message || settings.message_html %]
+[%	IF img_app_config.message || img_app_config.message_html %]
 <div class="site-message">
-[%	IF settings.message_html;
-		settings.message_html;
-	ELSIF settings.message;
-		'<p class="site-message__p">' _ settings.message _ '</p>';
+[%	IF img_app_config.message_html;
+		img_app_config.message_html;
+	ELSIF img_app_config.message;
+		'<p class="site-message__p">' _ img_app_config.message _ '</p>';
 	END;
 %]
 </div>

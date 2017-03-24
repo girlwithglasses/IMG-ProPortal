@@ -89,25 +89,10 @@ has 'tmpl_includes' => (
 	default => sub { return {}; }
 );
 
-# sub BUILDARGS {
-# 	my $class = shift;
-# 	my $args = ( @_ && 1 < scalar( @_ ) ) ? { @_ } : shift // {};
-#
-# 	log_debug { 'BUILDARGS class: ' . Dumper $class };
-# 	log_debug { 'BUILDARGS args:  ' . Dumper $args };
-#
-# 	return $args;
-# }
-#
-# sub BUILD {
-# 	my ( $self, $args ) = @_;
-# 	log_debug { 'running ' . $self . ' BUILD!' };
-# #	log_debug { 'args: ' . Dumper $args };
-# 	if ( $args->{controller_role} ) {
-# 		$self->add_controller_role( $args->{controller_role} );
-# 	}
-# #	log_debug { 'post controller BUILD self: ' . Dumper $self };
-# }
+has 'output_format' => (
+	is => 'lazy',
+	default => undef
+);
 
 =head3 render
 

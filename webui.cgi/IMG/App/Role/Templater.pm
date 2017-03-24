@@ -91,14 +91,14 @@ sub render_template {
 	$data->{ext_link} = sub { return $self->get_ext_link( @_ ) };
 
 # 	if ( $self->can('get_ext_link') ) {
-# 		say 'Can get_ext_link';
+# 		log_debug { 'Can get_ext_link' };
 # 	} else {
-# 		say 'Cannot get_ext_link';
+# 		log_debug { 'Cannot get_ext_link' };
 # 	}
 # 	if ( $self->can('get_img_link_tt') ) {
-# 		say 'can get_img_link_tt';
+# 		log_debug { 'can get_img_link_tt' };
 # 	} else {
-# 		say 'cannot get_img_link_tt';
+# 		log_debug { 'cannot get_img_link_tt' };
 # 	}
 
 #	$data->{link} = sub { return $self->get_img_link_tt( @_ ) };

@@ -118,7 +118,7 @@ sub get_oracle_connection_params {
 				$d = clean_oracle_params( _read_oracle_connection_file( $d ) );
 			}
 		}
-#		say 'db now: ' . Dumper $db;
+#		log_debug { 'db now: ' . Dumper $db };
 		return $db;
 	}
 	# open the file, read the connection params, clean them up
@@ -183,11 +183,11 @@ sub _read_oracle_connection_file {
 		"(.+)";
 		/x) {
 			$db->{ lc( $1 ) } = $3;
-#			say 'setting ' . $1 . ' to ' . $3;
+#			log_debug { 'setting ' . $1 . ' to ' . $3 };
 		}
 	}
 
-#	say "_read_oracle_connection_file: " . Dumper $db;
+#	log_debug { "_read_oracle_connection_file: " . Dumper $db };
 
 	return $db;
 }

@@ -31,7 +31,7 @@ return decode_json '[{"combined_sample_flag":null,"genome_type":"isolate","ecosy
 taxon_oid_display_name => sub {
 	my $self = shift;
 
-	say 'self: ' . Dumper $self;
+	log_debug { 'self: ' . Dumper $self };
 
 	return csv( in => $self->config->{local_data_dir} . 'dataset.tsv', headers => 'auto', sep_char => "\t", quote_char => undef );
 
@@ -98,13 +98,13 @@ sub filter {
 	}
 
 	if ( ! keys %{$f_types->{ $filter_h->{pp_subset} } } ) {
-		say 'Could not find any filters for ' . $filter_h->{pp_subset};
+		log_debug { 'Could not find any filters for ' . $filter_h->{pp_subset} };
 		return $data;
 	}
 
 	my @test;
 	for my $k ( keys %{$f_types->{ $filter_h->{pp_subset} }} ) {
-		say 'Looking at ' . $k;
+		log_debug { 'Looking at ' . $k };
 		if ( ! ref $f_types->{ $filter_h->{pp_subset} }{$k} ) {
 			push @test, sub {
 				my $t = shift;
@@ -124,7 +124,7 @@ sub filter {
 		elsif ( 'ARRAY' eq ref $f_types->{ $filter_h->{pp_subset} }{$k} ) {
 			push @test, sub {
 				my $t = shift;
-				say 'looking for ' . $k . ' to be one of: ' . join ", ", @{$f_types->{ $filter_h->{pp_subset} }{$k}};
+				log_debug { 'looking for ' . $k . ' to be one of: ' . join ", ", @{$f_types->{ $filter_h->{pp_subset} }{$k}} };
 				return 1 if ! exists $t->{ $k };
 				return scalar grep { $t->{$k} eq $_ } @{$f_types->{ $filter_h->{pp_subset} }{$k}};
 			};
@@ -134,18 +134,18 @@ sub filter {
 		}
 	}
 
-	say 'test array: ' . Dumper \@test;
+	log_debug { 'test array: ' . Dumper \@test };
 
 	my @passed;
 	DATA_LOOP:
 	for my $d ( @$data ) {
-		say 'looking at data item for ' . $d->{taxon_oid};
+		log_debug { 'looking at data item for ' . $d->{taxon_oid} };
 		for my $t ( @test ) {
-			say 'Running test';
+			log_debug { 'Running test' };
 			my $ans = $t->( $d );
-			say 'answer: ' . Dumper $ans;
+			log_debug { 'answer: ' . Dumper $ans };
 			if ( ! $t->( $d ) ) {
-				say $d->{taxon_oid} . ' failed test: ' . Dumper $t;
+				log_debug { $d->{taxon_oid} . ' failed test: ' . Dumper $t };
 				next DATA_LOOP;
 			}
 #			next DATA_LOOP unless $_->( $d );

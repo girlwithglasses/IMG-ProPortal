@@ -49,7 +49,7 @@ sub make_menu {
 	my $menu_grp = $args->{group} || undef;
 	my $page_id = $args->{page} || undef;
 
-	say 'Looking for group ' . ( $menu_grp || 'undefined' ) . ' and page ' . ( $page_id || 'undefined' );
+	log_debug { 'Looking for group ' . ( $menu_grp || 'undefined' ) . ' and page ' . ( $page_id || 'undefined' ) };
 
 	# if the ID is not defined, return the default menu
 #	if ( not defined $page_id ) {
@@ -70,12 +70,12 @@ sub make_menu {
 		my $l = shift;
 		my $rtn;
 		if ( $menu_grp && $menu_grp eq $l->{id} ) {
-#			say 'MATCH! Group matches ' . $l->{id};
+#			log_debug { 'MATCH! Group matches ' . $l->{id} };
 			$l->{class} = 'parent';
 			$rtn++;
 		}
 		if ( $page_id && $page_id eq $l->{id} ) {
-#			say 'MATCH! page ID matches ' . $l->{id};
+#			log_debug { 'MATCH! page ID matches ' . $l->{id} };
 			$l->{class} = 'current';
 			$rtn++;
 		}
@@ -176,7 +176,7 @@ that page to be in the menu!)
 sub find_parent_menu {
 	my $self = shift;
 	my $id = shift // $self->choke({ err => 'missing', subject => 'page ID' });
-#	say 'Looking for ' . $id;
+#	log_debug { 'Looking for ' . $id };
 	my $menus = $self->get_menu_items();
 	for my $m ( @$menus ) {
 		my $rslt = $self->_get_subtree( [ $m ], $id );
@@ -206,7 +206,7 @@ sub _get_group {
 	my $menu_grp = shift;
 	my $page_id = shift;
 
-#	say 'menu_grp: >>' . ( $menu_grp // 'undefined' ) . '<<';
+#	log_debug { 'menu_grp: >>' . ( $menu_grp // 'undefined' ) . '<<' };
 
 	my $mapping = {
 		FindGenomes    => 'menu/FindGenomes',
@@ -222,7 +222,7 @@ sub _get_group {
 	};
 
 	if ( defined $menu_grp && $mapping->{ $menu_grp } ) {
-#		say 'We definitely have this one!';
+#		log_debug { 'We definitely have this one!' };
 		return $mapping->{ $menu_grp };
 	}
 #	else {
@@ -230,7 +230,7 @@ sub _get_group {
 #			return find_parent_menu( $page_id );
 #		}
 #	}
-#	say 'Not mapped or a menu item. Hmmmm!';
+#	log_debug { 'Not mapped or a menu item. Hmmmm!' };
 	return;
 #	return home();
 
@@ -241,22 +241,22 @@ sub _get_subtree {
 	my $self = shift;
 	my $struct = shift;
 
-#	say 'struct: ' . Dumper $struct;
+#	log_debug { 'struct: ' . Dumper $struct };
 
 	my $menu_page = shift;
 	if ( ref $struct && 'ARRAY' eq ref $struct ) {
 		for ( @$struct ) {
-			say 'Looking at ' . $_;
+			log_debug { 'Looking at ' . $_ };
 			if ( ! ref $_ ) {
 				if ( $menu_page eq $_ ) {
-#					say __SUB__ . ': found the thing I was looking for!';
+#					log_debug { __SUB__ . ': found the thing I was looking for!' };
 					# need to populate these links!
 					return $_;
 				}
 			}
 			else {
 				if ( $_->{id} && $menu_page eq $_->{id} ) {
-#					say __SUB__ . ': found the thing I was looking for!';
+#					log_debug { __SUB__ . ': found the thing I was looking for!' };
 					return $_;
 				}
 				my $results = $self->_get_subtree( $_->{submenu}, $menu_page ) if $_->{submenu};

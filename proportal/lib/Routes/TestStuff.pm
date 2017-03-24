@@ -1,6 +1,6 @@
 package Routes::TestStuff;
-use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
+use IMG::Util::Import 'LogErr';
 use AppCorePlugin;
 use IMG::Util::File qw( :all );
 use File::Spec::Functions;
@@ -9,7 +9,7 @@ use File::Spec::Functions;
 prefix '/cart' => sub {
 	any '/genomes/add' => sub {
 
-		say Dumper body_parameters;
+		log_debug { 'body params: ' . Dumper body_parameters };
 		my @tax_arr = body_parameters->get_all('taxon_oid[]');
 
 		my $self = img_app;
@@ -98,7 +98,7 @@ for my $f ( qw[ demo ] ) {
 # 			$rslt = { 'error' => 001, 'message' => 'No data returned by query' };
 # 		}
 #
-# 		say Dumper $rslt;
+# 		log_debug { Dumper $rslt };
 #
 # 		content_type 'application/json';
 #
@@ -118,7 +118,7 @@ for my $f ( qw[ demo ] ) {
 # 		for ( @valid_queries ) {
 # 			my $app = MiniContr->new();
 # 			$app->add_controller( $_ );
-# #			say $_ . ' controller: ' . Dumper $app->controller;
+# #			log_debug { $_ . ' controller: ' . Dumper $app->controller };
 # 			$v_q->{$_} = $app->controller->valid_filters;
 # 		}
 #
@@ -128,7 +128,7 @@ for my $f ( qw[ demo ] ) {
 # 			pp_subsets => [ @pp_subsets ]
 # 		};
 #
-# 		say 'results: ' . Dumper $results;
+# 		log_debug { 'results: ' . Dumper $results };
 #
 # 		return template 'pages/datamart_stats', $results;
 #

@@ -3,7 +3,7 @@
 #
 #	Core attributes, etc.
 #
-#	$Id: Core.pm 36722 2017-03-17 16:58:25Z aireland $
+#	$Id: Core.pm 36795 2017-03-22 19:30:58Z aireland $
 ############################################################################
 package IMG::App::Core;
 

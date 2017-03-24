@@ -29,7 +29,7 @@ has 'taxon_oid' => (
 
 sub _build_taxon_oid {
 	my $self = shift;
-	say 'running build taxon ID';
+	log_debug { 'running build taxon ID' };
 	$self->choke({
 		err => 'missing',
 		subject => 'taxon_oid'
@@ -168,12 +168,12 @@ sub run {
 
 		remove_tree( $self->jbrowse_taxon_dir, { keep_root => 1 } );
 
-#		say 'steps: ' . Dumper $steps->{ $args->{steps} }->();
+#		log_debug { 'steps: ' . Dumper $steps->{ $args->{steps} }->() };
 		# sequence for preparing the JBrowse files
 		for ( @{ $steps->{ $args->{steps} }->() } ) {
-#			say 'running ' . join ", ", @$_;
+#			log_debug { 'running ' . join ", ", @$_ };
 			my ( $step, $fatal ) = @$_;
-#			say 'running ' . $step;
+#			log_debug { 'running ' . $step };
 			local $@;
 			eval { $self->$step(); };
 
@@ -183,7 +183,7 @@ sub run {
 				die $@;
 			}
 			# otherwise, allow to continue
-#			say 'steps now: ' . Dumper $steps->{ $args->{steps} };
+#			log_debug { 'steps now: ' . Dumper $steps->{ $args->{steps} } };
 		}
 	}
 }
@@ -202,7 +202,7 @@ Scratch directory for the files while we're working on them
 sub create_scratch_dir {
 	my $self = shift;
 	umask 0;
-#	say 'current umask: ' . umask;
+#	log_debug { 'current umask: ' . umask };
 	my $args = { mode => 0777 };
 	if ( $self->config->{environment} && 'production' ne $self->config->{environment} ) {
 		$args->{verbose} = 1;
@@ -239,7 +239,7 @@ sub create_ref_seq {
 		});
 	}
 
-#	say 'Creating reference sequence...';
+#	log_debug { 'Creating reference sequence...' };
 	Bio::JBrowse::Cmd::FormatSequences->new(
 		'--fasta', $seq_file,
 		'--key', $self->taxon_display_name,
@@ -384,7 +384,7 @@ sub tab_delimited_to_gff {
 	# create the parser
 	my $parser = IMG::Util::Parser::TSV2GFF::prepare_parser( $f );
 	my $out_fh = File::Temp->new();
-#	say 'Creating parser for ' . $f;
+#	log_debug { 'Creating parser for ' . $f };
 	local $@;
 	eval {
 		IMG::Util::Parser::TSV2GFF::tsv2gff({
@@ -400,7 +400,7 @@ sub tab_delimited_to_gff {
 		warn 'Problem with parsing ' . $infile . ': ' . $@;
 	}
 	else {
-		say 'Creating track for ' . $f;
+		log_debug { 'Creating track for ' . $f };
 		Bio::JBrowse::Cmd::FlatFileToJson->new(
 			'--gff', $out_fh->filename,
 			'--trackLabel', $f,
@@ -429,7 +429,7 @@ sub index_names {
 	my $self = shift;
 
 	# create name indexes
-	say 'Indexing names...';
+	log_debug { 'Indexing names...' };
 	Bio::JBrowse::Cmd::IndexNames->new(
 		'--out', $self->jbrowse_taxon_dir
 	)->run;
@@ -545,7 +545,7 @@ sub do_async {
     my $d = deferred;
     my $w;
     $w = AE::timer 0, 0, sub {
-    	say 'Running an async callback';
+    	log_debug { 'Running an async callback' };
     	$d->resolve( $callback->( ref( $input ) ? @$input : $input ) );
         undef $w;
     };

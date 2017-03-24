@@ -164,7 +164,7 @@ sub _parse {
 			local $/;
 			my $contents = <$fh>;
 			if ( $args->{verbose} ) {
-				say $contents;
+				log_debug { $contents };
 			}
 			return $contents;
 		},
