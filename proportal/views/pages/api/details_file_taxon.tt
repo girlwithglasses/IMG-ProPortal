@@ -1,0 +1,14 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal API';
+%]
+<h2>API</h2>
+
+<p>Welcome to the experimental ProPortal API. This is the home page for the list query API. The following file downloads may be available for your taxon of choice:</p>
+<dl>
+[%	FOR ft IN schema.file_type.enum %]
+	<dt>[% ft %]</dt>
+	<dd>[% schema.file_type.enum_map.$ft %]</dd>
+	<dd>URL format: /api/details/file/taxon?file_type=[% ft %]&amp;taxon_oid=???</dd>
+[%	END %]
+</dl>
+[% END %]
