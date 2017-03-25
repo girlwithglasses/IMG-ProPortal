@@ -111,7 +111,7 @@ sub run_query {
 	my $stt = $self->$query( $args );
 
 	return unless defined $stt;
-#	say 'statement: ' . Dumper $stt;
+#	log_debug { 'statement: ' . Dumper $stt };
 
 	# add filters
 	if ($args->{filters}) {
@@ -121,7 +121,7 @@ sub run_query {
 		});
 	}
 
-#	say 'Returning data... time elapsed since query init: ' . Time::HiRes::tv_interval( $self->t0, [ Time::HiRes::gettimeofday ] );
+#	log_debug { 'Returning data... time elapsed since query init: ' . Time::HiRes::tv_interval( $self->t0, [ Time::HiRes::gettimeofday ] ) };
 
 	# TODO: set the output format
 # 	-result_as      => 'rows'      || 'firstrow'
@@ -130,8 +130,18 @@ sub run_query {
 #                   || 'subquery'  || 'flat_arrayref'
 #                   || 'statement' || 'fast_statement'
 
+	my @valid_result_as = ( qw( rows firstrow hashref sth sql subquery statement
+		flat_arrayref fast_statement ) );
+
+	log_debug { 'result as: ' . Dumper $args->{result_as} };
+
 	if ( $args->{result_as} ) {
-		return $stt->refine( -result_as => $args->{result_as} );
+		if ( 'csv' eq $args->{result_as} ) {
+			return $stt->refine( -result_as => 'statement' );
+		}
+		elsif ( grep { $_ eq $args->{result_as} } @valid_result_as ) {
+			return $stt->refine( -result_as => $args->{result_as} );
+		}
 	}
 
 	if ( $args->{check_results} ) {
@@ -141,7 +151,7 @@ sub run_query {
 		});
 	}
 
-#	say 'statement: ' . Dumper $stt;
+#	log_debug { 'statement: ' . Dumper $stt };
 
 	return $stt->all;
 

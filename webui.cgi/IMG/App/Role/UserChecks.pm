@@ -1,12 +1,11 @@
 ###########################################################################
 #
-# $Id: UserChecks.pm 36523 2017-01-26 17:53:41Z aireland $
+# $Id: UserChecks.pm 36829 2017-03-24 18:34:42Z aireland $
 #
 ###########################################################################
 package IMG::App::Role::UserChecks;
 
 use IMG::Util::Import 'MooRole';
-use IMG::Model::Contact;
 
 requires 'config', 'session', 'check_jgi_session', 'get_jgi_user_json', 'get_db_contact_data';
 
@@ -25,7 +24,7 @@ sub run_user_checks {
 	# ping the server
 	my $user_data = $self->get_jgi_user_json( $u_id );
 
-	say 'got user data... continuing with my work!';
+	log_debug { 'got user data... continuing with my work!' };
 
 	my $db_data = $self->get_db_contact_data({ caliban_id => $user_data->{user}{id} });
 
@@ -36,38 +35,10 @@ sub run_user_checks {
 		});
 	}
 
-	##	merge user and db data:
-	my %new = %$db_data;
-	if ( %$user_data ) {
-		$new{jgi_session_id} = $user_data->{id};
-		$new{caliban_id} = $user_data->{user}{contact_id};
-		$new{caliban_user_name} = $user_data->{user}{login};
-	}
-
-	for (keys %new) {
-		delete $new{$_} unless defined $new{$_};
-	}
-
-	# create a user object
-#	my $user = IMG::Model::Contact->new({ db_data => $db_data, user_data => $user_data });
-#	$self->_set_user( $user );
-	$self->_set_user( %new );
+	log_debug { 'db data: ' . Dumper $db_data };
+	log_debug { 'user data' . Dumper $user_data };
 
 	return { db_data => $db_data, user_data => $user_data };
-
-=cut
-	# set up session params
-	session 'contact_oid'       => $q->[0];
-	session 'username'          => $q->[1];
-	session 'super_user'        => $q->[2];
-	session 'name'              => $q->[3];
-	session 'email'             => $q->[4];
-	session 'jgi_session_id'    => $user_data->{id};
-	session 'caliban_id'        => $user_data->{user}{contact_id};
-	session 'caliban_user_name' => $user_data->{user}{login};
-	session 'banned_checked'    => 1;
-=cut
-
 
 }
 
@@ -175,7 +146,7 @@ sub touch_cart_files {
 	my $gf = GenomeCart::getColIdFile();
 	WebUtil::fileTouch($gf) if -e $gf;
 
-	say "cart looks like this: " . Dumper \%cart;
+	log_debug { "cart looks like this: " . Dumper \%cart };
 	return \%cart;
 =cut
 

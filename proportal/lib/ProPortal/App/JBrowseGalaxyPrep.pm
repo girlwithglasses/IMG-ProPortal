@@ -55,7 +55,7 @@ with qw(
 sub run {
 	my $self = shift;
 
-#	say 'args: ' . Dumper $self->args;
+#	log_debug { 'args: ' . Dumper $self->args };
 	if ( $self->args->has_email && $self->args->email ne 'Anonymous' ) {
 		# check the user can access the taxon
 		my $user_h = $self->get_db_contact_data({ email => $self->args->email });

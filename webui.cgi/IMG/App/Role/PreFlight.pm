@@ -3,7 +3,7 @@
 #
 #	Run preflight checks to ensure app is ready for action
 #
-#	$Id: PreFlight.pm 36602 2017-02-28 21:51:26Z aireland $
+#	$Id: PreFlight.pm 36811 2017-03-23 16:26:34Z aireland $
 ############################################################################
 package IMG::App::Role::PreFlight;
 
@@ -108,7 +108,7 @@ sub max_cgi_process_check {
 
 	my $cmd = "/bin/ps -ef | grep -c $scriptName |";
 
-#	say "Running $cmd";
+#	log_debug { "Running $cmd" };
 
 	# run the command, count the output
 	delete @ENV{qw(PATH IFS CDPATH ENV BASH_ENV)};

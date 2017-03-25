@@ -30,7 +30,7 @@ sub _build_workflow_id_h {
 	# GET /api/workflows
 	my $wf = $self->http_ua->get( $self->config->galaxy . '/api/workflows?key=' . $self->galaxy_api_key );
 
-	say 'workflows: ' . Dumper $wf;
+	log_debug { 'workflows: ' . Dumper $wf };
 
 }
 

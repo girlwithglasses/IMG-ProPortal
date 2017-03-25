@@ -164,8 +164,8 @@ sub get_taxon_file {
 	my $f_names = {
 		aa_seq =>	sub { return 'taxon.faa/' . +shift->{taxon_oid} . '.faa'; },
 		dna_seq =>	sub { return 'taxon.fna/' . +shift->{taxon_oid} . '.fna'; },
-#		lin_seq =>	sub { return 'taxon.lin.fna/' . +shift . '.lin.fna'; },
-#		genes =>	sub { return 'taxon.genes.fna/' . +shift . '.fna'; },
+		lin_seq =>	sub { return 'taxon.lin.fna/' . +shift->{taxon_oid} . '.lin.fna'; },
+		genes =>	sub { return 'taxon.genes.fna/' . +shift->{taxon_oid} . '.fna'; },
 		gff =>		sub { return 'tab.files/gff/' . +shift->{taxon_oid} . '.gff'; },
 		cog =>		sub { return 'tab.files/cog/' . +shift->{taxon_oid} . '.cog.tab.txt' },
 		kog =>		sub { return 'tab.files/kog/' . +shift->{taxon_oid} . '.kog.tab.txt' },
@@ -173,6 +173,9 @@ sub get_taxon_file {
 		tigrfam =>	sub { return 'tab.files/tigrfam/' . +shift->{taxon_oid} . '.tigrfam.tab.txt' },
 		ipr =>		sub { return 'tab.files/ipr/' . +shift->{taxon_oid} . '.ipr.tab.txt' },
 		kegg =>		sub { return 'tab.files/ko/' . +shift->{taxon_oid} . '.ko.tab.txt' },
+		tmhmm =>    sub { return 'tab.files/tmhmm/' . +shift->{taxon_oid} . '.tmhmm.tab.txt' },
+		signalp =>  sub { return 'tab.files/signalp/' . +shift->{taxon_oid} . '.signalp.tab.txt' },
+		xref =>     sub { return 'tab.files/xref/' . +shift->{taxon_oid} . '.xref.tab.txt' },
 	};
 
 	# aliases

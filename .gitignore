@@ -55,7 +55,7 @@ proportal/config.pl
 proportal/bin/async.psgi
 proportal/bin/stream_test.psgi
 
-# proportal/environments/
+proportal/environments/db.pl
 proportal/docs/
 proportal/log/
 proportal/node_modules/

@@ -26,6 +26,9 @@ sub _rename {
 
 	die __PACKAGE__ . ' requires two name arguments' unless $type && $name;
 
+	if ( $name =~ /::/ ) {
+		$name = join '::', map { camelize( $_ ) } split '::', $name;
+	}
 	$type = camelize($type);
 	$name = camelize($name);
 	return "ProPortal::${type}::${name}";

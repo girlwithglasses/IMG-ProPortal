@@ -1,6 +1,6 @@
 package IMG::Util::StashDump;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 
 sub stash_dump {
 	my $package_name = shift;

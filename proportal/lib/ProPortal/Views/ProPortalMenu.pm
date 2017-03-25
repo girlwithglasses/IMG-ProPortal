@@ -129,7 +129,6 @@ sub my_img {
 			'login'
 		]
 	};
-
 	# SSO enabled: allow login
 	if ( $self->config->{sso_enabled} ) {
 		push @{$menu->{submenu}}, 'login';

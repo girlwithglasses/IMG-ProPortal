@@ -57,7 +57,7 @@ sub _render {
 		filters => { pp_subset => 'coccus' }
 	});
 
-	say 'Clades: ' . Dumper $clades;
+	log_debug { 'Clades: ' . Dumper $clades };
 
 	my $data;
 	my $clade_h;
@@ -91,6 +91,7 @@ sub get_data {
 	my $res = $self->_core->run_query({
 		query => 'clade',
 		filters => $self->filters,
+#		result_as => $self->output_format
 	});
 
 #	return $res;

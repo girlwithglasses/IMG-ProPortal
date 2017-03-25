@@ -42,7 +42,7 @@ sub check_file {
 		_check_file_name( $f_name )
 	);
 	if ( $rtn ne $file ) {
-		say "original: $file\nchecked: $rtn";
+		log_debug { "original: $file\nchecked: $rtn" };
 	}
 	return $rtn;
 }
@@ -151,7 +151,7 @@ sub untaint_env {
 	for my $p (@paths) {
 		if ($ENV{ $p }) {
 
-#			say STDERR "$p: paths: " . Dumper $ENV{ $p };
+#			log_debug { STDERR "$p: paths: " . Dumper $ENV{ $p } };
 
 			# filter out everything that isn't in /usr, /global, or /opt
 			my @p_arr = eval {

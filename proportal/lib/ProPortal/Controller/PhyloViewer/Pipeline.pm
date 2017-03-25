@@ -186,7 +186,7 @@ sub create_FASTA_file {
 		});
 	}
 	else {
-#		say 'CREATING A NEW FILE!!';
+#		log_debug { 'CREATING A NEW FILE!!' };
 #		( $outfh, $outfile ) = tempfile();
 		$self->choke({
 			err => 'missing',
@@ -410,7 +410,7 @@ sub read_tree_file {
 		};
 
 		if ( $@ ) {
-			say 'err msg: ' . Dumper $@;
+			log_debug { 'err msg: ' . Dumper $@ };
 			die $@->{'-text'};
 		}
 		return $treeio;

@@ -24,6 +24,11 @@ Details page for a CyCOG function
 
 sub _render {
 	my $self = shift;
+	return { results => $self->get_data( @_ ) };
+}
+
+sub get_data {
+	my $self = shift;
 	my $args = shift;
 
 	if ( ! $args || ! $args->{db} || ! $args->{xref} ) {
@@ -37,15 +42,6 @@ sub _render {
 		err => 'not_implemented'
 	}) unless 'cycog' eq $args->{db};
 
-	my $func = $self->get_data( $args );
-
-	return { results => $func };
-}
-
-sub get_data {
-	my $self = shift;
-	my $args = shift;
-
 	my $res = $self->_core->run_query({
 		query => 'cycog_details',
 		where => {
@@ -56,11 +52,11 @@ sub get_data {
 	if ( scalar @$res != 1 ) {
 		$self->choke({
 			err => 'no_results',
-			subject => 'function ' . ( $args->{function_oid} || 'unspecified' )
+			subject => 'function ' . join ":", map { $args->{$_} || '' } ( 'db', 'xref' )
 		});
 	}
 
-	say 'function: ' . Dumper $res;
+#	log_debug { 'function: ' . Dumper $res };
 
 	my $cy = $res->[0];
 
@@ -72,7 +68,7 @@ sub get_data {
 		where => { gene_oid => \@gene_arr }
 	});
 
-	say 'results: ' . Dumper $gene_list;
+#	log_debug { 'results: ' . Dumper $gene_list };
 
 	return { function => $cy, genes => $gene_list };
 

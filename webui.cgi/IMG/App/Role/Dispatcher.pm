@@ -3,7 +3,7 @@
 #
 #	Parse query params and run the appropriate code
 #
-#	$Id: Dispatcher.pm 36602 2017-02-28 21:51:26Z aireland $
+#	$Id: Dispatcher.pm 36811 2017-03-23 16:26:34Z aireland $
 ############################################################################
 package IMG::App::Role::Dispatcher;
 
@@ -39,7 +39,7 @@ sub prepare_dispatch {
 	@arg_h{ qw( current noMenu gwtModule yui_js scripts help redirect_url ) } = $prep_args->{module}->getAppHeaderData();
 
 #	my @appArgs = $prep_args->{module}->getAppHeaderData();
-	say 'appArgs: ' . Dumper \%arg_h;
+	log_debug { 'appArgs: ' . Dumper \%arg_h };
 
 	my $tmpl_inc;
 
@@ -271,7 +271,7 @@ sub parse_params {
 	my $page = $req->param('page') || "";
 	my $section = $req->param('section');
 
-	say "page: $page; section: $section";
+	log_debug { "page: $page; section: $section" };
 
 	if ( $module = is_valid_module( $section ) ) {
 		if ( $req->param("exportGenes") || $req->param("exportGeneData") ) {
@@ -289,7 +289,7 @@ sub parse_params {
 	my $page_id = ( defined $page && lc( $page ) ne 'home')
 		? $module . '/' . $page
 		: $module;
-	say 'page_id: ' . $page_id;
+	log_debug { 'page_id: ' . $page_id };
 
 	return {
 		module => $module,
@@ -320,14 +320,14 @@ sub prepare_dispatch_coderef {
 	# initialise IMG session, dbhs, etc.
 	IMG::Util::Factory::require_module( 'WebUtil' );
 
-#	say 'Loaded WebUtil';
+#	log_debug { 'Loaded WebUtil' };
 	WebUtil::init_from_proportal( $self );
 
 # 	my $errs;
 # 	my $mods = $self->valid_modules;
 # 	for my $m ( sort keys %$mods ) {
 # 		local $@;
-# 		say 'loading ' . $mods->{$m};
+# 		log_debug { 'loading ' . $mods->{$m} };
 # 		eval {
 # 			IMG::Util::Factory::require_module( $mods->{$m} );
 # 		};
@@ -335,8 +335,8 @@ sub prepare_dispatch_coderef {
 # 	}
 # 	if ( $errs ) {
 # 		for ( sort keys %$errs ) {
-# 			say $_;
-# 			say $errs->{$_};
+# 			log_debug { $_ };
+# 			log_debug { $errs->{$_} };
 # 		}
 # 	}
 
@@ -344,19 +344,19 @@ sub prepare_dispatch_coderef {
 
 	my $sub_h = {
 		webError => sub {
-	#		say 'running WebUtil::WebError';
+	#		log_debug { 'running WebUtil::WebError' };
 			confess $_[0];
 		},
 		webDie => sub {
-	#		say 'running WebUtil::webDie';
+	#		log_debug { 'running WebUtil::webDie' };
 			confess $_[0];
 		},
 		webErrorHeader => sub {
-	#		say 'running WebUtil::webErrorHeader';
+	#		log_debug { 'running WebUtil::webErrorHeader' };
 			return WebUtil::webError( @_ );
 		},
 		webExit => sub {
-	#		say 'running WebUtil::webExit';
+	#		log_debug { 'running WebUtil::webExit' };
 			return;
 		},
 		webLog => sub {
@@ -405,7 +405,7 @@ sub prepare_dispatch_coderef {
 		});
 	}
 
-	say 'Loaded ' . $module;
+	log_debug { 'Loaded ' . $module };
 
 
 	my $to_do;

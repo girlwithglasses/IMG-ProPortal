@@ -36,7 +36,7 @@ sub _render {
 		file => $args->{newick},
 		format => 'newick'
 	});
-#	say 'gene tax file res: ' . Dumper $self->read_gene_taxon_file( $args );
+#	log_debug { 'gene tax file res: ' . Dumper $self->read_gene_taxon_file( $args ) };
 	my $uniq;
 
 	my $gp_data = $self->read_gene_taxon_file({
@@ -77,7 +77,7 @@ sub _render {
 		};
 	}
 
-#	say Dumper $ds;
+#	log_debug { Dumper $ds };
 
 	if ( scalar @$ds > 1 ) {
 		die 'Too many roots!';
@@ -85,8 +85,8 @@ sub _render {
 
 #	$ds->[0]{children} = prune_tree_ds( $ds->[0]{children} );
 
-#	say 'Finished tree pruning: tree now:';
-#	say Dumper $ds;
+#	log_debug { 'Finished tree pruning: tree now:' };
+#	log_debug { Dumper $ds };
 
 	return { results => {
 		js => {
@@ -133,7 +133,7 @@ sub make_pruned_tree_ds {
 	my %args = ( @_ );
 	my $level = $args{level} || 0;
 	my $indent = ( "\t" ) x  $level;
-#	say $indent . 'Entering make_pruned_tree_ds';
+#	log_debug { $indent . 'Entering make_pruned_tree_ds' };
 
 	my @unfiltered = $args{node}->each_Descendent;
 	my $children_by_dist;
@@ -141,7 +141,7 @@ sub make_pruned_tree_ds {
 	FILTER_CHILDREN:
 	while ( @unfiltered ) {
 		my $child = shift @unfiltered;
-#		say $indent . 'Examining an unfiltered child...';
+#		log_debug { $indent . 'Examining an unfiltered child...' };
 		my $c_data;
 
 		$c_data = {
@@ -154,27 +154,27 @@ sub make_pruned_tree_ds {
 			$c_data->{metadata} = $args{data}->{ $child->id } if $args{data}->{ $child->id };
 		}
 
-#		say $indent . 'child: ' . Dumper $c_data;
+#		log_debug { $indent . 'child: ' . Dumper $c_data };
 
 		if ( 0 < scalar $child->each_Descendent ) {
-#			say $indent . 'found a node with children';
+#			log_debug { $indent . 'found a node with children' };
 			my @ok;
 			for my $gc ( $child->each_Descendent ) {
 				if ( 0 == $args{tree}->distance( -nodes => [ $child, $gc ] ) ) {
 					push @unfiltered, $gc;
-#					say $indent . 'found a child with distance zero!';
+#					log_debug { $indent . 'found a child with distance zero!' };
 				}
 				else {
-#					say $indent . 'found an OK child';
+#					log_debug { $indent . 'found an OK child' };
 					push @ok, $gc;
 				}
 			}
 			if ( @ok ) {
 				$c_data->{children} = make_pruned_tree_ds( %args, node => $child, level => $level + 1 );
-#				say $indent . 'pruned children: ' . Dumper $c_data;
+#				log_debug { $indent . 'pruned children: ' . Dumper $c_data };
 			}
 			else {
-#				say $indent . 'No valid children found';
+#				log_debug { $indent . 'No valid children found' };
 				next FILTER_CHILDREN;
 			}
 		}
@@ -182,7 +182,7 @@ sub make_pruned_tree_ds {
 		# ignore intermediate nodes with length 0
 		# CHECK: do we need to do this?
 		if ( 0 == $c_data->{length} ) {
-#			say $indent . 'this node has length 0; going to next node';
+#			log_debug { $indent . 'this node has length 0; going to next node' };
 			next FILTER_CHILDREN;
 		}
 #		next if 0 == $c_data->{length};
@@ -205,7 +205,7 @@ sub make_pruned_tree_ds {
 			my $length;
 			for ( @{$children_by_dist->{$d}} ) {
 				if ( defined $length && $_->{length} != $length ) {
-#					say 'length mismatch!';
+#					log_debug { 'length mismatch!' };
 				}
 				$length = $_->{length};
 				$_->{length} = 0;
@@ -213,7 +213,7 @@ sub make_pruned_tree_ds {
 			push @children, { length => $length, cumul_len => $d, children => $children_by_dist->{$d} };
 		}
 	}
-#	say $indent . 'returning children: ' . Dumper \@children;
+#	log_debug { $indent . 'returning children: ' . Dumper \@children };
 	return \@children;
 }
 

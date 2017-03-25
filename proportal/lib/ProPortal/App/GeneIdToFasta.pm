@@ -121,13 +121,13 @@
 
 			my @hdr = eval { $csv->header( $fh ) };
 
-			say 'hdr: ' . Dumper \@hdr;
+			log_debug { 'hdr: ' . Dumper \@hdr };
 
 			if ( $@ || ! grep { "gene_oid" eq $_ } @hdr ) {
 
 				if ( $@ ) {
 					my @errs = $csv->error_diag();
-					say 'Error! ' . join "\n", @errs;
+					log_debug { 'Error! ' . join "\n", @errs };
 				}
 
 				$self->choke({

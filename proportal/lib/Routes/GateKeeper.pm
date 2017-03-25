@@ -3,7 +3,7 @@
 #
 #	Routes for logging in and out
 #
-#	$Id: GateKeeper.pm 36524 2017-01-26 17:57:46Z aireland $
+#	$Id: GateKeeper.pm 36811 2017-03-23 16:26:34Z aireland $
 ############################################################################
 package Routes::GateKeeper;
 
@@ -37,10 +37,10 @@ any '/login' => sub {
 		expires => '5 mins'
 	);
 
-	debug "c: " . Dumper $c;
-	debug "to header: " . Dumper $c->to_header();
-#	say "jgi cookie: " . Dumper cookie->{jgi_return};
-	debug "cookies: " . Dumper cookies;
+	log_debug { "c: " . Dumper $c };
+	log_debug { "to header: " . Dumper $c->to_header() };
+#	log_debug { "jgi cookie: " . Dumper cookie->{jgi_return} };
+	log_debug { "cookies: " . Dumper cookies };
 
 	push_header 'Set-Cookie' => $c->to_header();
 

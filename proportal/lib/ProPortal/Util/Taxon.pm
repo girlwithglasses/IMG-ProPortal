@@ -34,7 +34,7 @@ sub get_taxon_name_public {
 		}
 	});
 
-#	say 'results: ' . Dumper $results;
+#	log_debug { 'results: ' . Dumper $results };
 
 	if ( scalar @$results ) {
 		if ( $results->[0]->{is_public} ne 'Yes' ) {

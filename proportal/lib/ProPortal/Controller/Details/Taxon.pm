@@ -24,6 +24,11 @@ Details page for a taxon / metagenome
 
 sub _render {
 	my $self = shift;
+	return { results => { taxon => $self->get_data( @_ ), label_data => $self->get_label_data } };
+}
+
+sub get_data {
+	my $self = shift;
 	my $args = shift;
 
 	if ( ! $args || ! $args->{taxon_oid} ) {
@@ -33,14 +38,6 @@ sub _render {
 		});
 	}
 
-	my $taxon = $self->get_data( $args );
-
-	return { results => { taxon => $taxon, label_data => $self->get_label_data } };
-}
-
-sub get_data {
-	my $self = shift;
-	my $args = shift;
 	my $res = $self->_core->run_query({
 		query => 'taxon_details',
 		where => $args

@@ -73,9 +73,12 @@ has 'controller' => (
 sub add_controller {
 	my $self = shift;
 	my $class = $self->_prepare_controller( shift );
-	log_debug { 'running _set_controller' };
+	my $extras = shift // {};
 
-	$self->_set_controller({ class => $class, _core => $self });
+	log_debug { 'running _set_controller' };
+	$extras->{_core} = $self;
+
+	$self->_set_controller({ class => $class, %$extras });
 
 #	log_debug { 'controller now: ' . Dumper $self->controller };
 

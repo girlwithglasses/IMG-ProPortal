@@ -3,7 +3,7 @@
 #
 #	Interface to the current query
 #
-#	$Id: CurrentQuery.pm 36722 2017-03-17 16:58:25Z aireland $
+#	$Id: CurrentQuery.pm 36811 2017-03-23 16:26:34Z aireland $
 ############################################################################
 package IMG::App::CurrentQuery;
 
@@ -36,14 +36,14 @@ sub _set_page_params {
 	for ( qw( page_id menu_group ) ) {
 		if ( $params->{$_} ) {
 			my $p = '_set_' . $_;
-#			say 'running ' . $p;
+#			log_debug { 'running ' . $p };
 
 			$self->$p( $params->{$_} );
 		}
 	}
 
-#	say 'page_id: ' . Dumper $self->page_id;
-#	say 'menu_group: ' . Dumper $self->menu_group;
+#	log_debug { 'page_id: ' . Dumper $self->page_id };
+#	log_debug { 'menu_group: ' . Dumper $self->menu_group };
 
 }
 

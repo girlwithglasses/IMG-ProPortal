@@ -83,7 +83,7 @@
 			subject => $f_name
 		}) unless defined $filters->{$f_name};
 
-	#	say 'Filters: ' . Dumper $filters;
+	#	log_debug { 'Filters: ' . Dumper $filters };
 
 
 
@@ -269,6 +269,44 @@ my $schema = {
 		enum_map => {
 			cycog => 'CyCOG'
 		}
+	},
+	file_type => {
+		id => 'file_type',
+		title => 'file type',
+		type => 'enum',
+		enum => [ qw(
+			aa_seq
+			dna_seq
+			lin_seq
+			genes
+			gff
+			cog
+			kog
+			pfam
+			tigrfam
+			ipr
+			kegg
+			tmhmm
+			signalp
+			xref
+		) ],
+		enum_map => {
+			aa_seq => 'genome amino acid sequence',
+			dna_seq => 'genome DNA sequence',
+			lin_seq => '??? sequence',
+			genes => 'DNA sequence, genes',
+			gff => 'GFF3 format (strict conformance not guaranteed for type and attribute fields)',
+			cog => 'COG annotations, tab-delimited',
+			kog => 'KOG annotations, tab-delimited',
+			pfam => 'PFAM annotations, tab-delimited',
+			tigrfam => 'TIGRFAM annotations, tab-delimited',
+			ipr => 'non-Pfam/TIGRFAM InterPro hits, tab-delimited',
+			ko => 'KEGG orthology and EC annotations, tab-delimited',
+			signalp => 'signal peptide annotation, tab-delimited',
+			tmhmm => 'transmembrane helix annotation, tab-delimited',
+			xref => 'external references (spotty coverage)'
+		},
+		no_sqlize => 1
 	}
 };
 
@@ -481,15 +519,24 @@ sub filter_sqlize {
 		subject => 'filter schema'
 	});
 
-	log_debug { 'filter sqlize: ' . Dumper $filters };
+	log_debug { 'filter pre-sqlize: ' . Dumper $filters };
 
 	my %f;
+	my $h;
+	if ( 'HASH' eq ref $filters ) {
+		$h++;
+	}
+
 	for my $fd ( keys %$filters ) {
+		if ( $schema->{$fd} && $schema->{$fd}{no_sqlize} ) {
+			# skip non-SQL filters
+			next;
+		}
 		my $fd_fn = $fd . '_filter';
 		if ( $self->can( $fd_fn ) ) {
-			my @f = $filters->get_all( $fd );
-
-			say 'post-filter: ' . Dumper( $self->$fd_fn( [ @f ] ) );
+			my @f = $h
+				? ( $filters->{$fd} ) # standard hash
+				: $filters->get_all( $fd ); # Hash::MultiValue version
 
 			%f = ( %f, %{ $self->$fd_fn( [ @f ] ) } );
 		}
@@ -497,6 +544,9 @@ sub filter_sqlize {
 			$f{ $fd } = $filters->{$fd};
 		}
 	}
+
+	log_debug { 'post-filter sqlize: ' . Dumper \%f };
+
 	return \%f;
 # 	$self->choke({
 # 		err => 'missing',

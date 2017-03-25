@@ -51,6 +51,7 @@ hook 'before' => sub {
 		#	we have the JGI session cookie
 		#	JGI SSO returns a cookie with ID jgi_session
 		if ( cookies && cookies->{jgi_session} ) {
+			log_debug { 'found cookies, and found a jgi_session cookie!' };
 			if ( session('jgi_session_id') ) {
 				# make sure that the session is still valid
 				local $@;

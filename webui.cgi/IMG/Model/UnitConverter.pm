@@ -18,20 +18,20 @@ sub distance_in_m {
 		\s*$/ix ) {
 		if ($4) {
 			if ($4 eq 'km') {
-			#	say "Found $input; returning " . $1 * 1000;
+			#	log_debug { "Found $input; returning " . $1 * 1000 };
 				return $1 * 1000;
 			}
 			elsif ($4 eq 'cm') {
-			#	say "Found $input; returning " . $1 / 100;
+			#	log_debug { "Found $input; returning " . $1 / 100 };
 				return $1 / 100;
 			}
 		}
 	#	if ($input ne $1) {
-	#		say "Found $input; returning $1";
+	#		log_debug { "Found $input; returning $1" };
 	#	}
 		return $1;
 	}
-#	say "Could not parse $input!";
+#	log_debug { "Could not parse $input!" };
 	return undef;
 }
 

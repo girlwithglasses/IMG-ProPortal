@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: Session.pm 36602 2017-02-28 21:51:26Z aireland $
+# $Id: Session.pm 36829 2017-03-24 18:34:42Z aireland $
 #
 ############################################################################
 package IMG::App::Role::Session;
@@ -27,9 +27,25 @@ sub set_up_session {
 	my $self = shift;
 	my $user = shift;
 
-	say 'params to set_up_session: ' . Dumper $user;
+=cut
+	# set up session params
+	session 'contact_oid'       => $q->[0];
+	session 'username'          => $q->[1];
+	session 'super_user'        => $q->[2];
+	session 'name'              => $q->[3];
+	session 'email'             => $q->[4];
+	session 'jgi_session_id'    => $user_data->{id};
+	session 'caliban_id'        => $user_data->{user}{contact_id};
+	session 'caliban_user_name' => $user_data->{user}{login};
+	session 'banned_checked'    => 1;
+=cut
 
-	say 'user: ' . Dumper $self->user;
+
+
+
+	log_debug { 'params to set_up_session: ' . Dumper $user };
+
+	log_debug { 'user: ' . Dumper $self->user };
 
 #	$self->session->write( 'jgi_session_id', $user->{user_data}{id} );
 
@@ -64,7 +80,7 @@ sub set_up_session {
 	session 'caliban_user_name' => $user_data->{user}{login};
 	session 'banned_checked'    => 1;
 
-	say "session looks like this: " . Dumper session;
+	log_debug { "session looks like this: " . Dumper session };
 
 #=cut
 	WebUtil::loginLog( 'login', 'sso' );

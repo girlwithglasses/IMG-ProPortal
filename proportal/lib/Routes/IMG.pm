@@ -1,5 +1,5 @@
 package Routes::IMG;
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use Dancer2 appname => 'ProPortal';
 use AppCorePlugin;
 
@@ -11,6 +11,16 @@ use CGI::Emulate::PSGI;
 prefix '/cgi-bin' => sub {
 
 	any '/main.cgi?**' => sub {
+
+		my $q_params = query_parameters;
+		my $ordered = join "&", map { $_ . "=" . join ",", $q_params->get_all($_) } sort keys %$q_params;
+
+		log_debug { 'ordered: ' . $ordered };
+
+		if ( $ordered =~ m!page=(gene|taxon)detail&section=(gene|taxon)detail&(gene|taxon)_oid=(\d+)$!i ) {
+			# taxon details
+			forward "/details/$1/$4";
+		}
 
 		my $rtn = img_app->prepare_dispatch({
 			'session' => session,

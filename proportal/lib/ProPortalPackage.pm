@@ -46,7 +46,7 @@ sub init_current_query {
 	$self->clear_controller;
 	$self->_set_current_query({ _core => $self });
 	$self->_set_app( $app );
-	say 'session: ' . $self->session;
+	log_debug { 'session: ' . $self->session };
 }
 
 has 'app' => (
@@ -61,9 +61,9 @@ has '+session' => (
 
 sub _build_session {
 	my $sess = shift->app->session;
-	Moo::Role->apply_roles_to_object($sess, qw(SessionParamRole));
+	Moo::Role->apply_roles_to_object( $sess, qw(SessionParamRole) );
 
-#	say Dumper $sess;
+#	log_debug { Dumper $sess };
 
 	return $sess;
 }

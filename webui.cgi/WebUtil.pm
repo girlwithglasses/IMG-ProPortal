@@ -1597,7 +1597,7 @@ sub newAppendFileHandle {
     $path = checkPath($path);
     my $fh = new FileHandle( $path, "a" );
 
-	say "func: $func";
+#	say "func: $func";
 
     # to stop infinite loop when log files cannot be open - ken
     if ( ! $fh && ( $func eq "webLog" || $func eq "webErrLog" ) ) {
@@ -5507,10 +5507,10 @@ sub imgClause {
 
     $clause .= " and $alias" . '.' . "obsolete_flag = 'No' ";
 
-    
+
     if ($img_nr && !$forced_img_nr_no) {
         $clause .= " and $alias" . '.' . "is_nr = 'Yes' ";
-        
+
 #        $clause .= qq{
 #and $alias.taxon_oid  in(
 #    select nr7.taxon_oid
@@ -5519,7 +5519,7 @@ sub imgClause {
 #    and nr7.SEQUENCING_GOLD_ID is not null
 #    and nr7.IS_PUBLIC = 'Yes'
 #    and nr7.domain in ('Bacteria', 'Archaea')
-#    and nr7.taxon_oid = 
+#    and nr7.taxon_oid =
 #        (select max(nr8.taxon_oid)
 #        from taxon nr8
 #        where nr8.sequencing_gold_id = nr7.sequencing_gold_id
@@ -5528,7 +5528,7 @@ sub imgClause {
 #        and nr8.IS_PUBLIC = 'Yes'
 #        and nr8.domain in ('Bacteria', 'Archaea'))
 #     )
-#        };   
+#        };
     }
 
     return $clause;
@@ -5587,7 +5587,7 @@ sub imgClauseNoTaxon {
          $type
       )
     };
-    
+
     my $img_nr = $env->{img_nr};
     if ( $img_nr && !$forced_img_nr_no) {
         $clause .= qq{
@@ -5598,7 +5598,7 @@ sub imgClauseNoTaxon {
     and nr7.SEQUENCING_GOLD_ID is not null
     and nr7.IS_PUBLIC = 'Yes'
     and nr7.domain in ('Bacteria', 'Archaea')
-    and nr7.taxon_oid = 
+    and nr7.taxon_oid =
         (select max(nr8.taxon_oid)
         from taxon nr8
         where nr8.sequencing_gold_id = nr7.sequencing_gold_id
@@ -5607,10 +5607,10 @@ sub imgClauseNoTaxon {
         and nr8.IS_PUBLIC = 'Yes'
         and nr8.domain in ('Bacteria', 'Archaea'))
      )
-        };   
-    }    
-    
-    
+        };
+    }
+
+
     return $clause;
 }
 

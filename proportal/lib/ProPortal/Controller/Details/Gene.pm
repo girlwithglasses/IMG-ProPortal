@@ -24,9 +24,12 @@ Details page for a gene
 
 sub _render {
 	my $self = shift;
-	my $args = shift;
+	return { results => { gene => $self->get_data( @_ ) } };
+}
 
-	log_debug { 'args: ' . Dumper $args };
+sub get_data {
+	my $self = shift;
+	my $args = shift;
 
 	if ( ! $args || ! $args->{gene_oid} ) {
 		$self->choke({
@@ -34,18 +37,6 @@ sub _render {
 			subject => 'gene_oid'
 		});
 	}
-
-	my $res = $self->get_data( $args );
-
-#	log_debug { 'results: ' . Dumper $res };
-
-	return { results => { gene => $res } };
-
-}
-
-sub get_data {
-	my $self = shift;
-	my $args = shift;
 
 	# get the genes
 	my $genes = $self->_core->run_query({
@@ -64,7 +55,9 @@ sub get_data {
 
 	my $res = $genes->[0];
 
-	return $res;
+	if ( 'imgsqlite' eq $self->_core->config->{schema}{img_core}{db} ) {
+		return $res;
+	}
 
 	my $associated = {
 		multi => [ qw(
@@ -106,6 +99,8 @@ sub get_data {
 			}
 		}
 	}
+
+	log_debug { 'gene object: ' . Dumper $res };
 	return $res;
 
 }

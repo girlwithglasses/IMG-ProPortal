@@ -19,7 +19,7 @@ my $imgAppTerm;
 sub img_render {
 	my $self = shift;
 
-#	say "dsl: " . Dumper $dsl;
+#	log_debug { "dsl: " . Dumper $dsl };
 
 	my %args = @_;
 
