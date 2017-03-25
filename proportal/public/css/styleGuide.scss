@@ -2,13 +2,16 @@
 
 
 // STYLE GUIDE VARIABLES
+
+// Layout variables
+$overall_width: 1300px;
+$padding_sg: 50px;
+$sidebar_width: 300px;
+
 // $font-family_sg: "Helvetica Neue", Helvetica, Arial, sans-serif;
 $font-family_sg: 'Roboto', sans-serif;
 $font-variant_sg: none; //small-caps;
 $font-weight_sg: lighter;
-
-$padding_sg: 50px;
-$sidebar_width: 300px;
 
 // Style guide colors
 $font-color_sg: #959595;
@@ -40,17 +43,15 @@ $pp_btn_disabled_color: $color7;
 
 
 // STYLEGUIDE SECTIONS
-#wrap {
-    margin: auto;
-    width: 1300px;
-}
 
 #header {
 	color: white;
-	padding: 30px;
-	padding-left: $padding_sg;
+	padding: $padding_sg;
 	text-align: left;
 	border-bottom: $line_sg;
+	width: 100%;
+	height: 160px;
+	clear: both;
 }
 
 // #nav {
@@ -59,24 +60,23 @@ $pp_btn_disabled_color: $color7;
 // 	float: left;
 // 	text-align: right;	
 // }
+#wrap {
+    margin: auto;
+    width: 100%;
+}
+
 
 #main {
-	margin-left: $sidebar_width;
-	padding: 60px $padding_sg 0 $padding_sg;
+	padding: $padding_sg $padding_sg 0 $sidebar_width;
+  float: none;
+  display: block;
 }
 
 #sidebar {
-// 	background: cyan;
-	 
-	float:left;
-	width: $sidebar_width;
 	padding: $padding_sg;
-	padding-top: 60px;
-// 	 position: absolute;
-    top: 10px;
-	position: -webkit-sticky;  // required for Safari
-	position: sticky;
-	top: 0; // required as well.
+	position: fixed;
+	top: 190px;
+	width: $sidebar_width;
 	
 }
 
@@ -210,131 +210,131 @@ ul.colorSwatch-list_sg {
 // 		PLAYGROUND!  USE THIS TO STYLE NEW ELEMENTS FOR PROPORTAL.
 //----------------------------------------------------------------------
 
-
-// PP BUTTONS
-button, 
-html input[type="button"], 
-	input[type="reset"], 
-	input[type="submit"]{
-	
-  background: $color2;	// lite_or
-  color: white;
-  
-  font-size: 14px;
-  padding: 0.75rem 1.5rem;
-  text-transform: uppercase;
-  vertical-align: middle;
-  line-height: 1.5rem; 
-  border: 2px solid transparent;
-  
-  &:hover {
-  	background: darken( $color2, 10% )
-  }
-}
-
-// Buttons with solid color backgrounds, white text
-.pp_btn_std {
-  background: $pp_btn_std_color;	// lite_or
-  color: white;
-  
-  &:hover {
-  	background: darken( $pp_btn_std_color, 10% );
-  }
-}
-
-.pp_btn_orange {	
-  background: $pp_btn_orange_color;	// lite_or
-  color: white;
-	
-  &:hover {
-  	background: darken( $pp_btn_orange_color, 10% );
-  }	 
-}
-
-.pp_btn_disabled {	
-  background: $pp_btn_disabled_color;	// midgrey
-  color: white;
-  
-  &:hover {	
-  	background: $pp_btn_disabled_color;
-  }
-}
-
-// Buttons with white background, outlined in various colors with matching text.
-
-.pp_btn_std_outline {
-	background: white;
-	color: $pp_btn_std_color;
-	border: $element-border-width solid $pp_btn_std_color;
-	
-  &:hover {
-  	color: darken( $pp_btn_std_color, 10% );
-  	background: white;
-  	border: $element-border-width solid darken( $pp_btn_std_color, 10% );
-  }	
-}
-
-.pp_btn_orange_outline {
-	background: white;
-	color: $pp_btn_orange_color;
-	border: $element-border-width solid $pp_btn_orange_color;
-	
-  &:hover {
-  	color: darken( $pp_btn_orange_color, 10% );
-  	background: white;
-  	border: $element-border-width solid darken( $pp_btn_orange_color, 10% );
-  }	
-}
-
-.pp_btn_disabled_outline {
-	background: white;
-	color: $pp_btn_disabled_color;
-	border: $element-border-width solid $pp_btn_disabled_color;
-	
-  &:hover {
-  	color: darken( $pp_btn_disabled_color, 10% );
-  	background: white;
-  	border: $element-border-width solid darken( $pp_btn_disabled_color, 10% );
-  }	
-}
-
-.pp_btn_add {
-	display: inline-block;
-	width: 30px;
-	height: 30px;
-	padding: 0;
-	margin: 0;
-	background: $color1;
-	
-	font-size: 24px;
-	text-align: center;
-	vertical-align: middle;
-	
-	color: darken( $color1, 10% );
-	background: white;
-	border: $element-border-width solid $color1;
-	
-	&:hover {
-		color: darken( $color1, 10% );
-		background: white;
-		border: $element-border-width solid darken( $color1, 10% );
-  	}	
-}
-
-.pp_btn_remove {
-	display: inline-block;
-	width: 30px;
-	height: 30px;
-	padding: 0;
-	margin: 0;
-	background: $color1;
-	font-size: 24px;
-	
-	&:hover {
-		background: darken( $color1, 10% );
-		border: 3px solid darken( $color1, 10% );
-  	}	
-}
+// 
+// // PP BUTTONS
+// button, 
+// html input[type="button"], 
+// 	input[type="reset"], 
+// 	input[type="submit"]{
+// 	
+//   background: $color2;	// lite_or
+//   color: white;
+//   
+//   font-size: 14px;
+//   padding: 0.75rem 1.5rem;
+//   text-transform: uppercase;
+//   vertical-align: middle;
+//   line-height: 1.5rem; 
+//   border: 2px solid transparent;
+//   
+//   &:hover {
+//   	background: darken( $color2, 10% )
+//   }
+// }
+// 
+// // Buttons with solid color backgrounds, white text
+// .pp_btn_std {
+//   background: $pp_btn_std_color;	// lite_or
+//   color: white;
+//   
+//   &:hover {
+//   	background: darken( $pp_btn_std_color, 10% );
+//   }
+// }
+// 
+// .pp_btn_orange {	
+//   background: $pp_btn_orange_color;	// lite_or
+//   color: white;
+// 	
+//   &:hover {
+//   	background: darken( $pp_btn_orange_color, 10% );
+//   }	 
+// }
+// 
+// .pp_btn_disabled {	
+//   background: $pp_btn_disabled_color;	// midgrey
+//   color: white;
+//   
+//   &:hover {	
+//   	background: $pp_btn_disabled_color;
+//   }
+// }
+// 
+// // Buttons with white background, outlined in various colors with matching text.
+// 
+// .pp_btn_std_outline {
+// 	background: white;
+// 	color: $pp_btn_std_color;
+// 	border: $element-border-width solid $pp_btn_std_color;
+// 	
+//   &:hover {
+//   	color: darken( $pp_btn_std_color, 10% );
+//   	background: white;
+//   	border: $element-border-width solid darken( $pp_btn_std_color, 10% );
+//   }	
+// }
+// 
+// .pp_btn_orange_outline {
+// 	background: white;
+// 	color: $pp_btn_orange_color;
+// 	border: $element-border-width solid $pp_btn_orange_color;
+// 	
+//   &:hover {
+//   	color: darken( $pp_btn_orange_color, 10% );
+//   	background: white;
+//   	border: $element-border-width solid darken( $pp_btn_orange_color, 10% );
+//   }	
+// }
+// 
+// .pp_btn_disabled_outline {
+// 	background: white;
+// 	color: $pp_btn_disabled_color;
+// 	border: $element-border-width solid $pp_btn_disabled_color;
+// 	
+//   &:hover {
+//   	color: darken( $pp_btn_disabled_color, 10% );
+//   	background: white;
+//   	border: $element-border-width solid darken( $pp_btn_disabled_color, 10% );
+//   }	
+// }
+// 
+// .pp_btn_add {
+// 	display: inline-block;
+// 	width: 30px;
+// 	height: 30px;
+// 	padding: 0;
+// 	margin: 0;
+// 	background: $color1;
+// 	
+// 	font-size: 24px;
+// 	text-align: center;
+// 	vertical-align: middle;
+// 	
+// 	color: darken( $color1, 10% );
+// 	background: white;
+// 	border: $element-border-width solid $color1;
+// 	
+// 	&:hover {
+// 		color: darken( $color1, 10% );
+// 		background: white;
+// 		border: $element-border-width solid darken( $color1, 10% );
+//   	}	
+// }
+// 
+// .pp_btn_remove {
+// 	display: inline-block;
+// 	width: 30px;
+// 	height: 30px;
+// 	padding: 0;
+// 	margin: 0;
+// 	background: $color1;
+// 	font-size: 24px;
+// 	
+// 	&:hover {
+// 		background: darken( $color1, 10% );
+// 		border: 3px solid darken( $color1, 10% );
+//   	}	
+// }
 
 // PROPORTAL TABLE
 

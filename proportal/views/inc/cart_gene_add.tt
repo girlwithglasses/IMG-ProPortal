@@ -2,18 +2,18 @@
 
 <div class="itemList_controls right-elements top">
 
-	<button class="test-button-outline">Select all</button>
-	<button class="test-button-outline">Clear selection</button>
-	<button class="test-button">Add to cart</button>
+	<button class="pp-button outline">Select all</button>
+	<button class="pp-button outline">Clear selection</button>
+	<button>Add to cart</button>
 </div>
 
 [% content %]
 
 
 <div class="itemList_controls right-elements">
-	<button class="test-button-outline">Select all</button>
-	<button class="test-button-outline">Clear selection</button>
-	<button class="test-button">Add to cart</button>
+	<button class="pp-button outline">Select all</button>
+	<button class="pp-button outline">Clear selection</button>
+	<button>Add to cart</button>
 </fieldset>
 
 

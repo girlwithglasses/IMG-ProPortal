@@ -189,3 +189,28 @@ $icon-h: 32px;
 @mixin icon-plus-sil {
 	background-position: -336px 0;
 }
+
+// FORM MIXINS
+//--------------------------------------------------------
+
+// BUTTONS
+@mixin pp-button-style($border-color, $bg-color, $fg-color) {
+
+	border: $element-border-width solid $border-color;
+	background: $bg-color;
+	color: $fg-color;	
+
+	&:hover {
+    	background: darken($bg-color, 10%);
+    	border: $element-border-width solid darken($border-color, 10%);
+    	color: darken($fg-color, 10%);
+    }
+    
+    &:active {
+    	background: lighten($bg-color, 10%);
+    	border: $element-border-width solid lighten($border-color, 10%);
+    	color: lighten($fg-color, 10%);
+    }
+    
+}
+

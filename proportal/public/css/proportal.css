@@ -99,9 +99,11 @@ canvas, template
   border: 0;
   vertical-align: baseline; }
 
-button, input, optgroup, select, textarea {
+button, .pp-button, input, optgroup, select, textarea {
+  margin: 0;
+  font: inherit;
   padding: 0;
-  vertical-align: baseline; }
+  vertical-align: middle; }
 
 html, body,
 address, article, aside, footer, header, hgroup, nav, section,
@@ -392,8 +394,16 @@ article {
   margin: 40px 0; }
 
 #home-gallery {
-  background: #343434;
-  color: white; }
+  background: black;
+  padding: 0;
+  width: 100%;
+  clear: right; }
+
+#carousel {
+  height: 400px;
+  width: 600px;
+  padding: 0;
+  overflow: hidden; }
 
 @media only screen and (max-width: 479px) {
   #home-about, #home-news, #home-stats, #home-gallery, #home-quick-search {
@@ -443,11 +453,10 @@ article {
     height: 400px; }
 
   #home-gallery {
-    padding: 5px;
+    padding: 0px;
     margin-left: 410px;
     float: none;
-    display: block;
-    height: 400px; }
+    display: block; }
 
   #home-about, #home-news, #home-stats {
     width: 32%;
@@ -586,37 +595,80 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
   input[type="text"]:focus, input[type="text"]:active, input[type="email"]:focus, input[type="email"]:active, input[type="password"]:focus, input[type="password"]:active, input[type="search"]:focus, input[type="search"]:active, input[type="tel"]:focus, input[type="tel"]:active, input[type="url"]:focus, input[type="url"]:active, textarea:focus, textarea:active {
     color: #666; }
 
-button, html input[type="button"], input[type="reset"], input[type="submit"] {
-  border: none;
+button, .pp-button, html input[type="button"], input[type="reset"], input[type="submit"] {
+  height: 3rem;
   background: #d3691b;
-  padding: 0 0.75rem;
-  margin: 0.75rem 0;
+  border: 1px solid transparent;
+  padding: 0 1.5rem;
+  font-size: 0.9em;
   color: white;
   text-transform: uppercase;
-  vertical-align: middle;
   line-height: 1.5rem; }
+  button:hover, .pp-button:hover, html input[type="button"]:hover, input[type="reset"]:hover, input[type="submit"]:hover {
+    background: #a65315; }
+  button:active, .pp-button:active, html input[type="button"]:active, input[type="reset"]:active, input[type="submit"]:active {
+    background: #e6843b; }
 
-.test-button {
-  padding: 10px 20px;
-  font-size: 75%;
-  border: 1px solid #d3691b; }
+button.disabled, .disabled.pp-button,
+button.disabled:hover,
+.disabled.pp-button:hover,
+button.disabled:focus,
+.disabled.pp-button:focus,
+button.disabled:active,
+.disabled.pp-button:active,
+input:disabled,
+button:disabled,
+.pp-button:disabled {
+  background: #ddd;
+  border: #element-border-width solid transparent; }
 
-.test-button-blue {
-  padding: 10px 20px;
-  font-size: 75%;
+.pp-button.outline {
+  border: 1px solid #d3691b;
+  background: transparent;
+  color: #d3691b; }
+  .pp-button.outline:hover {
+    background: transparent;
+    border: 1px solid #a65315;
+    color: #a65315; }
+  .pp-button.outline:active {
+    background: rgba(26, 26, 26, 0);
+    border: 1px solid #e6843b;
+    color: #e6843b; }
+.pp-button.blue {
+  border: 1px solid transparent;
   background: #648caa;
-  border: 1px solid #648caa; }
+  color: white; }
+  .pp-button.blue:hover {
+    background: #4e728d;
+    border: 1px solid transparent;
+    color: #e6e6e6; }
+  .pp-button.blue:active {
+    background: #85a4bc;
+    border: 1px solid rgba(26, 26, 26, 0);
+    color: white; }
+.pp-button.blue-outline {
+  border: 1px solid #648caa;
+  background: transparent;
+  color: #648caa; }
+  .pp-button.blue-outline:hover {
+    background: transparent;
+    border: 1px solid #4e728d;
+    color: #4e728d; }
+  .pp-button.blue-outline:active {
+    background: rgba(26, 26, 26, 0);
+    border: 1px solid #85a4bc;
+    color: #85a4bc; }
+.pp-button.disabled:hover {
+  background: #ddd; }
+.pp-button.disabled:active {
+  background: #ddd; }
 
-.test-button-outline {
-  padding: 10px 20px;
-  font-size: 75%;
-  background: white;
-  color: #d3691b;
-  border: 1px solid #d3691b; }
-  .test-button-outline:hover {
-    color: #a65315;
-    background: white;
-    border: 1px solid #a65315; }
+input {
+  border: 1px solid #5a5a5a;
+  padding: 0 1.5rem;
+  height: 3rem;
+  background: transparent;
+  border-radius: 0px; }
 
 .nav-trigger {
   display: none; }
@@ -948,12 +1000,14 @@ HTML BODY CODE SNIPPET:
   width: 3rem; }
 
 .header-search__input {
-  margin-bottom: 0;
-  width: 3rem; }
+  width: 10rem;
+  height: 2.3rem;
+  font-size: 1em; }
   .header-search__input:active, .header-search__input:focus {
     width: 20rem; }
 .header-search__submit {
-  padding: 0 0.75rem; }
+  height: 2.3rem;
+  font-size: 0.9em; }
 
 .mart-list-menu__link {
   display: block;
@@ -1705,9 +1759,6 @@ button bar usually found under pageTitle
 #buttonBar {
   float: right;
   clear: both; }
-  #buttonBar button {
-    padding: 10px;
-    font-size: 75%; }
 
 /* partials/grid
 grid of cards found on auto-generated pages 

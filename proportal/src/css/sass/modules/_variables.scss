@@ -49,15 +49,36 @@ $half: 1024px;
 
 */
 
-// visual styles used throughout the site
-$underline: 1px solid map-get( $jgi-palette, dk_grey );		// switch over to using b-border mixin.
+// GENERAL ELEMENT STYLE
+//---------------------------------------------------------------
 
 // elements have a standard border color and width
 $element-border-width: 1px;
 $element-border-color: map-get( $jgi-palette, dk_grey );
-
 $border-lighter: lighten( $element-border-color, 40% );
 
+
+// visual styles used throughout the site
+$underline: 1px solid map-get( $jgi-palette, dk_grey );		// switch over to using b-border mixin.
+
+
+// FORM ELEMENTS
+//---------------------------------------------------------------
+
+// General variables
+$element-height: 3rem;
+$element-padding-sides: 1.5rem;
+
+$element-font-size: 0.9em;
+
+// Button variables
+$button-height: 3rem; //$element-height;
+$button-padding-sides: $element-padding-sides;
+$button-bgcolor: map-get( $jgi-palette, reddish );
+$button-color: white;
+$button-transform: uppercase;
+
+// Input box variables:
 
 
 // width at which menu starts wrapping

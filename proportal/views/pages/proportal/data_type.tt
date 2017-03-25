@@ -31,12 +31,13 @@
 [%			FOR pps IN data_filters.schema.${sort_by.1}.enum;
 				IF sorted_data.$dt.$pps; %]
 		<li>[% data_filters.schema.${sort_by.1}.enum_map.$pps %] ([% sorted_data.$dt.$pps.size %])
-			<ul>
+			<ul style="padding-bottom: 20px;">
 [%					FOR t IN sorted_data.$dt.$pps;
 						taxon = results.data.ix.$t; %]
-				<li>
-				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% taxon.taxon_oid %]" id="cbox_[% taxon.taxon_oid %]" />
-				<a href="[% link( 'details', { type => 'taxon', taxon_oid => taxon.taxon_oid } ) %]">[% taxon.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => taxon.taxon_oid } ) %]">JBrowse</a --></li>
+				<li style="height: 2rem;">
+				<input type="checkbox" style="padding: 0;"class="sample-data__cbox" name="taxon_oid[]" value="[% taxon.taxon_oid %]" id="cbox_[% taxon.taxon_oid %]" />
+				<a href="[% link( 'details', { type => 'taxon', taxon_oid => taxon.taxon_oid } ) %]">[% taxon.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => taxon.taxon_oid } ) %]">JBrowse</a -->
+				</li>
 [%					END %]
 			</ul>
 		</li>

@@ -1,9 +1,12 @@
 <div class="nav-holder">
+
+
 	<input type="checkbox" id="horiz-bar-toggle" class="nav-toggle horiz-global-toggle" />
 <!-- this toggle shows / hides the global nav and horiz-menu in mobile view -->
 	<div class="horiz-bar-toggle__container">
 		<label class="horiz-bar-toggle__label" for="horiz-bar-toggle">Menu</label>
 	</div>
+
 [%
 	PROCESS 'inc/nav_horiz_bar.tt';
 	PROCESS 'inc/nav_jgi_links.tt';

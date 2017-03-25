@@ -51,10 +51,17 @@ article {
 }
 
 #home-gallery {
-	background: map-get( $jgi-palette, black );
-	color: white;
-// 	height: 350px;
-// 	float: left;
+	background: black; //map-get( $jgi-palette, black );
+	padding: 0;
+	width: 100%;
+	clear: right;	// important! makes inner images clip on right.	
+}
+
+#carousel {
+	height: 400px;
+	width: 600px;
+	padding: 0;
+	overflow: hidden;
 }
 
 // smallest screen
@@ -130,16 +137,14 @@ article {
 	}
 		
 	#home-gallery {
-// 		padding: 30px;
-// 		overflow: hidden;
-// 		width: auto;
-		  padding: 5px;
+		  padding: 0px;
 		  margin-left: 410px;
 		  float: none;
 		  display: block;
-		  height: 400px;
 	}
-		
+	
+
+			
 	#home-about, #home-news, #home-stats {
 		width: 32%;
 		float: left;

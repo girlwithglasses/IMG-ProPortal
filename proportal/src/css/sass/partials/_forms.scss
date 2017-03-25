@@ -44,47 +44,77 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
         color: #666;
     }
 }
+//----------------------------------//
+// 				BUTTONS				//
+//----------------------------------//
 
-// buttons of all sorts!
+// BASE BUTTON STYLE
+//		variables defined in /modules/_variables.scss
+//------------------------------------
 button, html input[type="button"], input[type="reset"], input[type="submit"] {
-	border: none;
-	background: $secondary;
-    padding: 0 $gutter;
-    margin: $gutter 0;
-	color: white;
-	text-transform: uppercase;
-	vertical-align: middle;
+
+	height: $button-height;
+	background: $button-bgcolor;
+	border: $element-border-width solid transparent;
+	padding: 0 $button-padding-sides;
+	font-size: $element-font-size;
+	color: $button-color;
+	text-transform: $button-transform;	
     line-height: $line-ht;
-
-}
-
-.test-button {		// temp location.  need to style all the buttons.
-	padding: 10px 20px;
-	font-size: 75%; 
-	border: $element-border-width solid map-get( $jgi-palette, reddish );
-}
-
-.test-button-blue {		// temp location.  need to style all the buttons.
-	padding: 10px 20px;
-	font-size: 75%; 
-	background: map-get( $jgi-palette, dk_blue );
-	border: $element-border-width solid map-get( $jgi-palette, dk_blue );
-}
-
-.test-button-outline {		// temp location.  need to style all the buttons.
-	padding: 10px 20px;
-	font-size: 75%; 
 	
-	background: white;
-	color: map-get( $jgi-palette, reddish );
-	border: $element-border-width solid map-get( $jgi-palette, reddish );
+	&:hover {
+    	background: darken($button-bgcolor, 10%);
+//     	color: darken($button-color, 10%);
+    }
+    
+    &:active {
+    	background: lighten($button-bgcolor, 10%);
+//     	color: lighten($button-color, 10%);
+    }
+}
+
+button.disabled,
+button.disabled:hover,
+button.disabled:focus,
+button.disabled:active,
+input:disabled,
+button:disabled {
+	background: #ddd;
+	border: #element-border-width solid transparent;
+}
+
+// Button Mods
+//---------------------------------------------------
+
+.pp-button {
+	@extend button;
+
+	&.outline {
+		@include pp-button-style( map-get( $jgi-palette, reddish ), transparent,  map-get( $jgi-palette, reddish ));
+	}
 	
-  &:hover {
-  	color: darken( map-get( $jgi-palette, reddish ), 10% );
-  	background: white;
-  	border: $element-border-width solid darken( map-get( $jgi-palette, reddish ), 10% );
-  }	
-  
+	&.blue {
+		@include pp-button-style( transparent, map-get( $jgi-palette, dk_blue ), white );
+	}
+	
+	&.blue-outline {
+		@include pp-button-style( map-get( $jgi-palette, dk_blue ), transparent, map-get( $jgi-palette, dk_blue ));
+	}
+
+	&.disabled {
+		&:hover {	background: #ddd;	}
+		&:active {	background: #ddd;	}
+	}	
+}
+
+// INPUT BOX
+// input[type="text"] {
+input {
+  border: $element-border-width solid $element-border-color; 
+  padding:  0 $element-padding-sides;		
+  height: $element-height;
+  background: transparent;
+  border-radius: 0px;
 }
 
 // checkboxes for the checkbox hack

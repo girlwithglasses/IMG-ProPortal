@@ -1,10 +1,28 @@
 <nav class="jgi-links">
 	<ul class="jgi-links-menu">
+<!-- 
 		<li class="jgi-links-menu__item">
 			<a class="jgi-links-menu__link" href="http://jgi.doe.gov">JGI Home</a>
 		</li>
+ 		<li class="jgi-links-menu__item">
+			<a class="jgi-links-menu__link" href="http://jgi.doe.gov/contact-us/">Contact IMG</a>
+		</li>
+ -->
+ 		<li class="jgi-links__item header-search">
+        [%  PROCESS 'inc/header_search.tt' %]
+		</li>
+		
+<!-- 		A hack... visually, the login links should show up under the search bar. -->
+ 		<li class="jgi-links__item" style="float: right; clear: both;">
+ 			<div>
+ 				<span> Login </span>
+<!-- 				<span style="margin: 0 10px;">Hello Sara!</span>  |  <span style="margin: 0 10px;"><a class="jgi-links-menu__link">Logout</a></span> -->
+			</div>
+ 		</li>
+
+			
 [%		IF data_marts; %]
-		<li class="jgi-links-menu__item mart-list cf">
+		<li class="jgi-links__item mart-list cf" >
 			<input type="checkbox" id="mart-list-toggle" class="nav-toggle" />
 			<label for="mart-list-toggle" class="mart-list__toggle">expand</label>
 			<a class="jgi-links-menu__link" href="[% data_marts.abs_url || link( data_marts.id ) %]">[% data_marts.label %]</a>
@@ -17,11 +35,7 @@
 %]
 		</li>
 [%		END; %]
-		<li class="jgi-links-menu__item">
-			<a class="jgi-links-menu__link" href="http://jgi.doe.gov/contact-us/">Contact IMG</a>
-		</li>
-		<li class="jgi-links-menu__item header-search">
-        [%  PROCESS 'inc/header_search.tt' %]
-		</li>
+		
     </ul>
+
 </nav>
