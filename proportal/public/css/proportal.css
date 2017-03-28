@@ -1767,22 +1767,18 @@ div.grid {
   float: left; }
 
 a.grid:link, a.grid:visited {
-  background: #648caa;
-  color: white;
+  color: #5a5a5a;
   width: 230px;
   height: 250px;
   padding: 25px;
   margin: 5px;
   text-decoration: none;
   display: inline-block;
-  border: 0;
+  border: 1px solid #5a5a5a;
   clear: both; }
 
-a.grid:hover, a.grid:active {
-  background: white;
-  color: #648caa;
-  border: 2px solid #648caa;
-  cursor: pointer; }
+a.grid:hover {
+  color: #648caa; }
 
 /* 
 /list/ page elements, including item table header and footer.
