@@ -1,26 +1,122 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Home';
 %]
+
+<style>
+
+/* MOVE TO SASS FILES */
+
+/* labels */
+label.myForm {
+	text-transform: uppercase;	
+	font-size: 14px;
+	display: block;
+	margin: 5px;
+}
+
+label.myForm:after {
+	clear: both;
+	float: left;
+}
+
+select {
+  border: 1px solid #5a5a5a; map-get( $jgi-palette, dk_grey ); 
+  border-radius: 0px;
+  
+  background: transparent;
+  padding:  0 20px;	
+  text-transform: uppercase;	
+  font-size: 14px;
+  height: 3em;
+
+}
+
+input {
+  border: 1px solid #5a5a5a; map-get( $jgi-palette, dk_grey ); 
+  border-radius: 0px;
+  
+  background: transparent;
+  padding:  0 20px;		
+  font-size: 14px;
+  height: 3em;
+}
+
+
+</style>
+
+
 <div class="cf">
-<section id="about">
-<h3>About IMG/ProPortal</h3>
-<p>
+
+<div style="height:auto; overflow:hidden;">
+	<div id="home-quick-search">
+		<!-- <div class="infoBox"> -->
+		<div class="infoBoxTitle" style="border-bottom: 1px solid gray;"><h3>Quick Search</h3></div>
+
+		<div id="home-quick-search-form">
+		
+			<div style="margin-bottom: 10px;">
+				<label class="myForm" for="search-domain">Search category</label>
+				<select id="search-domain"  style="width: 100%;">
+					<option value="genomes"> Genomes </option>
+					<option value="genes"> Genes </option>
+					<option value="functions"> Functions </option>
+				</select>
+			</div>	
+		
+			<div style="margin-bottom: 10px;">
+				<label class="myForm" for="search-keyword">For keyword</label>
+				<input id="search-keyword" type="text" style="width: 100%;"/>
+			</div>	
+		
+		
+			<button class="test-button-blue" style="float: right;">Go</button>
+
+
+
+		</div>
+	</div>
+
+	<div id="home-gallery">
+
+	</div>
+</div> <!-- row -->
+
+<div class=" infoBox" id="home-stats">
+	<div class="infoBoxTitle"><h3>IMG/ProPortal Data Sets</h3></div>
+
+	<table>
+		<tr><td colspan="2"><h6> Isolate and Single Cell Genomes </h6></td></tr>
+	[%	FOR fd IN data_filters.valid.keys.sort;
+			FOR f IN data_filters.valid.$fd.enum;
+				IF results.stats.pp_subsets.$f;
+					s = results.stats.pp_subsets.$f; %]
+			<tr><td class="indent">[% data_filters.schema.$fd.enum_map.$f %]</td>
+				<td>[% s.count %]</td>
+			</tr>
+	[%			END;
+			END;
+		END;%]
+
+		<tr><td><h6> Metagenomes </h6></td>
+		<td>[% results.stats.metagenomes_marine.0.count %]</td></tr>
+	</table>
+</div>
+
+<div class=" infoBox" id="home-about">
+	<div class="infoBoxTitle"><h3>About IMG/ProPortal</h3></div>
+
+	<p>
 	The marine cyanobacterium <strong><i>Prochlorococcus</i></strong>, which is abundant in the oceans, is a key model system in microbial ecology. <strong>IMG/ProPortal</strong> provides <i>Prochlorococcus</i> and the closely related <i>Synechococcus</i> and <i>Cyanophage</i> genomes integrated with a comprehensive set of publicly-available isolate and single cell genomes, and a rich set of publicly-available metagenome samples. <strong>IMG/ProPortal</strong> includes genomic, transcriptomic, metagenomic and population data from both cultivated strains and wild populations of cyanobacteria and phage.</p>
 <p><strong>IMG/ProPortal</strong> relies on IMG's data warehouse and comparative analysis tools (<a href="http://nar.oxfordjournals.org/content/42/D1/D560" rel="external">Nucleic Acids Research, Volume 42 Issue D1</a>) and is a descendant of <strong>ProPortal</strong> (<a href="http://nar.oxfordjournals.org/content/40/D1/D632" rel="external">Nucleic Acids Research Volume 40 Issue D1</a>).</p>
-</section>
 
-<section id="user-guide">
-<h3>User Guide</h3>
-[%	IF user_guide;
-		# do something
-	ELSE; %]
-<p>The IMG/ProPortal user guide is still under development.</p>
-[%	END; %]
-</section>
+</div>
 
-<section id="news">
-<h3>News</h3>
-[%	INCLUDE inc/news.tt %]
-</section>
+<div class="infoBox" id="home-news">
+	<div class="infoBoxTitle"><h3>News</h3></div>
+
+	<a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+</div>
+
 </div>
 [% END; %]

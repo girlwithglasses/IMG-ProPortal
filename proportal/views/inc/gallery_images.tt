@@ -1,0 +1,19 @@
+
+[%
+pics = [{
+        url => '/images/homePics/med4_w1000.jpeg',
+        desc => '<p>Prochlorococcus sp. MED4 imaged with TEM while dividing. </p>
+				 <p>Luke Thompson (Chisholm Lab, MIT) and Nicki Watson (Whitehead Institute), 2006.</p>'
+    },
+    {
+        url => '/images/homePics/pro_test_tubes_w1000.jpg',
+        desc => '<p>Prochlorococcus cultures in test tubes. </p>
+       	 		<p>Jessie Berta-Thompson (Chisholm Lab, MIT), 2013.</p>'  
+    },
+    {
+        url => '/images/homePics/ctd_w1000.jpg',
+        desc => '<p>CTD rosette on board the R/V Melville in the South Pacific Subtropical Gyre. </p>
+       	 		<p>Paul Berube (Chisholm Lab, MIT), 2010.</p>'
+    }];
+    
+%]    

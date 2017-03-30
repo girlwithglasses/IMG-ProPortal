@@ -4,7 +4,9 @@
 	USE Dumper;
 %]
 
+<!-- 
 <div class="cf">
+	
 [%	PROCESS inc/tool_descriptions.tt;
 
 	VIEW app_list;
@@ -14,6 +16,7 @@
 	<div class="grid">
 		<a class="grid" href="[% link( m.id ) %]">
 		<h5 class="C">[% m.title || m.label %]</h5>
+			
 		[%	IF description.${m.id};
 				description.${m.id};
 			END;
@@ -27,7 +30,7 @@
 
 %]
 </div>
-
+ -->
 
 <div class="cf">
 [%	#PROCESS inc/tool_descriptions.tt;
@@ -38,7 +41,8 @@
 			PROCESS $tmpl_name;
 		ELSIF content.id; %]
 <h2>[%	content.title || content.label %]</h2>
-[%			IF description.${content.id};
+[%			description.${content};	
+			IF description.${content.id};
 				description.${content.id};
 			END;
 		END;

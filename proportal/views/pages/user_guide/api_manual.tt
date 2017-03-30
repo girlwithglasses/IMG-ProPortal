@@ -3,6 +3,7 @@
 	END;
 	WRAPPER $page_wrapper;
 	title = 'Sample Demo';
+	
 %]
 	
 <a href="/user_guide/">< back</a>	

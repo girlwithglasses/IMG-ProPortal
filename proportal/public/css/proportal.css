@@ -389,41 +389,63 @@ article {
 #home-about {
   clear: all; }
 
+#home-quick-search {
+  border: 1px solid #5a5a5a; }
+
 #home-quick-search-form {
   width: 100%;
-  margin: 40px 0; }
+  margin: 40px 0;
+  padding: 0.75rem; }
 
 #home-gallery {
-  background: black;
-  padding: 0;
-  width: 100%;
-  clear: right; }
-
-#carousel {
-  height: 400px;
-  width: 600px;
-  padding: 0;
-  overflow: hidden; }
+  background-repeat: no-repeat;
+  background-position: center center;
+  overflow: hidden;
+  /* Creates a new block format context, which will make this tag fill the remaining width */
+  height: 400px; }
 
 @media only screen and (max-width: 479px) {
-  #home-about, #home-news, #home-stats, #home-gallery, #home-quick-search {
-    width: 100%;
-    clear: both;
-    padding: 1.5rem 0.75rem;
-    margin-top: 0.75rem; }
-
-  .content, #tool-input__section, #tool-info__section {
-    width: 100%;
-    padding: 0; } }
-@media only screen and (min-width: 480px) and (max-width: 767px) {
-  #home-about, #home-news, #home-stats, #home-gallery, #home-quick-search {
+  #home-about, #home-news, #home-stats, #home-quick-search {
     width: 100%;
     clear: both;
     padding: 1.5rem 0.75rem;
     margin-top: 0.75rem; }
 
   #home-quick-search {
-    margin-bottom: 50px; }
+    margin: 50px 0; }
+
+  #home-gallery-caption {
+    background: black;
+    opacity: 0.6;
+    color: white;
+    float: left;
+    width: 100%;
+    padding: 20px; }
+    #home-gallery-caption:hover {
+      opacity: 0.8; }
+
+  .content, #tool-input__section, #tool-info__section {
+    width: 100%;
+    padding: 0; } }
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+  #home-about, #home-news, #home-stats, #home-quick-search {
+    width: 100%;
+    clear: both;
+    padding: 1.5rem 0.75rem;
+    margin-top: 0.75rem; }
+
+  #home-quick-search {
+    margin: 50px 0; }
+
+  #home-gallery-caption {
+    background: black;
+    opacity: 0.6;
+    color: white;
+    float: left;
+    width: 100%;
+    padding: 20px; }
+    #home-gallery-caption:hover {
+      opacity: 0.8; }
 
   #tool-input__section, #tool-info__section {
     width: 100%;
@@ -452,11 +474,16 @@ article {
     border: 1px solid #5a5a5a;
     height: 400px; }
 
-  #home-gallery {
-    padding: 0px;
-    margin-left: 410px;
-    float: none;
-    display: block; }
+  #home-gallery-caption {
+    background: black;
+    opacity: 0.6;
+    color: white;
+    float: right;
+    width: 200px;
+    height: 400px;
+    padding: 10px 20px; }
+    #home-gallery-caption:hover {
+      opacity: 0.8; }
 
   #home-about, #home-news, #home-stats {
     width: 32%;

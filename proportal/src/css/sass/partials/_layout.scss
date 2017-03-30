@@ -41,41 +41,52 @@ article {
 }
 
 #home-quick-search {
-// 	height: 350px;
+	border: $element-border-width solid $element-border-color;
 	
 }
 
 #home-quick-search-form {
 	width: 100%;
 	margin: 40px 0;
+	padding: $gutter;
 }
 
 #home-gallery {
-	background: black; //map-get( $jgi-palette, black );
-	padding: 0;
-	width: 100%;
-	clear: right;	// important! makes inner images clip on right.	
+    background-repeat: no-repeat;
+	background-position: center center;
+    overflow: hidden; /* Creates a new block format context, which will make this tag fill the remaining width */
+    height: 400px;    
 }
 
-#carousel {
-	height: 400px;
-	width: 600px;
-	padding: 0;
-	overflow: hidden;
-}
 
 // smallest screen
 @include maxw( $nar- ) {
 
 	// homepage sections.
-	#home-about, #home-news, #home-stats, #home-gallery, #home-quick-search{
+	#home-about, #home-news, #home-stats, #home-quick-search{
 		width: 100%;
 		clear: both;
 		padding: $line-ht $gutter;
 		margin-top: $gutter;
-// 		border: 1px solid black;	//
+	}
+
+	#home-quick-search {
+		margin: 50px 0;
 	}
 	
+	#home-gallery-caption {
+		background: black;
+		opacity: 0.6;
+		color: white;
+		float: left;
+		width: 100%;
+		padding: 20px;
+	
+		&:hover {
+			opacity: 0.8;
+		}
+	}
+		
 	.content, #tool-input__section, #tool-info__section {
 		width: 100%;
 		padding: 0;
@@ -86,16 +97,28 @@ article {
 @include minmax( $nar, $med- ) {
 
 	// homepage sections.
-	#home-about, #home-news, #home-stats, #home-gallery, #home-quick-search{
+	#home-about, #home-news, #home-stats, #home-quick-search{
 		width: 100%;
 		clear: both;
 		padding: $line-ht $gutter;
 		margin-top: $gutter;
-// 		border: 1px solid black;	//
 	}
 	
 	#home-quick-search {
-		margin-bottom: 50px;
+		margin: 50px 0;
+	}
+
+	#home-gallery-caption {
+		background: black;
+		opacity: 0.6;
+		color: white;
+		float: left;
+		width: 100%;
+		padding: 20px;
+	
+		&:hover {
+			opacity: 0.8;
+		}
 	}
 	#tool-input__section, #tool-info__section {
 		width: 100%;
@@ -135,22 +158,25 @@ article {
 		border: $element-border-width solid $element-border-color;
 		height: 400px;
 	}
-		
-	#home-gallery {
-		  padding: 0px;
-		  margin-left: 410px;
-		  float: none;
-		  display: block;
-	}
-	
 
-			
+#home-gallery-caption {
+	background: black;
+	opacity: 0.6;
+	color: white;
+	float: right;
+	width: 200px;
+	height: 400px;
+	padding: 10px 20px;
+	
+	&:hover {
+		opacity: 0.8;
+	}
+}			
 	#home-about, #home-news, #home-stats {
 		width: 32%;
 		float: left;
 		padding: $line-ht $gutter;
 		margin-left: $gutter;
-// 		border: 1px solid black;	//
 	}
 	
 	#home-stats {
@@ -160,7 +186,6 @@ article {
 	
 	.page-intro {
 		float: left;
-// 		width: 66.6%;
 		padding: 0 $gutter;
 		margin-bottom: $line-ht;
 	}
