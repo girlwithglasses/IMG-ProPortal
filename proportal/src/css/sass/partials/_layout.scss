@@ -42,12 +42,12 @@ article {
 
 #home-quick-search {
 	border: $element-border-width solid $element-border-color;
+	height: 400px;
 	
 }
 
 #home-quick-search-form {
 	width: 100%;
-	margin: 40px 0;
 	padding: $gutter;
 }
 
@@ -63,7 +63,7 @@ article {
 @include maxw( $nar- ) {
 
 	// homepage sections.
-	#home-about, #home-news, #home-stats, #home-quick-search{
+	#home-about, #home-news, #home-stats, #home-quick-search, #home-gallery{
 		width: 100%;
 		clear: both;
 		padding: $line-ht $gutter;
@@ -71,7 +71,7 @@ article {
 	}
 
 	#home-quick-search {
-		margin: 50px 0;
+		// margin: 50px 0;
 	}
 	
 	#home-gallery-caption {

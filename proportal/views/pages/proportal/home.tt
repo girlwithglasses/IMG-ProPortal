@@ -2,36 +2,12 @@
 	title = 'IMG ProPortal: Home';
 %]
 
-
 <style>
 
-/* MOVE TO SASS FILES */
-
-/* labels */
-label.myForm {
-	text-transform: uppercase;	
-	font-size: 14px;
-	display: block;
-	margin: 5px;
+div.site-message {
+	display: none;
 }
-
-label.myForm:after {
-	clear: both;
-	float: left;
-}
-
-select {
-  border: 1px solid #5a5a5a; //map-get( $jgi-palette, dk_grey ); 
-  border-radius: 0px;
-  
-  background: transparent;
-  padding:  0 20px;	
-  text-transform: uppercase;	
-  font-size: 14px;
-  height: 3em;
-
-}
-
+	
 </style>
 
 
@@ -39,14 +15,12 @@ select {
 
 <div id="firstRow">
 	<div id="home-quick-search">
-		<!-- <div class="infoBox"> -->
-		<div class="infoBoxTitle" style="border-bottom: 1px solid gray;"><h3>Quick Search</h3></div>
-
+		<div class="infoBoxTitle"><h3>Quick Search</h3></div>
 		<div id="home-quick-search-form">
 		
 			<div>
-				<label class="myForm" for="search-domain">Search category</label>
-				<select id="search-domain"  style="width: 100%;">
+				<label class="pp-form" for="search-domain">Search category</label>
+				<select class="pp-form" id="search-domain"  style="width: 100%;">
 					<option value="genomes"> Genomes </option>
 					<option value="genes"> Genes </option>
 					<option value="functions"> Functions </option>
@@ -54,7 +28,7 @@ select {
 			</div>	
 		
 			<div style="margin-bottom: 10px;">
-				<label class="myForm" for="search-keyword">For keyword</label>
+				<label class="pp-form" for="search-keyword">For keyword</label>
 				<input id="search-keyword" type="text" style="width: 100%;"/>
 			</div>	
 		

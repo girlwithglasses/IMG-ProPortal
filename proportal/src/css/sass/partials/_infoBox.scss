@@ -15,12 +15,11 @@ found on details pages
 		@include borders( $element-border-width, $border-lighter );
 		
 	}
+}
 
-	> .infoBoxTitle {
-		margin: 10px 0 5px 0;
-		border-bottom: $underline;
-	}
-
+.infoBoxTitle {
+	margin: 10px 0 5px 0;
+	border-bottom: $underline;
 }
 
 .infoBox-double {

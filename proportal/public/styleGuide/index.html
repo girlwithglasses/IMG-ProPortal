@@ -60,6 +60,7 @@
 		<li><a href="#forms">Forms</a></li>
 			<ul>
 				<li><a href="#buttons">Buttons</a></li>
+				<li><a href="#dropdown-button">Dropdown Button</a></li>
 			</ul>	
 		<li><a href="#navigation">Navigation</a></li>
 			<ul>
@@ -182,12 +183,14 @@
 	executed. </p>
 
 
+<!-- 
 	<button class="pp_btn_add"> + </button>
 	<button class="pp_btn_remove"> - </button>
 	<p class="sg"> These buttons are used for adding or removing genes, genomes,
 	functions or scaffolds to the cart when those items are viewed in a list.  They are 
 	analogous to the buttons in the example above.  Below is an example of how they look in a table of genomes. </p>
 	
+ -->
 	<table class="pp_table">
 		
 		<tr><th> Genome name </th> <th> Ocean </th> <th> + / -</th></tr>
@@ -198,6 +201,22 @@
 	</table>
 		
 </section>	
+
+<section id="dropdown-button">
+	<h3 class="sg underline_sg"> Dropdown Button </h3>
+	
+	<br><br>
+
+	<div class="pp-dropdown">
+		<input class=" pp-dropdown-button" id="export-button" type="checkbox" name="menu"/>
+		<label class="pp-dropdown-button" for="export-button"> Export </label>
+		<ul class="pp-dropdown-button">
+			<li><a href="">Metadata</a></li>
+			<li><a href="">File Bundle</a></li>
+		</ul>
+	</div>
+
+</section>
 
 </section>	<!-- forms -->
 
@@ -231,15 +250,15 @@
 				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
 			</div>			
 			<div id="tabContent2_nav_tabs_example_std" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Genomes </h4>
 				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
 			</div>	
 			<div id="tabContent3_nav_tabs_example_std" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Functions </h4>
 				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
 			</div>	
 			<div id="tabContent4_nav_tabs_example_std" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Scaffolds </h4>
 				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
 			</div>	
 				
@@ -269,15 +288,15 @@
 				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
 			</div>			
 			<div id="tabContent2_nav_tabs_example_minimal" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Genomes </h4>
 				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
 			</div>	
 			<div id="tabContent3_nav_tabs_example_minimal" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Functions </h4>
 				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
 			</div>	
 			<div id="tabContent4_nav_tabs_example_minimal" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Scaffolds </h4>
 				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
 			</div>	
 				
@@ -309,15 +328,15 @@
 				<p> Lorem ipsum dolor sit amet, eleifend eros, sit lacinia erat faucibus, augue suspendisse. Accumsan integer, nunc auctor. Elit sit ac mauris, at pulvinar vehicula quam mattis. Mattis fames eu vestibulum suspendisse integer vivamus, eu nunc eget exercitationem et, imperdiet velit, aenean sit in velit libero lectus. </p>
 			</div>			
 			<div id="tabContent2_nav_tabs_example_pill" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Genomes </h4>
 				<p> Ei sit debet ancillae temporibus, ea quidam aeterno labores est. Has discere cotidieque at, legere dissentiunt qui cu. Ex sit adhuc indoctum mediocrem, timeam pericula gloriatur ei mea. Ipsum mazim argumentum quo te, ea sea recusabo expetendis intellegam. </p>
 			</div>	
 			<div id="tabContent3_nav_tabs_example_pill" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Function </h4>
 				<p> Ex sed homero iudicabit, velit mollis in has. Tacimates reprimique ea mea, ea falli oportere mea. Est te alia liber feugait, dicit euismod eam no, suas dicit senserit mel ad. Ad qui mentitum officiis. </p>
 			</div>	
 			<div id="tabContent4_nav_tabs_example_pill" class="tabContent">
-				<h4> Genes </h4>
+				<h4> Scaffolds </h4>
 				<p> Paulo singulis inimicus eu qui, sea in quando appetere iracundia, latine patrioque deseruisse ex vel. Id vix dicat inimicus. Mei constituto disputationi voluptatibus ex, admodum consulatu reformidans vix an. Ad per decore aliquando reprehendunt, no nam deleniti invenire, mea vero ludus et. </p>
 			</div>	
 				

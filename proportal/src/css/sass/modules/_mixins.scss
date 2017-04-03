@@ -161,6 +161,21 @@ $icon-h: 32px;
 	background-image: url(../images/sprite.svg);
     background-size: $icon-w;
 }
+
+// these work with individual form elements
+@mixin element-up-arrow {
+	background-image: url("/images/icomoon/SVG/down-arr.svg");
+	background-position: right;
+	background-repeat: no-repeat;
+}
+
+@mixin element-down-arrow {
+	background-image: url("/images/icomoon/SVG/up-arr.svg");
+	background-position: right;
+	background-repeat: no-repeat;
+}
+
+// these work with the horizontal nav bar.
 @mixin icon-up-arr {
     background-image: url("data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiB2aWV3Qm94PSIwIDAgMzIgMzIiPjxwYXRoIGZpbGw9IiNmZmZmZmYiIGQ9Ik05Ljg5IDIxLjIybDYuMTEtNi4xMSA2LjExIDYuMTEgMS44OS0xLjg5LTgtOC04IDh6Ii8+PC9zdmc+");
 //	background-position: 0 0;

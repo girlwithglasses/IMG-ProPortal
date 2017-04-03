@@ -3,6 +3,12 @@
 	self = results.taxon;
 %]
 
+<style>
+	div.site-message {	display: none;	}
+	div.noteToSelf { display: none; }
+</style>
+
+
 <div class="thisWrapper">
 	<div id="pageHeader">
 		<div id="pageTitle" >
@@ -19,8 +25,28 @@
 			<h2>[% self.taxon_display_name %]</h2>
 		</div>
 		<div id="buttonBar">
-			<button>Add to Cart</button>
-<!-- 			<button>Export</button> 	** develop this later **			-->
+			<div id="buttonBar-container">
+				<ul class="buttonBar"  >
+				
+					<li class="buttonBar">
+						<div class="pp-dropdown">
+							<input class=" pp-dropdown-button" id="export-button" type="checkbox" name="menu"/>
+							<label class="pp-dropdown-button" for="export-button"> Export </label>
+							<ul class="pp-dropdown-button">
+								
+<!-- 								These links don't work locally! -->
+								<li><a href="[% link( 'file', { taxon_oid => self.taxon_oid, file_type => 'bundle' } ) %]">File Bundle</a></li>
+								<li><a href="[% link( 'details', { taxon_oid => self.taxon_oid } ) %]">Metadata</a></li>
+							</ul>
+						</div>
+					</li>
+				
+					<li class="buttonBar">
+						<button class="pp-button">Add to Cart</button>
+					</li>
+		
+				</ul>
+			</div>	
 		</div>
 
 	</div>

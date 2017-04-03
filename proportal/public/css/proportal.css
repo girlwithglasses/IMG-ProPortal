@@ -390,11 +390,11 @@ article {
   clear: all; }
 
 #home-quick-search {
-  border: 1px solid #5a5a5a; }
+  border: 1px solid #5a5a5a;
+  height: 400px; }
 
 #home-quick-search-form {
   width: 100%;
-  margin: 40px 0;
   padding: 0.75rem; }
 
 #home-gallery {
@@ -405,14 +405,11 @@ article {
   height: 400px; }
 
 @media only screen and (max-width: 479px) {
-  #home-about, #home-news, #home-stats, #home-quick-search {
+  #home-about, #home-news, #home-stats, #home-quick-search, #home-gallery {
     width: 100%;
     clear: both;
     padding: 1.5rem 0.75rem;
     margin-top: 0.75rem; }
-
-  #home-quick-search {
-    margin: 50px 0; }
 
   #home-gallery-caption {
     background: black;
@@ -622,7 +619,27 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
   input[type="text"]:focus, input[type="text"]:active, input[type="email"]:focus, input[type="email"]:active, input[type="password"]:focus, input[type="password"]:active, input[type="search"]:focus, input[type="search"]:active, input[type="tel"]:focus, input[type="tel"]:active, input[type="url"]:focus, input[type="url"]:active, textarea:focus, textarea:active {
     color: #666; }
 
-button, .pp-button, html input[type="button"], input[type="reset"], input[type="submit"] {
+/* labels */
+label.pp-form {
+  text-transform: uppercase;
+  font-size: 0.9em;
+  display: block;
+  margin-top: 15px; }
+
+label.pp-form:after {
+  clear: both;
+  float: left; }
+
+select.pp-form {
+  border: 1px solid #5a5a5a;
+  border-radius: 0px;
+  background: transparent;
+  padding: 0 1.5rem;
+  text-transform: uppercase;
+  font-size: 0.9em;
+  height: 3rem; }
+
+button, .pp-button, a.button, html input[type="button"], input[type="reset"], input[type="submit"] {
   height: 3rem;
   background: #d3691b;
   border: 1px solid transparent;
@@ -631,9 +648,9 @@ button, .pp-button, html input[type="button"], input[type="reset"], input[type="
   color: white;
   text-transform: uppercase;
   line-height: 1.5rem; }
-  button:hover, .pp-button:hover, html input[type="button"]:hover, input[type="reset"]:hover, input[type="submit"]:hover {
+  button:hover, .pp-button:hover, a.button:hover, html input[type="button"]:hover, input[type="reset"]:hover, input[type="submit"]:hover {
     background: #a65315; }
-  button:active, .pp-button:active, html input[type="button"]:active, input[type="reset"]:active, input[type="submit"]:active {
+  button:active, .pp-button:active, a.button:active, html input[type="button"]:active, input[type="reset"]:active, input[type="submit"]:active {
     background: #e6843b; }
 
 button.disabled, .disabled.pp-button,
@@ -689,6 +706,75 @@ button:disabled,
   background: #ddd; }
 .pp-button.disabled:active {
   background: #ddd; }
+
+.pp-dropdown {
+  padding: 0;
+  margin: 0;
+  height: 3rem;
+  border: 1px solid #5a5a5a;
+  vertical-align: middle; }
+  .pp-dropdown:hover {
+    border: 1px solid black;
+    color: black; }
+    .pp-dropdown:hover > label {
+      color: black; }
+
+label.pp-dropdown-button {
+  font-size: 0.9em;
+  color: #5a5a5a;
+  text-transform: uppercase;
+  line-height: 3rem;
+  margin-bottom: -2px;
+  display: block;
+  height: 3rem;
+  width: 100%;
+  padding: 0 40px 0 1.5rem;
+  vertical-align: middle;
+  text-align: center;
+  background-image: url("/images/icomoon/SVG/down-arr.svg");
+  background-position: right;
+  background-repeat: no-repeat; }
+
+ul.pp-dropdown-button {
+  max-height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  list-style-type: none;
+  position: absolute;
+  border: 1px solid #5a5a5a;
+  display: none;
+  background: white; }
+  ul.pp-dropdown-button > li {
+    background: white; }
+  ul.pp-dropdown-button > li a {
+    display: table-cell;
+    vertical-align: middle;
+    text-decoration: none;
+    height: 3rem;
+    font-size: 0.9em;
+    color: #5a5a5a;
+    text-transform: uppercase;
+    line-height: 1.5rem;
+    padding: 0 40px 0 1.5rem;
+    border: 0; }
+  ul.pp-dropdown-button > li a:hover {
+    color: black; }
+
+/*hide the inputs*/
+input.pp-dropdown-button {
+  display: none;
+  padding: 30px; }
+
+/*show the second levele menu of the selected voice*/
+input.pp-dropdown-button:checked ~ ul {
+  max-height: 200px;
+  display: block; }
+
+input.pp-dropdown-button:checked + label {
+  background-image: url("/images/icomoon/SVG/up-arr.svg");
+  background-position: right;
+  background-repeat: no-repeat; }
 
 input {
   border: 1px solid #5a5a5a;
@@ -953,7 +1039,7 @@ HTML BODY CODE SNIPPET:
     position: relative;
     padding: 10px 20px;
     margin-right: 10px;
-    top: 0px;
+    top: 1px;
     vertical-align: middle;
     line-height: 1.5rem;
     font-size: 14px;
@@ -983,7 +1069,7 @@ HTML BODY CODE SNIPPET:
 
 .nav_tabs_minimal > [id^="tab"]:checked + label {
   color: black;
-  border-bottom: 3px solid black; }
+  border-bottom: 4px solid black; }
 
 .nav_tabs_pill > label {
   margin: 0 10px 10px 0; }
@@ -1750,9 +1836,10 @@ found on details pages
     padding: 10px 20px;
     overflow: auto;
     border: 1px solid silver; }
-  .infoBox > .infoBoxTitle, .infoBox-double > .infoBoxTitle {
-    margin: 10px 0 5px 0;
-    border-bottom: 1px solid #5a5a5a; }
+
+.infoBoxTitle {
+  margin: 10px 0 5px 0;
+  border-bottom: 1px solid #5a5a5a; }
 
 .infoBox-double {
   width: 100%; }
@@ -1776,6 +1863,7 @@ page title for a details page
 #pageTitle {
   float: left;
   width: 100%;
+  margin-bottom: 10px;
   border-bottom: 1px solid #5a5a5a; }
   #pageTitle .normal {
     font-weight: normal; }
@@ -1783,10 +1871,39 @@ page title for a details page
 /* partials/buttonBar
 button bar usually found under pageTitle	
 */
-#buttonBar {
+#buttonBar-container {
   float: right;
   clear: both; }
 
+ul.buttonBar {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  ul.buttonBar > li {
+    float: left;
+    margin-left: 10px; }
+
+@media only screen and (max-width: 767px) {
+  #buttonBar-container {
+    float: left;
+    width: 100%; }
+
+  ul.buttonBar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0; }
+    ul.buttonBar > li {
+      float: none;
+      clear: both;
+      margin-bottom: 10px;
+      margin-left: 0;
+      width: 100%; }
+    ul.buttonBar > li button, ul.buttonBar > li .pp-button {
+      width: 100%; }
+    ul.buttonBar > li ul li {
+      float: left;
+      clear: both;
+      display: block; } }
 /* partials/grid
 grid of cards found on auto-generated pages 
 */

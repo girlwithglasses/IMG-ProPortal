@@ -199,7 +199,7 @@ HTML BODY CODE SNIPPET:
 		position: relative;
     	padding: 10px 20px;
 		margin-right: 10px;
-   		top: $element-border-width - 1;
+   		top: $element-border-width;
 		vertical-align: middle;
 		line-height: 1.5rem;
 		font-size: 14px;
@@ -253,7 +253,7 @@ HTML BODY CODE SNIPPET:
 
     > [id^="tab"]:checked + label {	
     	color: darken( $element-border-color, 50% );
-    	border-bottom: $element-border-width+2 solid darken( $element-border-color, 50% );	
+    	border-bottom: $element-border-width+3 solid darken( $element-border-color, 50% );	
     } 
 
 }

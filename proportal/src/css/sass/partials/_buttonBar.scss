@@ -2,11 +2,56 @@
 button bar usually found under pageTitle	
 */
 
-#buttonBar {
+#buttonBar-container {
 	float: right;
 	clear: both;
+}
 
-// 	button {
-// 		padding: 10px;
-// 		font-size: 75%; }
+ul.buttonBar {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	
+	> li{
+		float: left;
+		margin-left: 10px;
+	}
+
 }	
+
+@include maxw( $med- ) {
+
+	#buttonBar-container {
+		float: left;
+		width: 100%;
+	}
+
+	ul.buttonBar {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+	
+		> li{
+			float: none;
+			clear: both;
+			margin-bottom: 10px;
+			margin-left: 0;
+			width: 100%;
+		}
+		
+		> li button{
+			width: 100%;
+		}
+		
+		> li ul {
+// 			display: block;
+// 			position: static;
+		}
+		
+		> li ul li{
+			float: left;
+			clear: both;
+			display: block;
+		}
+	}	
+}

@@ -1,0 +1,45 @@
+.icon {
+	display: inline-block;
+	background-repeat: no-repeat;
+	background-image: url(sprite.svg);
+}
+.icon-up-arr {
+	width: 32px;
+	height: 32px;
+	background-position: 0 0;
+}
+.icon-r-arr {
+	width: 32px;
+	height: 32px;
+	background-position: -48px 0;
+}
+.icon-l-arr {
+	width: 32px;
+	height: 32px;
+	background-position: -96px 0;
+}
+.icon-down-arr {
+	width: 32px;
+	height: 32px;
+	background-position: -144px 0;
+}
+.icon-minus-box {
+	width: 25px;
+	height: 32px;
+	background-position: -192px 0;
+}
+.icon-minus-sil {
+	width: 32px;
+	height: 32px;
+	background-position: -240px 0;
+}
+.icon-plus-box {
+	width: 25px;
+	height: 32px;
+	background-position: -288px 0;
+}
+.icon-plus-sil {
+	width: 32px;
+	height: 32px;
+	background-position: -336px 0;
+}
