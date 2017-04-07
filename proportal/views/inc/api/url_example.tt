@@ -1,0 +1,8 @@
+[%	IF url_example_set.size > 0 %]
+<dl class="api-example">
+[%		FOR ex IN url_example_set %]
+<dt class="api-example__code"><a href="[% ex.url %]"><code>[% ex.url %]</code></a></dt>
+<dd class="api-example__description">[% ex.desc %]</dd>
+[%		END %]
+</dl>
+[%	END %]

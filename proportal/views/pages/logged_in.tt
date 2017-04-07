@@ -1,0 +1,6 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'Logged In';
+%]
+<h2>Logged In</h2>
+<p>Congratulations, you have successfully logged in!</p>
+[% END; %]

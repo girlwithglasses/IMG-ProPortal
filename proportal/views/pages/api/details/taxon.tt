@@ -1,0 +1,6 @@
+[%	query = {
+		base_url => link( 'details/taxon' ),
+		app => apps.item( 'details::taxon' )
+	};
+
+	PROCESS 'inc/api/list_tmpl.tt'; %]

@@ -1,0 +1,12 @@
+<h3>Scaffold Lists</h3>
+[%
+
+query = {
+	base_url => link( 'list/scaffold' ),
+	app => apps.item( 'list::scaffold' )
+};
+
+PROCESS 'inc/api/list_tmpl.tt';
+
+%]
+

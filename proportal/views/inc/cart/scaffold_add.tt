@@ -1,0 +1,9 @@
+[%	hidden_params = {
+		section => 'scaffoldCart',
+		page => 'scaffoldCart'
+	};
+	IF ! form_class;
+		form_class = 'scaffold-cart';
+	END;
+	PROCESS 'inc/cart/generic_add.tt';
+%]

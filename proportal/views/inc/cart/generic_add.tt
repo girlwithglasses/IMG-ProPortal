@@ -1,0 +1,15 @@
+<form action="[% img_app_config.main_cgi_url %]" method="POST" class="[% form_class %]__form">
+<fieldset class="[% form_class %]__main-fieldset">
+[%	FOR h IN hidden_params.keys %]
+<input type="hidden" name="[% h %]" value="[% hidden_params.$h %]" />
+[%	END;
+
+	control_class = form_class _ '--top';
+	PROCESS 'inc/cart/controls.tt';
+
+	content;
+
+	control_class = form_class _ '--base';
+	PROCESS 'inc/cart/controls.tt'; %]
+</fieldset>
+</form>

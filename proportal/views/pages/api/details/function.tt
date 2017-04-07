@@ -1,0 +1,6 @@
+[%	query = {
+		base_url => link( 'fn_details' ),
+		app => apps.item( 'details::function' )
+	};
+
+	PROCESS 'inc/api/list_tmpl.tt'; %]

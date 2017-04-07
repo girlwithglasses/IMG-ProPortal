@@ -1,0 +1,49 @@
+<section class="api-docs__container">
+<h4 class="api-docs__header"><code>[%
+	IF query.exists( 'app' );
+		link( query.app.controller.page_id, { output_format => output_format } );
+	ELSIF query.base_url;
+		query.base_url;
+	ELSE;
+		'UNKNOWN LINK!';
+	END;
+	%]</code></h4>
+[%#	IF query.key_id %]
+<!-- h5>Valid Key IDs:</h5>
+<p>[% query.key_id %]</p -->
+[%#	END %]
+<h5>Valid Query Parameters</h5>
+[%	IF query.app.controller.filter_domains; %]
+	<dl class="data_filters__dl">
+[%		FOR v IN query.app.controller.filter_domains; %]
+		<dt class="data_filters__term"><code>[% v %]</code></dt>
+		<dd class="data_filters__def">[%
+		sch = query.app.controller.query_filter_schema.$v;
+			IF sch.defined('enum'); %]
+		<code>( [% sch.enum.join(" | ") %] )</code>
+[%			ELSIF sch.defined('type');
+		%]<i>[% sch.type %]</i>[%
+			END; %]
+		</dd>
+[%		END; # end FOR v in query.app... %]
+	</dl>
+[%	ELSE;
+	'No filter domains found!';
+
+%]
+	<dl>
+	[%	FOR p IN query.params.keys.sort; %]
+	<dt><code>[% p %]</code></dt><dd>[% query.params.$p %]</dd>
+	[%	END %]
+	</dl>
+[%	END;
+	IF query.app.controller.examples %]
+<h5>Example URLs</h5>
+<dl class="api-example">
+[%		FOR ex IN query.app.controller.examples %]
+<dt class="api-example__code"><a href="[% url_prefix %][% ex.url %]"><code>[% url_prefix %][% ex.url %]</code></a></dt>
+<dd class="api-example__description">[% ex.desc %]</dd>
+[%		END %]
+</dl>
+[%	END %]
+</section>

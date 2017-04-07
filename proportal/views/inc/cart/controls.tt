@@ -1,0 +1,5 @@
+<fieldset class="[% control_class %]__fieldset">
+<button class="[% control_class %]__selectall" value="Select all">Select all</button>
+<input class="[% control_class %]__reset" type="reset" value="Clear selection" />
+<input class="[% control_class %]__submit" type="submit" value="Add to cart" />
+</fieldset>

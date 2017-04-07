@@ -1,0 +1,82 @@
+[%	# A generic table component
+# params:
+# data_table hashref with keys
+# .class          => css class for the table
+# .thead.enum     => arrayref of object properties to be included in the table
+# .thead.enum_map => hashref with column titles (corresponding to object properties)
+# .tbody          => arrayref of objects for the table
+# .transform      => hashref of functions to transform an object value for display
+#                 (e.g. to create a link with a certain value, modify text, etc.)
+
+PROCESS 'inc/generic/cbox.tt';
+PROCESS 'inc/generic/link.tt';
+
+
+# table cell view
+# if the item is a scalar, prints it out
+# if the item is a hash, gets the 'macro' hash key, runs it, and prints the result
+
+VIEW t_cell;
+
+	BLOCK text;
+		item;
+	END;
+
+	BLOCK hash;
+		mac = item.macro;
+		x = item;
+		TRY;
+			$mac( x );
+		CATCH;
+			USE Dumper( Indent => 1 );
+			'<pre>link error: ' _ Dumper.dump( item ) _ '</pre>';
+			error;
+		END;
+	END;
+END;
+
+
+
+IF data_table.tbody.size > 0;
+	headers = data_table.thead; %]
+	<table class="[% data_table.class %]__table">
+[%	IF data_table.caption %]
+	<caption class="[% data_table.class %]__caption">[% results.js.table_caption %]</caption>
+[%	END %]
+	<thead class="[% data_table.class %]__thead">
+	<tr>
+[%		FOREACH th IN headers.enum; %]
+	<th class='[% data_table.class %]__th--[% th %]'>[%
+			IF headers.enum_map.$th;
+				headers.enum_map.$th;
+			ELSIF 'cbox' != th;
+				th | ucfirst;
+			END; %]</th>
+[%		END; %]
+	</tr>
+	</thead>
+	<tbody class="[% data_table.class %]__tbody">
+[%		FOREACH datum IN data_table.tbody; %]
+		<tr[%
+			IF datum.__id;
+			' id="' _ datum.__id _ '"';
+			END;
+			IF datum.__class;
+			' class="' _ datum.__class _ '"';
+			END; %]>
+[%			FOREACH th IN headers.enum; %]
+				<td class="[% data_table.class %]__tbody--[% th %]">
+[%				IF data_table.transform.exists( th );
+					contents = data_table.transform.$th( datum );
+					t_cell.print( contents );
+				ELSE;
+					t_cell.print( datum.$th );
+				END; %]
+					</td>
+
+[%			END; # FOREACH th IN headers.enum %]
+		</tr>
+[%		END; # FOREACH datum in data_table.tbody %]
+	</tbody>
+	</table>
+[% END # if data_table.tbody.size %]

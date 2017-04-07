@@ -1,0 +1,6 @@
+[%	query = {
+		base_url => link( 'details/gene' ),
+		app => apps.item( 'details::gene' )
+	};
+
+	PROCESS 'inc/api/list_tmpl.tt'; %]

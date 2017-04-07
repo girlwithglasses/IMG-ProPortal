@@ -1,0 +1,35 @@
+[%
+	# interconversion of URL prefixes / output formats
+	output_fmt = {
+		url => {
+			'/api'     => 'json',
+			'/csv_api' => 'csv',
+			'/tab_api' => 'tab',
+			''         => 'html'
+		},
+		fmt => {
+			html => '',
+			json => '/api',
+			csv  => '/csv_api',
+			tab  => '/tab_api'
+		}
+	};
+
+	# Descriptions of the various queries
+	description = {};
+
+	description.details = BLOCK %]
+<p>Use <code>/details/</code> when you want to retrieve the metadata for a single entry in ProPortal, whether that entry is a taxon, gene, function or scaffold.  Using <code>/details/</code> requires a single, unique ID and returns a single entry.</p>
+[%	END;
+
+	description.list = BLOCK %]
+<p>Use <code>/list/</code> when you want to retrieve many entries of a consistent data type. Queries are often associated with some key ID parameter but do not have to be. Declare what type of data you want by specifying either taxon, gene, function or scaffold after <code>/list/</code> in the URL path.</p>
+[%	END;
+
+	description.file = BLOCK %]
+<p>Use <code>/file/</code> to retrieve listings of the sequence and annotation files available for one or many taxa. To download a file, provide a <var>taxon_oid</var> and a <var>file_type</var>. Other argument combinations will list available files for given taxa and file types.</p>
+[%	END;
+
+	description.proportal = BLOCK %]
+<p>Use <code>/proportal/</code> to retrieve the data for specific ProPortal queries.</p>
+[%	END %]

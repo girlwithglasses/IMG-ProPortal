@@ -1,0 +1,9 @@
+[%	hidden_params = {
+		section => 'FunctionCart',
+		page => 'functionCart'
+	};
+	IF ! form_class;
+		form_class = 'function-cart';
+	END;
+	PROCESS 'inc/cart/generic_add.tt';
+%]

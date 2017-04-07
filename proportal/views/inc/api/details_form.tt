@@ -1,0 +1,22 @@
+[%	# form for a simple details query
+	#	class: form + form element class
+	#	domain: ( function | gene | scaffold | taxon )
+	#	params: arrayref of objects representing the arguments to details
+	#         .label -- label for the param
+	#         .name  -- param name (e.g. taxon_oid)
+
+
+%]
+<form method="POST" name="details_[% domain %]" class="[% class %]__form" action="/query_runner">
+<fieldset>
+[%	FOR p IN params %]
+	<label for="details_[% domain %]_[% p.name %]" class="[% class %]__label--[% p.name %]">[% p.label %]</label>
+	<input type="text" name="[% p.name %]" id="details_[% domain %]_[% p.name %]" class="[% class %]__txtinput--[% p.name %]" />
+[%	END %]
+</fieldset>
+<fieldset>
+	<input type="hidden" name="domain" value="[% domain %]" />
+	<input type="hidden" name="prefix" value="details" />
+	<input type="submit" class="[% class %]--submit" />
+</fieldset>
+</form>

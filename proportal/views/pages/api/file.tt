@@ -1,0 +1,53 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'File API';
+%]
+<h2>[% title %]</h2>
+[%
+	PROCESS 'inc/api/descriptions.tt';
+
+	q = 'file'; %]
+<h3><code>/[% q %]/</code></h3>
+[%	IF description.$q;
+		description.$q;
+	END;
+
+	query = {
+		base_url => link( 'file' ),
+#		app =>
+	};
+
+	PROCESS 'inc/api/list_tmpl.tt'; %]
+
+
+
+[%#	Valid Key IDs:  ( taxon_oid )
+
+Valid Arguments:
+file_type = ( aa_seq | dna_seq | lin_seq | genes | gff | cog | kog | pfam | tigrfam | ipr | kegg | tmhmm | signalp | xref | bundle )
+pp_subset = ( pro | syn | other | metagenome | pro_phage | other_phage )
+dataset_type = ( transcriptome | single_cell | isolate | metagenome | metatranscriptome )
+
+
+/api/file	displays a large table with download links for all available taxon_oids in ProPortal for each “file_type”
+/api/details/file **	readme showing the available values of the argument “file_type” and how to use it in a URL query
+	** note that this belongs in the /details/ section, but is relevant here!
+
+/api/file?taxon_oid=12345678	shows the available files for a taxon
+/api/file?pp_subset=pro	shows the list of all available files for all prochlorococcus taxa
+/api/file?taxon_oid=12345678&file_type=gff		downloads a gff file for taxon 12345678.
+
+%]
+<p>Welcome to the experimental ProPortal API. This is the home page for the file query API. The following file downloads may be available for your taxon of choice:</p>
+<dl>
+[%	FOR ft IN schema.file_type.enum %]
+	<dt>[% ft %]</dt>
+	<dd>[% schema.file_type.enum_map.$ft %]</dd>
+	<dd>URL format: /api/file?file_type=[% ft %]&amp;taxon_oid=???</dd>
+[%	END %]
+[%	FOR f IN schema.pp_subset.enum %]
+	<dt>[% f %]</dt>
+	<dd><a href="/api/file?pp_subset=[% f %]">all taxa in subset [% schema.pp_subset.enum_map.$f %]</a>
+[%	END %]
+</dl>
+
+[% END; # end wrapper %]

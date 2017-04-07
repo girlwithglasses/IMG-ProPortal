@@ -1,0 +1,20 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'File Downloads List';
+	self = results.taxon.first;
+
+%]
+<h2>File downloads for [% self.taxon_display_name %]</h2>
+<section>
+	<p>
+		The following files are available for <a href="[% link( 'details', { domain => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_display_name %]</a>:
+	</p>
+</section>
+<ul class="file-list--taxon__ul">
+[%	FOR f IN data_filters.schema.file_type.enum;
+		IF self.$f %]
+	<li class="file-list--taxon__li"><a class="file-list--taxon__link" href="[% link( 'file', { taxon_oid => self.taxon_oid, file_type => f } ) %]" title="[% data_filters.schema.file_type.enum_map.$f %] for [% self.taxon_oid %]">[% self.$f %]</a>: [% data_filters.schema.file_type.enum_map.$f %]</li>
+[%		END;
+	END; %]
+</ul>
+[% END %]
+

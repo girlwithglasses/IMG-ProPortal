@@ -1,0 +1,9 @@
+[%	hidden_params = {
+		section => 'GenomeCart',
+		page => 'genomeCart'
+	};
+	IF ! form_class;
+		form_class = 'taxon-cart';
+	END;
+	PROCESS 'inc/cart/generic_add.tt';
+%]

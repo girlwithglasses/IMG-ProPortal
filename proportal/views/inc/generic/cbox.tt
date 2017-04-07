@@ -1,0 +1,51 @@
+[%	# a generic checkbox
+	# arguments (as a hash):
+	# name, value, id
+	# optional: class, status (checked or otherwise)
+
+	# label.where => before | after | around
+	#      .text
+	#      .class
+
+MACRO checkbox BLOCK;
+
+	IF x.defined('label');
+		IF 'before' == x.label.where || 'around' == x.label.where;
+%]	<label for="[% x.id %]"[%
+			IF x.label.defined('class');
+				%] class="[% x.label.class %]"[%
+			END;
+%]>[% x.label.text %][%
+		END;
+		IF 'before' == x.label.where; %]
+</label>
+[%		END;
+	END; # end label defined%]
+	<input type="checkbox" name="[% x.name %]" value="[% x.value %]" [%
+
+		IF x.id;
+			%] id="[% x.id %]"[%
+		END;
+
+		IF x.class;
+			%] class="[% x.class %]"[%
+		END;
+
+		IF x.status;
+			' ' _ x.status;
+		END;
+	%] />
+[%	IF x.defined('label');
+		IF 'around' == x.label.where; %]
+</label>
+[%		END;
+		IF 'after' == x.label.where;
+%]	<label for="[% x.id %]"[%
+			IF x.label.defined('class');
+				%] class="[% x.label.class %]"[%
+			END;
+%]>[% x.label.text %]</label>
+[%		END;
+	END;
+
+END; # end MACRO checkbox %]

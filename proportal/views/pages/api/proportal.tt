@@ -1,0 +1,27 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'API';
+%]
+<h2>ProPortal query API</h2>
+[%
+	PROCESS 'inc/api/descriptions.tt';
+
+	q = 'proportal'; %]
+<h3><code>/[% q %]/</code></h3>
+[%	IF description.$q;
+		description.$q;
+	END;
+%]
+
+<ul>
+[%	FOREACH q IN queries.sort %]
+	<li>[% q %]: [short description of fields available]
+		<ul>
+[%		FOREACH s IN apps.$q.controller.valid_filters.pp_subset.enum %]
+			<li>pp_subset: <a href="/api/proportal/[% q %]?pp_subset=[% s %]">[% s %]</a></li>
+[%		END; %]
+		</ul>
+	</li>
+[%	END %]
+</ul>
+
+[% END; # end wrapper %]

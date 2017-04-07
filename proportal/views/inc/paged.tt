@@ -1,0 +1,26 @@
+[%	# A generic paging component %]
+[%	IF ! paging.defined('class');
+		paging.class = 'paging';
+	END;
+
+	# paging.url
+	# paging.params
+
+
+
+	%]
+<div class="[% paging.class %]__container">
+<ul class="[% paging.class %]__list">
+[%
+
+
+start + 2
+
+current +- 2
+
+end - 2
+	FOR page_number IN paging.to_do %]
+<li class="[% paging.class %]__item"><a class="[% paging.class %]__link" href="[% link( paging.url, paging.params ) %]&amp;page_index=[% page_number %]">[% page_number %]</a></li>
+[%	END %]
+</ul>
+</div>

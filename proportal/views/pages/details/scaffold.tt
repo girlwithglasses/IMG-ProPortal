@@ -1,0 +1,48 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'IMG ProPortal: ' _ self.display_name;
+	self = results.scaffold;
+	class = 'scaffold-details';
+
+	PROCESS 'inc/generic/link.tt';
+%]
+
+<h2 class="[% class %]__title">[% self.scaffold_name %]</h2>
+<h3 class="[% class %]__subtitle">from [% taxon_name_link( x = {}, obj = self ) %]</h3>
+
+<div class="[% class %]__buttonBar">
+	<a class="[% class %]__button--jbrowse" href="[% # link to JBrowse %]">View in JBrowse</a>
+	<a class="[% class %]__button--cart" href="[% # link to scaffold cart add! %]" title="Add to scaffold cart">Add to Cart</a>
+</div>
+
+<dl class="[% class %]__dl">
+<dt class="[% class %]__def">IMG scaffold ID</dt>
+<dd class="[% class %]__term">[% self.scaffold_oid %]</dd>
+<dt class="[% class %]__term">Sequence length</dt>
+<dd class="[% class %]__def">[% self.scaffold_stats.seq_length %]</dd>
+<dt class="[% class %]__term">Topology</dt>
+<dd class="[% class %]__def">[% self.mol_topology %]</dd>
+<dt class="[% class %]__term">GC content</dt>
+<dd class="[% class %]__def">[% self.scaffold_stats.gc_percent %]</dd>
+<dt class="[% class %]__term">Genes</dt>
+<dd class="[% class %]__def">[%
+	IF self.defined('scaffold_stats')
+		&& self.scaffold_stats.defined('count_total_gene'); %]
+<a href="[% link( 'list', { domain => 'gene', scaffold_oid => self.scaffold_oid } ) %]">[% self.scaffold_stats.count_total_gene %]</a>
+[%	END; %]
+</dd>
+<dt class="[% class %]__term">RNA</dt>
+<dd class="[% class %]__def">[%
+	IF self.defined('scaffold_stats')
+		&& self.scaffold_stats.defined('count_rna'); %]
+<a href="[% link( 'list', { domain => 'gene', scaffold_oid => self.scaffold_oid, category => 'rna' } ) %]">[% self.scaffold_stats.count_rna %]</a>
+[%	END; %]
+</dd>
+<dt class="[% class %]__def">External references</dt>
+<dd class="[% class %]__term">[%
+	IF self.db_source && self.ext_accession; %]
+<a href="[%  %]">[% self.db_source %]:[% self.ext_accession %]</a>
+[%	END; %]
+</dl>
+<p class="[% class %]__updated">Added [% self.add_date %]; last modified [% self.last_update %]</p>
+
+[%	END %]

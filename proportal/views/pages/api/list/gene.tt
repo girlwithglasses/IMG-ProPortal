@@ -1,0 +1,11 @@
+<h3>Gene Lists</h3>
+[%
+
+query = {
+	base_url => link( 'list/gene' ),
+	app => apps.item( 'list::gene' )
+};
+
+PROCESS 'inc/api/list_tmpl.tt';
+
+%]

@@ -1,0 +1,11 @@
+<h3>Taxon Lists</h3>
+[%
+
+query = {
+	base_url => link( 'list/taxon' ),
+	app => apps.item( 'list::taxon' )
+};
+
+PROCESS 'inc/api/list_tmpl.tt';
+
+%]
