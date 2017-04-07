@@ -1,8 +1,8 @@
 <tool id="bioperl_converter" name="BioPerl Converter" version="0.1.0">
   <description>Convert between different bio file formats using BioPerl</description>
   <command><![CDATA[
-  source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc;
-  perl /global/homes/a/aireland/webUI/proportal/script/bioperl_converter.pl
+  source \$HOME/perl5/perlbrew/etc/bashrc;
+  perl \$HOME/webUI/proportal/script/bioperl_converter.pl
     --infile "$input"
     #if $conversionType.type == "fasta2phy":
      --from fasta

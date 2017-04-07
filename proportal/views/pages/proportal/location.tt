@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Location Map';
+	title = 'Location Map';
 %]
 <h2>Sample Distribution by Location</h2>
 <section class="page-intro info--location">

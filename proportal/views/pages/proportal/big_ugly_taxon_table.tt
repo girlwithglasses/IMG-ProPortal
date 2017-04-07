@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Data Type Inventory';
+	title = 'Data Table';
 %]
 <h2>Data Type Inventory</h2>
 <section class="info--data_type page-intro">
@@ -26,7 +26,7 @@
 	<tbody class="data-table__tbody">
 [%		FOREACH t IN results.js.array; %]
 		<tr id="taxon_oid_[% t.taxon_oid %]">
-			<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
+			<td><a href="[% link( 'details', { domain => 'taxon', taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
 [%			FOREACH th IN headers; %]
 			<td>[%
 				IF th.size == 1;

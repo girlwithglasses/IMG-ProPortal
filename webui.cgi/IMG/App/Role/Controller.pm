@@ -78,9 +78,8 @@ sub add_controller {
 	log_debug { 'running _set_controller' };
 	$extras->{_core} = $self;
 
+	log_debug { 'controller: ' . $class };
 	$self->_set_controller({ class => $class, %$extras });
-
-#	log_debug { 'controller now: ' . Dumper $self->controller };
 
 	if ( $self->controller->can('controller_args') ) {
 		$self->_set_controller( $self->controller->controller_args );
@@ -95,7 +94,7 @@ sub add_controller_role {
 	my $role = $self->_prepare_controller( shift );
 	Role::Tiny->apply_roles_to_object( $self, $role );
 
-	log_debug { 'self now: ' . Dumper $self };
+#	log_debug { 'self now: ' . Dumper $self };
 
 	if ( $self->controller_args ) {
 		$self->_set_controller( $self->controller_args );

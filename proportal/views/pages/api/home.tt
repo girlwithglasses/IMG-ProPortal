@@ -1,18 +1,42 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal API';
+	title = 'API Home';
 %]
 <h2>API</h2>
 
-<p>Welcome to the experimental ProPortal API. The following queries are currently available as JSON downloads; please note that not all subsets are available for each query, as is reflected in the UI.</p>
-<ul>
-[%	FOREACH q IN queries.sort %]
-	<li>[% q %]: [short description of fields available]
-		<ul>
-[%		FOREACH s IN apps.$q.controller.valid_filters.pp_subset.enum %]
-			<li>pp_subset: <a href="/api/proportal/[% q %]?pp_subset=[% s %]">[% s %]</a></li>
+<p>Welcome to the ProPortal API.</p>
+
+<p>Please follow the links for more information on how to specify each query.</p>
+
+[%
+
+	if_names = {
+		html => 'HTML (web) interface',
+	};
+
+	PROCESS 'inc/api/descriptions.tt';
+
+	q_types = [ 'details', 'list', 'file', 'proportal' ];
+
+	FOR q IN q_types; %]
+	<h3><code>/[% q %]/</code></h3>
+[%		IF description.$q;
+			description.$q;
+		END; %]
+	<ul class="api_link">
+[%		FOR f IN [ 'html', 'json', 'csv', 'tab' ]; %]
+		<li class="api_link__item">
+			<a href="[% output_fmt.fmt.$f %]/[% q %]/">[%
+				IF if_names.$f;
+					if_names.$f;
+				ELSE; %]
+				[% f | upper %] API
+[%				END; %]
+			</a>
+		</li>
 [%		END; %]
-		</ul>
-	</li>
-[%	END %]
-</ul>
-[% END %]
+	</ul>
+[%	END; # end FOR q IN q_types
+
+
+
+	END;%]

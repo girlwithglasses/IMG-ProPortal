@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Login';
+	title = 'Login';
 %]
 <h2>IMG ProPortal: Login</h2>
 <p>Sign in with your <a href='[% ext_links.sso_url %]'>JGI Single Sign-On</a> account to use the IMG ProPortal.</p>

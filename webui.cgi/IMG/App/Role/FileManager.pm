@@ -7,6 +7,7 @@ use IMG::Util::File;
 use File::Spec::Functions qw( catdir catfile );
 use IMG::App::Role::ErrorMessages qw( err );
 use Storable;
+use Text::CSV_XS qw[ csv ];
 requires 'config', 'session', 'choke';
 
 =pod
@@ -138,6 +139,31 @@ sub get_workspace_dirname {
 	);
 }
 
+my $taxon_file_subs = {
+	aa_seq =>   sub { return 'taxon.faa/' . +shift->{taxon_oid} . '.faa'; },
+	dna_seq =>  sub { return 'taxon.fna/' . +shift->{taxon_oid} . '.fna'; },
+	lin_fna =>  sub { return 'taxon.lin.fna/' . +shift->{taxon_oid} . '.lin.fna'; },
+	lin_idx =>  sub { return 'taxon.lin.fna/' . +shift->{taxon_oid} . '.lin.fna.idx'; },
+	genes =>    sub { return 'taxon.genes.fna/' . +shift->{taxon_oid} . '.fna'; },
+	alt_seq =>  sub { return 'taxon.alt.faa/' . +shift->{taxon_oid} . '.alt.faa'; },
+	intergenic => sub { return 'taxon.intergenic.fna/' . + shift->{taxon_oid} . '.fna'; },
+	gff =>      sub { return 'tab.files/gff/' . +shift->{taxon_oid} . '.gff'; },
+	cog =>      sub { return 'tab.files/cog/' . +shift->{taxon_oid} . '.cog.tab.txt'; },
+	kog =>      sub { return 'tab.files/kog/' . +shift->{taxon_oid} . '.kog.tab.txt'; },
+	pfam =>     sub { return 'tab.files/pfam/' . +shift->{taxon_oid} . '.pfam.tab.txt'; },
+	tigrfam =>  sub { return 'tab.files/tigrfam/' . +shift->{taxon_oid} . '.tigrfam.tab.txt'; },
+	ipr =>      sub { return 'tab.files/ipr/' . +shift->{taxon_oid} . '.ipr.tab.txt'; },
+	kegg =>     sub { return 'tab.files/ko/' . +shift->{taxon_oid} . '.ko.tab.txt'; },
+	tmhmm =>    sub { return 'tab.files/tmhmm/' . +shift->{taxon_oid} . '.tmhmm.tab.txt'; },
+	signalp =>  sub { return 'tab.files/signalp/' . +shift->{taxon_oid} . '.signalp.tab.txt'; },
+	xref =>     sub { return 'tab.files/xref/' . +shift->{taxon_oid} . '.xref.tab.txt'; },
+	bundle =>   sub { return 'download/' . +shift->{taxon_oid} . '.tar.gz'; },
+};
+
+# aliases
+$taxon_file_subs->{faa} = $taxon_file_subs->{aa_seq};
+$taxon_file_subs->{fna} = $taxon_file_subs->{dna_seq};
+
 =head3 get_taxon_file
 
 Get the location of a taxon-related file -- e.g. sequence file,
@@ -161,36 +187,72 @@ sub get_taxon_file {
 		subject => '"web_data_dir" config parameter'
 	}) unless $self->config->{web_data_dir};
 
-	my $f_names = {
-		aa_seq =>	sub { return 'taxon.faa/' . +shift->{taxon_oid} . '.faa'; },
-		dna_seq =>	sub { return 'taxon.fna/' . +shift->{taxon_oid} . '.fna'; },
-		lin_seq =>	sub { return 'taxon.lin.fna/' . +shift->{taxon_oid} . '.lin.fna'; },
-		genes =>	sub { return 'taxon.genes.fna/' . +shift->{taxon_oid} . '.fna'; },
-		gff =>		sub { return 'tab.files/gff/' . +shift->{taxon_oid} . '.gff'; },
-		cog =>		sub { return 'tab.files/cog/' . +shift->{taxon_oid} . '.cog.tab.txt' },
-		kog =>		sub { return 'tab.files/kog/' . +shift->{taxon_oid} . '.kog.tab.txt' },
-		pfam =>		sub { return 'tab.files/pfam/' . +shift->{taxon_oid} . '.pfam.tab.txt' },
-		tigrfam =>	sub { return 'tab.files/tigrfam/' . +shift->{taxon_oid} . '.tigrfam.tab.txt' },
-		ipr =>		sub { return 'tab.files/ipr/' . +shift->{taxon_oid} . '.ipr.tab.txt' },
-		kegg =>		sub { return 'tab.files/ko/' . +shift->{taxon_oid} . '.ko.tab.txt' },
-		tmhmm =>    sub { return 'tab.files/tmhmm/' . +shift->{taxon_oid} . '.tmhmm.tab.txt' },
-		signalp =>  sub { return 'tab.files/signalp/' . +shift->{taxon_oid} . '.signalp.tab.txt' },
-		xref =>     sub { return 'tab.files/xref/' . +shift->{taxon_oid} . '.xref.tab.txt' },
-	};
-
-	# aliases
-	$f_names->{faa} = $f_names->{aa_seq};
-	$f_names->{fna} = $f_names->{dna_seq};
-
 	my $type = $args->{type} || $self->choke({ err => 'missing', subject => 'file type' });
 
-	$self->choke({ err => 'invalid', subject => $type, type => 'file type' }) unless $f_names->{$type};
+	$self->choke({ err => 'invalid', subject => $type, type => 'file type' }) unless $taxon_file_subs->{$type};
 
 	return catdir(
 		$self->config->{web_data_dir},
-		$f_names->{ $type }->( $args )
+		$taxon_file_subs->{ $type }->( $args )
 	);
 }
+
+=head3 generate_taxon_file_list
+
+Generate the list of the files available for a set of taxa
+
+@param  $args  hashref with params
+
+
+
+=cut
+
+sub generate_taxon_file_list {
+	my $self = shift;
+	my $args = shift;
+
+	my $f_name = $args->{file_name};
+	if ( ! io( $f_name )->exists
+	|| ! io( $f_name )->is_readable
+		# if the file is more than a day old
+	|| ( time - io( $f_name )->mtime > 86400 ) ) {
+		for my $tax ( @{$args->{taxon_arr}} ) {
+			for ( @{$args->{file_type}} ) {
+				$tax->{$_} = -r $self->get_taxon_file({ type => $_, taxon_oid => $tax->{taxon_oid} });
+			}
+		}
+
+		# write the file as csv
+		IMG::Util::File::write_csv({
+			file => $f_name,
+			cols => [ 'taxon_oid', 'taxon_display_name', @{$args->{file_type}} ],
+			data_arr => $args->{taxon_arr}
+		});
+	}
+	return;
+}
+
+sub get_taxon_list_file {
+	my $self = shift;
+	my $args = shift;
+	if ( ! io( $args->{file_name} )->exists
+	|| ! io( $args->{file_name} )->is_readable ) {
+		$self->choke({
+
+		});
+	}
+
+
+	# read in the taxon_list_file
+	my $contents = csv({
+		eol => $/,
+		sep_char => "\t",
+		headers => "auto",
+		in => $args->{file_name}
+	});
+	return $contents;
+}
+
 
 
 my $file_index = {

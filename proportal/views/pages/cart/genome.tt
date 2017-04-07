@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Genome Cart';
+	title = 'Genome Cart';
 %]
 <h2>Genome Cart</h2>
 

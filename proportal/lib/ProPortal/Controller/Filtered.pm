@@ -36,8 +36,7 @@ has 'filters' => (
 );
 
 has 'filter_domains' => (
-	is => 'ro',
-	lazy => 1,
+	is => 'lazy',
 	default => sub {
 		return [ qw( pp_subset ) ];
 	}
@@ -78,12 +77,16 @@ sub _build_query_filter_schema {
 
 	my $schema;
 
+#	log_debug { 'core: ' . Dumper $self->_core };
+
 	for my $fn ( @{$self->filter_domains} ) {
 		$schema->{$fn} = $self->_core->filter_schema( $fn );
 		if ( $valid->{$fn} && $valid->{$fn}{enum} ) {
 			$schema->{$fn}{enum} = $valid->{$fn}{enum};
 		}
 	}
+
+#	log_debug { 'schema now: ' . Dumper $schema };
 
 	return $schema;
 

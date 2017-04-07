@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Ecosystem Browser';
+	title = 'Ecosystem Browser';
 %]
 <h2>Sample Distribution by Ecosystem</h2>
 <section class="info--ecosystem init page-intro">
@@ -42,7 +42,7 @@
 #	tree_recurse( item = [ results.js.tree ], depth=0 );
 
 	show = { ecosystem => 1 };
-	WRAPPER 'inc/cart_genome_add.tt';
+	WRAPPER 'inc/cart/taxon_add.tt';
 		FOREACH s IN results.array;
 			PROCESS 'inc/taxon_details.tt';
 		END;

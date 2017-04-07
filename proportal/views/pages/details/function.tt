@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: ' _ self.display_name;
+	title = self.display_name;
 	self = results.function;
 %]
 
@@ -21,39 +21,43 @@
 <div class="thisWrapper">
 	<div id="pageHeader">
 		<div id="pageTitle" >
-			<!-- Write function type -->
 			<h4 class="normal">
 				CyCOG Function
 			</h4>
-
-			<!-- Write function name -->
 			<h2>[% self.name %]</h2>
 		</div>
 		<div id="buttonBar">
 			<button>Add to Cart</button>
 <!-- 			<button>Export</button> 	** develop this later **			-->
 		</div>
-
 	</div>
-
-
 <div class="row">
-
-<div class="infoBox">
-
+	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>CyCOG Details</h4></div>
-
 		<table class="condensed">
-			<tr><td class="col1">CyCOG ID</td>	<td>[% self.cycog_oid %]</td></tr>
-			<tr><td>Name</td>	<td>[% self.name %]</td></tr>
-			<tr><td>CyCOG version</td>	<td>version [% self.version %]</td></tr>
-			<tr><td>Gene members</td>	<td>[% self.n_members %]</td></tr>
-			<tr><td>MIT ID</td>	<td>[% self.mit_oid %]</td></tr>
+			<tr>
+				<td class="col1">CyCOG ID</td>
+				<td>[% self.cycog_oid %]</td>
+			</tr>
+			<tr>
+				<td>Name</td>
+				<td>[% self.name %]</td>
+			</tr>
+			<tr>
+				<td>CyCOG version</td>
+				<td>version [% self.version %]</td>
+			</tr>
+			<tr>
+				<td>Gene members</td>
+				<td>[% self.n_members %]</td>
+			</tr>
+			<tr>
+				<td>MIT ID</td>
+				<td>[% self.mit_oid %]</td>
+			</tr>
 		</table>
-
-</div> <!-- infoBox -->
-
-<div class="infoBox">
+	</div> <!-- infoBox -->
+	<div class="infoBox">
 
 
 	<div class="infoBoxTitle"><h4>CyCOG Consensus Sequence</h4></div>
@@ -105,13 +109,8 @@
 				</code>
 				</div>
 			</div>
-
 		</div>
-
-
-
-</div> <!-- infoBox -->
-
+	</div> <!-- infoBox -->
 </div> <!-- row -->
 
 
@@ -120,27 +119,16 @@
 <div class="infoBox-double">
 
 	<div class="infoBoxTitle"><h4>Gene Members</h4></div>
-	[%	IF results.genes.size > 0;	%]
-	<!-- <!~~ 	add this wrapper back when we implement the cart functionality. ~~> -->
-	[%		WRAPPER 'inc/cart_gene_add.tt' %]
-		<table class="lined">
-			<tr class="underline">
-				<th></th>
-				<th>Gene ID</th>
-				<th>Gene Product Name</th>
-				<th>Genome</th>
-			</tr>
-			[%	FOR g IN results.genes %]
-			<tr>
-				<td><input type="checkbox" class="sample-data__cbox" name="gene_oid[]" value="[% g.gene_oid %]" id="cbox_[% g.gene_oid %]" /> </td>
-				<td><a href="[% link( 'details', { type => 'gene', gene_oid => g.gene_oid } ) %]">[% g.gene_oid %]</a></td>
-				<td>[% g.product_name %]</td>
-				<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => g.taxon_oid } ) %]">[% g.taxon_display_name %]</a></td>
-			</tr>
-			[%	END %]
-		</table>
-[%		END; # end wrapper 	%]
+[%	IF results.genes && results.genes.size > 0;
+		WRAPPER 'inc/cart/gene_add.tt';
+			data_table = results.table;
+			data_table.class = "gene-list";
+			data_table.caption = "Gene Members";
+			data_table.tbody = results.genes;
+			PROCESS 'inc/generic_table.tt';
+		END; # end wrapper
 
+%]
 [%	ELSE; # END if... %]
 <p>No genes found</p>
 [%	END; %]

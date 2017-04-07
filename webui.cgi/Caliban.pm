@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: Caliban.pm 36698 2017-03-13 17:46:58Z klchu $
+# $Id: Caliban.pm 36826 2017-03-24 17:02:30Z klchu $
 #
 ############################################################################
 package Caliban;
@@ -302,7 +302,7 @@ $tipText
         };
         
         
-        logout(1, 6);
+        logout(0, 6);
         #WebUtil::printSessionExpired($text);
         return 0;
     } else {
@@ -323,7 +323,7 @@ Please login again.
 $tipText
         };
         
-        logout(1, "7 $code");
+        logout(0, "7 $code");
         WebUtil::webErrorHeader($text, -1, 1);
     }
     return 0;
@@ -731,7 +731,7 @@ Please try again<br><br>
 
 $tipText
         };
-        logout(1, "2 $code");
+        logout(0, "2 $code");
         WebUtil::webErrorHeader($text, 1);
     }
 }
@@ -759,7 +759,7 @@ sub logout {
     } else {
 
         # portal logout is here ? or above
-        WebUtil::loginLog( 'Caliban.pm logout', "img $code" );
+        WebUtil::loginLog( 'Caliban.pm logout', "img $sso_logout $code" );
     }
 
     WebUtil::clearSession();

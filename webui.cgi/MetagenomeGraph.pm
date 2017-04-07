@@ -1,9 +1,6 @@
 ############################################################################
-#
-# $Id: MetagenomeGraph.pm 34545 2015-10-20 21:36:40Z klchu $
-#
+# $Id: MetagenomeGraph.pm 36877 2017-03-27 22:57:19Z aratner $
 # package to draw 2 recur plots and scatter plot
-#
 ############################################################################
 package MetagenomeGraph;
 
@@ -31,6 +28,7 @@ use MetaUtil;
 use QueryUtil;
 use PhyloUtil;
 use GraphUtil;
+use JSON;
 
 my $section              = "MetagenomeGraph";
 my $env                  = getEnv();
@@ -41,11 +39,12 @@ my $tmp_dir              = $env->{tmp_dir};
 my $verbose              = $env->{verbose};
 my $web_data_dir         = $env->{web_data_dir};
 my $base_url             = $env->{base_url};
+my $top_base_url         = $env->{top_base_url};
 my $cgi_tmp_dir          = $env->{cgi_tmp_dir};
 my $user_restricted_site = $env->{user_restricted_site};
 my $YUI                  = $env->{yui_dir_28};
 my $yui_tables           = $env->{yui_tables};
-my $img_ken               = $env->{img_ken};
+my $img_ken              = $env->{img_ken};
 
 my $unknown = "Unknown";
 
@@ -77,22 +76,14 @@ sub dispatch {
     my $taxon_oid = param("taxon_oid");
     timeout( 60 * 40 );    # timeout in 40 mins (from main.pl)
 
-#    if ( $user_restricted_site && HtmlUtil::isCgiCacheEnable() ) {
-#        my $x = WebUtil::isTaxonPublic( $dbh, $taxon_oid );
-#        $sid = 0 if ($x);    # public cache
-#    }
     HtmlUtil::cgiCacheInitialize( $section);
     HtmlUtil::cgiCacheStart() or return;
 
     if ( $page eq "fragRecView1" ) {
         GraphUtil::printFragment($dbh, $section);
     } elsif ( $page eq "fragRecView2" ) {
-
-        # future button
         GraphUtil::printProtein($dbh, $section);
     } elsif ( $page eq "fragRecView3" ) {
-
-        # can be 'all', 'pos' or 'neg'
         my $strand = param("strand");
         printScatter( $dbh, $strand );
     } elsif ( $page eq "binscatter" ) {
@@ -106,7 +97,6 @@ sub dispatch {
         print "family $family\n";
     }
 
-    #$dbh->disconnect();
     HtmlUtil::cgiCacheStop();
 }
 
@@ -347,11 +337,9 @@ sub printScatter {
     if(lc($data_type) eq 'both' || lc($data_type) eq 'unassembled') {
         $limit = 10000;
         print qq{
-        Because of size limitation unassembled gene data will be truncated to $limit per file.
+        Due to size limitation unassembled gene data will be truncated to $limit per file.
         };
     }
-
-
 
     my $colorExplain = "<p><font size=1>"
           . "<font color='red'>Red 90%</font><br>\n"
@@ -366,7 +354,7 @@ sub printScatter {
     my $min1;
     my $max1;
 
-    print $colorExplain;
+    #print $colorExplain;
     printStartWorkingDiv();
 
     if ( $merfsGenome ) {
@@ -398,9 +386,9 @@ sub printScatter {
                 $gene2homolog_hits{$gene2homolog} = $r;
             }
 
-            if($limit) {
+            if ($limit) {
                 my $size = $#workspace_ids_data;
-                if($percent_identity == 30 && $size > $limit) {
+                if ($percent_identity == 30 && $size > $limit) {
                     next;
                 } elsif($percent_identity == 60 && $size > $limit) {
                     next;
@@ -493,16 +481,15 @@ sub printScatter {
 
     }
 
+    printEndWorkingDiv();
 
-    if($img_ken) {
-        printEndWorkingDiv('',1);
-    } else {
-        printEndWorkingDiv();
-    }
+    # anna: call the new plot:
+    printGenesForGenomePlot($taxon_oid, $merfsGenome, \@records);
+    return; 
 
+    ################################### anna: the following is no longer used:
     my $seq_length = $max1 - $min1 + 1;
     $seq_length = $max1 if ( $range eq "" );
-
     my $xincr = ceil( $seq_length / 10 );
 
 
@@ -565,6 +552,67 @@ sub printScatter {
     }
     printStatusLine( "Loaded.", 2 );
     print end_form();
+}
+
+# ANNA: new plot that uses d3scatterplot.min.js:
+sub printGenesForGenomePlot {
+    my ($taxon_oid, $mer, $records_aref) = @_;
+
+    my $hint = "The plot can be repositioned using mouse-drag and zoomed using mouse-wheel.<br/>"
+	. "Click on a legend item to find and select that item in the plot.<br/>"
+	. "Mouse over or click on the items in plot to see details.";
+    printHint($hint);
+
+    my $div_id = "genesforgenomeplot";
+    my $gene_url = "$main_cgi?section=GeneDetail&page=geneDetail&gene_oid=";
+    $gene_url = "$main_cgi?section=MetaGeneDetail&page=metaGeneDetail"
+	. "&data_type=assembled&taxon_oid=$taxon_oid&gene_oid=" if $mer;
+
+    my @myarray;
+    foreach my $rec (@$records_aref) {
+	my $gene_oid       = @$rec[0];
+	my $percent        = @$rec[2];
+	$percent = 100 if !$mer;
+
+	my $strand         = @$rec[4];
+	my $start_coord    = @$rec[5];
+	my $end_coord      = @$rec[6]; 
+	my $scaffold       = @$rec[7];
+	my $scaffold_name  = @$rec[8];
+	my $metag_start    = @$rec[13];
+	my $metag_end      = @$rec[14]; 
+	my $metag_strand   = @$rec[15];
+	my $homolog_scaffold_name   = @$rec[16];
+	my $product_name   = @$rec[17];
+
+	my $label = "$gene_oid $product_name $scaffold_name $start_coord..$end_coord";
+	$label = "$gene_oid $scaffold_name $percent% "
+	    . "$homolog_scaffold_name $start_coord..$end_coord ($strand)" if $mer;
+
+	my %subhash;
+	$subhash{'id'}    = $gene_oid;
+	$subhash{'name'}  = "Gene";
+	$subhash{'desc'}  = $label;
+	$subhash{'x1'}    = $start_coord + 0;
+	$subhash{'x2'}    = $end_coord + 0;
+	$subhash{'ydata'} = $percent + 0;
+	
+	push @myarray, \%subhash;
+    }
+    my $data = encode_json(\@myarray);
+
+    # plot the data
+    print qq{
+      <link rel="stylesheet" type="text/css" href="$top_base_url/css/d3scatterplot.css" />
+      <script src="$top_base_url/js/d3.min.js"></script>
+      <div id="$div_id" class="$div_id"></div>
+      <script src="$top_base_url/js/d3scatterplot.min.js"></script>
+      <script>
+          window.onload = drawScatterPlot
+          ("$div_id", $data, 1, 1, 0, 1, "$gene_url", "Genome Position", "Percent %");
+      </script>
+    };
+
 }
 
 sub getPhylumGeneFilePercentInfoMERFS {

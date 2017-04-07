@@ -56,7 +56,7 @@ my @goldSingleAttrs = (
     'cell_shape',
     'cultured',
     'culture_type',
-    'uncultured_type',      
+    'uncultured_type',
     'depth',
     'ecosystem',
     'ecosystem_category',
@@ -98,8 +98,8 @@ my @goldSingleAttrs = (
     'pmo_project_id',
     'its_spid',
     'its_proposal_id',
-    'gpts_proposal_id',    
-    
+    'gpts_proposal_id',
+
 );
 
 my @goldSampleSingleAttrs = (
@@ -165,11 +165,11 @@ my %goldSetAttr2TableNameAlias = (
 my @goldCondAttrs = (
     'altitude',
     'biotic_rel',
-    'cell_arrangement', 
+    'cell_arrangement',
     'cell_shape',
     'cultured',
     'culture_type',
-    'uncultured_type',          
+    'uncultured_type',
     'depth',
     'diseases',
     'ecosystem',
@@ -184,15 +184,15 @@ my @goldCondAttrs = (
     'host_name',
     'iso_country',
     'isolation',
-    'latitude', 
-    'longitude',           
+    'latitude',
+    'longitude',
     'metabolism',
     'motility',
     'oxygen_req',
     'phenotypes',
     'project_relevance',
-    'salinity', 
-    'sample_body_site', 
+    'salinity',
+    'sample_body_site',
     'sample_body_subsite',
     'specific_ecosystem',
     'sporulation',
@@ -201,12 +201,12 @@ my @goldCondAttrs = (
     'type_strain',
     'sample_oid',
     'project_info',
-    'contact_name', 
-    'contact_email', 
+    'contact_name',
+    'contact_email',
     'pmo_project_id',
     'its_spid',
     'its_proposal_id',
-    'gpts_proposal_id',    
+    'gpts_proposal_id',
 );
 
 # see FindGenomesByMetadata::printOrgCategoryResults_ImgGold and FindGenomesByMetadata::printCategoryContent
@@ -282,10 +282,10 @@ my %goldAttr2Display = (
     funding_program => 'Funding Program',
     type_strain     => 'Type Strain',
     mrn             => "Medical Record Number",
-    date_collected  => "Sample Collection Date",    
+    date_collected  => "Sample Collection Date",
     sample_oid      => "IMG Sample ID",
-    project_info    => 'IMG Project ID',  
-    contact_name    => 'Contact Name', 
+    project_info    => 'IMG Project ID',
+    contact_name    => 'Contact Name',
     contact_email   => 'Contact Email',
     pmo_project_id => 'PMO Project Id',
     its_spid  => 'ITS PID',
@@ -381,16 +381,57 @@ sub getGoldSampleAttrDisplayName {
     my %other = (
     mrn             => "Medical Record Number",
     date_collected  => "Sample Collection Date",
-    contact_name => 'Contact Name', 
-    contact_email=>'Contact Email', 
+    contact_name => 'Contact Name',
+    contact_email=>'Contact Email',
     funding_program=>'Funding Program',
     seq_status => 'GOLD Sequencing Status',
-    );
-    
-    if(exists $other{$attr}) {
-        return $other{$attr};
-    }
 
+	# from if/else cascade
+    sample_site => 'Sample Site',
+    ncbi_project_id => 'Sample NCBI Project ID',
+    host_ncbi_taxid => 'Host NCBI Taxon ID',
+    date_collected => 'Date Collected',
+    iso_country => 'Isolation Country',
+    geo_location => 'Sample Geographic Location',
+    longitude => 'Longitude',
+    latitude => 'Latitude',
+    altitude => 'Altitude',
+    depth => 'Depth',
+    comments => 'Comments',
+    sampling_strategy => 'Sampling Strategy',
+    sample_isolation => 'Sample Isolation',
+    sample_volume => 'Sample Volume',
+    gc_perc => 'GC Percent',
+    sample_body_site => 'Body Site',
+    est_biomass => 'Biomass',
+    est_diversity => 'Diversity',
+    temp => 'Temperature',
+    temp_range => 'Temperature Range',
+    salinity => 'Salinity',
+    pressure => 'Pressure',
+    ph => 'pH',
+    library_method => 'Sample Library Method',
+    assembly_method => 'Sample Assembly Method',
+    binning_method => 'Sample Binning Method',
+    est_size => 'Estimated Size',
+    units => 'Units',
+    contig_count => 'Contig Count',
+    singlet_count => 'Singlet Count',
+    gene_count => 'Gene Count',
+    host_name => 'Host Name',
+    host_gender => 'Host Gender',
+    host_age => 'Host Age',
+    host_health_condition => 'Host Health Condition',
+    sample_oid => 'IMG Sample ID',
+    project_info => 'IMG Project ID',
+
+    );
+
+    return $other{$attr} || '';
+#     if(exists $other{$attr}) {
+#         return $other{$attr};
+#     }
+=cut
     if ( $attr eq 'sample_site' ) {
         return 'Sample Site';
     } elsif ( $attr eq 'ncbi_project_id' ) {
@@ -461,13 +502,13 @@ sub getGoldSampleAttrDisplayName {
         return 'Host Age';
     } elsif ( $attr eq 'host_health_condition' ) {
         return 'Host Health Condition';
-    } elsif($attr eq 'sample_oid') {
+    } elsif ( $attr eq 'sample_oid' ) {
         return 'IMG Sample ID';
-    } elsif($attr eq 'project_info') {
+    } elsif ( $attr eq 'project_info' ) {
         return 'IMG Project ID'
     }
-
     return '';
+=cut
 }
 
 ############################################################################
@@ -674,8 +715,8 @@ sub db_getLineage {
     my $imgClause = WebUtil::imgClause('tx');
 
     my $sql = qq{
-      select tx.taxon_oid, 
-         tx.domain, tx.phylum, tx.ir_class, tx.ir_order, 
+      select tx.taxon_oid,
+         tx.domain, tx.phylum, tx.ir_class, tx.ir_order,
          tx.family, tx.genus, tx.species, tx.strain
 	     from taxon tx
 	     where tx.taxon_oid = ?
@@ -987,10 +1028,10 @@ sub checkPubmedId {
 ############################################################################
 sub connectGoldDatabase {
     my ($isAjaxCall) = @_;
-    
+
     # move to new location
     return WebUtil::dbGoldLogin($isAjaxCall);
-    
+
 }
 
 ############################################################################
@@ -1005,7 +1046,7 @@ sub getGoldSingleAttr {
 ############################################################################
 sub isGoldSingleAttr {
     my ($attr) = @_;
-        
+
     return WebUtil::inArray($attr, @goldSingleAttrs);
 }
 
@@ -1021,7 +1062,7 @@ sub getGoldSetAttr {
 ############################################################################
 sub isGoldSetAttr {
     my ($attr) = @_;
-        
+
     return $goldSetAttr2TableName{$attr};
 }
 
@@ -1047,7 +1088,7 @@ sub getGoldAttrDisplayName {
 
     my $val = $goldAttr2Display{$attr};
     return $attr if ($val eq '');
-    
+
     return $val;
 }
 
@@ -1110,9 +1151,9 @@ sub getGoldAttrSection {
               || $attr eq 'latitude'
               || $attr eq 'altitude'
               || $attr eq 'depth'
-              || $attr eq 'cultured'        
-              || $attr eq 'culture_type'    
-              || $attr eq 'uncultured_type' 
+              || $attr eq 'cultured'
+              || $attr eq 'culture_type'
+              || $attr eq 'uncultured_type'
               || $attr eq 'seq_status'
               || $attr eq 'seq_center'
               || $attr eq 'seq_method'
@@ -1156,12 +1197,12 @@ sub getGoldSetAttrSQL {
         } elsif ( $attr eq 'seq_center' ) {
             $link_type_val = 'Seq Center';
         }
-        
+
         if ($isPoidOnly) {
             $sql = "select project_oid ";
         }
         else {
-            $sql = "select project_oid, db_name ";            
+            $sql = "select project_oid, db_name ";
         }
         $sql .= "from project_info_data_links ";
         $sql .= "where link_type = '$link_type_val' ";
@@ -1174,7 +1215,7 @@ sub getGoldSetAttrSQL {
             $sql = "select project_oid ";
         }
         else {
-            $sql = "select project_oid, $attr ";            
+            $sql = "select project_oid, $attr ";
         }
         $sql .= "from $table_name ";
         if ($cond) {
@@ -1217,9 +1258,9 @@ sub getGoldAttrCVQuery {
         }
         if ($goldAttr2UseDistinctData{$attr}) {
             return "select distinct $attr from project_info order by 1";
-        }        
+        }
     }
-    
+
     return '';
 #    return $goldAttrCV2Query{$attr};
 }
@@ -1278,19 +1319,19 @@ sub getMetadataForAttrs {
         $allClause .= ' )';
     }
     my $sql = qq{
-        select project_oid, img_oid, ncbi_project_id, 
+        select project_oid, img_oid, ncbi_project_id,
 	       gold_stamp_id, gold_id_old
         from project_info
         where 1 = 1
         $allClause
     };
-    #print "getMetadataForAttrs ncbi_project_id \$sql: $sql<br/>\n"; 
+    #print "getMetadataForAttrs ncbi_project_id \$sql: $sql<br/>\n";
     my $cur = execSql( $dbh, $sql, $verbose );
 
     my %tOids2Poids = {};
     my %tOids2Recs = {};
     for ( ; ; ) {
-        my ($project_oid, $img_oid, $ncbi_pid, 
+        my ($project_oid, $img_oid, $ncbi_pid,
 	    $gold_stamp_id, $gold_id_old) = $cur->fetchrow();
         last if !$project_oid;
 
@@ -1311,27 +1352,27 @@ sub getMetadataForAttrs {
             if ($ncbi_pid ne ''
                 && $tOids2GbkPids_ref->{$img_oid} eq $ncbi_pid) {
                 push(@taxonOids, $img_oid);
-            } 
+            }
 	} else {
             if ($ncbi_pid ne '') {
-                my $tOids_str = $gbkPid2tOids{$ncbi_pid}; 
+                my $tOids_str = $gbkPid2tOids{$ncbi_pid};
                 my @tOids = split( /\t/, $tOids_str );
-                if (scalar(@tOids) > 0) { 
+                if (scalar(@tOids) > 0) {
                     push(@taxonOids, @tOids);
-                } 
-            } 
+                }
+            }
 	}
 
         if ($project_oid ne '' && scalar(@taxonOids) > 0) {
             addPoidToHash
-		(\@taxonOids, $project_oid, \%tOids2Poids, $r, 
+		(\@taxonOids, $project_oid, \%tOids2Poids, $r,
 		 \%tOids2Recs, "ncbi_project_id in project_info table",
-		 $tOids2GbkPids_ref, $tOids2SubmissionIds_ref, 
+		 $tOids2GbkPids_ref, $tOids2SubmissionIds_ref,
 		 $tOids2GoldIds_ref);
         }
     }
     $cur->finish();
-    
+
     # start to find corresponding project_oid through env_sample table
     my @tOidsNotFound = ();
     my @pidsNotFound = ();
@@ -1367,7 +1408,7 @@ sub getMetadataForAttrs {
 	for ( ; ; ) {
 	    my ($project_oid, $img_oid, $ncbi_pid) = $cur->fetchrow();
 	    last if !$project_oid;
-	    
+
 	    my $r = "$project_oid\t";
 	    $r .= "$img_oid\t";
 	    $r .= "$ncbi_pid\t";
@@ -1375,7 +1416,7 @@ sub getMetadataForAttrs {
 	    my @taxonOids = ();
 	    if ($ncbi_pid ne '') {
 		#try to take advantage of $img_oid to avoid loop
-		if ($img_oid ne '' 
+		if ($img_oid ne ''
 		    && $tOids2GbkPids_ref->{$img_oid} eq $ncbi_pid) {
 		    push(@taxonOids, $img_oid);
 		}
@@ -1384,7 +1425,7 @@ sub getMetadataForAttrs {
 		    my @tOids = split( /\t/, $tOids_str );
 		    if (scalar(@tOids) > 0) {
 			push(@taxonOids, @tOids);
-		    }               
+		    }
 		}
 	    }
 	    else {
@@ -1392,17 +1433,17 @@ sub getMetadataForAttrs {
 		    push(@taxonOids, $img_oid);
 		}
 	    }
-	    
+
 	    if ($project_oid ne '' && scalar(@taxonOids) > 0) {
 		addPoidToHash
-		    (\@taxonOids, $project_oid, \%tOids2Poids, $r, 
+		    (\@taxonOids, $project_oid, \%tOids2Poids, $r,
 		     \%tOids2Recs, "ncbi_project_id in env_sample table",
-		     $tOids2GbkPids_ref, $tOids2SubmissionIds_ref, 
+		     $tOids2GbkPids_ref, $tOids2SubmissionIds_ref,
 		     $tOids2GoldIds_ref);
-	    }	
+	    }
 	}
         $cur->finish();
-	
+
 	# start to find corresponding project_oid through submission table
 	my @tOidsNotFound1 = ();
 	my @submissionIdsNotFound = ();
@@ -1415,7 +1456,7 @@ sub getMetadataForAttrs {
 		    if ($submission_id ne '');
 	    }
 	}
-	
+
 	if (scalar(@tOidsNotFound1) > 0) {
 	    my $submissionIdClause = OracleUtil::getIdClause($dbh, 'gtt_num_id2', 'submission_id', \@submissionIdsNotFound);
 	    $txClause = OracleUtil::getIdClause($dbh, 'gtt_num_id1', 'img_taxon_oid', \@tOidsNotFound1);
@@ -1436,20 +1477,20 @@ sub getMetadataForAttrs {
 	    };
 	    #print "getMetadataForAttrs submission \$sql: $sql<br/>\n";
 	    $cur = execSql( $dbh, $sql, $verbose );
-	    
+
 	    for ( ; ; ) {
 		my ($project_oid, $img_oid, $submission_id) = $cur->fetchrow();
 		last if !$project_oid;
-		
+
 		my $r = "$project_oid\t";
 		$r .= "$img_oid\t";
 		$r .= "$submission_id\t";
-		
+
 		my @taxonOids = ();
 		if ($submission_id ne '') {
 		    # try to take advantage of $img_oid to avoid loop
 		    if ($img_oid ne ''
-			&& $tOids2SubmissionIds_ref->{$img_oid} 
+			&& $tOids2SubmissionIds_ref->{$img_oid}
 			eq $submission_id) {
 			push(@taxonOids, $img_oid);
 		    }
@@ -1457,20 +1498,20 @@ sub getMetadataForAttrs {
 			my $tOids_str = $submissionId2tOids{$submission_id};
 			my @tOids = split( /\t/, $tOids_str );
 			if (scalar(@tOids) > 0) {
-			    push(@taxonOids, @tOids);                   
-			}               
+			    push(@taxonOids, @tOids);
+			}
 		    }
 		}
 		else {
-		    if ($img_oid ne '' 
+		    if ($img_oid ne ''
 			&& $tOids2SubmissionIds_ref->{$img_oid} eq '') {
 			push(@taxonOids, $img_oid);
 		    }
 		}
-		
+
 		if ($project_oid ne '' && scalar(@taxonOids) > 0) {
 		    addPoidToHash
-			(\@taxonOids, $project_oid, \%tOids2Poids, $r, 
+			(\@taxonOids, $project_oid, \%tOids2Poids, $r,
 			 \%tOids2Recs, "submission_id in submission table",
 			 $tOids2GbkPids_ref, $tOids2SubmissionIds_ref,
 			 $tOids2GoldIds_ref);
@@ -1494,7 +1535,7 @@ sub getMetadataForAttrs {
 		    push(@goldIdsNotFound, $gold_id) if ($gold_id ne '');
 		}
 	    }
-	    
+
 	    if (scalar(@tOidsNotFound2) > 0) {
 		my $goldStampIdClause = '';
 		$goldStampIdClause = OracleUtil::getIdClause($dbh, 'gtt_func_id', 'gold_stamp_id', \@gold_ids);
@@ -1503,17 +1544,17 @@ sub getMetadataForAttrs {
 		$goldOldIdClause = OracleUtil::getIdClause($dbh, 'gtt_func_id1', 'gold_id_old', \@gold_ids);
 
 		$allClause = '';
-		if ($goldStampIdClause ne '' 
-		    || $goldOldIdClause ne '' 
+		if ($goldStampIdClause ne ''
+		    || $goldOldIdClause ne ''
 		    || $txClause ne '') {
 		    $allClause = 'and ( ';
 		    $allClause .= $goldStampIdClause;
 		    $allClause .= ' or '
-			if ( $goldStampIdClause ne '' 
+			if ( $goldStampIdClause ne ''
 			     && $goldOldIdClause ne '');
 		    $allClause .= $goldOldIdClause;
-		    #$allClause .= ' or ' 
-		    if (($goldStampIdClause ne '' 
+		    #$allClause .= ' or '
+		    if (($goldStampIdClause ne ''
 			 || $goldOldIdClause ne '') && $txClause ne '');
 		    #$allClause .= $txClause;
 		    $allClause .= ' )';
@@ -1527,25 +1568,25 @@ sub getMetadataForAttrs {
 		    $allClause
 		};
 		#print "getMetadataForAttrs gold_id \$sql: $sql<br/>\n";
-		
+
 		$cur = execSql( $dbh, $sql, $verbose );
-		
+
 		for ( ; ; ) {
-                    my ($project_oid, $img_oid, $ncbi_pid, 
+                    my ($project_oid, $img_oid, $ncbi_pid,
 			$gold_stamp_id, $gold_id_old) = $cur->fetchrow();
 		    last if !$project_oid;
-		    
+
 		    my $r = "$project_oid\t";
 		    $r .= "$img_oid\t";
 		    $r .= "$ncbi_pid\t";
 		    $r .= "$gold_stamp_id\t";
 		    $r .= "$gold_id_old\t";
-		    
+
                     my @taxonOids = ();
 		    if ($gold_stamp_id ne '' || $gold_id_old ne '') {
 			#try to take advantage of $img_oid to avoid loop
-			if ($img_oid ne '' 
-			    && ($tOids2GoldIds_ref->{$img_oid} eq $gold_stamp_id 
+			if ($img_oid ne ''
+			    && ($tOids2GoldIds_ref->{$img_oid} eq $gold_stamp_id
 				|| $tOids2GoldIds_ref->{$img_oid} eq $gold_id_old)) {
 			    push(@taxonOids, $img_oid);
 			}
@@ -1564,18 +1605,18 @@ sub getMetadataForAttrs {
 			    push(@taxonOids, $img_oid);
 			}
 		    }
-		    
+
 		    if ($project_oid ne '' && scalar(@taxonOids) > 0) {
 			addPoidToHash
-			    (\@taxonOids, $project_oid, \%tOids2Poids, $r, \%tOids2Recs, 
+			    (\@taxonOids, $project_oid, \%tOids2Poids, $r, \%tOids2Recs,
 			     "gold_stamp_id and gold_id_old in project_info table",
 			     $tOids2GbkPids_ref, $tOids2SubmissionIds_ref,
 			     $tOids2GoldIds_ref);
 		    }
 		}
-		$cur->finish();	
-            }   
-=cut	            
+		$cur->finish();
+            }
+=cut
 }
     }
 
@@ -1631,7 +1672,7 @@ sub getMetadataForAttrs {
             my $p_oid = $tOids2Poids{$tOid};
             my $rec = '';
             if ($p_oid ne '') {
-                $rec = $poid2Vals{$p_oid};            	
+                $rec = $poid2Vals{$p_oid};
             }
             $rec = $dummyRec if ($rec eq '');
             $tOids2Meta{$tOid} = $rec;
@@ -1646,19 +1687,19 @@ sub getMetadataForAttrs {
             $sql .= ' order by project_oid ';
             #print "get set-valued \$sql: $sql<br/>\n";
     	    $cur = execSql( $dbh, $sql, $verbose );
-	    
+
             my %poid2Vals = {};
     	    for ( ; ; ) {
         		my ( $p_oid, $val ) = $cur->fetchrow();
         		last if !$p_oid;
-                
+
                 if ($val ne '') {
                     my $vals = $poid2Vals{$p_oid};
                     if ($vals ne '') {
                         $poid2Vals{$p_oid} .= ", $val";
                     }
                     else {
-                        $poid2Vals{$p_oid} = $val;                    	
+                        $poid2Vals{$p_oid} = $val;
                     }
                 }
     	    }
@@ -1695,7 +1736,7 @@ sub convetKey2Value{
         if ($value ne '') {
         	$newHash{$value} .= "$key\t";
         }
-    }    
+    }
     return %newHash;
 }
 
@@ -1723,7 +1764,7 @@ sub insertIntoLine {
         #print "added $colVal\t at the end of line<br/>\n" if ($toPrint);
     }
     else {
-        substr($line, $idx+1, 0) = "$colVal\t";    	
+        substr($line, $idx+1, 0) = "$colVal\t";
         #print "added $colVal\t at " .($idx+1)."<br/>\n" if ($toPrint);
     }
 
@@ -1731,8 +1772,8 @@ sub insertIntoLine {
 }
 
 sub addPoidToHash {
-    my ($taxonOids_ref, $project_oid, $tOids2Poids_ref, $r, 
-	$tOids2Recs_ref, $throughMsg, $tOids2GbkPids_ref, 
+    my ($taxonOids_ref, $project_oid, $tOids2Poids_ref, $r,
+	$tOids2Recs_ref, $throughMsg, $tOids2GbkPids_ref,
 	$tOids2SubmissionIds_ref, $tOids2GoldIds_ref) = @_;
 
     if (scalar(@$taxonOids_ref) > 0) {
@@ -1745,31 +1786,31 @@ sub addPoidToHash {
                 my $gbk_pid_img = $tOids2GbkPids_ref->{$tOid};
                 my $gold_id_img = $tOids2GoldIds_ref->{$tOid};
                 my $submission_id_img = $tOids2SubmissionIds_ref->{$tOid};
-                my $existRec = $tOids2Recs_ref->{$tOid};            	
+                my $existRec = $tOids2Recs_ref->{$tOid};
             	if ($throughMsg =~ /project_info/i) {
 		    my ($project_oid_exist, $img_oid_exist,
 			$ncbi_pid_exist, $gold_stamp_id_exist,
 			$gold_id_old_exist) = split( /\t/, $existRec );
                     my ($project_oid, $img_oid, $ncbi_pid,
 			$gold_stamp_id, $gold_id_old) = split( /\t/, $r );
-				    
+
 		    if ($ncbi_pid eq $ncbi_pid_exist
-			&& $gold_stamp_id eq $gold_stamp_id_exist 
+			&& $gold_stamp_id eq $gold_stamp_id_exist
 			&& $gold_id_old eq $gold_id_old_exist) {
                         webLog("Through $throughMsg, taxon $tOid links to different project_OID: $existPoid and $project_oid, but with same ncbi_project_id $ncbi_pid, gold_stamp_id $gold_stamp_id and gold_id_old $gold_id_old, continue to use existing $existPoid\n");
 		    }
 		    else {
-			if ($gbk_pid_img eq $ncbi_pid 
+			if ($gbk_pid_img eq $ncbi_pid
 			    && $gbk_pid_img ne $ncbi_pid_exist) {
 			    if ($project_oid ne '') {
 				$tOids2Poids_ref->{$tOid} = $project_oid;
 				$tOids2Recs_ref->{$tOid} = $r;
                                 webLog("Through $throughMsg, taxon $tOid links to different project_OID: $existPoid and $project_oid, new ncbi_project_id $ncbi_pid same as IMG database, replace existing with new $project_oid\n");
-			    }                  
+			    }
 			}
 			elsif ( (($gold_id_img eq $gold_stamp_id
 			       && $gold_id_img eq $gold_id_old)
-			       && ($gold_id_img ne $gold_stamp_id_exist 
+			       && ($gold_id_img ne $gold_stamp_id_exist
 			        || $gold_id_img ne $gold_id_old_exist))
 			       || (($gold_id_img eq $gold_stamp_id
 			         || $gold_id_img eq $gold_id_old)
@@ -1779,23 +1820,23 @@ sub addPoidToHash {
                                 $tOids2Poids_ref->{$tOid} = $project_oid;
                                 $tOids2Recs_ref->{$tOid} = $r;
                                 webLog("Through $throughMsg, taxon $tOid links to different project_OID: $existPoid and $project_oid, new gold_ids same as IMG database $gold_id_img, replace existing with new $project_oid\n");
-                            }	                        
+                            }
 			}
 			else {
-                            webLog("Through $throughMsg, taxon $tOid found to have different project_OID: $existPoid and $project_oid, continue to use the existing $existPoid\n");	                    	
-			}			    	
-		    }            		
+                            webLog("Through $throughMsg, taxon $tOid found to have different project_OID: $existPoid and $project_oid, continue to use the existing $existPoid\n");
+			}
+		    }
             	}
                 elsif ($throughMsg =~ /env_sample/i) {
                     my ($project_oid_exist, $img_oid_exist,
 			$ncbi_pid_exist) = split( /\t/, $existRec );
                     my ($project_oid, $img_oid, $ncbi_pid) = split( /\t/, $r );
-		    
+
                     if ($ncbi_pid eq $ncbi_pid_exist) {
                         webLog("Through $throughMsg, taxon $tOid links to different project_OID: $existPoid and $project_oid, but with same ncbi_project_id $ncbi_pid, continue to use existing $existPoid\n");
                     }
                     else {
-                        if ($gbk_pid_img eq $ncbi_pid 
+                        if ($gbk_pid_img eq $ncbi_pid
 			    && $gbk_pid_img ne $ncbi_pid_exist) {
                             if ($project_oid ne '') {
                                 $tOids2Poids_ref->{$tOid} = $project_oid;
@@ -1806,12 +1847,12 @@ sub addPoidToHash {
                         else {
                             webLog("Through $throughMsg, taxon $tOid found to have different project_OID: $existPoid and $project_oid, continue to use the existing $existPoid\n");
                         }
-                    }               
+                    }
                 }
                 elsif ($throughMsg =~ /submission/i) {
                     my ($project_oid_exist, $img_oid_exist,
 			$submission_id_exist) = split( /\t/, $existRec );
-                    my ($project_oid, $img_oid, 
+                    my ($project_oid, $img_oid,
 			$submission_id) = split( /\t/, $r );
 
                     if ($submission_id eq $submission_id_exist) {
@@ -1829,8 +1870,8 @@ sub addPoidToHash {
                         else {
                             webLog("Through $throughMsg, taxon $tOid found to have different project_OID: $existPoid and $project_oid, continue to use the existing $existPoid\n");
                         }
-                    }               
-                }            	
+                    }
+                }
             }
             else {
             	if ($project_oid ne '') {
@@ -1845,21 +1886,21 @@ sub addPoidToHash {
 # for validation purpose, currently not used
 sub validateGold2Img {
     my ($tOid, $ncbi_pid, $gold_stamp_id, $gold_id_old, $img_oid,
-	$tOids2GbkPids_ref, $tOids2SubmissionIds_ref, 
+	$tOids2GbkPids_ref, $tOids2SubmissionIds_ref,
 	$tOids2GoldIds_ref) = @_;
 
     my $gbk_pid_img = $tOids2GbkPids_ref->{$tOid};
     my $gold_id_img = $tOids2GoldIds_ref->{$tOid};
 
-    if (($tOid ne '' || $img_oid ne '') 
+    if (($tOid ne '' || $img_oid ne '')
 	&& $tOid ne $img_oid) {
         webLog("Taxon OID $img_oid <<<>>> $tOid different: Gold $ncbi_pid, $gold_stamp_id or $gold_id_old, $img_oid <<>> IMG $gbk_pid_img, $gold_id_img, $tOid\n");
     }
-    elsif (($ncbi_pid ne '' || $gbk_pid_img ne '') 
+    elsif (($ncbi_pid ne '' || $gbk_pid_img ne '')
 	   && $ncbi_pid ne $gbk_pid_img) {
         webLog("NCBI Project ID $ncbi_pid <<<>>> $gbk_pid_img different: Gold $ncbi_pid, $gold_stamp_id or $gold_id_old, $img_oid <<>> IMG $gbk_pid_img, $gold_id_img, $tOid\n");
     }
-    elsif (($gold_stamp_id ne '' || $gold_id_old ne '' || $gold_id_img ne '') 
+    elsif (($gold_stamp_id ne '' || $gold_id_old ne '' || $gold_id_img ne '')
 	   && $gold_stamp_id ne $gold_id_img && $gold_id_old ne $gold_id_img) {
         webLog("Gold ID $gold_stamp_id or $gold_id_old <<<>>> $gold_id_img different: Gold $ncbi_pid, $gold_stamp_id or $gold_id_old, $img_oid <<>> IMG $gbk_pid_img, $gold_id_img, $tOid\n");
     }
@@ -2159,7 +2200,7 @@ sub getMetadataForSubmissionId {
         # set-valued
         $sql = getGoldSetAttrSQL( $attr, "project_oid = ?" );
         $cur = execSql( $dbh, $sql, $verbose, $project_oid );
-        
+
         my $str = "";
         for ( ; ; ) {
             my ( $p_id, $val ) = $cur->fetchrow();
@@ -2261,7 +2302,7 @@ sub getQueryNCBIProjIds {
             if ($toProcessVal) {
                 @vals = processParamValue(param($attr));
             } else {
-                @vals = param($attr);           
+                @vals = param($attr);
             }
             if ( scalar(@vals) > 0 ) {
                 my $cond1 = "";
@@ -2291,7 +2332,7 @@ sub getQueryNCBIProjIds {
             if ($toProcessVal) {
                 @vals = processParamValue(param($attr));
             } else {
-                @vals = param($attr);           
+                @vals = param($attr);
             }
             if ( scalar(@vals) > 0 ) {
                 my $cond1 = "";
@@ -2363,7 +2404,7 @@ sub getMetadataForNCBIProjId {
     my ( $ncbi_proj_id, $attr_ref ) = @_;
 
     my %metadata;
-    
+
     # do not search metadata by ncbi project id - ken
     # metagenome sample all have teh same ncbi project ids
     # instead all should have a gold sample id or submission id if private
@@ -2474,10 +2515,10 @@ sub getProjectMetadataForNCBIProjId {
     my ($ncbi_proj_id) = @_;
 
     my %metadata;
-    
+
     webLog("getProjectMetadataForNCBIProjId\n");
     return %metadata;
-   
+
     if ( blankStr($ncbi_proj_id) || !isInt($ncbi_proj_id) ) {
         return %metadata;
     }
@@ -2505,13 +2546,13 @@ sub getProjectMetadataForNCBIProjId {
     }
 
     if ( $project_oid ) {
-        
+
         # get single-valued
         $sql = getGoldSingleAttrSQL( "p.project_oid = ?" );
         $cur = execSql( $dbh, $sql, $verbose, $project_oid );
         my ( $p_oid, @vals ) = $cur->fetchrow();
         $cur->finish();
-    
+
         if ($p_oid) {
             my $cnt = 0;
             my @attrs1 = getGoldSingleAttr();
@@ -2526,7 +2567,7 @@ sub getProjectMetadataForNCBIProjId {
                 $cnt++;
             }
         }
-    
+
         # get set-valued
         my @attrs2 = getGoldSetAttr();
         for my $attr (@attrs2) {
@@ -2536,7 +2577,7 @@ sub getProjectMetadataForNCBIProjId {
             for ( ; ; ) {
                 my ( $p_id, $val ) = $cur->fetchrow();
                 last if !$p_id;
-    
+
                 if ( !blankStr($val) ) {
                     if ( blankStr($str) ) {
                         $str = $val;
@@ -2546,7 +2587,7 @@ sub getProjectMetadataForNCBIProjId {
                 }
             }
             $cur->finish();
-    
+
             if ( !blankStr($str) ) {
                 $metadata{$attr} = $str;
             }
@@ -2562,8 +2603,8 @@ sub getProjectMetadataForNCBIProjId {
 sub getAllMetadataForGa {
     my ($gaId) = @_;
     my %metadata;
-    
-    
+
+
     my $dbh = connectGoldDatabase();
     my $sql;
     my $cur;
@@ -2576,9 +2617,9 @@ from gold_analysis_project_lookup2 l,
 where l.gold_id = ?
 and l.sample_oid = s.sample_oid
         };
-      
+
         my $cur = execSql( $dbh, $sql, $verbose, $gaId );
-        ($sample_oid, $gsId, $project_oid) = $cur->fetchrow();    
+        ($sample_oid, $gsId, $project_oid) = $cur->fetchrow();
     }
 
     if ( !$project_oid  ) {
@@ -2587,7 +2628,7 @@ select p.GOLD_STAMP_ID, p.PROJECT_OID
 from gold_analysis_project_lookup2 l,
      project_info p
 where l.gold_id = ?
-and l.project_oid = p.project_oid            
+and l.project_oid = p.project_oid
         };
         my $cur = execSql( $dbh, $sql, $verbose, $gaId );
         ($gsId, $project_oid) = $cur->fetchrow();
@@ -2611,12 +2652,12 @@ and l.project_oid = p.project_oid
                         $metadata{$attr1} = $val1;
                     }
                 }
-    
+
                 # next
                 $cnt++;
             }
         }
-    
+
         # get set-valued
         my @attrs2 = getGoldSetAttr();
         for my $attr (@attrs2) {
@@ -2626,7 +2667,7 @@ and l.project_oid = p.project_oid
             for ( ; ; ) {
                 my ( $p_id, $val ) = $cur->fetchrow();
                 last if !$p_id;
-    
+
                 if ( !blankStr($val) ) {
                     if ( blankStr($str) ) {
                         $str = $val;
@@ -2636,7 +2677,7 @@ and l.project_oid = p.project_oid
                 }
             }
             $cur->finish();
-    
+
             if ( !blankStr($str) ) {
                 $metadata{$attr} = $str;
             }
@@ -2652,7 +2693,7 @@ and l.project_oid = p.project_oid
             $sql3 .= ", s." . $sample_attr;
         }
         $sql3 .= " from env_sample s where s.sample_oid = ?";
-    
+
         my $cur3 = execSql( $dbh, $sql3, $verbose, $sample_oid );
         my ( $s_oid, @vals3 ) = $cur3->fetchrow();
         $cur3->finish();
@@ -2664,7 +2705,7 @@ and l.project_oid = p.project_oid
             if ( scalar(@vals3) > $j ) {
                 $val3 = $vals3[$j];
             }
-    
+
             if ( !blankStr($val3) ) {
                 $metadata{$attr3} = $val3;
             }
@@ -2675,7 +2716,7 @@ and l.project_oid = p.project_oid
 
     return %metadata;
 
-    
+
 }
 
 ##########################################################################
@@ -2691,7 +2732,7 @@ sub getAllMetadataForSubmissionId {
 
     # find corresponding project_oid
     my $dbh = connectGoldDatabase();
-    my $sql = 
+    my $sql =
 	"select project_info, sample_oid from submission where submission_id = ?";
     my $cur = execSql( $dbh, $sql, $verbose, $submission_id );
     my ($project_oid, $sample_oid) = $cur->fetchrow();
@@ -2717,7 +2758,7 @@ sub getAllMetadataForSubmissionId {
             my $cur = execSql( $dbh, $sql, $verbose, $submission_id );
     	my ($cnt0) = $cur->fetchrow();
     	$cur->finish();
-    
+
     	if ( $cnt0 == 1 ) {
     	    $sql =
     		"select sample_oid from submission_samples where submission_id = ?";
@@ -2744,12 +2785,12 @@ sub getAllMetadataForSubmissionId {
                         $metadata{$attr1} = $val1;
                     }
                 }
-    
+
                 # next
                 $cnt++;
             }
         }
-    
+
         # get set-valued
         my @attrs2 = getGoldSetAttr();
         for my $attr (@attrs2) {
@@ -2759,7 +2800,7 @@ sub getAllMetadataForSubmissionId {
             for ( ; ; ) {
                 my ( $p_id, $val ) = $cur->fetchrow();
                 last if !$p_id;
-    
+
                 if ( !blankStr($val) ) {
                     if ( blankStr($str) ) {
                         $str = $val;
@@ -2769,7 +2810,7 @@ sub getAllMetadataForSubmissionId {
                 }
             }
             $cur->finish();
-    
+
             if ( !blankStr($str) ) {
                 $metadata{$attr} = $str;
             }
@@ -2785,7 +2826,7 @@ sub getAllMetadataForSubmissionId {
     	    $sql3 .= ", s." . $sample_attr;
     	}
     	$sql3 .= " from env_sample s where s.sample_oid = ?";
-    
+
     	my $cur3 = execSql( $dbh, $sql3, $verbose, $sample_oid );
     	my ( $s_oid, @vals3 ) = $cur3->fetchrow();
     	$cur3->finish();
@@ -2797,7 +2838,7 @@ sub getAllMetadataForSubmissionId {
     		if ( scalar(@vals3) > $j ) {
     		    $val3 = $vals3[$j];
     		}
-    
+
     		if ( !blankStr($val3) ) {
     		    $metadata{$attr3} = $val3;
     		}
@@ -2837,7 +2878,7 @@ sub getAllMetadataForGoldId {
         $cur = execSql( $dbh, $sql, $verbose, $project_oid );
         my ( $p_oid, @vals ) = $cur->fetchrow();
         $cur->finish();
-    
+
         if ($p_oid) {
             my $cnt = 0;
             my @attrs1 = getGoldSingleAttr();
@@ -2848,7 +2889,7 @@ sub getAllMetadataForGoldId {
                         $metadata{$attr1} = $val1;
                     }
                 }
-    
+
                 # next
                 $cnt++;
             }
@@ -2864,7 +2905,7 @@ sub getAllMetadataForGoldId {
             for ( ; ; ) {
                 my ( $p_id, $val ) = $cur->fetchrow();
                 last if !$p_id;
-    
+
                 if ( !blankStr($val) ) {
                     if ( blankStr($str) ) {
                         $str = $val;
@@ -2874,7 +2915,7 @@ sub getAllMetadataForGoldId {
                 }
             }
             $cur->finish();
-    
+
             if ( !blankStr($str) ) {
                 $metadata{$attr} = $str;
             }
@@ -2891,7 +2932,7 @@ sub getAllMetadataForGoldId {
         my $cur3 = execSql( $dbh, $sql3, $verbose, $sample_gold_id );
         my ( $sample_oid, @vals3 ) = $cur3->fetchrow();
         $cur3->finish();
-    
+
         if ( $sample_oid ) {
             my $j = 0;
             my $val3 = '';
@@ -2899,11 +2940,11 @@ sub getAllMetadataForGoldId {
                 if ( scalar(@vals3) > $j ) {
                     $val3 = $vals3[$j];
                 }
-        
+
                 if ( !blankStr($val3) ) {
                     $metadata{$attr3} = $val3;
                 }
-        
+
                 $j++;
             }
         }
@@ -2916,7 +2957,7 @@ sub getAllMetadataForGoldId {
 # Ga
 sub getSampleMetadataForGa {
     my ($gaId) = @_;
-    
+
     my $dbh = connectGoldDatabase();
     my $sql = qq{
 select s.sample_oid, s.gold_id
@@ -2925,10 +2966,10 @@ from gold_analysis_project_lookup2 l,
 where l.gold_id = ?
 and l.sample_oid = s.sample_oid
     };
-      
+
     my $cur = execSql( $dbh, $sql, $verbose, $gaId );
     my ($sample_oid, $gsId) = $cur->fetchrow();
-    
+
     my %metadata = {};
     if ( !$sample_oid ) {
         return %metadata;
@@ -2960,7 +3001,7 @@ and l.sample_oid = s.sample_oid
     }
 
     return %metadata;
-    
+
 }
 
 
@@ -3025,7 +3066,7 @@ sub getSampleMetadataForNCBIProjId {
     my ($ncbi_proj_id) = @_;
 
     my %metadata;
-    
+
     # do not search metadata by ncbi project id - ken
     # metagenome sample all have teh same ncbi project ids
     # instead all should have a gold sample id or submission id if private
@@ -3131,16 +3172,16 @@ sub getProjectMetadataForIds {
 
     if ( scalar(@projects) > 0 ) {
         my $project_oid_str = join( ",", @projects );
-    
+
         # get single-valued
         $sql = getGoldSingleAttrSQL( "p.project_oid in ($project_oid_str)" );
         $cur = execSql( $dbh, $sql, $verbose );
-    
+
         my %attvalues;
         for ( ; ; ) {
             my ( $p_id, @vals ) = $cur->fetchrow();
             last if !$p_id;
-    
+
             my $cnt = 0;
             my @attrs1 = getGoldSingleAttr();
             for my $attr1 (@attrs1) {
@@ -3161,7 +3202,7 @@ sub getProjectMetadataForIds {
             }
         }
         $cur->finish();
-    
+
         # get set-valued
         my @attrs2 = getGoldSetAttr();
         for my $attr (@attrs2) {
@@ -3176,7 +3217,7 @@ sub getProjectMetadataForIds {
                 }
             }
             $cur->finish();
-    
+
             my @keys = sort( keys(%items) );
             my $text;
             for my $k (@keys) {
@@ -3230,7 +3271,7 @@ sub getProjectMetadataForImgOid {
         $cur = execSql( $dbh, $sql, $verbose, $project_oid );
         my ( $p_oid, @vals ) = $cur->fetchrow();
         $cur->finish();
-    
+
         if ($p_oid) {
             my $cnt = 0;
             my @attrs1 = getGoldSingleAttr();
@@ -3241,7 +3282,7 @@ sub getProjectMetadataForImgOid {
                         $metadata{$attr1} = $val1;
                     }
                 }
-    
+
                 # next
                 $cnt++;
             }
@@ -3257,7 +3298,7 @@ sub getProjectMetadataForImgOid {
             for ( ; ; ) {
                 my ( $p_id, $val ) = $cur->fetchrow();
                 last if !$p_id;
-    
+
                 if ( !blankStr($val) ) {
                     if ( blankStr($str) ) {
                         $str = $val;
@@ -3267,7 +3308,7 @@ sub getProjectMetadataForImgOid {
                 }
             }
             $cur->finish();
-    
+
             if ( !blankStr($str) ) {
                 $metadata{$attr} = $str;
             }
@@ -3345,7 +3386,7 @@ sub getSampleMetadataFromGold {
         %metadata = getSampleMetadataForGa($analysis_project_id);
         if ( scalar(keys %metadata) > 0 ) {
             return %metadata;
-        }  
+        }
     }
 
     # use submission id first
@@ -3353,7 +3394,7 @@ sub getSampleMetadataFromGold {
         %metadata = getSampleMetadataForSubmissionId($submission_id);
         if ( scalar(keys %metadata) > 0 ) {
             return %metadata;
-        }    	
+        }
     }
 
     # use IMG OID second
@@ -3397,7 +3438,7 @@ sub getAllMetadataFromGold {
             #print "getAllMetadataFromGold() used submission_id = $submission_id<br/>\n";
             return %metadata;
         }
-    } 
+    }
 
     if ($project_gold_id || $sample_gold_id) {
         %metadata = getAllMetadataForGoldId($project_gold_id, $sample_gold_id);
@@ -3405,14 +3446,14 @@ sub getAllMetadataFromGold {
             #print "getAllMetadataFromGold() used project_gold_id=$project_gold_id sample_gold_id=$sample_gold_id<br/>\n";
             return %metadata;
         }
-    } 
+    }
 
     my $img_oid;
     my @img_oids = split( /\,/, $img_oid_str );
     if ( scalar(@img_oids) == 1 ) {
         $img_oid = $img_oids[0];
     }
-    
+
     my $ncbi_project_id;
     my @ncbi_ids = split( /\,/, $ncbi_project_id_str );
     if ( scalar(@ncbi_ids) == 1 ) {
@@ -3567,13 +3608,13 @@ sub getCategoryCondTaxons {
     my ($rclause, @bindList) = urClauseBind("tx");
     my $imgClause = WebUtil::imgClause('tx');
 
-    $sql = qq{ 
+    $sql = qq{
        select tx.taxon_oid
            from taxon tx
            $ncbi_proj_id_conds
            $rclause
            $imgClause
-           order by tx.taxon_display_name 
+           order by tx.taxon_display_name
     };
     #print "<p>SQL: $sql</p>\n";
 
@@ -3641,7 +3682,7 @@ sub getCategoryTaxonCount {
                     $ncbi_proj_ids .= $ncbi_id;
             	}
             	else {
-                    $ncbi_proj_ids .= ' ' . $ncbi_id;            		
+                    $ncbi_proj_ids .= ' ' . $ncbi_id;
             	}
             }
             if ( !blankStr($sample_ncbi_id) && isInt($sample_ncbi_id) ) {
@@ -3695,7 +3736,7 @@ sub getCategoryTaxonCount {
         my ($rclause, @bindList) = urClauseBind("tx");
         my $imgClause = WebUtil::imgClause('tx');
 
-        $sql = qq{ 
+        $sql = qq{
 		    select count(*)
 			from taxon tx
             $ncbi_proj_id_conds

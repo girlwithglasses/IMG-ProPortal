@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Gene List';
+	title = 'Gene List';
 %]
 <h2>Gene List</h2>
 <section class="info--data_type page-intro">
@@ -24,7 +24,7 @@
 [%		FOR g IN results.genes %]
 		<li>
 		<input type="checkbox" class="sample-data__cbox" name="gene_oid[]" value="[% g.gene_oid %]" id="cbox_[% g.gene_oid %]" />
-		<a href="[% link( 'details', { type => 'gene', gene_oid => g.gene_oid } ) %]">[% g.gene_oid %]</a>, [% g.product_name %] from <a href="[% link( 'details', { type => 'taxon', taxon_oid => g.taxon_oid } ) %]">[% g.taxon_display_name %]</a></li>
+		<a href="[% link( 'details', { domain => 'gene', gene_oid => g.gene_oid } ) %]">[% g.gene_oid %]</a>, [% g.product_name %] from <a href="[% link( 'details', { domain => 'taxon', taxon_oid => g.taxon_oid } ) %]">[% g.taxon_display_name %]</a></li>
 
 [%		END %]
 	</ul>

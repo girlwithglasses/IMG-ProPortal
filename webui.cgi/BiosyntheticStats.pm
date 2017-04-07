@@ -1,6 +1,6 @@
 ############################################################################
 # BiosyntheticStats - detail page for biosynthetic clusters
-# $Id: BiosyntheticStats.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: BiosyntheticStats.pm 36803 2017-03-23 05:17:12Z aratner $
 ############################################################################
 package BiosyntheticStats;
 my $section = "BiosyntheticStats";
@@ -133,8 +133,7 @@ sub dispatch {
         my $url  = "xml.cgi?section=$section&page=displayStats&type=gene_count";
         my $func = "javascript:displayStats('$url', 'genecounttab', 'bygenecount_genomes')";
         print qq{
-        <select id='bygenecount_genomes' name= 'bygenecount_genomes'
-                onchange="$func">
+        <select id='bygenecount_genomes' name= 'bygenecount_genomes' onchange="$func">
           <option value='both' selected>Isolates and Metagenomes</option>
           <option value='isolate'>Isolates Only</option>
           <option value='metagenome'>Metagenomes Only</option>
@@ -146,7 +145,7 @@ sub dispatch {
             printBreakdownBy("gene_count", 0);
         } else {
             print "<p>Please click <font color='blue'><u>Display</u></font> "
-              . "to load the distribution of Biosynthetic Clusters by Gene Count.</p>";
+		. "to load the distribution of Biosynthetic Clusters by Gene Count.</p>";
             print "<input type='button' class='medbutton' "
 		. "value='Display' onclick=\"$func\" />";
         }
@@ -292,8 +291,7 @@ sub printOverview {
     my $func = "javascript:displayStats('$url', 'genecounttab', 'bygenecount_genomes')";
     print qq{
         <br>
-        <select id='bygenecount_genomes' name= 'bygenecount_genomes'
-                onchange="$func">
+        <select id='bygenecount_genomes' name= 'bygenecount_genomes' onchange="$func">
           <option value='both' selected>Isolates and Metagenomes</option>
           <option value='isolate'>Isolates Only</option>
           <option value='metagenome'>Metagenomes Only</option>
@@ -646,9 +644,9 @@ sub printClustersWithGenbankID {
 
     $it->hideAll() if $cnt < 50;
     print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bcwgenbank_frm") if $cnt > 10;
+    BiosyntheticDetail::printPfamFooter("bcwgenbank") if $cnt > 10;
     $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bcwgenbank_frm");
+    BiosyntheticDetail::printPfamFooter("bcwgenbank");
 
     OracleUtil::truncTable($dbh, "gtt_func_id")
       if ($clusterClause =~ /gtt_func_id/i);
@@ -778,7 +776,8 @@ sub getStatsByNp {
     }
     $cur->finish();
 
-    return ($npTypeExpCnt, $npTypePredCnt, $npTypeUnknownCnt, $npIdExpCnt, $npIdPredCnt, $npIdUnknownCnt);
+    return ($npTypeExpCnt, $npTypePredCnt, $npTypeUnknownCnt,
+	    $npIdExpCnt, $npIdPredCnt, $npIdUnknownCnt);
 }
 
 ######################################################################
@@ -1476,11 +1475,15 @@ sub printStatsByProbability {
         }
     }
 
+    my $hint = "Click on the count for a given category to view the BCs for that category. If the count is above $UPPER_LIMIT, BCs cannot be displayed and the category should be filtered further, if possible.<br/>Alternatively, go to Search->By BC Attributes";
+    printHint($hint);
+
     my $dofilter;
     $dofilter = "gene count" if $gene_count eq "";
     $dofilter = "phylum" if $phylum     eq "";
     $dofilter = "gene count or phylum" if $gene_count eq "" && $phylum eq "";
-    print "<p>You may select a probability score to filter the clusters further by $dofilter</p>" if $dofilter ne "";
+    print "<p>You may select a probability score to filter the clusters further by $dofilter</p>"
+	if $dofilter ne "";
 
     my $dbh = dbLogin();
     my $rclause = WebUtil::urClause("bc.taxon");
@@ -1512,8 +1515,8 @@ sub printStatsByProbability {
     $it->addColSpec("Clusters",    "",    "right");
 
     # probability score is rounded using floor
-    my $url_section =
-      "$section_cgi&page=clustersByProbability" . "&gene_count=$gene_count&phylum=" . WebUtil::massageToUrl2($phylum);
+    my $url_section = "$section_cgi&page=clustersByProbability"
+	. "&gene_count=$gene_count&phylum=" . WebUtil::massageToUrl2($phylum);
     for ( ;; ) {
         my ($probability, $total_clusters) = $cur->fetchrow();
         last if !$total_clusters;
@@ -1593,11 +1596,15 @@ sub printStatsByGeneCount {
         }
     }
 
+    my $hint = "Click on the count for a given range to view the BCs for that range. If the count is above $UPPER_LIMIT, BCs cannot be displayed and the category should be filtered further, if possible.<br/>Alternatively, go to Search->By BC Attributes";
+    printHint($hint);
+
     my $dofilter = "";
     $dofilter = "probability" if $probability eq "";
     $dofilter = "phylum" if $phylum eq "";
     $dofilter = "probability or phylum" if $probability eq "" && $phylum eq "";
-    print "<p>You may select a gene count range to filter the clusters further by $dofilter</p>" if $dofilter ne "";
+    print "<p>You may select a gene count range to filter the clusters further by $dofilter</p>"
+	if $dofilter ne "";
 
     my $dbh = dbLogin();
     my $rclause = WebUtil::urClause("bc.taxon");
@@ -2798,12 +2805,16 @@ sub printStatsByPhylum {
         }
     }
 
+    my $hint = "Click on the count for a given category to view the BCs for that category. If the count is above $UPPER_LIMIT, BCs cannot be displayed and the category should be filtered further, if possible.<br/>Alternatively, go to Search->By BC Attributes";
+    printHint($hint);
+
     my $dofilter;
     $dofilter = "gene count"  if $gene_count  eq "";
     $dofilter = "probability" if $probability eq "";
     $dofilter = "probability or gene count"
-      if $gene_count eq "" && $probability eq "";
-    print "<p>You may select a phylum to filter the clusters further by $dofilter</p>" if $dofilter ne "";
+	if $gene_count eq "" && $probability eq "";
+    print "<p>You may select a phylum to filter the clusters further by $dofilter</p>"
+	if $dofilter ne "";
 
     my $dbh = dbLogin();
     my $rclause = WebUtil::urClause("tx");
@@ -3003,13 +3014,6 @@ sub printClustersByBCType {
         $clusterClause
     };
 
-#    my $it = new InnerTable(1, "bybctype$$", "bybctype", 1);
-#    my $sd = $it->getSdDelim();
-#    $it->addColSpec("Select");
-#    $it->addColSpec("Cluster ID",  "asc", "right");
-#    $it->addColSpec("Genome Name", "asc", "left");
-#    $it->addColSpec("Evidence",    "asc", "left") if $evidence eq "";
-
     my $cnt = 0;
     my $cur = execSql($dbh, $sql, $verbose);
     my @cids;
@@ -3021,36 +3025,10 @@ sub printClustersByBCType {
         }
 
         push(@cids, $cluster_id);
-
-#        my $url = "$main_cgi?section=BiosyntheticDetail" . "&page=cluster_detail&cluster_id=$cluster_id";
-#        my $txurl = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
-#
-#        my $row;
-#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-#
-#        if ($evidence eq "") {
-#            $row .= $attr_val . $sd . $attr_val . "\t";
-#        }
-#
-#        $it->addRow($row);
         $cnt++;
     }
 
-
-
     BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
-
-#    OracleUtil::truncTable($dbh, "gtt_func_id")
-#      if ($clusterClause =~ /gtt_func_id/i);
-#
-#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-#    BiosyntheticDetail::printPfamFooter("bybctype_frm") if $cnt > 10;
-#    $it->printOuterTable(1);
-#    BiosyntheticDetail::printPfamFooter("bybctype_frm");
-#
-#    printStatusLine("$cnt clusters for BC TYPE: $bc_type. ", 2);
 }
 
 ######################################################################
@@ -3119,7 +3097,7 @@ sub printClustersByProbability {
         }
 
         OracleUtil::truncTable($dbh, "gtt_func_id")
-          if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
+	    if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
         return;
     }
 
@@ -3152,8 +3130,10 @@ sub printClustersByProbability {
         my ($cluster_id, $taxon_oid, $taxon_name) = $cur->fetchrow();
         last if !$cluster_id;
 
-        my $url = "$main_cgi?section=BiosyntheticDetail" . "&page=cluster_detail&cluster_id=$cluster_id";
-        my $txurl = "$main_cgi?section=TaxonDetail" . "&page=taxonDetail&taxon_oid=$taxon_oid";
+        my $url = "$main_cgi?section=BiosyntheticDetail"
+	    . "&page=cluster_detail&cluster_id=$cluster_id";
+        my $txurl = "$main_cgi?section=TaxonDetail"
+	    . "&page=taxonDetail&taxon_oid=$taxon_oid";
 
         my $row;
         $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
@@ -3164,10 +3144,10 @@ sub printClustersByProbability {
     }
 
     print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bcbyprobability_frm") if $cnt > 10;
+    BiosyntheticDetail::printPfamFooter("bcbyprobability") if $cnt > 10;
     $it->hideAll()                                             if $cnt < 50;
     $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bcbyprobability_frm");
+    BiosyntheticDetail::printPfamFooter("bcbyprobability");
 
     OracleUtil::truncTable($dbh, "gtt_func_id")
       if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
@@ -3216,7 +3196,7 @@ sub printClustersByPfamIds {
     print "<p>";
     print "<u>Evidence</u>: $evidence";
     print "<br/><br/>";
-    for my $pfam_id (@pfam_ids) {
+    foreach my $pfam_id (@pfam_ids) {
         my $funcName = $funcId2Name{$pfam_id};
         print $pfam_id . " - <i>" . $funcName . "</i><br/>";
     }
@@ -3273,9 +3253,9 @@ sub printClustersByPfamIds {
 
     $it->hideAll() if $cnt < 50;
     print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bcbypfamid_frm") if $cnt > 10;
+    BiosyntheticDetail::printPfamFooter("bcbypfamid") if $cnt > 10;
     $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bcbypfamid_frm");
+    BiosyntheticDetail::printPfamFooter("bcbypfamid");
 
     printStatusLine("$cnt clusters. ", 2);
     print end_form();
@@ -3331,16 +3311,6 @@ sub printClustersByPfam {
     };
     my $cur = execSql($dbh, $sql, $verbose, $evidence, $func_code);
 
-#    print start_form(-id     => "bcbypfam_frm",
-#		     -name   => "mainForm",
-#		     -action => "$main_cgi");
-
-#    my $it = new InnerTable(1, "bcbypfam$$", "bcbypfam", 1);
-#    my $sd = $it->getSdDelim();
-#    $it->addColSpec("Select");
-#    $it->addColSpec("Cluster ID",  "asc", "right");
-#    $it->addColSpec("Genome Name", "asc", "left");
-
     my $cnt = 0;
     my @cids;
     for ( ;; ) {
@@ -3348,29 +3318,11 @@ sub printClustersByPfam {
         last if !$cluster_id;
 
         push(@cids, $cluster_id);
-#        my $url = "$main_cgi?section=BiosyntheticDetail"
-#	    . "&page=cluster_detail&cluster_id=$cluster_id";
-#        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
-#
-#        my $row;
-#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-#        $it->addRow($row);
         $cnt++;
     }
     $cur->finish();
 
     BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
-
-#    $it->hideAll() if $cnt < 50;
-#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-#    BiosyntheticDetail::printPfamFooter("bcbypfam_frm") if $cnt > 10;
-#    $it->printOuterTable(1);
-#    BiosyntheticDetail::printPfamFooter("bcbypfam_frm");
-#
-#    printStatusLine("$cnt clusters for $definition. ", 2);
-#    print end_form();
 }
 
 ######################################################################
@@ -3509,9 +3461,9 @@ sub printClustersByPhylum {
 
     $it->hideAll() if $cnt < 50;
     print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-    BiosyntheticDetail::printPfamFooter("bcbyphylum_frm") if $cnt > 10;
+    BiosyntheticDetail::printPfamFooter("bcbyphylum") if $cnt > 10;
     $it->printOuterTable(1);
-    BiosyntheticDetail::printPfamFooter("bcbyphylum_frm");
+    BiosyntheticDetail::printPfamFooter("bcbyphylum");
 
     OracleUtil::truncTable($dbh, "gtt_func_id")
       if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
@@ -3745,17 +3697,6 @@ sub printClustersByLength {
     };
     my $cur = execSql($dbh, $sql, $verbose, $min, $max);
 
-#    print start_form(-id     => "bcbylength_frm",
-#		     -name   => "mainForm",
-#		     -action => "$main_cgi");
-#
-#    my $it = new InnerTable(1, "bcbylength$$", "bcbylength", 1);
-#    my $sd = $it->getSdDelim();
-#    $it->addColSpec("Select");
-#    $it->addColSpec("Cluster ID",   "asc",  "right");
-#    $it->addColSpec("Genome Name",  "asc",  "left");
-#    $it->addColSpec("Length (bps)", "desc", "right");
-
     my $count = 0;
     my @cids;
     for ( ;; ) {
@@ -3763,33 +3704,10 @@ sub printClustersByLength {
         last if !$cluster_id;
 
         push(@cids, $cluster_id);
-
-#        my $url = "$main_cgi?section=BiosyntheticDetail"
-#	    . "&page=cluster_detail&cluster_id=$cluster_id";
-#        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
-#
-#        my $row;
-#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-#        $row .= $len;
-#        $it->addRow($row);
         $count++;
     }
 
     BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
-
-#    $it->hideAll() if $count < 50;
-#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-#    BiosyntheticDetail::printPfamFooter("bcbylength_frm") if $count > 10;
-#    $it->printOuterTable(1);
-#    BiosyntheticDetail::printPfamFooter("bcbylength_frm");
-#
-#    OracleUtil::truncTable($dbh, "gtt_func_id")
-#      if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
-#
-#    printStatusLine("$count clusters for seq length. ", 2);
-#    print end_form();
 }
 
 ######################################################################
@@ -3918,18 +3836,6 @@ sub printClustersByGeneCount {
     };
     my $cur = execSql($dbh, $sql, $verbose);
 
-#    print start_form(-id     => "bcbygcnt_frm",
-#		     -name   => "mainForm",
-#		     -action => "$main_cgi");
-#
-#    my $it = new InnerTable(1, "bcbygcnt$$", "bcbygcnt", 1);
-#    my $sd = $it->getSdDelim();
-#
-#    $it->addColSpec("Select");
-#    $it->addColSpec("Cluster ID",  "asc",  "right");
-#    $it->addColSpec("Genome Name", "asc",  "left");
-#    $it->addColSpec("Gene Count",  "desc", "right");
-
     my $count = 0;
     my @cids;
     for ( ;; ) {
@@ -3939,33 +3845,10 @@ sub printClustersByGeneCount {
         next if $cnt > $max && $max ne "";
 
         push(@cids, $cluster_id);
-
-#        my $url = "$main_cgi?section=BiosyntheticDetail"
-#	    . "&page=cluster_detail&cluster_id=$cluster_id";
-#        my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
-#
-#        my $row;
-#        $row .= $sd . "<input type='checkbox' name='bc_id' value='$cluster_id' />\t";
-#        $row .= $cluster_id . $sd . alink($url, $cluster_id) . "\t";
-#        $row .= $taxon_name . $sd . alink($txurl, $taxon_name) . "\t";
-#        $row .= $cnt;
-#        $it->addRow($row);
         $count++;
     }
 
-BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
-
-#    $it->hideAll() if $count < 50;
-#    print "<script src='$top_base_url/js/checkSelection.js'></script>\n";
-#    BiosyntheticDetail::printPfamFooter("bcbygcnt_frm") if $count > 10;
-#    $it->printOuterTable(1);
-#    BiosyntheticDetail::printPfamFooter("bcbygcnt_frm");
-#
-#    OracleUtil::truncTable($dbh, "gtt_func_id")
-#      if ($clusterClause =~ /gtt_func_id/i);    # clean up temp table
-#
-#    printStatusLine("$count clusters for gene count: $range. ", 2);
-#    print end_form();
+    BiosyntheticDetail::processBiosyntheticClusters( $dbh, '', \@cids );
 }
 
 sub getClusterClause {
@@ -4146,21 +4029,19 @@ sub printPfamList {
 
     my $name = "_section_${section}_clustersByPfamIds";
     if ($count > 10) {
-        print submit(
-            -name  => $name,
-            -value => "List BCs",
-            -class => "smdefbutton"
-       );
+        print submit( -name  => $name,
+		      -value => "List BCs",
+		      -class => "smdefbutton"
+	    );
         print nbsp(1);
         WebUtil::printButtonFooter();
     }
     $it->printOuterTable(1);
 
-    print submit(
-        -name  => $name,
-        -value => "List BCs",
-        -class => "smdefbutton"
-   );
+    print submit( -name  => $name,
+		  -value => "List BCs",
+		  -class => "smdefbutton"
+	);
     print nbsp(1);
     WebUtil::printButtonFooter();
     WorkspaceUtil::printSaveFunctionToWorkspace("func_id") if $count > 10;

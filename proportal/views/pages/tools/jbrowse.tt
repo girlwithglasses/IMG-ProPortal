@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: JBrowse';
+	title = 'JBrowse';
 %]
 <div class="floatR"><img src="http://gmod.org/mediawiki/images/thumb/a/ac/JBrowseLogo.png/250px-JBrowseLogo.png" /></div>
 <h2>[% JBrowse %]</h2>

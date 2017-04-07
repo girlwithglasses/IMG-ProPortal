@@ -510,7 +510,7 @@
 ############################################################################
 #   Misc. web utility functions.
 # 	--es 04/15/2004
-# $Id: WebUtil.pm 34719 2015-11-17 18:52:01Z klchu $
+# $Id: WebUtil.pm 36678 2017-03-08 19:48:02Z klchu $
 ############################################################################
 package WebUtil;
 
@@ -525,9 +525,6 @@ BEGIN {
   abbrScaffoldName
   absCoord
   addIdPrefix
-  addIntergenic
-  addNxFeatures
-  addRepeats
   alignImage
   alink
   alinkNoTarget
@@ -556,7 +553,6 @@ BEGIN {
   checkGenePerm
   checkMysqlSearchTerm
   checkPath
-  checkScaffoldPerm
   checkTaxonAvail
   checkTaxonPerm
   checkTaxonPermHeader
@@ -625,7 +621,6 @@ BEGIN {
   getFposLinear
   getGeneHitsRows
   getGeneHitsZipRows
-  getGeneReplacementSql
   getGoogleMapsKey
   getHitsRows
   getHtmlBookmark
@@ -743,8 +738,6 @@ BEGIN {
   runCmd
   runCmdNoExit
   sanitizeInt
-  scaffoldOid2ExtAccession
-  scaffoldOid2TaxonOid
   selectUrl
   setLinkTarget
   setSessionParam
@@ -816,6 +809,7 @@ use GD;
 use CGI qw( :standard );
 use CGI::PSGI;
 use CGI::Session qw/-ip-match/;    # for security - ken
+use CGI::Cookie;
 use MIME::Base64 qw( encode_base64 decode_base64 );
 use FileHandle;
 use Data::Dumper;
@@ -916,26 +910,12 @@ my $log_dir     = $env->{log_dir};
 #
 $CGITempFile::TMPDIRECTORY = $TempFile::TMPDIRECTORY = "$cgi_tmp_dir";
 
-# For sqllite
+# For sqlite
 $ENV{TMP}     = "$cgi_tmp_dir";
 $ENV{TEMP}    = "$cgi_tmp_dir";
 $ENV{TEMPDIR} = "$cgi_tmp_dir";
 $ENV{TMPDIR}  = "$cgi_tmp_dir";
-
-# ifs scratch directory to email users
-# see GenerateArtemisFile.pm var $public_artemis_url
-my $ifs_tmp_dir = $env->{ifs_tmp_dir};
-
-sub webInit {
-	webfsTest();
-	# create index.html in tmp directories for security;
-	createTmpIndex();
-	initialize();
-	# make sure log files are registered
-	if ( ! $env->{web_log_file} || ! $env->{err_log_file} || ! -w $env->{web_log_file} || ! -w $env->{err_log_file} ) {
-		webDie("Log files not specified or writable");
-	}
-}
+$ENV{SQLITE_TMPDIR}  = "$cgi_tmp_dir";
 
 
 my $cgi_dir             = $env->{cgi_dir};
@@ -984,7 +964,7 @@ my $g_session;
 my $cookie_name = "CGISESSID_" . ( $env->{urlTag} || ( split m!/!, $base_url )[-1] );
 
 my $linkTarget;
-my $rdbms = getRdbms();
+
 
 ## --es 05/05/2005 limit no. of concurrent BLAST jobs.
 my $max_blast_jobs = $env->{max_blast_jobs} || 20;
@@ -1006,20 +986,274 @@ if ( defined $ENV{GATEWAY_INTERFACE}  && $env->{err_log_file} ) {
 my $blast_PID = 0;
 
 
+    my $cookie_sid = $cgi->cookie($cookie_name) || undef;
+    
+    # test last host cookie
+    my $hostname = WebUtil::getHostname();
+    my $cookie_host = $cgi->cookie('img_host' . $env->{urlTag}) || undef;
+    webLog("\n\nHOST $hostname === cookie host $cookie_host\n\n");
+    if(defined($cookie_host) && $hostname ne $cookie_host) {        
+        printSessionExpired("over 1+ hour idle time.");
+    }
+    
+    # http://search.cpan.org/~markstos/CGI-Session-4.48/lib/CGI/Session/Tutorial.pm
+    # Above example is worth an attention. Remember, all expired sessions are empty sessions, 
+    # but not all empty sessions are expired sessions.
+    my $sessiontest = CGI::Session->load(undef, $cookie_sid, { Directory => $cgi_tmp_dir });
+    if ( $sessiontest->is_expired ) {
+        webLog( "\n\nYOUR session expired. $cookie_sid\n\n");
+
+        # if not from the login page jgi sso
+        my $oldLogin = param('oldLogin');
+        if($oldLogin eq '') {
+            printSessionExpired("over 55+ min idle time.");
+        }
+    } 
+    
+    if ( $sessiontest->is_empty ) {
+        # my login out or expired session
+        webLog( "\n\nYOUR session is_empty: $cookie_sid\n\n");
+        $g_session = $sessiontest->new(); 
+        my $newid = getSessionId();
+        webLog( "\n\nYOUR NEW session created in is_empty(): $newid\n\n");
+    } else {
+        $g_session = $sessiontest;
+    }
+    
+    # OLD way for cgi session v3.x+
+    #$g_session = new CGI::Session( undef, $cookie_sid, { Directory => $cgi_tmp_dir } ); # this works better
+    #$g_session              = new CGI::Session( undef, $cgi, { Directory => $cgi_tmp_dir } ); # does not as well
+    webLog("\n\nYOUR session id ===== " . getSessionId());
+    webLog("  cookie id: ===== $cookie_sid\n\n");
+    
+    webLog("script =======  $0\n\n");
+    
+    # the cookie expires 55min
+    #$g_session->expire('+1h');    # expire after 1 hour
+    $g_session->expire('+55m');    # expire after 55 mins
+
+    stackTrace( "WebUtil::initialize()", "TEST: cookie ids ======= cookie_name => $cookie_name sid => " . ( $cookie_sid || "" ) );
+}
+
+#
+# print a session expired page
+# why ? sso is 24 hours
+# user do not know they have been logout by img and relogin by jgi sso
+# hence their carts stuff disappears etc....
+# 
+sub printSessionExpired {
+    my($text) = @_;
+    
+    # for the xml.pl json_proxy.pl
+    # just return
+    my $script = $0;
+    if($script =~/^xml/ || $script =~/^json_proxy/ || $script =~/^inner/) {
+        return;
+    }
+    
+    my $sso_url                 = $env->{sso_url};
+    my $sso_domain              = $env->{sso_domain};
+
+    my $cookie_host = makeCookieHostname();
+
+#    my $cookie_name = getCookieName();
+#    my $cookie = CGI::Cookie->new(
+#            -name   => $cookie_name,
+#            -value  => 0,
+#            -expires => '-1d'
+#    );
+    my $cookie = makeCookieSession(-1, '-1d');
 
 
-sub initialize {
+    # make sure we set the correct host name cookie
+    print $cgi->header(-type => "text/html", -cookie => [$cookie, $cookie_host ] );
+    
+    printHeader();
+    
+    my $buttonText = 'Refresh Session';
+    if($user_restricted_site || $public_login) {
+        $buttonText = 'Sign In Again';
+    }
+    
+    print qq{
+<br><br>
+Your IMG session has expired: $text 
+<br><br>
+<input class='smdefbutton' type='button' name='signin' value='$buttonText'
+onclick="window.open('main.cgi', '_self')";>
+<br>
 
-	if ( @_ ) {
-		# initialise using existing objects
-		warn "Running initialise with existing objects";
-		my $args = ( @_ && 1 < scalar(@_) ) ? { @_ } : shift || {};
-#		die unless exists $args->{session};
-		$cgi = $args->{cgi} if $args->{cgi};
-		$cookie_name = $args->{cookie_name} if $args->{cookie_name};
-		$g_session = $args->{session} if $args->{session};
-		DatabaseStuff::set_dbh( img_gold => $args->{img_gold} ) if $args->{img_gold};
-		DatabaseStuff::set_dbh( img_core => $args->{img_core} ) if $args->{img_core};
+</body>
+    };
+    
+    printMainFooter();
+    
+    # I cannot jgi sso logout - what they were using the portal and forgot about
+    # the img window
+
+    webExit();
+}
+
+# this creates a cookie named 'img_host' . $env->{urlTag}
+# it keeps track if the load balancers switches the user to another server
+# the cookie expires with 2 hours idle time
+# - ken
+sub makeCookieHostname {
+    my $hostname = getHostname();    
+    my $cookie_host = CGI::Cookie->new(
+            -name   => 'img_host' . $env->{urlTag},
+            -value  => $hostname,
+            -expires => '+2h'
+    );     
+    return $cookie_host;    
+}
+
+# creates cgi session cookie
+# 
+# input
+# cookie value - the default is cgi session id 
+# expire time: default is 2 hours idle time 
+#
+# +45m 
+# +90m expire after 90 minutes
+# +24h - 24 hour cookie
+# +1d - one day
+# +6M   6 months from now
+# +1y   1 year from now
+#
+# $session->expire("+1d");
+# - ken 
+sub makeCookieSession {
+    my($value, $expiresTime) = @_;
+    
+    $expiresTime = '+2h' if(!$expiresTime);
+    
+    if(!$value) {
+        $value = getSessionId();
+    }
+    
+    
+    my $cookie_name = getCookieName();
+    my $cookie = CGI::Cookie->new(
+            -name   => $cookie_name,
+            -value  => $value,
+            -expires => $expiresTime
+    );
+    return $cookie;
+}
+
+
+# creates jgi sso return cookie
+#
+sub makeCookieSsoReturn {
+    my($url) = @_;
+    my $sso_domain      = $env->{sso_domain};
+    my $sso_cookie_name = $env->{sso_cookie_name};
+    
+     my $cookie_return = CGI::Cookie->new(
+            -name   => $sso_cookie_name,
+            -value  => $url,
+            -domain => $sso_domain
+     );
+     
+     return $cookie_return;
+}
+
+#
+# print an img header with no js source files just css files
+#
+sub printHeader {
+    print <<EOF;
+<!DOCTYPE html>
+<html>
+<head>
+<title>IMG</title>
+<meta charset="UTF-8">
+<meta name="description" content="Integrated Microbial Genomes" />
+<meta name="keywords" content="gene,genome,metagenome,microbe,microbial,img,jgi, virus" />
+<meta http-equiv="Cache-Control" content="max-age=3600"/>
+<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/jgi.css" />
+<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/div-v33.css" />
+<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/menu-v40.css" />
+<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/img-v33.css" />
+<link rel="icon" href="https://img.jgi.doe.gov/images/favicon.ico"/>
+<link rel="SHORTCUT ICON" href="https://img.jgi.doe.gov/images/favicon.ico" />
+
+</head>
+
+<body id="body_frame" class="yui-skin-sam">
+<header id="jgi-header">
+<div id="jgi-logo">
+<a href="http://jgi.doe.gov/" title="DOE Joint Genome Institute - IMG">
+<img width="480" height="70" src="https://img.jgi.doe.gov//images/logo-JGI-IMG.png" alt="DOE Joint Genome Institute's IMG logo"/>
+</a>
+</div>
+<nav class="jgi-nav">
+    <ul>
+    <li><a href="http://jgi.doe.gov">JGI Home</a></li>
+    <li><a href="https://sites.google.com/a/lbl.gov/img-form/contact-us">Contact Us</a></li>
+    </ul>
+</nav>
+</header>
+<div id="myclear"></div>
+
+EOF
+}
+
+#
+# print standard img footer
+#
+sub printMainFooter {
+    my ( $homeVersion, $postJavascript ) = @_;
+
+    # HTTP_X_FORWARDED_FOR gets true client ip address when there is a load balancer port forwarding to web server
+    # REMOTE_ADDR will be the 127.xxxxx ip address which is imcorrect - ken
+    my $remote_addr =  getIpAddress();
+
+
+    # try to get true hostname
+    # can't use back ticks with -T
+    # - ken
+    my $servername = $ENV{SERVER_NAME}; # this does not work on the new gpweb36/37 - ken
+    my $hostname = getHostname();
+
+    my $img_rdbms = '';
+    if($img_ken) {
+        $img_rdbms = '<br>' . $env->{oracle_config_dir};
+    }
+
+    $servername = $hostname . " $img_rdbms " . $ENV{ORA_SERVICE} . ' ' . $];
+
+    my $copyright_year = $env->{copyright_year};
+    my $version_year   = $env->{version_year};
+    my $img            = param("img");
+
+    # no exit read
+    my $buildDate = file2Str( "$base_dir/buildDate", 1 );
+    my $templateFile = "$base_dir/footer-v33.html";
+
+    #$templateFile = "$base_dir/footer-v33.html" if ($homeVersion);
+    my $s = file2Str( $templateFile, 1 );
+    $s =~ s/__main_cgi__/$main_cgi/g;
+    $s =~ s/__base_url__/$base_url/g;
+    $s =~ s/__copyright_year__/$copyright_year/;
+    $s =~ s/__version_year__/$version_year/;
+    $s =~ s/__server_name__/$servername/;
+    $s =~ s/__build_date__/$buildDate $remote_addr/;
+    $s =~ s/__google_analytics__//;
+    $s =~ s/__post_javascript__/$postJavascript/;
+    $s =~ s/__top_base_url__/$top_base_url/g;
+    print "$s\n";
+}
+
+
+sub stackTrace {
+    my ( $title, $text, $contact_oid, $sid ) = @_;
+
+return; # turn off for now  - ken
+
+    if ( !$contact_oid ) {
+		$contact_oid = getContactOid() || "";
 	}
 	else {
 		cluck "Running WebUtil initialise";
@@ -1058,6 +1292,7 @@ sub clearSession {
     setTaxonSelections("");
     setSessionParam( "jgi_session_id", "" );
     setSessionParam( "oldLogin",       "" );
+    setSessionParam("last_jgisso_ping", 0);
 
     $session->delete();
     $session->flush();                # Recommended practice says use flush() after delete().
@@ -1085,61 +1320,6 @@ sub setBlastPid {
     LogStuff::webLog("child pid set = $pid\n");
 }
 
-# 1. create tmp areas
-# 2. for security create index.html in tmp directories - ken
-#
-sub createTmpIndex {
-
-	return;
-    return if $env->{dev_site};
-
-	# make sure these directories exist
-	# this just a check to make sure it exists and create it if not.
-	# it should have been created from install script and rsync over to prod machine
-	# - ken
-    for my $dir ( $tmp_dir, $log_dir, $cgi_tmp_dir ) {
-        if ( $dir && ! -e $dir ) {
-			umask 0002;
-			make_path( $dir, { mode => 0775 } );
-		}
-	}
-
-    # what if /ifs/scratch/ failed?
-    my $ifs_tmp_parent_dir = $env->{ifs_tmp_parent_dir};
-    if ( $ifs_tmp_parent_dir ne "" && -e $ifs_tmp_parent_dir && $ifs_tmp_dir ne "" && !-e $ifs_tmp_dir ) {
-        umask 0000;
-        make_path( $ifs_tmp_dir, { mode => 0777 } );
-        chmod( 0777, $ifs_tmp_dir );
-    }
-
-    if ( $ifs_tmp_dir ne "" && -e $ifs_tmp_dir ) {
-        if ( !-e "$tmp_dir/public" ) {
-            symlink $ifs_tmp_dir, "$tmp_dir/public";
-        }
-    }
-
-    if ( -e $ifs_tmp_dir ) {
-        if ( !-e "$ifs_tmp_dir/index.html" ) {
-
-            # tmp index-tmp.html
-            my $s  = file2Str( $base_dir . "/index-tmp.html" );       # read file only when necessary
-            my $wh = newWriteFileHandle("$ifs_tmp_dir/index.html");
-            print $wh $s;
-            close $wh;
-        }
-    }
-
-    if ( -e $tmp_dir ) {
-        if ( !-e "$tmp_dir/index.html" ) {
-
-            # tmp index-tmp.html
-            my $s  = file2Str( $base_dir . "/index-tmp.html" );       # read file only when necessary
-            my $wh = newWriteFileHandle("$tmp_dir/index.html");
-            print $wh $s;
-            close $wh;
-        }
-    }
-}
 
 ############################################################################
 # blockRobots - Block robots from using this script.
@@ -1149,7 +1329,7 @@ sub blockRobots {
     ## .htaccess and robots.txt does not work; we force it.
     my $http_user_agent = $ENV{HTTP_USER_AGENT};
     LogStuff::webLog("HTTP_USER_AGENT='$http_user_agent'\n") if $verbose >= 1;
-    my $remote_addr = $ENV{REMOTE_ADDR};
+    my $remote_addr = getIpAddress();
     LogStuff::webLog("REMOTE_ADDR=$remote_addr\n") if $verbose >= 1;
 
     #
@@ -1164,9 +1344,11 @@ sub blockRobots {
         my $ip = param('ip');
         my $useragent = param('useragent');
 
-        LogStuff::webLog("\nNCBI bot ignored for LinkOut test Apr 27 2015\n");
-        LogStuff::webLog("$remote_addr === $ip\n");
-        LogStuff::webLog("$http_user_agent === $useragent\n\n");
+        # last test last Apr 27 2015
+        # next one Mar 7 2016
+        webLog("\nNCBI bot ignored for LinkOut test Apr 27 2015\n");
+        webLog("$remote_addr === $ip\n");
+        webLog("$http_user_agent === $useragent\n\n");
 
         return;
     }
@@ -1244,7 +1426,7 @@ sub blockRobots {
 }
 
 sub blockIpAddress {
-    my $remote_addr = $ENV{REMOTE_ADDR};
+    my $remote_addr = getIpAddress();
 
     my $file = $env->{block_ip_address_file};
     if ( $file ne '' && -e $file ) {
@@ -1375,6 +1557,89 @@ sub resetContactOid {
 
 
 ############################################################################
+# delete the web logs after given size
+#
+# new for 3.3 - ken
+############################################################################
+#sub purgeLogs {
+#    my ($file) = @_;
+#
+#    # return in bytes
+#    my $filezie = -s $file;
+#
+#    # 100 MB
+#    my $maxsize = 100 * 1024 * 1024;
+#
+#    if ( $filezie > $maxsize ) {
+#
+#        #webErrLog("$filezie unlinked\n");
+#        unlink($file);
+#    }
+#}
+
+############################################################################
+# webLog - Do logging to file.
+############################################################################
+sub webLog {
+    my ($s) = @_;
+    return if ( $verbose < 0 );
+
+    #    my $enable_purge = $env->{enable_purge};
+    #    if ($enable_purge) {
+    #        purgeLogs($web_log_file);
+    #    }
+
+    my $afh = newAppendFileHandle( $web_log_file, "webLog" );
+    print $afh $s;
+    close $afh;
+}
+
+############################################################################
+# webErrLog - Do logging to STDERR to file.
+############################################################################
+sub webErrLog {
+    my ($s) = @_;
+    my $afh = newAppendFileHandle( $err_log_file, "webErrLog" );
+    print $afh $s;
+    close $afh;
+}
+
+# trace logins and logouts
+# $loginType - login or logout
+# $sso - img or sso
+sub loginLog {
+    my ( $loginType, $sso ) = @_;
+    my $login_log_file = $env->{login_log_file};
+    if ( $login_log_file ne '' ) {
+        my $afh         = newAppendFileHandle($login_log_file);
+        my $time        = dateTimeStr();
+        my $session     = getSessionId();
+        my $contactId   = getContactOid();
+        my $url         = $env->{cgi_url};
+        my $remote_addr = getIpAddress();
+        my $servername  = getHostname();
+
+        print $afh $time;
+        print $afh "\t";
+        print $afh $loginType;
+        print $afh "\t";
+        print $afh $sso;
+        print $afh "\t";
+        print $afh $contactId;
+        print $afh "\t";
+        print $afh $remote_addr;
+        print $afh "\t";
+        print $afh $servername;
+        print $afh "\t";
+        print $afh $url;
+        print $afh "\t";
+        print $afh $session;
+        print $afh "\n";
+        close $afh;
+    }
+}
+
+############################################################################
 # getRdbms - Get rdbms type from configuration file.
 ############################################################################
 sub getRdbms {
@@ -1388,7 +1653,7 @@ sub getRdbms {
 #   RDBMS's like mysql.
 ############################################################################
 sub getNvl {
-    return "ifnull" if $rdbms eq "mysql";
+    return "ifnull" if getRdbms() eq "mysql";
     return "nvl";
 }
 
@@ -1407,7 +1672,7 @@ sub unsetEnvPath {
 
     my $envPath = $ENV{PATH};
     if ( $envPath =~ /^(.*)$/ ) {
-	    $ENV{PATH} = $1; # untaint
+	    $ENV{PATH} = $1; #untaint
     }
 	return;
 }
@@ -1665,77 +1930,6 @@ sub newUnzipFileHandle {
     return $fh;
 }
 
-# webfs / db lock file test
-sub webfsTest {
-    my $webfs = $env->{ifs_tmp_parent_dir};
-    my $errorMsg;
-    my $mask   = POSIX::SigSet->new(SIGALRM);    # signals to mask in the handler
-    my $action = POSIX::SigAction->new(
-        sub { webErrorHeader( "IMG webfs hard drive has failed. Please try again later.", 0, -1 ) },   # the handler code ref
-        $mask
-          # not using (perl 5.8.2 and later) 'safe' switch or sa_flags
-    );
-    my $oldaction = POSIX::SigAction->new();
-    sigaction( SIGALRM, $action, $oldaction );
-    eval {
-        alarm( $dbLoginTimeout ) if $dbLoginTimeout;    # seconds before time out
-        if ( -e $webfs ) {
-            # it's fine.
-        }
-        alarm(0);                  # cancel alarm (if connect worked fast)
-    };
-    alarm(0);                      # cancel alarm (if eval failed)
-
-    # restore original signal handler
-    sigaction( SIGALRM, $oldaction );
-    alarm($timeoutSec) if $timeoutSec;
-
-    if ($@) {
-        # eval failed
-        webErrorHeader( "$@", 0, -1 );
-    }
-}
-
-# Can we read the web data dir?
-sub webDataTest {
-    my $common_tmp_dir = $env->{common_tmp_dir};
-    my $web_data_dir   = $env->{web_data_dir};
-    my $str            = "";
-    my $ifs_str        = "";
-    my $web_str        = "";
-
-    if ( !-e $web_data_dir ) {
-        $web_str = "data drive";
-        $str     = qq{
-This is embarrassing. IMG's data files cannot be accessed at this time.
-Please try again later.
-If the problem presist please contact us at:
-<a href="main.cgi?section=Questions&subject=Web Data Problems $web_str">IMG Questions/Comments</a> or email us at:
-<a href="mailto:$jira_email_error?Subject=Web Data Problems $web_str"> IMG Support </a>.
-        };
-    } elsif ( !-e $ifs_tmp_dir ) {
-        $ifs_str = "ifs drive";
-        $str     = qq{
-This is embarrassing. IMG's web temporary area cannot be accessed at this time.
-This only affects our export tools and emailed results tools. You can still use most of IMG's tools.
-If the problem presist please contact us at:
-<a href="main.cgi?section=Questions&subject=Web Data Problems $ifs_str">IMG Questions/Comments</a> or email us at:
-<a href="mailto:$jira_email_error?Subject=Web Data Problems $ifs_str"> IMG Support </a>.
-        };
-    } elsif ( !-e $common_tmp_dir ) {
-        $str = qq{
-This is embarrassing. IMG's BLAST temporary area cannot be accessed at this time.
-This only affects our BLAST tools. You can still use most of IMG's tools.
-If the problem presist please contact us at:
-<a href="main.cgi?section=Questions&subject=Web Data Problems $ifs_str">IMG Questions/Comments</a> or email us at:
-<a href="mailto:$jira_email_error?Subject=Web Data Problems $ifs_str"> IMG Support </a>.
-        };
-
-    }
-
-    return $str;
-}
-
 #############################################################################
 # runCmd - Run external command line tool.  Exit on failure, non-zero
 #   exit status.
@@ -1837,11 +2031,16 @@ sub appendFile {
 # currDateTime - Get current date time string.
 #############################################################################
 sub currDateTime {
+#    my $s = sprintf(
+#        "%d/%d/%d %d:%d:%d",
+#        localtime->mon() + 1, localtime->mday(), localtime->year() + 1900,
+#        localtime->hour(),    localtime->min(),  localtime->sec()
+#    );
     my $s = sprintf(
-        "%d/%d/%d %d:%d:%d",
-        localtime->mon() + 1, localtime->mday(), localtime->year() + 1900,
+        "%04d/%02d/%02d %02d:%02d:%02d",
+        localtime->year() + 1900, localtime->mon() + 1, localtime->mday(), 
         localtime->hour(),    localtime->min(),  localtime->sec()
-    );
+    );    
     return $s;
 }
 
@@ -2358,6 +2557,7 @@ sub readLinearFasta {
         close $rfh2;
     }
     LogStuff::webLog("Index position for $id: $pos1, $pos2\n");
+    #print "Index position for $id: $pos1, $pos2<br/>\n";
 
     if ( $pos1 == -1 ) {
         LogStuff::webLog("WARNING: readLinearFasta() cannot find index for $inFile:'$id'\n");
@@ -2380,6 +2580,9 @@ sub readLinearFasta {
         LogStuff::webLog("WARNING: readLinearFasta() bad pos1r=$pos1r\n");
         return "";
     }
+    #if ( $pos1r < $pos1 ) {
+    #    $pos1r = $pos1
+    #}
 
     my $len   = $end_coord - $start_coord + 1;
     my $pos2r = $pos1r + $len - 1;
@@ -2543,7 +2746,7 @@ sub webError {
     my $copyright_year = $env->{copyright_year};
     my $version_year   = $env->{version_year};
 
-    my $remote_addr = $ENV{REMOTE_ADDR} // '';
+    my $remote_addr = getIpAddress() // '';
     my $servername;
     my $s = getHostname();
     $servername = $s . ' ' . ( $ENV{ORA_SERVICE} || "" ) . ' ' . $];
@@ -2699,6 +2902,262 @@ sub nbsp {
         $s .= "&nbsp; ";
     }
     return $s;
+}
+
+############################################################################
+# dbLogin - Login to oracle or some RDBMS and return handle.
+# 
+# http://search.cpan.org/~lbaxter/Sys-SigAction/dbd-oracle-timeout.POD
+#
+############################################################################
+sub dbLogin {
+	
+	
+	webLog("\n\nStatus: dbLogin ============================== \n\n");
+	
+    if ( $DBH_IMG ne '' ) {
+
+        #http://search.cpan.org/~pythian/DBD-Oracle-1.64/lib/DBD/Oracle.pm#ping
+        #        my  $rv = $DBH_IMG->ping;
+        #        if($rv) {
+        webLog("img using pooled connection \n");
+        return $DBH_IMG;
+
+        #        }
+    }
+
+    if ( $ora_port ne "" && $ora_host ne "" && $ora_sid ne "" ) {
+        $dsn = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid;";
+    }
+
+    my $mask   = POSIX::SigSet->new(SIGALRM);    # signals to mask in the handler
+    my $action = POSIX::SigAction->new(
+        sub {
+        	webErrorHeader("Database connection timeout. UI is waiting too long. Please try again later.");
+        },       # the handler code ref
+        $mask # not using (perl 5.8.2 and later) 'safe' switch or sa_flags
+    );
+
+    my $oldaction = POSIX::SigAction->new();
+    sigaction(SIGALRM, $action, $oldaction );
+    my $dbh;
+    eval {
+        alarm($dbLoginTimeout);                  # seconds before time out
+        $dbh = DBI->connect( $dsn, $user, pwDecode($pw) );
+        alarm(0);                                # cancel alarm (if connect worked fast)
+    };
+    alarm(0);                                    # cancel alarm (if eval failed)
+
+    # restore original signal handler
+    sigaction(SIGALRM, $oldaction );
+    alarm($timeoutSec) if ( $timeoutSec ne '' && $timeoutSec > 0 );
+
+    if ($@) {
+        webError("$@");
+    } elsif ( !defined($dbh) ) {
+        my $error = $DBI::errstr;
+
+        #webLog("$error\n");
+        if ( $error =~ "ORA-00018" ) {
+
+            # "ORA-00018: maximum number of sessions exceeded"
+            webErrorHeader( "<br/> Sorry, database is very busy. " . "Please try again later. <br/> $error", 1 );
+        } else {
+            webErrorHeader(
+                "<br/>  This is embarrassing. Sorry, database is down. " . "Please try again later. <br/> $error", 1 );
+        }
+    }
+    $dbh->{LongReadLen} = $maxClobSize;
+    $dbh->{LongTruncOk} = 1;
+
+    $DBH_IMG = $dbh;
+
+    my $max = getMaxSharedConn($dbh);
+    my $opn = getOpenSharedConn($dbh);
+    webLog("max = $max , open = $opn\n");
+    webErrLog("max = $max , open = $opn\n");
+    if ( !$env->{ignore_db_check} && $opn >= $max ) {
+        dbLogoutImg();
+        dbLogoutGold();        
+        webErrorHeader( "<br>We are sorry. The database is very busy ($opn, $max). Please try again later. <br> ", 1 );
+    }
+
+    return $dbh;
+}
+
+#
+# max number of possible shared connections
+#
+sub getMaxSharedConn {
+    my ($dbh) = @_;
+
+
+    return 100; # all other img system
+
+#    my $sql = qq{
+#select value from v\$parameter where name = 'max_shared_servers'
+#    };
+#    my $cur = execSql( $dbh, $sql, $verbose );
+#    my ($cnt) = $cur->fetchrow();
+#
+#    return $cnt;
+}
+
+#
+# the number of current open shared connections
+#
+# I should take 80% ??? of the max to test against to throw a db busy message
+#
+sub getOpenSharedConn {
+    my ($dbh) = @_;
+    my $sql = qq{
+select count(*) from v\$session where server != 'DEDICATED'
+    };
+
+    my $cur = execSql( $dbh, $sql, $verbose );
+    my ($cnt) = $cur->fetchrow();
+
+    return $cnt;
+}
+
+sub dbGoldLogin {
+    my ($isAjaxCall) = @_;
+
+    if ( $DBH_GOLD ne '' ) {
+
+        #        my  $rv = $DBH_GOLD->ping;
+        #        if($rv) {
+        webLog("gold using pooled connection \n");
+        return $DBH_GOLD;
+
+        #        }
+    }
+
+    # use the new database imgsg_dev
+    my $user;        #     = "imgsg_dev";
+    my $pw;          #       = decode_base64('VHVlc2RheQ==');
+    my $ora_host;    # = 'muskrat.jgi-psf.org';                 #"jericho.jgi-psf.org";
+    my $ora_port;    # = "";
+    my $ora_sid;     #  = "imgiprd";
+    my $dsn;         #      = "dbi:Oracle:" . $ora_sid;
+
+    my $img_ken_localhost      = $env->{img_ken_localhost};
+    my $img_gold_oracle_config = $env->{img_gold_oracle_config};
+
+    if ($img_ken_localhost) {
+
+        # used by ken for local testing only!
+
+        $user = "imgsg_dev";
+        $pw   = decode_base64('VHVlc2RheQ==');
+
+        $ora_host = "localhost";
+        $ora_port = "1531";
+        $ora_sid  = "imgiprd";
+    } elsif ($img_gold_oracle_config) {
+
+        require $img_gold_oracle_config;
+        $dsn      = $ENV{ORA_DBI_DSN_GOLD};
+        $user     = $ENV{ORA_USER_GOLD};
+        $pw       = pwDecode( $ENV{ORA_PASSWORD_GOLD} );
+        $ora_port = "";
+        $ora_sid  = "";
+        $ora_host = "";
+
+        #webLog("===== using gold snapshot db ===========\n");
+    }
+
+    if ( $ora_port ne "" ) {
+        $dsn = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid";
+    }
+
+    my $mask   = POSIX::SigSet->new(SIGALRM);    # signals to mask in the handler
+    my $action = POSIX::SigAction->new(
+        sub {
+            if ($isAjaxCall) {
+                return '';
+                webExit(0);
+            } else {
+                webErrorHeader("GOLD database connection timeout. UI is waiting too long. Please try again later.");
+            }
+
+        },                                       # the handler code ref
+        $mask
+
+          # not using (perl 5.8.2 and later) 'safe' switch or sa_flags
+    );
+
+    my $oldaction = POSIX::SigAction->new();
+    sigaction(SIGALRM, $action, $oldaction );
+    my $dbh;
+    eval {
+        alarm($dbLoginTimeout);                  # seconds before time out
+        $dbh = DBI->connect( $dsn, $user, pwDecode($pw) );
+        alarm(0);                                # cancel alarm (if connect worked fast)
+    };
+    alarm(0);                                    # cancel alarm (if eval failed)
+
+    # restore original signal handler
+    sigaction(SIGALRM, $oldaction );
+    alarm($timeoutSec) if ( $timeoutSec ne '' && $timeoutSec > 0 );
+
+    if ($@) {
+        webError("$@");
+    } elsif ( !defined($dbh) ) {
+        my $error = $DBI::errstr;
+
+        #webLog("$error\n");
+        if ( $error =~ "ORA-00018" ) {
+
+            # "ORA-00018: maximum number of sessions exceeded"
+            webErrorHeader( "<br/> DB GOLD: Sorry, database is very busy. " . "Please try again later. <br/> $error", 1 );
+        } else {
+            webErrorHeader(
+                "<br/> DB GOLD: This is embarrassing. Sorry, database is down. " . "Please try again later. <br/> $error",
+                1 );
+        }
+    }
+    $dbh->{LongReadLen} = $maxClobSize;
+    $dbh->{LongTruncOk} = 1;
+
+    $DBH_GOLD = $dbh;
+    
+    my $max = getMaxSharedConn($dbh);
+    my $opn = getOpenSharedConn($dbh);
+    webLog("max = $max , open = $opn\n");
+    webErrLog("max = $max , open = $opn\n");
+    if ( !$env->{ignore_db_check} && $opn >= $max ) {
+        dbLogoutImg();
+        dbLogoutGold();
+        webErrorHeader( "<br>We are sorry. The GOLD database is very busy ($opn, $max). Please try again later. <br> ", 1 );
+    }    
+    
+    
+    return $dbh;
+}
+
+#
+# logout of img
+#
+sub dbLogoutImg {
+    if ( $DBH_IMG ne '' ) {
+        webLog("img pooled connection logout\n");
+        $DBH_IMG->disconnect();
+        $DBH_IMG = '';
+    }
+
+    #stackTrace("WebUtil::dbLogoutImg()");
+}
+
+#
+# logout of gold
+#
+sub dbLogoutGold {
+    if ( $DBH_GOLD ne '' ) {
+        webLog("gold pooled connection logout\n");
+        $DBH_GOLD->disconnect();
+        $DBH_GOLD = '';
+    }
 }
 
 ############################################################################
@@ -3661,9 +4120,9 @@ sub alignImage {
     my $seg3      = int( $image_len - $end_pos );
     $seg2 = 1 if $seg2 < 1;
     LogStuff::webLog "  seg1=$seg1 seg2=$seg2 seg3=$seg3\n" if $verbose >= 3;
-    my $s = "<image src='$base_url/images/rect.blue.png' " . "width='$seg1' height='1' />";
-    $s .= "<image src='$base_url/images/rect.green.png' " . "width='$seg2' height='5' />";
-    $s .= "<image src='$base_url/images/rect.blue.png' " . "width='$seg3' height='1' />";
+    my $s = "<img src='$base_url/images/rect.blue.png' " . "width='$seg1' height='1' />";
+    $s .= "<img src='$base_url/images/rect.green.png' " . "width='$seg2' height='5' />";
+    $s .= "<img src='$base_url/images/rect.blue.png' " . "width='$seg3' height='1' />";
     return $s;
 }
 
@@ -3675,7 +4134,7 @@ sub histogramBar {
     my ( $percentage, $maxLen, $url ) = @_;
     my $w = int( $maxLen * $percentage );
     my $h = 10;
-    my $s = "<image src='$base_url/images/rect.green.png' " . "width='$w' height='$h'/>";
+    my $s = "<img src='$base_url/images/rect.green.png' " . "width='$w' height='$h'/>";
     if ( $url ne "" ) {
         my $s2 = "<a href='$url'>$s</a>";
         $s = $s2;
@@ -4227,14 +4686,24 @@ sub getPhyloDomainCounts {
 # Note: \n adds extra space, so do not use it!
 ############################################################################
 sub printCartFooter {
-    my ( $id, $buttonLabel, $bclass, $form_id ) = @_;
+    my ( $id, $buttonLabel, $bclass, $form_id, $jsCall ) = @_;
     my $buttonClass = "meddefbutton";
     $buttonClass = $bclass if $bclass ne "";
-    print submit(
-        -name  => $id,
-        -value => $buttonLabel,
-        -class => $buttonClass
-    );
+    if ( $jsCall ) {
+        print submit(
+            -name  => $id,
+            -value => $buttonLabel,
+            -class => $buttonClass,
+            -onclick => $jsCall
+        );        
+    }
+    else {
+        print submit(
+            -name  => $id,
+            -value => $buttonLabel,
+            -class => $buttonClass
+        );        
+    }
     print nbsp(1);
     printButtonFooter($form_id);
 }
@@ -4342,8 +4811,8 @@ sub printFuncCartFooterForEditor {
 }
 
 sub printGeneCartFooter {
-    my ($form_id) = @_;
-    printCartFooter( "_section_GeneCartStor_addToGeneCart", "Add Selected to Gene Cart", "", $form_id );
+    my ($form_id, $jsCall) = @_;
+    printCartFooter( "_section_GeneCartStor_addToGeneCart", "Add Selected to Gene Cart", "", $form_id, $jsCall );
 }
 
 sub printGeneCartFooterWithToggle {
@@ -4840,132 +5309,6 @@ sub completionLetterNoteParen {
     return $s;
 }
 
-############################################################################
-# addNxFeatures - Add feature on scaffold panel for long strings
-#   of N's and X's.
-#   Inputs:
-#     dbh - database handle
-#     scaffold_oid - scaffold object identifer
-#     scf_panel - scaffold panel handle
-#     panelStrand - panel strand orientation
-#     scf_start_coord - scaffold start coorindate
-#     scf_end_coord - scaffold end coordinate
-############################################################################
-sub addNxFeatures {
-    my ( $dbh, $scaffold_oid, $scf_panel, $panelStrand, $scf_start_coord, $scf_end_coord ) = @_;
-    my $sql = qq{
-       select distinct ft.scaffold_oid, ft.start_coord, ft.end_coord
-       from scaffold_nx_feature ft
-       where ft.scaffold_oid = ?
-       and ft.seq_length > 500
-       and( ( ft.start_coord > ? and
-               ft.end_coord < ? ) or
-            ( ? <= ft.start_coord and
-	       ft.start_coord <= ? ) or
-            ( ? <= ft.end_coord and
-	       ft.end_coord <= ? )
-       )
-   };
-    my $cur = execSql(
-        $dbh,           $sql,             $verbose,       $scaffold_oid,    $scf_start_coord,
-        $scf_end_coord, $scf_start_coord, $scf_end_coord, $scf_start_coord, $scf_end_coord
-    );
-    my $count = 0;
-    for ( ; ; ) {
-        my ( $scaffold_oid, $start_coord, $end_coord ) = $cur->fetchrow();
-        last if !$scaffold_oid;
-        $count++;
-        $scf_panel->addNxBrackets( $start_coord, $end_coord, $panelStrand );
-    }
-    $cur->finish();
-    LogStuff::webLog "$count features found\n" if $verbose >= 3;
-}
-############################################################################
-# addRepeats -  Mark crispr and other repeat features.
-#   Inputs:
-#     dbh - database handle
-#     scaffold_oid - scaffold object identifer
-#     scf_panel - scaffold panel handle
-#     panelStrand - panel strand orientation
-#     scf_start_coord - scaffold start coorindate
-#     scf_end_coord - scaffold end coordinate
-############################################################################
-sub addRepeats {
-    my ( $dbh, $scaffold_oid, $scf_panel, $panelStrand, $scf_start_coord, $scf_end_coord ) = @_;
-
-    #return if !$img_internal && !$include_metagenomes;
-
-    my $sql = qq{
-       select distinct sr.start_coord, sr.end_coord, sr.n_copies, sr.type
-       from scaffold_repeats sr
-       where sr.scaffold_oid = ?
-       and ( sr.end_coord - sr.start_coord ) > 50
-       and( ( sr.start_coord > ? and
-               sr.end_coord < ? ) or
-            ( ? <= sr.start_coord and
-	       sr.start_coord <= ? ) or
-            ( ? <= sr.end_coord and
-	       sr.end_coord <= ? )
-       )
-   };
-    my $cur = execSql(
-        $dbh,           $sql,             $verbose,       $scaffold_oid,    $scf_start_coord,
-        $scf_end_coord, $scf_start_coord, $scf_end_coord, $scf_start_coord, $scf_end_coord
-    );
-    my $count = 0;
-    for ( ; ; ) {
-        my ( $start_coord, $end_coord, $n_copies, $type ) = $cur->fetchrow();
-        last if !$start_coord;
-        $count++;
-        if ( $type eq "crispr" || $type eq "CRISPR" ) {
-            $scf_panel->addCrispr( $start_coord, $end_coord, $panelStrand, $n_copies );
-        }
-    }
-    $cur->finish();
-    LogStuff::webLog "$count repeats found\n" if $verbose >= 1;
-}
-
-############################################################################
-# addIntergenic -  Mark intergenic regions.
-#   Inputs:
-#     dbh - database handle
-#     scaffold_oid - scaffold object identifer
-#     scf_panel - scaffold panel handle
-#     panelStrand - panel strand orientation
-#     scf_start_coord - scaffold start coorindate
-#     scf_end_coord - scaffold end coordinate
-############################################################################
-sub addIntergenic {
-    my ( $dbh, $scaffold_oid, $scf_panel, $panelStrand, $scf_start_coord, $scf_end_coord ) = @_;
-
-    #return if !$img_internal;
-
-    my $sql = qq{
-       select distinct ig.start_coord, ig.end_coord
-       from dt_intergenic ig
-       where ig.scaffold_oid = ?
-       and( ( ig.start_coord > ? and
-               ig.end_coord < ? ) or
-            ( ? <= ig.start_coord and
-	       ig.start_coord <= ? ) or
-            ( ? <= ig.end_coord and
-	       ig.end_coord <= ? )
-       )
-   };
-    my $cur = execSql(
-        $dbh,           $sql,             $verbose,       $scaffold_oid,    $scf_start_coord,
-        $scf_end_coord, $scf_start_coord, $scf_end_coord, $scf_start_coord, $scf_end_coord
-    );
-    my $count = 0;
-    for ( ; ; ) {
-        my ( $start_coord, $end_coord ) = $cur->fetchrow();
-        last if !$start_coord;
-        $count++;
-        $scf_panel->addIntergenic( $scaffold_oid, $start_coord, $end_coord, $panelStrand );
-    }
-    $cur->finish();
-    LogStuff::webLog "$count intergenic found\n" if $verbose >= 3;
-}
 
 ############################################################################
 # readFileIndexed - Read file index sorted.
@@ -5009,9 +5352,27 @@ sub readFileIndexed {
 # printExcelHeader - Print HTTP header for outputting to Excel.
 ############################################################################
 sub printExcelHeader {
-    my ($fileName) = @_;
+    my ($fileName, $sz) = @_;
+    
     print "Content-type: application/vnd.ms-excel\n";
     print "Content-Disposition: inline;filename=$fileName\n";
+    if ( $sz && $sz > 0 ) {
+        print "Content-length: $sz\n";        
+    }
+    print "\n";
+}
+
+############################################################################
+# printTxtHeader - Print HTTP header for outputting to txt editor.
+############################################################################
+sub printTxtHeader {
+    my ($fileName, $sz) = @_;
+    
+    print "Content-type: application/text\n";
+    print "Content-Disposition: inline;filename=$fileName\n";
+    if ( $sz && $sz > 0 ) {
+        print "Content-length: $sz\n";        
+    }
     print "\n";
 }
 
@@ -5323,7 +5684,7 @@ sub tableExists {
     $tableName      =~ tr/a-z/A-Z/;
     my $tableNameLc =~ tr/A-Z/a-z/;
     my $cnt = 0;
-    if ( $rdbms eq "mysql" ) {
+    if ( getRdbms() eq "mysql" ) {
         my $sql = qq{
 	   show tables
         };
@@ -5338,7 +5699,7 @@ sub tableExists {
         }
         $cur->finish();
     }
-    if ( $rdbms eq "oracle" ) {
+    if ( getRdbms() eq "oracle" ) {
         my $sql = qq{
         select count(*)
         from user_objects
@@ -5350,8 +5711,8 @@ sub tableExists {
         $cnt = $cur->fetchrow();
         $cur->finish();
     }
-    LogStuff::webLog "tableExists('$tableName') $cnt rdbms='$rdbms'\n"
-      if $verbose >= 1;
+#    webLog "tableExists('$tableName') $cnt rdbms='getRdbms()'\n"
+#      if $verbose >= 1;
     return $cnt;
 }
 
@@ -5490,7 +5851,7 @@ sub urClauseBind {
 # $alias - taxon table sql alias - required
 #
 sub imgClause {
-    my ($alias, $forced_img_nr_no) = @_;
+    my ($alias, $forced_img_nr_no, $no_public_restriction) = @_;
 
     my $clause = "";
 
@@ -5501,7 +5862,7 @@ sub imgClause {
 
     # w, geba is now w, m
     #if(!$user_restricted_site || $public_nologin_site) {
-    if ( !$user_restricted_site ) {
+    if ( !$user_restricted_site && !$no_public_restriction ) {
         $clause .= " and $alias" . '.' . "is_public = 'Yes' ";
     }
 
@@ -5933,6 +6294,7 @@ sub validateGenePerms {
 sub checkScaffoldPerm {
     my ( $dbh, $scaffold_oid ) = @_;
     return if !$user_restricted_site;
+
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
         webError("Session expired. You do not have permission to view this genome.");
@@ -6841,38 +7203,6 @@ sub geneOid2TaxonOid {
 }
 
 ############################################################################
-# scaffoldOid2TaxonOid - Get taxon_oid from scaffold_oid.
-############################################################################
-sub scaffoldOid2TaxonOid {
-    my ( $dbh, $scaffold_oid ) = @_;
-    my $sql = qq{
-        select scf.taxon
-	from scaffold scf
-	where scf.scaffold_oid = ?
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    my ($taxon_oid) = $cur->fetchrow();
-    $cur->finish();
-    return $taxon_oid;
-}
-
-############################################################################
-# scaffoldOid2ExtAccession - Retrieve external accession.
-############################################################################
-sub scaffoldOid2ExtAccession {
-    my ( $dbh, $scaffold_oid ) = @_;
-    my $sql = qq{
-        select scf.ext_accession
-	from scaffold scf
-	where scf.scaffold_oid = ?
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $scaffold_oid );
-    my ($ext_accession) = $cur->fetchrow();
-    $cur->finish();
-    return $ext_accession;
-}
-
-############################################################################
 # getScaffoldSeq - Get sequence give a scaffold_oid and coordinates.
 ############################################################################
 sub getScaffoldSeq {
@@ -6915,7 +7245,7 @@ sub getScaffoldSeq {
 ############################################################################
 sub lowerAttr {
     my ( $attr, $forceFunc ) = @_;
-    if ( $rdbms eq "mysql" && !$forceFunc ) {
+    if ( getRdbms() eq "mysql" && !$forceFunc ) {
 
         #return "${attr}_lc";
         return "lower( $attr )";
@@ -7261,7 +7591,7 @@ sub loadProxyGeneName {
     }
     my $to_char = "to_char";
     my $to_char_x;
-    if ( $rdbms eq "mysql" ) {
+    if ( getRdbms() eq "mysql" ) {
         $to_char   = "cast";
         $to_char_x = "as char";
     }
@@ -7318,7 +7648,7 @@ sub loadDtProxyGeneInfo_old {
     }
     my $to_char = "to_char";
     my $to_char_x;
-    if ( $rdbms eq "mysql" ) {
+    if ( getRdbms() eq "mysql" ) {
         $to_char   = "cast";
         $to_char_x = "as char";
     }
@@ -8086,7 +8416,10 @@ sub myLwpUserAgent {
     # Doug has fixed the bad cert - I can commit out the below line
     # all servers are fixed
 
-    # $ua->ssl_opts(verify_hostname => 0, SSL_verify_mode => 0x00);
+    # hack again for the new blast server - ken 2016-02-16
+    $ua->ssl_opts(verify_hostname => 0, SSL_verify_mode => 0x00);
+
+    # $ua->agent('Mozilla/5.0');
 
     return $ua;
 }
@@ -8577,6 +8910,9 @@ sub printStartWorkingDiv {
 ############################################################################
 sub printEndWorkingDiv {
     my ( $name, $noClear ) = @_;
+    
+    $noClear = 1 if($img_ken);
+    
     print qq{
        </p>
        </div>
@@ -9333,9 +9669,11 @@ sub getClusterHomologRows {
 
     unsetEnvPath();
 
-    my $tmpDir = "$cgi_tmp_dir/clusterHomologs$$.tmpDir";
-    runCmd("/bin/rm -fr $tmpDir");
-    runCmd("/bin/mkdir -p $tmpDir");
+    require Command;
+    my $cgi_tmp_dir2 = Command::createSessionDir();
+    my $tmpDir = "$cgi_tmp_dir2/clusterHomologs$$.tmpDir";
+    #runCmd("/bin/rm -fr $tmpDir");
+    #runCmd("/bin/mkdir -p $tmpDir");
     runCmd("/bin/cp $cgi_dir/BLOSUM62 $tmpDir");
     my $queryTmpFile = "$tmpDir/query.$gene_oid.faa";
     my $subjTmpFile  = "$tmpDir/subject.$gene_oid.faa";
@@ -9388,7 +9726,20 @@ sub getClusterHomologRows {
 
     # --path is needed although fullpath of legacy_blast.pl is
     # specified in the beginning of command! ---yjlin 03/12/2013
-    runCmd($cmd);
+    #runCmd($cmd);
+        print "Calling blast api<br>\n";
+        my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
+        if ( $stdOutFile == -1 ) {
+
+            # close working div but do not clear the data
+            printEndWorkingDiv( '', 1 );
+            printStatusLine( "Error.", 2 );
+            WebUtil::webExit(-1);
+        }
+        print "blast done<br>\n";
+    
+    
     LogStuff::webLog( ">>> Singleton BLAST " . currDateTime() . "\n" );
 
     $cmd =
@@ -9397,9 +9748,22 @@ sub getClusterHomologRows {
       . " -e 1e-2 -F F  $z_arg -m 8 -o $tmpOutFile2 -a 16 -b 2500 "
       . " --path $blastall_bin ";
 
+        print "Calling blast api<br>\n";
+        my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
+        my $stdOutFile = Command::runCmdViaUrl( $cmdFile, $stdOutFilePath );
+        if ( $stdOutFile == -1 ) {
+
+            # close working div but do not clear the data
+            printEndWorkingDiv( '', 1 );
+            printStatusLine( "Error.", 2 );
+            WebUtil::webExit(-1);
+        }
+        print "blast done<br>\n";
+
+
     # --path is needed although fullpath of legacy_blast.pl is
     # specified in the beginning of command! ---yjlin 03/12/2013
-    runCmd($cmd);
+    #runCmd($cmd);
     LogStuff::webLog( ">>> Sort and write " . currDateTime() . "\n" );
 
     my @rows;
@@ -9613,7 +9977,7 @@ sub printCustomHeader {
     my $helplink = "";
     if ( $help ne "" ) {
         $helplink = qq{
-            <a href="$base_url/doc/$help" target="_help" onClick="_gaq.push(['_trackEvent', 'Document', 'printHeaderWithInfo', '$help']);">
+            <a href="$base_url/../docs/$help" target="_help" onClick="_gaq.push(['_trackEvent', 'Document', 'printHeaderWithInfo', '$help']);">
             <img width="30" height="24" border="0"
              src="$base_url/images/help.gif" title="view help document"
              style="cursor:pointer; cursor:hand;" /></a>
@@ -9623,7 +9987,7 @@ sub printCustomHeader {
     my $howtolink = "";
     if ( $howto ne "" ) {
         $howtolink = qq{
-            <a href=$base_url/doc/$howto target=_help onClick="_gaq.push(['_trackEvent', 'Document', 'printHeaderWithInfo', '$howto']);">
+            <a href=$base_url/../docs/$howto target=_help onClick="_gaq.push(['_trackEvent', 'Document', 'printHeaderWithInfo', '$howto']);">
             <img width="20" height="24" border="0"
              src="$base_url/images/howto.png" title="view how-to in IMG"
              style="cursor:pointer; cursor:hand;" /></a>
@@ -9631,25 +9995,26 @@ sub printCustomHeader {
     }
 
     my $javalink = "";
-    if ( $java ne "" ) {
-        my $javatext =
-"Please verify the current version of java using: <a href=http://www.java.com/en/download/installed.jsp >verify</a>. <br/>Please make sure that older versions of java are uninstalled. This can be done using: <a href=http://www.java.com/en/download/uninstallapplet.jsp >uninstall</a> <br/>With Java 7 Update 51 or later, you need to go to Control Panel -> Java -> Security tab, click on <u>Edit Site List</u> and add the following to the list: <br/><br/> http://img.jgi.doe.gov/ <br/> https://img.jgi.doe.gov/ <br/><br/>On linux, go to your jre/bin directory and launch jcontrol to change the security setting as above.<br/>See <a href=$base_url/doc/systemreqs.html >System Requirements</a> for supported browsers. Some browsers may have issues with java.";
-
-        my $info3 =
-            "onclick=\"return overlib('$javatext', "
-          . "RIGHT, STICKY, MOUSEOFF, "
-          . "CAPTION, 'Java issues in IMG', "
-          . "FGCOLOR, '#E0FFC2', "
-          . "WIDTH, 450)\" "
-          . "onmouseout='return nd()' ";
-
-        $javalink = qq{
-        <a $info3>
-        <img src="$base_url/images/java-cup.jpg" width="24" height="24"
-        border="0" title="view java issues in IMG"
-        style="cursor:pointer; cursor:hand;" /></a>
-        };
-    }
+    # java support end ken 2016-02-19
+#    if ( $java ne "" ) {
+#        my $javatext =
+#"Please verify the current version of java using: <a href=http://www.java.com/en/download/installed.jsp >verify</a>. <br/>Please make sure that older versions of java are uninstalled. This can be done using: <a href=http://www.java.com/en/download/uninstallapplet.jsp >uninstall</a> <br/>With Java 7 Update 51 or later, you need to go to Control Panel -> Java -> Security tab, click on <u>Edit Site List</u> and add the following to the list: <br/><br/> http://img.jgi.doe.gov/ <br/> https://img.jgi.doe.gov/ <br/><br/>On linux, go to your jre/bin directory and launch jcontrol to change the security setting as above.<br/>See <a href=$base_url/doc/systemreqs.html >System Requirements</a> for supported browsers. Some browsers may have issues with java.";
+#
+#        my $info3 =
+#            "onclick=\"return overlib('$javatext', "
+#          . "RIGHT, STICKY, MOUSEOFF, "
+#          . "CAPTION, 'Java issues in IMG', "
+#          . "FGCOLOR, '#E0FFC2', "
+#          . "WIDTH, 450)\" "
+#          . "onmouseout='return nd()' ";
+#
+#        $javalink = qq{
+#        <a $info3>
+#        <img src="$base_url/images/java-cup.jpg" width="24" height="24"
+#        border="0" title="view java issues in IMG"
+#        style="cursor:pointer; cursor:hand;" /></a>
+#        };
+#    }
 
     print qq{
         $header $infolink
@@ -9777,81 +10142,13 @@ sub parseDNACoords {
     return ( $start_coord, $end_coord, $partial_gene, $error_msg );
 }
 
-#
-# convert a list of function ids to a url
-# the list is plain text separated by space
-# return string of html <a> tags
-# otherwise id is returned back
-#
-sub functionIdToUrl {
-    my ( $id, $type, $gene_oid ) = @_;
-
-    my $pfam_base_url    = $env->{pfam_base_url};
-    my $cog_base_url     = $env->{cog_base_url};
-    my $tigrfam_base_url = $env->{tigrfam_base_url};
-    my $enzyme_base_url  = $env->{enzyme_base_url};
-    my $kegg_module_url  = $env->{kegg_module_url};
-    my $ipr_base_url     = $env->{ipr_base_url};
-    my $cassette_url     = 'main.cgi?section=GeneCassette&page=cassetteBox&type=cog&cassette_oid=';
-
-    # main.cgi?section=KeggPathwayDetail&page=koterm2&ko_id=KO:K13280&gene_oid=646510566
-    my $ko_url = 'main.cgi?section=KeggPathwayDetail&page=koterm2&gene_oid=' . $gene_oid . '&ko_id=';
-
-    # sometimes the id is the list of ids separate by a space
-    my @ids = split( /\s/, $id );
-    my $urls;
-    if ( $id =~ /^COG/i ) {
-        foreach my $i (@ids) {
-            my $tmp = alink( $cog_base_url . $i, $i );
-            $urls .= " $tmp";
-        }
-    } elsif ( $id =~ /^EC/i ) {
-        foreach my $i (@ids) {
-            my $o = $i;
-            $i =~ tr/A-Z/a-z/;
-            my $tmp = alink( $enzyme_base_url . $i, $o );
-            $urls .= " $tmp";
-        }
-    } elsif ( $id =~ /^pfam/i ) {
-        foreach my $i (@ids) {
-            my $o = $i;
-            $i =~ s/pfam/PF/;
-            my $tmp = alink( $pfam_base_url . $i, $o );
-            $urls .= " $tmp";
-        }
-    } elsif ( $id =~ /^TIGR/i ) {
-        foreach my $i (@ids) {
-            my $tmp = alink( $tigrfam_base_url . $i, $i );
-            $urls .= " $tmp";
-        }
-    } elsif ( $id =~ /^IPR/i ) {
-        foreach my $i (@ids) {
-            my $tmp = alink( $ipr_base_url . $i, $i );
-            $urls .= " $tmp";
-        }
-    } elsif ( $id =~ /^KO/i ) {
-        foreach my $i (@ids) {
-            my $tmp = alink( $ko_url . $i, $i );
-            $urls .= " $tmp";
-        }
-
-    } elsif ( $type eq 'cassette' ) {
-        $urls = alink( $cassette_url . $id, $id );
-    }
-
-    if ( $urls ne '' ) {
-        return $urls;
-    } else {
-        return $id;
-    }
-}
-
 sub getGenomeHitsDir {
     my $sessionId = getSessionId();
     my $dir       = getSessionDir();
     $dir .= "/genomeHits";
     if ( !( -e "$dir" ) ) {
-        mkdir "$dir" or webError("Cannot make $dir: $!");
+        #mkdir "$dir" or webError("Cannot make $dir!");
+        myMakeDir($dir);
     }
     return ( $dir, $sessionId );
 }
@@ -9860,8 +10157,9 @@ sub getCartDir {
     my $sessionId = getSessionId();
     my $dir       = getSessionDir();
     $dir .= "/cart";
-    if ( ! -e "$dir" ) {
-        mkdir "$dir" or webError("Cannot make $dir: $!");
+    if ( !( -e "$dir" ) ) {
+        #mkdir "$dir" or webError("Cannot make $dir!");
+        myMakeDir($dir);
     }
     return ( $dir, $sessionId );
 #    return wantarray ? ( $dir, $sessionId ) : $dir ;
@@ -9879,17 +10177,37 @@ sub getSessionDir {
     my $sessionId = getSessionId();
     my $dir       = "$cgi_tmp_dir/$sessionId";
     if ( ! -e "$dir" ) {
-        mkdir "$dir" or webError("Cannot create session directory $dir: $!");
+        #mkdir "$dir" or webError("Cannot make $dir!");
+        myMakeDir($dir);
     }
 
     if ( $subDir ) {
         $dir = "$cgi_tmp_dir/$sessionId/$subDir";
         if ( ! -e "$dir" ) {
-            mkdir "$dir" or webError("Cannot make $dir: $!");
+            #mkdir "$dir" or webError("Cannot make $dir!");
+            myMakeDir($dir);
         }
     }
 
     return $dir;
+}
+
+# mkdir -p
+sub myMakeDir {
+    my ($dir) = @_;
+    umask 0000;
+    my $err;
+    make_path( $dir, { mode => 0777, error => \$err} );
+    if (@$err) {
+      for my $diag (@$err) {
+          my ($file, $message) = %$diag;
+          if ($file eq '') {
+              webErrorHeader("Cannot make $dir: general error: $message\n");
+          } else {
+              webErrorHeader("Cannot make $dir: problem unlinking $file: $message\n");
+          }
+      }
+    }    
 }
 
 #
@@ -9913,15 +10231,17 @@ sub getSessionTmpDir {
     my $sessionId = getSessionId();
     my $dir       = "$tmp_dir/public/$sessionId";
     if ( !( -e "$dir" ) ) {
-        mkdir "$dir" or webError("Cannot make $dir!");
-        chmod( 0777, $dir );
+        #mkdir "$dir" or webError("Cannot make $dir!");
+        #chmod( 0777, $dir );
+        myMakeDir($dir);
     }
 
     if ( $subDir ne '' ) {
         $dir = "$tmp_dir/public/$sessionId/$subDir";
         if ( !( -e "$dir" ) ) {
-            mkdir "$dir" or webError("Cannot make $dir!");
-            chmod( 0777, $dir );
+            #mkdir "$dir" or webError("Cannot make $dir!");
+            #chmod( 0777, $dir );
+            myMakeDir($dir);
         }
     }
 
@@ -9937,26 +10257,32 @@ sub getSessionTmpDirUrl {
     my ($subDir) = @_;
 
     my $sessionId = getSessionId();
-    my $dir       = "$tmp_url/public/$sessionId";
-    my $dirTest   = "$tmp_dir/public/$sessionId";
-    if ( !( -e $dirTest ) ) {
-        webError("Cannot find $dirTest!");
-    }
+    my $dirUrl;
 
     if ( $subDir ne '' ) {
-        $dir = "$tmp_url/public/$sessionId/$subDir";
-        if ( !( -e "$dirTest/$subDir" ) ) {
-            webError("Cannot find $dirTest!");
+        $dirUrl = "$tmp_url/public/$sessionId/$subDir";
+        my $subdirTest   = getSessionTmpDir($subDir);
+        if ( !( -e $subdirTest ) ) {
+            webError("Cannot find $subdirTest!");
         }
     }
+    else {
+        my $dirUrl = "$tmp_url/public/$sessionId";
+        my $dirTest = getSessionTmpDir();
+        if ( !( -e $dirTest ) ) {
+            webError("Cannot find $dirTest!");
+        }
+        #print "getSessionTmpDirUrl() exist dirTest=$dirTest<br/>\n";        
+    }
 
-    return $dir;
+    return $dirUrl;
 }
 
 sub getGenerateDir {
     my $dir = "$cgi_tmp_dir/generate";
     if ( !( -e "$dir" ) ) {
-        mkdir "$dir" or webError("Cannot make $dir!");
+        #mkdir "$dir" or webError("Cannot make $dir!");
+        myMakeDir($dir);
     }
     return ($dir);
 }
@@ -10110,6 +10436,16 @@ sub hasProdege {
         return 'https://prodege.jgi.doe.gov' . $subUrl;
     }
     return '';
+}
+
+sub getIpAddress {
+    # HTTP_X_FORWARDED_FOR gets true client ip address when there is a load balancer port forwarding to web server
+    # REMOTE_ADDR will be the 127.xxxxx ip address which is imcorrect - ken
+    my $remote_addr =  $ENV{HTTP_X_FORWARDED_FOR};
+    if (!$remote_addr) {
+        $remote_addr = $ENV{REMOTE_ADDR};
+    }
+    return $remote_addr; 
 }
 
 1;

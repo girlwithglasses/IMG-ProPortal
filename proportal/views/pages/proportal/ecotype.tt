@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Ecotype Browser';
+	title = 'Ecotype Browser';
 %]
 <h2>Sample Distribution by Ecotype</h2>
 <section class="info--ecotype init page-intro">
@@ -18,7 +18,7 @@
 </div>
 </section>
 <section role="complementary" class="ecotype-data">
-[% WRAPPER 'inc/cart_genome_add.tt'; %]
+[% WRAPPER 'inc/cart/taxon_add.tt'; %]
 <ul class="noDot">
 [%	FOREACH ecotype IN results.js.data.keys.sort; %]
 [%		FOREACH clade IN results.js.data.$ecotype.keys.sort; %]

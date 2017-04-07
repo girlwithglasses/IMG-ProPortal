@@ -57,7 +57,7 @@ sub get_data {
 #	return decode_json <DATA>;
 	return $self->_core->run_query({
 		query => 'taxon_metadata',
-		filters => $self->filters,
+		filters => $self->filters
 	});
 }
 

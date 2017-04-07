@@ -15,6 +15,69 @@ use DataModel::IMG_Gold;
 # 	required => 1
 # );
 
+# extra 'case' statements to add to a query
+
+my $case_stts = {
+
+#	adds a query to check whether the taxon is public or private
+#	see taxon_name_public for an example of use
+
+#	taxon_table_name may refer to a view that includes taxon.is_public
+#	note that vw_gold_taxon *only* contains public genomes
+
+	taxon_public => sub {
+		my $self = shift;
+		my $args = shift // {};
+
+		my $taxon_table_name = $args->{taxon_table_name} || 'taxon';
+		my $case_sql = '';
+
+		if ( $self->can('user') && defined $self->user && defined $self->user->contact_oid ) {
+			my $u_id = "= " . $self->user->contact_oid;
+			my $taxt = '= ' . $taxon_table_name . '.taxon_oid';
+
+			$case_sql = 'WHEN EXISTS (' .
+				$self->schema('img_core')->table('ContactTaxonPermissions')
+					->select(
+						-columns => [ '1' ],
+						-where => {
+							taxon_permissions => \ $taxt,
+							contact_oid => \ $u_id
+						},
+						-result_as => 'sql'
+					)
+				. ") THEN 'accessible' ";
+		}
+
+		my $case = "CASE WHEN "
+		. $taxon_table_name . ".is_public = 'Yes' THEN 'public' "
+		. $case_sql
+		. " ELSE 'private'"
+		. " END AS viewable";
+		return $case;
+	}
+
+};
+
+
+
+
+
+
+
+
+sub default_select {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema( delete $args->{schema} )->table( delete $args->{table} )
+		->select(
+			%$args,
+			-result_as => 'statement'
+		);
+}
+
+
 =head3 clade
 
 Search for spp with a clade defined
@@ -26,15 +89,25 @@ No additional arguments
 sub clade {
 	my $self = shift;
 
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
-			-where    => {
-				clade => { '!=', undef },
-			},
-			-order_by => [ qw( taxon_display_name ) ],
-			-result_as => 'statement',
-		);
+	return $self->default_select({
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
+		-where    => {
+			clade => { '!=', undef },
+		},
+		-order_by => [ qw( taxon_display_name ) ],
+	});
+
+# 	return $self->schema('img_core')->table('GoldTaxonVw')
+# 		->select(
+# 			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
+# 			-where    => {
+# 				clade => { '!=', undef },
+# 			},
+# 			-order_by => [ qw( taxon_display_name ) ],
+# 			-result_as => 'statement',
+# 		);
 
 }
 
@@ -355,7 +428,7 @@ sub gene_list {
 
 	$args->{where}{'gene.obsolete_flag'} = 'No';
 
-	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax ] )
+	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax <=> scaffold ] )
 		->select(
 			-columns => [ qw(
 				gene_oid
@@ -366,6 +439,8 @@ sub gene_list {
 				taxon_oid
 				taxon_display_name
 				pp_subset
+				scaffold|scaffold_oid
+				scaffold_name
 			) ],
 			-where   => $args->{where},
 			-result_as => 'statement'
@@ -430,9 +505,9 @@ sub gene_details {
 	my $args = shift;
 
 #	my $gene = $self->schema('img_core')->table('PPGeneDetails')
-	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax ] )
+	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax <=> scaffold ] )
 		->select(
-			-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name' ],
+			-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name', 'scaffold_oid', 'scaffold_name' ],
 			-where   => $args->{where},
 			-result_as => 'statement'
 		);
@@ -477,41 +552,71 @@ sub taxon_details {
 
 }
 
-# extra 'case' statements to add to a query
+=head3 scaffold_details
 
-my $case_stts = {
+Given an array of scaffold IDs, retrieve the scaffold data plus taxon ID and name
 
-#	adds a query to check whether the taxon is public or private
+Uses table gold_tax, so implicitly only selects public genomes
 
-	taxon_public => sub {
-		my $self = shift;
-		my $case_sql = '';
+@param  args->{where} should be in the form
 
-		if ( $self->can('user') && defined $self->user && defined $self->user->contact_oid ) {
-			my $u_id = "= $self->user->contact_oid";
-			$case_sql = 'WHEN EXISTS (' .
-				$self->schema('img_core')->table('ContactTaxonPermissions')
-					->select(
-						-columns => [ '1' ],
-						-where => {
-							taxon_permissions => \ '= taxon.taxon_oid',
-							contact_oid => \$u_id
-						},
-						-result_as => 'sql'
-					)
-				. ") THEN 'accessible' ";
-		}
+	scaffold_oid => [ arrayref of scaffold IDs ] (or a single scaffold_oid)
 
-		my $case = q!CASE
-  WHEN taxon.is_public = 'Yes' THEN 'public'
-! . $case_sql . q!
-  ELSE 'private'
-  END
-AS viewable!;
-		return $case;
-	}
+@return arrayref of scaffold objects
 
-};
+=cut
+
+
+
+sub scaffold_details {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_core')->join( qw[ Scaffold <=> gold_tax ] )
+		->select(
+			-columns => [ 'scaffold.*', 'taxon_oid', 'taxon_display_name' ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+
+
+
+}
+
+=head3 scaffold_list
+
+Given search criteria, retrieve the scaffold data plus taxon ID and name
+
+Uses table gold_tax, so implicitly only selects public genomes
+
+@param  args->{where} encodes filter data
+
+@return arrayref of scaffold objects
+
+=cut
+
+
+sub scaffold_list {
+	my $self = shift;
+	my $args = shift;
+
+	return $self->schema('img_core')->join( qw[ Scaffold <=> gold_tax ] )
+		->select(
+			-columns => [ qw(
+				scaffold_oid
+				scaffold_name
+				mol_type
+				mol_topology
+				ext_accession
+				db_source
+				taxon_oid
+				taxon_display_name
+				pp_subset
+			) ],
+			-where   => $args->{where},
+			-result_as => 'statement'
+		);
+}
 
 
 =head3 taxon_name_public
@@ -534,9 +639,12 @@ sub taxon_name_public {
 	my $self = shift;
 	my $args = shift;
 
+	my $tax_stt = $case_stts->{taxon_public}->( $self );
+	log_debug { $tax_stt };
+
 	return $self->schema('img_core')->table('Taxon')
 	->select(
-		-columns => [ $case_stts->{taxon_public}->( $self ), qw( taxon_oid taxon_display_name is_public ) ],
+		-columns => [ $tax_stt, qw( taxon_oid taxon_display_name is_public ) ],
 		-where   => { taxon_oid => $args->{where}{taxon_oid} },
 		-result_as => 'statement'
 	);
@@ -617,7 +725,7 @@ sub banned_users {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->schema('img_gold')->table('CancelledUser')
+	return $self->schema('img_core')->table('CancelledUser')
 		->select(
 			-where => $args->{where},
 			-columns => [ qw( username email ) ],
@@ -630,6 +738,8 @@ sub banned_users {
 =head3 news
 
 Get the ProPortal news!
+
+NO LONGER USED
 
 =cut
 

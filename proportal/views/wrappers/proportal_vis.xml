@@ -1,7 +1,7 @@
 <tool id="proportal_vis" name="ProPortal visualisations" version="0.1.0">
 <description>ProPortal visualisations</description>
-<command>source /global/homes/a/aireland/perl5/perlbrew/etc/bashrc;
-DANCER_ENVIRONMENT="proportal-galaxy" perl /global/homes/a/aireland/webUI/proportal/script/galaxy/proportal_vis.pl
+<command>source $HOME/perl5/perlbrew/etc/bashrc;
+DANCER_ENVIRONMENT="proportal-galaxy" perl $HOME/webUI/proportal/script/galaxy/proportal_vis.pl
 	--query "$visualisation.query"
 	--pp_subset "$visualisation.pp_subset"
 	--outfile "$outfile"

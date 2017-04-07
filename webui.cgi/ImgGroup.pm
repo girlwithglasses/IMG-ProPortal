@@ -1926,6 +1926,7 @@ sub shareGenomesWithMembers {
 		    last if ! $gid2;
 
 		    if ( lc($role2) eq 'pi' ||
+			 lc($role2) eq 'co-pi' ||
 			 lc($role2) eq 'submitter' ) {
 			$can_grant = 1;
 		    }

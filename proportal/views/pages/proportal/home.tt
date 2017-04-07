@@ -3,11 +3,9 @@
 %]
 
 <style>
-
 div.site-message {
 	display: none;
 }
-	
 </style>
 
 
@@ -17,7 +15,7 @@ div.site-message {
 	<div id="home-quick-search">
 		<div class="infoBoxTitle"><h3>Quick Search</h3></div>
 		<div id="home-quick-search-form">
-		
+
 			<div>
 				<label class="pp-form" for="search-domain">Search category</label>
 				<select class="pp-form" id="search-domain"  style="width: 100%;">
@@ -25,19 +23,19 @@ div.site-message {
 					<option value="genes"> Genes </option>
 					<option value="functions"> Functions </option>
 				</select>
-			</div>	
-		
+			</div>
+
 			<div style="margin-bottom: 10px;">
 				<label class="pp-form" for="search-keyword">For keyword</label>
 				<input id="search-keyword" type="text" style="width: 100%;"/>
-			</div>	
-		
+			</div>
+
 			<button class="test-button-blue" style="float: right;">Go</button>
 
 		</div>
 	</div>
 
-	[% PROCESS 'inc/gallery_images.tt';	
+	[% PROCESS 'inc/gallery_images.tt';
 		USE Math;
 		idx = Math.int(Math.rand(pics.size));	%]
 

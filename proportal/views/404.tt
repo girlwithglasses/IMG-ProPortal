@@ -1,6 +1,6 @@
 [%
 	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: 404 Error';
+	title = '404 Error';
 %]
 <h2>Page not found</h2>
 <p class="error">

@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Home';
+	title = 'Home';
 %]
 <h2>IMG/ProPortal</h2>
 <h3>Offline</h3>

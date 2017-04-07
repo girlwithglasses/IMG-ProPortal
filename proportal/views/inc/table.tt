@@ -1,7 +1,7 @@
 [%	# A generic table component %]
 [%
 
-IF results.js.array.size > 0;
+IF 	results.js.array.size > 0;
 	headers = results.js.table_headers; %]
 	<table>
 [%	IF results.js.table_caption %]

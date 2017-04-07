@@ -48,14 +48,12 @@ use File::Copy;
 extends 'IMG::App';
 with qw(
 	ProPortal::IO::DBIxDataModel
-	ProPortal::Util::Taxon
 	IMG::Util::ScriptApp
 );
 
 sub run {
 	my $self = shift;
 
-#	log_debug { 'args: ' . Dumper $self->args };
 	if ( $self->args->has_email && $self->args->email ne 'Anonymous' ) {
 		# check the user can access the taxon
 		my $user_h = $self->get_db_contact_data({ email => $self->args->email });
@@ -63,7 +61,19 @@ sub run {
 	}
 
 	# check taxon is public
-	my $t_data = $self->get_taxon_name_public({ taxon_oid => $self->args->taxon_oid });
+	my $t_data = $self->run_query({
+		query => 'taxon_name_public',
+		where => {
+			taxon_oid => $self->args->{taxon_oid},
+		}
+	});
+
+	if ( ! scalar @$t_data || 'private' eq $t_data->[0]{viewable} ) {
+		$self->choke({
+			err => 'private_data'
+		});
+	}
+
 
 	# copy / soft link the sequence file
 	my $seq_src = $self->get_taxon_file({ type => 'dna_seq', taxon_oid => $self->args->taxon_oid });

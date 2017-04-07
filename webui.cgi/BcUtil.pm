@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: BcUtil.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: BcUtil.pm 36804 2017-03-23 05:17:55Z aratner $
 ############################################################################
 package BcUtil;
 
@@ -31,12 +31,12 @@ my $abc                      = $env->{abc};
 # printSetDetailFooter
 ############################################################################
 sub printSetDetailFooter {
-
+    my ( $mytblid ) = @_;
     print submit(
           -name  => '_section_WorkspaceBcSet_addToBcBuffer',
           -value => 'Add Selected to BC Cart',
           -class => 'meddefbutton',
-          -onclick => "return validateBCSelection(1, \"mainForm\");"
+          -onclick => "return validateBCSelection(1, \"$mytblid\");"
     );    
     print nbsp(1);
     WebUtil::printButtonFooter();
@@ -46,27 +46,26 @@ sub printSetDetailFooter {
 # printTableFooter
 ############################################################################
 sub printTableFooter {
-    my ( $myform ) = @_;
+    my ( $mytblid ) = @_;
     my $buttonLabel = "View Selected Neighborhoods";
     my $buttonClass = "meddefbutton";
     my $name = "_section_BiosyntheticDetail_selectedNeighborhoods";
 
     print "<div style='width: 2000px;'>\n";
 
-    if($abc || $img_ken) {
+    if ($abc || $img_ken) {
         my $workspace = 0;
-       if($workspace) {
-          # add to workspace - new file, an existing file or buffer / cart if no file given - ken 
-       } else {
-           # just a button to add to buffer
-          
-            print submit(
-          -name  => '_section_WorkspaceBcSet_addToBcBuffer',
-          -value => 'Add Selected to BC Cart',
-          -class => $buttonClass,
-          -onclick => "return validateBCSelection(1, \"$myform\");"
-            );
-            
+	if ($workspace) {
+	    # add to workspace - new file, an existing file or buffer / cart if no file given - ken 
+	} else {
+	    # just a button to add to buffer
+	    print submit(
+		-name  => '_section_WorkspaceBcSet_addToBcBuffer',
+		-value => 'Add Selected to BC Cart',
+		-class => $buttonClass,
+		-onclick => "return validateBCSelection(1, \"$mytblid\");"
+		);
+	    
              print nbsp(1);           
        }
     }
@@ -75,14 +74,14 @@ sub printTableFooter {
           -name  => $name,
           -value => $buttonLabel,
           -class => $buttonClass,
-          -onclick => "return validateBCSelection(1, \"$myform\");"
+          -onclick => "return validateBCSelection(1, \"$mytblid\");"
     );
     print nbsp(1);    
-    printAddToCartFooter('Scaffold', $myform);
+    printAddToCartFooter('Scaffold', $mytblid);
     print nbsp(1);
-    printAddToCartFooter('Gene', $myform);
+    printAddToCartFooter('Gene', $mytblid);
     print nbsp(1);
-    WebUtil::printButtonFooter($myform);
+    WebUtil::printButtonFooter($mytblid);
     
     print "</div>\n";
 }
@@ -91,7 +90,7 @@ sub printTableFooter {
 # printAddToCartFooter
 ############################################################################
 sub printAddToCartFooter {
-    my ( $cart_type, $myform ) = @_;
+    my ( $cart_type, $mytblid ) = @_;
     
     my $id;
     if ( $cart_type eq 'Gene' ) {
@@ -106,7 +105,7 @@ sub printAddToCartFooter {
           -name  => $id,
           -value => $buttonLabel,
           -class => $buttonClass,
-          -onclick => "return validateBCSelection(1, \"$myform\");"
+          -onclick => "return validateBCSelection(1, \"$mytblid\");"
     );
 }
 

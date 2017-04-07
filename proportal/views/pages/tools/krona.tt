@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Krona';
+	title = 'Krona';
 %]
 <div class="floatR" style="width: 250px"><img src="https://camo.githubusercontent.com/29f73f47fce0bb1d6ba9d7d6f2de494f6c08d726/687474703a2f2f6d6172626c2e6769746875622e696f2f4b726f6e612f696d672f6c6f676f2e706e67" /></div>
 <h2>Krona</h2>

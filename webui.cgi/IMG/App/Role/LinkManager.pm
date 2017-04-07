@@ -111,7 +111,7 @@ To use in a template, specify the link ID as the first argument, and any extra p
 
 # http://example.com/cgi-bin/main.cgi?section=MyIMG&amp;page=preferences
 
-[% link( 'details', { type => 'taxon', taxon_oid => 1234567 } %]
+[% link( 'details', { domain => 'taxon', taxon_oid => 1234567 } %]
 
 # http://example.com/cgi-bin/main.cgi?section=TaxonDetail&amp;page=taxonDetail&taxon_oid=1234567
 

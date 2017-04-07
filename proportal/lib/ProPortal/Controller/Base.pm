@@ -1,7 +1,7 @@
 package ProPortal::Controller::Base;
 
 use IMG::Util::Import 'Class';
-with 'IMG::App::Role::ErrorMessages';
+with 'IMG::App::Role::ErrorMessages', 'ProPortal::Controller::Role::OutputFormat';
 
 =head3 _core
 
@@ -89,10 +89,6 @@ has 'tmpl_includes' => (
 	default => sub { return {}; }
 );
 
-has 'output_format' => (
-	is => 'lazy',
-	default => undef
-);
 
 =head3 render
 

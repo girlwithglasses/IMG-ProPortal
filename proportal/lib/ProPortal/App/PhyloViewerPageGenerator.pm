@@ -69,21 +69,26 @@ use ScriptAppArgs;
 use AppCore;
 extends 'IMG::App';
 with qw(
+	IMG::App::Role::Controller
 	ProPortal::IO::DBIxDataModel
 	ProPortal::Controller::PhyloViewer::Pipeline
 	IMG::Util::ScriptApp
 	IMG::App::Role::Templater
 );
 
-has 'controller_role' => (
-	is => 'ro',
-	default => 'ProPortal::Controller::PhyloViewer::Results'
-);
+# has 'controller' => (
+# 	is => 'ro',
+# 	default => 'ProPortal::Controller::PhyloViewer::Results'
+# );
 
 sub run {
 	my $self = shift;
 
-	my $rslts = $self->render( $self->args );
+	log_debug { 'I am here!' };
+
+	my $rslts = $self->controller->render( $self->args );
+	log_debug { 'Done rendering!' };
+
 	$rslts->{settings} = $self->config;
 	$rslts->{page_wrapper} = 'layouts/contents_only.tt';
 	$rslts = AppCore::get_tmpl_vars({ core => $self, output => $rslts });

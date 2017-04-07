@@ -6,7 +6,7 @@
 #
 # for workspace the temp cart file is teh unsaved buffer file
 #
-# $Id: WorkspaceBcSet.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
+# $Id: WorkspaceBcSet.pm 36806 2017-03-23 05:19:59Z aratner $
 ########################################################################
 package WorkspaceBcSet;
 
@@ -1121,16 +1121,13 @@ sub printBufferButtons {
         -value => "Remove Selected",
         -class => "meddefbutton",
         -onClick => "return validateSelection(1);",
-    );
-    
+    );   
 }
-
 
 ############################################################################
 # printBcSetDetail
 ############################################################################
-sub printBcSetDetail {
-    
+sub printBcSetDetail {    
     my $filename = param('filename');
     if ( $filename && !blankStr($filename) ) {
         WebUtil::checkFileName($filename);
@@ -1162,11 +1159,11 @@ sub printBcSetDetail {
     close $rfh;
 
     print "<div id='bcsettab1'>";
-    BcUtil::printSetDetailFooter() if ($cnt > 10);
+    BcUtil::printSetDetailFooter("processbc") if ($cnt > 10);
     my $dbh = dbLogin();
     require BiosyntheticDetail;
     my $count = BiosyntheticDetail::processBiosyntheticClusters($dbh, '', \@ids, '', '', '', 1); 
-    BcUtil::printSetDetailFooter();
+    BcUtil::printSetDetailFooter("processbc");
     print "</div>\n";
 
     print "<div id='bcsettab2'>";
@@ -1181,7 +1178,6 @@ sub printBcSetDetail {
 # addToBcBuffer
 ############################################################################
 sub addToBcBuffer {
-
     my @filenames = param('filename');    # to workspace set
     my @bcIds     = param('bc_id');
     addBcIds( \@bcIds, $filenames[0] );
@@ -1230,7 +1226,6 @@ sub addBcIds {
 # remove a list of bc ids from Buffer
 ############################################################################
 sub removeFromBcBuffer {
-
     my @filenames = param('filename');    # to workspace set
     my @bcIds     = param('bc_id');
 

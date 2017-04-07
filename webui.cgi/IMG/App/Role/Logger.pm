@@ -12,7 +12,18 @@ while ( 'webUI' ne basename( $dir ) ) {
 	$dir = dirname( $dir );
 }
 
-Log::Log4perl->init( catfile( $dir, 'proportal/environments', 'logger.conf' ) );
+my $conf = 'logger.conf';
+
+sub get_logger {
+	Log::Log4perl->get_logger('rootLogger');
+}
+
+sub set_logger_conf {
+	$conf = +shift;
+	Log::Log4perl->init( catfile( $dir, 'proportal/environments', $conf ) );
+}
+
+Log::Log4perl->init( catfile( $dir, 'proportal/environments', $conf ) );
 
 sub arg_default_logger { $_[1] || Log::Log4perl->get_logger }
 

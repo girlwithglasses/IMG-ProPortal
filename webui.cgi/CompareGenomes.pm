@@ -3,7 +3,7 @@
 #   cumulative statistics.  Formerly taxonStatsRdbms.pl
 #      --es 07/07/2005
 #
-# $Id: CompareGenomes.pm 35977 2016-08-08 20:14:36Z klchu $
+# $Id: CompareGenomes.pm 36779 2017-03-21 01:30:39Z aratner $
 ############################################################################
 package CompareGenomes;
 my $section = "CompareGenomes";
@@ -194,7 +194,7 @@ sub printStatsForMultipleTaxons {
     $domainCount{Eukaryota} = 0;
 
     my $cur = execSql( $dbh, $sql, $verbose );
-    for ( ; ; ) {
+    for ( ;; ) {
         my ( $taxon_oid, $domain ) = $cur->fetchrow();
         last if !$taxon_oid;
         push( @taxon_oids, $taxon_oid );
@@ -215,8 +215,12 @@ sub printStatsForMultipleTaxons {
         };
     }
 
-    print "<p>\n";
-    print "Statistics for user-selected genomes.<br/>\n";
+    print "<p style='width: 950px;'>";
+    if ( blankStr($taxonClause) ) {
+	print "Statistics for All genomes:<br/>";
+    } else {
+	print "Statistics for user-selected genomes:<br/>";
+    }
     my @keys = sort( keys(%domainCount) );
     for my $k (@keys) {
         my $count = $domainCount{$k};
@@ -236,7 +240,6 @@ sub printStatsForMultipleTaxons {
     print alink( $url, "Breakdown by selected genomes, general statistics." );
     print "</p>\n";
 
-    #$dbh->disconnect();
     print end_form();
 }
 

@@ -59,9 +59,18 @@ sub _render {
 		}
 	}
 
+
+
 	log_debug { 'Sorted. Returning at ' . Time::HiRes::gettimeofday };
 
-	return { results => { data => $data, sort_by => [ 'pp_subset', 'dataset_type' ] } };
+	return { results => {
+		data => $data,
+		sort_by => [ 'pp_subset', 'dataset_type' ],
+		display_filters => {
+			pp_subset => [ qw( pro pro_phage syn syn_phage other other_phage metagenome ) ],
+			dataset_type => [qw( isolate single_cell metagenome transcriptome metatranscriptome ) ]
+		}
+	} };
 }
 
 

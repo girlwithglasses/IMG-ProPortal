@@ -65,6 +65,12 @@ return {
 				log_level => 'debug',
 			}
 		},
+
+		serializer => {
+			JSON => {
+				convert_blessed => 1
+			}
+		}
 	},
 };
 

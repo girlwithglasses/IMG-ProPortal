@@ -119,7 +119,7 @@ sub _init_schema {
 
 	# set up the module...
 	my %module_args = (
-		debug => 1,
+		debug => IMG::App::Role::Logger::get_logger(),
 		dbi_prepare_method => 'prepare_cached',
 	);
 

@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: TreeFile.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: TreeFile.pm 36842 2017-03-24 23:55:00Z aratner $
 ############################################################################
 package TreeFile;
 my $section = "TreeFile";
@@ -920,7 +920,7 @@ sub drawSunburst {
       <div id="$div_id"></div>
       </div>
       <div id="sidebar"><div id="legend"></div></div>
-      <script src="$top_base_url/js/d3sunburst.js"></script>
+      <script src="$top_base_url/js/d3sunburst.min.js"></script>
       <script>
           window.onload = doSunburst
               ($data, "$div_id", "$levels_url", $levels);

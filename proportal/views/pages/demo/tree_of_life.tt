@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Tree of Life';
+	title = 'Tree of Life';
 %]
 	<h2>Tree of Life</h2>
 <section class="page-intro">

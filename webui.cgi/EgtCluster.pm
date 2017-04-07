@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 36348 2016-10-21 19:58:24Z aratner $
+# $Id: EgtCluster.pm 36888 2017-03-28 21:06:08Z aratner $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -19,10 +19,12 @@ use WebConfig;
 use WebUtil;
 use GenomeListJSON;
 use HTML::Template;
+use JSON;
 
 my $env = getEnv();
 my $base_url = $env->{ base_url };
 my $base_dir = $env->{ base_dir };
+my $top_base_url = $env->{top_base_url};
 my $cgi_dir  = $env->{ cgi_dir };
 my $cgi_url  = $env->{ cgi_url };
 my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
@@ -727,14 +729,6 @@ sub printResults {
          "<u>Right-click</u> to add selections to the cart.<br/>" .
 	 "Click on a legend item to show it in the plot");
 
-    #require King;
-    #my $url_fragm1 = "section=TaxonDetail&page=taxonDetail&taxon_oid=";
-    #my $url_fragm2 = "section=GenomeCart&page=genomeCart&genomes=";
-    #King::writeKinInputFile(\@recs2, "$tmp_dir/".$type."$$"."_".$sid.".kin", 0,
-    #			    $url_fragm1, $url_fragm2);
-    #King::writeKingApplet_old("$tmp_url/".$type."$$"."_".$sid.".kin");
- 
-    #printEgtClusterUI($pca_data);
     printClusterChart3D($pca_data);
 }
 
@@ -884,6 +878,7 @@ sub printPcaResults {
     my @recs;
     my @recs2;
 
+    my @jsondata;
     my $pca = "\"data\": [ ";
     my $max1 = 0; my $max2 = 0; my $max3 = 0;
     my $min1 = 0; my $min2 = 0; my $min3 = 0;
@@ -914,6 +909,7 @@ sub printPcaResults {
 	my( @vals ) = split( /\t/, $s );
 	my $idx = 0;
 	my $points;
+	my @pts;
 
 	foreach my $v( @vals ) {
 	    $v = sprintf( "%.3f", $v );
@@ -922,6 +918,8 @@ sub printPcaResults {
 		# add only the first 3 components
 		$r2 .= "$v\t";
 		$points .= "$v,";
+		push(@pts, $v);
+
 		$max1 = $max1 > $v ? $max1 : $v if $idx == 0;
 		$max2 = $max2 > $v ? $max2 : $v if $idx == 1;
 		$max3 = $max3 > $v ? $max3 : $v if $idx == 2;
@@ -944,6 +942,16 @@ sub printPcaResults {
             "{\"id\": \"$taxon_oid\","
             . "\"coords\": [$points],"
             . "\"label\": $ptLabel},";
+
+	# for the 2D plot:x
+	my %subhash;
+	$subhash{'id'}    = $taxon_oid;
+	$subhash{'name'}  = "Genome";
+	$subhash{'desc'}  = "$taxon_name"."[$d]"." PC1:".@pts[0].", PC2: ".@pts[1];
+	$subhash{'xdata'} = @pts[0] + 0;
+	$subhash{'ydata'} = @pts[1] + 0;
+	push @jsondata, \%subhash;
+
     }
     close $rfh;
 
@@ -1002,13 +1010,6 @@ sub printPcaResults {
 	     "<u>Right-click</u> to add selections to the cart.<br/>" .
 	     "Click on a legend item to show it in the plot");
 	
-	#require King;
-	#my $url_fragm1 = "section=TaxonDetail&page=taxonDetail&taxon_oid=";
-	#my $url_fragm2 = "section=GenomeCart&page=genomeCart&genomes=";
-	#King::writeKinInputFile(\@recs2, "$tmp_dir/pca$$"."_".$sid.".kin", 0,
-	#			$url_fragm1, $url_fragm2);
-	#King::writeKingApplet_old("$tmp_url/pca$$"."_".$sid.".kin");
-        #printEgtClusterUI( $pca_data );
 	printClusterChart3D($pca_data);
     }
     else {
@@ -1020,22 +1021,26 @@ sub printPcaResults {
     print "<div id='pcatab2'>";
     if ( $sum > 0 ) {
         print "<h2>2-D Plot of PC1 and PC2</h2>\n";
-        printHint
-            ("- Mouse over a point to see genome information.<br/>\n" .
-	     "- Click on a point to see genome details.<br/>\n");
-        print "<br/>";
+	my $hint = "Mouse over a point to see genome information.<br/>"
+	    . "Click on a point to see genome details.<br/>"
+	    . "The plot can be repositioned using mouse-drag and zoomed using mouse-wheel.";
+        printHint($hint);
 
-	my $plotname = "pca$$"."_".$sid;
-        my $tmpPlotFile = "$tmp_dir/".$plotname.".png";
-        my $tmpPlotUrl = "$tmp_url/".$plotname.".png";
+	my $data = encode_json(\@jsondata);
+	my $div_id = "genomecluster2dplot";
+	my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
 
-        require PcaPlot;
-        my $areas = PcaPlot::writeFile( \@recs, $tmpPlotFile );
-        print "<img src='$tmpPlotUrl' usemap='#$plotname' border='1' ";
-        print "alt='PCA Plot' />\n";
-        print "<map name='$plotname'>\n";
-        print $areas;
-        print "</map>\n";
+	# plot the data
+	print qq{
+        <link rel="stylesheet" type="text/css" href="$top_base_url/css/d3scatterplot.css" />
+        <script src="$top_base_url/js/d3.min.js"></script>
+        <div id="$div_id" class="$div_id"></div>
+        <script src="$top_base_url/js/d3scatterplot.min.js"></script>
+        <script>
+            window.onload = drawScatterPlot
+            ("$div_id", $data, 0, 1, 1, 0, "$txurl", "PC 1", "PC 2");
+        </script>                                                                                    
+        };
 
     } else {
         print "<p><font color='red'>No data to display.</font></p>\n";
@@ -3174,31 +3179,5 @@ sub printClusterChart3D {
     print "<p>This chart is generated using ".alink($url, "Highcharts")."<br/>";
 }
 
-############################################################################
-# printEgtClusterUI - prints the tags for ImgPlotter to plot pca_data
-############################################################################
-sub printEgtClusterUI {
-  my( $pca_data ) = @_;
-
-  print qq{
-    <script>var plotPCAJSON = '$pca_data';</script>
-    <table><tr>
-      <td valign=top>
-      <div id="plotArea" width="1024" height="1024"></div>
-      </td>
-      <td valign=top>
-      <button type='button' onclick='window.EgtClusterUI_addToCart();'>Add Selected to Cart</button>
-      <div id="legend"></div>
-      </td>
-      </tr></table>
-      <script src='/js/d3.min.js'></script>
-      <script src='/js/three.min.js'></script>
-      <script src='/js/ImgPlotter.js'></script>
-      <script src='/js/TrackballControls.js'></script>
-      <script src='/js/stats.min.js'></script>
-      <script src='/js/EgtClusterUI.js'></script>
-      <div id="pca3dLegend"></div>
-  };
-}
 
 1;

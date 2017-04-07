@@ -1,6 +1,6 @@
 [%
 	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: News';
+	title = 'News';
 %]
 <h2>News</h2>
 <div class="cf">

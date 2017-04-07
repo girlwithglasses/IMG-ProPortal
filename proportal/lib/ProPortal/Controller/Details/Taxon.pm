@@ -2,7 +2,7 @@ package ProPortal::Controller::Details::Taxon;
 
 use IMG::Util::Import 'Class'; #'MooRole';
 
-extends 'ProPortal::Controller::Base';
+extends 'ProPortal::Controller::Filtered';
 
 with 'IMG::Model::DataManager';
 
@@ -12,6 +12,12 @@ has '+page_id' => (
 
 has '+page_wrapper' => (
 	default => 'layouts/default_wide.tt'
+);
+
+has '+filter_domains' => (
+	default => sub {
+		return [ qw( taxon_oid ) ];
+	}
 );
 
 =head3 render
@@ -24,7 +30,12 @@ Details page for a taxon / metagenome
 
 sub _render {
 	my $self = shift;
-	return { results => { taxon => $self->get_data( @_ ), label_data => $self->get_label_data } };
+	return {
+		results => {
+			taxon => $self->get_data( @_ ),
+			label_data => $self->get_label_data
+		}
+	};
 }
 
 sub get_data {
@@ -88,7 +99,16 @@ sub get_data {
 		}
 	}
 	return $res;
+}
 
+sub examples {
+	return [{
+		url => '/details/taxon/$img_taxon_oid',
+		desc => 'metadata for taxon <var>$img_taxon_oid</var>'
+	},{
+		url => '/details/taxon/640069325',
+		desc => 'metadata for taxon IMG:640069325, <i>Prochlorococcus</i> sp. NATL1A'
+	}];
 }
 
 1;

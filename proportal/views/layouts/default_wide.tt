@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>[% title %]</title>
+	<title>IMG ProPortal: [% title %]</title>
 [%
     PROCESS 'inc/page_head.tt';
 	IF tmpl_includes;

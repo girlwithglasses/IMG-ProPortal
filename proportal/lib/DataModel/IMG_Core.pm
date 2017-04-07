@@ -849,6 +849,10 @@ DBIx::DataModel  # no semicolon (intentional)
   [qw/ScaffoldSigPeptides         scaffold_sig_peptides            *    scaffold_oid         /])
 
 ->Association(
+  [qw/Scaffold                    scaffold                         1    scaffold_oid            /],
+  [qw/ScaffoldStats               scaffold_stats                 0..1   scaffold_oid /])
+
+->Association(
   [qw/Taxon                       taxon                            1    taxon_oid            /],
   [qw/Assembly                    assemblies                       *    taxon                /])
 
@@ -1341,6 +1345,10 @@ DataModel::IMG_Core
 ->Association(
   [qw/GoldTaxonVw                gold_tax                     1    taxon_oid      /],
   [qw/Gene                       genes                        *    taxon          /])
+
+->Association(
+  [qw/GoldTaxonVw                gold_tax                     1    taxon_oid      /],
+  [qw/Scaffold                   scaffold                     *    taxon          /])
 
 ;
 

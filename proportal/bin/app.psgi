@@ -48,10 +48,10 @@ use IMG::App::Role::Logger;
 
 	use AppCore;
 	use AppCorePlugin;
-	use Routes::Ajax;
-	use Routes::IMG;
+# 	use Routes::Ajax;
+# 	use Routes::IMG;
 #	use Routes::JBrowse;
-	use Routes::API;
+#	use Routes::API;
 	use Routes::MenuPages;
 	use Routes::ProPortal;
 #	use Routes::TestStuff;

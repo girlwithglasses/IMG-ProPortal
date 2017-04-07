@@ -1,9 +1,0 @@
-<form action="[% img_app_config.main_cgi_url %]" method="POST" class="sample-data__form">
-[% content %]
-<fieldset class="sample-data__controls" id="form_controls">
-<input type="hidden" name="section" value="GenomeCart" />
-<input type="hidden" name="page" value="genomeCart" />
-<input class="sample-data__reset" type="reset" value="Clear selection" />
-<input class="sample-data__submit" type="submit" value="Add to cart" />
-</fieldset>
-</form>

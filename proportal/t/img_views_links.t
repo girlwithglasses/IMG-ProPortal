@@ -99,11 +99,95 @@ subtest 'internal links: no config' => sub {
 	};
 };
 
+my $links = [
+{
+	args => { id => 'login' },
+	url => 'http://example.com/login',
+	comment => 'login'
+},{
+	args => { id => 'TreeFile', style => 'old' },	# static link, old style
+	url => 'http://example.com/main.cgi?domain=all&amp;page=domain&amp;section=TreeFile',
+	comment => 'old-style link'
+},{
+	args => { id => 'er' },
+	url => 'http://localhost/er',
+	comment => 'datamart link'
+},{
+	args => { id => 'proportal/clade' },
+	url  => 'http://example.com/proportal/clade',
+	comment => 'proportal link'
+},{
+	args => { id => 'details/taxon' },
+	url => 'http://example.com/details/taxon',
+	comment => 'details link without params'
+},{
+	args => { id => 'details', params => { domain => 'taxon', taxon_oid => 1234567 } },
+	url =>  'http://example.com/details/taxon/1234567',
+	comment => 'fully-specified details link with params'
+},{
+	args => { id => 'details', params => { taxon_oid => 1234567 } },
+	url =>  'http://example.com/details/taxon/1234567',
+	comment => 'details link with params, taxon inferred'
+},{
+	args => { id => 'details', params => { scaffold_oid => 7654321 } },
+	url => 'http://example.com/details/scaffold/7654321',
+	comment => 'scaffold details'
+},{
+	args => { id => 'list', params => { taxon_oid => 1234, domain => 'taxon' } },
+	url => 'http://example.com/list/taxon?taxon_oid=1234',
+	comment => 'taxon list'
+},{
+	args => { id => 'list', params => { gene_oid => 1234, domain => 'taxon', output_format => 'csv' } },
+	url => 'http://example.com/csv_api/list/taxon?gene_oid=1234',
+	comment => 'taxon list, output format'
+},{
+	args => { id => 'file', params => { taxon_oid => 1234, file_type => 'gff' } },
+	url => 'http://example.com/file?file_type=gff&taxon_oid=1234',
+	comment => 'file query'
+},{
+	args => { id => 'file', params => [ pp_subset => 'pro', pp_subset => 'syn' ] },
+	url => 'http://example.com/file?pp_subset=pro&pp_subset=syn',
+	comment => 'pro and syn file downloads'
+}];
+
+# 		static link, new style
+# 		is( $app->img_link({ id => 'login' }), 'http://example.com/login' );
+#
+# 		static link, old style
+# 		is( $app->img_link({ id => 'TreeFile', style => 'old' }), 'http://example.com/main.cgi?domain=all&amp;page=domain&amp;section=TreeFile', 'old-style link' );
+# 		absolute URL
+# 		is( $app->img_link({ id => 'er' }), 'http://localhost/er' );
+#
+# 		new static
+# 		is( $app->img_link({ id => 'TreeFile', style => 'new' }), 'http://example.com/TreeFile/domain/all', 'new-style link' );
+#
+# 		proportal link
+# 		is(
+# 			$app->img_link({ id => 'proportal/clade' }),
+# 			'http://example.com/proportal/clade',
+# 			'proportal link'
+# 		);
+#
+# 		new dynamic, taxon
+# 		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/taxon/1234567', 'link with params');
+#
+# 		new dynamic, no params
+# 		is( $app->img_link({ id => 'taxon' }), 'http://example.com/taxon', 'link without params' );
+#
+
+# 		# old dynamic
+# 		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=1234567', 'link with params');
+#
+# 		# old dynamic, no params
+# 		is( $app->img_link({ id => 'taxon' }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=', 'Make sure that incomplete URLs have the incomplete bit at the end' );
+
+
 subtest 'internal links' => sub {
 
 	$app = TestApp->new( config => $cfg );
 
 	subtest 'error states' => sub {
+
 		ok( 1 == $app->_links_init, 'Links have been initiated!' );
 
 		$msg = err({
@@ -134,36 +218,9 @@ subtest 'internal links' => sub {
 
 	subtest 'valid' => sub {
 
-		# static link, new style
-		is( $app->img_link({ id => 'login' }), 'http://example.com/login' );
-
-		# static link, old style
-		is( $app->img_link({ id => 'TreeFile', style => 'old' }), 'http://example.com/main.cgi?domain=all&amp;page=domain&amp;section=TreeFile', 'old-style link' );
-		# absolute URL
-		is( $app->img_link({ id => 'er' }), 'http://localhost/er' );
-
-		# new static
-		is( $app->img_link({ id => 'TreeFile', style => 'new' }), 'http://example.com/TreeFile/domain/all', 'new-style link' );
-
-		# proportal link
-		is(
-			$app->img_link({ id => 'proportal/clade' }),
-			'http://example.com/proportal/clade',
-			'proportal link'
-		);
-
-		# new dynamic, taxon
-		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/taxon/1234567', 'link with params');
-
-		# new dynamic, no params
-		is( $app->img_link({ id => 'taxon' }), 'http://example.com/taxon', 'link without params' );
-
-
-# 		# old dynamic
-# 		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=1234567', 'link with params');
-#
-# 		# old dynamic, no params
-# 		is( $app->img_link({ id => 'taxon' }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=', 'Make sure that incomplete URLs have the incomplete bit at the end' );
+		for my $l ( @$links ) {
+			is ( $app->img_link( $l->{args} ), $l->{url}, $l->{comment} );
+		}
 
 	};
 };
@@ -174,6 +231,8 @@ subtest 'jbrowse links' => sub {
 
 		# with JBrowse server
 
+		say 'starting jbrowse links';
+
 		$app = TestApp->new;
 		$msg = err({ err => 'missing', subject => 'config' });
 		throws_ok {
@@ -183,8 +242,8 @@ subtest 'jbrowse links' => sub {
 		$app = TestApp->new( config => $cfg_w_jbrowse );
 		say 'app: ' . Dumper $app;
 		is(
-			$app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }),
-			'http://example_w_jbrowse.com/taxon/1234567',
+			$app->img_link({ id => 'details', params => { domain => 'taxon', taxon_oid => 1234567 } }),
+			'http://example_w_jbrowse.com/details/taxon/1234567',
 			'taxon link'
 		);
 
@@ -203,10 +262,11 @@ subtest 'jbrowse links' => sub {
 		$app = TestApp->new( config => $cfg );
 		say 'app: ' . Dumper $app;
 		is(
-			$app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }),
-			'http://example.com/taxon/1234567',
+			$app->img_link({ id => 'details/taxon', params => { taxon_oid => 1234567 } }),
+			'http://example.com/details/taxon/1234567',
 			'taxon link'
 		);
+
 		is(
 			$app->img_link({ id => 'jbrowse', params => { taxon_oid => 1234567 } }),
 			'http://example.com/jbrowse/1234567',
@@ -255,66 +315,13 @@ subtest 'template toolkit links' => sub {
 
 	subtest 'valid' => sub {
 
-
-
-		# old dynamic
-		is( $app->img_link({ id => 'taxon', params => { taxon_oid => 1234567 } }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=1234567', 'link with params');
-
-		# old dynamic, no params
-		is( $app->img_link({ id => 'taxon' }), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=', 'Make sure that incomplete URLs have the incomplete bit at the end' );
-
-		# static link, new style
-		is( $app->img_link_tt('login'),
-			'http://example.com/login',
-			'static link, new style'
-		);
-
-		# static link, old style
-		is(
-			$app->img_link_tt('TreeFile'),
-			'http://example.com/main.cgi?domain=all&amp;page=domain&amp;section=TreeFile',
-			'static link, old style'
-		);
-
-		# new static
-		is( $app->img_link_tt('TreeFile', { style => 'new' }), 'http://example.com/TreeFile/domain/all', 'new-style link' );
-
-		# absolute URL
-		is(
-			$app->img_link_tt('er'),
-			'http://localhost/er',
-			'absolute URL'
-		);
-
-		# new dynamic
-		is(
-			$app->img_link_tt('jbrowse', { taxon_oid => 1234567 } ),
-			'http://example.com/jbrowse/1234567',
-			'jbrowse link with params'
-		);
-
-		# new dynamic
-		is(
-			$app->img_link_tt('jbrowse'),
-			'http://example.com/jbrowse/',
-			'jbrowse link, no params'
-		);
-
-		# new static
-		is(
-			$app->img_link_tt('taxon', { taxon_oid => 1234567 }),
-		'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=1234567',
-			'link with params'
-		);
-
-		is(
-			$app->img_link_tt('proportal/location'),
-			'http://example.com/proportal/location',
-			'ProPortal link'
-		);
-
-		is( $app->img_link_tt('taxon'), 'http://example.com/main.cgi?page=taxonDetail&amp;section=TaxonDetail&amp;taxon_oid=', 'link without params');
-
+		for ( @$links ) {
+			my $args = $_->{args};
+			is( $app->img_link_tt( $_->{args}{id}, ( $_->{args}{params} || {} ) ),
+				$_->{url},
+				$_->{comment}
+			);
+		}
 	};
 };
 

@@ -2,7 +2,7 @@ package ProPortal::Controller::Details::Gene;
 
 use IMG::Util::Import 'Class'; #'MooRole';
 
-extends 'ProPortal::Controller::Base';
+extends 'ProPortal::Controller::Filtered';
 
 with 'IMG::Model::DataManager';
 
@@ -12,6 +12,12 @@ has '+page_id' => (
 
 has '+page_wrapper' => (
 	default => 'layouts/default_wide.tt'
+);
+
+has '+filter_domains' => (
+	default => sub {
+		return [ qw( gene_oid ) ];
+	}
 );
 
 =head3 render
@@ -55,13 +61,12 @@ sub get_data {
 
 	my $res = $genes->[0];
 
-	if ( 'imgsqlite' eq $self->_core->config->{schema}{img_core}{db} ) {
-		return $res;
-	}
+# 	if ( 'imgsqlite' eq $self->_core->config->{schema}{img_core}{db} ) {
+# 		return $res;
+# 	}
 
 	my $associated = {
 		multi => [ qw(
-			gene_cassette_genes
 			gene_cog_groups
 			gene_eggnogs
 			gene_enzymes
@@ -71,7 +76,6 @@ sub get_data {
 			gene_img_interpro_hits
 			gene_kog_groups
 			gene_pdb_xrefs
-			gene_rna_clusters
 			gene_seed_names
 			gene_sig_peptides
 			gene_swissprot_names
@@ -79,8 +83,10 @@ sub get_data {
 			gene_tigrfams
 			gene_tmhmm_hits
 			gene_xref_families
-			img_cluster_member_genes
 		)],
+# 			gene_rna_clusters
+# 			gene_cassette_genes
+# 			img_cluster_member_genes
 		single => [ qw(
 			scaffold
 		)]
@@ -103,6 +109,16 @@ sub get_data {
 	log_debug { 'gene object: ' . Dumper $res };
 	return $res;
 
+}
+
+sub examples {
+	return [{
+		url => '/details/gene/$img_gene_oid',
+		desc => 'metadata for gene <var>$img_gene_oid</var>'
+	},{
+		url => '/details/gene/640083263',
+		desc => 'metadata for gene IMG:640083263, DNA polymerase III, beta subunit (EC 2.7.7.7)'
+	}];
 }
 
 1;

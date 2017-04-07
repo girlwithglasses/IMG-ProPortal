@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Phylogram';
+	title = 'Phylogram';
 %]
 	<style>
 		.vis { height: 500px; width: 100% }

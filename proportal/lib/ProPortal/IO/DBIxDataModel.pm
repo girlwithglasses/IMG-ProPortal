@@ -121,27 +121,52 @@ sub run_query {
 		});
 	}
 
-#	log_debug { 'Returning data... time elapsed since query init: ' . Time::HiRes::tv_interval( $self->t0, [ Time::HiRes::gettimeofday ] ) };
+=cut
 
-	# TODO: set the output format
-# 	-result_as      => 'rows'      || 'firstrow'
-#                   || 'hashref'   || [hashref => @cols]
-#                   || 'sth'       || 'sql'
-#                   || 'subquery'  || 'flat_arrayref'
-#                   || 'statement' || 'fast_statement'
+   -columns       => \@columns,
+     # OR : -columns => [-DISTINCT => @columns],
+   -where         => \%where_criteria,
+     # OR : -fetch => $key,
+     # OR : -fetch => \@key,
+   -where_on      => \%where_on_criteria,
+   -group_by      => \@groupings,
+   -having        => \%having_criteria,
+   -order_by      => \@order,
+   -for           => $purpose,
+   -post_SQL      => sub {...},
+   -pre_exec      => sub {...},
+   -post_exec     => sub {...},
+   -post_bless    => sub {...},
+   -prepare_attrs => \%attrs,
+   -limit         => $limit,
+   -offset        => $offset,
+   -page_size     => $page_size,
+   -page_index    => $page_index,
+   -column_types  => \%column_types,
+   -result_as     => 'rows'      || 'firstrow'
+                  || 'hashref'   || [hashref => @cols]
+                  || 'sth'       || 'sql'
+                  || 'subquery'  || 'flat_arrayref'
+                  || 'statement' || 'fast_statement'
+
+=cut
 
 	my @valid_result_as = ( qw( rows firstrow hashref sth sql subquery statement
 		flat_arrayref fast_statement ) );
 
 	log_debug { 'result as: ' . Dumper $args->{result_as} };
 
-	if ( $args->{result_as} ) {
-		if ( 'csv' eq $args->{result_as} ) {
+	if ( $args->{result_as} && 'html' ne $args->{result_as} ) {
+#		if ( 'csv' eq $args->{result_as} ) {
 			return $stt->refine( -result_as => 'statement' );
-		}
-		elsif ( grep { $_ eq $args->{result_as} } @valid_result_as ) {
-			return $stt->refine( -result_as => $args->{result_as} );
-		}
+#		}
+#		elsif ( grep { $_ eq $args->{result_as} } @valid_result_as ) {
+#			return $stt->refine( -result_as => $args->{result_as} );
+#		}
+	}
+
+	if ( $args->{dbixdm} ) {
+		return $stt->refine( %{$args->{dbixdm}} );
 	}
 
 	if ( $args->{check_results} ) {

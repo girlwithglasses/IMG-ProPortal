@@ -1,51 +1,26 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: File Downloads List';
+	title = 'File List';
 %]
-<h2>File downloads</h2>
-<section class="info--data_type page-intro">
-	<p>This page provides an overview of the taxa in IMG relevant to the ProPortal project. This comprises <i>Prochlorococcus</i>, <i>Synechococcus</i>, cyanophage species and metagenomes from marine environments.
-	</p>
-</section>
-<div id="main">
-[%	IF results.taxon.size > 0;	%]
-		<table class="lined">
-			<thead>
-			<tr class="underline">
-				<th></th>
-				<th>Taxon ID</th>
-				<th>Taxon display name</th>
-				<th>Dataset type</th>
-				<th>ProPortal subset</th>
-[%		FOR f IN data_filters.schema.file_type.enum;
-			'<th>' _ f _ '</th>';
-		END; %]
-			</tr>
-			</thead>
-			<tbody>
-[%		FOR t IN results.taxon %]
-			<tr>
-				<td><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% t.taxon_oid %]" id="cbox_[% t.taxon_oid %]"></td>
-				<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => t.taxon_oid } ) %]">[% t.taxon_oid %]</a></td>
-				<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
-				<td>[% t.dataset_type %]</td>
-				<td>[% t.pp_subset %]</td>
-[%			FOR f IN data_filters.schema.file_type.enum %]
-			<td>
-[%				IF t.$f %]
-	<a href="/api/details/file/taxon?taxon_oid=[% t.taxon_oid %]&amp;file_type=[% f %]">
-		[% f %]
-	</a>
-[%				END;  # end if %]
-			</td>
-[%			END; # end FOR f IN... %]
-			</tr>
-[%		END; # end FOR t IN results.... %]
-			</tbody>
-		</table>
+<h2>File List</h2>
+[%	IF results.params;
+		IF results.params.taxon_oid; %]
+			for taxon <a href="[% link( 'details', { domain => 'taxon', taxon_oid => results.params.taxon_oid } ) %]">[% results.params.taxon_oid %]</a>
+[%		END;
+	ELSE;
+		USE Dumper( Indent => 1 );
+		'<pre>' _ Dumper.dump( results.params ) _ '</pre>';
+	END # end IF results.params %]
+<div class="[% results.table.class %]__container" id="main">
+[%	IF results.arr.size > 0;
 
-[%	ELSE; # END if... %]
-<p>No taxa found</p>
-[%	END; %]
+		data_table = results.table;
+		data_table.class = "file-list";
+		data_table.caption = "File List";
+		data_table.tbody = results.arr;
+		PROCESS 'inc/generic_table.tt';
+
+	ELSE %]
+<p>No files found</p>
+[%	END;  # END if results.arr.size %]
 </div>
 [% END %]
-

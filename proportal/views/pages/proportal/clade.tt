@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Clade Graph';
+	title = 'Clade Graph';
 %]
 <h2>Sample Distribution by Clade</h2>
 <section class="info--clade init page-intro">
@@ -24,7 +24,7 @@
 </div>
 </section>
 <section role="complementary" class="clade-data">
-[%	WRAPPER 'inc/cart_genome_add.tt'; %]
+[%	WRAPPER 'inc/cart/taxon_add.tt'; %]
 <ul class="noDot">
 [%	FOREACH genus IN results.js.data.keys.sort;
 	FOREACH clade IN results.js.data.$genus.keys.sort;
@@ -35,13 +35,13 @@
 	<!-- p><a class="clade-details__link--genome_list_clade" href="[% link('genome_list_clade', { clade => c.label } ) %]">View species in table browser</a></p -->
 	<ul>
 	[%		FOREACH s IN c.genomes %]
-		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a class="clade-details__link--taxon" href="[% link('details', { type => 'taxon', taxon_oid => s.taxon_oid }) %]">[% s.taxon_display_name %]</a></li>
+		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a class="clade-details__link--taxon" href="[% link('details', { domain => 'taxon', taxon_oid => s.taxon_oid }) %]">[% s.taxon_display_name %]</a></li>
 	[%		END %]
 	</ul>
 </li>
 [%	END;
 	END; # end foreach genus %]
 </ul>
-[%	END; # end cart_genome_add wrapper %]
+[%	END; # end cart/taxon_add wrapper %]
 </section>
 [%	END; %]

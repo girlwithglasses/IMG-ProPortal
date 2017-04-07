@@ -17,7 +17,7 @@ prefix '/cgi-bin' => sub {
 
 		log_debug { 'ordered: ' . $ordered };
 
-		if ( $ordered =~ m!page=(gene|taxon)detail&section=(gene|taxon)detail&(gene|taxon)_oid=(\d+)$!i ) {
+		if ( $ordered =~ m!page=(gene|taxon|scaffold)detail&section=(gene|taxon|scaffold)detail&(gene|taxon|scaffold)_oid=(\d+)$!i ) {
 			# taxon details
 			forward "/details/$1/$4";
 		}

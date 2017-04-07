@@ -1,22 +1,22 @@
 package ProPortal::Controller::PhyloViewer::Results;
 
-use IMG::Util::Import 'MooRole';
+use IMG::Util::Import 'Class';
 
-with 'ProPortal::Controller::PhyloViewer::Pipeline';
+extends 'ProPortal::Controller::Base';
 
-has 'controller_args' => (
-	is => 'lazy',
-	default => sub {
-		return {
-			class => 'ProPortal::Controller::Base',
-			tmpl => 'pages/proportal/phylo_viewer/results.tt',
-			tmpl_includes => {
-				tt_scripts => [ 'phylo_viewer' ]
-			}
-		};
-	}
+has '+page_id' => (
+	default => 'proportal/phylo_viewer/results'
 );
 
+has '+tmpl' => (
+	default => 'pages/proportal/phylo_viewer/results.tt'
+);
+
+has '+tmpl_includes' => (
+	default => sub {
+		return { tt_scripts => qw( phylo_viewer ) };
+	}
+);
 
 use JSON qw( encode_json decode_json );
 use Text::CSV_XS qw[ csv ];

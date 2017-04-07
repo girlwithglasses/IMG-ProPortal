@@ -53,9 +53,6 @@ sub _render {
 	my $self = shift;
 	my $data;
 
-	# news query (only for logged-in users...)
-	my $news = $self->_core->run_query({ query => 'news' });
-
 	my $stats;
 
 	# counts, grouped by proportal pp_subset
@@ -157,7 +154,6 @@ sub _render {
 		);
 
 	return { results => {
-		news => $news // undef,
 		stats => $stats
 	} };
 }

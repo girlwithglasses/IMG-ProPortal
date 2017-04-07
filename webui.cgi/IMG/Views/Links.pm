@@ -117,12 +117,106 @@ structure:
 
 	label	- text string to use for the link
 	title	- string to go in the 'title' attribute (optional)
-	url_h	- for links using main.cgi; hashref contains params and values to be appended to main_cgi_url
-		url		- links to be appended directly to base_url
-		abs_url	- an absolute URL, no appending required
+
+	url_h	- for links using main.cgi;
+			  hashref contains params and values to be appended to main_cgi_url
+
+	abs_url	- an absolute URL, no appending required
+
+	url		- links to be appended directly to base_url
+
 =cut
 
 my $static_links = {
+
+#	various hard links
+	'about' => {
+		abs_url => $base_url_h->{server} . '/#IMGMission',
+		label => 'IMG Mission'
+	},
+	'about/cite' => {
+		abs_url => $base_url_h->{img_google_site} . 'using-img/citation',
+		label => 'Citation'
+	},
+	'about/contact' => {
+		abs_url => $base_url_h->{img_google_site} . 'contact-us',
+		label => 'Contact us' },
+	'about/credits' => {
+		abs_url => $base_url_h->{img_google_site} . 'using-img/credits',
+		label => 'Credits' },
+	'about/documents' => {
+		abs_url => $base_url_h->{img_google_site} . 'documents', title => 'documents',
+		label => 'IMG Document Archive' },
+	'about/faq' => {
+		abs_url => $base_url_h->{img_google_site} . 'faq', title => 'Frequently Asked Questions',
+		label => 'FAQ' },
+	'about/links' => {
+		abs_url => $base_url_h->{img_google_site} . 'using-img/related-links',
+		label => 'Related Links' },
+	'about/mer' => {
+		abs_url => $base_url_h->{server} . '/mer/doc/about_index.html', title => 'Information about IMG',
+		label => 'About IMG/M ER' },
+	'about/publications' => {
+		abs_url => $base_url_h->{img_google_site} . 'using-img/publication',
+		label => 'Publications' },
+	'about/systemreqs' => {
+		abs_url => $base_url_h->{server} . '/mer/doc/systemreqs.html',
+		label => 'System Requirements' },
+	'about/tutorial' => {
+		abs_url => $base_url_h->{img_google_site} . 'using-img/tutorial',
+		label => 'Tutorial' },
+	'about/user_forum' => {
+		abs_url => $base_url_h->{img_google_site} . 'questions',
+		label => 'IMG User Forum' },
+	'about/workshop' => {
+		abs_url => 'http://www.jgi.doe.gov/meetings/mgm/',
+		label => 'MGM Workshop' },
+
+#	{ abs_url => 'http://jgi.doe.gov/data-and-tools/data-management-policy-practices-resources/', label => 'Data Management Policy' },
+#	{ abs_url => 'http://jgi.doe.gov/collaborate-with-jgi/pmo-overview/policies/', label => 'Collaborate with JGI' },
+#	{ abs_url => 'https://groups.google.com/a/lbl.gov/d/msg/img-user-forum/o4Pjc_GV1js/EazHPcCk1hoJ', label => 'How to download' },
+#	{ abs_url => 'http://genome.jgi-psf.org/', label => 'JGI Genome Portal' },
+
+#	data marts
+	w => {
+		abs_url => $base_url_h->{server} . '/w',
+		label => 'IMG isolates'
+	},
+	er => {
+		abs_url => $base_url_h->{server} . '/er',
+		title => 'IMG Expert Review',
+		label => '<abbr title="IMG Expert Review">IMG ER</abbr>'
+	},
+	edu => {
+		abs_url => $base_url_h->{server} . '/edu',
+		title => 'IMG Education',
+		label => '<abbr title="IMG Education">IMG EDU</abbr>'
+	},
+	'm' => {
+		abs_url => $base_url_h->{server} . '/m',
+		title => 'IMG Metagenomes',
+		label => '<abbr title="IMG Metagenomes">IMG M</abbr>'
+	},
+	mer => {
+		abs_url => $base_url_h->{server} . '/mer',
+		title => 'Metagenome Expert Review',
+		label => '<abbr title="IMG Metagenome Expert Review">IMG MER</abbr>'
+	},
+	hmpm => {
+		abs_url => 'https://img.jgi.doe.gov/cgi-bin/imgm_hmp/main.cgi',
+		title => 'Human Microbiome Project Metagenomes',
+		label => '<abbr title="Human Microbiome Project Metagenome">IMG HMP M</abbr>'
+	},
+	abc => {
+		abs_url => $base_url_h->{server} . '/abc',
+		label => 'IMG ABC'
+	},
+	submit => {
+		abs_url => $base_url_h->{server} . '/submit',
+		label => 'Submit Data Set'
+	},
+
+# main_cgi_url links
   ABC => {
     label => 'ABC',
     url_h => {
@@ -748,181 +842,7 @@ my $static_links = {
     }
   },
 
-
-#	data marts
-	w => {
-		abs_url => $base_url_h->{server} . '/w',
-		label => 'IMG isolates'
-	},
-	er => {
-		abs_url => $base_url_h->{server} . '/er',
-		title => 'IMG Expert Review',
-		label => '<abbr title="IMG Expert Review">IMG ER</abbr>'
-	},
-	edu => {
-		abs_url => $base_url_h->{server} . '/edu',
-		title => 'IMG Education',
-		label => '<abbr title="IMG Education">IMG EDU</abbr>'
-	},
-	'm' => {
-		abs_url => $base_url_h->{server} . '/m',
-		title => 'IMG Metagenomes',
-		label => '<abbr title="IMG Metagenomes">IMG M</abbr>'
-	},
-	mer => {
-		abs_url => $base_url_h->{server} . '/mer',
-		title => 'Metagenome Expert Review',
-		label => '<abbr title="IMG Metagenome Expert Review">IMG MER</abbr>'
-	},
-	hmpm => {
-		abs_url => 'https://img.jgi.doe.gov/cgi-bin/imgm_hmp/main.cgi',
-		title => 'Human Microbiome Project Metagenomes',
-		label => '<abbr title="Human Microbiome Project Metagenome">IMG HMP M</abbr>'
-	},
-	abc => {
-		abs_url => $base_url_h->{server} . '/abc',
-		label => 'IMG ABC'
-	},
-	submit => {
-		abs_url => $base_url_h->{server} . '/submit',
-		label => 'Submit Data Set'
-	},
-
-#	other link types
-	login => {
-		label => 'Log in',
-		url => 'login'
-	},
-	logout => {
-		label => 'Log out',
-		url => 'logout',
-	},
-
-#	proportal links
-
-	home => {
-		label => 'IMG/ProPortal', url => 'proportal',
-	},
-	'menu/proportal' => {
-		label => 'Browse', url => 'menu/proportal',
-	},
-	'menu/search' => {
-		label => 'Search', url => 'menu/search',
-	},
-	'search/blast' => {
-		label => 'BLAST', url => 'search/blast',
-	},
-	'search/advanced_search' => {
-		label => 'Advanced Search', url => 'search/advanced_search',
-	},
-	'menu/tools' => {
-		label => 'Tools', url => 'menu/tools',
-	},
-	'tools/galaxy' => {
-		label => 'Launch Galaxy', url => 'tools/galaxy',
-	},
-	'tools/phyloviewer' => {
-		label => 'PhyloViewer', url => 'tools/phyloviewer',
-	},
-	'tools/jbrowse' => {
-		label => 'JBrowse', url => 'tools/jbrowse',
-	},
-	'tools/krona' => {
-		label => 'Krona', url => 'tools/krona',
-	},
-	my_img => {
-		label => 'My IMG', url => 'my_img',
-	},
-	'my_img/preferences' => {
-		label => 'Preferences', url => 'my_img/preferences',
-	},
-	'menu/support' => {
-		label => 'Support', url => 'menu/support',
-	},
-	'menu/user_guide' => {
-		url => 'menu/user_guide',
-		label => 'User Guide',
-	},
-	'support/about' => {
-		label => 'About IMG/ProPortal', url => 'support/about',
-	},
-	'user_guide' => {
-		label => 'User Guide', url => 'user_guide',
-	},
-	'user_guide/api_manual' => {
-		label => 'API Manual', url => 'user_guide/api_manual',
-	},
-	'user_guide/browsing' => {
-		label => 'Browsing', url => 'user_guide/browsing',
-	},
-	'user_guide/getting_started' => {
-		label => 'Getting Started', url => 'user_guide/getting_started',
-	},
-	'user_guide/searching' => {
-		label => 'Searching', url => 'user_guide/searching',
-	},
-	'user_guide/using_tools' => {
-		label => 'Using Tools', url => 'user_guide/using_tools',
-	},
-	'support/news' => {
-		label => 'News', url => 'support/news',
-	},
-	'support/about' => {
-		label => 'About', url => 'support/about',
-	},
-	cart => {
-		label => 'Analysis Cart', url => 'cart',
-	},
-	'cart/genomes' => {
-		label => 'Genomes (#)', url => 'cart/genomes',
-	},
-	'cart/genes' => {
-		label => 'Genes (#)', url => 'cart/genes',
-	},
-	'cart/functions' => {
-		label => 'Functions (#)', url => 'cart/functions',
-	},
-	'cart/scaffolds' => {
-		label => 'Scaffolds (#)', url => 'cart/scaffolds',
-	},
-
-
-	proportal => {
-		label => 'IMG ProPortal', url => 'proportal',
-	},
-	'proportal/big_ugly_taxon_table' => {
-		url => 'proportal/big_ugly_taxon_table', label => 'table view',
-	},
-	'proportal/clade' => {
-		url => 'proportal/clade', label => 'by clade',
-	},
-	'proportal/data_type' => {
-		url => 'proportal/data_type', label => 'by data type',
-	},
-	'proportal/location' => {
-		url => 'proportal/location', label => 'by location',
-	},
-	'proportal/phylogram' => {
-		url => 'proportal/phylogram', label => 'by taxonomic tree',
-	},
-	'proportal/ecosystem' => {
-		url => 'proportal/ecosystem', label => 'by ecosystem',
-	},
-	'proportal/ecotype' => {
-		url => 'proportal/ecotype', label => 'by ecotype'
-	},
-
-	'phyloviewer' => {
-		url => 'tools/phyloviewer', label => 'PhyloViewer',
-	},
-
-#	galaxy
-	galaxy => {
-		url => 'galaxy', label => 'Galaxy'
-	},
-
-# menu links
-
+#	menu links
 	'menu/abc' => {
 		url => 'menu/abc',
 		label => 'ABC',
@@ -1032,66 +952,215 @@ my $static_links = {
 		label => 'Workspace',
 	},
 
+	'menu/proportal' => {
+		url => 'menu/proportal',
+		label => 'Browse'
+	},
+
+	'menu/search' => {
+		url => 'menu/search',
+		label => 'Search'
+	},
+	## search
+	'search/blast' => {
+		url => 'search/blast',
+		label => 'BLAST'
+	},
+	'search/advanced_search' => {
+		url => 'search/advanced_search',
+		label => 'Advanced Search'
+	},
+	'menu/tools' => {
+		url => 'menu/tools',
+		label => 'Tools'
+	},
+	## tools
+	'tools/galaxy' => {
+		url => 'tools/galaxy',
+		label => 'Launch Galaxy'
+	},
+	'tools/phyloviewer' => {
+		url => 'tools/phyloviewer',
+		label => 'PhyloViewer'
+	},
+	'tools/jbrowse' => {
+		url => 'tools/jbrowse',
+		label => 'JBrowse'
+	},
+	'tools/krona' => {
+		url => 'tools/krona',
+		label => 'Krona'
+	},
+
+
+	'menu/support' => {
+		url => 'menu/support',
+		label => 'Support'
+	},
+
+	'menu/user_guide' => {
+		url => 'menu/user_guide',
+		label => 'User Guide',
+	},
+
+	my_img => {
+		url => 'my_img',
+		label => 'My IMG'
+	},
+	'my_img/preferences' => {
+		url => 'my_img/preferences',
+		label => 'Preferences'
+	},
+
+	'support/about' => {
+		url => 'support/about',
+		label => 'About IMG/ProPortal'
+	},
+	'support/news' => {
+		url => 'support/news',
+		label => 'News'
+	},
+	'support/about' => {
+		url => 'support/about',
+		label => 'About'
+	},
+
+	'user_guide' => {
+		url => 'user_guide',
+		label => 'User Guide'
+	},
+	'user_guide/api_manual' => {
+		url => 'user_guide/api_manual',
+		label => 'API Manual'
+	},
+	'user_guide/browsing' => {
+		url => 'user_guide/browsing',
+		label => 'Browsing'
+	},
+	'user_guide/getting_started' => {
+		url => 'user_guide/getting_started',
+		label => 'Getting Started'
+	},
+	'user_guide/searching' => {
+		url => 'user_guide/searching',
+		label => 'Searching'
+	},
+	'user_guide/using_tools' => {
+		url => 'user_guide/using_tools',
+		label => 'Using Tools'
+	},
+
+	# carts
+	cart => {
+		url => 'cart',
+		label => 'Analysis Cart'
+	},
+	'cart/genomes' => {
+		url => 'cart/genomes',
+		label => 'Genomes (#)'
+	},
+	'cart/genes' => {
+		url => 'cart/genes',
+		label => 'Genes (#)'
+	},
+	'cart/functions' => {
+		url => 'cart/functions',
+		label => 'Functions (#)'
+	},
+	'cart/scaffolds' => {
+		url => 'cart/scaffolds',
+		label => 'Scaffolds (#)'
+	},
+
+
+#	other link types
+	login => {
+		label => 'Log in',
+		url => 'login'
+	},
+	logout => {
+		label => 'Log out',
+		url => 'logout',
+	},
+
+
+#	proportal links
+	home => {
+		label => 'IMG/ProPortal',
+		url => 'proportal',
+	},
+
+
+	proportal => {
+		url => 'proportal',
+		label => 'IMG ProPortal'
+	},
+	'proportal/big_ugly_taxon_table' => {
+		url => 'proportal/big_ugly_taxon_table',
+		label => 'table view'
+	},
+	'proportal/clade' => {
+		url => 'proportal/clade',
+		label => 'by clade'
+	},
+	'proportal/data_type' => {
+		url => 'proportal/data_type',
+		label => 'by data type'
+	},
+	'proportal/location' => {
+		url => 'proportal/location',
+		label => 'by location'
+	},
+	'proportal/phylogram' => {
+		url => 'proportal/phylogram',
+		label => 'by taxonomic tree'
+	},
+	'proportal/ecosystem' => {
+		url => 'proportal/ecosystem',
+		label => 'by ecosystem'
+	},
+	'proportal/ecotype' => {
+		url => 'proportal/ecotype',
+		label => 'by ecotype'
+	},
+
+	'phyloviewer' => {
+		url => 'tools/phyloviewer',
+		label => 'PhyloViewer'
+	},
+
+#	galaxy
+	galaxy => {
+		url => 'galaxy',
+		label => 'Galaxy'
+	},
+
 	## FAKE LINK!!!
-	'cart/genomes/add' => {
-		url => 'cart/genomes/add',
-		label => 'Add to genome cart'
-	},
-
-	'about' => {
-		abs_url => $base_url_h->{server} . '/#IMGMission',
-		label => 'IMG Mission'
-	},
-	'about/cite' => {
-		abs_url => $base_url_h->{img_google_site} . 'using-img/citation',
-		label => 'Citation'
-	},
-	'about/contact' => {
-		abs_url => $base_url_h->{img_google_site} . 'contact-us',
-		label => 'Contact us' },
-	'about/credits' => {
-		abs_url => $base_url_h->{img_google_site} . 'using-img/credits',
-		label => 'Credits' },
-	'about/documents' => {
-		abs_url => $base_url_h->{img_google_site} . 'documents', title => 'documents',
-		label => 'IMG Document Archive' },
-	'about/faq' => {
-		abs_url => $base_url_h->{img_google_site} . 'faq', title => 'Frequently Asked Questions',
-		label => 'FAQ' },
-	'about/links' => {
-		abs_url => $base_url_h->{img_google_site} . 'using-img/related-links',
-		label => 'Related Links' },
-	'about/mer' => {
-		abs_url => $base_url_h->{server} . '/mer/doc/about_index.html', title => 'Information about IMG',
-		label => 'About IMG/M ER' },
-	'about/publications' => {
-		abs_url => $base_url_h->{img_google_site} . 'using-img/publication',
-		label => 'Publications' },
-	'about/systemreqs' => {
-		abs_url => $base_url_h->{server} . '/mer/doc/systemreqs.html',
-		label => 'System Requirements' },
-	'about/tutorial' => {
-		abs_url => $base_url_h->{img_google_site} . 'using-img/tutorial',
-		label => 'Tutorial' },
-	'about/user_forum' => {
-		abs_url => $base_url_h->{img_google_site} . 'questions',
-		label => 'IMG User Forum' },
-	'about/workshop' => {
-		abs_url => 'http://www.jgi.doe.gov/meetings/mgm/',
-		label => 'MGM Workshop' },
-
-#	{ abs_url => 'http://jgi.doe.gov/data-and-tools/data-management-policy-practices-resources/', label => 'Data Management Policy' },
-#	{ abs_url => 'http://jgi.doe.gov/collaborate-with-jgi/pmo-overview/policies/', label => 'Collaborate with JGI' },
-#	{ abs_url => 'https://groups.google.com/a/lbl.gov/d/msg/img-user-forum/o4Pjc_GV1js/EazHPcCk1hoJ', label => 'How to download' },
-#	{ abs_url => 'http://genome.jgi-psf.org/', label => 'JGI Genome Portal' },
+# 	'cart/genomes/add' => {
+# 		url => 'cart/genomes/add',
+# 		label => 'Add to genome cart'
+# 	},
 
 
 };
+
+sub urlize_params {
+	my $hash = shift;
+	return '' unless keys %$hash;
+	return '?' . join "&amp;", map {
+		$_ . "=" . escape( $hash->{$_} )
+	} sort keys %$hash;
+}
+
 
 =head3 $dynamic_links
 
 Links for dynamic or detail pages, e.g. taxon details, or any page
 that depends on certain parameters
+
+#=cut
+
+my $dynamic_links;
 
 =cut
 
@@ -1100,137 +1169,122 @@ my $dynamic_links = {
 	# JBrowse base URL: jbrowse.com/12345678
 	# no JBrowse URL:   base_url/jbrowse/12345678
 	jbrowse => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				my $h = shift;
-				return
-				( $base_url_h->{jbrowse}
-				? $base_url_h->{jbrowse}
-				: $base_url_h->{base_url} . '/jbrowse' )
-				.
-				( $h && $h->{params}
-				? '/' . $h->{params}{taxon_oid}
-				: '' );
-			}
-		}
+		my $h = shift;
+		return
+		( $base_url_h->{jbrowse}
+		? $base_url_h->{jbrowse}
+		: $base_url_h->{base_url} . '/jbrowse' )
+		.
+		( $h && $h->{params}
+		? '/' . $h->{params}{taxon_oid}
+		: '' );
 	},
 
-	fn_details => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				my $h = shift;
-	#			log_debug { 'h: ' . Dumper $h };
-				return $h->{base}
-				. 'details/function'
-				.
-				( $h->{params}{db}
-				? '/' . $h->{params}{db} . '/' . ( $h->{params}{xref} || '' )
-				: '' );
-			},
-		};
+	file => sub {
+		my $h = shift;
+		return $h->{base}
+		. '/file'
+		. urlize_params( $h->{params} || {} );
 	},
 
 	details => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				my $h = shift;
-	#			log_debug { 'h: ' . Dumper $h };
-				return $h->{base}
-				. 'details/'
-				. $h->{params}{type}
-				.
-				( $h->{params}
-				? '/' . $h->{params}{ $h->{params}{type} . '_oid' }
-				: '' );
-			},
-		};
+		my $h = shift;
+#		log_debug { 'details link; h: ' . Dumper $h };
+		if ( ! $h->{params} ) {
+			return $h->{base} . '/details/';
+		}
+		if ( $h->{params}{taxon_oid} ) {
+			return $h->{base} . '/details/taxon/' . $h->{params}{taxon_oid};
+		}
+		elsif ( $h->{params}{scaffold_oid} ) {
+			return $h->{base} . '/details/scaffold/' . $h->{params}{scaffold_oid};
+		}
+		elsif ( $h->{params}{gene_oid} ) {
+			return $h->{base} . '/details/gene/' . $h->{params}{gene_oid};
+		}
+
+		if ( $h->{params}{domain} ) {
+			return $h->{base}
+			. '/details/'
+			. $h->{params}{domain}
+			. '/'
+			. ( $h->{params}{ $h->{params}{domain} . '_oid' } || '' );
+		}
+		else {
+			log_error { 'Unknown details link type: ' . Dumper $h };
+			return '';
+		}
 	},
 
 	list => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				my $h = shift;
-				return $h->{base}
-				. 'list/'
-				. $h->{params}{type}
-				.
-				( $h->{params}
-				? '?' . join "&amp;", map {
-						$_ . "=" . escape( $h->{params}{$_} )
-					} sort keys %{$h->{params}}
-				: '' );
-			},
-		};
-	},
-	taxon_details => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				return $_[0]->{base} . 'details/taxon' .
-				( $_[0] && $_[0]->{params}
-				? '/' . shift->{params}{taxon_oid}
-				: '' );
-			},
-		};
-	},
-	gene_details => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				return $_[0]->{base} . 'details/gene' .
-				( $_[0] && $_[0]->{params}
-				? '/' . shift->{params}{gene_oid}
-				: '' );
-			},
-		};
-	},
-	taxon_list => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				my $h = shift;
-				return $h->{base} . 'list/gene' .
-				( $h->{params}
-				? '?' . join "&amp;", map {
-						$_ . "=" . escape( $h->{params}{$_} )
-					} sort keys %{$h->{params}}
-				: '' );
-			},
-		};
-	},
-	gene_list => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				my $h = shift;
-				return $h->{base} . 'list/gene' .
-				( $h->{params}
-				? '?' . join "&amp;", map {
-						$_ . "=" . escape( $h->{params}{$_} )
-					} sort keys %{$h->{params}}
-				: '' );
-			},
-		};
-	},
-	'list/gene' => sub {
-		return {
-			style => 'new',
-			fn => sub {
-				my $h = shift;
-				return $h->{base} . 'list/gene' .
-				( $h->{params}
-				? '?' . join "&amp;", map {
-						$_ . "=" . escape( $h->{params}{$_} )
-					} sort keys %{$h->{params}}
-				: '' );
-			},
-		};
+		my $h = shift;
+		log_debug { 'list link; h: ' . Dumper $h };
+		if ( ! $h->{params} ) {
+			return $h->{base} . '/list/';
+		}
+		if ( $h->{params}{domain} ) {
+			my $domain = delete $h->{params}{domain};
+			return $h->{base}
+			. '/list/'
+			. $domain
+			. urlize_params( $h->{params} );
+		}
+		else {
+			log_error { 'Unknown list domain: ' . Dumper $h };
+			return '';
+		}
+# 		return $h->{base}
+# 		. '/list/'
+# 		. $h->{params}{type}
+# 		. urlize_params( $h->{params} );
 	},
 
+	fn_details => sub {
+		my $h = shift;
+#		log_debug { 'h: ' . Dumper $h };
+		return $h->{base}
+		. '/details/function'
+		.
+		( $h->{params}{db}
+		? '/' . $h->{params}{db} . '/' . ( $h->{params}{xref} || '' )
+		: '' );
+	},
+};
+
+for my $d ( qw( taxon gene scaffold ) ) {
+	$dynamic_links->{ $d . '_details' } = sub {
+		my $args = shift;
+		$args->{params}{domain} = $d;
+		return $dynamic_links->{details}->( $args );
+	};
+}
+
+for my $d ( qw( taxon gene scaffold function ) ) {
+	$dynamic_links->{ $d . '_list' } = sub {
+		my $args = shift;
+		$args->{params}{domain} = $d;
+		return $dynamic_links->{list}->( $args );
+	};
+}
+
+$dynamic_links->{'list/file'} = $dynamic_links->{file};
+
+$dynamic_links->{'list/taxon'} = $dynamic_links->{taxon_list};
+$dynamic_links->{'list/gene'}  = $dynamic_links->{gene_list};
+$dynamic_links->{'list/scaffold'} = $dynamic_links->{scaffold_list};
+$dynamic_links->{'list/function'} = $dynamic_links->{function_list};
+
+$dynamic_links->{'details/taxon'} = $dynamic_links->{taxon_details};
+$dynamic_links->{'details/gene'}  = $dynamic_links->{gene_details};
+$dynamic_links->{'details/scaffold'} = $dynamic_links->{scaffold_details};
+$dynamic_links->{'details/function'} = $dynamic_links->{fn_details};
+
+
+
+
+#=cut
+
+my $old_dynamic = {
 	genome_list => sub {
 		return {
 			section => 'ProPortal',
@@ -1262,6 +1316,10 @@ my $dynamic_links = {
 #	https://img-proportal-test.jgi.doe.gov/details/taxon/main.cgi?section=GeneCassette&page=occurrence&taxon_oid=2634166547
 	chr_cassette_genes => sub {
 		return {
+# 			my $h = shift;
+# 			return $h->{base}
+# 			. 'list/function'
+# 			. urlize_params( $h->{params} );
 			section => 'GeneCassette',
 			page => 'occurrence',
 			taxon_oid => $_[0]->{params}{taxon_oid}
@@ -1276,71 +1334,9 @@ my $dynamic_links = {
 			taxon_oid => $_[0]->{params}{taxon_oid}
 		};
 	}
-
 };
 
-# /gene/details/12345678
-# $dynamic_links->{gene_details} = sub {
-# 	my $args = shift;
-# 	log_debug { 'args: ' . Dumper $args };
-# 	return $dynamic_links->{details}->( { type => 'gene', %$args } );
-# };
-#
-# $dynamic_links->{taxon_details} = sub {
-# 	my $args = shift;
-# 	log_debug { 'args: ' . Dumper $args };
-# 	return $dynamic_links->{details}->( { type => 'taxon', %$args } );
-# };
-#
-
-	# /taxon/details/1234568
-# 	taxon_details => sub {
-# 		return {
-# 			style => 'new',
-# 			fn => sub {
-# 				return $_[0]->{base} . 'details/taxon' .
-# 				( $_[0] && $_[0]->{params}
-# 				? '?' . shift->{params}{taxon_oid}
-# 				: '' );
-# 			},
-# 		};
-# 	},
-
-	# /gene/list/<criteria>
-# $dynamic_links->{gene_list} = sub {
-# 	my $args = shift;
-# 	log_debug { 'args: ' . Dumper $args };
-# 	return $dynamic_links->{list}->( { type => 'gene', %$args } );
-# # 	return {
-# # 		style => 'new',
-# # 		fn => sub {
-# # 			my $h = shift;
-# # 			return $h->{base} . 'gene/list' .
-# # 			( $h->{params}
-# # 			? '?' . join "&amp;", map {
-# # 					$_ . "=" . escape( $h->{params}{$_} )
-# # 				} sort keys %{$h->{params}}
-# # 			: '' );
-# # 		},
-# # 	};
-# };
-
-	# /taxon/list/<criteria>
-# $dynamic_links->{taxon_list} = sub {
-# 	return {
-# 		style => 'new',
-# 		fn => sub {
-# 			my $h = shift;
-# 			return $h->{base} . 'taxon/list' .
-# 			( $h->{params}
-# 			? '/' . join "&amp;", map {
-# 					$_ . "=" . escape( $h->{params}{$_} )
-# 				} sort keys %{$h->{params}}
-# 			: '' );
-# 		},
-# 	};
-# };
-
+=cut
 
 =head3 $link_library
 
@@ -1350,7 +1346,8 @@ Merged library of static and dynamic links
 
 my $link_library = $static_links;
 
-@$link_library{ keys %$dynamic_links } = map { $_->() } values %$dynamic_links;
+@$link_library{ keys %$dynamic_links } = values %$dynamic_links;
+@$link_library{ keys %$old_dynamic } = map { $_->() } values %$old_dynamic;
 
 sub _get_link_library {
 	return $link_library;
@@ -1463,15 +1460,38 @@ sub get_img_link {
 		subject => 'arguments to get_img_link'
 	});
 
-	if ( ! exists $args->{id} || ! $args->{id} ) {
-
-#		warn 'args: ' . Dumper $args;
+	if ( ! defined $args->{id} ) {
 		die err({
 			err => 'missing',
 			subject => 'link ID'
 		});
 	}
+# 	else {
+# 		log_debug { 'id: ' . $args->{id} };
+# 		log_debug { 'args: ' . Dumper $args };
+# 	}
 
+	my $base = $base_url_h->{base_url};
+
+	# dynamic links are functions, so dispatch 'em
+	if ( $dynamic_links->{ $args->{id} } ) {
+
+#		log_debug { 'found dynamic link for ' . $args->{id} . '; args: ' . Dumper $args };
+		if ( $args->{params} && defined $args->{params}{output_format} ) {
+			if ( 'csv' eq $args->{params}{output_format} ) {
+				$base .= '/csv_api';
+			}
+			elsif ( 'tab' eq $args->{params}{output_format} ) {
+				$base .= '/tab_api';
+			}
+			elsif ( 'json' eq $args->{params}{output_format} ) {
+				$base .= '/api';
+			}
+			delete $args->{params}{output_format};
+		}
+
+		return $dynamic_links->{ $args->{id} }->({ base => $base, %$args } );
+	}
 
 	# get the link data or die trying
 	my $l_data = $link_library->{ $args->{id} } || confess err({
@@ -1480,16 +1500,22 @@ sub get_img_link {
 		subject => $args->{id}
 	});
 
-	my $jbrowse;
-	if ( $args->{id} eq 'jbrowse' ) {
-		$jbrowse++;
-	}
+# 	my $jbrowse;
+# 	if ( $args->{id} eq 'jbrowse' ) {
+# 		$jbrowse++;
+# 	}
 
+	if ( ref $l_data ne 'HASH' ) {
+		log_debug { 'l_data: ' . Dumper $l_data };
+		log_debug { 'link library: ' . Dumper $link_library };
+	}
 	if ( $l_data->{abs_url} ) {
 		return $l_data->{abs_url};
 	}
 
-	my $base = $l_data->{base_url} || $base_url_h->{base_url};
+	# base url
+	$base = $l_data->{base_url} if $l_data->{base_url};
+
 	if ( '/' ne substr( $base, -1 ) ) {
 		$base .= '/';
 	}
@@ -1498,9 +1524,6 @@ sub get_img_link {
 		# send it as-is
 		return $base . $l_data->{url};
 	}
-
-#	log_debug { 'args: '   . Dumper $args if $jbrowse };
-#	log_debug { 'l_data: ' . Dumper $l_data if $jbrowse };
 
 	$args->{style} ||= $l_data->{style} // 'old';
 
@@ -1519,12 +1542,14 @@ sub get_img_link {
 		$base = $base_url_h->{main_cgi_url};
 	}
 
-	if ( $args->{params} ) {
-		for ( keys %{$args->{params}} ) {
-			# params should be URL-encoded!
-			$args->{params}{$_} = escape( $args->{params}{$_} );
-		}
-	}
+#	log_debug { 'link ID: ' . $args->{id} . '; style: ' . $args->{style} };
+
+# 	if ( $args->{params} ) {
+# 		for ( keys %{$args->{params}} ) {
+# 			# params should be URL-encoded!
+# 			$args->{params}{$_} = escape( $args->{params}{$_} );
+# 		}
+# 	}
 
 # 	log_debug { 'base: '   . Dumper $base if $jbrowse };
 # 	log_debug { 'l_data: ' . Dumper $l_data if $jbrowse };
@@ -1553,7 +1578,7 @@ To use in a template, specify the link ID as the first argument, and any extra p
 
 # http://example.com/cgi-bin/main.cgi?section=MyIMG&amp;page=preferences
 
-[% link( 'details', { type => 'taxon', taxon_oid => 1234567 } %]
+[% link( 'details', { domain => 'taxon', taxon_oid => 1234567 } %]
 
 # http://example.com/cgi-bin/main.cgi?section=TaxonDetail&amp;page=taxonDetail&taxon_oid=1234567
 

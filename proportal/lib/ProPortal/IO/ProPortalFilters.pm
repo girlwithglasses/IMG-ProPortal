@@ -157,6 +157,7 @@
 package ProPortal::IO::ProPortalFilters;
 
 use IMG::Util::Import 'MooRole';
+with 'IMG::App::Role::ErrorMessages';
 
 =head3 schema
 
@@ -217,7 +218,11 @@ my $schema = {
 		title => 'Gene ID',
 		type => 'number'
 	},
-
+	scaffold_oid => {
+		id => 'scaffold_oid',
+		title => 'Scaffold ID',
+		type => 'number',
+	},
 	locus_type => {
 		id => 'locus_type',
 		title => 'locus type',
@@ -270,6 +275,11 @@ my $schema = {
 			cycog => 'CyCOG'
 		}
 	},
+	xref => {
+		id => 'xref',
+		title => 'reference',
+		type => 'string',
+	},
 	file_type => {
 		id => 'file_type',
 		title => 'file type',
@@ -277,8 +287,10 @@ my $schema = {
 		enum => [ qw(
 			aa_seq
 			dna_seq
-			lin_seq
+			lin_fna
+			lin_idx
 			genes
+			intergenic
 			gff
 			cog
 			kog
@@ -289,12 +301,41 @@ my $schema = {
 			tmhmm
 			signalp
 			xref
+			bundle
 		) ],
+
+# taxon.lin.fna/xxxxxxxx.lin.fna contains DNA seq of the entire set of scaffolds of taxon in a contiguous manner and indexes of each scaffold <start,end> in that can be found in xxxxxxx.lin.fna.idx.
+
+# This directory contains the .faa seqs of alternate splice variant genes for the model orgs such as human, mouse, fly, worm etc. which we integrated a long while ago. UI gene detail displays these sequences, if the gene has splice variants...
+
 		enum_map => {
-			aa_seq => 'genome amino acid sequence',
-			dna_seq => 'genome DNA sequence',
-			lin_seq => '??? sequence',
+			aa_seq => 'AA seq',
+			dna_seq => 'DNA seq',
+			lin_fna => 'scaffold DNA',
+			lin_idx => 'scaffold index',
+			genes => 'gene DNA seq',
+			intergenic => 'intergenic DNA',
+			alt_seq => 'alternative splice variant genes for model organisms (e.g. human, mouse, fly, worm, etc.)',
+			gff => 'GFF3 annotations',
+			cog => 'COG annotations',
+			kog => 'KOG annotations',
+			pfam => 'PFAM annotations',
+			tigrfam => 'TIGRFAM annotations',
+			ipr => 'InterPro',
+			ko => 'KEGG',
+			signalp => 'signal peptides',
+			tmhmm => 'transmembrane helixes',
+			xref => 'external references',
+			bundle => 'file bundle'
+		},
+		enum_desc => {
+			aa_seq => 'amino acid sequence',
+			dna_seq => 'DNA sequence',
+			lin_fna => 'DNA sequence of all scaffolds in a taxon',
+			lin_idx => 'index file for the scaffold sequence',
 			genes => 'DNA sequence, genes',
+			intergenic => 'DNA sequence of intergenic regions',
+			alt_seq => 'amino acid sequence of alternative splice variant genes for model organisms (e.g. human, mouse, fly, worm, etc.)',
 			gff => 'GFF3 format (strict conformance not guaranteed for type and attribute fields)',
 			cog => 'COG annotations, tab-delimited',
 			kog => 'KOG annotations, tab-delimited',
@@ -304,7 +345,8 @@ my $schema = {
 			ko => 'KEGG orthology and EC annotations, tab-delimited',
 			signalp => 'signal peptide annotation, tab-delimited',
 			tmhmm => 'transmembrane helix annotation, tab-delimited',
-			xref => 'external references (spotty coverage)'
+			xref => 'external references (spotty coverage)',
+			bundle => 'bundle of sequence and annotation files, .tar.gz compressed'
 		},
 		no_sqlize => 1
 	}
@@ -495,8 +537,14 @@ sub filter_schema {
 		subject => 'filter schema'
 	});
 
+	log_debug { 'looking for filter schema for ' . $f };
+
 	if ( $schema->{$f} ) {
 		return $schema->{$f};
+	}
+
+	if ( ':all' eq $f ) {
+		return $schema;
 	}
 
 	$self->choke({

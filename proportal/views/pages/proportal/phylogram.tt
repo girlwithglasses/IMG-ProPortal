@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Phylogram';
+	title = 'Phylogram';
 %]
 	<h2>Phylogram</h2>
 <section class="info--phylogram page-intro">
@@ -20,7 +20,7 @@
 </section>
 <section role="complementary" class="sample-data">
 [%	show = { phylogen_class => 1 };
-	WRAPPER 'inc/cart_genome_add.tt';
+	WRAPPER 'inc/cart/taxon_add.tt';
 		FOREACH s IN results.array;
 			PROCESS 'inc/taxon_details.tt';
 		END;

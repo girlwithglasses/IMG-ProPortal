@@ -41,7 +41,7 @@ use Dancer2;
 	use Routes::MenuPages;
 #	use Routes::JBrowse;
 	use Routes::IMG;
-	use Routes::API;
+#	use Routes::API;
 	use Routes::ProPortal;
 	use Routes::TestStuff;
 

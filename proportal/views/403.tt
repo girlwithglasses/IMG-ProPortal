@@ -1,6 +1,6 @@
 [%
 	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: 403 Error';
+	title = '403 Error';
 %]
 <h2>Forbidden</h2>
 <p class="error">

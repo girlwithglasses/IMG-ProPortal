@@ -1,6 +1,6 @@
 ###########################################################################
 # DistanceTree.pm - draws a radial phylogenetic tree
-# $Id: DistanceTree.pm 36281 2016-10-05 19:19:09Z aratner $
+# $Id: DistanceTree.pm 36845 2017-03-25 00:22:54Z aratner $
 ############################################################################
 package DistanceTree;
 my $section = "DistanceTree";
@@ -729,7 +729,7 @@ sub printRectangularPhylogram {
       <link rel="stylesheet" type="text/css" href="$css_dir/d3phylotree.css" />
       <span id="ruler"></span>
       <div id="$div_id"></div>
-      <script src="$js_dir/d3phylogram.js"></script>
+      <script src="$js_dir/d3phylogram.min.js"></script>
       <script>
           window.onload = drawPhylogram("$newick_str", "$div_id", "$url", $data, "$tree_type");
       </script>
@@ -1039,7 +1039,7 @@ sub printD3Phylogram {
       <script src="$top_base_url/js/d3.min.js"></script>
       <script src="$top_base_url/js/newick.js"></script>
       <div id="$div_id"></div>
-      <script src="$js_dir/d3phylotree.js"></script>
+      <script src="$js_dir/d3phylotree.min.js"></script>
       <script>
           window.onload = drawPhylogram("$newick_str", "$div_id", "$txurl", $data);
       </script>

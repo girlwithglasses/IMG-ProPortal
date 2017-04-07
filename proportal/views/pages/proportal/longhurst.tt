@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: Longhurst Code';
+	title = 'Longhurst Code';
 %]
 
 <section class="longhurst-stats">
@@ -27,7 +27,7 @@
 [%			FOREACH t IN results.by_lh.$lh;
 				r = results.ix.$t; %]
 		<tr>
-			<td colspan="2"><a href="[% link( 'details', { type => 'taxon', taxon_oid => r.taxon_oid } ) %]">[% r.taxon_display_name %]</a></td>
+			<td colspan="2"><a href="[% link( 'details', { domain => 'taxon', taxon_oid => r.taxon_oid } ) %]">[% r.taxon_display_name %]</a></td>
 		</tr>
 [%			END; %]
 [%		END;

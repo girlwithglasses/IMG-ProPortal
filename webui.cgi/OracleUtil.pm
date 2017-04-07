@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: OracleUtil.pm 34715 2015-11-16 22:12:57Z klchu $
+# $Id: OracleUtil.pm 36784 2017-03-22 04:13:00Z aratner $
 #
 #
 #
@@ -895,6 +895,31 @@ sub getIdsInClause {
             truncTable( $dbh, $tableName );
             insertDataArray( $dbh, $tableName, $ids_ref );
             $idsInClause = " select id from $tableName ";
+        }
+        else {
+            if ($isIdNum) {
+                $idsInClause = join( ',', @$ids_ref );
+            }
+            else {
+                $idsInClause = WebUtil::joinSqlQuoted( ',', @$ids_ref );
+            }
+        }
+    }
+    return $idsInClause;
+}
+
+sub getIdsInClauseForTwo {
+    my ( $dbh, $tableName, $createSql, $isIdNum, $ids_ref, $customDefinedMax ) = @_;
+
+    my $idsInClause = '';
+    if ( scalar(@$ids_ref) > 0 ) {
+        if ( useTempTable( scalar(@$ids_ref), $customDefinedMax ) ) {
+            if ( $createSql && !isTableExist($dbh, $tableName) ) {
+                createTempTableReady( $dbh, $tableName, $createSql);                
+            }
+            truncTable( $dbh, $tableName );
+            insertDataArray( $dbh, $tableName, $ids_ref );
+            $idsInClause = " select id, id from $tableName ";
         }
         else {
             if ($isIdNum) {

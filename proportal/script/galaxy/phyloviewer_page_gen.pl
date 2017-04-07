@@ -12,9 +12,8 @@ BEGIN {
 }
 
 use lib @dir_arr;
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use Dancer2;
-use IMG::App::Role::ErrorMessages qw( script_die );
 use ProPortal::App::PhyloViewerPageGenerator;
 use Getopt::Long;
 
@@ -32,7 +31,11 @@ GetOptions(
 
 eval {
 
-ProPortal::App::PhyloViewerPageGenerator->new( dancer_config => config, args => $args, controller_role => 'PhyloViewer::Results' )->run();
+	ProPortal::App::PhyloViewerPageGenerator->new(
+		dancer_config => config,
+		args => $args,
+		controller => 'ProPortal::Controller::PhyloViewer::Results'
+	)->run();
 
 };
 

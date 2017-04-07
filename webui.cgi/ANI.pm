@@ -1,4 +1,4 @@
-# $Id: ANI.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: ANI.pm 36839 2017-03-24 23:40:21Z aratner $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -97,7 +97,8 @@ sub dispatch {
         doQuickPairwise();
         HtmlUtil::cgiCacheStop();
     } elsif ($page eq "doSameSpeciesPlot") {
-        doSameSpeciesPlot();
+        printSameSpeciesPairwiseForm();	# new UI 
+        #doSameSpeciesPlot();
     } elsif ($page eq "doPairwiseWithUpload") {
         HtmlUtil::cgiCacheInitialize($section, '', '', 1);
         HtmlUtil::cgiCacheStart() or return;
@@ -106,7 +107,7 @@ sub dispatch {
     } elsif ($page eq "plotSameSpeciesPairwise" || paramMatch("plotSameSpeciesPairwise") ne "") {
         plotSameSpeciesPairwise();
     } elsif ($page eq "sameSpeciesPairwise") {
-        printSameSpeciesPairwiseForm();	# for testing...
+        printSameSpeciesPairwiseForm();	# new UI 
     } elsif ($page eq "cliques") {
         printAllCliques(1);
     } elsif ($page eq "species") {
@@ -191,7 +192,7 @@ sub printOverview {
     TabHTML::printTabAPILinks("cliquesTab");
 
     my @tabIndex = ("#allcliquetab1", "#allcliquetab2", "#allcliquetab3", "#allcliquetab4");
-    my @tabNames = ("All Cliques",    "by Species",     "by Taxonomy",    "Clique Groups");
+    my @tabNames = ("All Cliques", "by Species", "by Taxonomy", "Clique Groups");
     TabHTML::printTabDiv("cliquesTab", \@tabIndex, \@tabNames);
 
     print "<div id='allcliquetab1'>";
@@ -1446,33 +1447,29 @@ sub uploadLocalFile {
 }
 
 sub printSameSpeciesPairwiseForm {
-    my $formid = "anibyspecies_frm";
-    print start_form(-id     => $formid,
+    print "<h1>Same Species Pairwise</h1>";
+    print "<p>";
+    print "Please select no more than 100 species to analyze using pairwise ANI. ";
+    print "<br/>Please note that it may not be possible to display the plot for species that have more than 200 genomes.";
+    print "</p>";
+
+    my $formid = "anibyspecies";
+    print start_form(-id     => $formid."_frm",
 		     -name   => "mainForm",
 		     -action => "$main_cgi");
 
-    print "<p>";
-    print "Please select the type of points to plot:<br/>";
-    print qq{
-        <input id='samespecies1' type='radio'
-         style='vertical-align: text-bottom;'
-         value='af-ani' name='samespecies' checked/>
-         ANI1 vs. AF1 and ANI2 vs.AF2
-        <input id='sampespecies2' type='radio'
-         style='vertical-align: text-bottom;'
-         value='final' name='samespecies' />Final ANI vs. Final AF
-    };
-    print "</p>";
-
+    print "<script type='text/javascript' src='$top_base_url/js/checkSelection.js'></script>\n";
     my $name = "_section_ANI_plotSameSpeciesPairwise";
     print submit(
         -name    => $name,
         -value   => "Plot Same Species Pairwise",
         -class   => "medbutton",
-        -onClick => "return validateItemSelection(1, 10, \"$formid\", \"genus_species\");"
-   );
+        -onClick => "return validateItemSelection(1, '', \"$formid\", \"genus_species\");"
+    );
     print nbsp(1);
-    print reset(-class => "smbutton");
+
+    print "<input type='button' name='clearAll' value='Clear All' "
+	. "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
 
     my $spc_cnt = printAllSpeciesInfo(0, 1);
 
@@ -1481,11 +1478,12 @@ sub printSameSpeciesPairwiseForm {
         -name    => $name,
         -value   => "Plot Same Species Pairwise",
         -class   => "medbutton",
-        -onClick => "return validateItemSelection(1, 10, \"$formid\", \"genus_species\");"
-   );
+        -onClick => "return validateItemSelection(1, '', \"$formid\", \"genus_species\");"
+    );
 
     print nbsp(1);
-    print reset(-class => "smbutton");
+    print "<input type='button' name='clearAll' value='Clear All' "
+	. "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
 
     print end_form();
 }
@@ -1499,9 +1497,9 @@ sub plotSameSpeciesPairwise {
     # for each genus-species, find all the genomes
     # and for each of the genomes, get the values ngenomes x ngenomes matrix
 
-    my @array;
+    my @samples;
     foreach my $genus_species (@genus_species) {
-        my ($lineage_href, $taxons_aref) = getLineage($genus_species);
+        my ($lineage_href, $taxons_aref, $tx2genus_aref) = getLineage($genus_species);
         my @taxonids = sort @$taxons_aref;
         my $nTaxons = scalar @taxonids;
         next if $nTaxons < 2;
@@ -1509,9 +1507,16 @@ sub plotSameSpeciesPairwise {
         my $taxonClause1;
         my $taxonClause2;
         if (scalar(@taxonids) > 0) {
-            my $taxon_ids_str = OracleUtil::getNumberIdsInClause($dbh, @taxonids);
+            #my $taxon_ids_str = OracleUtil::getNumberIdsInClause($dbh, @taxonids);
+            my $taxon_ids_str = OracleUtil::getIdsInClauseForTwo($dbh, 'gtt_num_id', '', 1, \@taxonids);
             $taxonClause1 = " and tam.genome1 in ($taxon_ids_str) ";
             $taxonClause2 = " and tam.genome2 in ($taxon_ids_str) ";
+
+            # replace the "select id from" with "select id, id from"
+	    if ($taxon_ids_str =~ /gtt_num_id/i) {
+		$taxonClause1 = " and (tam.genome1, tam.genome2) in ($taxon_ids_str) ";
+		$taxonClause2 = "";
+	    }
         }
 
         my $sql = qq{
@@ -1524,11 +1529,6 @@ sub plotSameSpeciesPairwise {
             $taxonClause2
         };
         my $cur = execSql($dbh, $sql, $verbose);
-
-        my %myhash;
-        $myhash{'species'} = $genus_species;
-        my @samples;
-
         for ( ;; ) {
             my ($genome1, $genome2, $ani1, $ani2, $af1, $af2, $fani, $ff) = $cur->fetchrow();
             last if !$genome1;
@@ -1538,21 +1538,16 @@ sub plotSameSpeciesPairwise {
             $ff  = sprintf("%.3f", $ff)  if $ff  ne "";
 
             my %subhash;
-
-            $subhash{'genome1'}   = $genome1 + 0;
-            $subhash{'genome2'}   = $genome2 + 0;
-            $subhash{'ani1'}      = $ani1 + 0;      # add zero to make it a number
-            $subhash{'ani2'}      = $ani2 + 0;
-            $subhash{'af1'}       = $af1 + 0;
-            $subhash{'af2'}       = $af2 + 0;
-            $subhash{'final_ani'} = $fani + 0;
-            $subhash{'final_af'}  = $ff + 0;
+	    $subhash{'id'}     = $genus_species;
+	    $subhash{'name'}   = "Species";
+	    $subhash{'desc'}   = $genome1." - ".$genome2;
+            $subhash{'xdata'}  = $fani + 0;
+            $subhash{'ydata'}  = $ff + 0;
+	    $subhash{'genus1'} = $tx2genus_aref->{$genome1};
+	    $subhash{'genus2'} = $tx2genus_aref->{$genome2};
 
             push @samples, \%subhash;
         }
-
-        $myhash{'samples'} = \@samples;
-        push(@array, \%myhash);
 
         OracleUtil::truncTable($dbh, "gtt_num_id")
 	    if ($taxonClause1 =~ /gtt_num_id/i);
@@ -1560,9 +1555,47 @@ sub plotSameSpeciesPairwise {
 	    if ($taxonClause2 =~ /gtt_num_id/i);
     }
 
-    print encode_json(\@array);
+    my $data = encode_json(\@samples);
+    my $div_id = "samespeciesplot";
+    my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
+
+    print "<h1>ANI Same Species Plot</h1>";
+    my $hint = "The plot can be repositioned using mouse-drag and zoomed using mouse-wheel.<br/>"
+	. "Click on a dot for options to add component genomes to cart.";
+    printHint($hint);
+
+    # template for table dialog popup over the scatterplot:
+    my $template = HTML::Template->new(filename => "$base_dir/sameSpeciesPairwise.html");
+    $template->param(columns => "<th>Genome</th><th>Species</th><th>Genus</th>");
+    $template->param(top_base_url => $top_base_url);
+    print $template->output;
 
     # plot the data
+    print qq{
+      <link rel="stylesheet" type="text/css" href="$top_base_url/css/d3scatterplot.css" />
+      <script src="$top_base_url/js/d3.min.js"></script>
+      <div id="$div_id" class="$div_id"></div>
+      <script src="$top_base_url/js/d3scatterplot.min.js"></script>
+      <script>
+          window.onload = drawScatterPlot
+          ("$div_id", $data, 1, 0, 1, 0, "$txurl", "Final ANI", "Final AF");
+      </script>
+
+      <script>
+      function addRow(table, data, selected_genomes) {
+          console.log("calling ANI:addRow()");
+          var genomes = data.desc.split(" - ");
+          if (!(genomes[0] in selected_genomes)) {
+	      table.row.add([genomes[0], genomes[0], data.id, data.genus1]).draw();
+          }
+          if (!(genomes[1] in selected_genomes)) {
+	      table.row.add([genomes[1], genomes[1], data.id, data.genus2]).draw();
+          }
+          selected_genomes[genomes[0]] = 1;
+          selected_genomes[genomes[1]] = 1;
+      }
+      </script>
+    };
 }
 
 sub printAllCliques {
@@ -2132,6 +2165,7 @@ sub getLineage {
     my $cur = execSql($dbh, $sql, $verbose, @binds);
 
     my %lineage_h;
+    my %taxon2genus;
     my @taxons;
     for ( ;; ) {
         my ($taxon_oid, $taxon_name, $species, $ani_species, $domain, $phylum,
@@ -2141,11 +2175,11 @@ sub getLineage {
         my $lineage = $domain . "\t" . $phylum . "\t" . $class . "\t"
 	    . $order . "\t" . $family . "\t" . $genus;
         $lineage_h{$lineage} = 1;
-
+	$taxon2genus{$taxon_oid} = $genus;
         push @taxons, $taxon_oid;
     }
 
-    return \%lineage_h, \@taxons;
+    return \%lineage_h, \@taxons, \%taxon2genus;
 }
 
 sub printInfoForGenusSpecies {
@@ -2156,7 +2190,7 @@ sub printInfoForGenusSpecies {
     $status_str = "All Finished, Permanent Draft and Draft"
 	if $seqstatus && $seqstatus eq "both";
 
-    my ($lineage_href, $taxons_aref) = getLineage($genus_species, $seqstatus);
+    my ($lineage_href, $taxons_aref, $tx2genus_aref) = getLineage($genus_species, $seqstatus);
 
     print "<h1>Species Detail</h1>";
     print "<p><u>Genus Species</u>: $genus_species";
@@ -2183,7 +2217,7 @@ sub printInfoForGenusSpecies {
     require TabHTML;
     TabHTML::printTabAPILinks("infogsTab");
 
-    my @tabIndex = ("#infogstab1",         "#infogstab2");
+    my @tabIndex = ("#infogstab1", "#infogstab2");
     my @tabNames = ("Cliques for Species", "Genomes for Species");
     TabHTML::printTabDiv("infogsTab", \@tabIndex, \@tabNames);
 
@@ -2242,8 +2276,8 @@ sub printCliqueDetails {
     require TabHTML;
     TabHTML::printTabAPILinks("cliqueDetailsTab");
 
-    my @tabIndex = ("#cliquetab0", "#cliquetab1",       "#cliquetab2");
-    my @tabNames = ("Overview",    "Genomes in Clique", "Similar Cliques");
+    my @tabIndex = ("#cliquetab0", "#cliquetab1", "#cliquetab2");
+    my @tabNames = ("Overview", "Genomes in Clique", "Similar Cliques");
 
     if ($clique_type eq "clique-group" && $nGenomes < 32) {
         push @tabIndex, "#cliquetab3";
@@ -2272,7 +2306,6 @@ sub printCliqueDetails {
 
     print "<div id='cliquetab1'>";
 
-    # members
     my $it = new InnerTable(1, "cliqdetails$$", "cliqdetails", 1);
     my $sd = $it->getSdDelim();
     $it->addColSpec("Select");
@@ -2298,10 +2331,12 @@ sub printCliqueDetails {
         $cnt++;
 
     }
+
     printMainForm();
 
     print hiddenVar("clique_id", $clique_id);
     print "<script type='text/javascript' src='$top_base_url/js/checkSelection.js'></script>\n";
+
     my $name = "_section_ANI_doQuickPairwise";
     if ($cnt > 10) {
         TaxonSearchUtil::printButtonFooter("cliqdetails");
@@ -2310,7 +2345,7 @@ sub printCliqueDetails {
             -name    => $name,
             -value   => "Pairwise ANI",
             -class   => "medbutton",
-            -onClick => "return validateItemSelection(2, '', \"cliquetab1\", \"taxon_filter_oid\");"
+            -onClick => "return validateItemSelection(2, '', \"cliqdetails\", \"taxon_filter_oid\");"
        );
     }
     $it->printOuterTable(1);
@@ -2322,7 +2357,7 @@ sub printCliqueDetails {
             -name    => $name,
             -value   => "Pairwise ANI",
             -class   => "medbutton",
-            -onClick => "return validateItemSelection(2, '', \"cliquetab1\", \"taxon_filter_oid\");"
+            -onClick => "return validateItemSelection(2, '', \"cliqdetails\", \"taxon_filter_oid\");"
        );
     }
 

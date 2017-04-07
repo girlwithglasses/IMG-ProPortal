@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: PhyloViewer';
+	title = 'PhyloViewer';
 %]
 <h2>PhyloViewer (beta)</h2>
 <p>

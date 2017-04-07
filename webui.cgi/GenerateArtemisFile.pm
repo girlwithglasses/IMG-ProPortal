@@ -1,7 +1,7 @@
 ############################################################################
 # Utility functions to support to generate GenBank/EMBL file.
 #
-# $Id: GenerateArtemisFile.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
+# $Id: GenerateArtemisFile.pm 36788 2017-03-22 06:08:09Z jinghuahuang $
 ############################################################################
 package GenerateArtemisFile;
 
@@ -20,6 +20,7 @@ use WebConfig;
 use WebUtil;
 use MailUtil;
 use FileHandle;
+use SequenceExportUtil;
 
 # Force flush
 $| = 1;
@@ -821,6 +822,13 @@ sub processFastaFile {
             webError("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
         }
 
+        if ($isFromWorkspace) {
+            main::printAppHeader("AnaCart");
+            #print "Content-type: text/html\n";
+            #print "Content-Disposition: inline;filename=exportFasta\n";
+            #print "\n";
+        }
+
         my $title;
         my $ext;
         my $what = ucfirst( lc($folder) );
@@ -832,6 +840,7 @@ sub processFastaFile {
             $title = "Export $what Fasta Nucleic Acid Sequence";
             $ext = "fna";
         }
+
         print "<h1>$title</h1>\n";
         my $outDir      = WebUtil::getGenerateDir();
         my $outFileName = "$$.$ext";

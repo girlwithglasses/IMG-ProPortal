@@ -65,10 +65,7 @@ sub generic {
 	if ( $args->{format} ) {
 		return output_as( $args->{format}, $rslt );
 	}
-
-	content_type 'application/json';
-	return JSON->new->convert_blessed(1)->encode( $rslt );
-
+	return output_json( $rslt );
 }
 
 prefix '/api' => sub {
@@ -179,38 +176,70 @@ prefix '/api' => sub {
 			};
 		}
 	};
+};
 
-	prefix '/list/file' => sub {
+# `/api/file?taxon_oid=12345678&file_type=gff` => downloads a file;
+# `/api/file?taxon_oid=12345678` shows the available files for a taxon;
+# `/api/file?pp_subset=pro` provides the list of all available files for that subset
 
+for my $api ( '/', '/api/' ) {
 
+	prefix $api . 'file' => sub {
 
-	};
+		any '?' => sub {
+			if ( 0 == scalar query_parameters->keys ) {
+				log_debug { 'no query params!' };
+				pass;
+			}
 
-	prefix '/details/file' => sub {
+			if ( query_parameters->{taxon_oid} ) {
+				if ( query_parameters->{file_type} ) {
+					log_debug { 'got tax id and file type' };
 
-		any '/taxon?' => sub {
+					bootstrap( 'Details::File' );
+					my $file = img_app->controller->get_data( query_parameters );
+					log_debug { 'file: ' . $file };
+					send_file(
+						$file,
+						content_type => 'attachment',
+						system_path => 1
+					);
+				}
+				else {
+					bootstrap( 'List::File' );
+					img_app->set_filters( query_parameters );
+					if ( '/api/' eq $api ) {
+						return output_json( img_app->controller->get_data );
+					}
+					return template 'pages/details/file.tt', img_app->controller->render;
+				}
+			}
+			else {
+				log_debug { 'incomplete params' };
+				bootstrap( 'List::File' );
+				img_app->set_filters( query_parameters );
+				if ( '/api/' eq $api ) {
+					return output_json( img_app->controller->get_data );
+				}
+				return template img_app->controller->tmpl, img_app->controller->render;
+			}
 
-			log_debug { 'no query params!' } && pass if ! scalar query_parameters->keys;
-
-			bootstrap( 'Details::File' );
-# 			if ( $args->{filters} ) {
-# 				img_app->set_filters( $args->{filters} );
-# 			}
-			my $file = img_app->controller->get_data( query_parameters );
-
-			send_file(
-				$file,
-				content_type => 'attachment',
-				system_path => 1
-			);
 		};
 
 		any qr{.*}x => sub {
-				return template 'pages/api/details_file_taxon.tt', { schema => { file_type => img_app->filter_schema('file_type') } };
+				return template 'pages/api/file.tt', { schema => {
+					file_type => img_app->filter_schema('file_type'),
+					pp_subset => img_app->filter_schema('pp_subset')
+				} };
 		};
-
 	};
-};
+}
+
+sub output_json {
+	my $output = shift;
+	content_type 'application/json';
+	return JSON->new->convert_blessed(1)->encode( $output );
+}
 
 sub output_as {
 	my $format = shift;

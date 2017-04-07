@@ -1,6 +1,6 @@
 ############################################################################
 # BiosyntheticDetail - detail page for biosynthetic clusters
-# $Id: BiosyntheticDetail.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: BiosyntheticDetail.pm 36808 2017-03-23 05:36:03Z aratner $
 ############################################################################
 package BiosyntheticDetail;
 my $section = "BiosyntheticDetail";
@@ -1221,13 +1221,13 @@ sub printBioClusterGeneList {
         print "<h2>Find Similar Biosynthetic Clusters</h2>\n";
         print "<p><font color='red'>This feature is available for super users only.</font>\n";
         print "<p>Select one or more genes to search. "
-          . "The result is based on Pfams associated with the selected gene(s).<br/>\n";
+	    . "The result is based on Pfams associated with the selected gene(s).<br/>\n";
         my $name = "_section_BiosyntheticDetail_findSimilarBCGF";
         print submit(
             -name    => $name,
             -value   => 'Find Similar Clusters',
             -class   => 'meddefbutton',
-            -onclick => "return validateGeneSelection(1, 'bcgenes_frm');"
+            -onclick => "return validateGeneSelection(1, 'bcgenes');"
         );
         print "<br/>\n";
         print "</div>\n";
@@ -7106,7 +7106,7 @@ sub processBiosyntheticClusters {
         $it->addRow($r);
     }
 
-    if ( !$frombccart) {
+    if ( !$frombccart ) {
         BcUtil::printTableFooter("processbc");
     }
     $it->printOuterTable(1);
@@ -7783,7 +7783,7 @@ sub printSimilarBCGF {
 }
 
 sub printPfamFooter {
-    my ($myform) = @_;
+    my ($mytblid) = @_;
 
     if (0) {    # not needed right now -anna
         my $name        = "_section_${section}_pfamNeighborhood";
@@ -7811,7 +7811,7 @@ sub printPfamFooter {
         -name    => $name,
         -value   => "Add Genes of Selected Clusters to Cart",
         -class   => $buttonClass,
-        -onclick => "return validateBCSelection(1, \"$myform\");"
+        -onclick => "return validateBCSelection(1, \"$mytblid\");"
     );
     print nbsp(1);
     my $name        = "_section_${section}_addBCScaffolds";
@@ -7820,7 +7820,7 @@ sub printPfamFooter {
         -name    => $name,
         -value   => "Add Scaffolds of Selected Clusters to Cart",
         -class   => $buttonClass,
-        -onclick => "return validateBCSelection(1, \"$myform\");"
+        -onclick => "return validateBCSelection(1, \"$mytblid\");"
     );
     print nbsp(1);
 

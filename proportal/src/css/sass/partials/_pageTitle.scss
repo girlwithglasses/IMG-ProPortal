@@ -1,5 +1,5 @@
 /* partials/pageTitle
-page title for a details page	
+page title for a details page
 */
 
 #pageTitle {
@@ -9,6 +9,7 @@ page title for a details page
 	@include b_border($element-border-width, $element-border-color);
 
 	.normal {
-		font-weight: normal; }
+		font-weight: normal;
+	}
 
-}	
+}

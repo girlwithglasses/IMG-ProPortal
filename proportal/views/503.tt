@@ -1,6 +1,6 @@
 [%
 	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: 503 Error';
+	title = '503 Error';
 %]
 <h2>Server Offline</h2>
 <p class="error">

@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 36687 2017-03-08 21:33:36Z klchu $
+# $Id: main.pl 36826 2017-03-24 17:02:30Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -111,7 +111,7 @@ timeout( 60 * $default_timeout_mins );
 
 # check the number of cgi processes
 maxCgiProcCheck();
-blockRobots();
+#blockRobots();
 
 # key the AppHeader where $current used
 # value display
@@ -534,6 +534,7 @@ if ( param() ) {
         GeneInfoPager                => 'GeneInfoPager',
         Export                       => 'Export',
         WorkspacePublicSet           => 'WorkspacePublicSet',
+        Blast16s => 'Blast16s',
     );
 
     # testing sections
@@ -1425,12 +1426,6 @@ sub printContentEnd {
 sub printAppHeader {
     my ( $current, $noMenu, $gwtModule, $yuijs, $content_js, $help, $redirecturl ) = @_;
 
-    if ( $virus && WebUtil::paramMatch("noHeader") ne "" ) {
-        #WebUtil::webLog("main::printAppHeader() noHeader<br/>\n"); 
-        require Viral;
-        return;
-    }
-        
     # sso
     my $cookie_return = '';
     if ( $sso_enabled && $current eq "login" && $sso_url ne "" ) {
@@ -1480,9 +1475,6 @@ sub printAppHeader {
         HtmlUtil::cgiCacheInitialize("homepage");
         HtmlUtil::cgiCacheStart() or return;
         
-        #my $dbh = dbLogin();
-        #my ( $maxAddDate, $maxErDate ) = getMaxAddDate($dbh);
-
         printContentHome();
 
         my $templateFile = "$base_dir/home-v33a.html";
@@ -1523,7 +1515,6 @@ Small organic molecules produced<br/>by living organisms<br/>
 </div> 
 };
 
-        # </div>
         HtmlUtil::cgiCacheStop();
 
     } elsif ( $virus && $current eq "Home" ) {
@@ -1533,8 +1524,6 @@ Small organic molecules produced<br/>by living organisms<br/>
         printErrorDiv();
 
         my $page = param('page');
-        #print "main::printAppHeader() page=$page<br/>\n";
-        require Viral;
     	if ( $page eq "isoHostDetail" ||
     	     paramMatch("isoHostDetail") ne "" ||
     	     $page eq "metaHostDetail" ||
@@ -1543,11 +1532,15 @@ Small organic molecules produced<br/>by living organisms<br/>
     	     paramMatch("bothHostDetail") ne "" ||
     	     $page eq "mvcHostDetail" ||
     	     paramMatch("mvcHostDetail") ne "" ) {
+    	    
+    	    # 
     	    return;
-    	}
-        elsif ( ! $page || $page eq 'googlemap' ) {
+    	    
+    	} elsif ( ! $page || $page eq 'googlemap' ) {
+            require Viral;
     	    Viral::printViralHome();
         }
+
 
     } elsif ($img_hmp && $current eq "Home" ) {
         # old home page turned off 

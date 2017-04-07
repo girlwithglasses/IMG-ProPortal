@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. utility functions to support HTML.
-# $Id: HtmlUtil.pm 36386 2016-10-27 18:19:02Z klchu $
+# $Id: HtmlUtil.pm 36801 2017-03-23 05:10:17Z aratner $
 ############################################################################
 package HtmlUtil;
 
@@ -1638,7 +1638,7 @@ sub printGenomeListHtmlTable {
         $it->addRow($row);
     }
     
-    my $txTableName = "taxontable";    # name of current instance of taxon table
+    my $txTableName = "genomelist";    # name of current instance of taxon table
     if ($count > 10) {
         print submit(
               -name    => 'setTaxonFilter',
@@ -1646,7 +1646,7 @@ sub printGenomeListHtmlTable {
               -class   => 'meddefbutton',
               -onClick => "return isGenomeSelected('$txTableName');"
         );
-        print nbsp(2);
+        print nbsp(1);
         WebUtil::printButtonFooter();
     }    
     $it->printOuterTable(1);
@@ -1656,7 +1656,7 @@ sub printGenomeListHtmlTable {
           -class   => 'meddefbutton',
           -onClick => "return isGenomeSelected('$txTableName');"
     );
-    print nbsp(2);
+    print nbsp(1);
     WebUtil::printButtonFooter();
 
     if ($count > 0) {

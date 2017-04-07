@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: FindGenesBlast.pm 36826 2017-03-24 17:02:30Z klchu $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -977,12 +977,6 @@ sub printGeneSearchBlastResults {
         if ( $#imgBlastDbs < 0 ) {
             @imgBlastDbs = OracleUtil::processTaxonSelectionParam("imgBlastDb");
         }
-
-        #if ($img_ken) {
-        #    print "<p>\n";
-        #    print Dumper \@imgBlastDbs;
-        #    print "<br>\n";
-        #}
     }
 
     my @taxon_oids;
@@ -1028,7 +1022,7 @@ sub printGeneSearchBlastResults {
     if ( $use_db ) {
         print qq{
             <font color='green'>
-                Use Blast Database: $use_db
+                Blast Database: $use_db
             </font>
             <br>\n
         };
@@ -1548,7 +1542,7 @@ sub printGeneSearchDnaBlastForAll {
     my $cfh;
     my $reportFile;
 
-    if ( $blastallm0_server_url ne "" ) {
+    if ($blastallm0_server_url ne "" ) {
 	##print "<p>url: $blastallm0_server_url\n";
         # For security reasons, we don't put in the whole
         # path, but make some assumptions about the report
@@ -1558,9 +1552,11 @@ sub printGeneSearchDnaBlastForAll {
             $reportFile = "blast.$sessionId.$$.m0.txt";
         }
 
-	if ( ! $use_db ) {
-	    $use_db = 'allFna';
-	}
+	   if ( ! $use_db ) {
+	       $use_db = 'allFna';
+	   }
+
+    # TODO 16s 10000 to 1000?
 
         # --es 08/30/08
         # Heuristic to discover IMG (Oracle) database name.
@@ -1658,45 +1654,45 @@ sub printGeneSearchDnaBlastForAll {
     WebUtil::resetEnvPath();
     wunlink($tmpFile);
     wunlink($tmpDbFile);
-
-    if ($anyHits && $use_db ne 'viral_spacer' ) {
-        print "</pre>\n";
+    my $page = param('page'); # blast16sResults
+    
+    if ($anyHits && $use_db ne 'viral_spacer' && $page ne 'blast16sResults') {
         WebUtil::printScaffoldCartFooter();
-        print "<pre>\n";
+    } elsif($page eq 'blast16sResults') {
+        WebUtil::printGeneCartFooter();
     }
 
     print "<pre><font color='blue'>\n";
     my $dbh = WebUtil::dbLogin();
-    my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( $dbh, \@lines, '', 0, $evalue );
 
-    #print "printGeneSearchDnaBlastForAll() que: @$query_coords_ref<br>\n";
-    #print "printGeneSearchDnaBlastForAll() sub: @$subjt_coords_ref<br>\n";
+    if( $page eq 'blast16sResults') {
+        processDnaSearchResult16s($dbh, \@lines, '', 0, $evalue);
+    } else {
+        my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( $dbh, \@lines, '', 0, $evalue );
+    }
+
     print "</font></pre>\n";
 
     if ($anyHits) {
-        print "</pre>\n";
-	if ( $use_db ne 'viral_spacers' ) {
-	    WebUtil::printScaffoldCartFooter();
-	    ## save to workspace
-	    WorkspaceUtil::printSaveScaffoldToWorkspace('scaffold_oid');
-	}
-        print "<pre>\n";
+	   if ( $use_db ne 'viral_spacers' && $page ne 'blast16sResults') {
+           WebUtil::printScaffoldCartFooter();
+	       WorkspaceUtil::printSaveScaffoldToWorkspace('scaffold_oid');
+       } elsif($page eq 'blast16sResults') {
+            WebUtil::printGeneCartFooter();	       
+	   }
     }
 
 
     if($img_ken) {
-
         print "<p>$common_tmp_dir\n";
         print "<p>Report file: $reportFile\n";
-
     }
         
         
     printStatusLine( "Loaded.", 2 );
-
     print end_form();
-    webLog "BLAST Done for IMG DB process=$$ " . currDateTime() . "\n"
-      if $verbose >= 1;
+    
+    #webLog "BLAST Done for IMG DB process=$$ " . currDateTime() . "\n" if $verbose >= 1;
 }
 
 ############################################################################
@@ -2630,6 +2626,137 @@ sub printEnvBlast {
     print end_form();
     webLog "BLAST Done for IMG DB process=$$ " . currDateTime() . "\n"
       if $verbose >= 1;
+}
+
+# TODO 16s
+# 
+# this is for the new blast all 16s isolate, metagenome
+# 2017-03-21
+# - ken
+#
+# output format
+# Isolate
+# lcl|640703712_637000059_1481_16S  pcr09 rRNA 16S 16S ribosomal RN...  2736    0.0 
+# 640703712 - gene
+# 637000059 - genome
+#
+# Metagenome
+# 
+# lcl|3300001621.a.JGI20253J16334_100551                                1253    0.0   
+# 3300001621 - taxon oid
+# a - data type
+# JGI20253J16334_100551 - gene oid
+sub processDnaSearchResult16s {
+    my ( $dbh, $lines_ref, $taxon_oid, $in_file, $evalue ) = @_;
+
+    # isolate16s.fna metaa16s.fna meta1.fna
+    my $use_db = param('use_db');   
+
+    my $inSummary = 0;
+    my $inScore = 0;
+    my $inScoreTaxonId = 0;
+    my $inScoreGeneId = 0;
+
+    foreach my $s (@$lines_ref) {
+        chomp $s;
+            
+        if ( $s =~ /^Sequences producing significant alignments/ ) {
+            $inSummary = 1;
+            $inScore = 0;
+
+        } elsif ($s =~ /^Sequence with id/) {
+            $inSummary = 0;
+            $inScore = 0;
+        } elsif ( $s =~ /^>/ ) {
+            # >lcl|640703712_637000059_1481_16S pcr09 rRNA 16S 16S ribosomal RNA 2131334..2132814(-) [Candidatus 
+            $inSummary = 0;
+            $inScore = 0;
+            my $tmp = $s;
+            $tmp =~ s/>//;
+            
+            if($use_db eq 'metaa16s.fna' || $use_db eq 'meta1.fna') {
+                my ($taxon_oid, $gene_oid, $g_t_str, $data_type) = findIds16s($tmp, 1);
+                $data_type = "assembled" if($data_type eq 'a');
+                $data_type = "uassembled" if($data_type eq 'u');
+                my $url = alink("main.cgi?section=MetaGeneDetail&page=metaGeneDetail&taxon_oid=$taxon_oid&gene_oid=$gene_oid&locus_type=rRNA&data_type=$data_type", $g_t_str);
+                $s =~ s/$g_t_str/$url/;                
+                
+            } else {
+                my ($taxon_oid, $gene_oid, $g_t_str) = findIds16s($tmp, 0);
+                my $url = alink("main.cgi?section=GeneDetail&page=geneDetail&gene_oid=$gene_oid", $g_t_str);
+                $s =~ s/$g_t_str/$url/;
+
+                $inScoreTaxonId = $taxon_oid;
+                $inScoreGeneId = $gene_oid; 
+            }
+    
+
+        } elsif ( $s =~ /Score = / ) {
+            $inSummary = 0;
+            $inScore = 1;
+
+        } elsif($inScore && $s =~ /^Sbjct/) {
+            # only the first Sbjct is a link
+            $inSummary = 0;
+            $inScore = 0;
+
+            
+            
+        }  elsif ( $inSummary && !WebUtil::blankStr($s) ) {
+            $inScore = 0;
+            
+            # # lcl|640703712_637000059_1481_16S  pcr09 rRNA 16S 16S ribosomal RN...  2736    0.0 
+            if($use_db eq 'metaa16s.fna' || $use_db eq 'meta1.fna') {
+                my ($taxon_oid, $gene_oid, $g_t_str, $data_type) = findIds16s($s, 1);
+                
+                $data_type = "assembled" if($data_type eq 'a');
+                $data_type = "uassembled" if($data_type eq 'u');
+                my $url = alink("main.cgi?section=MetaGeneDetail&page=metaGeneDetail&taxon_oid=$taxon_oid&gene_oid=$gene_oid&locus_type=rRNA&data_type=$data_type", $g_t_str);
+                $s =~ s/$g_t_str/$url/;
+                print "<input name='gene_oid' value='$taxon_oid $data_type $gene_oid' type='checkbox'>";            
+            } else {
+            
+            my ($taxon_oid, $gene_oid, $g_t_str) = findIds16s($s, 0);
+            my $url = alink("main.cgi?section=GeneDetail&page=geneDetail&gene_oid=$gene_oid", $g_t_str);
+            $s =~ s/$g_t_str/$url/;
+            print "<input name='gene_oid' value='$gene_oid' type='checkbox'>";
+            }            
+        }
+        print "$s\n";
+    }
+}
+
+# summary section
+# isolate
+# lcl|640703712_637000059_1481_16S  pcr09 rRNA 16S 16S ribosomal RN...  2736    0.0
+#
+sub findIds16s  {
+    my($line, $isMetagenome) = @_;
+    
+    $line =~ s/\s+/ /g;
+    
+    if($isMetagenome) {
+        my $gene_oid = 0;
+        my $taxon_oid = 0;
+        my $data_type = '';
+    
+        my($gene_taxon, @junk) = split(/\s/, $line);
+        my $idx = index($gene_taxon, '|');
+        $gene_taxon = substr($gene_taxon, ($idx + 1));
+        ($taxon_oid, $data_type, $gene_oid) = split(/\./, $gene_taxon);        
+    
+        return ($taxon_oid, $gene_oid, $gene_taxon, $data_type);
+    } else {
+        my $gene_oid = 0;
+        my $taxon_oid = 0;
+    
+        my($gene_taxon, @junk) = split(/\s/, $line);
+        my $idx = index($gene_taxon, '|');
+        $gene_taxon = substr($gene_taxon, ($idx + 1));
+        ($gene_oid, $taxon_oid, @junk) = split(/_/, $gene_taxon);
+    
+        return ($taxon_oid, $gene_oid, $gene_taxon);
+    }
 }
 
 ############################################################################

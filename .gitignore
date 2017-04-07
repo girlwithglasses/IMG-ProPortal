@@ -71,6 +71,8 @@ proportal/lib/PodServer.pm
 proportal/script/podserver
 proportal/lib/ProPortal/Model/Methods.pm
 
+proportal/src/.sass-cache
+
 proportal/blib/
 proportal/.build/
 proportal/_build/

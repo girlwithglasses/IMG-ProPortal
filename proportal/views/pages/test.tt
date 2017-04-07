@@ -1,5 +1,5 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: DataMart Stats';
+	title = 'DataMart Stats';
 	type = result.type;
 %]
 <form method="post" action="https://img-proportal-dev.jgi-psf.org/cgi-bin/main.cgi" enctype="multipart/form-data" name="mainForm" id="GenomeSearch_frm" onsubmit="removeDups ('GenomeSearch_frm', 'GenomeSearch'); " onreset="handleReset ('GenomeSearch_frm', 'GenomeSearch'); ">

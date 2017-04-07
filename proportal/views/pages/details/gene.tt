@@ -1,8 +1,11 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	self = results.gene;
 
-	#title = 'IMG ProPortal: ' _ self.display_name;
-	title = 'IMG ProPortal: Gene Details';
+	#title = self.display_name;
+	title = 'Gene Details';
+	class = 'gene-details';
+
+	PROCESS 'inc/generic/link.tt';
 
 %]
 
@@ -27,12 +30,9 @@
 
 		<!-- Write gene name -->
 		<h2>[% self.gene_display_name %]</h2>
-		
+
 		<!-- Write taxon source (need query for taxon display name) -->
-		<h4 class="normal"> <a href="[% link( 'details', { type => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_display_name %]</a> </h4>
-		
-		
-				
+		<h4 class="normal">from [% taxon_name_link( x = {}, obj = self ) %]</h4>
 	</div>
 	<div id="buttonBar">
 		<button>View in JBrowse</button>
@@ -65,10 +65,21 @@
 
 		<div class="tableTitle"><h6>Genome and Scaffold Details</h6></div>
 		<table class="condensed">
-			<tr><td class="col1">Taxon ID</td>	<td> <a href="[% link( 'details', { type => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_oid %]</a></td></tr>
-			<tr><td>Taxon</td>	<td><a href="[% link( 'details', { type => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_display_name %]</a></td></tr>
-			<tr><td>Scaffold ID</td>	<td> [% self.scaffold %] <div class="noteToSelf"> * </div></td></tr>
-			<tr><td>Scaffold</td>	<td> <div class="noteToSelf"> * </div></td></tr>
+			<tr>
+				<td class="col1">Taxon ID</td>
+				<td>[% taxon_id_link( x = {}, obj = self ); %]</td>
+			</tr>
+			<tr>
+				<td>Taxon</td>
+				<td>[% taxon_name_link( x = {}, obj = self ); %]</td>
+			</tr>
+			<tr>
+				<td>Scaffold ID</td>
+				<td>[% scaffold_id_link( x = {}, obj = self ); %]</td></tr>
+			<tr>
+				<td>Scaffold</td>
+				<td>[% scaffold_name_link( x = {}, obj = self ); %]</td>
+			</tr>
 		</table>
 
 		<div class="tableTitle"><h6>External Links</h6></div>
@@ -86,10 +97,10 @@
 		<div class="infoBoxTitle"><h4>Protein Functional Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
 
 		<table class="lined">
-		<tr><td class="col1">CyCOG</td> 	<td> <a>COG0592</a>: DNA polymerase III sliding clamp (beta) subunit, PCNA homolog</td></tr>
+		<tr><td class="col1">CyCOG</td> 	<td><a>COG0592</a>: DNA polymerase III sliding clamp (beta) subunit, PCNA homolog</td></tr>
 
 
-		<tr><td>KOG</td> 	<td> <a>KOG789</a>: a verbose description of this KOG will go here: Lorem ipsum dolor sit amet, consectetur adipiscing elit</td></tr>
+		<tr><td>KOG</td> 	<td><a>KOG789</a>: a verbose description of this KOG will go here: Lorem ipsum dolor sit amet, consectetur adipiscing elit</td></tr>
 		<tr>
 		<td>Enzyme</td>
 		<td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>

@@ -75,7 +75,7 @@ sub _render {
 
 	my $res = $self->get_data();
 
-	for my $r (@$res) {
+	for my $r ( @$res ) {
 		# collect genomes by the generic clade name
 		push @{$data->{ $r->{genus} }{ $r->{generic_clade} }{genomes}}, $r;
 	}

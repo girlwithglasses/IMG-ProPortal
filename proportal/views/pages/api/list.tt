@@ -1,18 +1,19 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal API';
+	title = 'List API';
 %]
-<h2>API</h2>
+<h2>List query API</h2>
+[%
+	PROCESS 'inc/api/descriptions.tt';
 
-<p>Welcome to the experimental ProPortal API. This is the home page for the list query API. The following list queries are available:</p>
-<ul>
-[%	FOREACH q IN queries.sort %]
-	<li>[% q %]: [short description of fields available]
-		<ul>
-[%		FOREACH s IN apps.$q.controller.valid_filters.pp_subset.enum %]
-			<li>pp_subset: <a href="/api/proportal/[% q %]?pp_subset=[% s %]">[% s %]</a></li>
-[%		END; %]
-		</ul>
-	</li>
-[%	END %]
-</ul>
-[% END %]
+	type = 'list'; %]
+<h3><code>/[% type %]/</code></h3>
+[%	IF description.$type;
+		description.$type;
+	END;
+
+	FOR q IN queries;
+		p_name = 'pages/api/' _ q.replace('::','/') _ '.tt';
+		PROCESS $p_name;
+	END;
+
+END; %]

@@ -1,6 +1,6 @@
 package ProPortal::Util::Factory;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use String::CamelCase qw(camelize);
 use IMG::Util::Factory;
 
@@ -24,11 +24,15 @@ sub _rename {
 	my $type = shift;
 	my $name = shift;
 
-	die __PACKAGE__ . ' requires two name arguments' unless $type && $name;
+	err({
+		err => 'missing',
+		subject => 'type and name parameters'
+	}) unless $type && $name;
 
 	if ( $name =~ /::/ ) {
 		$name = join '::', map { camelize( $_ ) } split '::', $name;
 	}
+
 	$type = camelize($type);
 	$name = camelize($name);
 	return "ProPortal::${type}::${name}";
