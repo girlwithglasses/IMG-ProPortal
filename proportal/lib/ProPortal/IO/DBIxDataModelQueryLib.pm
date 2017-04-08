@@ -428,7 +428,7 @@ sub gene_list {
 
 	$args->{where}{'gene.obsolete_flag'} = 'No';
 
-	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax <=> scaffold ] )
+	return $self->schema('img_core')->join( qw[ Gene <=> scaffold <=> gold_tax ] )
 		->select(
 			-columns => [ qw(
 				gene_oid
@@ -442,7 +442,7 @@ sub gene_list {
 				scaffold|scaffold_oid
 				scaffold_name
 			) ],
-			-where   => $args->{where},
+			-where => $args->{where},
 			-result_as => 'statement'
 		);
 }
@@ -505,7 +505,7 @@ sub gene_details {
 	my $args = shift;
 
 #	my $gene = $self->schema('img_core')->table('PPGeneDetails')
-	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax <=> scaffold ] )
+	return $self->schema('img_core')->join( qw[ Gene <=> scaffold <=> gold_tax ] )
 		->select(
 			-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name', 'scaffold_oid', 'scaffold_name' ],
 			-where   => $args->{where},
