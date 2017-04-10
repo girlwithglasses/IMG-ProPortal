@@ -11,9 +11,7 @@
 
 ### ProPortal Subset ###
 
-#### Taxonomic subsets ####
-
-This is the SQL case statement that defines the ProPortal subset:
+Defined in the database view `VW_GOLD_TAXON` as:
 
 ```sql
 
@@ -23,17 +21,17 @@ CASE
       WHEN lower(taxon_display_name) LIKE 'prochlorococcus%' THEN
         CASE
           WHEN taxon.domain = 'Bacteria' THEN 'pro'
-          WHEN taxon.domain = 'Viruses' THEN 'pro_phage'
+          WHEN taxon.domain = 'Viruses'  THEN 'pro_phage'
         END
       WHEN lower(taxon_display_name) LIKE 'synechococcus%' THEN
         CASE
-          WHEN taxon.domain = 'Bacteria' AND ecosystem_type = 'Marine' THEN 'syn'
+          WHEN taxon.domain = 'Bacteria' AND lower(ecosystem_type) = 'marine' THEN 'syn'
           WHEN taxon.domain = 'Viruses' THEN 'syn_phage'
         END
       WHEN ( lower(ecosystem_subtype) = 'marginal sea' OR lower(ecosystem_subtype) = 'pelagic') THEN
         CASE
           WHEN taxon.domain = 'Bacteria' THEN 'other'
-          WHEN taxon.domain = 'Viruses' THEN 'other_phage'
+          WHEN taxon.domain = 'Viruses'  THEN 'other_phage'
         END
     END
    WHEN genome_type = 'metagenome' AND lower(ecosystem_type) = 'marine' THEN genome_type
@@ -49,7 +47,7 @@ For isolate genomes (`taxon.genome_type = 'isolate'`):
   * `domain` is viruses: subset Prochlorococcus phage (`pro_phage`)
 
 * `taxon_display_name` start with 'synechococcus':
-  * `domain` is bacteria and `ecosystem_type` is 'marine': subset Synechococcus (`syn`)
+  * `domain` is bacteria and `ecosystem_type` is 'Marine': subset Synechococcus (`syn`)
   * `domain` is viruses: subset Synechococcus phage (`syn_phage`)
 
 * `ecosystem_subtype` is 'marginal sea' or 'pelagic':
@@ -75,6 +73,7 @@ CASE
     CASE
       WHEN analysis_project_type in( 'Single Cell Analysis (unscreened)' , 'Single Cell Analysis (screened)') THEN 'single_cell'
       WHEN exists ( select 1 from rnaseq_dataset where rnaseq_dataset.reference_taxon_oid = taxon.taxon_oid AND rnaseq_dataset.dataset_type = 'Transcriptome') THEN 'transcriptome'
+      WHEN analysis_project_type = 'Genome from Metagenome' THEN 'genome_from_metagenome'
       ELSE genome_type
     END
    WHEN analysis_project_type = 'Metatranscriptome Analysis' THEN 'metatranscriptome'
@@ -85,9 +84,11 @@ AS dataset_type
 
 For isolate genomes (`taxon.genome_type = 'isolate'`):
 
-* `taxon.genome_type = 'isolate'` and `analysis_project_type` = Single Cell Analysis (screened/unscreened): single cells (`single_cell`)
+* `analysis_project_type` = Single Cell Analysis (screened/unscreened): single cells (`single_cell`)
 
 * `rnaseq_dataset.dataset_type = 'Transcriptome'` and `rnaseq_dataset.reference_taxon_oid` = taxon_oid: transcriptomes (`transcriptome`)
+
+* `analysis_project_type` = 'Genome from Metagenome': genome from metagenome (`genome_from_metagenome`)
 
 * anything else: `isolate`
 
