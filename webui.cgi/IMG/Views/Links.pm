@@ -1020,18 +1020,22 @@ my $static_links = {
 		url => 'support/news',
 		label => 'News'
 	},
-	'support/about' => {
-		url => 'support/about',
-		label => 'About'
-	},
+# 	'support/about' => {
+# 		url => 'support/about',
+# 		label => 'About'
+# 	},
 
 	'user_guide' => {
 		url => 'user_guide',
 		label => 'User Guide'
 	},
 	'user_guide/api_manual' => {
-		url => 'user_guide/api_manual',
+		url => 'api',
 		label => 'API Manual'
+	},
+	'user_guide/data_documentation' => {
+		url => 'user_guide/data_documentation',
+		label => 'Data Documentation'
 	},
 	'user_guide/browsing' => {
 		url => 'user_guide/browsing',

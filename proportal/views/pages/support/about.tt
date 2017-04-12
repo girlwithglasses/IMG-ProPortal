@@ -2,11 +2,17 @@
 	WRAPPER 'inc/page_wrapper.tt';
 	title = 'About';
 %]
+
+
 <div class="cf">
-<h2>About</h2>
-[%	USE Dumper;
-	'<pre>';
-	Dumper.dump( content );
-	'</pre>'; %]
+
+<h2 class="underline">About IMG/ProPortal</h2>
+<br>
+<p>The marine cyanobacterium <strong><i>Prochlorococcus</i></strong>, which is abundant in the oceans, is a key model system in microbial ecology. <strong>IMG/ProPortal</strong> provides <i>Prochlorococcus</i> and the closely related <i>Synechococcus</i> and <i>Cyanophage</i> genomes integrated with a comprehensive set of publicly-available isolate and single cell genomes, and a rich set of publicly-available metagenome samples. <strong>IMG/ProPortal</strong> includes genomic, transcriptomic, metagenomic and population data from both cultivated strains and wild populations of cyanobacteria and phage.</p>
+<p><strong>IMG/ProPortal</strong> relies on IMG's data warehouse and comparative analysis tools (<a href="http://nar.oxfordjournals.org/content/42/D1/D560" rel="external">Nucleic Acids Research, Volume 42 Issue D1</a>) and is a descendant of <strong>ProPortal</strong> (<a href="http://nar.oxfordjournals.org/content/40/D1/D632" rel="external">Nucleic Acids Research Volume 40 Issue D1</a>).</p>
+
+
+
 </div>
+
 [%	END; %]

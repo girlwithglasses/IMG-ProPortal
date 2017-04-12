@@ -1,0 +1,47 @@
+[%	IF ! page_wrapper;
+		page_wrapper = 'layouts/default.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'Data Documentation';
+%]
+
+<!-- 
+<style>
+	div.site-message{
+		display: none;
+	}
+</style>
+ -->
+
+<!-- <a href="/user_guide/">< back</a>	 -->
+<p></p>
+<h2 id="top" class="underline">Data Documentation</h2>
+<br>
+ <ol>
+ 	<li> <a href="#1">What data sets are available in IMG/ProPortal?</a></li>
+ 	<li> <a href="#2">What metadata is available?</a></li>
+ 	<li> <a href="#3">CyCOG Functions: IMG/ProPortal's cyanobacteria-specific orthologous clusters.</a></li>
+ </ol>
+<br>
+
+<h4 id="1" class="underline">What data sets are available in IMG/ProPortal?</h4>
+<br>
+<p>Coming soon!</p>
+<a href="#top">go to top </a>
+<p></p>
+
+<h4 id="2" class="underline">What metadata is available?</h4>
+<br>
+<p>Coming soon!</p>
+<a href="#top">go to top </a>
+<p></p>
+
+<h4 id="3" class="underline">CyCOG Functions: IMG/ProPortal's cyanobacteria-specific orthologous clusters.</h4>
+<br>
+<p>Coming soon!</p>
+<a href="#top">go to top </a>
+<p></p>
+
+
+[% END; %]
+

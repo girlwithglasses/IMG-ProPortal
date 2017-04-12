@@ -2,11 +2,11 @@
 	WRAPPER 'inc/page_wrapper.tt';
 	title = 'News';
 %]
-<h2>News</h2>
+
 <div class="cf">
-[%	USE Dumper;
-	'<pre>';
-	Dumper.dump( content );
-	'</pre>'; %]
+<h2 class="underline">News</h2>
+	<br>
+	<a class="twitter-timeline" href="https://twitter.com/IMG_ProPortal">Tweets by IMG ProPortal</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 </div>
 [%	END; %]

@@ -59,8 +59,11 @@ div.site-message {
 				IF results.stats.pp_subsets.$f;
 					s = results.stats.pp_subsets.$f; %]
 			<tr><td class="indent">[% data_filters.schema.$fd.enum_map.$f %]</td>
-				<td>[% s.count %]</td>
-			</tr>
+				<td>
+					
+					<a href="[% link( 'list', { domain => 'taxon', pp_subset => f  } ) %]"> [% s.count %]</a>
+				</td>
+			</tr>2
 	[%			END;
 			END;
 		END;%]

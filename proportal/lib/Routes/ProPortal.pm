@@ -755,7 +755,7 @@ GET  /proportal/phylo_viewer/results/QUERY_ID => get query results
 my $page_h = {
 	tools => [ qw( krona jbrowse galaxy phyloviewer ) ],
 	search => [ qw( advanced_search blast ) ],
-	user_guide => [ qw( api_manual browsing getting_started searching using_tools ) ],
+	user_guide => [ qw( api_manual data_documentation browsing getting_started searching using_tools ) ],
 	support => [ qw( news about ) ]
 };
 

@@ -47,11 +47,11 @@ sub _get_menu_items {
 
 		home(),
 		browse(),
-		search(),
+# 		search(),
 		tools(),
-		$self->my_img(),
+# 		$self->my_img(),
 		support(),
-		cart(),
+#		cart(),
 	];
 
 }
@@ -92,9 +92,9 @@ sub tools {
 	return {
 		id => 'menu/tools',
 		submenu => [
-			'phyloviewer',
-			'tools/jbrowse',
-			'tools/krona',
+# 			'phyloviewer',
+# 			'tools/jbrowse',
+# 			'tools/krona',
 			'galaxy',
 		],
 	};
@@ -141,17 +141,18 @@ sub support {
 		id => 'menu/support',
 		submenu => [
 			'support/about',
+			'support/news',
 #			'user_guide',
 			{	id => 'user_guide',
 				submenu => [
 					'user_guide/getting_started',
-					'user_guide/browsing',
-					'user_guide/searching',
-					'user_guide/using_tools',
-					'user_guide/api_manual'
+					'user_guide/data_documentation',
+# 					'user_guide/browsing',
+# 					'user_guide/searching',
+# 					'user_guide/using_tools',
+ 					'user_guide/api_manual'
 				]
-			},
-			'support/news',
+			}
  		],
 	};
 }

@@ -5,32 +5,39 @@
 	title = 'Sample Demo';
 %]
 
-<a href="/user_guide/">< back</a>	
+	
 <p></p>
-<h2 id="top">Getting Started </h2>
-
+<h2 id="top" class="underline">Getting Started </h2>
+<br>
 <ol>
-	<li> <a href="#1">Understanding the Analysis Cart </a></li>
-	<li> <a href="#2">Populating the Cart </a></li>
-	<li> <a href="#3">Working with Data in the Cart </a></li>
+	<li> <a href="#1">Browsing Data Sets </a></li>
+	<li> <a href="#2">Downloading Data </a></li>
+	<li> <a href="#3">Using the Analysis Cart </a></li>
+	<li> <a href="#4">Using Galaxy Tools </a></li>
 </ol>
+<br>
 
-<h4>Overview</h4>
-[%	PROCESS 'inc/lorem_ipsum.tt'; %]
-
-<h4 id="1">Understanding the Analysis Cart</h4>
-[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<h4 id="1" class="underline">Browsing Data Sets</h4>
+<br>
+<p>Coming soon!</p>
 <a href="#top">go to top </a>
 <p></p>
 
-<h4 id="2">Populating the Cart</h4>
-[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<h4 id="2" class="underline">Downloading Data</h4>
+<br>
+<p>Coming soon!</p>
 <a href="#top">go to top </a>
 <p></p>
 
-<h4 id="3">Working with Data in the Cart</h4>
-[%	PROCESS 'inc/lorem_ipsum.tt'; %]
+<h4 id="3" class="underline">Using the Analysis Cart</h4>
+<br>
+<p>Coming soon!</p>
 <a href="#top">go to top </a>
 <p></p>
 
+<h4 id="4" class="underline">Using the Analysis Cart</h4>
+<br>
+<p>Coming soon!</p>
+<a href="#top">go to top </a>
+<p></p>
 [% END; %]
