@@ -63,7 +63,7 @@ div.site-message {
 					
 					<a href="[% link( 'list', { domain => 'taxon', pp_subset => f  } ) %]"> [% s.count %]</a>
 				</td>
-			</tr>2
+			</tr>
 	[%			END;
 			END;
 		END;%]
