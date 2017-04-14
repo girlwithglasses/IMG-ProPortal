@@ -1952,6 +1952,46 @@ a.grid:hover {
   width: 100%;
   clear: both; }
 
+.taxon-list__table {
+  border-bottom: 1px solid #5a5a5a;
+  border-top: 1px solid #5a5a5a; }
+.taxon-list__thead > tr > th {
+  border-bottom: 1px solid #5a5a5a; }
+
+.gene-list__table {
+  border-bottom: 1px solid #5a5a5a;
+  border-top: 1px solid #5a5a5a; }
+.gene-list__thead > tr > th {
+  border-bottom: 1px solid #5a5a5a; }
+
+.function-list__table {
+  border-bottom: 1px solid #5a5a5a;
+  border-top: 1px solid #5a5a5a; }
+.function-list__thead > tr > th {
+  border-bottom: 1px solid #5a5a5a; }
+
+.scaffold-list__table {
+  border-bottom: 1px solid #5a5a5a;
+  border-top: 1px solid #5a5a5a; }
+.scaffold-list__thead > tr > th {
+  border-bottom: 1px solid #5a5a5a; }
+
+.taxon-cart--top__fieldset, .taxon-cart--base__fieldset {
+  margin: 0.75rem 0;
+  float: right; }
+
+.gene-cart--top__fieldset, .gene-cart--base__fieldset {
+  margin: 0.75rem 0;
+  float: right; }
+
+.function-cart--top__fieldset, .function-cart--base__fieldset {
+  margin: 0.75rem 0;
+  float: right; }
+
+.scaffold-cart--top__fieldset, .scaffold-cart--base__fieldset {
+  margin: 0.75rem 0;
+  float: right; }
+
 /* partials/print
  * (from https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css)
  */

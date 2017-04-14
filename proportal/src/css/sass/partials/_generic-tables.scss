@@ -1,0 +1,45 @@
+
+// Push generic-table to all four data list types.
+@mixin generic-tables {
+	@include generic-table( "taxon-list" );
+	@include generic-table( "gene-list" );
+	@include generic-table( "function-list" );
+	@include generic-table( "scaffold-list" );
+}
+
+// Defining styles for all generic-tables.
+@mixin generic-table( $class ) {
+	.#{$class} {
+		&__table {
+			@include b_border(1px, $element-border-color);
+			@include t_border(1px, $element-border-color);	
+		}	
+		&__thead {
+			> tr > th {
+				@include b_border(1px, $element-border-color);
+			}
+		}	
+		&__tbody {}
+		&__caption {}
+		&__th {}
+
+		// Gene-list specific fields.
+		&--cbox {
+			.#{$class}__th	{}
+		}
+
+		&--gene_oid {
+			.#{$class}__th	{}
+		}
+
+		&--gene_display_name {
+			.#{$class}__th	{}
+		}
+
+		&--taxon_oid {
+			.#{$class}__th	{}
+		}	
+	
+	}
+}
+

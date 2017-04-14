@@ -1,0 +1,21 @@
+
+// Push generic-cart to all four data list types.
+@mixin generic-carts {
+	@include generic-cart( "taxon-cart" );
+	@include generic-cart( "gene-cart" );
+	@include generic-cart( "function-cart" );
+	@include generic-cart( "scaffold-cart" );
+}
+
+// Defining styles for all generic-carts.
+@mixin generic-cart( $class ) {
+	.#{$class} {
+
+		&--top, &--base{
+			&__fieldset	{
+				margin: $gutter 0;
+				float: right;
+			}
+		}	
+	}	
+}

@@ -1,35 +1,80 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = results.domain _ ' List' | ucfirst;
 %]
-<h2>[% results.domain | ucfirst %] List</h2>
-[%	IF results.params;
-		IF 'gene' == results.domain; %]
-		<h4 class="normal">
-			<!--  this section needs to be expanded as more links come online -->
-			[%	IF results.params.gene_symbol;
-					results.params.gene_symbol;
-				END;
 
-				IF results.params.locus_type == "xRNA";
-					'Other RNA';
-				ELSE;
-					results.params.locus_type;
-				END;
+<!-- WORK IN PROGRESS!! This should all get added to a separate template -->
+<div id="pageHeader">
+	<div id="pageTitle">
+	
+		<h2>[% results.domain | ucfirst %] List</h2>
+		[%	IF results.params;	%]
+					<h4 class="normal">
+				
+				
+				
+					[% IF results.domain == 'gene';  %]
 
-				IF results.params.taxon_oid; %]
-				for taxon <a href="[% link( 'details', { domain => 'taxon', taxon_oid => results.params.taxon_oid } ) %]">[% results.params.taxon_oid %]</a>
-[%				END %]
-		</h4>
-[%		END; # end IF 'gene'
-	END; # end IF results.params
+					<!--  this section needs to be expanded as more links come online -->
+					[%	IF results.params.gene_symbol;
+							results.params.gene_symbol;
+						END;
 
+						IF results.params.locus_type == "xRNA";
+							'Other RNA';
+						ELSE;
+							results.params.locus_type;
+						END;
+
+						IF results.params.taxon_oid; %]
+						for taxon <a href="[% link( 'details', { domain => 'taxon', taxon_oid => results.params.taxon_oid } ) %]">[% results.params.taxon_oid %]</a>
+					[%	END;
+				
+				ELSIF results.domain == 'taxon';
+					IF params.pp_subset;	%]
+						
+						[% IF params.pp_subset == "syn"	%]
+							Synechococcus genomes
+						[% ELSIF params.pp_subset == "pro"	%]
+							Prochlorococcus genomes
+						[% ELSIF params.pp_subset == "other"	%]
+							Other genomes
+						[% ELSIF params.pp_subset == "syn_phage"	%]
+							Synechococcus phage genomes
+						[% ELSIF params.pp_subset == "pro_phage"	%]
+							Prochlorococcus phage genomes
+						[% ELSIF params.pp_subset == "other_phage"	%]
+							Other phage genomes
+						[% END;	%]
+						
+					[% END;		# end IF params.pp_subset;
+					IF params.dataset_type;	%]
+						,
+						[% IF params.dataset_type == "isolate"	%]
+							Isolates
+						[% ELSIF params.dataset_type == "single_cell"	%]
+							Single cell genomes
+						[% ELSIF params.dataset_type == "metagenome"	%]
+							Metagenomes
+						[% ELSIF params.dataset_type == "metatranscriptome"	%]
+							Metatranscriptomes
+						[% ELSIF params.dataset_type == "transcriptome"	%]
+							Transcriptomes																			
+						[% END;	%]
+						
+					[% END;		# end IF params.pp_subset;
+			 	END; # end IF results.params	%]
+				</h4>
+		[% END;	
 	IF results.n_results; %]
 <p class="[% results.table.class %]__count">[% results.n_results %] results</p>
+</div></div>
+
 [%	END;
 
 	IF results.defined('n_pages') && results.n_pages > 1; %]
 <p>PAGING REQUIRED!</p>
 [%	END; %]
+
 <div class="[% results.table.class %]__container" id="main">
 [%	IF results.arr.size > 0;
 
