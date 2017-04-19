@@ -13,10 +13,11 @@
 	IF button;
 		PROCESS 'inc/cart/cart_add_macro.tt';
 		PROCESS 'inc/generic/link.tt'; %]
-	<ul class="button_bar__container">
+
+	<ul class="button-bar__container">
 [%		IF button.jbrowse; %]
-			<li class="button_bar__item--jbrowse">
-				<a class="button_bar__link" rel="external" href="[%
+			<li class="button-bar__item">
+				<a class="button-bar__link" rel="external" href="[%
 					link( 'jbrowse', button.jbrowse );
 				%]">View in JBrowse</a>
 			</li>
@@ -24,18 +25,28 @@
 
 		IF button.export;
 		# for each format, provide a download link %]
-			<li class="button_bar__item--export">
-[%				FOR x IN button.export;
-					generic_link( x );
-				END; %]
+			<li class="button-bar__item">
+				<div class="bb-dropdown__container">
+					<input class="bb-dropdown__cbox" id="export-button" type="checkbox" name="menu" />
+					<label class="bb-dropdown__label" for="export-button">Export</label>
+					<ul class="bb-dropdown__ul">
+[%				FOR x IN button.export; %]
+						<li class="bb-dropdown__item">
+[%					x.class = 'bb-dropdown__link';
+					generic_link( x ); %]
+						</li>
+[%				END; %]
+					</ul>
+				</div>
 			</li>
 [%		END;
 
 		IF button.cart; %]
-			<li class="button_bar__item--cart">
+			<li class="button-bar__item">
 [%			cart_add( button.cart ); %]
 			</li>
 [%		END; # end button.cart %]
 	</ul>
 [%	END; # end button %]
 </div>
+

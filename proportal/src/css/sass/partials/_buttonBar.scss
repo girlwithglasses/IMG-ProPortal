@@ -1,57 +1,137 @@
 /* partials/buttonBar
-button bar usually found under pageTitle	
+button bar usually found under pageTitle
 */
 
-#buttonBar-container {
-	float: right;
-	clear: both;
-}
-
-ul.buttonBar {
-	list-style-type: none;
-	margin: 0;
-	padding: 0;
-	
-	> li{
-		float: left;
-		margin-left: 10px;
+.button-bar {
+	&__container {
+		float: right;
+		clear: both;
+		list-style-type: none;
 	}
 
-}	
+	&__item {
+		float: left;
+		margin-left: 10px;
+		/* cart dropdown */
+		&--cart {}
+
+	}
+
+	// block link (e.g. JBrowse)
+	&__link {
+		display: block;
+	}
+
+}
 
 @include maxw( $med- ) {
 
-	#buttonBar-container {
-		float: left;
-		width: 100%;
-	}
+	.button-bar {
 
-	ul.buttonBar {
-		list-style-type: none;
-		margin: 0;
-		padding: 0;
-	
-		> li{
+		&__container {
+			float: left;
+			width: 100%;
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+		}
+		&__item {
 			float: none;
 			clear: both;
 			margin-bottom: 10px;
 			margin-left: 0;
 			width: 100%;
 		}
-		
-		> li button{
-			width: 100%;
+	}
+}
+
+// Dropdown Button
+//---------------------------------------------------
+
+.bb-dropdown {
+
+	&__container {
+		padding: 0;
+		margin: 0;
+		height: $button-height;
+		border: $element-border-width solid $element-border-color;
+	//     display: block;
+		vertical-align: middle;
+		&:hover {
+			border: $element-border-width solid darken( $element-border-color, 50% );
+			color: darken($element-border-color, 50%);
+
+			> .bb-dropdown__label {
+				color: darken($element-border-color, 50%);
+			}
 		}
-		
-		> li ul {
-// 			display: block;
-// 			position: static;
-		}
-		
-		> li ul li{
-			float: left;
-			clear: both;
+	}
+
+
+	&__label {
+		font-size: $element-font-size;
+		color: $element-border-color;
+		text-transform: $button-transform;
+		line-height: $button-height;
+		margin-bottom: -2px;
+		display: block;
+		height: $button-height;
+		width: 100%;
+		padding: 0 40px 0 $element-padding-sides;
+		vertical-align: middle;
+		text-align: center;
+		@include element-up-arrow;
+	}
+
+	&__ul {
+		max-height: 0;
+		padding: 0;
+		margin: 0;
+		overflow: hidden;
+		list-style-type: none;
+		position: absolute;
+		border: $element-border-width solid $element-border-color;
+		display: none;
+		background: white;
+	}
+
+
+	/*hide the inputs*/
+	&__cbox {
+		display:none;
+		padding: 30px;
+
+		/*show the second level menu of the selected voice*/
+		&:checked ~ .bb-dropdown__ul {
+			max-height: 200px;
 			display: block;
 		}
-	}	
+
+		// change arrow when menu is displayed
+		&:checked + .bb-dropdown__label {
+			@include element-down-arrow;
+		}
+	}
+
+	&__li {
+		background: white;
+	}
+
+	&__link {
+		display:table-cell;
+		vertical-align: middle;
+		text-decoration: none;
+		height: $button-height;
+		font-size: $element-font-size;
+		color: $element-border-color;
+		text-transform: $button-transform;
+		line-height: $line-ht;
+		padding: 0 40px 0 $element-padding-sides;
+		border: 0;
+
+		&:hover {
+			color: darken($element-border-color, 50%);
+		}
+
+	}
 }
