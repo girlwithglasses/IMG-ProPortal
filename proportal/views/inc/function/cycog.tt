@@ -1,0 +1,9 @@
+[%	# CyCOGs
+
+	PROCESS 'inc/generic/link.tt';
+	# gene_cycog_groups.cycog_oid = cycog.cycog_oid
+
+	function_link( x = { db => 'cycog', xref => fn.cycog_oid, text => fn.cycog_oid } );
+	': ' _ fn.name _ ', ' _ fn.description;
+
+%]

@@ -1,0 +1,13 @@
+[%	# COGs / KOGs
+
+	PROCESS 'inc/generic/link.tt';
+	# xog = 'cog' or 'kog'
+	# gene_xog_groups.cog = xog.xog_id
+	#
+	xog_id = xog _ '_id';
+	xog_name = xog _ '_name';
+
+	function_link( x = { db => xog, xref => fn.$xog_id, text => fn.$xog_id } );
+	': ' _ fn.$xog_name ;
+
+%]

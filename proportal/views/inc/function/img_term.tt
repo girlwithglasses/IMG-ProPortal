@@ -1,0 +1,39 @@
+[%	# IMG Terms
+	# gene.gene_img_functions
+	# gene_img_functions.function = img_term.term_oid
+	# gene_img_functions.modified_by = contact.contact_oid
+
+	PROCESS 'inc/generic/link.tt';
+
+	# $url = "$main_cgi?section=ImgTermBrowser" . "&page=imgTermDetail&term_oid=$term_oid";
+	function_link( x = { db => 'img_term', xref => img_term.term_oid, text => img_term.term } );
+	': ';
+
+#	TODO:
+#	this switch section is not for public sites
+
+	SWITCH img_term.f_flag;
+		CASE "M";
+			' (manual assigment)';
+		CASE "A";
+			' (automatic assignment)';
+		CASE [ 'C', 'P' ];
+			' (automatic ';
+			IF img_term.f_flag == 'C';
+				'complete';
+			ELSE;
+				'partial';
+			END;
+				' match';
+			IF img_term.evidence;
+				'; ' _ img_term.evidence;
+			END;
+			IF img_term.confidence;
+				'; ' _ img_term.confidence;
+			END;
+			')';
+	END;
+
+	IF gene_img_functions.mod_date && contact.name;
+		'(' _ contact.name _ ' ' _ gene_img_functions.mod_date _ ')';
+	END; %]

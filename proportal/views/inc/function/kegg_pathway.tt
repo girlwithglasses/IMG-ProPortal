@@ -1,0 +1,70 @@
+[%	# KEGG Pathways
+	# gene.gene_ko_terms
+	# gene_ko_terms.ko_terms = ko_term.ko_id
+	#  "main.cgi?section=KeggPathwayDetail&page=koterm2&ko_id=$ko_id" . "&gene_oid=$gene_oid";
+
+#     my $sql_myimg = qq{
+#            union
+#        select distinct pw.pathway_name, pw.image_id, '1'
+#        from kegg_pathway pw, image_roi roi,
+#             image_roi_ko_terms irkt, ko_term_enzymes kte,
+#             gene_myimg_enzymes gme, gene g
+#        where pw.pathway_oid = roi.pathway
+#        and roi.roi_id = irkt.roi_id
+#        and irkt.ko_terms = kte.ko_id
+#        and kte.enzymes = gme.ec_number
+#        and gme.gene_oid = g.gene_oid
+#        and gme.modified_by = ?
+#        and g.gene_oid = ?
+#     };
+#     my $myimg_union;
+#     if ( $contact_oid > 0 && $show_myimg_login ) {
+#         $myimg_union = $sql_myimg;
+#         push( @binds, $contact_oid );
+#         push( @binds, $gene_oid );
+#     }
+#
+#     ## Not ready for prime time.  Doesn't reduce list of KEGG pathways.
+#     my $sql_ko = qq{
+#        select distinct pw.pathway_name, pw.image_id, '0'
+#        from kegg_pathway pw, image_roi roi, image_roi_ko_terms irk,
+#           gene_ko_terms gkt, gene g
+#        where pw.pathway_oid = roi.pathway
+#        and roi.roi_id = irk.roi_id
+#        and irk.ko_terms = gkt.ko_terms
+#        and gkt.gene_oid = g.gene_oid
+#        and g.gene_oid = ?
+#        $myimg_union
+#     };
+#     my $sql   = $sql_ko;
+#     my $cur   = execSql( $dbh, $sql, $verbose, @binds );
+#     my $count = 0;
+#     print "<tr class='img'>\n";
+#     print "<th class='subhead'>KEGG Pathway</th>\n";
+#     print "<td class='img'>\n";
+#     my %done;
+#
+#     # BAD image maps - overview maps
+#     # see KeggMap
+#     $done{'map01100'} = 1;
+#
+#     for ( ; ; ) {
+#         my ( $pathway_name, $image_id, $myimg ) = $cur->fetchrow();
+#         last if !$pathway_name;
+#         next if $done{$image_id};
+#         my $url = "$main_cgi?section=KeggMap" . "&page=keggMap&map_id=$image_id&gene_oid=$gene_oid&myimg=$myimg";
+#         my $x;
+#         $x = " (from MyIMG)" if $myimg;
+#         print alink( $url, $pathway_name ) . "$x<br/>\n";
+#         $done{$image_id} = 1;
+#     }
+
+
+
+
+	PROCESS 'inc/generic/link.tt';
+
+	function_link( x = { db => 'ko_term', xref => ko_term.ko_id, text => ko_term.ko_id } );
+	': ' _ ko_term.ko_name _ ko_term.definition;
+
+	END; %]

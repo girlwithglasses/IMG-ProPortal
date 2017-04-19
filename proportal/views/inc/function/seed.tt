@@ -1,0 +1,16 @@
+[%	# SEED
+	# gene.gene_seed_names
+	#
+#   "GENE_OID" TEXT,
+#   "PRODUCT_NAME" TEXT,
+#   "SOURCE" TEXT,
+#   "SUBSYSTEM" TEXT,
+#   "MD5_CHECKSUM" TEXT,
+#   "SUBSYSTEM_FLAG" TEXT,
+#   "TAXON" TEXT,
+#   "SCAFFOLD" TEXT
+
+#	function_link( x = { db => 'seed', xref => ???, text => gsn.product_name || 'N/A' } );
+	gsn.product_name _ ': ' _ gsn.source _ gsn.subsystem;
+
+END %]

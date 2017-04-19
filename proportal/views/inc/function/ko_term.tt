@@ -1,0 +1,10 @@
+[%	# Kegg Orthology Terms
+	# gene.gene_ko_terms
+	# gene_ko_terms.ko_terms = ko_term.ko_id
+	#  "main.cgi?section=KeggPathwayDetail&page=koterm2&ko_id=$ko_id" . "&gene_oid=$gene_oid";
+
+	PROCESS 'inc/generic/link.tt';
+
+	function_link( x = { db => 'ko_term', xref => ko_term.ko_id, text => ko_term.ko_id } ) _ ': ' _ ko_term.ko_name _ ko_term.definition;
+
+%]

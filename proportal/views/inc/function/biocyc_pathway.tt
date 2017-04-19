@@ -1,0 +1,22 @@
+[%	# BioCyc Pathways
+	# gene_biocyc_rxns.ec_number = biocyc_reaction.unique_id
+	# biocyc_reaction_in_pwys.in_pwys = biocyc_reaction.
+	# biocyc_pathway.unique_id =
+
+#         select distinct bp.unique_id, bp.common_name
+#         from biocyc_pathway bp, biocyc_reaction_in_pwys brp,
+#         biocyc_reaction br, gene_biocyc_rxns gb
+#         where bp.unique_id = brp.in_pwys
+#         and brp.unique_id = br.unique_id
+#         and br.unique_id = gb.biocyc_rxn
+#         and br.ec_number = gb.ec_number
+#         and gb.gene_oid = ?
+
+
+
+	PROCESS 'inc/generic/link.tt';
+
+	function_link( x = { db => 'biocyc_pathway', xref => biocyc_pathway.unique_id, text => biocyc_pathway.unique_id } );
+	': ' _ biocyc_pathway.common_name;
+
+	END; %]
