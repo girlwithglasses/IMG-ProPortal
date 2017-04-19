@@ -1,1 +1,1 @@
-[%	PROCESS 'inc/generic_list_results.tt' %]
+[%	PROCESS 'inc/generic/list_results.tt' %]

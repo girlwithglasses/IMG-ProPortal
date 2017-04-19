@@ -1,0 +1,18 @@
+[%
+	surtitle = self.db;
+	title = self.name;
+
+	button = {
+		cart => {
+			form => {
+				type => 'inc/cart/button_add.tt',
+				params => { db => self.db, xref => self.xref },
+				domain => 'function'
+			},
+		},
+	#	export =>
+	};
+
+	PROCESS 'inc/generic/title.tt';
+
+%]

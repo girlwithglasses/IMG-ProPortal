@@ -1,0 +1,28 @@
+[%
+	IF self.locus_type == 'CDS';
+		surtitle = 'Gene';
+	ELSE;
+		surtitle = self.locus_type;
+	END;
+	title = self.gene_display_name;
+	subtitle = 'from ' _ taxon_name_link( x = {}, obj = self );
+
+	button = {
+		cart => {
+			form => {
+				type => 'inc/cart/button_add.tt',
+				params => { gene_oid => self.gene_oid },
+				domain => 'gene'
+			},
+		},
+		jbrowse => { taxon_oid => self.taxon_oid, loc => self.start_coord _ '..' _ self.end_coord }, # self.strand?
+	#	export =>
+	};
+
+
+# jbrowse link:
+# http://gmod.org/wiki/JBrowse_Configuration_Guide#Controlling_JBrowse_with_the_URL_Query_String
+
+	PROCESS 'inc/generic/title.tt';
+
+%]

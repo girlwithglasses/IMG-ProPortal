@@ -1,4 +1,4 @@
-# $Id: ANI.pm 36839 2017-03-24 23:40:21Z aratner $
+# $Id: ANI.pm 36896 2017-03-29 22:56:53Z aratner $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -98,7 +98,6 @@ sub dispatch {
         HtmlUtil::cgiCacheStop();
     } elsif ($page eq "doSameSpeciesPlot") {
         printSameSpeciesPairwiseForm();	# new UI 
-        #doSameSpeciesPlot();
     } elsif ($page eq "doPairwiseWithUpload") {
         HtmlUtil::cgiCacheInitialize($section, '', '', 1);
         HtmlUtil::cgiCacheStart() or return;
@@ -1013,15 +1012,6 @@ sub printPairwiseTable {
     $it->printOuterTable(1) if $cnt > 0;
 }
 
-sub doSameSpeciesPlot {
-    my $template = HTML::Template->new(filename => "$base_dir/aniSameSpecies.html");
-    $template->param(base_url     => $base_url);
-    $template->param(cgi_url      => $cgi_url);
-    $template->param(top_base_url => $top_base_url);
-
-    print $template->output;
-}
-
 sub computePairwiseANI {
     my ($dbh, $oids1_aref, $oids2_aref) = @_;
     my @oids1 = @$oids1_aref;
@@ -1747,6 +1737,10 @@ sub printAllSpeciesInfo {
         my @txs = split(",", $genus_species2txs{$item});
         my $tx_cnt = scalar @txs;
 
+	if ($show_cb && $tx_cnt < 2) {
+	    next;
+	}
+
         my $link = alink($txurl . WebUtil::massageToUrl2($item) . "&domain=$domain", $tx_cnt);
         my $link = alink($txurl . $item, $tx_cnt);
         $row .= $tx_cnt . $sd . $link . "\t";
@@ -1763,6 +1757,10 @@ sub printAllSpeciesInfo {
             $clique_cnt = $genus_species2clqcnt{$item};
             $types_str = $genus_species2types{$item};
         }
+
+	if ($show_cb && $types_str eq "singleton") {
+	    next;
+	}
 
         my $link = alink($cqurl . $item, $clique_cnt);
         $row .= $clique_cnt . $sd . $link . "\t";

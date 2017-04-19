@@ -42,11 +42,10 @@ sub BUILDARGS {
 	my $args = ( @_ && scalar( @_ ) > 1 ) ? { @_ } : shift || {};
 
 #	log_debug { 'IMG::App BUILDARGS: ' . Dumper $args };
-
+#	log_debug { 'env: ' . Dumper \%ENV };
 	# coerce from dancer
 	if ( $args->{dancer_config} ) {
 #		log_debug { 'Coercing from dancer config!' };
-
 		$args->{config} = $args->{dancer_config}{plugins}{Adapter}{img_app}{options}{config};
 
 	}

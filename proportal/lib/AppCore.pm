@@ -7,7 +7,7 @@ use Sys::Hostname;
 use IMG::App;
 use ProPortal::Util::Factory;
 use AppCorePlugin;
-use IMG::App::Role::Logger;
+use IMG::Util::Logger;
 
 our $VERSION = '0.1.0';
 

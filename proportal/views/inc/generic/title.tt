@@ -1,0 +1,41 @@
+<div id="pageHeader">
+	<div id="pageTitle" >
+[%	IF surtitle %]
+		<h3 class="[% class %]__surtitle">[% surtitle %]</h3>
+[%	END; %]
+		<h2 class="[% class %]__title">[% title %]</h2>
+[%	IF subtitle %]
+		<h3 class="[% class %]__subtitle">[% subtitle %]</h3>
+[%	END; %]
+	</div>
+[%	# button bar
+
+	IF button;
+		PROCESS 'inc/cart/cart_add_macro.tt';
+		PROCESS 'inc/generic/link.tt'; %]
+	<ul class="button_bar__container">
+[%		IF button.jbrowse; %]
+			<li class="button_bar__item--jbrowse">
+				<a class="button_bar__link" rel="external" href="[%
+					link( 'jbrowse', button.jbrowse );
+				%]">View in JBrowse</a>
+			</li>
+[%		END;
+
+		IF button.export;
+		# for each format, provide a download link %]
+			<li class="button_bar__item--export">
+[%				FOR x IN button.export;
+					generic_link( x );
+				END; %]
+			</li>
+[%		END;
+
+		IF button.cart; %]
+			<li class="button_bar__item--cart">
+[%			cart_add( button.cart ); %]
+			</li>
+[%		END; # end button.cart %]
+	</ul>
+[%	END; # end button %]
+</div>

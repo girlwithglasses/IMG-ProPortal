@@ -24,7 +24,8 @@ my $common = {
 	img_core_gem1 => 'oracle.img_core_v400_gem1_shared.config',
 	img_core_gem2 => 'oracle.img_core_v400_gem2_shared.config',
 	img_gold => 'web.imgsg_dev.config',
-	i_taxon  => 'web.img_i_taxon.config'
+	i_taxon  => 'web.img_i_taxon.config',
+	img_sat => 'oracle.img_sat_v440_mr.config',
 };
 
 #     $e->{ oracle_config } = $e->{ oracle_config_dir } . "web.$dbTag.config";
@@ -338,27 +339,27 @@ sub make_dsn_str {
 
 }
 
-=head3 get_oracle_dbh
+=head3 get_oracle_conn
 
-Create a database handle for an Oracle DB using the config file settings
+Create a DBIx::Connector for an Oracle DB using the config file settings
 
 @param      hash of params, including database  -- the database name
                                       options   -- DBH options
 
             database name must be in the $common database names specified in this package.
 
-@return     $dbh - database handle
+@return     $conn - connector object
 
 =cut
 
-sub get_oracle_dbh {
+sub get_oracle_conn {
 	my $arg_h = shift // die err({ err => 'missing', subject => 'db_conn_params'});
 
 	if (! ref $arg_h || ref $arg_h ne 'HASH') {
 #		croak "get_oracle_dbh expects a hash ref as input";
 		die err({ err => 'invalid_enum',
 			subject => $arg_h,
-			type => 'input to get_oracle_dbh',
+			type => 'input to get_oracle_conn',
 			enum => [ "a hash ref" ]
 		});
 
@@ -379,9 +380,25 @@ sub get_oracle_dbh {
 		}
 	}
 
-	my $conn = IMG::Util::DBIxConnector::get_dbix_connector( $h );
-	return $conn->dbh;
+	return IMG::Util::DBIxConnector::get_dbix_connector( $h );
+}
 
+=head3 get_oracle_dbh
+
+Return the DBH from a DBIx::Connector object
+
+@param      hash of params, including database  -- the database name
+                                      options   -- DBH options
+
+            database name must be in the $common database names specified in this package.
+
+@return     $dbh - database handle
+
+=cut
+
+sub get_oracle_dbh {
+	my $conn = get_oracle_conn( @_ );
+	return $conn->dbh;
 }
 
 1;

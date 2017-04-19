@@ -15,10 +15,11 @@ BEGIN {
 		jbrowse/src/perl5
 		jbrowse/extlib/lib/perl5
 	);
-	my $home = dirname( $dir );
-	unshift @dir_arr,  catdir( $home, 'ken-branch/webui.cgi' );
+#	my $home = dirname( $dir );
+#	unshift @dir_arr,  catdir( $home, 'ken-branch/webui.cgi' );
 }
 use lib @dir_arr;
+use IMG::Util::Logger;
 use IMG::Util::Import 'psgi';
 
 #use JBlibs;
@@ -39,27 +40,13 @@ use IMG::Util::Import 'psgi';
 	use Routes::MenuPages;
 	# use Routes::JBrowse;
 	use Routes::IMG;
-#	use Routes::API;
 	use Routes::ProPortal;
 	# use Routes::TestStuff;
 
 	1;
 }
 
-my $home = basename( $dir );
-
-# $ENV{PLACK_URLMAP_DEBUG} = 1;
-
-# CGI server
-# use Plack::App::CGIBin;
-
-# my $old_img = sub {
-# 	Plack::App::CGIBin->new(root => catdir( $home, "pristine/webUI/webui.cgi" ) )->to_app;
-# };
-
 builder {
 	enable 'Deflater';
-
 	mount '/' => ProPortalApp->to_app;
-
 };

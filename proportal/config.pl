@@ -19,11 +19,8 @@ return {
 # template engine
 	template => "template_toolkit",
 
-# session engine
-	session => 'CGISession',
-
 # log engine
-	logger => 'File',
+	logger => 'Console',
 
 # disable server tokens in production environments
 	no_server_tokens => 1,
@@ -34,22 +31,11 @@ return {
 # if the requested path does not match any specific route, Dancer2 will check in the views directory for a matching template, and use it to satisfy the request if found
 	auto_page => 1,
 
-#	views => '/Users/gwg/Dropbox/IMG-ProPortal/views',
+	log => 'core',
 
 	engines => {
-		session => {
-			CGISession => {
-				name => 'CGISESSID_proportal',
-				cookie_name => 'CGISESSID_proportal',
-				cookie_duration => '1.5 hours',
-				driver_params => {
-					Directory => 'tmp',
-				},
-			},
-		},
 		template => {
 			template_toolkit => {
-#				INCLUDE_PATH => '/global/homes/a/aireland/webUI/proportal/',
 				RELATIVE => 1,
 				RECURSION => 1
 			}
@@ -63,6 +49,9 @@ return {
 			},
 			Console => {
 				log_level => 'debug',
+			},
+			'log4perl' => {
+				config_file => 'environments/log4perl.conf',
 			}
 		},
 

@@ -55,7 +55,7 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/CopyMerAll                  COPY_MER_ALL                   unknown_pk         /)
 ->Table(qw/CopyMerFinal                COPY_MER_FINAL                 unknown_pk         /)
 ->Table(qw/CopyMerPhase1               COPY_MER_PHASE1                unknown_pk         /)
-->Table(qw/DbSource                    DB_SOURCE                      db_code            /)
+# ->Table(qw/DbSource                    DB_SOURCE                      db_code            /)
 ->Table(qw/DeleteGenes                 DELETE_GENES                   unknown_pk         /)
 ->Table(qw/DeleteScaffolds             DELETE_SCAFFOLDS               unknown_pk         /)
 ->Table(qw/DeleteTaxons                DELETE_TAXONS                  unknown_pk         /)
@@ -256,73 +256,224 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/TmpTaxonPfam                TMP_TAXON_PFAM                 unknown_pk         /)
 ->Table(qw/UnmappedGenesArchive        UNMAPPED_GENES_ARCHIVE         old_gene_oid       /)
 ->Table(qw/Viraltaxons                 VIRALTAXONS                    unknown_pk         /)
-->Table(qw/Yesnocv                     YESNOCV                        flag_cv            /)
+#->Table(qw/Yesnocv                     YESNOCV                        flag_cv            /)
 
 ## VIEWS
 ->Table(qw/Contact                     CONTACT                        unknown_pk         /)
-->Table(qw/PpDatatype                  PP_DATATYPE                    unknown_pk         /)
+# ->Table(qw/PpDatatype                  PP_DATATYPE                    unknown_pk         /)
 ->Table(qw/PpDataTypeView              PP_DATA_TYPE_VIEW              unknown_pk         /)
-->Table(qw/PpSubset                    PP_SUBSET                      unknown_pk         /)
+#->Table(qw/PpSubset                    PP_SUBSET                      unknown_pk         /)
 ->Table(qw/TaxonProdVw                 TAXON_PROD_VW                  unknown_pk         /)
 ->Table(qw/TaxonStatsProdVw            TAXON_STATS_PROD_VW            unknown_pk         /)
-#->Table(qw/VwGoldTaxon                 VW_GOLD_TAXON                  unknown_pk         /)
+->Table(qw/GoldTaxonVw                 VW_GOLD_TAXON                  unknown_pk         /)
 ->Table(qw/VwTaxon                     VW_TAXON                       unknown_pk         /)
 ->Table(qw/VwTaxonSc                   VW_TAXON_SC                    unknown_pk         /)
 
 ## SYNONYMS
 ->Table(qw/Assertioncv                 ASSERTIONCV                    unknown_pk         /)
 ->Table(qw/BcExtLinks                  BC_EXT_LINKS                   unknown_pk         /)
-->Table(qw/BiocycClass                 BIOCYC_CLASS                   unknown_pk         /)
-->Table(qw/BiocycClassParents          BIOCYC_CLASS_PARENTS           unknown_pk         /)
-->Table(qw/BiocycClassSynonyms         BIOCYC_CLASS_SYNONYMS          unknown_pk         /)
-->Table(qw/BiocycClassTypes            BIOCYC_CLASS_TYPES             unknown_pk         /)
-->Table(qw/BiocycComp                  BIOCYC_COMP                    unknown_pk         /)
-->Table(qw/BiocycCompExtLinks          BIOCYC_COMP_EXT_LINKS          unknown_pk         /)
-->Table(qw/BiocycCompSynonyms          BIOCYC_COMP_SYNONYMS           unknown_pk         /)
-->Table(qw/BiocycCompTypes             BIOCYC_COMP_TYPES              unknown_pk         /)
-->Table(qw/BiocycEnzrxn                BIOCYC_ENZRXN                  unknown_pk         /)
-->Table(qw/BiocycEnzrxnExtLinks        BIOCYC_ENZRXN_EXT_LINKS        unknown_pk         /)
-->Table(qw/BiocycEnzrxnProsthGroups    BIOCYC_ENZRXN_PROSTH_GROUPS    unknown_pk         /)
-->Table(qw/BiocycEnzrxnSynonyms        BIOCYC_ENZRXN_SYNONYMS         unknown_pk         /)
-->Table(qw/BiocycPathway               BIOCYC_PATHWAY                 unknown_pk         /)
-->Table(qw/BiocycPathwayComments       BIOCYC_PATHWAY_COMMENTS        unknown_pk         /)
-->Table(qw/BiocycPathwayExtLinks       BIOCYC_PATHWAY_EXT_LINKS       unknown_pk         /)
-->Table(qw/BiocycPathwayInSpecies      BIOCYC_PATHWAY_IN_SPECIES      unknown_pk         /)
-->Table(qw/BiocycPathwayPwyLinks       BIOCYC_PATHWAY_PWY_LINKS       unknown_pk         /)
-->Table(qw/BiocycPathwaySubPwys        BIOCYC_PATHWAY_SUB_PWYS        unknown_pk         /)
-->Table(qw/BiocycPathwaySuperPwys      BIOCYC_PATHWAY_SUPER_PWYS      unknown_pk         /)
-->Table(qw/BiocycPathwayTaxonRange     BIOCYC_PATHWAY_TAXON_RANGE     unknown_pk         /)
-->Table(qw/BiocycPathwayTypes          BIOCYC_PATHWAY_TYPES           unknown_pk         /)
-->Table(qw/BiocycProtein               BIOCYC_PROTEIN                 unknown_pk         /)
-->Table(qw/BiocycProteinCatalyzes      BIOCYC_PROTEIN_CATALYZES       unknown_pk         /)
-->Table(qw/BiocycProteinExtLinks       BIOCYC_PROTEIN_EXT_LINKS       unknown_pk         /)
-->Table(qw/BiocycProteinInSpecies      BIOCYC_PROTEIN_IN_SPECIES      unknown_pk         /)
-->Table(qw/BiocycProteinSynonyms       BIOCYC_PROTEIN_SYNONYMS        unknown_pk         /)
-->Table(qw/BiocycProteinTypes          BIOCYC_PROTEIN_TYPES           unknown_pk         /)
-->Table(qw/BiocycReaction              BIOCYC_REACTION                unknown_pk         /)
-->Table(qw/BiocycReactionExtLinks      BIOCYC_REACTION_EXT_LINKS      unknown_pk         /)
-->Table(qw/BiocycReactionInPwys        BIOCYC_REACTION_IN_PWYS        unknown_pk         /)
-->Table(qw/BiocycReactionLeftHand      BIOCYC_REACTION_LEFT_HAND      unknown_pk         /)
-->Table(qw/BiocycReactionRightHand     BIOCYC_REACTION_RIGHT_HAND     unknown_pk         /)
-->Table(qw/BiocycReactionSynonyms      BIOCYC_REACTION_SYNONYMS       unknown_pk         /)
-->Table(qw/BiocycReactionTypes         BIOCYC_REACTION_TYPES          unknown_pk         /)
+
+## from img_sat
+
+#
+#	BIOCYC
+#
+->Table(qw/BiocycClass                BIOCYC_CLASS                  unique_id      /)
+->Table(qw/BiocycClassParents         BIOCYC_CLASS_PARENTS              unknown_pk /)
+->Table(qw/BiocycClassSynonyms        BIOCYC_CLASS_SYNONYMS             unknown_pk /)
+->Table(qw/BiocycClassTypes           BIOCYC_CLASS_TYPES                unknown_pk /)
+
+->Table(qw/BiocycComp                 BIOCYC_COMP                   unique_id      /)
+->Table(qw/BiocycCompExtLinks         BIOCYC_COMP_EXT_LINKS             unknown_pk /)
+->Table(qw/BiocycCompSynonyms         BIOCYC_COMP_SYNONYMS              unknown_pk /)
+->Table(qw/BiocycCompTypes            BIOCYC_COMP_TYPES                 unknown_pk /)
+
+->Table(qw/BiocycEnzrxn               BIOCYC_ENZRXN                 unique_id      /)
+->Table(qw/BiocycEnzrxnExtLinks       BIOCYC_ENZRXN_EXT_LINKS           unknown_pk /)
+->Table(qw/BiocycEnzrxnProsthGroups   BIOCYC_ENZRXN_PROSTH_GROUPS       unknown_pk /)
+->Table(qw/BiocycEnzrxnSynonyms       BIOCYC_ENZRXN_SYNONYMS            unknown_pk /)
+
+->Table(qw/BiocycPathway              BIOCYC_PATHWAY                unique_id      /)
+->Table(qw/BiocycPathwayComments      BIOCYC_PATHWAY_COMMENTS           unknown_pk /)
+->Table(qw/BiocycPathwayExtLinks      BIOCYC_PATHWAY_EXT_LINKS          unknown_pk /)
+->Table(qw/BiocycPathwayInSpecies     BIOCYC_PATHWAY_IN_SPECIES         unknown_pk /)
+->Table(qw/BiocycPathwayPwyLinks      BIOCYC_PATHWAY_PWY_LINKS          unknown_pk /)
+->Table(qw/BiocycPathwaySubPwys       BIOCYC_PATHWAY_SUB_PWYS           unknown_pk /)
+->Table(qw/BiocycPathwaySuperPwys     BIOCYC_PATHWAY_SUPER_PWYS         unknown_pk /)
+->Table(qw/BiocycPathwayTaxonRange    BIOCYC_PATHWAY_TAXON_RANGE        unknown_pk /)
+->Table(qw/BiocycPathwayTypes         BIOCYC_PATHWAY_TYPES              unknown_pk /)
+
+->Table(qw/BiocycProtein              BIOCYC_PROTEIN                unique_id      /)
+->Table(qw/BiocycProteinCatalyzes     BIOCYC_PROTEIN_CATALYZES          unknown_pk /)
+->Table(qw/BiocycProteinExtLinks      BIOCYC_PROTEIN_EXT_LINKS          unknown_pk /)
+->Table(qw/BiocycProteinInSpecies     BIOCYC_PROTEIN_IN_SPECIES         unknown_pk /)
+->Table(qw/BiocycProteinSynonyms      BIOCYC_PROTEIN_SYNONYMS           unknown_pk /)
+->Table(qw/BiocycProteinTypes         BIOCYC_PROTEIN_TYPES              unknown_pk /)
+
+->Table(qw/BiocycReaction             BIOCYC_REACTION               unique_id      /)
+->Table(qw/BiocycReactionExtLinks     BIOCYC_REACTION_EXT_LINKS         unknown_pk /)
+->Table(qw/BiocycReactionInPwys       BIOCYC_REACTION_IN_PWYS           unknown_pk /)
+->Table(qw/BiocycReactionLeftHand     BIOCYC_REACTION_LEFT_HAND         unknown_pk /)
+->Table(qw/BiocycReactionRightHand    BIOCYC_REACTION_RIGHT_HAND        unknown_pk /)
+->Table(qw/BiocycReactionSynonyms     BIOCYC_REACTION_SYNONYMS          unknown_pk /)
+->Table(qw/BiocycReactionTypes        BIOCYC_REACTION_TYPES             unknown_pk /)
+#
+#	COG
+#
+->Table(qw/Cog                        COG                           cog_id         /)
+->Table(qw/Cog2014                    COG2014                           unknown_pk /)
+->Table(qw/CogFamilies                COG_FAMILIES                      unknown_pk /)
+->Table(qw/Cogfunc2014                COGFUNC2014                       unknown_pk /)
+->Table(qw/CogFunction                COG_FUNCTION                  function_code  /)
+->Table(qw/CogFunctionObs             COG_FUNCTION_OBS                  unknown_pk /)
+->Table(qw/CogFunctions               COG_FUNCTIONS                     unknown_pk /)
+->Table(qw/CogFunctionsObs            COG_FUNCTIONS_OBS                 unknown_pk /)
+->Table(qw/CogObs                     COG_OBS                           unknown_pk /)
+->Table(qw/CogPathway                 COG_PATHWAY                   cog_pathway_oid/)
+->Table(qw/CogPathwayCogMembers       COG_PATHWAY_COG_MEMBERS           unknown_pk /)
+->Table(qw/CogSpecies                 COG_SPECIES                   species_code   /)
+
+->Table(qw/Compound                   COMPOUND                      ext_accession  /)
+->Table(qw/CompoundAliases            COMPOUND_ALIASES                  unknown_pk /)
+->Table(qw/CompoundExtLinks           COMPOUND_EXT_LINKS                unknown_pk /)
+
+->Table(qw/DbSource                   DB_SOURCE                     db_code        /)
+
+->Table(qw/DtKoEcCogPfam              DT_KO_EC_COG_PFAM                 unknown_pk /)
+
+->Table(qw/EggnogHierarchy            EGGNOG_HIERARCHY              eggnog_oid     /)
+->Table(qw/EggnogMd52id2ont           EGGNOG_MD52ID2ONT                 unknown_pk /)
+#
+#	ENZYME
+#
+->Table(qw/Enzyme                     ENZYME                        ec_number      /)
+->Table(qw/EnzymeEnzAliases           ENZYME_ENZ_ALIASES                unknown_pk /)
+->Table(qw/EnzymeExtLinks             ENZYME_EXT_LINKS                  unknown_pk /)
+->Table(qw/EnzymeProducts             ENZYME_PRODUCTS                   unknown_pk /)
+->Table(qw/EnzymeSubstrates           ENZYME_SUBSTRATES                 unknown_pk /)
+
+->Table(qw/GenomeProperty             GENOME_PROPERTY               prop_accession /)
+->Table(qw/GenomePropertyParents      GENOME_PROPERTY_PARENTS           unknown_pk /)
+#
+#	GO
+#
+->Table(qw/GoGraphPath                GO_GRAPH_PATH                 graph_path_id  /)
+->Table(qw/GoTerm                     GO_TERM                       go_id          /)
+->Table(qw/GoTermParents              GO_TERM_PARENTS                   unknown_pk /)
+->Table(qw/GoTermSynonyms             GO_TERM_SYNONYMS                  unknown_pk /)
+
+->Table(qw/ImageRoi                   IMAGE_ROI                     roi_id         /)
+->Table(qw/ImageRoiCompounds          IMAGE_ROI_COMPOUNDS               unknown_pk /)
+->Table(qw/ImageRoiEnzymes            IMAGE_ROI_ENZYMES                 unknown_pk /)
+->Table(qw/ImageRoiKoTerms            IMAGE_ROI_KO_TERMS                unknown_pk /)
+->Table(qw/ImageRoiReactions          IMAGE_ROI_REACTIONS               unknown_pk /)
+
+->Table(qw/ImgBuildHistory            IMG_BUILD_HISTORY             build_oid      /)
+#
+#	INTERPRO
+#
+->Table(qw/Interpro                   INTERPRO                      ext_accession  /)
+->Table(qw/InterproGoTerms            INTERPRO_GO_TERMS                 unknown_pk /)
+#
+#	KEGG
+#
+->Table(qw/KeggGene                   KEGG_GENE                     kegg_gene_id   /)
+->Table(qw/KeggGeneKoTerms            KEGG_GENE_KO_TERMS                unknown_pk /)
+->Table(qw/KeggGeneNcbiGeneIds        KEGG_GENE_NCBI_GENE_IDS           unknown_pk /)
+->Table(qw/KeggGeneNcbiGiNums         KEGG_GENE_NCBI_GI_NUMS            unknown_pk /)
+->Table(qw/KeggGeneUniprotIds         KEGG_GENE_UNIPROT_IDS             unknown_pk /)
+
+->Table(qw/KeggModule                 KEGG_MODULE                   module_id      /)
+->Table(qw/KeggModuleCompounds        KEGG_MODULE_COMPOUNDS             unknown_pk /)
+->Table(qw/KeggModuleKoTerms          KEGG_MODULE_KO_TERMS              unknown_pk /)
+->Table(qw/KeggModuleReactions        KEGG_MODULE_REACTIONS             unknown_pk /)
+
+->Table(qw/KeggPathway                KEGG_PATHWAY                  pathway_oid    /)
+->Table(qw/KeggPathwayModules         KEGG_PATHWAY_MODULES              unknown_pk /)
+->Table(qw/KeggPathwayRelatedPathways KEGG_PATHWAY_RELATED_PATHWAYS     unknown_pk /)
+
+->Table(qw/KmImageRoi                 KM_IMAGE_ROI                      unknown_pk /)
+->Table(qw/KmImageRoiKoTerms          KM_IMAGE_ROI_KO_TERMS             unknown_pk /)
+#
+#	KOG
+#
+->Table(qw/Kog                        KOG                           kog_id         /)
+->Table(qw/KogFamilies                KOG_FAMILIES                      unknown_pk /)
+->Table(qw/KogFunction                KOG_FUNCTION                  function_code  /)
+->Table(qw/KogFunctions               KOG_FUNCTIONS                     unknown_pk /)
+->Table(qw/KogPathway                 KOG_PATHWAY                   kog_pathway_oid/)
+->Table(qw/KogPathwayKogMembers       KOG_PATHWAY_KOG_MEMBERS           unknown_pk /)
+#
+#	KEGG ORTHOLOGY
+#
+->Table(qw/KoTerm                     KO_TERM                       ko_id          /)
+->Table(qw/KoTermClasses              KO_TERM_CLASSES                   unknown_pk /)
+->Table(qw/KoTermCogs                 KO_TERM_COGS                      unknown_pk /)
+->Table(qw/KoTermEnzymes              KO_TERM_ENZYMES                   unknown_pk /)
+->Table(qw/KoTermGoIds                KO_TERM_GO_IDS                    unknown_pk /)
+->Table(qw/KoTermModules              KO_TERM_MODULES                   unknown_pk /)
+->Table(qw/KoTermPathways             KO_TERM_PATHWAYS                  unknown_pk /)
+->Table(qw/KoTermReactions            KO_TERM_REACTIONS                 unknown_pk /)
+->Table(qw/KoTermTcFamilies           KO_TERM_TC_FAMILIES               unknown_pk /)
+#
+#
+#
+->Table(qw/MpwPglCompound             MPW_PGL_COMPOUND                  unknown_pk /)
+->Table(qw/MpwPglGeneGroup            MPW_PGL_GENE_GROUP                unknown_pk /)
+->Table(qw/MpwPglPathway              MPW_PGL_PATHWAY                   unknown_pk /)
+->Table(qw/MpwPglPathwayReaction      MPW_PGL_PATHWAY_REACTION          unknown_pk /)
+->Table(qw/MpwPglProteinGroup         MPW_PGL_PROTEIN_GROUP             unknown_pk /)
+->Table(qw/MpwPglReaction             MPW_PGL_REACTION                  unknown_pk /)
+->Table(qw/MpwPglReactionCompounds    MPW_PGL_REACTION_COMPOUNDS        unknown_pk /)
+->Table(qw/MpwPglTaxonomy             MPW_PGL_TAXONOMY                  unknown_pk /)
+#
+#	PFAM
+#
+->Table(qw/PfamClan                   PFAM_CLAN                     ext_accession  /)
+->Table(qw/PfamClanPfamFamilies       PFAM_CLAN_PFAM_FAMILIES           unknown_pk /)
+->Table(qw/PfamFamily                 PFAM_FAMILY                       unknown_pk /)
+->Table(qw/PfamFamilyCogs             PFAM_FAMILY_COGS                  unknown_pk /)
+->Table(qw/PfamFamilyExtLinks         PFAM_FAMILY_EXT_LINKS             unknown_pk /)
+->Table(qw/PfamFamilyFamilies         PFAM_FAMILY_FAMILIES              unknown_pk /)
+->Table(qw/PfamFamilyGenomeProperties PFAM_FAMILY_GENOME_PROPERTIES     unknown_pk /)
+->Table(qw/PfamFamilyV28              PFAM_FAMILY_V28               ext_accession  /)
+
+->Table(qw/PropertyStep               PROPERTY_STEP                 step_accession /)
+->Table(qw/PropertyStepEvidences      PROPERTY_STEP_EVIDENCES           unknown_pk /)
+
+->Table(qw/Reaction                   REACTION                      ext_accession  /)
+->Table(qw/ReactionCompounds          REACTION_COMPOUNDS                unknown_pk /)
+->Table(qw/ReactionEnzymes            REACTION_ENZYMES                  unknown_pk /)
+->Table(qw/ReactionExtLinks           REACTION_EXT_LINKS                unknown_pk /)
+
+->Table(qw/SeedFunctionalRole         SEED_FUNCTIONAL_ROLE          role_name      /)
+#
+#	TC
+#
+->Table(qw/TcFamily                   TC_FAMILY                     tc_family_num  /)
+->Table(qw/TcFamilyCogs               TC_FAMILY_COGS                    unknown_pk /)
+->Table(qw/TcFamilyGoTerms            TC_FAMILY_GO_TERMS                unknown_pk /)
+->Table(qw/TcFamilyImgTerms           TC_FAMILY_IMG_TERMS               unknown_pk /)
+->Table(qw/TcFamilyPfams              TC_FAMILY_PFAMS                   unknown_pk /)
+->Table(qw/TcFamilyPfamsIain          TC_FAMILY_PFAMS_IAIN              unknown_pk /)
+->Table(qw/TcFamilyTfams              TC_FAMILY_TFAMS                   unknown_pk /)
+#
+#	TIGRFAM
+#
+->Table(qw/Tigrfam                    TIGRFAM                       ext_accession  /)
+->Table(qw/TigrfamEnzymes             TIGRFAM_ENZYMES                   unknown_pk /)
+->Table(qw/TigrfamGenomeProperties    TIGRFAM_GENOME_PROPERTIES         unknown_pk /)
+->Table(qw/TigrfamRoles               TIGRFAM_ROLES                     unknown_pk /)
+->Table(qw/TigrRole                   TIGR_ROLE                     role_id        /)
+->Table(qw/Yesnocv                    YESNOCV                       flag_cv        /)
+
+
+
+
+
+
 ->Table(qw/CellLocalization            CELL_LOCALIZATION              unknown_pk         /)
-->Table(qw/Cog                         COG                            unknown_pk         /)
-->Table(qw/Cog2014                     COG2014                        unknown_pk         /)
-->Table(qw/Cogfunc2014                 COGFUNC2014                    unknown_pk         /)
-->Table(qw/CogFamilies                 COG_FAMILIES                   unknown_pk         /)
-->Table(qw/CogFunction                 COG_FUNCTION                   unknown_pk         /)
-->Table(qw/CogFunctions                COG_FUNCTIONS                  unknown_pk         /)
-->Table(qw/CogFunctionsObs             COG_FUNCTIONS_OBS              unknown_pk         /)
-->Table(qw/CogFunctionObs              COG_FUNCTION_OBS               unknown_pk         /)
-->Table(qw/CogObs                      COG_OBS                        unknown_pk         /)
-->Table(qw/CogPathway                  COG_PATHWAY                    unknown_pk         /)
-->Table(qw/CogPathwayCogMembers        COG_PATHWAY_COG_MEMBERS        unknown_pk         /)
-->Table(qw/CogSpecies                  COG_SPECIES                    unknown_pk         /)
 ->Table(qw/Componentcv                 COMPONENTCV                    unknown_pk         /)
-->Table(qw/Compound                    COMPOUND                       unknown_pk         /)
-->Table(qw/CompoundAliases             COMPOUND_ALIASES               unknown_pk         /)
-->Table(qw/CompoundExtLinks            COMPOUND_EXT_LINKS             unknown_pk         /)
 ->Table(qw/ContactImgGroups            CONTACT_IMG_GROUPS             unknown_pk         /)
 ->Table(qw/ContactProtexpPermissions   CONTACT_PROTEXP_PERMISSIONS    unknown_pk         /)
 ->Table(qw/ContactRnaexpPermissions    CONTACT_RNAEXP_PERMISSIONS     unknown_pk         /)
@@ -330,27 +481,17 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/ContactSnpExpPermissions    CONTACT_SNP_EXP_PERMISSIONS    unknown_pk         /)
 ->Table(qw/ContactTaxonPermissions     CONTACT_TAXON_PERMISSIONS      unknown_pk         /)
 ->Table(qw/DtAllPhyloTaxonStats        DT_ALL_PHYLO_TAXON_STATS       unknown_pk         /)
-->Table(qw/DtKoEcCogPfam               DT_KO_EC_COG_PFAM              unknown_pk         /)
 ->Table(qw/DtPhyloTaxonStats           DT_PHYLO_TAXON_STATS           unknown_pk         /)
-->Table(qw/EggnogHierarchy             EGGNOG_HIERARCHY               unknown_pk         /)
-->Table(qw/EggnogMd52id2ont            EGGNOG_MD52ID2ONT              unknown_pk         /)
 ->Table(qw/EnvSample                   ENV_SAMPLE                     unknown_pk         /)
 ->Table(qw/EnvSampleEnergySource       ENV_SAMPLE_ENERGY_SOURCE       unknown_pk         /)
 ->Table(qw/EnvSampleGold               ENV_SAMPLE_GOLD                unknown_pk         /)
 ->Table(qw/EnvSampleSeqMethod          ENV_SAMPLE_SEQ_METHOD          unknown_pk         /)
-->Table(qw/Enzyme                      ENZYME                         unknown_pk         /)
-->Table(qw/EnzymeEnzAliases            ENZYME_ENZ_ALIASES             unknown_pk         /)
-->Table(qw/EnzymeExtLinks              ENZYME_EXT_LINKS               unknown_pk         /)
-->Table(qw/EnzymeProducts              ENZYME_PRODUCTS                unknown_pk         /)
-->Table(qw/EnzymeSubstrates            ENZYME_SUBSTRATES              unknown_pk         /)
 ->Table(qw/GeneImgFunctions            GENE_IMG_FUNCTIONS             unknown_pk         /)
 ->Table(qw/GeneMyimgEnzymes            GENE_MYIMG_ENZYMES             unknown_pk         /)
 ->Table(qw/GeneMyimgFunctions          GENE_MYIMG_FUNCTIONS           unknown_pk         /)
 ->Table(qw/GeneMyimgGroups             GENE_MYIMG_GROUPS              unknown_pk         /)
 ->Table(qw/GeneMyimgTerms              GENE_MYIMG_TERMS               unknown_pk         /)
 ->Table(qw/GeneSnp                     GENE_SNP                       unknown_pk         /)
-->Table(qw/GenomeProperty              GENOME_PROPERTY                unknown_pk         /)
-->Table(qw/GenomePropertyParents       GENOME_PROPERTY_PARENTS        unknown_pk         /)
 ->Table(qw/GoldAnalysisProject         GOLD_ANALYSIS_PROJECT          unknown_pk         /)
 ->Table(qw/GoldAnalysisProjectLookup2  GOLD_ANALYSIS_PROJECT_LOOKUP2  unknown_pk         /)
 ->Table(qw/GoldAnalysisProjectUsers    GOLD_ANALYSIS_PROJECT_USERS    unknown_pk         /)
@@ -367,17 +508,7 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/GoldSpSeqCenter             GOLD_SP_SEQ_CENTER             unknown_pk         /)
 ->Table(qw/GoldSpSeqMethod             GOLD_SP_SEQ_METHOD             unknown_pk         /)
 ->Table(qw/GoldSpStudyGoldId           GOLD_SP_STUDY_GOLD_ID          unknown_pk         /)
-->Table(qw/GoGraphPath                 GO_GRAPH_PATH                  unknown_pk         /)
-->Table(qw/GoTerm                      GO_TERM                        unknown_pk         /)
-->Table(qw/GoTermParents               GO_TERM_PARENTS                unknown_pk         /)
-->Table(qw/GoTermSynonyms              GO_TERM_SYNONYMS               unknown_pk         /)
-->Table(qw/ImageRoi                    IMAGE_ROI                      unknown_pk         /)
-->Table(qw/ImageRoiCompounds           IMAGE_ROI_COMPOUNDS            unknown_pk         /)
-->Table(qw/ImageRoiEnzymes             IMAGE_ROI_ENZYMES              unknown_pk         /)
-->Table(qw/ImageRoiKoTerms             IMAGE_ROI_KO_TERMS             unknown_pk         /)
-->Table(qw/ImageRoiReactions           IMAGE_ROI_REACTIONS            unknown_pk         /)
 ->Table(qw/Imgtermcv                   IMGTERMCV                      unknown_pk         /)
-->Table(qw/ImgBuildHistory             IMG_BUILD_HISTORY              unknown_pk         /)
 ->Table(qw/ImgCompound                 IMG_COMPOUND                   unknown_pk         /)
 ->Table(qw/ImgCompoundActivity         IMG_COMPOUND_ACTIVITY          unknown_pk         /)
 ->Table(qw/ImgCompoundAliases          IMG_COMPOUND_ALIASES           unknown_pk         /)
@@ -411,37 +542,6 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/ImgTermEnzymes              IMG_TERM_ENZYMES               unknown_pk         /)
 ->Table(qw/ImgTermGraphPath            IMG_TERM_GRAPH_PATH            unknown_pk         /)
 ->Table(qw/ImgTermSynonyms             IMG_TERM_SYNONYMS              unknown_pk         /)
-->Table(qw/Interpro                    INTERPRO                       unknown_pk         /)
-->Table(qw/InterproGoTerms             INTERPRO_GO_TERMS              unknown_pk         /)
-->Table(qw/KeggGene                    KEGG_GENE                      unknown_pk         /)
-->Table(qw/KeggGeneKoTerms             KEGG_GENE_KO_TERMS             unknown_pk         /)
-->Table(qw/KeggGeneNcbiGeneIds         KEGG_GENE_NCBI_GENE_IDS        unknown_pk         /)
-->Table(qw/KeggGeneNcbiGiNums          KEGG_GENE_NCBI_GI_NUMS         unknown_pk         /)
-->Table(qw/KeggGeneUniprotIds          KEGG_GENE_UNIPROT_IDS          unknown_pk         /)
-->Table(qw/KeggModule                  KEGG_MODULE                    unknown_pk         /)
-->Table(qw/KeggModuleCompounds         KEGG_MODULE_COMPOUNDS          unknown_pk         /)
-->Table(qw/KeggModuleKoTerms           KEGG_MODULE_KO_TERMS           unknown_pk         /)
-->Table(qw/KeggModuleReactions         KEGG_MODULE_REACTIONS          unknown_pk         /)
-->Table(qw/KeggPathway                 KEGG_PATHWAY                   unknown_pk         /)
-->Table(qw/KeggPathwayModules          KEGG_PATHWAY_MODULES           unknown_pk         /)
-->Table(qw/KeggPathwayRelatedPathways  KEGG_PATHWAY_RELATED_PATHWAYS  unknown_pk         /)
-->Table(qw/KmImageRoi                  KM_IMAGE_ROI                   unknown_pk         /)
-->Table(qw/KmImageRoiKoTerms           KM_IMAGE_ROI_KO_TERMS          unknown_pk         /)
-->Table(qw/Kog                         KOG                            unknown_pk         /)
-->Table(qw/KogFamilies                 KOG_FAMILIES                   unknown_pk         /)
-->Table(qw/KogFunction                 KOG_FUNCTION                   unknown_pk         /)
-->Table(qw/KogFunctions                KOG_FUNCTIONS                  unknown_pk         /)
-->Table(qw/KogPathway                  KOG_PATHWAY                    unknown_pk         /)
-->Table(qw/KogPathwayKogMembers        KOG_PATHWAY_KOG_MEMBERS        unknown_pk         /)
-->Table(qw/KoTerm                      KO_TERM                        unknown_pk         /)
-->Table(qw/KoTermClasses               KO_TERM_CLASSES                unknown_pk         /)
-->Table(qw/KoTermCogs                  KO_TERM_COGS                   unknown_pk         /)
-->Table(qw/KoTermEnzymes               KO_TERM_ENZYMES                unknown_pk         /)
-->Table(qw/KoTermGoIds                 KO_TERM_GO_IDS                 unknown_pk         /)
-->Table(qw/KoTermModules               KO_TERM_MODULES                unknown_pk         /)
-->Table(qw/KoTermPathways              KO_TERM_PATHWAYS               unknown_pk         /)
-->Table(qw/KoTermReactions             KO_TERM_REACTIONS              unknown_pk         /)
-->Table(qw/KoTermTcFamilies            KO_TERM_TC_FAMILIES            unknown_pk         /)
 ->Table(qw/MeshDtree                   MESH_DTREE                     unknown_pk         /)
 ->Table(qw/MethExp                     METH_EXP                       unknown_pk         /)
 ->Table(qw/MethExperiment              METH_EXPERIMENT                unknown_pk         /)
@@ -453,14 +553,6 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/MethMotifSummary            METH_MOTIF_SUMMARY             unknown_pk         /)
 ->Table(qw/MethSample                  METH_SAMPLE                    unknown_pk         /)
 ->Table(qw/MethStats                   METH_STATS                     unknown_pk         /)
-->Table(qw/MpwPglCompound              MPW_PGL_COMPOUND               unknown_pk         /)
-->Table(qw/MpwPglGeneGroup             MPW_PGL_GENE_GROUP             unknown_pk         /)
-->Table(qw/MpwPglPathway               MPW_PGL_PATHWAY                unknown_pk         /)
-->Table(qw/MpwPglPathwayReaction       MPW_PGL_PATHWAY_REACTION       unknown_pk         /)
-->Table(qw/MpwPglProteinGroup          MPW_PGL_PROTEIN_GROUP          unknown_pk         /)
-->Table(qw/MpwPglReaction              MPW_PGL_REACTION               unknown_pk         /)
-->Table(qw/MpwPglReactionCompounds     MPW_PGL_REACTION_COMPOUNDS     unknown_pk         /)
-->Table(qw/MpwPglTaxonomy              MPW_PGL_TAXONOMY               unknown_pk         /)
 ->Table(qw/MsExperiment                MS_EXPERIMENT                  unknown_pk         /)
 ->Table(qw/MsExperimentExtLinks        MS_EXPERIMENT_EXT_LINKS        unknown_pk         /)
 ->Table(qw/MsExperimentPublications    MS_EXPERIMENT_PUBLICATIONS     unknown_pk         /)
@@ -492,13 +584,6 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/PathwayNetworkPartsLists    PATHWAY_NETWORK_PARTS_LISTS    unknown_pk         /)
 ->Table(qw/PathwayNetworkTaxons        PATHWAY_NETWORK_TAXONS         unknown_pk         /)
 ->Table(qw/PathwayNetworkTComponents   PATHWAY_NETWORK_T_COMPONENTS   unknown_pk         /)
-->Table(qw/PfamClan                    PFAM_CLAN                      unknown_pk         /)
-->Table(qw/PfamClanPfamFamilies        PFAM_CLAN_PFAM_FAMILIES        unknown_pk         /)
-->Table(qw/PfamFamily                  PFAM_FAMILY                    unknown_pk         /)
-->Table(qw/PfamFamilyCogs              PFAM_FAMILY_COGS               unknown_pk         /)
-->Table(qw/PfamFamilyExtLinks          PFAM_FAMILY_EXT_LINKS          unknown_pk         /)
-->Table(qw/PfamFamilyFamilies          PFAM_FAMILY_FAMILIES           unknown_pk         /)
-->Table(qw/PfamFamilyGenomeProperties  PFAM_FAMILY_GENOME_PROPERTIES  unknown_pk         /)
 ->Table(qw/PhenotypeRule               PHENOTYPE_RULE                 unknown_pk         /)
 ->Table(qw/PhenotypeRuleTaxons         PHENOTYPE_RULE_TAXONS          unknown_pk         /)
 ->Table(qw/ProjectInfo                 PROJECT_INFO                   unknown_pk         /)
@@ -510,13 +595,7 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/ProjectInfoPhenotypes       PROJECT_INFO_PHENOTYPES        unknown_pk         /)
 ->Table(qw/ProjectInfoProjectRelevance PROJECT_INFO_PROJECT_RELEVANCE unknown_pk         /)
 ->Table(qw/ProjectInfoRelevances       PROJECT_INFO_RELEVANCES        unknown_pk         /)
-->Table(qw/PropertyStep                PROPERTY_STEP                  unknown_pk         /)
-->Table(qw/PropertyStepEvidences       PROPERTY_STEP_EVIDENCES        unknown_pk         /)
 ->Table(qw/PublicSet                   PUBLIC_SET                     unknown_pk         /)
-->Table(qw/Reaction                    REACTION                       unknown_pk         /)
-->Table(qw/ReactionCompounds           REACTION_COMPOUNDS             unknown_pk         /)
-->Table(qw/ReactionEnzymes             REACTION_ENZYMES               unknown_pk         /)
-->Table(qw/ReactionExtLinks            REACTION_EXT_LINKS             unknown_pk         /)
 ->Table(qw/RnaseqDataset               RNASEQ_DATASET                 unknown_pk         /)
 ->Table(qw/RnaseqDatasetStats          RNASEQ_DATASET_STATS           unknown_pk         /)
 ->Table(qw/RnaseqExperiment            RNASEQ_EXPERIMENT              unknown_pk         /)
@@ -529,7 +608,6 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/RnaseqSample                RNASEQ_SAMPLE                  unknown_pk         /)
 ->Table(qw/RnaseqSampleExtLinks        RNASEQ_SAMPLE_EXT_LINKS        unknown_pk         /)
 ->Table(qw/RnaseqSampleSop             RNASEQ_SAMPLE_SOP              unknown_pk         /)
-->Table(qw/SeedFunctionalRole          SEED_FUNCTIONAL_ROLE           unknown_pk         /)
 ->Table(qw/Statuscv                    STATUSCV                       unknown_pk         /)
 ->Table(qw/Submission                  SUBMISSION                     unknown_pk         /)
 ->Table(qw/SubmissionDataFiles         SUBMISSION_DATA_FILES          unknown_pk         /)
@@ -542,18 +620,6 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/TaxonPfamCount              TAXON_PFAM_COUNT               unknown_pk         /)
 ->Table(qw/TaxonTigrCount              TAXON_TIGR_COUNT               unknown_pk         /)
 ->Table(qw/TaxonUpdateRequest          TAXON_UPDATE_REQUEST           unknown_pk         /)
-->Table(qw/TcFamily                    TC_FAMILY                      unknown_pk         /)
-->Table(qw/TcFamilyCogs                TC_FAMILY_COGS                 unknown_pk         /)
-->Table(qw/TcFamilyGoTerms             TC_FAMILY_GO_TERMS             unknown_pk         /)
-->Table(qw/TcFamilyImgTerms            TC_FAMILY_IMG_TERMS            unknown_pk         /)
-->Table(qw/TcFamilyPfams               TC_FAMILY_PFAMS                unknown_pk         /)
-->Table(qw/TcFamilyPfamsIain           TC_FAMILY_PFAMS_IAIN           unknown_pk         /)
-->Table(qw/TcFamilyTfams               TC_FAMILY_TFAMS                unknown_pk         /)
-->Table(qw/Tigrfam                     TIGRFAM                        unknown_pk         /)
-->Table(qw/TigrfamEnzymes              TIGRFAM_ENZYMES                unknown_pk         /)
-->Table(qw/TigrfamGenomeProperties     TIGRFAM_GENOME_PROPERTIES      unknown_pk         /)
-->Table(qw/TigrfamRoles                TIGRFAM_ROLES                  unknown_pk         /)
-->Table(qw/TigrRole                    TIGR_ROLE                      unknown_pk         /)
 
 #---------------------------------------------------------------------#
 #                      ASSOCIATION DECLARATIONS                       #
@@ -647,6 +713,10 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Composition(
   [qw/Gene                        gene                             1    gene_oid             /],
   [qw/GeneGoTerms                 gene_go_terms                    *    gene_oid             /])
+
+->Composition(
+  [qw/GeneGoTerms                 gene_go_terms                    1    go_id      /],
+  [qw/GoTerm                      go_term                          *    go_id      /])
 
 ->Composition(
   [qw/Gene                        gene                             1    gene_oid             /],
@@ -1081,12 +1151,17 @@ DBIx::DataModel  # no semicolon (intentional)
   [qw/Taxon                       taxons_11                        *    is_big_euk           /])
 
 ->Association(
-  [qw/Yesnocv                     yesnocv_12                       1    flag_cv              /],
-  [qw/Taxon                       taxons_12                        *    obsolete_flag        /])
+  [qw/Yesnocv                     yesnocv_12                       1    flag_cv         /],
+  [qw/Taxon                       taxons_12                        *    obsolete_flag   /])
 
 ->Association(
-  [qw/DtCog                       dt_cog                           1    cog_id              /],
-  [qw/GeneCogGroups               gene_cog_groups                  *    cog_id              /]);
+  [qw/Cog                         cog                              1    cog_id          /],
+  [qw/GeneCogGroups               gene_cog_groups                  *    cog_id        /])
+
+->Association(
+  [qw/Kog                         kog                              1    kog_id          /],
+  [qw/GeneKogGroups               gene_kog_groups                  *    kog_id          /])
+;
 
 # ->Table(qw/DtBc2ec                     DT_BC2EC                       unknown_pk         /)
 # ->Table(qw/DtCog                       DT_COG                         cog_id         /)
@@ -1172,6 +1247,53 @@ DataModel::IMG_Core->metadm->define_type(
 		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
 	});
 
+DataModel::IMG_Core->metadm->define_table(
+	class       => 'GoTerms',
+	db_name     => 'GENE_GO_TERMS INNER JOIN GO_TERM ON gene_go_terms.go_id = go_term.go_id',
+#	db_name     => 'GENE_GO_TERMS => go_term',
+	where       => { 'go_term.go_type' => "molecular_function" },
+	default_columns => 'gene_oid, go_evidence, reference, go_term.*',
+	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneGoTerms GoTerm ) ],
+);
+
+DataModel::IMG_Core->metadm->define_table(
+	class       => 'CogTerms',
+	db_name     => 'GENE_COG_GROUPS INNER JOIN COG ON gene_cog_groups.cog = cog.cog_id',
+	default_columns => 'gene_oid, cog.*',
+	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneCogGroups Cog ) ],
+);
+
+DataModel::IMG_Core->metadm->define_table(
+	class       => 'KogTerms',
+	db_name     => 'GENE_KOG_GROUPS INNER JOIN KOG ON gene_kog_groups.kog = kog.kog_id',
+	default_columns => 'gene_oid, kog.*',
+	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneKogGroups Kog ) ],
+);
+
+
+
+# DataModel::IMG_Core->View(
+# 	'GoTerms',
+# 	'gene_oid, go_evidence, go_term.*',
+# 	'GENE_GO_TERMS => go_term',
+# 	{ 'go_term.go_type' => "molecular_function" },
+# #	[ map { DataModel::IMG_Core->metadm->table($_) }
+# 		qw( GeneGoTerms GoTerm )
+# #	]
+# 	);
+
+
+DataModel::IMG_Core->Composition(
+  [qw/Gene                        g                                1    gene_oid        /],
+  [qw/GoTerms                     go_terms                         *    gene_oid        /]);
+
+DataModel::IMG_Core->Composition(
+  [qw/Gene                        g                                1    gene_oid        /],
+  [qw/CogTerms                    cog_terms                        *    gene_oid        /]);
+
+DataModel::IMG_Core->Composition(
+  [qw/Gene                        g                                1    gene_oid        /],
+  [qw/KogTerms                    kog_terms                        *    gene_oid        /]);
 
 =cut
 DataModel::IMG_Core->metadm->define_table(
@@ -1181,27 +1303,34 @@ DataModel::IMG_Core->metadm->define_table(
 );
 =cut
 
-DataModel::IMG_Core->metadm->define_table(
-	class       => 'GoldTaxonVw',
-	db_name     => 'VW_GOLD_TAXON',
-	primary_key => 'gold_id',
-	column_types => {
-		GenericClade => [ qw( clade ) ],
-		Distance     => [ qw( altitude depth ) ],
-		LatLng       => [ qw( latitude longitude )],
-		EcoNorm      => [ qw( ecosystem_subtype )],
-	},
-);
-
-DataModel::IMG_Core->metadm->define_table(
-	class       => 'TaxonTypeVw',
-	db_name     => 'VW_TAXON_TYPE',
-);
-
-DataModel::IMG_Core->metadm->define_table(
-	class       => 'GoldDataTypeVw',
-	db_name     => 'PP_DATA_TYPE_VIEW',
-);
+# DataModel::IMG_Core->metadm->define_table(
+# 	class       => 'GoldTaxonVw',
+# 	db_name     => 'VW_GOLD_TAXON',
+# 	primary_key => 'gold_id',
+# 	column_types => {
+# 		GenericClade => [ qw( clade ) ],
+# 		Distance     => [ qw( altitude depth ) ],
+# 		LatLng       => [ qw( latitude longitude )],
+# 		EcoNorm      => [ qw( ecosystem_subtype )],
+# 	},
+# );
+#
+# DataModel::IMG_Core->metadm->define_table(
+# 	class       => 'TaxonTypeVw',
+# 	db_name     => 'VW_TAXON_TYPE',
+# );
+#
+# DataModel::IMG_Core->metadm->define_table(
+# 	class       => 'GoldDataTypeVw',
+# 	db_name     => 'PP_DATA_TYPE_VIEW',
+# );
+#
+# DataModel::IMG_Core->metadm->define_table(
+# 	class   => '',
+# 	db_name =>
+#
+#
+# );
 
 =cut
 

@@ -1174,14 +1174,19 @@ my $dynamic_links = {
 	# no JBrowse URL:   base_url/jbrowse/12345678
 	jbrowse => sub {
 		my $h = shift;
-		return
+		my $url =
 		( $base_url_h->{jbrowse}
 		? $base_url_h->{jbrowse}
 		: $base_url_h->{base_url} . '/jbrowse' )
 		.
 		( $h && $h->{params}
-		? '/' . $h->{params}{taxon_oid}
-		: '' );
+		? '/' . delete $h->{params}{taxon_oid}
+		: ''
+		);
+		if ( $h->{params} ) {
+			$url .= urlize_params( $h->{params} );
+		}
+		return $url;
 	},
 
 	file => sub {

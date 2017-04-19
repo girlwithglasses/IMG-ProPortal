@@ -18,6 +18,14 @@
 
 </style>
 
+[%
+	self.db = 'CyCOG';
+	self.xref = self.cycog_oid;
+	PROCESS 'inc/title/function.tt';
+
+
+%]
+
 <div class="thisWrapper">
 	<div id="pageHeader">
 		<div id="pageTitle" >
@@ -125,7 +133,7 @@
 			data_table.class = "gene-list";
 			data_table.caption = "Gene Members";
 			data_table.tbody = results.genes;
-			PROCESS 'inc/generic_table.tt';
+			PROCESS 'inc/generic/table.tt';
 		END; # end wrapper
 
 %]

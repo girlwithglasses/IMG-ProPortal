@@ -97,6 +97,7 @@ feature 'async', 'asynchronous operation' => sub {
 	requires 'EV', 0;
 	recommends 'Mojo::Server::PSGI', 0;
 	requires 'Promises', 0;
+	requires 'Web::Machine', '0.17';
 	requires 'WebAPI::DBIC', 0;
 	requires 'Alien::Web::HalBrowser', 0;
 

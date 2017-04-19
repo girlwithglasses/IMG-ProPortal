@@ -1,6 +1,6 @@
 ###########################################################################
 # MetaGeneDetail.pm - file version
-# $Id: MetaGeneDetail.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: MetaGeneDetail.pm 36898 2017-03-30 20:20:59Z klchu $
 ############################################################################
 package MetaGeneDetail;
 my $section = "MetaGeneDetail";
@@ -517,7 +517,7 @@ sub printGeneDetail {
               <br>
               $nbsps1<a href="#evidence">RNA Neighborhood</a>
               <br>
-              $nbsps1<a href="#tools">External Sequence Search</a>
+              $nbsps1<a href="#tools">Sequence Search</a>
               <br>
               $nbsps1<a href="#homolog">RNA Homologs</a>
               <br>
@@ -7721,7 +7721,7 @@ sub printMetaRnaTools {
     my ( $taxon_oid, $data_type, $gene_oid, $locus_type, $gene_symbol, $scaffold_oid,$start_coord, $end_coord, $strand ) = @_;
 
     # html bookmark 3
-    print WebUtil::getHtmlBookmark( "tools", "<h2>External Sequence Search</h2>" );
+    print WebUtil::getHtmlBookmark( "tools", "<h2>Sequence Search</h2>" );
     print "\n";
 
 
@@ -7750,6 +7750,13 @@ sub printMetaRnaTools {
     $url .= "&genePageGeneOid=$gene_oid&genePageTaxonOid=$taxon_oid" 
       . "&genePageDataType=$data_type";
     print alink( $url, "Green Genes BLAST" ) . "<br/>\n";
+    }
+    
+    
+    if($gene_symbol eq "16S") {
+        my $url = "main.cgi?section=Blast16s&gene_oid=$gene_oid&taxon_oid=$taxon_oid&data_type=$data_type";
+        $url .= "&scaffold_oid=$scaffold_oid&strand=$strand&start_coord=$start_coord&end_coord=$end_coord";
+        print alink( $url, "IMG BLAST 16S" ) . "<br/>\n";
     }
     
     print "</p>\n";

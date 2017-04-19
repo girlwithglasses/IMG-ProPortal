@@ -9,7 +9,7 @@
 			module => "DataModel::IMG_Gold"
 		},
 		img_cycog => {
-			db => "imgsqlite",
+			db => "cycog",
 			module => "DataModel::IMG_CyCOG"
 		}
 	}

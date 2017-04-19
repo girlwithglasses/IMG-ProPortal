@@ -37,14 +37,13 @@ Use `perlbrew` to install the CPAN client `cpanm` and `patchperl`:
 Now install a local version of a recent version of Perl, and create a standard library to go with it:
 
 	perlbrew install perl-5.18.4
-	perlbrew lib create perl-5.18.4@std
-	perlbrew switch perl-5.18.4@std
+	perlbrew switch perl-5.18.4
 
-You're now using perl version 5.18.4 and any extra modules you install will be in the library `@std`.
+You're now using perl version 5.18.4 and any extra modules you install will be in the library created for perl v5.18.4.
 
 Install the ProPortal dependencies using `cpanm`. You'll need to locate the path to `cpanfile` in the `proportal` folder; in this example, it's in my home directory within  the folder `webUI`.
 
-	cpanm --installdeps ~/webUI/proportal/ --with-feature all
+	cpanm --installdeps ~/webUI/proportal/ --with-all-features
 
 Some modules may fail installation and need to be installed manually or using the `--force` flag (e.g. an issue with `Scalar::Does` meant it needed to be installed using `cpanm --force Scalar::Does`). Rerunning the command `cpanm --installdeps ~/webUI/proportal/` will redo the installation of any modules that were not installed previously.
 

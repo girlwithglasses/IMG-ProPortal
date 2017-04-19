@@ -29,7 +29,6 @@ The IMG modules consist of the following:
 | [`IMG::App::Role::Dispatch`](../../webui.cgi/IMG/App/Role/Dispatch.pm) and [`IMG::App::DispatchCore`](../../webui.cgi/IMG/App/DispatchCore.pm) | parameter parsing, selecting which module to load. Needs some updating. |
 | [`IMG::App::Role::ErrorMessages`](../../webui.cgi/IMG/App/Role/ErrorMessages.pm) | standardised error messages! |
 | [`IMG::App::Role::HttpClient`](../../webui.cgi/IMG/App/Role/HttpClient.pm) | access to an HTTP client via `$img_app->http_ua`; defaults to a new [`HTTP::Tiny`](http://metacpan.org/pod/HTTP::Tiny) instance |
-| [`IMG::App::Role::Logger`](../../webui.cgi/IMG/App/Role/Logger.pm) | TODO: integrate logger with Dancer2 logging! |
 | [`IMG::App::Role::MenuManager`](../../webui.cgi/IMG/App/Role/MenuManager.pm) | Menu manager, for generating data structures that can be interpreted to produce page menus. |
 | [`IMG::App::Role::PreFlight`](../../webui.cgi/IMG/App/Role/PreFlight.pm) | runs preflight checks to ensure the environment is ready |
  [`IMG::App::Role::Templater`](../../webui.cgi/IMG/App/Role/Templater.pm) | renders a [Template::Toolkit](http://template-toolkit.org) template |
@@ -85,6 +84,7 @@ The IMG modules consist of the following:
 | [`IMG::Util::Import`](../../webui.cgi/IMG/Util/Import.pm) | defines sets of modules to be loaded together; see [Import::Base](http://metacpan.org/pod/Import::Base) |
 | [`IMG::Util::Text`](../../webui.cgi/IMG/Util/Text.pm) | collection point for text-related functionality |
 | [`IMG::Util::Timed`](../../webui.cgi/IMG/Util/Timed.pm) | simple interface for timing a function |
+| [`IMG::Util::Logger`](../../webui.cgi/IMG/Util/Logger.pm) | TODO: integrate logger with Dancer2 logging! |
 
 
 [`IMG::Views::ViewMaker`](../../webui.cgi/IMG/Views/ViewMaker.pm) is/was a first attempt at extracting all the output-related functionality from [`main.pl`](../../webui.cgi/main.pl), [`WebUtil`](../../webui.cgi/WebUtil.pm), etc.

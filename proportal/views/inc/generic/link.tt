@@ -75,7 +75,7 @@
 	#	input hashref
 	#	x.db
 	#	x.xref
-	# %]
+	%]
 <a [%
 	IF x.keys.exists('class');
 %]class="[% x.class %]" [%
@@ -90,7 +90,5 @@
 	END;
 	%]href="[%
 		link( 'fn_details', { db => x.db, xref => x.xref } );
-	%]">[% x.db %]:[% x.xref %]</a>
-[%
-	END;
-%]
+	%]">[% x.text %]</a>
+[% END; %]

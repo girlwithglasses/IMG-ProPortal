@@ -50,7 +50,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
 
 /* labels */
 label.pp-form {
-	text-transform: uppercase;	
+	text-transform: uppercase;
 	font-size: $element-font-size;;
 	display: block;
 	margin-top: 15px;		//for labels that appear above element.
@@ -62,14 +62,14 @@ label.pp-form:after {
 }
 
 select.pp-form {
-  border: $element-border-width solid map-get( $jgi-palette, dk_grey ); 
+  border: $element-border-width solid map-get( $jgi-palette, dk_grey );
   border-radius: 0px;
-  
+
   background: transparent;
-  padding:  0 $element-padding-sides;	//20px;	
-  text-transform: uppercase;	
+  padding:  0 $element-padding-sides;	//20px;
+  text-transform: uppercase;
   font-size: $element-font-size;	//14px;
-  height: $element-height;	//3em;
+  height: $element-height;	//3rem;
 
 }
 
@@ -90,14 +90,14 @@ button, a.button, html input[type="button"], input[type="reset"], input[type="su
 	padding: 0 $button-padding-sides;
 	font-size: $element-font-size;
 	color: $button-color;
-	text-transform: $button-transform;	
+	text-transform: $button-transform;
     line-height: $line-ht;
-	
+
 	&:hover {
     	background: darken($button-bgcolor, 10%);
 //     	color: darken($button-color, 10%);
     }
-    
+
     &:active {
     	background: lighten($button-bgcolor, 10%);
 //     	color: lighten($button-color, 10%);
@@ -123,11 +123,11 @@ button:disabled {
 	&.outline {
 		@include pp-button-style( map-get( $jgi-palette, reddish ), transparent,  map-get( $jgi-palette, reddish ));
 	}
-	
+
 	&.blue {
 		@include pp-button-style( transparent, map-get( $jgi-palette, dk_blue ), white );
 	}
-	
+
 	&.blue-outline {
 		@include pp-button-style( map-get( $jgi-palette, dk_blue ), transparent, map-get( $jgi-palette, dk_blue ));
 	}
@@ -135,7 +135,7 @@ button:disabled {
 	&.disabled {
 		&:hover {	background: #ddd;	}
 		&:active {	background: #ddd;	}
-	}	
+	}
 }
 
 
@@ -149,23 +149,23 @@ button:disabled {
 	border: $element-border-width solid $element-border-color;
 //     display: block;
     vertical-align: middle;
-	
+
 	&:hover {
     	border: $element-border-width solid darken( $element-border-color, 50% );
     	color: darken($element-border-color, 50%);
-    	
+
     	> label {
     		color: darken($element-border-color, 50%);
     	}
     }
-    
+
 }
 
-label.pp-dropdown-button{	
+label.pp-dropdown-button{
 	font-size: $element-font-size;
 	color: $element-border-color;
-	text-transform: $button-transform;	
-	line-height: $button-height; 
+	text-transform: $button-transform;
+	line-height: $button-height;
 	margin-bottom: -2px;
 	display: block;
 	height: $button-height;
@@ -187,12 +187,12 @@ ul.pp-dropdown-button{
 	border: $element-border-width solid $element-border-color;
 	display: none;
 	background: white;
-	
+
 
 	> li {
 		background: white;
 	}
-	
+
 	> li a{
 		display:table-cell;
 		vertical-align: middle;
@@ -200,11 +200,11 @@ ul.pp-dropdown-button{
 		height: $button-height;
 		font-size: $element-font-size;
 		color: $element-border-color;
-		text-transform: $button-transform;	
+		text-transform: $button-transform;
 		line-height: $line-ht;
 		padding: 0 40px 0 $element-padding-sides;
 		border: 0;
-	} 
+	}
 
 	> li a:hover {
 		color: darken($element-border-color, 50%);
@@ -240,8 +240,8 @@ input.pp-dropdown-button:checked + label{
 // INPUT BOX
 // input[type="text"] {
 input {
-  border: $element-border-width solid $element-border-color; 
-  padding:  0 $element-padding-sides;		
+  border: $element-border-width solid $element-border-color;
+  padding:  0 $element-padding-sides;
   height: $element-height;
   background: transparent;
   border-radius: 0px;

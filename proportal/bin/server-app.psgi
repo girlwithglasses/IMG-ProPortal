@@ -17,7 +17,7 @@ BEGIN {
 	);
 }
 use lib @dir_arr;
-use IMG::Util::Base;
+use IMG::Util::Import;
 use IMG::Util::File qw( :all );
 
 use JBlibs;

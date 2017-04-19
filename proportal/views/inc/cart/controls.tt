@@ -1,5 +1,15 @@
+[%	# controls for a form
+	# params:
+	# control_class -- class for the form elements
+	# selectall_id  -- id to give the select all element for attaching JS listeners
+	#	will be generated from control_class if not provided
+
+	IF ! selectall_id;
+		selectall_id = control_class _ '-selectAll';
+	END;
+%]
 <fieldset class="[% control_class %]__fieldset">
-<button class="[% control_class %]__selectall" value="Select all">Select all</button>
+<button id="[% selectall_id %]" class="[% control_class %]__selectall" value="Select all">Select all</button>
 <input class="[% control_class %]__reset" type="reset" value="Clear selection" />
 <input class="[% control_class %]__submit" type="submit" value="Add to cart" />
 </fieldset>

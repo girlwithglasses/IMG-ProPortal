@@ -20,52 +20,79 @@ use DBIC::IMG_Core;
 use Carp::Always;
 use Getopt::Long;
 
+#	command line options:
+#	--source   fromDBI || fromDBIxClass
+#	--db   img_core || img_gold || img_sat  (can specify multiple values;
+#                                            by default, uses all three databases)
+
 my $args = { source => 'fromDBIxClass' };
+
 my $opt = GetOptions( $args,
 	"source|s=s",
-#	"test|t"         # flag for test mode
+	"db=s@"
 ) or script_die( 255, "Error in command line arguments" );
 
-# options for 'source': --fromDBI || --fromDBIxClass
-
-# {
-#   dsn => "dbi:Oracle:gemini1_shared",
-#   password => "imgCoreC0sM0s1",
-#   username => "img_core_v400"
-# }
-# {
-#   dsn => "dbi:Oracle:imgiprd",
-#   password => "Tuesday",
-#   username => "imgsg_dev"
-# }
-
-my $dbs = {
-	'img_core' => 'DataModel::IMG_Core',
-	'img_gold' => 'DataModel::IMG_Gold'
+my $abbr = {
+	'img_core' => 'IMG_Core',
+	'img_gold' => 'IMG_Gold',
+	'img_sat'  => 'IMG_Sat'
 };
 
-for my $x ( keys %$dbs ) {
+my @dbs;
+if ( ! $args->{db} ) {
+	@dbs = keys %$abbr;
+}
+else {
+	@dbs = grep { defined $abbr->{$_} } @{$args->{db}};
+}
+
+if ( ! @dbs || scalar @dbs == 0 ) {
+	script_die( 255, 'No databases specified!' );
+}
+
+say 'Running DBIx::DataModel generator in mode ' . $args->{source} . ' for database(s) ' . join ", ", @dbs;
+
+for my $x ( @dbs ) {
 
 	say 'Running schema generator for ' . $x;
 
-	my $generator = DBIx::DataModel::Schema::Generator->new( schema => $dbs->{$x} );
+	my $generator = DBIx::DataModel::Schema::Generator->new( schema => 'DataModel::' . $abbr->{$x} );
 
-	if ( $args->{fromDBI} ) {
+	if ( $args->{source} eq 'fromDBI' ) {
 		say 'Running generator->fromDBI';
-		my $dbh = IMG::Util::DB::get_oracle_dbh({
+
+		my $conn = IMG::Util::DB::get_oracle_conn({
 			database => $x,
 			options => {
 				RaiseError => 1,
-	#			FetchHashKeyName => 'NAME_lc'
 				LongReadLen => 38000,
-				LongTruncOk => 1
+				LongTruncOk => 1,
 			}
 		});
+		$conn->mode('fixup');
 
-		$generator->fromDBI( $dbh );
+	#	$generator->fromDBI(@dbi_connection_args, $catalog, $schema, $type);
+	#	$type = "'TABLE','VIEW','SYNONYM'" | 'TABLE' | etc
+
+# In addition the following special cases may also be supported by some drivers:
+#
+# If the value of $catalog is '%' and $schema and $table name are empty strings, the result set contains a list of catalog names. For example:
+#
+# $sth = $dbh->table_info('%', '', '');
+# If the value of $schema is '%' and $catalog and $table are empty strings, the result set contains a list of schema names.
+# If the value of $type is '%' and $catalog, $schema, and $table are all empty strings, the result set contains a list of table types.
+
+# In Oracle, the concept of user and schema is (currently) the same. Because database objects are owned by an user, the owner names in the data dictionary views correspond to schema names. Oracle does not support catalogues so TABLE_CAT is ignored as selection criterion.
+
+# Search patterns are supported for TABLE_SCHEM and TABLE_NAME.
+
+# TABLE_TYPE may contain a comma-separated list of table types.
+
+
+		$generator->fromDBI( $conn->dbh, '%', 'img_sat_v440', 'TABLE' );
 	}
 	else {
-		eval { $generator->parse_DBIx_Class('DBIC::IMG_Core'); };
+		eval { $generator->parse_DBIx_Class('DBIC::' . $abbr->{$x} ); };
 	}
 
 	say 'Done! Perl code generated:';
@@ -73,15 +100,3 @@ for my $x ( keys %$dbs ) {
 	say $generator->perl_code;
 
 }
-
-
-# $generator->parse_DBI($dbh);
-#
-# my $gen = DBIx::DataModel::Schema::Generator->new( schema => 'DataModel::IMG_Core');
-#
-# local $@;
-#
-#
-# die $@ if $@;
-#
-# say $gen->perl_code;

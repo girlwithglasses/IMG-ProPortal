@@ -17,7 +17,7 @@
 		data_table.class = "file-list";
 		data_table.caption = "File List";
 		data_table.tbody = results.arr;
-		PROCESS 'inc/generic_table.tt';
+		PROCESS 'inc/generic/table.tt';
 
 	ELSE %]
 <p>No files found</p>

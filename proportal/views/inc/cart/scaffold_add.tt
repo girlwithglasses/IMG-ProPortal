@@ -1,9 +1,20 @@
-[%	hidden_params = {
+[%	#	config parameters to add scaffolds to the scaffold cart
+	#	unless specified with form_type, the template 'inc/cart/generic_add.tt'
+	#	will be used
+
+	form_action = img_app_config.main_cgi_url;
+	hidden_params = {
 		section => 'scaffoldCart',
 		page => 'scaffoldCart'
 	};
+
 	IF ! form_class;
 		form_class = 'scaffold-cart';
 	END;
-	PROCESS 'inc/cart/generic_add.tt';
+
+	IF ! form_type;
+		form_type = 'inc/cart/generic_add.tt';
+	END;
+
+	PROCESS $form_type;
 %]

@@ -2,7 +2,7 @@
 # GeneDetail.pm - 2nd version
 #      --es 01/09/2007
 #
-# $Id: GeneDetail.pm 35611 2016-05-08 21:22:50Z klchu $
+# $Id: GeneDetail.pm 36898 2017-03-30 20:20:59Z klchu $
 ############################################################################
 package GeneDetail;
 my $section = "GeneDetail";
@@ -585,7 +585,7 @@ EOF
             <br>
             $nbsps1<a href="#evidence">RNA Neighborhood</a>
             <br>
-            $nbsps1<a href="#tools">External Sequence Search</a>
+            $nbsps1<a href="#tools">Sequence Search</a>
             <br>
             $nbsps1<a href="#homolog">RNA Homologs</a>
             <br>
@@ -7950,7 +7950,7 @@ sub printRnaTools {
     my ( $dbh, $gene_oid, $locus_type, $gene_symbol ) = @_;
 
     # html bookmark 3
-    print WebUtil::getHtmlBookmark( "tools", "<h2>External Sequence Search</h2>" );
+    print WebUtil::getHtmlBookmark( "tools", "<h2>Sequence Search</h2>" );
     print "\n";
 
     print "<p>\n";
@@ -7971,6 +7971,13 @@ sub printRnaTools {
         $url .= "&genePageGeneOid=$gene_oid";
         print alink( $url, "Green Genes BLAST" ) . "<br/>\n";
     }
+    
+    if($gene_symbol eq "16S") {
+        my $url = "main.cgi?section=Blast16s&gene_oid=$gene_oid";
+        print alink( $url, "IMG BLAST 16S" ) . "<br/>\n";
+    }
+    
+    
     print "</p>\n";
 }
 

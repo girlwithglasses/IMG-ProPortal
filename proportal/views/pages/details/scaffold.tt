@@ -4,16 +4,10 @@
 	class = 'scaffold-details';
 
 	PROCESS 'inc/generic/link.tt';
+
+	PROCESS 'inc/title/scaffold.tt';
+
 %]
-
-<h2 class="[% class %]__title">[% self.scaffold_name %]</h2>
-<h3 class="[% class %]__subtitle">from [% taxon_name_link( x = {}, obj = self ) %]</h3>
-
-<div class="[% class %]__buttonBar">
-	<a class="[% class %]__button--jbrowse" href="[% # link to JBrowse %]">View in JBrowse</a>
-	<a class="[% class %]__button--cart" href="[% # link to scaffold cart add! %]" title="Add to scaffold cart">Add to Cart</a>
-</div>
-
 <dl class="[% class %]__dl">
 <dt class="[% class %]__def">IMG scaffold ID</dt>
 <dd class="[% class %]__term">[% self.scaffold_oid %]</dd>

@@ -2,6 +2,7 @@ package IMG::App::Role::Schema;
 
 use IMG::Util::Import 'MooRole';
 use IMG::Util::Factory;
+use Log::Log4perl;
 
 with 'IMG::App::Role::ErrorMessages';
 
@@ -98,28 +99,28 @@ sub _init_schema {
 	}
 
 	# find the appropriate config for the module
-	if ( ! $self->config->{schema}{$schema}
-		|| ! $self->config->{schema}{$schema}{module}
+	if ( ! $self->config->{schema}{$schema} ) {
+		$self->choke({ err => 'missing', subject => 'schema ' . $schema })
+	}
+	elsif ( ! $self->config->{schema}{$schema}{module}
 		|| ! $self->config->{schema}{$schema}{db} ) {
 			$self->choke({
 				err => 'invalid',
 				subject => $schema,
 				type => 'schema'
 			});
+		log_error {
+			'invalid schema for ' . $schema . ': '
+			. Dumper $self->config->{schema}{$schema}
+		};
+
 	}
 
 	my $schema_mod = $self->config->{schema}{$schema}{module};
 
-=cut
-
-# $schema->debug(1);             # will warn for each SQL statement
-# $schema->debug($debug_object); # will call $debug_object->debug($sql)
-
-=cut
-
 	# set up the module...
 	my %module_args = (
-		debug => IMG::App::Role::Logger::get_logger(),
+		debug => Log::Log4perl->get_logger(),
 		dbi_prepare_method => 'prepare_cached',
 	);
 
@@ -127,14 +128,27 @@ sub _init_schema {
 		delete $module_args{debug};
 	}
 
-	if ( ! $options->{no_connection} ) {
-		$module_args{dbh} = $self->connection_for_schema( $schema )->dbh;
-	}
+#	if ( ! $options->{no_connection} ) {
+#		$module_args{dbh} = $self->connection_for_schema( $schema )->dbh;
+#	}
 
 	# dies if the module cannot be loaded
 	my $module = IMG::Util::Factory::create( $schema_mod, %module_args );
+	my $ref = sub { return $self->connection_for_schema( $schema )->dbh };
 
-	$self->set_schema_h({ %{ $self->schema_h || {} }, $schema => { module => $module, db => sub { return shift->get_connection_for_schema($schema); } } });
+	$module->dbh( $ref->() );
+
+	$self->set_schema_h({
+		%{ $self->schema_h || {} },
+		$schema => {
+			module => $module,
+			db => $self->config->{schema}{$schema}{db}
+#			db => sub { return shift->get_connection_for_schema($schema); }
+		}
+	});
+
+
+	log_debug { 'schema_h: ' . Dumper $self->schema_h };
 
 	return $module;
 }

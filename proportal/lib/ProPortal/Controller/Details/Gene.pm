@@ -44,26 +44,30 @@ sub get_data {
 		});
 	}
 
+	# check for deleted genes
+
+	# check for replaced genes
+
+	# check for metagenome genes
+
+
+
 	# get the genes
-	my $genes = $self->_core->run_query({
+	my $results = $self->_core->run_query({
 		query => 'gene_details',
 		where => {
 			gene_oid => $args->{gene_oid}
 		}
 	});
 
-	if ( ! scalar @$genes ) {
+	if ( ! scalar @$results ) {
 		$self->choke({
 			err => 'no_results',
 			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )
 		});
 	}
 
-	my $res = $genes->[0];
-
-# 	if ( 'imgsqlite' eq $self->_core->config->{schema}{img_core}{db} ) {
-# 		return $res;
-# 	}
+	my $gene = $results->[0];
 
 	my $associated = {
 		multi => [ qw(
@@ -83,6 +87,9 @@ sub get_data {
 			gene_tigrfams
 			gene_tmhmm_hits
 			gene_xref_families
+
+			go_terms
+			cog_terms
 		)],
 # 			gene_rna_clusters
 # 			gene_cassette_genes
@@ -94,20 +101,37 @@ sub get_data {
 
 	for my $type ( %$associated ) {
 		for my $assoc ( @{ $associated->{$type} } ) {
-			if ( $res->can( $assoc ) ) {
-				my $r = $res->$assoc;
+			if ( $gene->can( $assoc ) ) {
+				my $r = $gene->$assoc;
 		#		log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
 				if ($r
 					&& ( ( 'multi' eq $type && scalar @$r )
 					|| ( 'single' eq $type && defined $r ) ) ) {
-					$res->{$assoc} = $r;
+					$gene->{$assoc} = $r;
 				}
 			}
 		}
 	}
 
-	log_debug { 'gene object: ' . Dumper $res };
-	return $res;
+# 	if ( $gene->gene_go_terms ) {
+# 		for ( @{$gene->gene_go_terms} ) {
+# 			# get the GO info
+# 			$
+
+	# fetch the cycogs
+	my $cycogs = $self->_core->run_query({
+		query => 'cycogs_by_gene_oid',
+		where => {
+			gene_oid => $args->{gene_oid}
+		}
+	});
+
+	if ( scalar @$cycogs ) {
+		$gene->{gene_cycog_groups} = $cycogs;
+	}
+
+#	log_debug { 'gene object: ' . Dumper $gene };
+	return $gene;
 
 }
 

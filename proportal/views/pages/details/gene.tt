@@ -5,10 +5,29 @@
 	title = 'Gene Details';
 	class = 'gene-details';
 
+
+	PROCESS 'inc/title/gene.tt';
+
 	PROCESS 'inc/generic/link.tt';
+
+	BLOCK list_container %]
+	<ul class="[% class_name %]__container[%
+		IF class_suffix; '--' _ class_suffix; END; %]">
+[%	content %]
+	</ul>
+[%	END;
+
+
+	BLOCK list_item %]
+		<li class="[% class_name %]__item[%
+			IF class_suffix; '--' _ class_suffix; END; %]">
+[%	content %]
+		</li>
+[%	END;
 
 %]
 
+<!--
 <style>
 
 	/* Hookups for seqData tab group and content box */
@@ -23,28 +42,12 @@
 	}
 
 </style>
-
-
-<div id="pageHeader">
-	<div id="pageTitle">
-
-		<!-- Write gene name -->
-		<h2>[% self.gene_display_name %]</h2>
-
-		<!-- Write taxon source (need query for taxon display name) -->
-		<h4 class="normal">from [% taxon_name_link( x = {}, obj = self ) %]</h4>
-	</div>
-	<div id="buttonBar">
-		<button>View in JBrowse</button>
-		<button>Add to Cart</button>
-	</div>
-</div>
-
-
+ -->
 
 <div class="row">
 	<div class="infoBox">
 
+[%		IF self.locus_type == 'CDS' %]
 		<div class="infoBoxTitle"><h4>Gene Information</h4></div>
 
 		<div class="tableTitle"><h6>Gene Details</h6></div>
@@ -62,6 +65,26 @@
 			<tr><td>GC Content</td>	<td>[% self.gc_percent %]</td></tr>
 			<tr><td>Date Modified</td>	<td> [% self.mod_date %]</td></tr>
 		</table>
+[%		ELSE %]
+		<div class="infoBoxTitle"><h4>RNA Information</h4></div>
+[%
+#			IF self.gene_display_name.match('^RF');
+#				# RFAM link
+#			END;
+
+#    if ( $gene_display_name =~ /^RF/ ) {
+#        my $url = $rfam_base_url . $gene_display_name;
+#        $url = alink( $url, $gene_display_name );
+#        printAttrRowRaw( "IMG Product Name", $url );
+#    } else {
+#        printAttrRowRaw( "IMG Product Name", escHtml($gene_display_name) );
+#    }
+#    printAttrRowRaw( "Original Gene Product Name", escHtml($product_name) );
+#    printAttrRowRaw( "IMG Product Source", escHtml($img_product_source) );
+
+		END; %]
+
+
 
 		<div class="tableTitle"><h6>Genome and Scaffold Details</h6></div>
 		<table class="condensed">
@@ -93,18 +116,204 @@
 
 	</div> <!-- infoBox -->
 
+<!--
+    my $sql = qq{
+        select distinct db_name, id, custom_url
+        from gene_ext_links
+        where gene_oid = ?
+        order by db_name, id
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $gene_oid );
+    print "<td class='img'>\n";
+    my $count = 0;
+    my $s;
+
+    for ( ; ; ) {
+        my ( $db_name, $id, $custom_url ) = $cur->fetchrow();
+        last if !$id;
+        my $dbId = "$db_name:$id";
+        if ( $db_name eq "GI" && $ncbi_entrez_base_url ne "" ) {
+            my $url = "$ncbi_entrez_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+
+        } elsif ( $db_name eq "GenBank" && $ncbi_entrez_base_url ne "" ) {
+            my $url = "$ncbi_entrez_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "GeneID" && $geneid_base_url ne "" ) {
+            my $url = "$geneid_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+            if ( $is_big_euk eq "Yes" ) {
+                my $url = "$ncbi_mapview_base_url$id";
+                $s .= alink( $url, "MapView/$dbId" );
+                $s .= "; ";
+            }
+        } elsif ( $db_name =~ /UniProt/ && $nice_prot_base_url ne "" ) {
+            my $url = "$nice_prot_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ($enable_interpro && $db_name =~ /InterPro/  ) {
+            my $url = "$ipr_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+
+        } elsif ($enable_interpro && $db_name =~ /SUPERFAMILY/ ) {
+            my $url = "$ipr_base_url2$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+
+        } elsif ($enable_interpro && $db_name =~ /ProSiteProfiles/  ) {
+            my $url = "$ipr_base_url3$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+
+        } elsif ($enable_interpro && $db_name =~ /SMART/  ) {
+            my $url = "$ipr_base_url4$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+
+
+        } elsif ( $db_name eq "UniGene" ) {
+            my ( $org, $id2 ) = split( /\./, $id );
+            my $url = "$unigene_base_url?ORG=$org&CID=$id2";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "TAIR" ) {
+            my $url = "$tair_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "WormBase" ) {
+            my $url = "$wormbase_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "ZFIN" ) {
+            my $url = "$zfin_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "FLYBASE" ) {
+            my $url = "$flybase_base_url$id.html";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "HGNC" ) {
+            my $url = "$hgnc_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "MGI" ) {
+            my $url = "$mgi_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "RGD" ) {
+            my $url = "$rgd_base_url$id";
+            $s .= alink( $url, "$dbId" );
+            $s .= "; ";
+        } elsif ( $db_name eq "gene_oid" ) {
+            my $sql2 = qq{
+               select tx2.taxon_display_name
+               from gene g2, taxon tx2
+               where g2.gene_oid = ?
+               and g2.taxon = tx2.taxon_oid
+            };
+            my $cur2 = execSql( $dbh, $sql2, $verbose, $id );
+            my ($pr_taxon_display_name) = $cur2->fetchrow();
+            my $x = " [[proxy from $pr_taxon_display_name]]";
+
+            #$cur2->finish();
+            my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
+            $url .= "&gene_oid=$id";
+            $s .= alink( $url, $id ) . "$x; ";
+        } elsif ( $db_name eq "read_id" ) {
+            $s .= "$id; ";
+        } elsif ( $custom_url =~ /^http/ ) {
+            $s .= alink( $custom_url, $id ) . "; ";
+        }
+    }
+    chop $s;
+    chop $s;
+    print "$s\n";
+ -->
+
+
+
+[%	class_name = 'gene-fn-list'; %]
 	<div class="infoBox">
 		<div class="infoBoxTitle"><h4>Protein Functional Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
 
-		<table class="lined">
-		<tr><td class="col1">CyCOG</td> 	<td><a>COG0592</a>: DNA polymerase III sliding clamp (beta) subunit, PCNA homolog</td></tr>
 
 
-		<tr><td>KOG</td> 	<td><a>KOG789</a>: a verbose description of this KOG will go here: Lorem ipsum dolor sit amet, consectetur adipiscing elit</td></tr>
-		<tr>
+
+	<table class="lined">
+		<caption>Protein Functional Annotations</caption>
+<!-- CyCOGs -->
+	<tbody>
+	<tr class="[% class_name %]__trow">
+	<td class="[% class_name %]__tcell--title">CyCOGs</td>
+	<td class="[% class_name %]__tcell--list">
+[%
+	IF self.gene_cycog_groups AND self.gene_cycog_groups.size > 0;
+		arr = self.gene_cycog_groups;
+		WRAPPER list_container;
+			FOR fn IN arr;
+
+				WRAPPER list_item;
+				PROCESS 'inc/function/cycog.tt';
+				END; # end wrapper list_item
+
+			END; # end FOR fn IN arr
+		END; # end wrapper list_container
+	END; # end IF self.gene_cycog_groups %]
+	</td></tr>
+[%	FOR xog IN [ 'cog', 'kog' ]; %]
+	<tr class="[% class_name %]__trow">
+	<td class="[% class_name %]__tcell--title">[% xog | upper %]</td>
+	<td class="[% class_name %]__tcell--list">
+[%		gxg = xog _ '_terms';
+		IF self.$gxg AND self.$gxg.size > 0;
+			arr = self.$gxg;
+			class_suffix = xog;
+			WRAPPER list_container;
+				FOR fn IN arr;
+
+					WRAPPER list_item;
+					PROCESS 'inc/function/xog.tt';
+					END; # end wrapper list__item
+
+				END; # end FOR fn IN arr
+			END; # end wrapper list__container
+		END; # end IF self.$gxg %]
+	</td></tr>
+[%	END; # end for xog
+
+# COG
+# gene_cog_groups.cog
+# {	db => 'cog',
+# 	xref => cog.cog_id,
+# 	link_text => cog.cog_id,
+# 	post_text => cog.cog_name _ ', ' _ cog.description
+# }
+#
+# # KOG
+# # gene_kog_groups.kog
+# {	db => 'kog',
+# 	xref => kog.kog_id,
+# 	link_text => kog.kog_id,
+# 	post_text => kog.kog_name _ ', ' _ kog.kog_description
+# }
+
+%]
 		<td>Enzyme</td>
 		<td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>
+[%#
+#GENE_ENZYMES.enzymes
+#{	db => 'enzyme',
+#	xref => ec_number,
+#	link => enzyme.ec_number,
+#	post_test => enzyme.enzyme_name
+#}
 
+
+%]
 		<tr><td>Pfam</td>
 			<td>
 				<a>pfam00712</a>: DNA_pol3_beta <br>
@@ -112,11 +321,26 @@
 				<a>pfam02768</a>: DNA_pol3_beta_3 <br>
 			</td>
 		</tr>
+[%
+# arr = {
+# 	db => 'tigrfam',
+# 	xref => tigrfam.ext_accession,
+# 	link_text => tigrfam.ext_accession,
+# 	post_text => tigrfam.expanded_name
+# };
+
+# gene_tigrfams.ext_accession
+# tigrfam.expanded_name
+%]
 		<tr><td>TIGRfam</td>
 			<td>
 				<a>TIGR00663</a>:  DNA polymerase III, beta subunit<br>
 			</td>
 		</tr>
+[%
+
+# gene.gene_img_interpro_hits
+%]
 		<tr><td>InterPro</td>
 			<td>
 				<a>IPR001001</a>:  DNA polymerase III, beta chain (SMART SM00480)<br>
@@ -127,29 +351,61 @@
 			</td>
 		</tr>
 		<tr><td>GO Terms</td>
-			<td>
-				<a>GO:0008408</a>: 3'-5' exonuclease activity [evidence=IEA]<br>
-				<a>GO:0003677</a>: DNA binding [evidence=IEA]<br>
-				<a>GO:0003887</a>: DNA-directed DNA polymerase activity [evidence=IEA]<br>
-				<a>GO:0003887</a>: DNA-directed DNA polymerase activity [evidence=IEA]<br>
-				<a>GO:0016779</a>: nucleotidyltransferase activity [evidence=IEA]<br>
-				<a>GO:0016740</a>: transferase activity [evidence=IEA]<br>
-			</td>
-		</tr>
+		<td>
 
+[%
+	IF self.go_terms;
+		class_suffix = 'go_term';
+		WRAPPER list_container;
+			FOR fn IN self.go_terms;
+
+				WRAPPER list_item;
+				PROCESS 'inc/function/go_term.tt';
+				END; # end wrapper list_item
+
+			END;
+		END; # end wrapper list_container
+
+	END;
+
+
+# {	gene_xref_families:
+#   "GENE_OID" TEXT,
+#   "DB_NAME" TEXT,
+#   "ID" TEXT,
+#   "DESCRIPTION" TEXT,
+#   "XREF" TEXT,
+#   "TAXON" TEXT,
+#   "SCAFFOLD" TEXT
+
+%]
+		</td></tr>
 		<tr><td>PANTHER</td>
 			<td>
 				<a>PTHR30478</a> <br>
 			</td>
 		</tr>
+
+
 		<tr><td>Superfamily</td>
 			<td>
 				<a>SSF55979</a>:  DNA clamp<br>
 			</td>
 		</tr>
+[%
+# gene_seed_names
+# {	db => 'seed',
+# 	xref => product_name,??
+# 	link_text => gene_seed_names.product_name,
+# 	post_text => gene_seed_names.source _ ' ' _ gene_seed_names.subsystem
+# }
+
+%]
 		<tr><td>SEED</td> 	<td> [DNA polymerase III beta subunit (EC 2.7.7.7)]   fig|167555.5.peg.1   </td></tr>
+[%	# PROCESS 'inc/function/img_term.tt' %]
 		<tr><td>IMG Term</td> <td> DNA polymerase III, beta subunit (EC 2.7.7.7) (IMG_PIPELINE 2015-09-04)</td></tr>
 
+		</tbody>
 		</table>
 
 	</div> <!-- infoBox -->
@@ -159,9 +415,34 @@
 
 <div class="row">
 
+<h3>Pathway Annotations</h3>
+
+
+
+
+
 	<div class="infoBox">
 	<div class="infoBoxTitle"><h4>Pathway Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
 		<table class="lined">
+
+[%
+
+# ko_term
+# 	IF self.gene_ko_terms;
+#
+# 		class_suffix = 'ko_term'
+# 		WRAPPER list_container;
+# 			FOR fn IN self.gene_ko_terms;
+#
+# 				WRAPPER list_item;
+# 				PROCESS 'inc/function/ko_term.tt';
+# 				END; # end wrapper list__item
+#
+# 			END;
+# 		END; # end wrapper list__container
+#
+# 	END;
+%]
 		<tr><td class="col1">KEGG Orthology</td>
 			<td> <a>KO:K02338</a>: DPO3B, dnaN DNA polymerase III subunit beta [EC:2.7.7.7] </td></tr>
 		<tr><td>KEGG Pathways</td>

@@ -203,7 +203,8 @@ my $schema = {
 			isolate => 'Isolate',
 			metagenome => 'Metagenome',
 			transcriptome => 'Transcriptome',
-			metatranscriptome => 'Metatranscriptome'
+			metatranscriptome => 'Metatranscriptome',
+			genome_from_metagenome => 'Genome from metagenome'
 		},
 	},
 
@@ -240,28 +241,40 @@ my $schema = {
 		title => 'gene type',
 		type => 'enum',
 		enum => [ qw(
+			protein_coding
+			with_function
+			without_function
+			fused
+			signalp
+			transmembrane
 			rna
-			proteinCodingGenes
-			withFunc
-			withoutFunc
-			fusedGenes
-			signalpGeneList
-			transmembraneGeneList
-			geneCassette
-			biosynthetic_genes
+			rrna
+			5s_rrna
+			16s_rrna
+			23s_rrna
+			trna
+			xrna
 			pseudogene
+			cassette
+			biosynthetic_cluster
 		)],
 		enum_map => {
-			rna => 'RNA',
-			proteinCodingGenes => 'protein coding genes',
-			withFunc => 'genes with function assignment',
-			withoutFunc => 'genes without function assignment',
-			fusedGenes => 'fused genes',
-			signalpGeneList => 'signalP genes',
-			transmembraneGeneList => 'transmembrane proteins',
-			geneCassette => 'genes in cassette',
-			biosynthetic_genes => 'genes in biosynthetic clusters',
-			pseudogene => 'pseudogene'
+			protein_coding => 'Protein coding genes',
+			with_function => 'Genes with function assignment',
+			without_function => 'Genes without function assignment',
+			fused => 'Fused genes',
+			signalp => 'SignalP genes',
+			transmembrane => 'Transmembrane proteins',
+			rna  => 'RNA',
+			rrna => 'rRNA',
+			'5s_rrna'  => '5S rRNA',
+			'16s_rrna' => '16S rRNA',
+			'23s_rrna' => '23S rRNA',
+			trna => 'tRNA',
+			xrna => 'Other RNA',
+			pseudogene => 'Pseudogenes',
+			cassette => 'Genes in cassette',
+			biosynthetic_cluster => 'Genes in biosynthetic clusters',
 		}
 	},
 	db => {
@@ -476,7 +489,145 @@ sub locus_type_filter {
 	return { locus_type => [ map { $l_type_f->{ lc($_) } || $_ } @$f_name ] };
 }
 
+# 	proteinCodingGenes
+#	{ locus_type => 'CDS', obsolete_flag => 'No' }
 
+#	withFunc -- genes with function:
+
+# 	select distinct g.gene_oid
+# 	from gene g
+# 	where g.taxon = ?
+# 	and g.locus_type = 'CDS'
+# 	and g.obsolete_flag = 'No'
+# 	and not (
+# 		lower( g.gene_display_name ) like '%hypothetical%' or
+# 		lower( g.gene_display_name ) like '%unknown%' or
+# 		lower( g.gene_display_name ) like '%unnamed%' or
+# 		lower( g.gene_display_name ) like '%predicted protein%' or
+# 		g.gene_display_name is null
+# 	)
+
+#	withoutFunc -- genes without function
+# 	select distinct g.gene_oid
+# 	from gene g
+# 	where g.taxon = ?
+# 	{	locus_type => 'CDS',
+#		obsolete_flag => 'No',
+# 		-or => {
+# 			'lower( gene_display_name )' => { like => [
+# 			qw( %hypothetical% %unknown% %unnamed% ), '%predicted protein%' ]
+# 			},
+# 			gene_display_name => undef
+# 		}
+#	}
+
+# 	and g.obsolete_flag = 'No'
+# 	and (
+# 		lower( g.gene_display_name ) like '%hypothetical%' or
+# 		lower( g.gene_display_name ) like '%unknown%' or
+# 		lower( g.gene_display_name ) like '%unnamed%' or
+# 		lower( g.gene_display_name ) like '%predicted protein%' or
+# 		g.gene_display_name is null
+# 	)
+
+# 	rna
+#	{ locus_type => { 'like' => '%RNA' } }
+
+
+# 	fusedGenes
+
+# 	select g.gene_oid, g.gene_display_name, count( gfc.component )
+# 	from gene g, gene_fusion_components gfc
+# 	where g.gene_oid = gfc.gene_oid
+# 	and g.obsolete_flag = 'No'
+# 	and g.taxon = ?
+# 	$rclause
+# 	$imgClause
+# 	group by g.gene_oid, g.gene_display_name
+# 	order by g.gene_oid, g.gene_display_name
+
+#	{ gene_fusion_components.gene_oid => gene.gene_oid }
+sub fusion {
+	my $self = shift;
+	return 'exists (' . $self->schema('img_core')->table('GeneFusionComponents')
+	->select(
+		-columns => [ '1' ],
+		-where => {
+			'gene_fusion_components.gene_oid' => \ "= gene.gene_oid"
+		},
+		-result_as => 'sql' ) . ' )';
+}
+
+# 	signalpGeneList
+#
+# 	select distinct g.gene_oid
+# 	from gene g, gene_sig_peptides gsp
+# 	where g.gene_oid = gsp.gene_oid
+# 	and g.obsolete_flag = 'No'
+# 	and g.locus_type = 'CDS'
+# 	and g.taxon = ?
+#
+sub signalp_filter {
+#	{ locus_type => 'CDS', gene_sig_peptides.gene_oid => gene.gene_oid }
+	my $self = shift;
+	return 'exists (' .
+		$self->schema('img_core')->table('GeneSigPeptides')
+		->select(
+			-columns => [ 1 ],
+			-where => {
+				'gene.locus_type' => 'CDS',
+				'gene_sig_peptides.gene_oid' => \ "= gene.gene_oid"
+			},
+			-result_as => 'sql' ) . ')';
+}
+
+# 	transmembraneGeneList
+#
+# 		select distinct g.gene_oid
+# 		from gene g, gene_tmhmm_hits gth
+# 		where g.taxon = ?
+# 		and g.obsolete_flag = 'No'
+# 		and g.locus_type = 'CDS'
+# 		and g.gene_oid = gth.gene_oid
+# 		and gth.feature_type = 'TMhelix'
+#		{ locus_type => 'CDS',  }
+
+sub tmhelix_filter {
+	my $self = shift;
+	return 'exists (' .
+		$self->schema('img_core')->table('GeneTmhmmHits')
+		->select(
+			-columns => [ 1 ],
+			-where => {
+				'gene_tmhmm_hits.gene_oid' => \ '= gene.gene_oid',
+				'gene_tmhmm_hits.feature_type' => 'TMHelix'
+			},
+			-result_as => 'sql' ) . ')';
+}
+
+# 	geneCassette
+
+
+
+# 	biosynthetic_genes
+
+# 		select distinct bcf.feature_id
+# 		from bio_cluster_features_new bcf, bio_cluster_new g
+# 		where bcf.feature_type = 'gene'
+# 		and bcf.cluster_id = g.cluster_id
+# 		and g.taxon = $taxon_oid
+# 		$rclause
+# 		$imgClause
+
+
+# 	pseudogene
+# 	select distinct g0.gene_oid, g0.gene_display_name
+# 	from gene g0
+# 	where g0.taxon = ?
+# 	and( g0.is_pseudogene = 'Yes'
+# 		or g0.img_orf_type like '%pseudo%'
+# 		or g0.locus_type = 'pseudo' )
+# 	and g0.obsolete_flag = 'No'
 
 
 sub category_filter {
@@ -486,12 +637,76 @@ sub category_filter {
 		subject => 'filter'
 	});
 
-	my $filters = {
-		rna => { locus_type => { like => '%RNA' } },
-		pseudogene => { is_pseudogene => 'Yes' }
+	my $func_predicted_h = { -or =>
+	{
+		'lower( gene_display_name )' => { -like =>
+			[ '%hypothetical%', '%unknown%', '%unnamed%', '%predicted protein%' ]
+		}, # end -like
+		# gene display name is null
+		gene_display_name => { '=', undef }
+	}};
+
+	my $cat_filters = {
+		pseudogene => [
+			{ is_pseudogene => 'Yes' },
+			{ locus_type => 'pseudo' },
+			{ img_orf_type => { -like => '%pseudo%' } }
+		],
+
+		# protein coding
+		protein_coding => { locus_type => 'CDS' },
+
+		# with function
+		with_function => {
+			locus_type => 'CDS',
+			obsolete_flag => 'No',
+			-not => $func_predicted_h
+		},
+
+		# without function
+		without_function => {
+			locus_type => 'CDS',
+			obsolete_flag => 'No',
+			%$func_predicted_h
+		},
+
+		# RNA filters
+		rna => { locus_type => { -like => '%RNA' } },
+		# rRNA
+		rrna => { locus_type => 'rRNA' },
+		# tRNA
+		trna => { locus_type => 'tRNA' },
+		# other RNA
+		xrna => { locus_type => { -like => '%RNA', not_in => [ qw( rRNA tRNA ) ] } },
+
+# my $subquery = $source1->select(..., -result_as => 'subquery');
+# my $rows     = $source2->select(
+#     -columns => ...,
+#     -where   => {foo => 123, bar => {-not_in => $subquery}}
+# );
+
+		# transmembrane -- requires gene_tmhmm_hits
+#		{ locus_type => 'CDS', gene_tmhmm_hits.feature_type => 'TMHelix' },
+
+		# signalp -- requires gene_sig_peptides
+#		{ locus_type => 'CDS', gene_sig_peptides.gene_oid => gene.gene_oid },
+
+		# fused -- requires gene_fusion_components
+#		{ gene_fusion_components.gene_oid => gene.gene_oid },
+
+		# cassette
+
+		# biosynthetic_cluster
+
 	};
 
+	for my $n ( 5, 16, 23 ) {
+		$cat_filters->{ $n . 's_rrna' } = { %{$cat_filters->{rrna}}, gene_symbol => $n . 'S' };
+	}
+
 	my %h;
+
+	log_debug { 'filters: ' . Dumper $f_name };
 
 	for ( @$f_name ) {
 		$self->choke({
@@ -499,8 +714,9 @@ sub category_filter {
 #				type => 'category filter',
 #				subject => $_
 			err => 'not_implemented'
-		}) unless defined $filters->{$_};
-		%h = ( %h, %{$filters->{$_}} );
+		}) unless defined $cat_filters->{$_};
+
+		%h = ( %h, %{$cat_filters->{$_}} );
 	}
 
 	return \%h;
@@ -603,7 +819,7 @@ sub filter_sqlize {
 }
 
 sub dataset_type_valid {
-	return [ qw( isolate single_cell metagenome metatranscriptome transcriptome ) ];
+	return [ qw( isolate single_cell metagenome metatranscriptome transcriptome genome_from_metagenome ) ];
 }
 
 sub dataset_type_default {

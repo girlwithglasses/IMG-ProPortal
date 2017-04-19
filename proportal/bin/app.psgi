@@ -3,7 +3,7 @@ my @dir_arr;
 my $dir;
 
 BEGIN {
-	use File::Spec::Functions qw( rel2abs catdir );
+	use File::Spec::Functions qw( rel2abs catdir catfile );
 	use File::Basename qw( dirname basename );
 	$dir = dirname( rel2abs( $0 ) );
 	while ( 'webUI' ne basename( $dir ) ) {
@@ -19,11 +19,13 @@ BEGIN {
 
 	my $home = dirname( $dir );
 	unshift @dir_arr,  catdir( $home, 'ken-branch/webui.cgi' );
+
 }
 
 use lib @dir_arr;
+use IMG::Util::Logger;
 use IMG::Util::Import 'psgi';
-use IMG::App::Role::Logger;
+use File::Spec::Functions qw( catfile );
 
 #use Carp::Always;
 
@@ -42,7 +44,7 @@ use IMG::App::Role::Logger;
 #=cut
 
 {	package ProPortalApp;
-	use IMG::Util::Import 'LogErr';
+	use IMG::Util::Import;
 	use Dancer2 appname => 'ProPortal';
 	our $VERSION = '0.1.0';
 

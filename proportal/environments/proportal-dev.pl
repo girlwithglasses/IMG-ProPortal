@@ -21,18 +21,13 @@ use IMG::Util::ConfigValidator;
 
 my $cnf = IMG::Util::ConfigValidator::make_config({
 	dir => $dir,
-	schema => 'schema',
-	db => 'db',
+	schema => 'schema-server',
+	db => 'db-dev',
+	logger => 'logger-dev',
+	session => 'session-dev',
 #	debug => 'debug'
 });
 
-$cnf->{logger} = 'File';
-$cnf->{engines}{logger}{File} = {
-#	log_dir => catdir( $dir, '../logs/' ),
-	log_dir => '/global/homes/a/aireland/logs',
-	log_level => 'debug',
-	log_file  => 'proportal_dev.log'
-};
 $cnf->{sso_url_prefix} = 'https://signon.';
 $cnf->{sso_domain} = 'jgi.doe.gov';
 

@@ -1,5 +1,7 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'IMG ProPortal: Home';
+	PROCESS 'inc/generic/link.tt';
+
 %]
 
 <style>
@@ -49,27 +51,62 @@ div.site-message {
 
 </div> <!-- row -->
 
-<div class=" infoBox" id="home-stats">
+<div class="infoBox home-stats" id="home-stats">
 	<div class="infoBoxTitle"><h3>IMG/ProPortal Data Sets</h3></div>
 
-	<table>
-		<tr><td colspan="2"><h6> Isolate and Single Cell Genomes </h6></td></tr>
+	<table class="home-stats__table">
+		<thead>
+			<tr class="home-stats__head-row">
+				<th colspan="2" class="home-stats__caption">
+					Isolate and Single Cell Genomes
+				</th>
+			</tr>
+		</thead>
+		<tbody>
 	[%	FOR fd IN data_filters.valid.keys.sort;
 			FOR f IN data_filters.valid.$fd.enum;
 				IF results.stats.pp_subsets.$f;
 					s = results.stats.pp_subsets.$f; %]
-			<tr><td class="indent">[% data_filters.schema.$fd.enum_map.$f %]</td>
-				<td>
-					
-					<a href="[% link( 'list', { domain => 'taxon', pp_subset => f  } ) %]"> [% s.count %]</a>
+			<tr class="home-stats__body-row">
+				<td class="home-stats__cell--content">
+[%					x = {
+						type => 'list',
+						params => { domain => 'taxon', pp_subset => f  },
+						text => data_filters.schema.$fd.enum_map.$f
+					};
+					generic_link( x ); %]
+				</td>
+				<td class="home-stats__cell--count">
+[%					s.count %]
 				</td>
 			</tr>
-	[%			END;
+[%				END;
 			END;
-		END;%]
-
-		<tr><td><h6> Metagenomes </h6></td>
-		<td>[% results.stats.metagenomes_marine.0.count %]</td></tr>
+		END; %]
+		</tbody>
+		<thead>
+			<tr class="home-stats__head-row">
+				<!-- these were styled as h6 elements -->
+				<th colspan="2" class="home-stats__caption">
+					Metagenomes
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr class="home-stats__body-row">
+				<td class="home-stats__cell--content">
+[%					x = {
+						type => 'list',
+						params => { domain => 'taxon', pp_subset => 'metagenome'  },
+						text => 'Marine metagenomes'
+					};
+					generic_link( x ); %]
+				</td>
+				<td class="home-stats__cell--count">
+[%					results.stats.pp_subsets.metagenome.count %]
+				</td>
+			</tr>
+		</tbody>
 	</table>
 </div>
 

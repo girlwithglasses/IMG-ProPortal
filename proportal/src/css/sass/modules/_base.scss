@@ -202,7 +202,7 @@ blockquote, q, cite {
 }
 blockquote {
 	padding-left: $line-ht;
-	border-left: .25em solid $blockquote-left-bar;
+	border-left: .25rem solid $blockquote-left-bar;
 }
 blockquote > p {
 	padding: 0;

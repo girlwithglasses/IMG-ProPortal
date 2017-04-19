@@ -1,0 +1,61 @@
+[%
+	IF self.genome_type == 'isolate';
+		surtitle = 'Isolate genome';
+	ELSE;
+		surtitle = self.genome_type | ucfirst;
+	END;
+
+	title = self.taxon_display_name;
+
+	button = {
+		cart => {
+			form => {
+				type => 'inc/cart/button_add.tt',
+				params => { taxon_oid => self.taxon_oid },
+				domain => 'taxon'
+			},
+		},
+		jbrowse => { taxon_oid => self.taxon_oid },
+		export => [
+		{	type   => 'file',
+			params => { taxon_oid => self.taxon_oid, file_type => 'bundle' },
+			text   => 'File bundle'
+		},
+		{	type   => 'details',
+			params => {
+				domain => 'taxon', taxon_oid => self.taxon_oid, output => 'json'
+			},
+			text   => 'Metadata (JSON)'
+		}
+		]
+	# arguments (as a hash called 'x'):
+	# type, params -- to feed into the link as link( x.type, x.params )
+	# text -- link text
+	# optional: class, id, title -- link class, id, title
+
+	};
+
+	PROCESS 'inc/generic/title.tt';
+%]
+		<!-- div id="buttonBar">
+			<div id="buttonBar-container">
+				<ul class="buttonBar"  >
+
+					<li class="buttonBar">
+						<div class="pp-dropdown">
+							<input class=" pp-dropdown-button" id="export-button" type="checkbox" name="menu"/>
+							<label class="pp-dropdown-button" for="export-button"> Export </label>
+							<ul class="pp-dropdown-button">
+								<li><a href="[% link( 'file', { taxon_oid => self.taxon_oid, file_type => 'bundle' } ) %]">File Bundle</a></li>
+								<li><a href="[% link( 'details', { taxon_oid => self.taxon_oid } ) %]">Metadata</a></li>
+							</ul>
+						</div>
+					</li>
+
+					<li class="buttonBar">
+						<button class="pp-button">Add to Cart</button>
+					</li>
+
+				</ul>
+			</div>
+		</div -->

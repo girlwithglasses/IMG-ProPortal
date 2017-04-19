@@ -24,15 +24,26 @@ our %IMPORT_BUNDLES = (
 
 #	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )] ],
 
-	LogErr =>  [ 'IMG::App::Role::Logger', 'IMG::App::Role::ErrorMessages' => [ ':all' ] ],
-	ErrLog =>  [ 'IMG::App::Role::Logger', 'IMG::App::Role::ErrorMessages' => [ ':all' ] ],
+	LogErr =>  [ 'IMG::Util::Logger', 'IMG::App::Role::ErrorMessages' => [ ':all' ] ],
+	ErrLog =>  [ 'IMG::Util::Logger', 'IMG::App::Role::ErrorMessages' => [ ':all' ] ],
 
-	Class =>   [ 'Moo', 'Types::Standard' => [qw( :all )], 'IMG::App::Role::Logger' => [ ':all' ] ],
+	Class =>   [
+		'IMG::Util::Logger',
+		'Moo',
+		'Types::Standard' => [qw( :all )],
+		'IMG::App::Role::ErrorMessages' => [ ':all' ]
+	],
 
-	MooRole => [ 'Moo::Role', 'Types::Standard' => [qw( :all )], 'IMG::App::Role::Logger' => [ ':all' ] ],
+	MooRole => [
+		'IMG::Util::Logger',
+		'Moo::Role',
+		'Types::Standard' => [qw( :all )],
+		'IMG::App::Role::ErrorMessages' => [ ':all' ]
+	],
 
 	Test  =>   [
-		'File::Temp' => [ qw( tempfile tempdir )],
+		'IMG::Util::Logger',
+		'File::Temp' => [ qw( tempfile tempdir ) ],
 		'TestUtils' => [ qw( :all ) ],
 		'IMG::App::Role::ErrorMessages' => [ ':all' ],
 		qw( File::Spec::Functions Test::Most Test::Fatal Test::Script ),
@@ -43,7 +54,8 @@ our %IMPORT_BUNDLES = (
 	],
 
 	NetTest => [
-		'File::Temp' => [ qw( tempfile tempdir )],
+		'IMG::Util::Logger',
+		'File::Temp' => [ qw( tempfile tempdir ) ],
 		'TestUtils' => [ qw( :all ) ],
 		'IMG::App::Role::ErrorMessages' => [ ':all' ],
 		qw( File::Spec::Functions Test::Most Test::Fatal Test::Script Plack::Test Plack::Util HTTP::Request::Common HTTP::Cookies ),
@@ -55,6 +67,7 @@ our %IMPORT_BUNDLES = (
 	],
 
 	psgi => [
+		'IMG::Util::Logger',
 		'IMG::App::Role::ErrorMessages' => [ ':all' ],
 		'Dancer2',
 		'AppCorePlugin',

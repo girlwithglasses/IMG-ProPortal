@@ -23,7 +23,7 @@ has '+valid_filters' => (
 				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
 			},
 			dataset_type => {
-				enum => [ qw( isolate single_cell metagenome transcriptome metatranscriptome ) ]
+				enum => [ qw( isolate single_cell metagenome transcriptome metatranscriptome genome_from_metagenome ) ]
 			},
 		};
 	}
@@ -68,7 +68,7 @@ sub _render {
 		sort_by => [ 'pp_subset', 'dataset_type' ],
 		display_filters => {
 			pp_subset => [ qw( pro pro_phage syn syn_phage other other_phage metagenome ) ],
-			dataset_type => [qw( isolate single_cell metagenome transcriptome metatranscriptome ) ]
+			dataset_type => [qw( isolate single_cell genome_from_metagenome transcriptome metatranscriptome metagenome ) ]
 		}
 	} };
 }

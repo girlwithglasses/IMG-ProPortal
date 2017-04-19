@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 36826 2017-03-24 17:02:30Z klchu $
+# $Id: FindGenesBlast.pm 36898 2017-03-30 20:20:59Z klchu $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -2674,7 +2674,9 @@ sub processDnaSearchResult16s {
             my $tmp = $s;
             $tmp =~ s/>//;
             
-            if($use_db eq 'metaa16s.fna' || $use_db eq 'meta1.fna') {
+            # see Blast16s::printForm for dbn names - ken
+            #
+            if($use_db eq 'metaa16s.fna' || $use_db eq 'metau16s.fn') {
                 my ($taxon_oid, $gene_oid, $g_t_str, $data_type) = findIds16s($tmp, 1);
                 $data_type = "assembled" if($data_type eq 'a');
                 $data_type = "uassembled" if($data_type eq 'u');
@@ -2706,7 +2708,7 @@ sub processDnaSearchResult16s {
             $inScore = 0;
             
             # # lcl|640703712_637000059_1481_16S  pcr09 rRNA 16S 16S ribosomal RN...  2736    0.0 
-            if($use_db eq 'metaa16s.fna' || $use_db eq 'meta1.fna') {
+            if($use_db eq 'metaa16s.fna' || $use_db eq 'metau16s.fna') {
                 my ($taxon_oid, $gene_oid, $g_t_str, $data_type) = findIds16s($s, 1);
                 
                 $data_type = "assembled" if($data_type eq 'a');
@@ -2729,6 +2731,9 @@ sub processDnaSearchResult16s {
 # summary section
 # isolate
 # lcl|640703712_637000059_1481_16S  pcr09 rRNA 16S 16S ribosomal RN...  2736    0.0
+#
+# metagenome
+# lcl|3300000102.u.BSg3_333764081  Unknown
 #
 sub findIds16s  {
     my($line, $isMetagenome) = @_;

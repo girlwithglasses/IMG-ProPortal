@@ -1,0 +1,26 @@
+[%
+	title = self.scaffold_name;
+	subtitle = 'from ' _ taxon_name_link( x = {}, obj = self );
+
+	button = {
+		cart => {
+			form => {
+				type => 'inc/cart/button_add.tt',
+				params => { scaffold_oid => self.scaffold_oid },
+				domain => 'scaffold'
+			},
+		},
+		jbrowse => { taxon_oid => self.taxon_oid },
+		export => [
+		{	type   => 'details',
+			params => {
+				domain => 'scaffold', scaffold_oid => self.scaffold_oid, output_format => 'json'
+			},
+			text   => 'Metadata (JSON)'
+		}
+		]
+	};
+
+	PROCESS 'inc/generic/title.tt';
+
+%]

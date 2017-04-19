@@ -1,56 +1,10 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = 'IMG ProPortal: ' _ self.display_name;
+	title = self.display_name;
 	self = results.taxon;
+
+	PROCESS 'inc/title/taxon.tt';
+
 %]
-
-<style>
-	div.site-message {	display: none;	}
-	div.noteToSelf { display: none; }
-</style>
-
-
-<div class="thisWrapper">
-	<div id="pageHeader">
-		<div id="pageTitle" >
-			<!-- Write genome type -->
-			<h4 class="normal">
-			[% IF self.genome_type=="isolate"; %]
-				Isolate genome
-			[% ELSIF self.genome_type=="metagenome"; %]
-				Metagenome
-			[% END %]
-			</h4>
-
-			<!-- Write genome name -->
-			<h2>[% self.taxon_display_name %]</h2>
-		</div>
-		<div id="buttonBar">
-			<div id="buttonBar-container">
-				<ul class="buttonBar"  >
-
-					<li class="buttonBar">
-						<div class="pp-dropdown">
-							<input class=" pp-dropdown-button" id="export-button" type="checkbox" name="menu"/>
-							<label class="pp-dropdown-button" for="export-button"> Export </label>
-							<ul class="pp-dropdown-button">
-
-<!-- 								These links don't work locally! -->
-								<li><a href="[% link( 'file', { taxon_oid => self.taxon_oid, file_type => 'bundle' } ) %]">File Bundle</a></li>
-								<li><a href="[% link( 'details', { taxon_oid => self.taxon_oid } ) %]">Metadata</a></li>
-							</ul>
-						</div>
-					</li>
-
-					<li class="buttonBar">
-						<button class="pp-button">Add to Cart</button>
-					</li>
-
-				</ul>
-			</div>
-		</div>
-
-	</div>
-
 
 <div class="row">
 
@@ -100,34 +54,69 @@
 			<span class="h4"><b>Genes</b></span>
 			<div class="floatR h6 noteToSelf">Experimental Section</div>
 		</div>
+
+
+
+
 <table class="condensed">
 	<tr><td><h5>Total Genes</h5></td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid } ) %]"><b>[% self.taxon_stats.total_gene_count %]</a></b></td></tr>
-	<tr><td class="indent1"><h6>Protein Coding Genes</h6></td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'proteinCodingGenes' } ) %]"><b>[% self.taxon_stats.cds_genes %]</a></b></td></tr>
-	<tr><td class="indent2">Genes with functional prediction</td> <td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'withFunc' } ) %]">[% self.taxon_stats.genes_w_func_pred %]</a></td></tr>
-	<tr><td class="indent2">Genes without functional prediction</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'withoutFunc' } ) %]">[% self.taxon_stats.cds_genes - self.taxon_stats.genes_w_func_pred %]</a></td></tr>
-	<tr><td class="indent2">Fused protein coding genes</td>  <td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'fusedGenes' } ) %]">[% self.taxon_stats.fused_genes %]</a></td></tr>
-	<tr><td class="indent2">Coding signal proteins</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'signalpGeneList' } ) %]">[% self.taxon_stats.genes_signalp %]</a></td></tr>
-	<tr><td class="indent2">Coding transmembrane proteins</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'transmembraneGeneList' } ) %]">[% self.taxon_stats.genes_transmembrane %]</a></td></tr>
+[%	cats = [ 'protein_coding', 'with_function', 'without_function', 'fused', 'signalp', 'transmembrane', 'rna', 'rrna', '5s_rrna', '16s_rrna', '23s_rrna', 'trna', 'xrna', 'pseudogene' ];
+
+	self.taxon_stats.without_function = self.taxon_stats.cds_genes - self.taxon_stats.genes_w_func_pred;
+
+	cat_count = {
+		protein_coding => 'cds_genes'
+		with_function => 'genes_w_func_pred',
+		without_function => 'without_function',
+		fused => 'fused_genes',
+		signalp => 'genes_signalp',
+		transmembrane => 'genes_transmembrane',
+		rna => 'rna_genes',
+		rrna => 'rrna_genes',
+		'5s_rrna'  => 'rrna5s_genes',
+		'16s_rrna' => 'rrna16s_genes',
+		'23s_rrna' => 'rrna23s_genes',
+		trna => 'trna_genes',
+		xrna => 'other_rna_genes',
+		pseudogene => 'pseudo_genes'
+	};
+
+	FOR c IN cats; %]
+<tr class="taxon-gene-list__row--[% c %]">
+	<td class="taxon-gene-list__description--[% c %]">[% data_filters.full_schema.category.enum_map.$c %]</td>
+	<td class="taxon-gene-list__count--[% c %]">
+		<a href="[% link( 'list', { domain = 'gene', taxon_oid => self.taxon_oid, category => c } ) %]">[% self.taxon_stats.${cat_count.$c} %]</a>
+	</td>
+</tr>
+[%	END %]
+<!--
+	<tr><td class="indent1"><h6>Protein Coding Genes</h6></td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'protein_coding' } ) %]"><b>[% self.taxon_stats.cds_genes %]</a></b></td></tr>
+	<tr><td class="indent2">Genes with function predictions</td> <td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'with_function' } ) %]">[% self.taxon_stats.genes_w_func_pred %]</a></td></tr>
+	<tr><td class="indent2">Genes without function predictions</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'without_function' } ) %]">[% self.taxon_stats.cds_genes - self.taxon_stats.genes_w_func_pred %]</a></td></tr>
+	<tr><td class="indent2">Fused protein coding genes</td>  <td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'fused' } ) %]">[% self.taxon_stats.fused_genes %]</a></td></tr>
+	<tr><td class="indent2">Coding signal proteins</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'signalp' } ) %]">[% self.taxon_stats.genes_signalp %]</a></td></tr>
+	<tr><td class="indent2">Coding transmembrane proteins</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'transmembrane' } ) %]">[% self.taxon_stats.genes_transmembrane %]</a></td></tr>
+
 
 	<tr><td class="indent1"><h6>RNA Genes</h6></td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'rna' } ) %]"><b>[% self.taxon_stats.rna_genes %]</b></a></td></tr>
 	<tr><td class="indent2">rRNA Genes</td>
-		<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, locus_type => 'rRNA' } ) %]">[% self.taxon_stats.rrna_genes
+		<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'rrna' } ) %]">[% self.taxon_stats.rrna_genes
 			# + self.taxon_stats.its_annotation_or_whatever %]</a></td>
 	</tr>
 	<tr><td class="indent3">Internal transcribed spacer (ITS)</td>	<td><div class="noteToSelf h6">Coming Soon!</div></td></tr>
-	<tr><td class="indent3">5S rRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, locus_type => 'rRNA', gene_symbol => '5S' } ) %]">[% self.taxon_stats.rrna5s_genes %]</a></td></tr>
-	<tr><td class="indent3">16S rRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, locus_type => 'rRNA', gene_symbol => '16S' } ) %]">[% self.taxon_stats.rrna16s_genes %]</a></td></tr>
-	<tr><td class="indent3">23S rRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, locus_type => 'rRNA', gene_symbol => '23S' } ) %]">[% self.taxon_stats.rrna23s_genes %]</a></td></tr>
-	<tr><td class="indent2">tRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, locus_type => 'tRNA' } ) %]">[% self.taxon_stats.trna_genes %]</a></td></tr>
-	<tr><td class="indent2">Other RNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, locus_type => 'xRNA' } ) %]">[% self.taxon_stats.other_rna_genes %]</a></td></tr>
+	<tr><td class="indent3">5S rRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => '5s_rrna' } ) %]">[% self.taxon_stats.rrna5s_genes %]</a></td></tr>
+	<tr><td class="indent3">16S rRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => '16s_rrna' } ) %]">[% self.taxon_stats.rrna16s_genes %]</a></td></tr>
+	<tr><td class="indent3">23S rRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => '23s_rrna' } ) %]">[% self.taxon_stats.rrna23s_genes %]</a></td></tr>
+	<tr><td class="indent2">tRNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'trna' } ) %]">[% self.taxon_stats.trna_genes %]</a></td></tr>
+	<tr><td class="indent2">Other RNA genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'xrna' } ) %]">[% self.taxon_stats.other_rna_genes %]</a></td></tr>
 
 	<tr><td class="indent1"><h6>Pseudo Genes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'pseudogene' } ) %]"><b>[% self.taxon_stats.pseudo_genes %]</b></a></td></tr>
-
+-->
 	<tr><td class="indent1"><h6>Chromosomal Cassettes</h6></td>	<td><a href="[% link( 'chr_cassette_genes', { taxon_oid => self.taxon_oid } ) %]"><b>[% self.taxon_stats.total_cassettes %]</b></a></td></tr>
-	<tr><td class="indent2">Genes in Chromosomal Cassettes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'geneCassette' } ) %]">[% self.taxon_stats.genes_in_cassettes %]</a></td></tr>
+	<tr><td class="indent2">Genes in Chromosomal Cassettes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'cassette' } ) %]">[% self.taxon_stats.genes_in_cassettes %]</a></td></tr>
 
 	<tr><td class="indent1"><h6>Number of Biosynthetic Clusters</h6></td>	<td><a href="[% link( 'biosyn_cluster_genes', { taxon => self.taxon_oid } ) %]"><b>[% self.taxon_stats.total_biosynthetic %]</b></a></td></tr>
-	<tr><td class="indent2">Genes in Biosynthetic Clusters</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'biosynthetic_genes' } ) %]">[% self.taxon_stats.genes_in_biosynthetic %]</a></td></tr>
+	<tr><td class="indent2">Genes in Biosynthetic Clusters</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'biosynthetic_cluster' } ) %]">[% self.taxon_stats.genes_in_biosynthetic %]</a></td></tr>
 
 </table>
 
@@ -341,7 +330,10 @@
 		<div class="tableTitle"><h6>Curation Details</h6></div>
 		<table class="condensed">
 			<tr><td class="col1">Submission Type</td>	<td></td></tr>
-			<tr><td>IMG Release</td>	<td></td></tr>
+			<tr>
+				<td>IMG Release</td>
+				<td></td>
+			</tr>
 			<tr><td>Release Date</td>	<td>[%	self.release_date %]</td></tr>
 			<tr><td>Add Date</td>	<td>[% self.add_date %]</td></tr>
 			<tr><td>Modified Date</td>	<td>[% self.mod_date %]</td></tr>
@@ -350,10 +342,7 @@
 	</div>
 
 </div> <!-- row -->
-</div> <!-- thisWrapper -->
+<!-- /div> <!-- thisWrapper -->
 
-<div class="row">
-
-</div>
 
 [%	END %]

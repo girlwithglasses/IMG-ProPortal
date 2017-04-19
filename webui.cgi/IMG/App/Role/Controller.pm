@@ -4,8 +4,6 @@ use IMG::Util::Import 'MooRole';
 use ProPortal::Util::Factory;
 use ProPortal::Controller::Base;
 use Scalar::Util qw( blessed );
-#use IMG::App::Role::Logger;
-#use Dancer2;
 
 has 'controller' => (
 	is => 'rwp',

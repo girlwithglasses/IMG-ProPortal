@@ -19,6 +19,7 @@ BEGIN {
 	unshift @dir_arr,  catdir( $home, 'ken-branch/webui.cgi' );
 }
 use lib @dir_arr;
+use IMG::Util::Logger;
 use IMG::Util::Import 'psgi';
 use IMG::Util::File qw( :all );
 
@@ -37,11 +38,10 @@ use Dancer2;
 	use AppCore;
 	use AppCorePlugin;
 
-	use Routes::Ajax;
+#	use Routes::Ajax;
 	use Routes::MenuPages;
 #	use Routes::JBrowse;
 	use Routes::IMG;
-#	use Routes::API;
 	use Routes::ProPortal;
 	use Routes::TestStuff;
 

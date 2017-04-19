@@ -3,54 +3,58 @@
 
 table {
 // 	table-layout: fixed;
-	border-collapse: collapse; 
+	border-collapse: collapse;
 	width: 100%;
 	margin-bottom: 0;
 
 	// make our tables nice and spacious!
 	th, td {
 		padding: $gutter;
-		padding-left: 0;
-		text-align: left;	
+		text-align: left;
 	}
 
-	.clearStyle {	
+	.clearStyle {
 		border: 0;
 	}
 
 }
 
 table.condensed {
-	td {	padding: 6px 0px 6px 0px; 		}	
+	td {
+		padding: .25rem 0 .25rem 0;
+	}
 }
 
 table.lined {
-	td {	@include b_border(1px, $border-lighter);	}
+	td {
+		@include b_border(1px, $border-lighter);
+	}
 }
 
 .col1 {
 	width: 200px; }
 
 .subheader {
-	margin-top: 10px; }
+	margin-top: .5rem;
+}
 
 .indent1 {
-	text-indent: 30px;
+	text-indent: 2rem;
 }
 
 .indent2 {
-	text-indent: 60px;
+	text-indent: 4rem;
 }
 
 .indent3 {
-	text-indent: 90px;
+	text-indent: 6rem;
 }
 
 // This doesn't go in the table, but sits above it.  Styles a div.
 div.tableTitle {
-	width: 100%;
-	padding: 30px 0 10px 0;
-	margin-bottom: 6px;
+//	width: 100%;
+	padding: 2rem 0 .5rem 0;
+	margin-bottom: .25rem;
 	@include b_border(1px, $border-lighter);
 }
 
@@ -89,5 +93,25 @@ tbody tr:nth-child(odd) {
 	}
 	@if variable-exists(tr-odd-bg) {
 		background-color: $tr-odd-bg;
+	}
+}
+
+
+.home-stats {
+
+	&__table {}
+
+	&__head-row {}
+
+	&__body-row {}
+
+	&__cell {
+		&--content {
+
+		}
+
+		&--count {
+			text-align: right;
+		}
 	}
 }

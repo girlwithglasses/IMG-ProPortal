@@ -24,19 +24,27 @@
 	alt_sorted_data = results.data.dataset_type_subset;
 
 	# indexed by data type then pp_subset
+	# active filters are in data_filters.active.TYPE.NAME => 1
 
-	FOR dt IN results.display_filters.${sort_by.0}; %]
+	FOR dt IN results.display_filters.${sort_by.0};
+#		IF sort_by.0 == 'pp_subset' && data_filters.active.${sort_by.0}.defined('all_proportal');
+			## IGNORE THIS!
+#		ELSE;
+
+#		IF data_filters.active.${sort_by.0} && ! data_filters.active.${sort_by.0}.defined( 'all_proportal' );
+
+	%]
 	<h4>[% data_filters.schema.${sort_by.0}.enum_map.$dt | ucfirst %]</h4>
 [%		IF sorted_data.$dt && sorted_data.$dt.keys.size > 0; %]
 	<ul role="tree">
 [%			FOR pps IN results.display_filters.${sort_by.1};
 				IF sorted_data.$dt.$pps; %]
 		<li>[% data_filters.schema.${sort_by.1}.enum_map.$pps %] ([% sorted_data.$dt.$pps.size %])
-			<ul style="padding-bottom: 20px;">
+			<ul>
 [%					FOR t IN sorted_data.$dt.$pps;
 						taxon = results.data.ix.$t; %]
-				<li style="height: 2rem;">
-				<input type="checkbox" style="padding: 0;"class="sample-data__cbox" name="taxon_oid[]" value="[% taxon.taxon_oid %]" id="cbox_[% taxon.taxon_oid %]" />
+				<li>
+				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% taxon.taxon_oid %]" id="cbox_[% taxon.taxon_oid %]" />
 				<a href="[% link( 'details', { domain => 'taxon', taxon_oid => taxon.taxon_oid } ) %]">[% taxon.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => taxon.taxon_oid } ) %]">JBrowse</a -->
 				</li>
 [%					END %]

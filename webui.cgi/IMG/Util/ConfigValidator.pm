@@ -1,16 +1,20 @@
 package IMG::Util::ConfigValidator;
 
-use IMG::Util::Import 'LogErr';
+use IMG::Util::Import;
+use IMG::Util::Logger;
 use File::Spec::Functions qw( catdir catfile );
 use Config::Any;
 use WebConfig ();
-use IMG::Util::DB;
+# use IMG::App::Role::ErrorMessages;
+# use IMG::Util::DB;
+
+#	Creates the appropriate configuration for an IMG::App/Dancer instance
 
 #	schema  => # schema data -- which db connection to use for which schema
 #	db      => # database connection details
-#	img_cfg => # IMG config stuff, probably from WebConfig::getEnv()
 #	debug   => # debugging stuff
 #	logger  => # logger config
+#	session => # session engine config
 
 sub make_config {
 
@@ -18,10 +22,12 @@ sub make_config {
 
 	my $img_conf = WebConfig::getEnv();
 
-	my @pieces = qw( schema db debug logger );
+	my @pieces = qw( schema db debug logger session );
 
 	my @files = map { catfile( $args->{dir}, 'proportal/environments', $args->{$_} ) }
 				grep { exists $args->{$_} } @pieces;
+
+#	warn 'files: ' . join ", ", @files;
 
 	my $cfg = Config::Any->load_stems({
 		stems => [ @files ],
@@ -29,19 +35,46 @@ sub make_config {
 	#	flatten_to_hash => 1,
 	});
 
+	## TO INTEGRATE:
+	#	logger.conf vs web_log_file / err_log_file
+	#	session directory vs cgi_tmp_dir
+
+
 	my $hash = {};
 	for ( @$cfg ) {
 		my $vals = ( values %$_ )[0];
-		if ( $vals->{ schema } ) {
-			$img_conf->{schema} = $vals->{schema};
+		for my $k ( qw( schema db ) ) {
+			if ( $vals->{$k} ) {
+				$img_conf->{$k} = delete $vals->{$k};
+			}
 		}
-		elsif ( $vals->{db} ) {
-			$img_conf->{db} = $vals->{db};
+		for my $k ( qw( session logger ) ) {
+			if ( $vals->{$k} ) {
+				$hash->{$k} = delete $vals->{$k};
+			}
 		}
-		else {
+		# integrate engines
+		if ( $vals->{engines} ) {
+			if ( $hash->{engines} ) {
+				$hash->{engines} = { %{$hash->{engines}}, %{$vals->{engines}} };
+			}
+			else {
+				$hash->{engines} = $vals->{engines};
+			}
+			delete $vals->{engines};
+		}
+		if ( keys %$vals ) {
+#			say 'got this stuff left: ' . Dumper $vals;
 			$hash = { %$hash, %$vals };
 		}
 	}
+
+	# init the IMG::App logger
+	if ( $hash->{engines}{logger}{log4perl} ) {
+		IMG::Util::Logger::set_logger_conf( $hash->{engines}{logger}{log4perl} );
+	}
+
+	log_debug { 'hash: ' . Dumper $hash };
 
 #	log_debug { 'img_conf schema: ' . Dumper $img_conf->{schema} };
 #	log_debug { 'img_conf db: ' . Dumper $img_conf->{db} };
@@ -50,6 +83,9 @@ sub make_config {
 	for my $db ( keys %{$img_conf->{schema}} ) {
 		if ( ! $img_conf->{db}{ $img_conf->{schema}{$db}{db} } ) {
 			if ( 'img_core' eq $img_conf->{schema}{$db}{db} || 'img_gold' eq $img_conf->{schema}{$db}{db} ) {
+
+				require IMG::Util::DB;
+
 				my $dbh = IMG::Util::DB::get_oracle_connection_params({ database => $img_conf->{schema}{$db}{db} });
 				$dbh->{dbi_params} = {
 					RaiseError => 1,
@@ -65,9 +101,17 @@ sub make_config {
 		}
 	}
 
+#	say 'hash: ' . Dumper $hash;
+#	say 'img conf: ' . Dumper $img_conf;
+
 	# log files??
 	# currently have web_err_log, web_log, login_log, etc.
+	if ( $img_conf->{cgi_tmp_dir} && $hash->{engines}{session}{CGISession} ) {
+		# change the session settings to take account of this
+		$hash->{engines}{session}{CGISession}{driver_params}{Directory} = $img_conf->{cgi_tmp_dir};
+	}
 
+#	log_debug { 'other stuff: ' . Dumper $hash };
 
 #	log_debug { 'Made a hash of things!' };
 	$hash->{plugins}{Adapter}{img_app} = {
@@ -77,7 +121,6 @@ sub make_config {
 	};
 
 #	log_debug { 'config: ' . Dumper $img_conf };
-#	log_debug { 'other stuff: ' . Dumper $hash };
 	return $hash;
 }
 #

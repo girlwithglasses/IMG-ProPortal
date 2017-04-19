@@ -216,8 +216,8 @@ around 'render' => sub {
 		$rtn->{data_filters} = {
 			active => $active_h,
 			valid  => $self->valid_filters,
-			all    => $self->query_filter_schema,
-			schema => $self->query_filter_schema
+			schema => $self->query_filter_schema,
+			full_schema => $self->_core->filter_schema(':all')
 		};
 	}
 	return $rtn;

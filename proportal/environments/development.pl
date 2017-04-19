@@ -21,10 +21,10 @@ use IMG::Util::ConfigValidator;
 
 my $cnf = IMG::Util::ConfigValidator::make_config({
 	dir => $dir,
-	schema => 'schema_local',
-	db => 'db',
-	debug => 'debug'
+	schema => 'schema-local',
+	db => 'db-local',
+	debug => 'debug',
+	logger => 'logger-local'
 });
 
-$cnf->{logger} = 'Console';
 return $cnf;

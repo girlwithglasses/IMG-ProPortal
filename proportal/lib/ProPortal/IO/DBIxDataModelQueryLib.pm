@@ -269,7 +269,7 @@ sub taxon_oid_display_name {
 sub taxon_dataset_type {
 	my $self = shift;
 
-	return $self->schema('img_core')->table('GoldDataTypeVw')
+	return $self->schema('img_core')->table('PpDataTypeView')
 		->select(
 			-columns  => [ '*' ],
 			-order_by => [ qw( dataset_type genome_type pp_subset taxon_display_name ) ],
@@ -465,7 +465,7 @@ sub cycog_list {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->schema('img_cycog')->table('DtCyCog')
+	return $self->schema('img_cycog')->table('Cycog')
 		->select(
 			-columns => [ '*' ],
 			-result_as => 'statement'
@@ -477,9 +477,20 @@ sub cycog_details {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->schema('img_cycog')->table('DtCyCog')
+	return $self->schema('img_cycog')->table('Cycog')
 		->select(
 			-columns => [ '*' ],
+			-where => $args->{where},
+			-result_as => 'statement'
+		);
+}
+
+sub cycogs_by_gene_oid {
+	my $self = shift;
+	my $args = shift;
+	return $self->schema('img_cycog')->join( qw[ GeneCycogGroups <=> cycog ] )
+		->select(
+			-columns => [ 'cycog.*' ],
 			-where => $args->{where},
 			-result_as => 'statement'
 		);
@@ -617,6 +628,32 @@ sub scaffold_list {
 			-result_as => 'statement'
 		);
 }
+
+=head3
+
+Gene COGs or KOGs by taxon
+
+        select distinct g.gene_oid, g.locus_tag, g.gene_display_name, c.${og}_id, c.${og}_name
+        from gene g, gene_${og}_groups gcg, $og c,
+           ${og}_functions cfs, ${og}_function cf
+        where g.taxon = ?
+        and g.locus_type = 'CDS'
+        and g.obsolete_flag = 'No'
+        and g.gene_oid = gcg.gene_oid
+        and g.taxon = gcg.taxon
+        and gcg.$og = c.${og}_id
+        and c.${og}_name is not null
+        and c.${og}_id = cfs.${og}_id
+        and cfs.functions = cf.function_code
+        and cf.function_code = ?
+
+        $rclause = WebUtil::urClause('g.taxon');  # public/private
+        $imgClause = WebUtil::imgClauseNoTaxon('g.taxon'); # taxon table join
+
+=cut
+
+
+
 
 
 =head3 taxon_name_public
