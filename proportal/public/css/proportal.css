@@ -2902,84 +2902,6 @@ button:disabled,
 .pp-button.disabled:active {
   background: #ddd; }
 
-.pp-dropdown {
-  padding: 0;
-  margin: 0;
-  height: 48px;
-  height: 3rem;
-  border: 1px solid #5a5a5a;
-  vertical-align: middle; }
-  .pp-dropdown:hover {
-    border: 1px solid black;
-    color: black; }
-    .pp-dropdown:hover > label {
-      color: black; }
-
-label.pp-dropdown-button {
-  font-size: 14px;
-  font-size: 0.9rem;
-  color: #5a5a5a;
-  text-transform: uppercase;
-  line-height: 48px;
-  line-height: 3rem;
-  margin-bottom: -2px;
-  display: block;
-  height: 48px;
-  height: 3rem;
-  width: 100%;
-  padding: 0 40px 0 24px;
-  padding: 0 40px 0 1.5rem;
-  vertical-align: middle;
-  text-align: center;
-  background-image: url("/images/icomoon/SVG/down-arr.svg");
-  background-position: right;
-  background-repeat: no-repeat; }
-
-ul.pp-dropdown-button {
-  max-height: 0;
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
-  list-style-type: none;
-  position: absolute;
-  border: 1px solid #5a5a5a;
-  display: none;
-  background: white; }
-  ul.pp-dropdown-button > li {
-    background: white; }
-  ul.pp-dropdown-button > li a {
-    display: table-cell;
-    vertical-align: middle;
-    text-decoration: none;
-    height: 48px;
-    height: 3rem;
-    font-size: 14px;
-    font-size: 0.9rem;
-    color: #5a5a5a;
-    text-transform: uppercase;
-    line-height: 24px;
-    line-height: 1.5rem;
-    padding: 0 40px 0 24px;
-    padding: 0 40px 0 1.5rem;
-    border: 0; }
-  ul.pp-dropdown-button > li a:hover {
-    color: black; }
-
-/*hide the inputs*/
-input.pp-dropdown-button {
-  display: none;
-  padding: 30px; }
-
-/*show the second levele menu of the selected voice*/
-input.pp-dropdown-button:checked ~ ul {
-  max-height: 200px;
-  display: block; }
-
-input.pp-dropdown-button:checked + label {
-  background-image: url("/images/icomoon/SVG/up-arr.svg");
-  background-position: right;
-  background-repeat: no-repeat; }
-
 input {
   border: 1px solid #5a5a5a;
   padding: 0 24px;
@@ -4203,40 +4125,108 @@ page title for a details page
     font-weight: normal; }
 
 /* partials/buttonBar
-button bar usually found under pageTitle	
+button bar usually found under pageTitle
 */
-#buttonBar-container {
+.button-bar__container {
   float: right;
-  clear: both; }
+  clear: both;
+  list-style-type: none; }
 
-ul.buttonBar {
-  list-style-type: none;
-  margin: 0;
-  padding: 0; }
-  ul.buttonBar > li {
-    float: left;
-    margin-left: 10px; }
+.button-bar__item {
+  float: left;
+  margin-left: 10px;
+  /* cart dropdown */ }
+
+.button-bar__link {
+  display: block; }
 
 @media only screen and (max-width: 767px) {
-  #buttonBar-container {
+  .button-bar__container {
     float: left;
-    width: 100%; }
-  ul.buttonBar {
+    width: 100%;
     list-style-type: none;
     margin: 0;
     padding: 0; }
-    ul.buttonBar > li {
-      float: none;
-      clear: both;
-      margin-bottom: 10px;
-      margin-left: 0;
-      width: 100%; }
-    ul.buttonBar > li button, ul.buttonBar > li .pp-button {
-      width: 100%; }
-    ul.buttonBar > li ul li {
-      float: left;
-      clear: both;
-      display: block; } }
+  .button-bar__item {
+    float: none;
+    clear: both;
+    margin-bottom: 10px;
+    margin-left: 0;
+    width: 100%; } }
+
+.bb-dropdown {
+  /*hide the inputs*/ }
+  .bb-dropdown__container {
+    padding: 0;
+    margin: 0;
+    height: 48px;
+    height: 3rem;
+    border: 1px solid #5a5a5a;
+    vertical-align: middle; }
+    .bb-dropdown__container:hover {
+      border: 1px solid black;
+      color: black; }
+      .bb-dropdown__container:hover > .bb-dropdown__label {
+        color: black; }
+  .bb-dropdown__label {
+    font-size: 14px;
+    font-size: 0.9rem;
+    color: #5a5a5a;
+    text-transform: uppercase;
+    line-height: 48px;
+    line-height: 3rem;
+    margin-bottom: -2px;
+    display: block;
+    height: 48px;
+    height: 3rem;
+    width: 100%;
+    padding: 0 40px 0 24px;
+    padding: 0 40px 0 1.5rem;
+    vertical-align: middle;
+    text-align: center;
+    background-image: url("/images/icomoon/SVG/down-arr.svg");
+    background-position: right;
+    background-repeat: no-repeat; }
+  .bb-dropdown__ul {
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    list-style-type: none;
+    position: absolute;
+    border: 1px solid #5a5a5a;
+    display: none;
+    background: white; }
+  .bb-dropdown__cbox {
+    display: none;
+    padding: 30px;
+    /*show the second level menu of the selected voice*/ }
+    .bb-dropdown__cbox:checked ~ .bb-dropdown__ul {
+      max-height: 200px;
+      display: block; }
+    .bb-dropdown__cbox:checked + .bb-dropdown__label {
+      background-image: url("/images/icomoon/SVG/up-arr.svg");
+      background-position: right;
+      background-repeat: no-repeat; }
+  .bb-dropdown__li {
+    background: white; }
+  .bb-dropdown__link {
+    display: table-cell;
+    vertical-align: middle;
+    text-decoration: none;
+    height: 48px;
+    height: 3rem;
+    font-size: 14px;
+    font-size: 0.9rem;
+    color: #5a5a5a;
+    text-transform: uppercase;
+    line-height: 24px;
+    line-height: 1.5rem;
+    padding: 0 40px 0 24px;
+    padding: 0 40px 0 1.5rem;
+    border: 0; }
+    .bb-dropdown__link:hover {
+      color: black; }
 
 /* partials/grid
 grid of cards found on auto-generated pages 

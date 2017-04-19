@@ -20,6 +20,6 @@
 [%	FOR h IN form.params.keys %]
 <input type="hidden" name="[% h %]" value="[% form.params.$h %]" />
 [%	END; %]
-<input type="submit" value="Add to cart" />
+<input type="submit" class="[% form.class %]__submit" value="Add to cart" />
 </fieldset>
 </form>
