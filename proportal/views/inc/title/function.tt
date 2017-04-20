@@ -1,6 +1,6 @@
 [%
 	surtitle = self.db;
-	title = self.name;
+	article_title = self.name;
 
 	button = {
 		cart => {

@@ -3,7 +3,7 @@
 [%	IF surtitle %]
 		<h3 class="[% class %]__surtitle">[% surtitle %]</h3>
 [%	END; %]
-		<h2 class="[% class %]__title">[% title %]</h2>
+		<h2 class="[% class %]__title">[% article_title %]</h2>
 [%	IF subtitle %]
 		<h3 class="[% class %]__subtitle">[% subtitle %]</h3>
 [%	END; %]

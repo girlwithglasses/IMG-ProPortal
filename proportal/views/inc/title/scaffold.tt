@@ -1,5 +1,5 @@
 [%
-	title = self.scaffold_name;
+	article_title = self.scaffold_name;
 	subtitle = 'from ' _ taxon_name_link( x = {}, obj = self );
 
 	button = {
