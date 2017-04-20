@@ -1,14 +1,15 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	self = results.gene;
-
-	#title = self.display_name;
-	title = 'Gene Details';
+	type = 'Gene';
+	IF self.locus_type.match('(?i)rna');
+		type = 'RNA';
+	END;
+	title = type _ ' Details';
 	class = 'gene-details';
 
-
 	PROCESS 'inc/title/gene.tt';
-
 	PROCESS 'inc/generic/link.tt';
+	PROCESS 'inc/generic/attr_value_table.tt';
 
 	BLOCK list_container %]
 	<ul class="[% class_name %]__container[%
@@ -23,218 +24,84 @@
 			IF class_suffix; '--' _ class_suffix; END; %]">
 [%	content %]
 		</li>
-[%	END;
-
-%]
-
-<!--
-<style>
-
-	/* Hookups for seqData tab group and content box */
- 	#tab1_seqData:checked ~ #tabContent1_seqData,
- 	#tab2_seqData:checked ~ #tabContent2_seqData {
- 		display: block;
-  	}
-
-	/* comment this out while working on this to see my dev notes... */
-	.noteToSelf {
-		display: none;
-	}
-
-</style>
- -->
+[%	END; %]
 
 <div class="row">
 	<div class="infoBox">
 
-[%		IF self.locus_type == 'CDS' %]
-		<div class="infoBoxTitle"><h4>Gene Information</h4></div>
+[%		data_table = {
+			class => 'gene-details',
+			caption => title,
+			tbody => [
+				[ 'Gene ID', self.gene_oid ],
+				[ 'Gene Symbol', self.gene_symbol ],
+				[ 'Locus Type', self.locus_type ],
+				[ 'Locus Tag', self.locus_tag ],
+				[ 'Gene Product Name', self.gene_display_name ],
+				[ 'Original gene product name', self.product_name ],
+				[ 'IMG product source', self.img_product_source ],
+				[ 'DNA Coordinates', self.coordinates ],
+				[ 'Gene Length', self.gene_length ],
+				[ 'Protein Length ', self.protein_length ],
+				[ 'GC Content', self.gc_percent ],
+				[ 'Date Modified', self.mod_date ],
+				[ 'Description', self.description ]
+				[ 'Pseudogene', self.pseudogene ],
+				[ 'Estimated Copy', self.est_copy ],
+				[ 'Obsolete', self.obsolete_flag ],
+			]
+		};
+		attr_value_table( data_table );
 
-		<div class="tableTitle"><h6>Gene Details</h6></div>
-		<table class="condensed">
-			<tr><td class="col1">Gene ID</td> 	<td>[% self.gene_oid %]</td></tr>
-			<tr><td>Gene Symbol</td><td>[% self.gene_symbol %]</td></tr>
-			<tr><td>Locus Type</td>	<td>[% self.locus_type %]</td></tr>
-			<tr><td>Locus Tag</td>	<td>[% self.locus_tag %]</td></tr>
-			<tr><td>Gene Product Name</td>	<td> [% self.gene_display_name %]</td></tr>
-			<tr><td>Pseudogene</td> <td> [% self.is_pseudogene %] </td></tr>
-			<tr><td>Estimated Copy</td> <td> [% self.est_copy %] </td></tr>
-			<tr><td>DNA Coordinates</td>	<td>[% self.start_coord %] .. [%self.end_coord %] ([% self.strand %]) <div class="noteToSelf"> * </div></td></tr>
-			<tr><td>Gene Length</td>	<td>[% self.dna_seq_length %] bp</td></tr>
-			<tr><td>Protein Length </td> <td> [% self.aa_seq_length %] aa</td></tr>
-			<tr><td>GC Content</td>	<td>[% self.gc_percent %]</td></tr>
-			<tr><td>Date Modified</td>	<td> [% self.mod_date %]</td></tr>
-		</table>
-[%		ELSE %]
-		<div class="infoBoxTitle"><h4>RNA Information</h4></div>
-[%
-#			IF self.gene_display_name.match('^RF');
-#				# RFAM link
-#			END;
-
-#    if ( $gene_display_name =~ /^RF/ ) {
-#        my $url = $rfam_base_url . $gene_display_name;
-#        $url = alink( $url, $gene_display_name );
-#        printAttrRowRaw( "IMG Product Name", $url );
-#    } else {
-#        printAttrRowRaw( "IMG Product Name", escHtml($gene_display_name) );
-#    }
-#    printAttrRowRaw( "Original Gene Product Name", escHtml($product_name) );
-#    printAttrRowRaw( "IMG Product Source", escHtml($img_product_source) );
-
+		data_table = {
+			class => 'taxon-scaffold-details',
+			caption => 'Genome and Scaffold Details',
+			tbody => [
+				[ 'Taxon ID', taxon_id_link( x = {}, obj = self ) ],
+				[ 'Taxon name', taxon_name_link( x = {}, obj = self ) ],
+				[ 'Scaffold ID', scaffold_id_link( x = {}, obj = self ) ],
+				[ 'Scaffold name', scaffold_name_link( x = {}, obj = self ) ],
+			]
+		};
+		attr_value_table( data_table );
+%]
+<table class="gene-ext-links__table">
+	<caption class="gene-ext-links__caption">External Links</caption>
+	<thead class="gene-ext-links__thead">
+	<tr>
+		<th class="gene-ext-links__th--attr">Database</th>
+		<th class="gene-ext-links__th--value">Reference</th>
+	</tr>
+	</thead>
+	<tbody class="gene-ext-links__tbody">
+		<tr>
+		<td class="gene-ext-links__tcell--attr">
+			NCBI
+		</td>
+		<td class="gene-ext-links__tcell--val">
+[%			fn = {
+				db_name => 'NCBI',
+				id => self.protein_seq_accid
+			};
+			PROCESS 'inc/function/gene_ext_links.tt'; %]
+		</td>
+		</tr>
+[%		IF self.gene_ext_links.size > 0;
+			FOR fn IN self.gene_ext_links; %]
+		<tr>
+			<td class="gene-ext-links__tcell--attr">
+[%				fn.db_name %]
+			</td>
+			<td class="gene-ext-links__tcell--val">
+[%				PROCESS 'inc/function/gene_ext_links.tt'; %]
+			</td>
+		</tr>
+[%			END; # end for fn IN self.get_ext_lnks
 		END; %]
-
-
-
-		<div class="tableTitle"><h6>Genome and Scaffold Details</h6></div>
-		<table class="condensed">
-			<tr>
-				<td class="col1">Taxon ID</td>
-				<td>[% taxon_id_link( x = {}, obj = self ); %]</td>
-			</tr>
-			<tr>
-				<td>Taxon</td>
-				<td>[% taxon_name_link( x = {}, obj = self ); %]</td>
-			</tr>
-			<tr>
-				<td>Scaffold ID</td>
-				<td>[% scaffold_id_link( x = {}, obj = self ); %]</td></tr>
-			<tr>
-				<td>Scaffold</td>
-				<td>[% scaffold_name_link( x = {}, obj = self ); %]</td>
-			</tr>
-		</table>
-
-		<div class="tableTitle"><h6>External Links</h6></div>
-		<table class="condensed">
-			<tr><td class="col1"> NCBI</td> <td><a>[% self.dt_protein_seq_accid_lc %]</a> <div class="noteToSelf"> * </div></td></tr>
-			<tr><td>GI</td> <td><a>124024713</a><div class="noteToSelf"> * </div></td></tr>
-			<tr><td>GeneID</td> <td><a>4780657</a><div class="noteToSelf"> * </div></td></tr>
-			<tr><td>UniProtKB</td> <td><a>A2BZA4</a> <div class="noteToSelf"> * </div></td></tr>
-			</td></tr>
-		</table>
+	</tbody>
+</table>
 
 	</div> <!-- infoBox -->
-
-<!--
-    my $sql = qq{
-        select distinct db_name, id, custom_url
-        from gene_ext_links
-        where gene_oid = ?
-        order by db_name, id
-    };
-    my $cur = execSql( $dbh, $sql, $verbose, $gene_oid );
-    print "<td class='img'>\n";
-    my $count = 0;
-    my $s;
-
-    for ( ; ; ) {
-        my ( $db_name, $id, $custom_url ) = $cur->fetchrow();
-        last if !$id;
-        my $dbId = "$db_name:$id";
-        if ( $db_name eq "GI" && $ncbi_entrez_base_url ne "" ) {
-            my $url = "$ncbi_entrez_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-
-        } elsif ( $db_name eq "GenBank" && $ncbi_entrez_base_url ne "" ) {
-            my $url = "$ncbi_entrez_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "GeneID" && $geneid_base_url ne "" ) {
-            my $url = "$geneid_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-            if ( $is_big_euk eq "Yes" ) {
-                my $url = "$ncbi_mapview_base_url$id";
-                $s .= alink( $url, "MapView/$dbId" );
-                $s .= "; ";
-            }
-        } elsif ( $db_name =~ /UniProt/ && $nice_prot_base_url ne "" ) {
-            my $url = "$nice_prot_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ($enable_interpro && $db_name =~ /InterPro/  ) {
-            my $url = "$ipr_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-
-        } elsif ($enable_interpro && $db_name =~ /SUPERFAMILY/ ) {
-            my $url = "$ipr_base_url2$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-
-        } elsif ($enable_interpro && $db_name =~ /ProSiteProfiles/  ) {
-            my $url = "$ipr_base_url3$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-
-        } elsif ($enable_interpro && $db_name =~ /SMART/  ) {
-            my $url = "$ipr_base_url4$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-
-
-        } elsif ( $db_name eq "UniGene" ) {
-            my ( $org, $id2 ) = split( /\./, $id );
-            my $url = "$unigene_base_url?ORG=$org&CID=$id2";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "TAIR" ) {
-            my $url = "$tair_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "WormBase" ) {
-            my $url = "$wormbase_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "ZFIN" ) {
-            my $url = "$zfin_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "FLYBASE" ) {
-            my $url = "$flybase_base_url$id.html";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "HGNC" ) {
-            my $url = "$hgnc_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "MGI" ) {
-            my $url = "$mgi_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "RGD" ) {
-            my $url = "$rgd_base_url$id";
-            $s .= alink( $url, "$dbId" );
-            $s .= "; ";
-        } elsif ( $db_name eq "gene_oid" ) {
-            my $sql2 = qq{
-               select tx2.taxon_display_name
-               from gene g2, taxon tx2
-               where g2.gene_oid = ?
-               and g2.taxon = tx2.taxon_oid
-            };
-            my $cur2 = execSql( $dbh, $sql2, $verbose, $id );
-            my ($pr_taxon_display_name) = $cur2->fetchrow();
-            my $x = " [[proxy from $pr_taxon_display_name]]";
-
-            #$cur2->finish();
-            my $url = "$main_cgi?section=GeneDetail&page=geneDetail";
-            $url .= "&gene_oid=$id";
-            $s .= alink( $url, $id ) . "$x; ";
-        } elsif ( $db_name eq "read_id" ) {
-            $s .= "$id; ";
-        } elsif ( $custom_url =~ /^http/ ) {
-            $s .= alink( $custom_url, $id ) . "; ";
-        }
-    }
-    chop $s;
-    chop $s;
-    print "$s\n";
- -->
-
-
 
 [%	class_name = 'gene-fn-list'; %]
 	<div class="infoBox">

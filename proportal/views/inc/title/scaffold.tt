@@ -1,4 +1,4 @@
-[%
+[%	PROCESS 'inc/generic/link.tt';
 	article_title = self.scaffold_name;
 	subtitle = 'from ' _ taxon_name_link( x = {}, obj = self );
 

@@ -1,4 +1,4 @@
-[%
+[%	PROCESS 'inc/generic/link.tt';
 	IF self.genome_type == 'isolate';
 		surtitle = 'Isolate genome';
 	ELSE;

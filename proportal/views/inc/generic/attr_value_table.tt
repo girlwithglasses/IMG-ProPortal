@@ -33,7 +33,6 @@
 # 		END;
 # 	END;
 # END;
-#
 
 MACRO attr_value_table BLOCK;
 
@@ -61,7 +60,13 @@ IF data_table.tbody.size > 0;
 	</tr>
 	</thead>
 	<tbody class="[% data_table.class %]__tbody">
-[%		FOREACH datum IN data_table.tbody; %]
+[%		IF data_table.tbody == 'wrapper';
+
+			content;
+
+		ELSE;
+
+		FOREACH datum IN data_table.tbody; %]
 		<tr[%
 			IF datum.__id;
 			' id="' _ datum.__id _ '"';
@@ -80,7 +85,8 @@ IF data_table.tbody.size > 0;
 [%				datum.last %]
 			</td>
 		</tr>
-[%		END; # FOREACH datum in data_table.tbody %]
+[%		END; # FOREACH datum in data_table.tbody
+	END; %]
 	</tbody>
 	</table>
 [%

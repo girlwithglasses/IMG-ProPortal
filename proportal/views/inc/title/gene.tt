@@ -1,4 +1,5 @@
-[%
+[%	PROCESS 'inc/generic/link.tt';
+
 	IF self.locus_type == 'CDS';
 		surtitle = 'Gene';
 	ELSE;

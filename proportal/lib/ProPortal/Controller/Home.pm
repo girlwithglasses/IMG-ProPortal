@@ -60,18 +60,6 @@ sub _render {
 			-result_as => ['hashref' => 'dataset_type' ]
 		);
 
-
-	# metagenome count for all Marine metagenomes
-	$stats ->{metagenomes_marine} = $self->_core->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ 'count(taxon_oid)|count', qw( ecosystem_type ) ],
-			-group_by => [ qw( ecosystem_type ) ],
-			-where => {
-				ecosystem_type => 'Marine',
-				pp_subset => 'metagenome',
-			},
-		);
-
 	return { results => {
 		stats => $stats
 	} };

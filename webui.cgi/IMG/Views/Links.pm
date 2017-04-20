@@ -1342,6 +1342,15 @@ my $old_dynamic = {
 			page => 'biosynthetic_clusters',
 			taxon_oid => $_[0]->{params}{taxon_oid}
 		};
+	},
+
+	biosyn_cluster_detail => sub {
+		return {
+			section => 'BiosyntheticDetail',
+			page => 'cluster_detail',
+			taxon_oid => $_[0]->{params}{taxon_oid},
+			cluster => $_[0]->{params}{cluster_id}
+		};
 	}
 };
 

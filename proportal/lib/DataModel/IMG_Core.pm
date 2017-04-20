@@ -1,6 +1,6 @@
 package DataModel::IMG_Core;
 
-use IMG::Util::Import;
+use IMG::Util::Import 'LogErr';
 use DBIx::DataModel;
 use IMG::Model::UnitConverter;
 
@@ -827,8 +827,12 @@ DBIx::DataModel  # no semicolon (intentional)
   [qw/ScaffoldStats               scaffold_stats                   *    first_cds            /])
 
 ->Association(
-  [qw/ImgOrfType                  img_orf_type                     1    orf_type             /],
+  [qw/ImgOrfType                  orf_types                        1    orf_type             /],
   [qw/Gene                        genes                            *    img_orf_type         /])
+
+->Association(
+  [qw/Gene                        gene                             1    gene_oid  /],
+  [qw/GeneFragCoords              gene_frag_coords                 *    gene_oid  /])
 
 ->Composition(
   [qw/ParalogGroup                paralog_group                    1    group_oid            /],
@@ -1516,6 +1520,53 @@ DataModel::IMG_Core
 #	fromDB => sub {  },
 
 #=cut
+
+sub DataModel::IMG_Core::Gene::pseudogene {
+	my $self = shift;
+	if ( ( $self->{is_pseudogene} && 'Yes' eq $self->{is_pseudogene} )
+		|| ( $self->{img_orf_type} && 'pseudo' eq $self->{img_orf_type} ) ) {
+		return 'Yes';
+	}
+	return 'No';
+}
+
+# coordinates: return a formatted coordinate string
+# does the work of GeneUtil::getMultFragCoordsLine
+
+sub DataModel::IMG_Core::Gene::coordinates {
+	my $self = shift;
+
+	$self->expand('gene_frag_coords', ( -order_by => 'frag_order' ));
+
+	my $coord_str = $self->{start_coord} . '..' . $self->{end_coord};
+	if ( scalar @{$self->{gene_frag_coords}} ) {
+		$coord_str .= ', fragments '
+		. join ", ", map {
+			$_->{start_coord} . '..' . $_->{end_coord}
+		} @{$self->{gene_frag_coords}};
+
+	}
+	elsif ( $self->{cds_frag_coord} ) {
+
+		my $cds_frag_coord = lc( $self->{cds_frag_coord} );
+		$cds_frag_coord =~ s/complement|join//g;
+		$cds_frag_coord =~ s/[<>\(\)]//g;
+		$cds_frag_coord =~ s/,(\S)/, $1/g;
+
+		$coord_str .= ', fragments (' . $cds_frag_coord . ')' if $cds_frag_coord =~ /\w/;
+	}
+
+	return $coord_str . ' (' . $self->{strand} . ')';
+}
+
+sub DataModel::IMG_Core::Gene::gene_length {
+	my $self = shift;
+	return ( $self->{dna_seq_length} . ' bp' || 'unknown' );
+}
+sub DataModel::IMG_Core::Gene::protein_length {
+	my $self = shift;
+	return ( $self->{aa_seq_length} . ' aa' || 'unknown' );
+}
 
 =cut
 
