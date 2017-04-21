@@ -1,0 +1,97 @@
+[%	# A generic table component with a column of attributes on the left and values
+	# on the right
+# params:
+# data_table hashref with keys
+# .class          => css class for the table
+# .caption        => table caption
+# .thead.enum     => arrayref of object properties to be included in the table
+# .thead.enum_map => hashref with column titles (corresponding to object properties)
+#                    will default to 'Attribute' and 'Value' if not set
+# .tbody          => arrayref of objects for the table
+
+#PROCESS 'inc/generic/cbox.tt';
+#PROCESS 'inc/generic/link.tt';
+
+# table cell view
+# if the item is a scalar, prints it out
+# if the item is a hash, gets the 'macro' hash key, runs it, and prints the result
+# VIEW t_cell;
+#
+# 	BLOCK text;
+# 		item;
+# 	END;
+#
+# 	BLOCK hash;
+# 		mac = item.macro;
+# 		x = item;
+# 		TRY;
+# 			$mac( x );
+# 		CATCH;
+# 			USE Dumper( Indent => 1 );
+# 			'<pre>link error: ' _ Dumper.dump( item ) _ '</pre>';
+# 			error;
+# 		END;
+# 	END;
+# END;
+
+MACRO attr_value_table BLOCK;
+
+IF data_table.tbody.size > 0;
+	headers = data_table.thead; %]
+	<table class="[% data_table.class %]__table">
+[%	IF data_table.caption %]
+	<caption class="[% data_table.class %]__caption">[% data_table.caption %]</caption>
+[%	END %]
+	<thead class="[% data_table.class %]__thead">
+	<tr>
+[%		IF data_table.thead.enum;
+			FOREACH th IN headers.enum; %]
+		<th class='[% data_table.class %]__th--[% th %]'>[%
+				IF headers.enum_map.$th;
+					headers.enum_map.$th;
+				ELSIF 'cbox' != th;
+					th | ucfirst;
+				END; %]</th>
+[%			END;
+		ELSE; %]
+		<th class="[% data_table.class %]__th--attr">Attribute</th>
+		<th class="[% data_table.class %]__th--value">Value</th>
+[%		END; %]
+	</tr>
+	</thead>
+	<tbody class="[% data_table.class %]__tbody">
+[%		IF data_table.tbody == 'wrapper';
+
+			content;
+
+		ELSE;
+
+		FOREACH datum IN data_table.tbody; %]
+		<tr[%
+			IF datum.__id;
+			' id="' _ datum.__id _ '"';
+			END;
+			IF datum.__class;
+			' class="' _ datum.__class _ '"';
+			END; %]>
+			<td class="[% data_table.class %]__tcell--attr">
+[%				IF ! datum.first;
+					datum.last.split('_').join(' ') | ucfirst;
+				ELSE;
+					datum.first;
+				END; %]
+			</td>
+			<td class="[% data_table.class %]__tcell--val">
+[%				datum.last %]
+			</td>
+		</tr>
+[%		END; # FOREACH datum in data_table.tbody
+	END; %]
+	</tbody>
+	</table>
+[%
+END; # if data_table.tbody.size
+
+END; # end macro block
+
+%]

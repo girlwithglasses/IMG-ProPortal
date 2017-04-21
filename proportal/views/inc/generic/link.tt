@@ -3,7 +3,6 @@
 	# type, params -- to feed into the link as link( x.type, x.params )
 	# text -- link text
 	# optional: class, id, title -- link class, id, title
-
 	MACRO generic_link BLOCK;
 
 #	USE Dumper( Indent => 1 );
@@ -91,4 +90,23 @@
 	%]href="[%
 		link( 'fn_details', { db => x.db, xref => x.xref } );
 	%]">[% x.text %]</a>
-[% END; %]
+[%	END;
+
+	MACRO external_link BLOCK; %]
+<a rel="external" [%
+	IF x.keys.exists('class');
+%]class="[% x.class %]" [%
+	END;
+
+	IF x.keys.exists('id');
+%]id="[% x.id %]" [%
+	END;
+
+	IF x.keys.exists('title');
+%]title="[% x.title %]" [%
+	END;
+
+	%]href="[%
+		ext_link( x.type, x.params );
+	%]">[% x.text %]</a>
+[%	END; %]

@@ -148,7 +148,7 @@ sub _init_schema {
 	});
 
 
-	log_debug { 'schema_h: ' . Dumper $self->schema_h };
+#	log_debug { 'schema_h: ' . Dumper $self->schema_h };
 
 	return $module;
 }

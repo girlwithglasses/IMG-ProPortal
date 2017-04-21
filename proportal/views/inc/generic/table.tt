@@ -41,7 +41,7 @@ IF data_table.tbody.size > 0;
 	headers = data_table.thead; %]
 	<table class="[% data_table.class %]__table">
 [%	IF data_table.caption %]
-	<caption class="[% data_table.class %]__caption">[% results.js.table_caption %]</caption>
+	<caption class="[% data_table.class %]__caption">[% data_table.caption %]</caption>
 [%	END %]
 	<thead class="[% data_table.class %]__thead">
 	<tr>

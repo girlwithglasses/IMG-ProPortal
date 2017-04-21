@@ -1,10 +1,11 @@
-[%
+[%	PROCESS 'inc/generic/link.tt';
+
 	IF self.locus_type == 'CDS';
 		surtitle = 'Gene';
 	ELSE;
 		surtitle = self.locus_type;
 	END;
-	title = self.gene_display_name;
+	article_title = self.gene_display_name;
 	subtitle = 'from ' _ taxon_name_link( x = {}, obj = self );
 
 	button = {

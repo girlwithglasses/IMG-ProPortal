@@ -1,0 +1,17 @@
+[%
+	MACRO list_container BLOCK %]
+	<ul class="[% class_name %]__container[%
+		IF class_suffix; '--' _ class_suffix; END; %]">
+[%	content %]
+	</ul>
+[%	END;
+
+
+	MACRO list_item BLOCK %]
+		<li class="[% class_name %]__item[%
+			IF class_suffix; '--' _ class_suffix; END; %]">
+[%	content %]
+		</li>
+[%	END;
+
+%]

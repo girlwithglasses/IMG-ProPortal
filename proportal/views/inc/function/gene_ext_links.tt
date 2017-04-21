@@ -1,0 +1,36 @@
+[%	# external links for genes
+	# db_name, id, custom_url
+
+	PROCESS 'inc/generic/link.tt';
+
+	IF fn.db_name == 'gene_oid';
+
+		x = {
+			text => 'IMG:' _ fn.id _ '[[proxy]]',
+			type => 'details',
+			params => { domain => 'gene', gene_oid => fn.id }
+		};
+		generic_link( x );
+
+	ELSIF 'read_id' == fn.db_name;
+
+		fn.id;
+
+	ELSIF fn.custom_url.match('http'); %]
+	<a rel="external" href="[% fn.custom_url %]">[% fn.id %]</a>
+[%	ELSE;
+
+		x = {
+			text => fn.db_name _ ':' _ fn.id,
+			params => fn.id,
+			type => fn.db_name
+		};
+		TRY;
+			external_link( x );
+		CATCH;
+			USE Dumper( Indent => 1 );
+			'<pre>link error: ' _ Dumper.dump( x ) _ '</pre>';
+			error;
+		END;
+
+	END %]

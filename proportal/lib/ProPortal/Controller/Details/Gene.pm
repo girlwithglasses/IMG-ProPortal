@@ -69,47 +69,49 @@ sub get_data {
 
 	my $gene = $results->[0];
 
-	my $associated = {
-		multi => [ qw(
-			gene_cog_groups
-			gene_eggnogs
-			gene_enzymes
-			gene_ext_links
-			gene_fusion_components
-			gene_go_terms
-			gene_img_interpro_hits
-			gene_kog_groups
-			gene_pdb_xrefs
-			gene_seed_names
-			gene_sig_peptides
-			gene_swissprot_names
-			gene_tc_families
-			gene_tigrfams
-			gene_tmhmm_hits
-			gene_xref_families
+	my $associated = [ qw(
+		gene_cog_groups
+		gene_eggnogs
+		gene_enzymes
+		gene_ext_links
+		gene_fusion_components
+		gene_go_terms
+		gene_img_interpro_hits
+		gene_kog_groups
+		gene_pdb_xrefs
+		gene_seed_names
+		gene_sig_peptides
+		gene_swissprot_names
+		gene_tc_families
+		gene_tigrfams
+		gene_tmhmm_hits
+		gene_xref_families
 
-			go_terms
-			cog_terms
-		)],
-# 			gene_rna_clusters
-# 			gene_cassette_genes
-# 			img_cluster_member_genes
-		single => [ qw(
-			scaffold
-		)]
+		go_terms
+		cog_terms
+		kog_terms
+
+		scaffold
+	)];
+# 		gene_rna_clusters
+# 		gene_cassette_genes
+# 		img_cluster_member_genes
+
+	my $order = {
+		gene_ext_links => { -order_by => 'db_name, id' }
 	};
 
-	for my $type ( %$associated ) {
-		for my $assoc ( @{ $associated->{$type} } ) {
-			if ( $gene->can( $assoc ) ) {
-				my $r = $gene->$assoc;
+	for my $assoc ( @$associated ) {
+		if ( $gene->can( $assoc ) ) {
+			$gene->expand( $assoc, ( %{ $order->{$assoc} || {} } ) );
+#				my $r = $gene->$assoc;
 		#		log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
-				if ($r
-					&& ( ( 'multi' eq $type && scalar @$r )
-					|| ( 'single' eq $type && defined $r ) ) ) {
-					$gene->{$assoc} = $r;
-				}
-			}
+#				if ($r
+#					&& ( ( 'multi' eq $type && scalar @$r )
+#					|| ( 'single' eq $type && defined $r ) ) ) {
+#					$gene->{$assoc} = $r;
+#				}
+#			}
 		}
 	}
 

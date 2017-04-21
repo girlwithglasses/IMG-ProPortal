@@ -118,8 +118,44 @@ my $external_links = {
 	'worker_base_url' => 'https://img-worker.jgi-psf.org',
 	'wormbase_base_url' => 'http://www.wormbase.org/db/gene/gene?name=',
 	'zfin_base_url' => 'http://zfin.org/cgi-bin/webdriver?MIval=aa-markerview.apg&OID=',
+	'uniprot_base_url' => 'http://uniprot.org/uniprot/'
 };
 
+
+
+$external_links->{GI} = $external_links->{ncbi_entrez_base_url};
+$external_links->{GenBank} = $external_links->{ncbi_entrez_base_url};
+$external_links->{NCBI} = $external_links->{ncbi_entrez_base_url};
+$external_links->{GeneID} = $external_links->{geneid_base_url};
+
+# if ( $is_big_euk eq "Yes" ) {
+# 	my $url = "$ncbi_mapview_base_url$id";
+# 	$s .= alink( $url, "MapView/$dbId" );
+# 	$s .= "; ";
+# }
+
+$external_links->{UniProt} = $external_links->{nice_prot_base_url};
+$external_links->{InterPro} = $external_links->{ipr_base_url};
+$external_links->{SUPERFAMILY} = $external_links->{ipr_base_url2};
+$external_links->{ProSiteProfiles} = $external_links->{ipr_base_url3};
+$external_links->{SMART} = $external_links->{ipr_base_url4};
+$external_links->{TAIR} = $external_links->{tair_base_url};
+$external_links->{WormBase} = $external_links->{wormbase_base_url};
+$external_links->{ZFIN} = $external_links->{zfin_base_url};
+$external_links->{HGNC} = $external_links->{hgnc_base_url};
+$external_links->{MGI} = $external_links->{mgi_base_url};
+$external_links->{RGD} = $external_links->{rgd_base_url};
+$external_links->{UniProtKB} = $external_links->{uniprot_base_url};
+
+$external_links->{UniGene} = sub {
+	my ( $org, $id ) = split '.', shift;
+	return $external_links->{ unigene_base_url }
+		. '?ORG=' . $org . '&amp;CID=' . $id;
+};
+
+$external_links->{FLYBASE} = sub {
+	return $external_links->{ flybase_base_url } . +shift . '.html';
+};
 
 sub reverse_hash {
 return {
@@ -175,16 +211,15 @@ return {
 	'http://www.rcsb.org/pdb/explore.do?structureId=' => 'pdb_base_url',
 	'http://www.rcsb.org/pdb/search/searchSequence.do' => 'pdb_blast_url',
 	'http://www.sanger.ac.uk/Software/Artemis/' => 'artemis_url',
-	'http://www.uniprot.org/uniprot/' => 'nice_prot_base_url',
-	'http://www.uniprot.org/uniprot/' => 'swiss_prot_base_url',
-	'http://www.uniprot.org/uniprot/' => 'swissprot_source_url',
+	'http://www.uniprot.org/uniprot/' =>
+	[ 'nice_prot_base_url','swiss_prot_base_url','swissprot_source_url' ],
 	'http://www.wormbase.org/db/gene/gene?name=' => 'wormbase_base_url',
 	'http://zfin.org/cgi-bin/webdriver?MIval=aa-markerview.apg&OID=' => 'zfin_base_url',
 	'https://gold.jgi-psf.org/analysis_projects?id=' => 'gold_base_url_analysis',
 	'https://gold.jgi-psf.org/projects?id=' => 'gold_base_url_project',
 	'https://gold.jgi-psf.org/study?id=' => 'gold_base_url_study',
 	'https://gpweb08.nersc.gov:8443/' => 'gold_api_base_url',
-	'https://img-proportal-dev.jgi-psf.org/cgi-bin/ncbiBlastServer.cgi' => 'ncbi_blast_server_url',
+	'https://img.jgi.doe.gov/m/cgi-bin/ncbiBlastServer.cgi' => 'ncbi_blast_server_url',
 	'https://img-worker.jgi-psf.org' => 'worker_base_url',
 	'https://img-worker.jgi-psf.org/cgi-bin/blast/generic/blastQueue.cgi' => 'blastallm0_server_url',
 	'https://img-worker.jgi-psf.org/cgi-bin/blast/generic/rnaServer.cgi' => 'rna_server_url',
