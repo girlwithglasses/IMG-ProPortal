@@ -1,5 +1,5 @@
-<section class="title-section">
-	<!-- div id="pageTitle" -->
+<section class="title-section cf">
+	<div class="title-section__container">
 [%	IF surtitle %]
 		<h3 class="[% class %]__surtitle">[% surtitle %]</h3>
 [%	END; %]
@@ -7,7 +7,7 @@
 [%	IF subtitle %]
 		<h3 class="[% class %]__subtitle">[% subtitle %]</h3>
 [%	END; %]
-	<!-- /div -->
+	</div>
 [%	# button bar
 
 	IF button;

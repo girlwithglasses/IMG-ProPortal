@@ -13,4 +13,4 @@
 #	function_link( x = { db => 'seed', xref => ???, text => gsn.product_name || 'N/A' } );
 	gsn.product_name _ ': ' _ gsn.source _ gsn.subsystem;
 
-END %]
+%]

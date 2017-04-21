@@ -2,14 +2,7 @@
 page title for a details page
 */
 
-#pageTitle {
-	float: left;
-	width: 100%;
-	margin-bottom: 10px;
+.title-section__container {
+	margin-bottom: .5rem;
 	@include b_border($element-border-width, $element-border-color);
-
-	.normal {
-		font-weight: normal;
-	}
-
 }
