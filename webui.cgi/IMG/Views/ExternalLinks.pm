@@ -134,7 +134,6 @@ $external_links->{GeneID} = $external_links->{geneid_base_url};
 # 	$s .= "; ";
 # }
 
-$external_links->{UniProt} = $external_links->{nice_prot_base_url};
 $external_links->{InterPro} = $external_links->{ipr_base_url};
 $external_links->{SUPERFAMILY} = $external_links->{ipr_base_url2};
 $external_links->{ProSiteProfiles} = $external_links->{ipr_base_url3};
@@ -145,8 +144,12 @@ $external_links->{ZFIN} = $external_links->{zfin_base_url};
 $external_links->{HGNC} = $external_links->{hgnc_base_url};
 $external_links->{MGI} = $external_links->{mgi_base_url};
 $external_links->{RGD} = $external_links->{rgd_base_url};
+$external_links->{UniProt} = $external_links->{nice_prot_base_url};
 $external_links->{UniProtKB} = $external_links->{uniprot_base_url};
+$external_links->{'UniProt/TrEMBL'} = $external_links->{uniprot_base_url};
+$external_links->{'UniProtKB/TrEMBL'} = $external_links->{uniprot_base_url};
 
+$external_links->{SEED} = 'http://pseed.theseed.org/seedviewer.cgi?page=BrowseGenome&feature=';
 $external_links->{UniGene} = sub {
 	my ( $org, $id ) = split '.', shift;
 	return $external_links->{ unigene_base_url }

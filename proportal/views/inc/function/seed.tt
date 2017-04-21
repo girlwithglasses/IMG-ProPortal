@@ -1,16 +1,18 @@
 [%	# SEED
-	# gene.gene_seed_names
-	#
-#   "GENE_OID" TEXT,
-#   "PRODUCT_NAME" TEXT,
-#   "SOURCE" TEXT,
-#   "SUBSYSTEM" TEXT,
-#   "MD5_CHECKSUM" TEXT,
-#   "SUBSYSTEM_FLAG" TEXT,
-#   "TAXON" TEXT,
-#   "SCAFFOLD" TEXT
+	PROCESS 'inc/generic/link.tt';
+	x = {
+		text => 'SEED:' _ fn.source,
+		xref => fn.source,
+		db => 'SEED'
+	};
+	TRY;
+		external_link( x );
+	CATCH;
+		USE Dumper( Indent => 1 );
+		'<pre>link error: ' _ Dumper.dump( x ) _ '</pre>';
+		error;
+	END;
 
-#	function_link( x = { db => 'seed', xref => ???, text => gsn.product_name || 'N/A' } );
-	gsn.product_name _ ': ' _ gsn.source _ gsn.subsystem;
+	': ' _ ( fn.product_name || 'N/A' ) _', ' _ fn.subsystem;
 
 %]

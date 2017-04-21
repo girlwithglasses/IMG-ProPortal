@@ -107,6 +107,10 @@
 	END;
 
 	%]href="[%
-		ext_link( x.type, x.params );
+		IF x.type;
+			ext_link( x.type, x.params );
+		ELSE;
+			ext_link( x.db, x.xref );
+		END;
 	%]">[% x.text %]</a>
 [%	END; %]
