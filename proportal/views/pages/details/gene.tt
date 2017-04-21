@@ -31,7 +31,7 @@
 
 [%		data_table = {
 			class => 'gene-details',
-			caption => title,
+			caption => 'Gene Details',
 			tbody => [
 				[ 'Gene ID', self.gene_oid ],
 				[ 'Gene Symbol', self.gene_symbol ],
@@ -67,12 +67,14 @@
 %]
 <table class="gene-ext-links__table">
 	<caption class="gene-ext-links__caption">External Links</caption>
-	<thead class="gene-ext-links__thead">
+	<!-- 
+<thead class="gene-ext-links__thead">
 	<tr>
-		<th class="gene-ext-links__th--attr">Database</th>
-		<th class="gene-ext-links__th--value">Reference</th>
+		<th class="gene-ext-links__th~~attr">Database</th>
+		<th class="gene-ext-links__th~~value">Reference</th>
 	</tr>
 	</thead>
+ -->
 	<tbody class="gene-ext-links__tbody">
 		<tr>
 		<td class="gene-ext-links__tcell--attr">

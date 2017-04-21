@@ -2,9 +2,37 @@
 found on details pages 
 */
 
+// @import "../modules/typo.scss";
+
+// A mixin to style all tables found inside an infoBox
+@mixin infoBox-table( $class ) {
+	.#{$class} {
+
+		&__table {
+			@extend .condensed;
+		}	
+		
+		&__caption {
+			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0;
+			padding-left: 0;
+		}
+		
+		&__thead {
+			display: none;
+		}
+	}	
+}
+
 
 .infoBox, .infoBox-double {
 	padding: 0 20px 20px 20px; 
+		
+	@include infoBox-table( "gene-details" );		
+	@include infoBox-table( "taxon-scaffold-details" );
+	@include infoBox-table( "gene-ext-links" );	
+		
 		
 	// for displaying FASTA sequences, for example
  	.textDisplay {
@@ -13,9 +41,10 @@ found on details pages
 		padding: 10px 20px;
 		overflow: auto;
 		@include borders( $element-border-width, $border-lighter );
-		
 	}
 }
+
+
 
 .infoBoxTitle {
 	margin: 10px 0 5px 0;
