@@ -6,6 +6,8 @@ found on details pages
 
 // A mixin to style all tables found inside an infoBox
 @mixin infoBox-table( $class ) {
+
+	// Global styles for all generic tables in infoBoxes
 	.#{$class} {
 
 		&__table {
@@ -23,6 +25,15 @@ found on details pages
 			display: none;
 		}
 	}	
+	
+	// Table-specific styles.
+	.gene-fn-annots {
+		&__table {	@extend .lined;	}
+	}
+	
+	.gene-pway-annots {
+		&_table {	@extend .lined;	}
+	}
 }
 
 
@@ -32,6 +43,9 @@ found on details pages
 	@include infoBox-table( "gene-details" );		
 	@include infoBox-table( "taxon-scaffold-details" );
 	@include infoBox-table( "gene-ext-links" );	
+	@include infoBox-table( "gene-fn-annots" );
+	@include infoBox-table( "gene-pway-annots" );
+	@include infoBox-table( "gene-cycog-annots" );
 		
 		
 	// for displaying FASTA sequences, for example

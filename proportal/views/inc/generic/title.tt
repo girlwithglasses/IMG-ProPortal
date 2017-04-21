@@ -1,5 +1,6 @@
 <section class="title-section cf">
 	<div class="title-section__container">
+
 [%	IF surtitle %]
 		<h3 class="[% class %]__surtitle">[% surtitle %]</h3>
 [%	END; %]
