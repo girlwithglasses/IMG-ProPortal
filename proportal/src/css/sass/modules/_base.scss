@@ -83,6 +83,7 @@ button, input, optgroup, select, textarea {
 	font: inherit;
 	padding: 0;
 	vertical-align: middle;
+	text-transform: $button-transform;
 }
 
 // set line-height on non-inline elements

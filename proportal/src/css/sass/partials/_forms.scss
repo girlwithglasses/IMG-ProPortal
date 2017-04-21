@@ -83,7 +83,9 @@ select.pp-form {
 //		variables defined in /modules/_variables.scss
 //------------------------------------
 button, a.button, html 
-input[type="button"], input[type="reset"], input[type="submit"], 
+input[type="button"], 
+//input[type="reset"], 
+input[type="submit"], 
 .button-bar__link, .taxon-cart__submit {
 
 	height: $button-height;
@@ -91,7 +93,7 @@ input[type="button"], input[type="reset"], input[type="submit"],
 	border: 0;
 	padding: 0 $button-padding-sides;
 	color: $button-color;
-	text-transform: $button-transform;
+// 	text-transform: $button-transform;
 	text-align: center;
     line-height: $button-height;
 

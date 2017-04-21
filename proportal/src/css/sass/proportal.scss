@@ -40,7 +40,7 @@
 
 //Partials for list pages.
 @import "partials/generic-tables";	@include generic-tables;
-@import "partials/generic-carts";	@include generic-carts;
+@import "partials/generic-carts";	//@include generic-carts;
 
 // print style
 @import "partials/print";
