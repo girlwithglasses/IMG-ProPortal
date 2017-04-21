@@ -1,0 +1,374 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	self = results.gene;
+	type = 'Gene';
+	IF self.locus_type.match('(?i)rna');
+		type = 'RNA';
+	END;
+	title = type _ ' Details';
+	class = 'gene-details';
+
+	PROCESS 'inc/title/gene.tt';
+	PROCESS 'inc/generic/link.tt';
+	PROCESS 'inc/generic/attr_value_table.tt';
+
+	BLOCK list_container %]
+	<ul class="[% class_name %]__container[%
+		IF class_suffix; '--' _ class_suffix; END; %]">
+[%	content %]
+	</ul>
+[%	END;
+
+
+	BLOCK list_item %]
+		<li class="[% class_name %]__item[%
+			IF class_suffix; '--' _ class_suffix; END; %]">
+[%	content %]
+		</li>
+[%	END; %]
+
+<div class="row">
+	<div class="infoBox">
+
+[%		data_table = {
+			class => 'gene-details',
+			caption => title,
+			tbody => [
+				[ 'Gene ID', self.gene_oid ],
+				[ 'Gene Symbol', self.gene_symbol ],
+				[ 'Locus Type', self.locus_type ],
+				[ 'Locus Tag', self.locus_tag ],
+				[ 'Gene Product Name', self.gene_display_name ],
+				[ 'Description', self.description ]
+				[ 'Original gene product name', self.product_name ],
+				[ 'IMG product source', self.img_product_source ],
+				[ 'DNA Coordinates', self.coordinates ],
+				[ 'Gene Length', self.gene_length ],
+				[ 'Protein Length ', self.protein_length ],
+				[ 'GC Content', self.gc_percent ],
+				[ 'Date Modified', self.mod_date ],
+				[ 'Pseudogene', self.pseudogene ],
+				[ 'Estimated Copy', self.est_copy ],
+				[ 'Obsolete', self.obsolete_flag ],
+			]
+		};
+		attr_value_table( data_table );
+
+		data_table = {
+			class => 'taxon-scaffold-details',
+			caption => 'Genome and Scaffold Details',
+			tbody => [
+				[ 'Taxon ID', taxon_id_link( x = {}, obj = self ) ],
+				[ 'Taxon name', taxon_name_link( x = {}, obj = self ) ],
+				[ 'Scaffold ID', scaffold_id_link( x = {}, obj = self ) ],
+				[ 'Scaffold name', scaffold_name_link( x = {}, obj = self ) ],
+			]
+		};
+		attr_value_table( data_table );
+%]
+<table class="gene-ext-links__table">
+	<caption class="gene-ext-links__caption">External Links</caption>
+	<thead class="gene-ext-links__thead">
+	<tr>
+		<th class="gene-ext-links__th--attr">Database</th>
+		<th class="gene-ext-links__th--value">Reference</th>
+	</tr>
+	</thead>
+	<tbody class="gene-ext-links__tbody">
+		<tr>
+		<td class="gene-ext-links__tcell--attr">
+			NCBI
+		</td>
+		<td class="gene-ext-links__tcell--val">
+[%			fn = {
+				db_name => 'NCBI',
+				id => self.protein_seq_accid
+			};
+			PROCESS 'inc/function/gene_ext_links.tt'; %]
+		</td>
+		</tr>
+[%		IF self.gene_ext_links.size > 0;
+			FOR fn IN self.gene_ext_links; %]
+		<tr>
+			<td class="gene-ext-links__tcell--attr">
+[%				fn.db_name %]
+			</td>
+			<td class="gene-ext-links__tcell--val">
+[%				PROCESS 'inc/function/gene_ext_links.tt'; %]
+			</td>
+		</tr>
+[%			END; # end for fn IN self.get_ext_lnks
+
+		END;
+		IF self.gene_swissprot_names; %]
+		<tr>
+			<td class="gene-ext-links__tcell--attr">
+				SwissProt names
+			</td>
+			<td class="gene-ext-links__tcell--val">
+[%				FOR fn IN self.gene_swissprot_names; %]
+					[% fn.product_name %] ( [%
+						new_arr = [];
+						FOR x IN fn.xref_arr;
+							new_arr.push( '<a rel="external" href="'
+							_ ext_link( 'UniProt', x )
+							_ '">' _ x _ '</a>' );
+						END;
+						new_arr.join('; ');
+					%] )
+[%				END; %]
+			</td>
+		</tr>
+[%		END;
+		%]
+	</tbody>
+</table>
+
+	</div> <!-- infoBox -->
+
+[%	class_name = 'gene-fn-list'; %]
+	<div class="infoBox">
+		<div class="infoBoxTitle"><h4>Protein Functional Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
+
+
+
+
+	<table class="lined">
+		<caption>Protein Functional Annotations</caption>
+<!-- CyCOGs -->
+	<tbody>
+	<tr class="[% class_name %]__trow">
+	<td class="[% class_name %]__tcell--title">CyCOGs</td>
+	<td class="[% class_name %]__tcell--list">
+[%
+	IF self.gene_cycog_groups AND self.gene_cycog_groups.size > 0;
+		arr = self.gene_cycog_groups;
+		WRAPPER list_container;
+			FOR fn IN arr;
+
+				WRAPPER list_item;
+				PROCESS 'inc/function/cycog.tt';
+				END; # end wrapper list_item
+
+			END; # end FOR fn IN arr
+		END; # end wrapper list_container
+	END; # end IF self.gene_cycog_groups %]
+	</td></tr>
+[%	FOR xog IN [ 'cog', 'kog' ]; %]
+	<tr class="[% class_name %]__trow">
+	<td class="[% class_name %]__tcell--title">[% xog | upper %]</td>
+	<td class="[% class_name %]__tcell--list">
+[%		gxg = xog _ '_terms';
+		IF self.$gxg AND self.$gxg.size > 0;
+			arr = self.$gxg;
+			class_suffix = xog;
+			WRAPPER list_container;
+				FOR fn IN arr;
+
+					WRAPPER list_item;
+					PROCESS 'inc/function/xog.tt';
+					END; # end wrapper list__item
+
+				END; # end FOR fn IN arr
+			END; # end wrapper list__container
+		END; # end IF self.$gxg %]
+	</td></tr>
+[%	END; # end for xog %]
+		<td>Enzyme</td>
+		<td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>
+[%#
+#GENE_ENZYMES.enzymes
+#{	db => 'enzyme',
+#	xref => ec_number,
+#	link => enzyme.ec_number,
+#	post_test => enzyme.enzyme_name
+#}
+
+
+%]
+		<tr><td>Pfam</td>
+			<td>
+				<a>pfam00712</a>: DNA_pol3_beta <br>
+				<a>pfam02767</a>: DNA_pol3_beta_2 <br>
+				<a>pfam02768</a>: DNA_pol3_beta_3 <br>
+			</td>
+		</tr>
+[%
+# arr = {
+# 	db => 'tigrfam',
+# 	xref => tigrfam.ext_accession,
+# 	link_text => tigrfam.ext_accession,
+# 	post_text => tigrfam.expanded_name
+# };
+
+# gene_tigrfams.ext_accession
+# tigrfam.expanded_name
+%]
+		<tr><td>TIGRfam</td>
+			<td>
+				<a>TIGR00663</a>:  DNA polymerase III, beta subunit<br>
+			</td>
+		</tr>
+[%
+
+# gene.gene_img_interpro_hits
+%]
+		<tr><td>InterPro</td>
+			<td>
+				<a>IPR001001</a>:  DNA polymerase III, beta chain (SMART SM00480)<br>
+				<a>IPR022634</a>:  DNA polymerase III, beta chain, N-terminal (Pfam PF00712)<br>
+				<a>IPR022635</a>:  DNA polymerase III, beta chain, C-terminal (Pfam PF02768)<br>
+				<a>IPR022637</a>:  DNA polymerase III, beta chain, central (Pfam PF02767)<br>
+				<a>IPR024693</a>:  DNA polymerase III beta, domain (Gene3D G3DSA:3.10.150.10)<br>
+			</td>
+		</tr>
+		<tr><td>GO Terms</td>
+		<td>
+
+[%
+	IF self.go_terms;
+		class_suffix = 'go_term';
+		WRAPPER list_container;
+			FOR fn IN self.go_terms;
+
+				WRAPPER list_item;
+				PROCESS 'inc/function/go_term.tt';
+				END; # end wrapper list_item
+
+			END;
+		END; # end wrapper list_container
+
+	END;
+
+
+# {	gene_xref_families:
+#   "GENE_OID" TEXT,
+#   "DB_NAME" TEXT,
+#   "ID" TEXT,
+#   "DESCRIPTION" TEXT,
+#   "XREF" TEXT,
+#   "TAXON" TEXT,
+#   "SCAFFOLD" TEXT
+
+%]
+		</td></tr>
+		<tr><td>PANTHER</td>
+			<td>
+				<a>PTHR30478</a> <br>
+			</td>
+		</tr>
+
+
+		<tr><td>Superfamily</td>
+			<td>
+				<a>SSF55979</a>:  DNA clamp<br>
+			</td>
+		</tr>
+[%
+# gene_seed_names
+# {	db => 'seed',
+# 	xref => product_name,??
+# 	link_text => gene_seed_names.product_name,
+# 	post_text => gene_seed_names.source _ ' ' _ gene_seed_names.subsystem
+# }
+
+%]
+		<tr>
+			<td>SEED</td>
+			<td>
+[%			IF self.gene_seed_names.size > 0;
+				class_suffix = 'seed';
+				WRAPPER list_container;
+					FOR fn IN self.gene_seed_names;
+
+						WRAPPER list_item;
+						PROCESS 'inc/function/seed.tt';
+						END; # end wrapper list_item
+
+					END;
+				END; # end wrapper list_container
+
+			END; %]
+			</td></tr>
+
+[%	# PROCESS 'inc/function/img_term.tt' %]
+		<tr><td>IMG Term</td> <td> DNA polymerase III, beta subunit (EC 2.7.7.7) (IMG_PIPELINE 2015-09-04)</td></tr>
+
+		</tbody>
+		</table>
+
+	</div> <!-- infoBox -->
+
+
+</div> <!-- row -->
+
+<div class="row">
+
+<h3>Pathway Annotations</h3>
+
+
+
+
+
+	<div class="infoBox">
+	<div class="infoBoxTitle"><h4>Pathway Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
+		<table class="lined">
+
+[%
+
+# ko_term
+# 	IF self.gene_ko_terms;
+#
+# 		class_suffix = 'ko_term'
+# 		WRAPPER list_container;
+# 			FOR fn IN self.gene_ko_terms;
+#
+# 				WRAPPER list_item;
+# 				PROCESS 'inc/function/ko_term.tt';
+# 				END; # end wrapper list__item
+#
+# 			END;
+# 		END; # end wrapper list__container
+#
+# 	END;
+%]
+		<tr><td class="col1">KEGG Orthology</td>
+			<td> <a>KO:K02338</a>: DPO3B, dnaN DNA polymerase III subunit beta [EC:2.7.7.7] </td></tr>
+		<tr><td>KEGG Pathways</td>
+			<td>
+				<a>DNA replication</a><br>
+				<a>Homologous recombination</a><br>
+				<a>Mismatch repair</a><br>
+				<a>Purine metabolism</a><br>
+				<a>Pyrimidine metabolism</a><br>
+			</td>
+		</tr>
+		<tr><td>KEGG Modules</td>
+			<td>
+				<a>DNA polymerase III complex, bacteria</a><br>
+			</td>
+		</tr>
+		<tr><td>MetaCyc Pathways</td>
+			<td>
+
+			</td>
+		</tr>
+		<tr><td>IMG Pathways</td>
+			<td>
+				<a>Bacterial replication sliding clamp</a> (not asserted)<br>
+				<a>Leading strand DNA replication</a> (not asserted)
+			</td>
+		</tr>
+
+		</table>
+	</div> <!-- infobox -->
+
+</div>	<!-- row -->
+
+
+<p><a href="https://img.jgi.doe.gov/cgi-bin/m/main.cgi?section=GeneDetail&page=geneDetail&gene_oid=[% self.gene_oid %]">IMG original</a></p>
+[%	END %]
+
+
+
+
+
