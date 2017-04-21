@@ -82,25 +82,27 @@ select.pp-form {
 // BASE BUTTON STYLE
 //		variables defined in /modules/_variables.scss
 //------------------------------------
-button, a.button, html input[type="button"], input[type="reset"], input[type="submit"] {
+button, a.button, html 
+input[type="button"], 
+//input[type="reset"], 
+input[type="submit"], 
+.button-bar__link, .taxon-cart__submit {
 
 	height: $button-height;
 	background: $button-bgcolor;
-	border: $element-border-width solid transparent;
+	border: 0;
 	padding: 0 $button-padding-sides;
-	font-size: $element-font-size;
 	color: $button-color;
-	text-transform: $button-transform;
-    line-height: $line-ht;
+// 	text-transform: $button-transform;
+	text-align: center;
+    line-height: $button-height;
 
 	&:hover {
     	background: darken($button-bgcolor, 10%);
-//     	color: darken($button-color, 10%);
     }
 
     &:active {
     	background: lighten($button-bgcolor, 10%);
-//     	color: lighten($button-color, 10%);
     }
 }
 
@@ -133,10 +135,122 @@ button:disabled {
 	}
 
 	&.disabled {
+	   pointer-events: none;
+	   cursor: default;
 		&:hover {	background: #ddd;	}
 		&:active {	background: #ddd;	}
 	}
 }
+
+
+// Dropdown Button
+//---------------------------------------------------
+
+.bb-dropdown {
+
+	&__container {
+		line-height: $button-height;
+		height: $button-height;
+	}
+	
+	&__label {
+		width: 100%;
+		border: $element-border-width solid $element-border-color;
+		text-transform: $button-transform;
+		line-height: $button-height;
+		height: $button-height;
+		display: block;
+		padding: 0 40px 0 $element-padding-sides;
+		text-align: center;
+		@include element-up-arrow;
+		&:hover {
+			border: $element-border-width solid darken( $element-border-color, 50% );
+			color: darken($element-border-color, 50%);		
+		}				
+	}
+
+	&__ul {
+		padding: 0;
+		margin: 0;
+	}
+
+	&__item {
+		text-transform: $button-transform;
+		line-height: $button-height;
+		display: none;	
+  		position: relative;	
+  		background: white;
+		padding: 0 40px 0 $element-padding-sides;
+		vertical-align: middle;
+		text-align: center;	
+		border-left: $element-border-width solid $element-border-color;
+		border-right: $element-border-width solid $element-border-color;
+   		float: none; 		
+ 				
+// 		this should be under .bb-dropdown__link, but macro not assigning this class to
+// 		the <a href> element.  This works fine for now.
+		> a {
+			color: $element-border-color;
+			border: 0;
+		
+			&:hover {
+				color: darken($element-border-color, 50%);
+				text-decoration: none;
+				border: 0;
+			}
+		}
+	}
+	
+	&__item:first-child {
+		border-top: $element-border-width solid $element-border-color;
+	}
+
+	&__item:last-child {
+		border-bottom: $element-border-width solid $element-border-color;
+	}
+	
+	/*hide the inputs*/
+	&__cbox {
+		display:none;
+
+// 		show the second level menu of the selected voice*/
+		&:checked + .bb-dropdown__label + .bb-dropdown__ul {
+			display: block;
+		}
+		
+		&:checked + .bb-dropdown__label + .bb-dropdown__ul .bb-dropdown__item {
+			display: block;
+
+		}
+		
+		// change arrow when menu is displayed
+		&:checked + .bb-dropdown__label {
+			@include element-down-arrow;
+		}
+	}
+
+// 	currently not being assigned to <a href> links using the generic_link macro
+	&__link {
+// 		display:table-cell;
+// 		vertical-align: middle;
+// 		text-decoration: none;
+// 		height: $button-height;
+// 		font-size: $element-font-size;
+// 		color: $element-border-color;
+// 		text-transform: $button-transform;
+// 		line-height: $line-ht;
+// 		padding: 0 40px 0 $element-padding-sides;
+// 		border: 0;
+// 		
+// 		&:hover {
+// 			color: darken($element-border-color, 50%);
+// 			text-decoration: none;
+// 			border: 0;
+// 		}
+// 
+	}
+}
+
 
 
 // INPUT BOX
