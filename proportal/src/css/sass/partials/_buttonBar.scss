@@ -26,6 +26,16 @@ button bar usually found under pageTitle
 
 }
 
+// wide screen
+@include minw ( $med ) {
+	.bb-dropdown {
+	
+		&__container {
+			height: $button-height;
+		}
+	}		
+}
+
 // small screen
 @include maxw( $med- ) {
 
@@ -44,22 +54,24 @@ button bar usually found under pageTitle
 			margin-bottom: 10px;
 			margin-left: 0;
 			width: 100%;
- 			position: relative;
 		}
-	}
-	
-	.taxon-cart {
-		&__submit {		width: 100%;	}
 	}
 	
 	.bb-dropdown {
 	
 		&__container {
 			height: inherit;
+			
 		}
 
 		&__item {
 			width: 100%;
 		}
 	}
+	
+	.taxon-cart__submit {		width: 100%;	}
+	.gene-cart__submit {	width: 100%;	}
+	.function-cart__submit { 	width: 100%;	}
+	.scaffold-cart__submit {	width: 100%;	}
+	
 }
