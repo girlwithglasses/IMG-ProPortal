@@ -38,6 +38,7 @@
 				[ 'Locus Type', self.locus_type ],
 				[ 'Locus Tag', self.locus_tag ],
 				[ 'Gene Product Name', self.gene_display_name ],
+				[ 'Description', self.description ]
 				[ 'Original gene product name', self.product_name ],
 				[ 'IMG product source', self.img_product_source ],
 				[ 'DNA Coordinates', self.coordinates ],
@@ -45,7 +46,6 @@
 				[ 'Protein Length ', self.protein_length ],
 				[ 'GC Content', self.gc_percent ],
 				[ 'Date Modified', self.mod_date ],
-				[ 'Description', self.description ]
 				[ 'Pseudogene', self.pseudogene ],
 				[ 'Estimated Copy', self.est_copy ],
 				[ 'Obsolete', self.obsolete_flag ],
@@ -97,7 +97,29 @@
 			</td>
 		</tr>
 [%			END; # end for fn IN self.get_ext_lnks
-		END; %]
+
+		END;
+		IF self.gene_swissprot_names; %]
+		<tr>
+			<td class="gene-ext-links__tcell--attr">
+				SwissProt names
+			</td>
+			<td class="gene-ext-links__tcell--val">
+[%				FOR fn IN self.gene_swissprot_names; %]
+					[% fn.product_name %] ( [%
+						new_arr = [];
+						FOR x IN fn.xref_arr;
+							new_arr.push( '<a rel="external" href="'
+							_ ext_link( 'UniProt', x )
+							_ '">' _ x _ '</a>' );
+						END;
+						new_arr.join('; ');
+					%] )
+[%				END; %]
+			</td>
+		</tr>
+[%		END;
+		%]
 	</tbody>
 </table>
 
@@ -150,25 +172,7 @@
 			END; # end wrapper list__container
 		END; # end IF self.$gxg %]
 	</td></tr>
-[%	END; # end for xog
-
-# COG
-# gene_cog_groups.cog
-# {	db => 'cog',
-# 	xref => cog.cog_id,
-# 	link_text => cog.cog_id,
-# 	post_text => cog.cog_name _ ', ' _ cog.description
-# }
-#
-# # KOG
-# # gene_kog_groups.kog
-# {	db => 'kog',
-# 	xref => kog.kog_id,
-# 	link_text => kog.kog_id,
-# 	post_text => kog.kog_name _ ', ' _ kog.kog_description
-# }
-
-%]
+[%	END; # end for xog %]
 		<td>Enzyme</td>
 		<td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>
 [%#
@@ -341,65 +345,10 @@
 		</table>
 	</div> <!-- infobox -->
 
-	<div class="infoBox">
-	<div class="infoBoxTitle"><h4>Gene Sequence</h4></div>
-
-		<div class="nav_tabs nav_tabs_minimal">
-			<input type="radio" name="seqData" id="tab1_seqData" checked >
-			<label for="tab1_seqData">DNA</label>
-
-			<input type="radio" name="seqData" id="tab2_seqData">
-			<label for="tab2_seqData">Amino Acid</label>
-
-
-			<div id="tabContent1_seqData" class="tabContent">
-				<!-- <h4> DNA </h4> -->
-				<div class="textDisplay">
-				<code> <span style="color: blue">>640083263 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819] (+)strand</span>
-				ATGAAATTAAATTGTTCTCAATCTGAATTAAATAATGCTCTTCAATTGGT
-				TAGTAGAGCTGTTTCTAATCGACCGACGCACCCTGTATTAGCTAATGTTT
-				TGCTCGCTGCTGATGAGGTAACTGGAAAACTTCGCCTAACTGGTTTTGAC
-				TTAAGTTTAGGAATACAAACTTCAATATCTGCTTCTATAGAGAGCAGTGG
-				TGCCATAACTTTGCCTGCTAAGTTATTTGGTGAAATTGTTTCGAAATTAT
-				CTAACGACTCACCTCTAGTTCTGACATCAGATGAAACTAGTCAACAAGTC
-				GAGTTGACTAGTAAAAGTGGAACGTATCAAGTAAGAGGGATGGTGTCTGA
-				TGATTTTCCTGATTTACCTTTGGTAGAAAGCGGTAATTCATTTAAATTGA
-				ATCCATTATTATTATCTAATGCAATTAAATCAACTTTATTTGCAAGCAGT
-				ACTGATGAGGCTAAACAATTACTTACTGGTGTTAATCTTACTTTTGACGG
-				ATATGGGATTGAATCTGCAGCAACTGACGGACATAGATTAGCTGTTCTTA
-				ATTTAAATAATATATTATCTGATTCAAAAGAGATAGATAGTTCTACTAAA
-				TTCGAAAAATTTTCTATTACATTACCTTCCAAATCTTTAAGAGAAGTGGA
-				AAAATTTTTAAGTACTTGTGATATTAGTCAGCCAATTAATTTTTTTGTTG
-				ATAAAGGACAAGTAGTTTTTATATCAGTAGAAGATATTATAACTATAAGA
-				GCTTTAGAAGGTTCTTATCCAAATTATTCGCAATTATTACCTGATACTTT
-				TGAAAATGAATTAGAGTTTGATAGGAAAGAATTTATATCTTCATTAGAAC
-				GAATTGCTGTTTTAGCAGATCAGCATAATAATGTTATAAAGGTAACGACT
-				GACGGCTCTGCAAATTTAATCAAAATTAGTACGGATGCCCAAGATATTGG
-				AACAGGTTATGAGTCACTACCTGTCTCTTATAAAGGGGATTCATTTCAAA
-				TAGCATTTAATGTTAGATATTTATTAGATGGACTTAAAGTCATAGATTCA
-				AACTTGATTAAATTAAGTTGTAATTCTCCAACTACACCTGCGGTTTTCTC
-				ACCTATTAATAGTGACGTTAATTTCACTTATCTAGTAATGCCCATACAAA
-				TACGAAATTAA
-				</code>
-				</div>
-			</div>
-
-			<div id="tabContent2_seqData" class="tabContent">
-				<div class="textDisplay">
-				<code> <span style="color: blue">>640083263 YP_001013829 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819]</span>
-				[% self.aa_residue %]
-				</code>
-				</div>
-			</div>
-
-		</div>
-
-	</div> <!-- infoBox -->
-
 </div>	<!-- row -->
 
 
-
+<p><a href="https://img.jgi.doe.gov/cgi-bin/m/main.cgi?section=GeneDetail&page=geneDetail&gene_oid=[% self.gene_oid %]">IMG original</a></p>
 [%	END %]
 
 
