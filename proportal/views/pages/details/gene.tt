@@ -116,7 +116,7 @@
 
 	</div> <!-- infoBox -->
 
-<!--
+<!-- 
     my $sql = qq{
         select distinct db_name, id, custom_url
         from gene_ext_links
@@ -233,6 +233,7 @@
     chop $s;
     print "$s\n";
  -->
+
 
 
 

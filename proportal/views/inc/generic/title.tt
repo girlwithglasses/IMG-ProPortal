@@ -17,9 +17,7 @@
 	<ul class="button-bar__container">
 [%		IF button.jbrowse; %]
 			<li class="button-bar__item">
-				<a class="button-bar__link" rel="external" href="[%
-					link( 'jbrowse', button.jbrowse );
-				%]">View in JBrowse</a>
+				<a class="button-bar__link pp-button disabled" rel="external" href="[% link( 'jbrowse', button.jbrowse ); %]">View in JBrowse</a>
 			</li>
 [%		END;
 
@@ -30,12 +28,12 @@
 					<input class="bb-dropdown__cbox" id="export-button" type="checkbox" name="menu" />
 					<label class="bb-dropdown__label" for="export-button">Export</label>
 					<ul class="bb-dropdown__ul">
-[%				FOR x IN button.export; %]
+[%						FOR x IN button.export; %]
 						<li class="bb-dropdown__item">
-[%					x.class = 'bb-dropdown__link';
-					generic_link( x ); %]
+[%							x.class = 'bb-dropdown__link';
+							generic_link( x ); %]
 						</li>
-[%				END; %]
+[%						END; %]
 					</ul>
 				</div>
 			</li>
