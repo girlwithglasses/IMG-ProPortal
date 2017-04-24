@@ -18,7 +18,7 @@ has '+page_wrapper' => (
 
 has '+filter_domains' => (
 	default => sub {
-		return [ qw( pp_subset dataset_type locus_type gene_symbol taxon_oid category scaffold_oid ) ];
+		return [ qw( pp_subset dataset_type locus_type gene_symbol taxon_oid category scaffold_oid db xref ) ];
 	}
 );
 
@@ -116,6 +116,29 @@ sub _render {
 
 sub get_data {
 	my $self = shift;
+
+	if ( $self->filters->{db} || $self->filters->{xref} ) {
+		if ( ! $self->filters->{db} || ! $self->filters->{xref} ) {
+			$self->choke({
+				err => 'missing',
+				subject => 'valid function reference supplied; both "db" and "xref" must be'
+			});
+		}
+		# otherwise, we need to structure our query differently
+		if ( 'cycog' ne $self->filters->{db} ) {
+			$self->choke({
+				err => 'not_implemented'
+			});
+		}
+	}
+
+	# for scaffold and taxon filters, get the scaffold/taxon and pull up the genes from it
+	if ( $self->filters->{scaffold} || $self->filters->{taxon} ) {
+
+
+
+	}
+
 	return $self->_core->run_query({
 		query => 'gene_list',
 		filters => $self->filters,
@@ -130,8 +153,8 @@ sub examples {
 		url => '/list/gene?taxon_oid=640069325',
 		desc => 'list all genes for taxon NATL2A (taxon_oid 640069325)'
 	},{
-		url => '/list/gene?function_oid=xxxxxxx',
-		desc => 'list all genes for function xxxxxx (need to define this further with correct ids, etc.)'
+		url => '/list/gene?db=cycog&xref=0000001',
+		desc => 'list all genes for function CyCOG:0000001 (need to define this further with correct ids, etc.)'
 	},{
 		url => '/list/gene?scaffold_oid=xxxxxxx',
 		desc => 'list all genes on scaffold xxxxxx'

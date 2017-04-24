@@ -1,0 +1,30 @@
+/* partials/nav_inpage
+
+	In-page navigation for pages with lotsa content
+	'to top' links
+
+*/
+
+.page-nav {
+
+	// ul element
+	&__list {}
+
+	// nav item
+	&__item {}
+
+	// links in the in-page nav list
+	&__list {}
+
+}
+
+// link to the top of the page
+.to-top {
+
+	&__line {
+		text-align: right;
+	}
+
+	&__link {}
+
+}

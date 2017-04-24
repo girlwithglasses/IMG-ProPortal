@@ -327,6 +327,17 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 
 		prefix '/details' => sub {
 
+			get '/cycog_version/:version' => sub {
+				return dispatch({
+					prefix => 'details',
+					domain => 'cycog_version',
+					params => {
+						version => route_parameters->get( 'version' ),
+					},
+					output_format => $output_fmt->{url}{$mode}
+				});
+			};
+
 			get '/function/:db/:xref' => sub {
 				return dispatch({
 					prefix => 'details',

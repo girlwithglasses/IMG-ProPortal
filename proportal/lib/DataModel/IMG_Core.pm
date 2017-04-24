@@ -1536,6 +1536,7 @@ sub DataModel::IMG_Core::Gene::pseudogene {
 sub DataModel::IMG_Core::Gene::coordinates {
 	my $self = shift;
 
+	return 'unknown' unless $self->{start_coord} && $self->{end_coord} && $self->{strand};
 	$self->expand('gene_frag_coords', ( -order_by => 'frag_order' ));
 
 	my $coord_str = $self->{start_coord} . '..' . $self->{end_coord};
@@ -1561,11 +1562,33 @@ sub DataModel::IMG_Core::Gene::coordinates {
 
 sub DataModel::IMG_Core::Gene::gene_length {
 	my $self = shift;
-	return ( $self->{dna_seq_length} . ' bp' || 'unknown' );
+	return $self->{dna_seq_length} . ' bp' if $self->{dna_seq_length};
+	return 'unknown';
 }
 sub DataModel::IMG_Core::Gene::protein_length {
 	my $self = shift;
-	return ( $self->{aa_seq_length} . ' aa' || 'unknown' );
+	return $self->{aa_seq_length} . ' aa' if $self->{aa_seq_length};
+	return 'unknown';
+}
+
+sub DataModel::IMG_Core::Enzyme::xref {
+	my $self = shift;
+	if ( ! $self->{xref} ) {
+		my $xref = $self->{ec_number};
+		$xref =~ tr/A-Z/a-z/;
+		$self->{xref} = $xref;
+	}
+	return $self->{xref};
+}
+
+sub DataModel::IMG_Core::Enzyme::name {
+	my $self = shift;
+	if ( ! $self->{name} ) {
+		my $name = $self->{enzyme_name};
+		$name =~ s/\.$//g;
+		$self->{name} = $name;
+	}
+	return $self->{name};
 }
 
 =cut

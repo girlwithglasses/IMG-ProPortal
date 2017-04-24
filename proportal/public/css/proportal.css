@@ -2441,7 +2441,7 @@ small, .small, pre.debug {
   line-height: 24px;
   line-height: 1.5rem; }
 
-.underline {
+.underline, .infoBox .gene-details__caption, .infoBox-double .gene-details__caption, .infoBox .gene-list__caption, .infoBox-double .gene-list__caption, .infoBox .taxon-scaffold-details__caption, .infoBox-double .taxon-scaffold-details__caption, .infoBox .gene-ext-links__caption, .infoBox-double .gene-ext-links__caption, .infoBox .gene-fn-annots__caption, .infoBox-double .gene-fn-annots__caption, .infoBox .gene-pway-annots__caption, .infoBox-double .gene-pway-annots__caption, .infoBox .gene-cycog-annots__caption, .infoBox-double .gene-cycog-annots__caption {
   border-bottom: 1px solid silver; }
 
 /* standard text size is 16px */
@@ -2913,9 +2913,7 @@ button:disabled,
   /*hide the inputs*/ }
   .bb-dropdown__container {
     line-height: 48px;
-    line-height: 3rem;
-    height: 48px;
-    height: 3rem; }
+    line-height: 3rem; }
   .bb-dropdown__label {
     width: 100%;
     border: 1px solid #5a5a5a;
@@ -3038,11 +3036,11 @@ table {
   table .clearStyle {
     border: 0; }
 
-table.condensed td {
+table.condensed td, .infoBox table.gene-details__table td, .infoBox-double table.gene-details__table td, .infoBox table.gene-list__table td, .infoBox-double table.gene-list__table td, .infoBox table.taxon-scaffold-details__table td, .infoBox-double table.taxon-scaffold-details__table td, .infoBox table.gene-ext-links__table td, .infoBox-double table.gene-ext-links__table td, .infoBox table.gene-fn-annots__table td, .infoBox-double table.gene-fn-annots__table td, .infoBox table.gene-pway-annots__table td, .infoBox-double table.gene-pway-annots__table td, .infoBox table.gene-cycog-annots__table td, .infoBox-double table.gene-cycog-annots__table td {
   padding: 4px 0 4px 0;
   padding: .25rem 0 .25rem 0; }
 
-table.lined td {
+table.lined td, .infoBox table.gene-fn-annots__table td, .infoBox-double table.gene-fn-annots__table td, .infoBox table.gene-pway-annots_table td, .infoBox-double table.gene-pway-annots_table td {
   border-bottom: 1px solid silver; }
 
 .col1 {
@@ -3787,6 +3785,15 @@ article a {
   article a:hover, article a:focus, article a:active {
     border-bottom: 1px solid; }
 
+/* partials/nav_inpage
+
+	In-page navigation for pages with lotsa content
+	'to top' links
+
+*/
+.to-top__line {
+  text-align: right; }
+
 /* partials/extras */
 /* remove instructions on pages where clicking brings up info */
 .instructions {
@@ -4153,24 +4160,8 @@ article a {
   display: inline; }
 
 /* partials/infoBox
-found on details pages 
+found on details pages
 */
-.infoBox, .infoBox-double {
-  padding: 0 20px 20px 20px; }
-  .infoBox .textDisplay, .infoBox-double .textDisplay {
-    width: 100%;
-    height: 450px;
-    padding: 10px 20px;
-    overflow: auto;
-    border: 1px solid silver; }
-
-.infoBoxTitle {
-  margin: 10px 0 5px 0;
-  border-bottom: 1px solid #5a5a5a; }
-
-.infoBox-double {
-  width: 100%; }
-
 .infoBox {
   /* this may need to be defined somewhere else... */
   /* Small screen */
@@ -4183,6 +4174,75 @@ found on details pages
   @media all and (min-width: 1024px) {
     .infoBox {
       width: 50%; } }
+
+.infoBox, .infoBox-double {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem; }
+  .infoBox .gene-details__caption, .infoBox-double .gene-details__caption {
+    font-weight: bold;
+    margin: 12px 0;
+    margin: 0.75rem 0;
+    padding-left: 0; }
+  .infoBox .gene-details__thead, .infoBox-double .gene-details__thead {
+    display: none; }
+  .infoBox .gene-list__caption, .infoBox-double .gene-list__caption {
+    font-weight: bold;
+    margin: 12px 0;
+    margin: 0.75rem 0;
+    padding-left: 0; }
+  .infoBox .gene-list__thead, .infoBox-double .gene-list__thead {
+    display: none; }
+  .infoBox .taxon-scaffold-details__caption, .infoBox-double .taxon-scaffold-details__caption {
+    font-weight: bold;
+    margin: 12px 0;
+    margin: 0.75rem 0;
+    padding-left: 0; }
+  .infoBox .taxon-scaffold-details__thead, .infoBox-double .taxon-scaffold-details__thead {
+    display: none; }
+  .infoBox .gene-ext-links__caption, .infoBox-double .gene-ext-links__caption {
+    font-weight: bold;
+    margin: 12px 0;
+    margin: 0.75rem 0;
+    padding-left: 0; }
+  .infoBox .gene-ext-links__thead, .infoBox-double .gene-ext-links__thead {
+    display: none; }
+  .infoBox .gene-fn-annots__caption, .infoBox-double .gene-fn-annots__caption {
+    font-weight: bold;
+    margin: 12px 0;
+    margin: 0.75rem 0;
+    padding-left: 0; }
+  .infoBox .gene-fn-annots__thead, .infoBox-double .gene-fn-annots__thead {
+    display: none; }
+  .infoBox .gene-pway-annots__caption, .infoBox-double .gene-pway-annots__caption {
+    font-weight: bold;
+    margin: 12px 0;
+    margin: 0.75rem 0;
+    padding-left: 0; }
+  .infoBox .gene-pway-annots__thead, .infoBox-double .gene-pway-annots__thead {
+    display: none; }
+  .infoBox .gene-cycog-annots__caption, .infoBox-double .gene-cycog-annots__caption {
+    font-weight: bold;
+    margin: 12px 0;
+    margin: 0.75rem 0;
+    padding-left: 0; }
+  .infoBox .gene-cycog-annots__thead, .infoBox-double .gene-cycog-annots__thead {
+    display: none; }
+  .infoBox .textDisplay, .infoBox-double .textDisplay {
+    width: 100%;
+    height: 360px;
+    height: 22.5rem;
+    padding: 12px 24px;
+    padding: 0.75rem 1.5rem;
+    overflow: auto;
+    border: 1px solid silver; }
+
+.infoBoxTitle {
+  margin: 12px 0 8px 0;
+  margin: 0.75rem 0 0.5rem 0;
+  border-bottom: 1px solid #5a5a5a; }
+
+.infoBox-double {
+  width: 100%; }
 
 /* partials/pageTitle
 page title for a details page
@@ -4209,6 +4269,11 @@ button bar usually found under pageTitle
   .button-bar__link {
     display: block; }
 
+@media only screen and (min-width: 768px) {
+  .bb-dropdown__container {
+    height: 48px;
+    height: 3rem; } }
+
 @media only screen and (max-width: 767px) {
   .button-bar__container {
     float: left;
@@ -4220,13 +4285,18 @@ button bar usually found under pageTitle
     clear: both;
     margin-bottom: 10px;
     margin-left: 0;
-    width: 100%;
-    position: relative; }
-  .taxon-cart__submit {
     width: 100%; }
   .bb-dropdown__container {
     height: inherit; }
   .bb-dropdown__item {
+    width: 100%; }
+  .taxon-cart__submit {
+    width: 100%; }
+  .gene-cart__submit {
+    width: 100%; }
+  .function-cart__submit {
+    width: 100%; }
+  .scaffold-cart__submit {
     width: 100%; } }
 
 /* partials/grid
@@ -4448,9 +4518,7 @@ button:disabled,
   /*hide the inputs*/ }
   .bb-dropdown__container {
     line-height: 48px;
-    line-height: 3rem;
-    height: 48px;
-    height: 3rem; }
+    line-height: 3rem; }
   .bb-dropdown__label {
     width: 100%;
     border: 1px solid #5a5a5a;

@@ -59,37 +59,46 @@ my $case_stts = {
 
 };
 
+=head2 default_select
 
+Assembles the parts of a standard 'select' query from the query library
 
-
-
-
-
+=cut
 
 sub default_select {
 	my $self = shift;
 	my $args = shift;
 
-	return $self->schema( delete $args->{schema} )->table( delete $args->{table} )
+	if ( $args->{table} ) {
+		return $self->schema( delete $args->{schema} )->table( delete $args->{table} )
 		->select(
 			%$args,
 			-result_as => 'statement'
 		);
+	}
+	if ( $args->{join} ) {
+		my $j = delete $args->{join};
+		return $self->schema( delete $args->{schema} )->join( @$j )
+		->select(
+			%$args,
+			-result_as => 'statement'
+		);
+	}
 }
 
+my $select_queries = {};
 
-=head3 clade
+# =head3 clade
+#
+# Search for spp with a clade defined
+#
+# No additional arguments
+#
+# =cut
 
-Search for spp with a clade defined
+$select_queries->{clade} = sub {
 
-No additional arguments
-
-=cut
-
-sub clade {
-	my $self = shift;
-
-	return $self->default_select({
+	return {
 		schema => 'img_core',
 		table  => 'GoldTaxonVw',
 		-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
@@ -97,77 +106,65 @@ sub clade {
 			clade => { '!=', undef },
 		},
 		-order_by => [ qw( taxon_display_name ) ],
-	});
+	};
 
-# 	return $self->schema('img_core')->table('GoldTaxonVw')
-# 		->select(
-# 			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
-# 			-where    => {
-# 				clade => { '!=', undef },
-# 			},
-# 			-order_by => [ qw( taxon_display_name ) ],
-# 			-result_as => 'statement',
-# 		);
+};
 
-}
+# =head3 distinct_clade
+#
+# Collect all clades from the ProPortal set
+#
+# =cut
 
-=head3 distinct_clade
+$select_queries->{distinct_clade} = sub {
 
-Collect all clades from the ProPortal set
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns => [ qw( clade clade|generic_clade genus ) ],
+		-where    => {
+			clade => { '!=' => undef },
+		},
+		-group_by => [ qw( clade genus ) ],
+	};
+};
 
-=cut
+# =head3 location
+#
+# Search for latitude/longitude
+#
+# No additional arguments
+#
+# Queries the GoldTaxonVw table, which is restricted to public taxa
+#
+# =cut
 
-sub distinct_clade {
-	my $self = shift;
+$select_queries->{location} = sub {
 
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns => [ qw( clade clade|generic_clade genus ) ],
-			-where    => {
-				clade => { '!=' => undef },
-			},
-			-group_by => [ qw( clade genus ) ],
-			-result_as => 'statement'
-		);
-}
-
-=head3 location
-
-Search for latitude/longitude
-
-No additional arguments
-
-Queries the GoldTaxonVw table, which is restricted to public taxa
-
-=cut
-
-sub location {
-	my $self = shift;
-
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype pp_subset ) ],
-			-where    => {
-				latitude  => { '!=' => undef },
-				longitude => { '!=' => undef },
-			},
-			-order_by => [ qw( latitude longitude genome_type taxon_display_name ) ],
-			-result_as => 'statement',
-		);
-}
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype pp_subset ) ],
+		-where    => {
+			latitude  => { '!=' => undef },
+			longitude => { '!=' => undef },
+		},
+		-order_by => [ qw( latitude longitude genome_type taxon_display_name ) ],
+	};
+};
 
 
-=head3 longhurst_counts
+# =head3 longhurst_counts
+#
+#
+#
+# =cut
 
+$select_queries->{longhurst_counts} = sub {
 
-
-=cut
-
-sub longhurst_counts {
-	my $self = shift;
-
-	return $self->schema('img_core')->table('GoldTaxonVw')
-	->select(
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
 		-columns  => [ 'count(taxon_oid)|count', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
 		-group_by => [ qw( longhurst_code longhurst_description ) ],
 		-order_by => [ 'longhurst_description' ],
@@ -175,23 +172,21 @@ sub longhurst_counts {
 			pp_subset => { '!=', undef },
 #				is_public => 'Yes'
 		},
-		-result_as => 'statement'
-#		-result_as => ['hashref' => 'longhurst_description' ]
-	);
+	};
 
-}
+};
 
-=head3 longhurst
+# =head3 longhurst
+#
+#
+#
+# =cut
 
+$select_queries->{longhurst} = sub {
 
-
-=cut
-
-sub longhurst {
-	my $self = shift;
-
-	return $self->schema('img_core')->table('GoldTaxonVw')
-	->select(
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
 		-columns  => [ 'taxon_oid', 'taxon_display_name', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
 #		-group_by => [ qw( longhurst_code longhurst_description ) ],
 		-order_by => [ 'longhurst_description', 'taxon_display_name' ],
@@ -199,344 +194,366 @@ sub longhurst {
 			pp_subset => { '!=', undef },
 #				is_public => 'Yes'
 		},
-		-result_as => 'statement'
-#		-result_as => ['hashref' => 'longhurst_description' ]
-	);
+	};
 
-}
+};
 
 
-=head3 ecosystem
+# =head3 ecosystem
+#
+# Query for ecosystem
+#
+# No additional arguments
+#
+# =cut
 
-Query for ecosystem
+$select_queries->{ecosystem} = sub {
 
-No additional arguments
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns  => [ qw( taxon_display_name taxon_oid genome_type domain genus ), map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ecotype geo_location ) ],
+		-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem taxon_display_name ) ],
+	};
+};
 
-=cut
+# =head3 ecotype
+#
+# Query for ecotype
+#
+# =cut
 
-sub ecosystem {
-	my $self = shift;
+$select_queries->{ecotype} = sub {
 
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid genome_type domain genus ), map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ecotype geo_location ) ],
-			-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem taxon_display_name ) ],
-			-result_as => 'statement',
-		);
-}
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns  => [ qw( taxon_display_name taxon_oid clade clade|generic_clade ecotype ) ],
+		-where => {
+			ecotype => { '!=' => undef },
+			clade => { '!=' => undef },
+		},
+	};
+};
 
-=head3 ecotype
+# =head3 phylogram
+#
+# NCBI + IMG taxonomy
+#
+# =cut
 
-Query for ecotype
+$select_queries->{phylogram} = sub {
 
-=cut
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns  => [ qw( genome_type taxon_oid taxon_display_name ncbi_taxon_id domain phylum ir_class ir_order family clade ncbi_kingdom ncbi_phylum ncbi_class ncbi_order ncbi_family ncbi_genus ncbi_species pp_subset ) ],
+		-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
+	};
 
-sub ecotype {
-	my $self = shift;
+};
 
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ qw( taxon_display_name taxon_oid clade clade|generic_clade ecotype ) ],
-			-where => {
-				ecotype => { '!=' => undef },
-				clade => { '!=' => undef },
-			},
-			-result_as => 'statement',
-		);
-}
+# =head3 taxon_oid_display_name
+#
+# Simple tax ID / name query
+#
+# =cut
 
-sub phylogram {
-	my $self = shift;
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ qw( genome_type taxon_oid taxon_display_name ncbi_taxon_id domain phylum ir_class ir_order family clade ncbi_kingdom ncbi_phylum ncbi_class ncbi_order ncbi_family ncbi_genus ncbi_species pp_subset ) ],
-			-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
-			-result_as => 'statement',
-		);
-}
+$select_queries->{taxon_oid_display_name} = sub {
 
-sub taxon_oid_display_name {
-	my $self = shift;
+	return {
+		schema => 'img_core',
+		table  => 'Taxon',
+		-columns  => [ 'taxon_oid', 'taxon_display_name' ],
+	};
+};
 
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ 'taxon_oid', 'taxon_display_name' ],
-			-result_as => 'statement',
-		);
-}
+# =head3 taxon_dataset_type
+#
+# dataset type view query
+#
+# =cut
 
+$select_queries->{taxon_dataset_type} = sub {
 
-sub taxon_dataset_type {
-	my $self = shift;
-
-	return $self->schema('img_core')->table('PpDataTypeView')
-		->select(
-			-columns  => [ '*' ],
-			-order_by => [ qw( dataset_type genome_type pp_subset taxon_display_name ) ],
-			-result_as => 'statement',
-		);
-}
-
-=head3 subset_stats
-
-Count of number of genomes in each of the proportal subset types
-
-@param  [none]
-
-@return $resultset, with fields:
-
-pp_subset => ..., count => ...
-
-=cut
-
-sub subset_stats {
-	my $self = shift;
-
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns => [ 'pp_subset', 'count(distinct taxon_oid)|count' ],
-			-group_by => 'pp_subset',
-			-result_as => 'statement'
-		);
-}
-
-
-
-sub metagenomes_by_ecosystem {
-	my $self = shift;
-
-	return $self->schema('img_core')->table('GoldTaxonVw')
-		->select(
-			-columns  => [ 'count(distinct taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
-			-group_by => [ qw( ecosystem ecosystem_category ) ],
-			-where => {
-				pp_subset => 'metagenome'
-			},
-			-result_as => 'statement',
-		);
-}
-
-
-=head3 taxon_metadata
-
-Given an array of taxon IDs (or other 'where' statement to identify
-taxa), retrieve all associated metadata
-
-@param  args->{where} should be in the form
-
-	taxon_oid => [ arrayref of taxon IDs ]
-
-@return $resultset, with fields:
-
-genome_type
-taxon_oid
-taxon_display_name
-ncbi_taxon_id
-domain
-phylum
-ir_class
-ir_order
-family
-clade
-ncbi_kingdom
-ncbi_phylum
-ncbi_class
-ncbi_order
-ncbi_family
-ncbi_genus
-ncbi_species
-isolation
-oxygen_req
-cell_shape
-motility
-sporulation
-temp_range
-salinity
-geo_location
-latitude
-longitude
-altitude
-depth
-culture_type
-gram_stain
-biotic_rel
-ecotype
-longhurst_code
-longhurst_description
-ecosystem
-ecosystem_category
-ecosystem_type
-ecosystem_subtype
-specific_ecosystem
-pp_subset
-
-=cut
-
-sub taxon_metadata {
-	my $self = shift;
-	my $args = shift;
-
-	return $self->schema('img_core')->table('GoldTaxonVw')
-	->select(
+	return {
+		schema => 'img_core',
+		table  => 'PpDataTypeView',
 		-columns  => [ '*' ],
-		-where    => $args->{where},
-		-result_as => 'statement',
-	);
-}
+		-order_by => [ qw( dataset_type genome_type pp_subset taxon_display_name ) ],
+	};
+};
+
+# =head3 subset_stats
+#
+# Count of number of genomes in each of the proportal subset types
+#
+# @param  [none]
+#
+# @return $resultset, with fields:
+#
+# pp_subset => ..., count => ...
+#
+# =cut
+
+$select_queries->{subset_stats} = sub {
+
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns => [ 'pp_subset', 'count(distinct taxon_oid)|count' ],
+		-group_by => 'pp_subset',
+	};
+};
 
 
-=head3 gene_oid_taxon_oid
 
-Given an array of gene IDs, get the taxon_oid
+$select_queries->{metagenomes_by_ecosystem} = sub {
 
-@param  args->{where} should be in the form
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns  => [ 'count(distinct taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
+		-group_by => [ qw( ecosystem ecosystem_category ) ],
+		-where => {
+			pp_subset => 'metagenome'
+		}
+	};
+};
 
-	gene_oid => [ arrayref of gene IDs ] (or a single gene_oid)
 
-@return arrayref of results in the format
+# =head3 taxon_metadata
+#
+# Given an array of taxon IDs (or other 'where' statement to identify
+# taxa), retrieve all associated metadata
+#
+# @param  args->{where} should be in the form
+#
+# 	taxon_oid => [ arrayref of taxon IDs ]
+#
+# @return $resultset, with fields:
+#
+# genome_type
+# taxon_oid
+# taxon_display_name
+# ncbi_taxon_id
+# domain
+# phylum
+# ir_class
+# ir_order
+# family
+# clade
+# ncbi_kingdom
+# ncbi_phylum
+# ncbi_class
+# ncbi_order
+# ncbi_family
+# ncbi_genus
+# ncbi_species
+# isolation
+# oxygen_req
+# cell_shape
+# motility
+# sporulation
+# temp_range
+# salinity
+# geo_location
+# latitude
+# longitude
+# altitude
+# depth
+# culture_type
+# gram_stain
+# biotic_rel
+# ecotype
+# longhurst_code
+# longhurst_description
+# ecosystem
+# ecosystem_category
+# ecosystem_type
+# ecosystem_subtype
+# specific_ecosystem
+# pp_subset
+#
+# =cut
 
-	{ gene_oid => #####, taxon_oid => ##### }
+$select_queries->{taxon_metadata} = sub {
+	return {
+		schema => 'img_core',
+		table  => 'GoldTaxonVw',
+		-columns  => [ '*' ],
+	};
+};
 
-=cut
 
-sub gene_oid_taxon_oid {
+# =head3 gene_oid_taxon_oid
+#
+# Given an array of gene IDs, get the taxon_oid
+#
+# @param  args->{where} should be in the form
+#
+# 	gene_oid => [ arrayref of gene IDs ] (or a single gene_oid)
+#
+# @return arrayref of results in the format
+#
+# 	{ gene_oid => #####, taxon_oid => ##### }
+#
+# =cut
+
+$select_queries->{gene_oid_taxon_oid} = sub {
+
+	return {
+		schema => 'img_core',
+		table  => 'Gene',
+		-columns => [ qw( gene_oid taxon|taxon_oid ) ],
+	};
+};
+
+# =head3 gene_list
+#
+# Get all genes by taxon_oid (or other criterion)
+#
+# @param taxon_oid => nnnnnnnnn
+#
+# @return arrayref of gene objects
+#
+# =cut
+
+$select_queries->{gene_list} = sub {
+
+	return {
+		schema => 'img_core',
+		join  => [ qw[ Gene <=> scaffold <=> gold_tax ] ],
+		-columns => [ qw(
+			gene_oid
+			gene_symbol
+			gene_display_name
+			product_name
+			description
+			taxon_oid
+			taxon_display_name
+			pp_subset
+			scaffold|scaffold_oid
+			scaffold_name
+		) ],
+		-where   => { 'gene.obsolete_flag' => 'No' },
+	};
+};
+
+$select_queries->{gene_list_count} = sub {
+
+	return {
+		schema => 'img_core',
+		join => [ qw[ Gene <=> gold_tax ] ],
+		-columns => [ 'count( gene_oid )' ],
+		-where   => { 'gene.obsolete_flag' => 'No' },
+	};
+};
+
+# =head3 cycog_list
+#
+# CyCOG table only
+#
+# =cut
+
+$select_queries->{cycog_list} = sub {
+	return {
+		schema => 'img_cycog',
+		table  => 'Cycog',
+		-columns => '*'
+	};
+};
+
+$select_queries->{cycog_details} = sub {
+
+	return {
+		schema => 'img_cycog',
+		table  => 'Cycog',
+		-columns => '*'
+#		-where => $args->{where},
+	};
+};
+
+# =head3 cycogs_by_annotation_criteria
+#
+# CyCOG data, based on some annotation property
+#
+# =cut
+
+$select_queries->{cycog_by_annotation} = sub {
+
+	return {
+		schema => 'img_cycog',
+		join => [ qw[ GeneCycogGroups <=> cycog ] ],
+		-columns => [ 'cycog.*' ],
+	};
+};
+
+# =head3 cycog_version
+#
+# =cut
+
+$select_queries->{cycog_version} = sub {
+
+	return {
+		schema => 'img_cycog',
+		table => 'CycogRelease',
+		-columns => [ '*' ],
+	};
+};
+
+# =head3 cycog_version_latest
+#
+# The most recent CyCOG release
+#
+# =cut
+
+$select_queries->{cycog_version_latest} = sub {
+
+	return {
+		schema => 'img_cycog',
+		join => [ qw[ CycogRelease <=> current ] ],
+		-columns => [ 'cycog_release.*' ],
+	};
+};
+
+
+# =head3 gene_details
+#
+# Given an array of gene IDs, get the gene data
+#
+# @param  args->{where} should be in the form
+#
+# 	gene_oid => [ arrayref of gene IDs ] (or a single gene_oid)
+#
+# @return arrayref of results in the format
+#
+# 	{ gene => #####, taxon => ##### }
+#
+# =cut
+
+$select_queries->{gene_details} = sub {
+
+	return {
+		schema => 'img_core',
+		join => [ qw[ Gene <=> scaffold <=> gold_tax ] ],
+		-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name', 'scaffold_oid', 'scaffold_name' ],
+	};
+
+};
+
+# =head3 taxon_details
+#
+# Taxon details from taxon and gold_sequencing_project tables
+#
+# =cut
+
+$select_queries->{taxon_details} = sub {
 
 	my $self = shift;
 	my $args = shift;
 
-	return $self->schema('img_core')->table('Gene')
-		->select(
-			-columns => [ qw( gene_oid taxon|taxon_oid ) ],
-			-where   => $args->{where},
-			-result_as => 'statement'
-		);
-}
-
-=head3 gene_list
-
-Get all genes by taxon_oid (or other criterion)
-
-@param taxon_oid => nnnnnnnnn
-
-@return arrayref of gene objects
-
-=cut
-
-sub gene_list {
-	my $self = shift;
-	my $args = shift;
-
-	$args->{where}{'gene.obsolete_flag'} = 'No';
-
-	return $self->schema('img_core')->join( qw[ Gene <=> scaffold <=> gold_tax ] )
-		->select(
-			-columns => [ qw(
-				gene_oid
-				gene_symbol
-				gene_display_name
-				product_name
-				description
-				taxon_oid
-				taxon_display_name
-				pp_subset
-				scaffold|scaffold_oid
-				scaffold_name
-			) ],
-			-where => $args->{where},
-			-result_as => 'statement'
-		);
-}
-
-sub gene_list_count {
-	my $self = shift;
-	my $args = shift;
-
-	$args->{where}{'gene.obsolete_flag'} = 'No';
-
-	return $self->schema('img_core')->join( qw[ Gene <=> gold_tax ] )
-		->select(
-			-columns => [ 'count( gene_oid )' ],
-			-where   => $args->{where},
-			-result_as => 'statement'
-		);
-}
-
-sub cycog_list {
-	my $self = shift;
-	my $args = shift;
-
-	return $self->schema('img_cycog')->table('Cycog')
-		->select(
-			-columns => [ '*' ],
-			-result_as => 'statement'
-		);
-}
-
-
-sub cycog_details {
-	my $self = shift;
-	my $args = shift;
-
-	return $self->schema('img_cycog')->table('Cycog')
-		->select(
-			-columns => [ '*' ],
-			-where => $args->{where},
-			-result_as => 'statement'
-		);
-}
-
-sub cycogs_by_gene_oid {
-	my $self = shift;
-	my $args = shift;
-	return $self->schema('img_cycog')->join( qw[ GeneCycogGroups <=> cycog ] )
-		->select(
-			-columns => [ 'cycog.*' ],
-			-where => $args->{where},
-			-result_as => 'statement'
-		);
-}
-
-=head3 gene_details
-
-Given an array of gene IDs, get the gene data
-
-@param  args->{where} should be in the form
-
-	gene_oid => [ arrayref of gene IDs ] (or a single gene_oid)
-
-@return arrayref of results in the format
-
-	{ gene => #####, taxon => ##### }
-
-=cut
-
-sub gene_details {
-
-	my $self = shift;
-	my $args = shift;
-
-#	my $gene = $self->schema('img_core')->table('PPGeneDetails')
-	return $self->schema('img_core')->join( qw[ Gene <=> scaffold <=> gold_tax ] )
-		->select(
-			-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name', 'scaffold_oid', 'scaffold_name' ],
-			-where   => $args->{where},
-			-result_as => 'statement'
-		);
-
-}
-
-=head3 taxon_details
-
-Taxon details from taxon and gold_sequencing_project tables
-
-=cut
-
-sub taxon_details {
-
-	my $self = shift;
-	my $args = shift;
-
-	my $results = $self->taxon_name_public( $args )->all;
+	my $results = $self->default_select( $select_queries->{taxon_name_public}->( $self, $args ) )->all;
 
 	if ( scalar @$results > 0) {
 		if ( $results->[0]->{viewable} eq 'private' ) {
@@ -547,12 +564,12 @@ sub taxon_details {
 		}
 
 		# otherwise, return taxonomic info
-		return $self->schema('img_core')->join( qw[ GoldSequencingProject <=> taxa ] )
-		->select(
+		return {
+			schema => 'img_core',
+			join => [ qw[ GoldSequencingProject <=> taxa ] ],
 			-columns => [ '*' ],
 			-where => { 'taxon.taxon_oid' => $args->{where}{taxon_oid} },
-			-result_as => 'statement',
-		);
+		};
 	}
 
 	$self->choke({
@@ -561,226 +578,185 @@ sub taxon_details {
 		type => 'taxon_oid'
 	});
 
-}
+};
 
-=head3 scaffold_details
-
-Given an array of scaffold IDs, retrieve the scaffold data plus taxon ID and name
-
-Uses table gold_tax, so implicitly only selects public genomes
-
-@param  args->{where} should be in the form
-
-	scaffold_oid => [ arrayref of scaffold IDs ] (or a single scaffold_oid)
-
-@return arrayref of scaffold objects
-
-=cut
-
-
-
-sub scaffold_details {
-	my $self = shift;
-	my $args = shift;
-
-	return $self->schema('img_core')->join( qw[ Scaffold <=> gold_tax ] )
-		->select(
-			-columns => [ 'scaffold.*', 'taxon_oid', 'taxon_display_name' ],
-			-where   => $args->{where},
-			-result_as => 'statement'
-		);
+# =head3 scaffold_details
+#
+# Given an array of scaffold IDs, retrieve the scaffold data plus taxon ID and name
+#
+# Uses table gold_tax, so implicitly only selects public genomes
+#
+# @param  args->{where} should be in the form
+#
+# 	scaffold_oid => [ arrayref of scaffold IDs ] (or a single scaffold_oid)
+#
+# @return arrayref of scaffold objects
+#
+# =cut
 
 
 
-}
+$select_queries->{scaffold_details} = sub {
 
-=head3 scaffold_list
+	return {
+		schema => 'img_core',
+		join => [ qw[ Scaffold <=> gold_tax ] ],
+		-columns => [ 'scaffold.*', 'taxon_oid', 'taxon_display_name' ],
+	};
 
-Given search criteria, retrieve the scaffold data plus taxon ID and name
+};
 
-Uses table gold_tax, so implicitly only selects public genomes
-
-@param  args->{where} encodes filter data
-
-@return arrayref of scaffold objects
-
-=cut
-
-
-sub scaffold_list {
-	my $self = shift;
-	my $args = shift;
-
-	return $self->schema('img_core')->join( qw[ Scaffold <=> gold_tax ] )
-		->select(
-			-columns => [ qw(
-				scaffold_oid
-				scaffold_name
-				mol_type
-				mol_topology
-				ext_accession
-				db_source
-				taxon_oid
-				taxon_display_name
-				pp_subset
-			) ],
-			-where   => $args->{where},
-			-result_as => 'statement'
-		);
-}
-
-=head3
-
-Gene COGs or KOGs by taxon
-
-        select distinct g.gene_oid, g.locus_tag, g.gene_display_name, c.${og}_id, c.${og}_name
-        from gene g, gene_${og}_groups gcg, $og c,
-           ${og}_functions cfs, ${og}_function cf
-        where g.taxon = ?
-        and g.locus_type = 'CDS'
-        and g.obsolete_flag = 'No'
-        and g.gene_oid = gcg.gene_oid
-        and g.taxon = gcg.taxon
-        and gcg.$og = c.${og}_id
-        and c.${og}_name is not null
-        and c.${og}_id = cfs.${og}_id
-        and cfs.functions = cf.function_code
-        and cf.function_code = ?
-
-        $rclause = WebUtil::urClause('g.taxon');  # public/private
-        $imgClause = WebUtil::imgClauseNoTaxon('g.taxon'); # taxon table join
-
-=cut
+# =head3 scaffold_list
+#
+# Given search criteria, retrieve the scaffold data plus taxon ID and name
+#
+# Uses table gold_tax, so implicitly only selects public genomes
+#
+# @param  args->{where} encodes filter data
+#
+# @return arrayref of scaffold objects
+#
+# =cut
 
 
+$select_queries->{scaffold_list} = sub {
 
+	return {
+		schema => 'img_core',
+		join => [ qw[ Scaffold <=> gold_tax ] ],
+		-columns => [ qw(
+			scaffold_oid
+			scaffold_name
+			mol_type
+			mol_topology
+			ext_accession
+			db_source
+			taxon_oid
+			taxon_display_name
+			pp_subset
+		) ],
+	};
+};
 
+# =head3 taxon_name_public
+#
+# @param  args->{where} should be in the form
+#
+# 	taxon_oid   => ######
+#
+# @return arrayref of results in the format
+#
+# 	{	taxon_oid => #####,
+# 		taxon_display_name => #####,
+# 		is_public => 'Yes|No',
+# 		viewable => 'public|private|accessible'
+# 	}
+#
+# =cut
 
-=head3 taxon_name_public
-
-@param  args->{where} should be in the form
-
-	taxon_oid   => ######
-
-@return arrayref of results in the format
-
-	{	taxon_oid => #####,
-		taxon_display_name => #####,
-		is_public => 'Yes|No',
-		viewable => 'public|private|accessible'
-	}
-
-=cut
-
-sub taxon_name_public {
+$select_queries->{taxon_name_public} = sub {
 	my $self = shift;
 	my $args = shift;
 
 	my $tax_stt = $case_stts->{taxon_public}->( $self );
 	log_debug { $tax_stt };
 
-	return $self->schema('img_core')->table('Taxon')
-	->select(
+	return {
+		schema => 'img_core',
+		table => 'Taxon',
 		-columns => [ $tax_stt, qw( taxon_oid taxon_display_name is_public ) ],
 		-where   => { taxon_oid => $args->{where}{taxon_oid} },
-		-result_as => 'statement'
-	);
+	};
 
-}
+};
 
 
-=head3 taxon_permissions_by_contact_oid
+# =head3 taxon_permissions_by_contact_oid
+#
+# Given a user's contact ID and a taxon ID, see if the user is permitted
+# to access the taxon.
+#
+# @param  args->{where} should be in the form
+#
+# 	taxon_permissions   => ######
+# 	contact_oid => ######
+#
+# @return arrayref of results in the format
+#
+# 	{ contact_oid => #####, taxon_permissions => ##### }
+#
+# =cut
 
-Given a user's contact ID and a taxon ID, see if the user is permitted
-to access the taxon.
-
-@param  args->{where} should be in the form
-
-	taxon_permissions   => ######
-	contact_oid => ######
-
-@return arrayref of results in the format
-
-	{ contact_oid => #####, taxon_permissions => ##### }
-
-=cut
-
-sub taxon_permissions_by_contact_oid {
+$select_queries->{taxon_permissions_by_contact_oid} = sub {
 	my $self = shift;
 	my $args = shift;
 
 	$args->{where}{taxon_permissions} = delete $args->{where}{taxon_oid} if $args->{where}{taxon_oid};
 
-	return $self->schema('img_core')->table('ContactTaxonPermissions')
-		->select(
-			-columns => [ qw( contact_oid taxon_permissions ) ],
-			-where   => $args->{where},
-			-result_as => 'statement'
-		);
-}
+	return {
+		schema => 'img_core',
+		table => 'ContactTaxonPermissions',
+		-columns => [ qw( contact_oid taxon_permissions ) ],
+		-where   => $args->{where},
+	};
+};
 
-=head3 user_data
+# =head3 user_data
+#
+# Get the data for a user or set of users.
+#
+# @param  args->{where} should be in the form
+#
+# 	contact_oid => # IMG user ID  OR
+# 	caliban_id  => # user ID on the JGI Caliban system  OR
+# 	email       => # email addr
+#
+# 	# or other distinguishing feature(s)
+#
+# =cut
 
-Get the data for a user or set of users.
-
-@param  args->{where} should be in the form
-
-	contact_oid => # IMG user ID  OR
-	caliban_id  => # user ID on the JGI Caliban system  OR
-	email       => # email addr
-
-	# or other distinguishing feature(s)
-
-=cut
-
-sub user_data {
-	my $self = shift;
-	my $args = shift;
+$select_queries->{user_data} = sub {
 
 	my @cols = qw( contact_oid username name super_user email img_editor img_group img_editing_level );
 
-	return $self->schema('img_core')->table('Contact')
-		->select(
-			-columns  => [ @cols ],
-			-where    => $args->{where},
-			-result_as => 'statement'
-		);
-}
+	return {
+		schema => 'img_core',
+		table => 'Contact',
+		-columns  => [ @cols ],
+	};
+};
 
-=head3
+# =head3
+#
+# Check for banned users
+#
+# @param   args->{where} featuring either
+#
+# 	username => ... OR
+# 	email    => ...
+#
+# =cut
 
-Check for banned users
+$select_queries->{banned_users} = sub {
 
-@param   args->{where} featuring either
-
-	username => ... OR
-	email    => ...
-
-=cut
-
-sub banned_users {
-	my $self = shift;
-	my $args = shift;
-
-	return $self->schema('img_core')->table('CancelledUser')
-		->select(
-			-where => $args->{where},
-			-columns => [ qw( username email ) ],
-			-result_as => 'statement'
-		);
-}
+	return {
+		schema => 'img_core',
+		table => 'CancelledUser',
+		-columns => [ qw( username email ) ],
+	};
+};
 
 
 
-=head3 news
+# =head3 news
+#
+# Get the ProPortal news!
+#
+# NO LONGER USED
+#
+# =cut
 
-Get the ProPortal news!
-
-NO LONGER USED
-
-=cut
-
-sub news {
+$select_queries->{news} = sub {
 	my $self = shift;
 
 	my $g_id = 26;
@@ -815,14 +791,89 @@ sub news {
 		$where->{is_public} = 'Yes';
 	}
 
-	return $self->schema('img_core')->table('ImgGroupNews')
-		->select(
-			-columns   => [ qw( news_id title add_date ) ],
-			-where     => $where,
-			-order_by  => [ 'add_date' ],
-			-result_as => 'statement',
-		);
+	return {
+		schema => 'img_core',
+		table => 'ImgGroupNews',
+		-columns   => [ qw( news_id title add_date ) ],
+		-where     => $where,
+		-order_by  => [ 'add_date' ],
+	};
 
+};
+
+sub get_query {
+	my $self = shift;
+	my $args = shift;
+
+	my $query = $args->{query}
+		# no query specified
+		or $self->choke({
+			err => 'missing',
+			subject => 'database query'
+		});
+
+	# die if it isn't in the query hash or defined as a sub
+	if ( ! $select_queries->{ $query } ) { #&& ! $self->can($query) ) {
+		$self->choke({
+			err => 'invalid',
+			subject => $query,
+			type => 'database query'
+		});
+	}
+
+=cut
+
+   -columns       => \@columns,
+     # OR : -columns => [-DISTINCT => @columns],
+   -where         => \%where_criteria,
+     # OR : -fetch => $key,
+     # OR : -fetch => \@key,
+   -where_on      => \%where_on_criteria,
+   -group_by      => \@groupings,
+   -having        => \%having_criteria,
+   -order_by      => \@order,
+   -for           => $purpose,
+   -post_SQL      => sub {...},
+   -pre_exec      => sub {...},
+   -post_exec     => sub {...},
+   -post_bless    => sub {...},
+   -prepare_attrs => \%attrs,
+   -limit         => $limit,
+   -offset        => $offset,
+   -page_size     => $page_size,
+   -page_index    => $page_index,
+   -column_types  => \%column_types,
+   -result_as     => 'rows'      || 'firstrow'
+                  || 'hashref'   || [hashref => @cols]
+                  || 'sth'       || 'sql'
+                  || 'subquery'  || 'flat_arrayref'
+                  || 'statement' || 'fast_statement'
+
+=cut
+	# these get sent directly to the statement creator
+	my %extras;
+	for ( keys %$args ) {
+		$extras{ $_ } = $args->{$_} if /^-/;
+	}
+
+	#	in the query library
+#	if ( $select_queries->{ $args->{query} } ) {
+
+		my $sel_args = $select_queries->{ $query }->( $self, $args );
+		my $stt = $self->default_select({
+			%$sel_args,
+			%extras
+		});
+
+		if ( $args->{where} ) {
+			$stt->refine( -where => $args->{where} );
+		}
+
+		return $stt;
+#	}
+
+	# is it a subroutine query?
+#	return $self->$query( $args );
 }
 
 1;

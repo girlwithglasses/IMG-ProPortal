@@ -4,7 +4,7 @@
 <h2>[% results.domain | ucfirst %] List</h2>
 [%	IF results.params;
 		IF 'gene' == results.domain; %]
-		<h4 class="normal">
+		<h4>
 			<!--  this section needs to be expanded as more links come online -->
 			[%	IF results.params.category;
 					data_filters.schema.category.enum_map.${ results.params.category } || results.params.category;
@@ -27,13 +27,12 @@
 <div class="[% results.table.class %]__container" id="main">
 [%	IF results.arr.size > 0;
 
-#		add this wrapper back when we implement the cart functionality.
 		form_wrapper = 'inc/cart/' _ results.domain _ '_add.tt';
 		WRAPPER $form_wrapper;
 
 			data_table = results.table;
 			data_table.class = results.domain _ "-list";
-			data_table.caption = results.domain _ " List" | ucfirst;
+#			data_table.caption = results.domain _ " List" | ucfirst;
 			data_table.tbody = results.arr;
 			PROCESS 'inc/generic/table.tt';
 

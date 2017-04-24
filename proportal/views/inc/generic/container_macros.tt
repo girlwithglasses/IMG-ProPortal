@@ -1,17 +1,61 @@
 [%
-	MACRO list_container BLOCK %]
-	<ul class="[% class_name %]__container[%
+	# infobox wrapper
+	# args -- ibox hash with keys
+	# ibox.class    class for section     (optional -- will be set to 'infoBox otherwise')
+	# ibox.id       id for internal links (optional)
+	# ibox.title    title for the section (optional)
+
+	BLOCK infobox;
+
+		IF ! ibox.class;
+			ibox.class = 'infoBox';
+		END;	%]
+	<section class="[% ibox.class %]"[% IF ibox.id %] id="[% ibox.id %]"[% END %]>
+[%		IF ibox.title %]
+		<h4 class="[% ibox.class %]__title">[% ibox.title %]</h4>
+[%		END; %]
+	[%	content %]
+	<p class="to-top__line"><a class="to-top__link" href="#top">to page top</a></p>
+	</section>
+[%	END; # end infobox
+
+	BLOCK list_container %]
+	<ul class="[% class_name %]__list[%
 		IF class_suffix; '--' _ class_suffix; END; %]">
 [%	content %]
 	</ul>
 [%	END;
 
 
-	MACRO list_item BLOCK %]
+	BLOCK list_item %]
 		<li class="[% class_name %]__item[%
 			IF class_suffix; '--' _ class_suffix; END; %]">
 [%	content %]
 		</li>
 [%	END;
+
+	# in-page navigation item
+	# args -- pagenav hash with keys
+	# pagenav.class    class for section  (optional -- will be set to 'page-nav')
+	# pagenav.id       id (optional)
+	# pagenav.links    arrayref of pairs to put in the menu; should be in the format
+	# [ $section_id, "Section name" ],
+
+	MACRO in_page_nav BLOCK;
+
+	IF ! pagenav.class;
+		pagenav.class = 'page-nav';
+	END;
+	%]
+	<div class="[% pagenav.class %]__container">
+		<ul class="[% pagenav.class %]__list">
+[%		FOR nav IN pagenav.links; %]
+			<li class="[% pagenav.class %]__item">
+				<a href="#[% nav.id %]">[% nav.title %]</a>
+			</li>
+[%		END %]
+		</ul>
+	</div>
+[%	END; # end in_page_nav block
 
 %]

@@ -2,6 +2,7 @@
 # params:
 # data_table hashref with keys
 # .class          => css class for the table
+# .id             => id for the table (optional)
 # .thead.enum     => arrayref of object properties to be included in the table
 # .thead.enum_map => hashref with column titles (corresponding to object properties)
 # .tbody          => arrayref of objects for the table
@@ -39,7 +40,7 @@ END;
 
 IF data_table.tbody.size > 0;
 	headers = data_table.thead; %]
-	<table class="[% data_table.class %]__table">
+	<table class="[% data_table.class %]__table"[% IF data_table.id %] id="[% data_table.id %]"[% END %]>
 [%	IF data_table.caption %]
 	<caption class="[% data_table.class %]__caption">[% data_table.caption %]</caption>
 [%	END %]

@@ -1,7 +1,8 @@
 [%
 	surtitle = self.db;
-	article_title = self.name;
-
+	IF ! article_title;
+		article_title = self.name;
+	END;
 	button = {
 		cart => {
 			form => {

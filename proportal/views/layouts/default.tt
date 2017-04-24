@@ -33,7 +33,7 @@
 	PROCESS 'inc/header.tt';
 	PROCESS 'inc/nav_container.tt';
 %]
-	<article class="content cf" role="main">
+	<article class="content cf" role="main" id="top">
 [%
 #	IF settings.message;
 		PROCESS 'inc/message.tt';

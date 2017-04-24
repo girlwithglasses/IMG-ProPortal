@@ -42,8 +42,8 @@ sub _render {
 # 	});
 
 	my $statement = $self->get_data;
-	my $arr = $statement->all;
 	my $n_results = $statement->row_count;
+	my $arr = $statement->all;
 
 	return { results => {
 		domain => 'function',

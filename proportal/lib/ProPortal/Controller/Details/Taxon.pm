@@ -62,40 +62,28 @@ sub get_data {
 	}
 	$res = $res->[0];
 
-	my $associated = {
-		multi => [ qw(
-			gold_sp_cell_arrangements
-			gold_sp_collaborators
-			gold_sp_diseases
-			gold_sp_energy_sources
-			gold_sp_genome_publications
-			gold_sp_habitats
-			gold_sp_metabolisms
-			gold_sp_phenotypes
-			gold_sp_relevances
-			gold_sp_seq_centers
-			gold_sp_seq_methods
-			gold_sp_study_gold_ids
-			taxon_ext_links
-		)],
-		single => [ qw(
-			taxon_stats
-		)]
-	};
+	my $associated = [ qw(
+		gold_sp_cell_arrangements
+		gold_sp_collaborators
+		gold_sp_diseases
+		gold_sp_energy_sources
+		gold_sp_genome_publications
+		gold_sp_habitats
+		gold_sp_metabolisms
+		gold_sp_phenotypes
+		gold_sp_relevances
+		gold_sp_seq_centers
+		gold_sp_seq_methods
+		gold_sp_study_gold_ids
+		scaffolds
+		taxon_ext_links
+		taxon_stats
+	)];
 # 		goldanaproj
 
-	for my $type ( %$associated ) {
-		for my $assoc ( @{ $associated->{$type} } ) {
-			if ( $res->can( $assoc ) ) {
-				my $r = $res->$assoc;
-		#		log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
-
-				if ($r
-					&& ( ( 'multi' eq $type && scalar @$r )
-					|| ( 'single' eq $type && defined $r ) ) ) {
-					$res->{$assoc} = $r;
-				}
-			}
+	for my $assoc ( @$associated ) {
+		if ( $res->can( $assoc ) ) {
+			$res->expand( $assoc );
 		}
 	}
 	return $res;

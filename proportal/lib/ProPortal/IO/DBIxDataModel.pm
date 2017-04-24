@@ -93,23 +93,8 @@ sub run_query {
 	#	query is the name of the method to run
 	#	args->{params} will contain filter params
 
-	my $query = $args->{query}
-		# no query specified
-		or $self->choke({
-			err => 'missing',
-			subject => 'database query'
-		});
-
-	if (! $self->can($query)) {
-		$self->choke({
-			err => 'invalid',
-			subject => $query,
-			type => 'database query'
-		});
-	}
-
 	# get the query as a statement
-	my $stt = $self->$query( $args );
+	my $stt = $self->get_query( $args );
 
 	return unless defined $stt;
 #	log_debug { 'statement: ' . Dumper $stt };
@@ -121,36 +106,6 @@ sub run_query {
 			filters => $args->{filters}
 		});
 	}
-
-=cut
-
-   -columns       => \@columns,
-     # OR : -columns => [-DISTINCT => @columns],
-   -where         => \%where_criteria,
-     # OR : -fetch => $key,
-     # OR : -fetch => \@key,
-   -where_on      => \%where_on_criteria,
-   -group_by      => \@groupings,
-   -having        => \%having_criteria,
-   -order_by      => \@order,
-   -for           => $purpose,
-   -post_SQL      => sub {...},
-   -pre_exec      => sub {...},
-   -post_exec     => sub {...},
-   -post_bless    => sub {...},
-   -prepare_attrs => \%attrs,
-   -limit         => $limit,
-   -offset        => $offset,
-   -page_size     => $page_size,
-   -page_index    => $page_index,
-   -column_types  => \%column_types,
-   -result_as     => 'rows'      || 'firstrow'
-                  || 'hashref'   || [hashref => @cols]
-                  || 'sth'       || 'sql'
-                  || 'subquery'  || 'flat_arrayref'
-                  || 'statement' || 'fast_statement'
-
-=cut
 
 	my @valid_result_as = ( qw( rows firstrow hashref sth sql subquery statement
 		flat_arrayref fast_statement ) );
@@ -277,5 +232,6 @@ sub add_filters {
 	return $args->{statement};
 
 }
+
 
 1;

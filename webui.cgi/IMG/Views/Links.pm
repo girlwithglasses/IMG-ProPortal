@@ -1211,6 +1211,9 @@ my $dynamic_links = {
 		elsif ( $h->{params}{gene_oid} ) {
 			return $h->{base} . '/details/gene/' . $h->{params}{gene_oid};
 		}
+		elsif ( $h->{params}{cycog_version} ) {
+			return $h->{base} . '/details/cycog_version/' . $h->{params}{cycog_version};
+		}
 
 		if ( $h->{params}{domain} ) {
 			return $h->{base}
@@ -1242,10 +1245,6 @@ my $dynamic_links = {
 			log_error { 'Unknown list domain: ' . Dumper $h };
 			return '';
 		}
-# 		return $h->{base}
-# 		. '/list/'
-# 		. $h->{params}{type}
-# 		. urlize_params( $h->{params} );
 	},
 
 	fn_details => sub {

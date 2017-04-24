@@ -104,25 +104,13 @@ sub get_data {
 	for my $assoc ( @$associated ) {
 		if ( $gene->can( $assoc ) ) {
 			$gene->expand( $assoc, ( %{ $order->{$assoc} || {} } ) );
-#				my $r = $gene->$assoc;
-		#		log_debug { 'looking at ' . $assoc . '; found ' . Dumper $r };
-#				if ($r
-#					&& ( ( 'multi' eq $type && scalar @$r )
-#					|| ( 'single' eq $type && defined $r ) ) ) {
-#					$gene->{$assoc} = $r;
-#				}
-#			}
 		}
 	}
 
-# 	if ( $gene->gene_go_terms ) {
-# 		for ( @{$gene->gene_go_terms} ) {
-# 			# get the GO info
-# 			$
 
 	# fetch the cycogs
 	my $cycogs = $self->_core->run_query({
-		query => 'cycogs_by_gene_oid',
+		query => 'cycog_by_annotation',
 		where => {
 			gene_oid => $args->{gene_oid}
 		}

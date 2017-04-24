@@ -12,7 +12,7 @@
 	PROCESS 'inc/generic/attr_value_table.tt';
 
 	BLOCK list_container %]
-	<ul class="[% class_name %]__container[%
+	<ul class="[% class_name %]__list[%
 		IF class_suffix; '--' _ class_suffix; END; %]">
 [%	content %]
 	</ul>
@@ -31,7 +31,7 @@
 
 [%		data_table = {
 			class => 'gene-details',
-			caption => 'Gene Details',
+			caption => title,
 			tbody => [
 				[ 'Gene ID', self.gene_oid ],
 				[ 'Gene Symbol', self.gene_symbol ],
@@ -43,7 +43,7 @@
 				[ 'IMG product source', self.img_product_source ],
 				[ 'DNA Coordinates', self.coordinates ],
 				[ 'Gene Length', self.gene_length ],
-				[ 'Protein Length ', self.protein_length ],
+				[ 'Protein Length ', self.protein_length ],  # not in RNAs!
 				[ 'GC Content', self.gc_percent ],
 				[ 'Date Modified', self.mod_date ],
 				[ 'Pseudogene', self.pseudogene ],
@@ -52,46 +52,121 @@
 			]
 		};
 		attr_value_table( data_table );
-%]
 
+		data_table = {
+			class => 'taxon-scaffold-details',
+			caption => 'Genome and Scaffold Details',
+			tbody => [
+				[ 'Taxon ID', taxon_id_link( x = {}, obj = self ) ],
+				[ 'Taxon name', taxon_name_link( x = {}, obj = self ) ],
+				[ 'Scaffold ID', scaffold_id_link( x = {}, obj = self ) ],
+				[ 'Scaffold name', scaffold_name_link( x = {}, obj = self ) ],
+			]
+		};
+		attr_value_table( data_table );
 
+		IF self.protein_seq_accid
+			|| self.gene_ext_links.size > 0
+			|| self.gene_swissprot_names.size > 0 %]
+<table class="gene-ext-links__table">
+	<caption class="gene-ext-links__caption">External Links</caption>
+	<thead class="gene-ext-links__thead">
+	<tr>
+		<th class="gene-ext-links__th--attr">Database</th>
+		<th class="gene-ext-links__th--value">Reference</th>
+	</tr>
+	</thead>
+	<tbody class="gene-ext-links__tbody">
+[%		IF self.protein_seq_accid %]
+		<tr>
+		<td class="gene-ext-links__tcell--attr">
+			NCBI
+		</td>
+		<td class="gene-ext-links__tcell--val">
+[%			fn = {
+				db_name => 'NCBI',
+				id => self.protein_seq_accid
+			};
+			PROCESS 'inc/function/gene_ext_links.tt'; %]
+		</td>
+		</tr>
+[%		END %]
+[%		IF self.gene_ext_links.size > 0;
+			FOR fn IN self.gene_ext_links; %]
+		<tr>
+			<td class="gene-ext-links__tcell--attr">
+[%				fn.db_name %]
+			</td>
+			<td class="gene-ext-links__tcell--val">
+[%				PROCESS 'inc/function/gene_ext_links.tt'; %]
+			</td>
+		</tr>
+[%			END; # end for fn IN self.get_ext_lnks
+
+		END;
+		IF self.gene_swissprot_names.size > 0; %]
+		<tr>
+			<td class="gene-ext-links__tcell--attr">
+				SwissProt names
+			</td>
+			<td class="gene-ext-links__tcell--val">
+[%				FOR fn IN self.gene_swissprot_names; %]
+					[% fn.product_name %] ( [%
+						new_arr = [];
+						FOR x IN fn.xref_arr;
+							new_arr.push( '<a rel="external" href="'
+							_ ext_link( 'UniProt', x )
+							_ '">' _ x _ '</a>' );
+						END;
+						new_arr.join('; ');
+					%] )
+[%				END; %]
+			</td>
+		</tr>
+[%		END;
+		%]
+	</tbody>
+</table>
+[%		END %]
 </div> <!-- infoBox -->
 
-	[%	class_name = 'gene-fn-list'; %]
+[%	class_name = 'gene-fn-list'; %]
 	<div class="infoBox">
-	
-	<table class="gene-cycog-annots">
-		<caption class="gene-cycog-annots__caption">CyCOG Annotation</caption>	
-		
-		<tbody>
-			<tr class="[% class_name %]__trow">
-				<td class="[% class_name %]__tcell--title">CyCOGs</td>
-				<td class="[% class_name %]__tcell--list">
+		<div class="infoBoxTitle"><h4>Protein Functional Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
 [%
-	IF self.gene_cycog_groups AND self.gene_cycog_groups.size > 0;
-		arr = self.gene_cycog_groups;
+	fn_arr = [
+	[ 'CyCOG', 'gene_cycog_groups', 'cycog' ],
+	[ 'COG', 'cog_terms', 'cog', 'xog' ],
+	[ 'KOG', 'kog_terms', 'kog', 'xog' ],
+	];
+
+%]
+	<table class="lined">
+		<caption>Protein Functional Annotations</caption>
+<!-- CyCOGs -->
+	<tbody>
+[%	row = [ 'CyCOG', 'gene_cycog_groups', 'cycog' ]; %]
+	<tr class="[% class_name %]__trow">
+	<td class="[% class_name %]__tcell--title">[% row.0 %]</td>
+	<td class="[% class_name %]__tcell--list">
+[%	arr = self.${row.1};
+	IF arr.size > 0;
 		WRAPPER list_container;
 			FOR fn IN arr;
 
 				WRAPPER list_item;
-				PROCESS 'inc/function/cycog.tt';
+				tmpl = 'inc/function/' _ row.2 _ '.tt';
+				PROCESS $tmpl;
 				END; # end wrapper list_item
 
 			END; # end FOR fn IN arr
 		END; # end wrapper list_container
-	END; # end IF self.gene_cycog_groups %]
-				</td>
-			</tr>
-		</tbody>	
-	</table>	
-	
-	
-	<table class="gene-fn-annots__table">
-		<caption class="gene-fn-annots__caption">Other Functional Annotations</caption>
+	END; # end IF arr.size %]
+	</td>
+	</tr>
+[%	 %]
 
-	<tbody>
-	
-[%	FOR xog IN [ 'cog', 'kog' ]; %]
+[%	FOR xog IN ['cog', 'kog' ]; %]
 	<tr class="[% class_name %]__trow">
 	<td class="[% class_name %]__tcell--title">[% xog | upper %]</td>
 	<td class="[% class_name %]__tcell--list">
@@ -107,35 +182,39 @@
 					END; # end wrapper list__item
 
 				END; # end FOR fn IN arr
-			END; # end wrapper list__container
+			END; # end wrapper list_container
 		END; # end IF self.$gxg %]
 	</td></tr>
 [%	END; # end for xog %]
-
-
-<!-- 
 		<td>Enzyme</td>
-		<td> <a>EC:2.7.7.7</a>: DNA-directed DNA polymerase </td></tr>
- -->
-[%#
-#GENE_ENZYMES.enzymes
-#{	db => 'enzyme',
-#	xref => ec_number,
-#	link => enzyme.ec_number,
-#	post_test => enzyme.enzyme_name
-#}
+		<td>
+[%	IF self.gene_ko_enzymes.size > 0;
+#       select g.gene_oid, ez.ec_number, ez.enzyme_name
+#       from gene_ko_enzymes g, enzyme ez
+#       where g.enzymes = ez.ec_number
+#       and g.gene_oid = ?
 
+		arr = self.gene_ko_enzymes;
+		WRAPPER list_container;
+			FOR fn IN arr;
 
-%]
-<!-- 
+				WRAPPER list_item;
+				PROCESS 'inc/function/gene_ko_enzymes.tt';
+				END; # end wrapper list_item
+
+			END; # end FOR fn IN arr
+		END; # end wrapper list_container
+	END; # end IF self.gene_ko_enzymes %]
+		</td></tr>
 		<tr><td>Pfam</td>
+
+
 			<td>
 				<a>pfam00712</a>: DNA_pol3_beta <br>
 				<a>pfam02767</a>: DNA_pol3_beta_2 <br>
 				<a>pfam02768</a>: DNA_pol3_beta_3 <br>
 			</td>
 		</tr>
- -->
 [%
 # arr = {
 # 	db => 'tigrfam',
@@ -147,20 +226,29 @@
 # gene_tigrfams.ext_accession
 # tigrfam.expanded_name
 %]
-<!-- 
 		<tr><td>TIGRfam</td>
 			<td>
 				<a>TIGR00663</a>:  DNA polymerase III, beta subunit<br>
 			</td>
 		</tr>
- -->
 [%
 
 # gene.gene_img_interpro_hits
 %]
-<!-- 
 		<tr><td>InterPro</td>
 			<td>
+[%	IF self.gene_img_interpro_hits;
+		WRAPPER list_container;
+			FOR fn IN self.gene_img_interpro_hits;
+
+				WRAPPER list_item;
+#				PROCESS 'inc/function/img_interpro.tt';
+				END; # end wrapper list_item
+
+			END;
+		END; # end wrapper list_container
+	END;
+%]
 				<a>IPR001001</a>:  DNA polymerase III, beta chain (SMART SM00480)<br>
 				<a>IPR022634</a>:  DNA polymerase III, beta chain, N-terminal (Pfam PF00712)<br>
 				<a>IPR022635</a>:  DNA polymerase III, beta chain, C-terminal (Pfam PF02768)<br>
@@ -168,13 +256,9 @@
 				<a>IPR024693</a>:  DNA polymerase III beta, domain (Gene3D G3DSA:3.10.150.10)<br>
 			</td>
 		</tr>
- -->
- 
- 
 		<tr><td>GO Terms</td>
 		<td>
-[%
-	IF self.go_terms;
+[%	IF self.go_terms;
 		class_suffix = 'go_term';
 		WRAPPER list_container;
 			FOR fn IN self.go_terms;
@@ -187,22 +271,8 @@
 		END; # end wrapper list_container
 
 	END;
-
-
-# {	gene_xref_families:
-#   "GENE_OID" TEXT,
-#   "DB_NAME" TEXT,
-#   "ID" TEXT,
-#   "DESCRIPTION" TEXT,
-#   "XREF" TEXT,
-#   "TAXON" TEXT,
-#   "SCAFFOLD" TEXT
-
 %]
 		</td></tr>
-		
-		
-<!-- 
 		<tr><td>PANTHER</td>
 			<td>
 				<a>PTHR30478</a> <br>
@@ -215,7 +285,6 @@
 				<a>SSF55979</a>:  DNA clamp<br>
 			</td>
 		</tr>
- -->
 [%
 # gene_seed_names
 # {	db => 'seed',
@@ -244,22 +313,27 @@
 			</td></tr>
 
 [%	# PROCESS 'inc/function/img_term.tt' %]
-<!-- 
 		<tr><td>IMG Term</td> <td> DNA polymerase III, beta subunit (EC 2.7.7.7) (IMG_PIPELINE 2015-09-04)</td></tr>
- -->
 
 		</tbody>
 		</table>
 
-	</div> <!-- infobox -->
+	</div> <!-- infoBox -->
+
 
 </div> <!-- row -->
 
 <div class="row">
 
+<h3>Pathway Annotations</h3>
+
+
+
+
+
 	<div class="infoBox">
-	<table class="gene-pway-annots__table">
-		<caption class="gene-pway-annots__caption">Pathway Annotations</caption>
+	<div class="infoBoxTitle"><h4>Pathway Annotations <div class="noteToSelf"> Dummy Links...</div></h4></div>
+		<table class="lined">
 
 [%
 
@@ -272,15 +346,16 @@
 #
 # 				WRAPPER list_item;
 # 				PROCESS 'inc/function/ko_term.tt';
-# 				END; # end wrapper list__item
+# 				END; # end wrapper list_item
 #
 # 			END;
-# 		END; # end wrapper list__container
+# 		END; # end wrapper list_container
 #
 # 	END;
 %]
-<!-- 
 		<tr><td class="col1">KEGG Orthology</td>
+
+
 			<td> <a>KO:K02338</a>: DPO3B, dnaN DNA polymerase III subunit beta [EC:2.7.7.7] </td></tr>
 		<tr><td>KEGG Pathways</td>
 			<td>
@@ -307,86 +382,12 @@
 				<a>Leading strand DNA replication</a> (not asserted)
 			</td>
 		</tr>
- -->
 
 		</table>
-	
-	</div>	<!-- infobox -->
-	
-	<div class="infoBox">
-	
-	[%
-			data_table = {
-			class => 'taxon-scaffold-details',
-			caption => 'Genome and Scaffold Details',
-			tbody => [
-				[ 'Taxon ID', taxon_id_link( x = {}, obj = self ) ],
-				[ 'Taxon name', taxon_name_link( x = {}, obj = self ) ],
-				[ 'Scaffold ID', scaffold_id_link( x = {}, obj = self ) ],
-				[ 'Scaffold name', scaffold_name_link( x = {}, obj = self ) ],
-			]
-		};
-		attr_value_table( data_table );
-	%]
-	
-	<table class="gene-ext-links__table">
-	<caption class="gene-ext-links__caption">External Links</caption>
-
-	<tbody class="gene-ext-links__tbody">
-		<tr>
-		<td class="gene-ext-links__tcell--attr">
-			NCBI
-		</td>
-		<td class="gene-ext-links__tcell--val">
-[%			fn = {
-				db_name => 'NCBI',
-				id => self.protein_seq_accid
-			};
-			PROCESS 'inc/function/gene_ext_links.tt'; %]
-		</td>
-		</tr>
-[%		IF self.gene_ext_links.size > 0;
-			FOR fn IN self.gene_ext_links; %]
-		<tr>
-			<td class="gene-ext-links__tcell--attr">
-[%				fn.db_name %]
-			</td>
-			<td class="gene-ext-links__tcell--val">
-[%				PROCESS 'inc/function/gene_ext_links.tt'; %]
-			</td>
-		</tr>
-[%			END; # end for fn IN self.get_ext_lnks
-
-		END;
-		IF self.gene_swissprot_names; %]
-		<tr>
-			<td class="gene-ext-links__tcell--attr">
-				SwissProt names
-			</td>
-			<td class="gene-ext-links__tcell--val">
-[%				FOR fn IN self.gene_swissprot_names; %]
-					[% fn.product_name %] ( [%
-						new_arr = [];
-						FOR x IN fn.xref_arr;
-							new_arr.push( '<a rel="external" href="'
-							_ ext_link( 'UniProt', x )
-							_ '">' _ x _ '</a>' );
-						END;
-						new_arr.join('; ');
-					%] )
-[%				END; %]
-			</td>
-		</tr>
-[%		END;
-		%]
-	</tbody>
-</table>
-		
-
-	
-	</div>	<!-- infobox -->
+	</div> <!-- infobox -->
 
 </div>	<!-- row -->
+
 
 <p><a href="https://img.jgi.doe.gov/cgi-bin/m/main.cgi?section=GeneDetail&page=geneDetail&gene_oid=[% self.gene_oid %]">IMG original</a></p>
 [%	END %]

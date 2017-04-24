@@ -1,5 +1,5 @@
 /* partials/infoBox
-found on details pages 
+found on details pages
 */
 
 // @import "../modules/typo.scss";
@@ -12,65 +12,32 @@ found on details pages
 
 		&__table {
 			@extend .condensed;
-		}	
-		
+		}
+
 		&__caption {
 			@extend .underline;
 			font-weight: bold;
 			margin: $gutter 0;
 			padding-left: 0;
 		}
-		
+
 		&__thead {
 			display: none;
 		}
-	}	
-	
+	}
+
 	// Table-specific styles.
 	.gene-fn-annots {
 		&__table {	@extend .lined;	}
 	}
-	
+
 	.gene-pway-annots {
 		&_table {	@extend .lined;	}
 	}
 }
 
-
-.infoBox, .infoBox-double {
-	padding: 0 20px 20px 20px; 
-		
-	@include infoBox-table( "gene-details" );		
-	@include infoBox-table( "taxon-scaffold-details" );
-	@include infoBox-table( "gene-ext-links" );	
-	@include infoBox-table( "gene-fn-annots" );
-	@include infoBox-table( "gene-pway-annots" );
-	@include infoBox-table( "gene-cycog-annots" );
-		
-		
-	// for displaying FASTA sequences, for example
- 	.textDisplay {
-		width: 100%;
-		height: 450px;
-		padding: 10px 20px;
-		overflow: auto;
-		@include borders( $element-border-width, $border-lighter );
-	}
-}
-
-
-
-.infoBoxTitle {
-	margin: 10px 0 5px 0;
-	border-bottom: $underline;
-}
-
-.infoBox-double {
-	width: 100%;
-}
-
 .infoBox {
-	/* this may need to be defined somewhere else... */	
+	/* this may need to be defined somewhere else... */
 	/* Small screen */
 	@media all and (max-width: $half-) {
 		width: 100%;
@@ -82,4 +49,37 @@ found on details pages
 	@media all and (min-width: $half) {
 		width: 50%;
 	}
-}	
+}
+
+.infoBox, .infoBox-double {
+	padding: 0 $line-ht $line-ht $line-ht;
+
+	@include infoBox-table( "gene-details" );
+	@include infoBox-table( "gene-list" );
+	@include infoBox-table( "taxon-scaffold-details" );
+	@include infoBox-table( "gene-ext-links" );
+	@include infoBox-table( "gene-fn-annots" );
+	@include infoBox-table( "gene-pway-annots" );
+	@include infoBox-table( "gene-cycog-annots" );
+
+
+	// for displaying FASTA sequences, for example
+ 	.textDisplay {
+		width: 100%;
+		height: 15*$line-ht;
+		padding: $gutter $line-ht;
+		overflow: auto;
+		@include borders( $element-border-width, $border-lighter );
+	}
+}
+
+
+
+.infoBoxTitle {
+	margin: $gutter 0 .5rem 0;
+	border-bottom: $underline;
+}
+
+.infoBox-double {
+	width: 100%;
+}

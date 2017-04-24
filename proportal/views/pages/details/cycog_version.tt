@@ -1,0 +1,62 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'CyCOG Release';
+	self = results.vers;
+
+	surtitle = 'CyCOG release';
+	# cycog release
+	article_title = 'CyCOG version v' _ self.version;
+	subtitle = 'Released ' _ self.date_created;
+	IF self.comments;
+		subtitle = subtitle _ '; ' _ self.comments;
+	END;
+	subtitle = subtitle _ '.';
+	PROCESS 'inc/generic/title.tt';
+	PROCESS 'inc/generic/container_macros.tt';
+
+	BLOCK cycog_list;
+
+		data_table = results.cycog_table;
+		data_table.class = 'gene-cycog-annots-list';
+		data_table.caption = 'CyCOGs in release v' _ self.version;
+		data_table.tbody = results.cycog_arr;
+
+		PROCESS 'inc/generic/table.tt';
+
+	END;
+
+	BLOCK taxon_list;
+
+		data_table = results.taxon_table;
+		data_table.class = 'taxon-list';
+		data_table.caption = 'Taxa used to generate release v' _ self.version;
+		data_table.tbody = results.taxon_arr;
+
+		PROCESS 'inc/generic/table.tt';
+
+	END;
+
+	# page navigation
+	temp_title = 'Taxa used in v' _ self.version;
+
+	sections = [
+		{	id => 'cycog_list',
+			title => 'CyCOG list',
+			content => 'cycog_list'
+		},
+		{ 	id => 'taxon_list',
+			title => temp_title,
+			content => 'taxon_list'
+		}
+	];
+
+	in_page_nav( pagenav = { links => sections } );
+
+	FOR secn IN sections;
+
+		ibox = { id => secn.id, title => secn.title };
+		stuff = secn.content;
+		PROCESS $stuff WRAPPER 'infobox';
+
+	END;
+
+	END %]

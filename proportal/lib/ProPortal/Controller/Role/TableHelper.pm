@@ -110,11 +110,14 @@ my $table = {
 #	checkbox, function ID, function name, ...
 	cycog => {
 		thead => {
-			enum => [ 'cbox', 'cycog_oid', 'cycog_name', 'version' ],
+			enum => [ qw( cbox id description version cluster_size unique_taxa duplication_events ) ],
 			enum_map => {
-				cycog_oid => 'CyCOG ID',
-				cycog_name => 'CyCOG Name',
-				version => 'CyCOG version'
+				id => 'CyCOG ID',
+				description => 'Description',
+				version => 'CyCOG version',
+				cluster_size => 'Cluster size',
+				unique_taxa => 'Unique taxa',
+				duplication_events => 'Duplication events'
 			}
 		},
 		transform => {
@@ -122,29 +125,39 @@ my $table = {
 				my $x = shift;
 				return {
 					macro => 'checkbox',
-					name => "cycog_oid[]",
-					value => $x->{cycog_oid},
-					id => 'cbox_' . $x->{cycog_oid}
+					name => "id[]",
+					value => $x->{id},
+					id => 'cbox_' . $x->{id}
 				};
 			},
-			cycog_oid => sub {
+			id => sub {
 				my $x = shift;
 				return {
 					macro => 'generic_link',
-					text => $x->{cycog_oid},
+					text => 'CyCOG:' . $x->{id},
 					type => 'fn_details',
-					params => { db => 'cycog', xref => $x->{cycog_oid} }
+					params => { db => 'cycog', xref => $x->{id} }
 				};
 			},
-			cycog_name => sub {
+			description => sub {
 				my $x = shift;
 				return {
 					macro => 'generic_link',
-					text => $x->{name},
+					text => $x->{description},
 					type => 'fn_details',
-					params => { db => 'cycog', xref => $x->{cycog_oid} }
+					params => { db => 'cycog', xref => $x->{id} }
 				};
 			},
+			version => sub {
+				my $x = shift;
+				return {
+					macro => 'generic_link',
+					text => 'v' . $x->{version},
+					type => 'details',
+					params => { cycog_version => $x->{version} }
+				};
+			},
+
 		}
 	},
 

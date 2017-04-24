@@ -1,149 +1,136 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = self.display_name;
 	self = results.function;
-%]
 
-<style>
-
-	/* Hookups for seqData tab group and content box */
- 	#tab1_seqData:checked ~ #tabContent1_seqData,
- 	#tab2_seqData:checked ~ #tabContent2_seqData {
- 		display: block;
-  	}
-
-	/* comment this out while working on this to see my dev notes... */
-	.noteToSelf {
-		display: none;
-	}
-
-</style>
-
-[%
 	self.db = 'CyCOG';
-	self.xref = self.cycog_oid;
+	self.xref = self.id;
+	article_title = 'CyCOG:' _ self.id _ ': ' _ self.description;
 	PROCESS 'inc/title/function.tt';
+	PROCESS 'inc/generic/container_macros.tt';
 
+	BLOCK cycog_details;
 
+		vers_arr = [];
+		FOR v IN self.in_versions;
+			vers_arr.push( '<a href="'
+			_ link( 'details', { cycog_version => v } )
+			_ '">v'_ v _ '</a>' );
+		END;
+
+		data_table = {
+			class => 'function-details',
+			caption => title,
+			tbody => [
+				[ 'CyCOG ID', self.id ],
+				[ 'Description', self.description ],
+				[ 'CyCOG versions', vers_arr.join(", ") ],
+				[ 'Cluster size', self.cluster_size ],
+				[ 'Unique Taxa', self.unique_taxa ],
+				[ 'Duplication Events', self.duplication_events ],
+			]
+		};
+		PROCESS 'inc/generic/attr_value_table.tt';
+		attr_value_table( data_table );
+
+	END; # end block
+
+	# Sequence views
+	BLOCK sequence;
 %]
+	<div class="nav_tabs nav_tabs_minimal">
+		<input type="radio" name="seqData" id="tab1_seqData" checked >
+		<label for="tab1_seqData">DNA</label>
 
-<div class="thisWrapper">
-	<div id="pageHeader">
-		<div id="pageTitle" >
-			<h4 class="normal">
-				CyCOG Function
-			</h4>
-			<h2>[% self.name %]</h2>
+		<input type="radio" name="seqData" id="tab2_seqData">
+		<label for="tab2_seqData">Amino Acid</label>
+
+
+		<div id="tabContent1_seqData" class="tabContent">
+			<div class="textDisplay">
+			<code> <span style="color: blue">>640083263 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819] (+)strand</span>
+			ATGAAATTAAATTGTTCTCAATCTGAATTAAATAATGCTCTTCAATTGGT
+			TAGTAGAGCTGTTTCTAATCGACCGACGCACCCTGTATTAGCTAATGTTT
+			TGCTCGCTGCTGATGAGGTAACTGGAAAACTTCGCCTAACTGGTTTTGAC
+			TTAAGTTTAGGAATACAAACTTCAATATCTGCTTCTATAGAGAGCAGTGG
+			TGCCATAACTTTGCCTGCTAAGTTATTTGGTGAAATTGTTTCGAAATTAT
+			CTAACGACTCACCTCTAGTTCTGACATCAGATGAAACTAGTCAACAAGTC
+			GAGTTGACTAGTAAAAGTGGAACGTATCAAGTAAGAGGGATGGTGTCTGA
+			TGATTTTCCTGATTTACCTTTGGTAGAAAGCGGTAATTCATTTAAATTGA
+			ATCCATTATTATTATCTAATGCAATTAAATCAACTTTATTTGCAAGCAGT
+			ACTGATGAGGCTAAACAATTACTTACTGGTGTTAATCTTACTTTTGACGG
+			ATATGGGATTGAATCTGCAGCAACTGACGGACATAGATTAGCTGTTCTTA
+			ATTTAAATAATATATTATCTGATTCAAAAGAGATAGATAGTTCTACTAAA
+			TTCGAAAAATTTTCTATTACATTACCTTCCAAATCTTTAAGAGAAGTGGA
+			AAAATTTTTAAGTACTTGTGATATTAGTCAGCCAATTAATTTTTTTGTTG
+			ATAAAGGACAAGTAGTTTTTATATCAGTAGAAGATATTATAACTATAAGA
+			GCTTTAGAAGGTTCTTATCCAAATTATTCGCAATTATTACCTGATACTTT
+			TGAAAATGAATTAGAGTTTGATAGGAAAGAATTTATATCTTCATTAGAAC
+			GAATTGCTGTTTTAGCAGATCAGCATAATAATGTTATAAAGGTAACGACT
+			GACGGCTCTGCAAATTTAATCAAAATTAGTACGGATGCCCAAGATATTGG
+			AACAGGTTATGAGTCACTACCTGTCTCTTATAAAGGGGATTCATTTCAAA
+			TAGCATTTAATGTTAGATATTTATTAGATGGACTTAAAGTCATAGATTCA
+			AACTTGATTAAATTAAGTTGTAATTCTCCAACTACACCTGCGGTTTTCTC
+			ACCTATTAATAGTGACGTTAATTTCACTTATCTAGTAATGCCCATACAAA
+			TACGAAATTAA
+			</code>
+			</div>
 		</div>
-		<div id="buttonBar">
-			<button>Add to Cart</button>
-<!-- 			<button>Export</button> 	** develop this later **			-->
+
+		<div id="tabContent2_seqData" class="tabContent">
+			<div class="textDisplay">
+			<code> <span style="color: blue">>640083263 YP_001013829 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819]</span>
+			[% self.aa_residue %]
+			</code>
+			</div>
 		</div>
 	</div>
-<div class="row">
-	<div class="infoBox">
-		<div class="infoBoxTitle"><h4>CyCOG Details</h4></div>
-		<table class="condensed">
-			<tr>
-				<td class="col1">CyCOG ID</td>
-				<td>[% self.cycog_oid %]</td>
-			</tr>
-			<tr>
-				<td>Name</td>
-				<td>[% self.name %]</td>
-			</tr>
-			<tr>
-				<td>CyCOG version</td>
-				<td>version [% self.version %]</td>
-			</tr>
-			<tr>
-				<td>Gene members</td>
-				<td>[% self.n_members %]</td>
-			</tr>
-			<tr>
-				<td>MIT ID</td>
-				<td>[% self.mit_oid %]</td>
-			</tr>
-		</table>
-	</div> <!-- infoBox -->
-	<div class="infoBox">
+[%	END; # end block
+
+	# Gene list
+	BLOCK gene_list; %]
+	<p>[% self.cycog_genes.size %] gene[% IF self.cycog_genes.size != 1 %]s[% END %] associated with CyCOG:[% self.id %]</p>
+[%
+		IF results.genes && results.genes.size > 0;
+
+			WRAPPER 'inc/cart/gene_add.tt';
+				data_table = results.table;
+				data_table.id = 'cycog_gene_list';
+				data_table.class = "gene-list";
+				data_table.caption = "Gene Members";
+				data_table.tbody = results.genes;
+				PROCESS 'inc/generic/table.tt';
+			END; # end wrapper
+
+		END;
+	END; # end block
 
 
-	<div class="infoBoxTitle"><h4>CyCOG Consensus Sequence</h4></div>
+	# page layout
 
-		<div class="nav_tabs nav_tabs_minimal">
-			<input type="radio" name="seqData" id="tab1_seqData" checked >
-			<label for="tab1_seqData">DNA</label>
+	# page navigation
+	sections = [{
+		id => 'cycog_details',
+		title => 'CyCOG details',
+		content => 'cycog_details'
+	},
+	{	id => 'sequence',
+		title => 'CyCOG consensus sequence',
+		content => 'sequence'
+	},
+	{	id => 'gene_list',
+		title => 'Gene members',
+		content => 'gene_list'
+	}];
 
-			<input type="radio" name="seqData" id="tab2_seqData">
-			<label for="tab2_seqData">Amino Acid</label>
+	in_page_nav( pagenav = { links => sections } );
 
+	FOR secn IN sections;
 
-			<div id="tabContent1_seqData" class="tabContent">
-				<!-- <h4> DNA </h4> -->
-				<div class="textDisplay">
-				<code> <span style="color: blue">>640083263 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819] (+)strand</span>
-				ATGAAATTAAATTGTTCTCAATCTGAATTAAATAATGCTCTTCAATTGGT
-				TAGTAGAGCTGTTTCTAATCGACCGACGCACCCTGTATTAGCTAATGTTT
-				TGCTCGCTGCTGATGAGGTAACTGGAAAACTTCGCCTAACTGGTTTTGAC
-				TTAAGTTTAGGAATACAAACTTCAATATCTGCTTCTATAGAGAGCAGTGG
-				TGCCATAACTTTGCCTGCTAAGTTATTTGGTGAAATTGTTTCGAAATTAT
-				CTAACGACTCACCTCTAGTTCTGACATCAGATGAAACTAGTCAACAAGTC
-				GAGTTGACTAGTAAAAGTGGAACGTATCAAGTAAGAGGGATGGTGTCTGA
-				TGATTTTCCTGATTTACCTTTGGTAGAAAGCGGTAATTCATTTAAATTGA
-				ATCCATTATTATTATCTAATGCAATTAAATCAACTTTATTTGCAAGCAGT
-				ACTGATGAGGCTAAACAATTACTTACTGGTGTTAATCTTACTTTTGACGG
-				ATATGGGATTGAATCTGCAGCAACTGACGGACATAGATTAGCTGTTCTTA
-				ATTTAAATAATATATTATCTGATTCAAAAGAGATAGATAGTTCTACTAAA
-				TTCGAAAAATTTTCTATTACATTACCTTCCAAATCTTTAAGAGAAGTGGA
-				AAAATTTTTAAGTACTTGTGATATTAGTCAGCCAATTAATTTTTTTGTTG
-				ATAAAGGACAAGTAGTTTTTATATCAGTAGAAGATATTATAACTATAAGA
-				GCTTTAGAAGGTTCTTATCCAAATTATTCGCAATTATTACCTGATACTTT
-				TGAAAATGAATTAGAGTTTGATAGGAAAGAATTTATATCTTCATTAGAAC
-				GAATTGCTGTTTTAGCAGATCAGCATAATAATGTTATAAAGGTAACGACT
-				GACGGCTCTGCAAATTTAATCAAAATTAGTACGGATGCCCAAGATATTGG
-				AACAGGTTATGAGTCACTACCTGTCTCTTATAAAGGGGATTCATTTCAAA
-				TAGCATTTAATGTTAGATATTTATTAGATGGACTTAAAGTCATAGATTCA
-				AACTTGATTAAATTAAGTTGTAATTCTCCAACTACACCTGCGGTTTTCTC
-				ACCTATTAATAGTGACGTTAATTTCACTTATCTAGTAATGCCCATACAAA
-				TACGAAATTAA
-				</code>
-				</div>
-			</div>
+		ibox = { id => secn.id, title => secn.title };
+		stuff = secn.content;
+		PROCESS $stuff WRAPPER 'infobox';
 
-			<div id="tabContent2_seqData" class="tabContent">
-				<div class="textDisplay">
-				<code> <span style="color: blue">>640083263 YP_001013829 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819]</span>
-				[% self.aa_residue %]
-				</code>
-				</div>
-			</div>
-		</div>
-	</div> <!-- infoBox -->
-</div> <!-- row -->
+	END;
 
 
-<div class="row">
-
-<div class="infoBox-double">
-
-	<div class="infoBoxTitle"><h4>Gene Members</h4></div>
-[%	IF results.genes && results.genes.size > 0;
-		WRAPPER 'inc/cart/gene_add.tt';
-			data_table = results.table;
-			data_table.class = "gene-list";
-			data_table.caption = "Gene Members";
-			data_table.tbody = results.genes;
-			PROCESS 'inc/generic/table.tt';
-		END; # end wrapper
-
-%]
-[%	ELSE; # END if... %]
-<p>No genes found</p>
-[%	END; %]
-
-
-</div>  <!-- row -->
-
-
-</div> <!-- wrapper -->
-[%	END %]
+END %]

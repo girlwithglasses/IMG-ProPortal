@@ -20,6 +20,12 @@ has '+filter_domains' => (
 	}
 );
 
+has '+tmpl_includes' => (
+	default => sub {
+		return { tt_scripts => qw( datatables ) };
+	}
+);
+
 =head3 render
 
 Details page for a CyCOG function
@@ -31,10 +37,10 @@ Details page for a CyCOG function
 sub _render {
 	my $self = shift;
 
-	# function => obj, genes => [ gene, gene, gene, gene ]
 	my $results = $self->get_data( @_ );
 
 	$results->{table} = $self->get_table('gene');
+	$results->{n_genes} = scalar @{$results->{function}{cycog_genes}};
 
 	return { results => $results };
 }
@@ -57,7 +63,7 @@ sub get_data {
 	my $res = $self->_core->run_query({
 		query => 'cycog_details',
 		where => {
-			cycog_oid => $args->{xref}
+			id => $args->{xref}
 		}
 	});
 
@@ -72,17 +78,24 @@ sub get_data {
 
 	my $cy = $res->[0];
 
-	my @gene_arr = map { $_->{gene_oid} } @{ $cy->cycog_genes };
+	# get associated genes/taxa
+	$cy->expand( 'cycog_genes' );
+
+	my $vers_h;
+	my @gene_arr = map { $vers_h->{ $_->{version} }++; $_->{gene_oid} } @{ $cy->cycog_genes };
 
 	# get the gene list
-	my $gene_list = $self->_core->run_query({
+	my $gene_stt = $self->_core->run_query({
 		query => 'gene_list',
-		where => { gene_oid => \@gene_arr }
+		-where => { gene_oid => { in => \@gene_arr } },
+		result_as => 'statement'
 	});
+	# get a count of the number of genes
 
-#	log_debug { 'results: ' . Dumper $gene_list };
-
-	return { function => $cy, genes => $gene_list };
+#	log_debug { 'gene stt: ' . Dumper $gene_stt };
+	log_debug { 'gene stt row count: ' . Dumper $gene_stt->row_count };
+	log_debug { 'n cycog genes: ' . scalar @{$cy->{cycog_genes}} };
+	return { function => $cy, genes => $gene_stt->all };
 
 }
 

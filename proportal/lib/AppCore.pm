@@ -11,7 +11,6 @@ use IMG::Util::Logger;
 
 our $VERSION = '0.1.0';
 
-
 sub init {
 	my $class = shift;
 	my %opts  = @_;
@@ -19,7 +18,6 @@ sub init {
 #	log_debug { 'running init code!' };
 	# set optional configuration override
 	set $_ => $opts{ $_ } for keys %opts;
-
 }
 
 =head3 before hook
@@ -135,6 +133,13 @@ hook before_template_render => sub {
 
 	# merge the two
 	$_[0]->{$_} = $tmpl_extras->{$_} for keys %$tmpl_extras;
+	log_debug { "start template render at " . localtime() };
+
+};
+
+hook after_template_render => sub {
+
+	log_debug { "Finished template render at " . localtime() };
 
 };
 

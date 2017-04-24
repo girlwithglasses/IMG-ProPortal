@@ -1,0 +1,17 @@
+[%	IF ! scr_arr;
+		scr_arr = [];
+	END;
+
+	scr_arr.unshift( 'https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js' );
+	scr_arr.unshift( '//code.jquery.com/jquery-1.12.4.js' );
+
+	FOREACH s IN scr_arr;
+		'<script type="text/javascript" src="' _ s _ '"></script>';
+	END;
+%]
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#cycog_gene_list').DataTable();
+} );
+</script>
+
