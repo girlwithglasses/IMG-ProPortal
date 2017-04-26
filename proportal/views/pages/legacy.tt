@@ -269,7 +269,13 @@ as a reference for the papers in which they were reported.
 	<tbody>
 		<tr>
 			<td>1999</td>
-			<td><b>Photophysiology of the marine cyanobacterium Prochlorococcus: Ecotypic differences among cultured isolates.</b> Moore, L. R., & Chisholm, S. W. (1999). Limnology and Oceanography, 44(3), 628-638.</td>
+			<td>
+				<ul>
+					<li><b>Photophysiology of the marine cyanobacterium Prochlorococcus: Ecotypic differences among cultured isolates.</b> Moore, L. R., & Chisholm, S. W. (1999). Limnology and Oceanography, 44(3), 628-638.</li><p>
+					<li><b>Niche partitioning among Prochlorococcus ecotypes along ocean-scale environmental gradients.</b> Johnson, Z. I., Zinser, E. R., Coe, A., McNulty, N. P., Woodward, E. M. S., & Chisholm, S. W. (2006). Science, 311(5768), 1737-1740. </li><p>
+					<li><b>Influence of light and temperature on Prochlorococcus ecotype distributions in the Atlantic Ocean.</b> Zinser, E. R., Johnson, Z. I., Coe, A., Karaca, E., Veneziano, D., & Chisholm, S. W. (2007). Limnology and Oceanography, 52(5), 2205-2220.</li>
+				</ul>
+			</td>	
 			<td>
 				<ul>
 					<li><a href="">Prochlorococcus_strain_LIGHT_growth_rates.xls</a></li>
@@ -311,6 +317,7 @@ as a reference for the papers in which they were reported.
 		<tr>
 			<td>2009</td>
 			<td><b>Whole genome amplification and de novo assembly of single bacterial cells.</b> Rodrigue, S., Malmstrom, R. R., Berlin, A. M., Birren, B. W., Henn, M. R., & Chisholm, S. W. (2009). PloS one, 4(9), e6864.</td>
+
 			<td>
 				<ul>
 					<li><a href="">Prochlorococcus_MED4ax_single-cell_E05.tar.gz</a></li>
