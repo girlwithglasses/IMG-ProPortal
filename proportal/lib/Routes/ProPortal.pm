@@ -767,7 +767,8 @@ my $page_h = {
 	tools => [ qw( krona jbrowse galaxy phyloviewer ) ],
 	search => [ qw( advanced_search blast ) ],
 	user_guide => [ qw( api_manual data_documentation browsing getting_started searching using_tools ) ],
-	support => [ qw( news about ) ]
+	support => [ qw( news about ) ],
+	legacy => [ qw( legacy ) ]
 };
 
 for my $prefix ( keys %$page_h ) {
@@ -795,6 +796,12 @@ for my $prefix ( keys %$page_h ) {
 prefix '/user_guide' => sub {
 	get qr{ /? }x => sub {
 		return template "pages/user_guide/index", { pages => $page_h->{user_guide} };
+	}
+};
+
+prefix '/legacy' => sub {
+	get qr{ /? }x => sub {
+		return template "pages/legacy", { pages => $page_h->{legacy} };
 	}
 };
 

@@ -970,11 +970,17 @@ my $static_links = {
 		url => 'search/advanced_search',
 		label => 'Advanced Search'
 	},
+
+	legacy => {
+		url => 'legacy',
+		label => 'Legacy Data'
+	},
+	
+	## tools	
 	'menu/tools' => {
 		url => 'menu/tools',
 		label => 'Tools'
 	},
-	## tools
 	'tools/galaxy' => {
 		url => 'tools/galaxy',
 		label => 'Launch Galaxy'

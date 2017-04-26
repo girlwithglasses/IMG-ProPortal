@@ -1,0 +1,331 @@
+[%	IF ! page_wrapper;
+		page_wrapper = 'layouts/default_wide.tt';
+	END;
+	WRAPPER $page_wrapper;
+	title = 'Legacy Data';
+%]
+
+[%	IF ! scr_arr;
+		scr_arr = [];
+	END;
+
+	scr_arr.unshift( 'https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js' );
+	scr_arr.unshift( '//code.jquery.com/jquery-1.12.4.js' );
+	
+
+	FOREACH s IN scr_arr;
+		'<script type="text/javascript" src="' _ s _ '"></script>';
+	END;
+%]
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.css"/>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.js"></script>
+
+<style>
+	.site-message {
+		display: none;
+	}
+	
+	.return-link {
+		float: right;
+	}
+	
+	.section-space {
+		height: 4rem; 
+		display:block;
+	}
+</style>
+
+
+<script type="text/javascript">
+
+	function styleTables( $table ) {
+		$(document).ready(function() {
+			$($table).DataTable( 
+				{ 
+				"paging":   false,
+				//"searching": false,
+				"lengthChange":  false
+				}	
+			);
+		} );
+		
+				
+	}
+	
+	var tables = ['#cycog', '#microarray', '#physiology', '#other'];
+	
+	for (i=0; i<tables.length; i++){
+		styleTables( tables[i] );
+	}
+	
+	
+</script>
+
+<div class="cf">
+<h2 id="top" class="underline">Legacy Data</h2>
+<br>
+
+<ol>
+	<li><a href="#cycog-section">CyCOG Definitions</a></li>
+	<li><a href="#microarray-section">Microarray Data</a></li>
+	<li><a href="#physiology-section">Physiology Data</a></li>
+	<li><a href="#other-section">Other Data</a></li>
+</ol>
+
+<br>
+
+<h3 id="cycog-section" class="underline">CyCOG Definitions</h3>
+<br>
+<p> Starting with version 6.0, CyCOGs are defined using IMG gene annotations.  When CyCOGs are updated,
+old CyCOG definitions will still be accessible through flat file download here.  For all 
+CyCOG versions before 6.0, non-IMG gene annotations were used and are therefore not 
+comparable to definitions after version 6.0.  <b>These are indicated with
+italic version numbers below.</b>  While these older CyCOG definitions are incompatable with
+the newer IMG-based CyCOG definitions, we nonetheless make older versions available
+as a reference for the papers in which they were reported.
+</p>
+<br>
+
+<table id="cycog">
+	<thead>	
+		<tr>
+			<th>CyCOG Version</th>
+			<th>Release Date</th>
+			<th>Citation</th>
+			<th>Pubmed</th>
+			<th>Files</th>
+		</tr>	
+	</thead>
+	<tbody>
+		<tr>
+			<td><i>1.0</i></td>
+			<td>2007</td>
+			<td><b>Patterns and implications of gene gain and loss in the evolution of Prochlorococcus.</b> Kettler, G. C., Martiny, A. C., Huang, K., Zucker, J., Coleman, M. L., Rodrigue, S., ... & Steglich, C. (2007). PLoS Genet, 3(12), e231.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/18159947">18159947</a></td>
+			<td>	
+				<ul>
+					<li><a href="">pgen.0030231.st001.xls</a></li>
+				</ul>	
+			</td>									
+		</tr>	
+		<tr>
+			<td><i>3.0</i></td>
+			<td>2013</td>
+			<td><b>Genetic diversity in cultured and wild marine cyanomyoviruses reveals phosphorus stress as a strong selective agent.</b> Kelly, L., Ding, H., Huang, K. H., Osburne, M. S., & Chisholm, S. W. (2013). The ISME journal, 7(9), 1827-1841.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/23657361">23657361</a></td>
+			<td>	
+				<ul>
+					<li><a href="">V3Clusters.xlsx</a> </li>
+					<li><a href="">V3Clusters.fa</a> </li>
+					<li><a href="">V3Cluster.orphans.fa</a> </li>
+				</ul>	
+			</td>									
+		</tr>
+		<tr>
+			<td><i>4.0</i></td>
+			<td>2014</td>
+			<td><b>Genomes of diverse isolates of the marine cyanobacterium.</b> Biller, S. J., Berube, P. M., Berta-Thompson, J. W., Kelly, L., Roggensack, S. E., Awad, L., ... & Moore, L. R.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/25977791">25977791</a></td>
+			<td>	
+				<ul>
+					<li><a href="">Prochlorococcus_COGS_annotations.txt</a></li>
+				</ul>	
+			</td>									
+		</tr>		
+		<tr>
+			<td><i>5.0</i></td>
+			<td>2016</td>
+			<td><b>Global genetic capacity for mixotrophy in marine picocyanobacteria.</b> Yelton, A. P., Acinas, S. G., Sunagawa, S., Bork, P., Pedrós-Alió, C., & Chisholm, S. W. (2016). The ISME journal.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/27137127">27137127</a></td>	
+			<td>	
+				<ul>
+					<li><a href="">CyCOGs_version_5</a></li>
+				</ul>	
+			</td>									
+		</tr>		
+	</tbody>
+</table>
+<br>	
+<a class="return-link" href="#top">back to top</a>
+<div class="section-space"></div>
+
+
+<h3 id="microarray-section" class="underline">Microarray Data</h3>
+<br>
+
+<table id="microarray">
+	<thead>
+		<tr>
+			<th>Release Date</th>
+			<th>Citation</th>
+			<th>Pubmed</th>
+			<th>External Data</th>
+			<th>Files</th>
+		</tr>	
+	</thead>
+	<tbody>
+		<tr>
+			<td>2006</td>
+			<td><b>Genome-wide analysis of light sensing in Prochlorococcus.</b> Steglich, C., Futschik, M., Rector, T., Steen, R., & Chisholm, S. W. (2006). Journal of bacteriology, 188(22), 7796-7806.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/16980454">16980454</a></td>
+			<td></td>
+			<td>
+				<ul>
+					<li><a href="">MD4-9313a520062.cdf</a> </li>
+					<li><a href="">cell_files.tar.gz</a> </li>
+				</ul>
+			</td>		
+		</tr>
+		<tr>
+			<td>2006</td>
+			<td><b>Global gene expression of Prochlorococcus ecotypes in response to changes in nitrogen availability.</b> Tolonen, A. C., Aach, J., Lindell, D., Johnson, Z. I., Rector, T., Steen, R., ... & Chisholm, S. W. (2006). Molecular systems biology, 2(1), 53.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/17016519">17016519</a></td>
+			<td></td>
+			<td>
+				<ul>
+					<li><a href="">MD4-9313a520062.cdf</a> </li>
+					<li><a href=""> N_experiment_arrayexpress_namekey.xls</a> </li>
+					<li><a href="">README Anne's notes about N arrays.txt</a> </li>
+					<li><a href="">cel_files.tar.gz</a> (rename this) </li>
+				</ul>
+			</td>			
+		</tr>		
+		<tr>
+			<td>2006</td>
+			<td><b>Phosphate acquisition genes in Prochlorococcus ecotypes: evidence for genome-wide adaptation.</b> Martiny, A. C., Coleman, M. L., & Chisholm, S. W. (2006). Proceedings of the National Academy of Sciences, 103(33), 12552-12557.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/16895994">16895994</a></td>
+			<td></td>
+			<td>
+				<ul>
+					<li><a href="">MD4-9313a520062.cdf</a> </li>
+					<li><a href=""> P_normalized.xls</a> </li>
+					<li><a href="">med4_cel_files.tar.gz</a> </li>
+					<li><a href="">mit9313_cel_files.tar.gz</a> </li>
+				</ul>
+			</td>			
+		</tr>
+		<tr>
+			<td>2007</td>
+			<td><b>Genome-wide expression dynamics of a marine virus and host reveal features of co-evolution.</b> Lindell, D., Jaffe, J. D., Coleman, M. L., Futschik, M. E., Axmann, I. M., Rector, T., ... & Church, G. M. (2007). Nature, 449(7158), 83-86.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/17805294">17805294</a></td>
+			<td>GEO: <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE8382">GSE8382</a></td>
+			<td></td>		
+		</tr>			
+		<tr>
+			<td>2010</td>
+			<td><b>Short RNA half-lives in the slow-growing marine cyanobacterium Prochlorococcus.</b> Steglich, C., Lindell, D., Futschik, M., Rector, T., Steen, R., & Chisholm, S. W. (2010). Genome biology, 11(5), R54.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/20482874">20482874</a></td>
+			<td>GEO: <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17075">GSE17075</a></td>
+			<td></td>
+		</tr>	
+		<tr>
+			<td>2011</td>
+			<td><b>Transcriptome response of high-and low-light-adapted Prochlorococcus strains to changing iron availability.</b> Thompson, A. W., Huang, K., Saito, M. A., & Chisholm, S. W. (2011).  The ISME journal, 5(10), 1580-1594.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/21562599">21562599</a></td>
+			<td>GEO: <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE26533">GSE26533</a></td>
+			<td></td>
+			
+		</tr>	
+		<tr>
+			<td>2012</td>
+			<td><b>Transcriptome and proteome dynamics of a light-dark synchronized bacterial cell cycle.</b> Waldbauer, J. R., Rodrigue, S., Coleman, M. L., & Chisholm, S. W. (2012). PloS one, 7(8), e43432.
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/22952681">22952681</a></td>
+			<td><a href="http://dx.doi.org/10.5061/dryad.8kk12 ">Dryad</a></td>
+			<td></td>
+		</tr>	
+		<tr>
+			<td>2014</td>
+			<td><b>Comparative transcriptomics of two environmentally relevant cyanobacteria reveals unexpected transcriptome diversity.</b> Voigt, K., Sharma, C. M., Mitschke, J., Lambrecht, S. J., Voß, B., Hess, W. R., & Steglich, C. (2014). The ISME journal, 8(10), 2056-2068.</td>
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/24739626">24739626</a></td>
+			<td>GEO: <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE53065">GSE53065</a></td>
+			<td></td>		
+		</tr>			
+		<tr>
+			<td>2015</td>
+			<td><b>Response of Prochlorococcus to varying CO2: O2 ratios.</b> Bagby, S. C., & Chisholm, S. W. (2015). The ISME journal, 9(10), 2232-2245.</td>	
+			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/25848872">25848872</a></td>
+			<td>GEO: <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE65684">GSE65684</a></td>
+			<td></td>		
+		</tr>		
+	</tbody>
+</table>
+<br>
+<a class="return-link" href="#top">back to top</a>
+<div class="section-space"></div>
+
+
+<h3 id="physiology-section" class="underline">Physiology Data</h3>
+<br>
+
+<table id="physiology">
+	<thead>
+		<tr>
+			<th>Release Date</th>
+			<th>Citation</th>
+			<th>Files</th>
+		</tr>	
+	</thead>
+	<tbody>
+		<tr>
+			<td>1999</td>
+			<td><b>Photophysiology of the marine cyanobacterium Prochlorococcus: Ecotypic differences among cultured isolates.</b> Moore, L. R., & Chisholm, S. W. (1999). Limnology and Oceanography, 44(3), 628-638.</td>
+			<td>
+				<ul>
+					<li><a href="">Prochlorococcus_strain_LIGHT_growth_rates.xls</a></li>
+					<li><a href="">Prochlorococcus_strain_LIGHT_growth_rates.pdf</a></li>
+					<li><a href="">Prochlorococcus_strain_TEMPERATURE_growth_rates.xls</a></li>
+					<li><a href="">Prochlorococcus_strain_TEMPERATURE_growth_rates.pdf</a></li>										
+				</ul>
+			</td>
+		</tr>
+	</tbody>
+</table>	
+	
+<a class="return-link" href="#top">back to top</a>
+<div class="section-space"></div>
+
+
+<h3 id="other-section" class="underline">Other Data</h3>
+<br>
+<table id="other">
+	<thead>
+		<tr>
+			<th>Release Date</th>
+			<th>Citation</th>
+			<th>Files</th>
+		</tr>	
+	</thead>
+	<tbody>
+		<tr>
+			<td>2009</td>
+			<td><b>Taxonomic resolution, ecotypes and the biogeography of Prochlorococcus.</b> Martiny, A. C., Tai, A. P., Veneziano, D., Primeau, F., & Chisholm, S. W. (2009). Environmental microbiology, 11(4), 823-832.</td>
+			<td>
+				<ul>
+					<li><a href="">Pro_ITS.ARF</a></li>
+					<li><a href="">Pro_ITS.arb</a></li>
+					<li><a href="">Pro_ITS.fasta</a></li>										
+				</ul>
+			</td>
+		</tr>
+		<tr>
+			<td>2009</td>
+			<td><b>Whole genome amplification and de novo assembly of single bacterial cells.</b> Rodrigue, S., Malmstrom, R. R., Berlin, A. M., Birren, B. W., Henn, M. R., & Chisholm, S. W. (2009). PloS one, 4(9), e6864.</td>
+			<td>
+				<ul>
+					<li><a href="">Prochlorococcus_MED4ax_single-cell_E05.tar.gz</a></li>
+				</ul>
+			</td>
+		</tr>
+
+	</tbody>
+</table>
+
+	
+<a class="return-link" href="#top">back to top</a>
+<div class="section-space"></div>
+
+
+<!-- </div> -->
+
+[% END; %]
