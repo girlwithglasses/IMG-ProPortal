@@ -51,6 +51,7 @@ sub _get_menu_items {
 		tools(),
 # 		$self->my_img(),
 		support(),
+		legacy()
 #		cart(),
 	];
 
@@ -97,6 +98,12 @@ sub tools {
 # 			'tools/krona',
 			'galaxy',
 		],
+	};
+}
+
+sub legacy {
+	return {
+		id => 'legacy'
 	};
 }
 
@@ -147,9 +154,6 @@ sub support {
 				submenu => [
 					'user_guide/getting_started',
 					'user_guide/data_documentation',
-# 					'user_guide/browsing',
-# 					'user_guide/searching',
-# 					'user_guide/using_tools',
  					'user_guide/api_manual'
 				]
 			}
