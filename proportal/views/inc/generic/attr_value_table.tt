@@ -1,4 +1,120 @@
-[%	# A generic table component with a column of attributes on the left and values
+[%	#	create a definition list of attribute / value pairs
+	#	args:
+	#	.obj -- object to get keys from
+	#
+	#
+	#
+	#
+
+	MACRO attr_value_dl( data_table ) BLOCK;
+		name_h = {
+			gene_oid => 'Gene ID',
+			coords   => 'DNA coordinates',
+			gc_percent => '% GC',
+			est_copy => 'Estimated copy number',
+			img_product_source => 'IMG product source',
+			img_orf_type => 'IMG ORF type',
+		};
+		dl_class = data_table.class or 'tabular';
+		obj = data_table.obj;
+
+		IF data_table.caption; %]
+	<h4[% IF data_table.caption_id %] id="[% data_table.caption_id %]"[% END; %]>
+		[% data_table.caption %]
+	</h4>
+[%
+END;
+%]
+	<dl class="[% dl_class %]"[%
+		IF data_table.id;
+		%] id="[% data_table.id %]"[%
+		END;
+		%]>
+[%
+	IF data_table.arr;
+		FOREACH datum IN data_table.arr;
+			attr = datum.first;
+			if_present = datum.last || 0;
+			## only print if there is data
+			IF ( ! if_present ) || ( if_present && obj.$attr ); %]
+		<dt class='[% dl_class %]__attr'>
+[%				IF name_h.$attr; %]
+			[% name_h.$attr %]
+[%				ELSE; %]
+			[% attr.replace('_',' ') | ucfirst; %]
+[%				END; %]
+		</dt><dd class='[% dl_class %]__value'>
+			[%	obj.$attr %]
+		</dd>
+[%			END;
+		END; # FOREACH datum in data_table.arr
+	END;
+
+	IF data_table.tbody;
+		FOREACH datum IN data_table.tbody; %]
+		<dt class="[% dl_class %]__attr">
+[%			datum.first; %]
+		</dt><dd class="[% dl_class %]__value">
+[%			datum.last %]
+		</dd>
+[%		END; # FOREACH datum in data_table.tbody
+	END; # end data_table.tbody
+
+	IF data_table.fn_arr;
+
+		FOR fn IN data_table.fn_arr;
+		annot_name = 'annot_' _ fn.last;
+			IF self.$annot_name && self.$annot_name.size > 0; %]
+		<dt>[% fn.first %]</dt>
+[%	#	'<pre class="debug">' _ Dumper.dump( fn ) _ '</pre>';
+				FOR x IN self.$annot_name; %]
+		<dd>
+[%					TRY;
+				external_link({ db => x.db, xref => x.xref });
+					CATCH;
+			#	'<pre>' _ error _ '</pre>';
+				x.db _ ':' _ x.xref;
+					END;
+			': ' _ x.name; %]
+		</dd>
+[%				END;
+			END;
+		END;
+	END;
+
+
+		IF data_table.proplist;
+			FOR datum IN proplist;
+				attr = datum.first;
+				if_present = datum.last || 0;
+				## only print if there is data
+				IF ( ! if_present ) || ( if_present && obj.$attr ); %]
+			<dt class="[% dl_class %]__attr">
+	[%				IF name_h.$attr; %]
+				[% name_h.$attr %]
+	[%				ELSE; %]
+				[% attr.replace('_',' ') | ucfirst; %]
+	[%				END; %]
+			</dt>[%
+					FOR fn IN obj.$attr;
+			%]<dd class='[% dl_class %]__value'>
+
+
+			</dd>[%
+
+					END;
+
+				END;
+			END;
+		END;
+
+
+%]
+	</dl>
+[%	END; # end macro
+
+
+	# A generic table component with a column of attributes on the left and values
 	# on the right
 # params:
 # data_table hashref with keys
@@ -48,8 +164,7 @@ VIEW t_cell;
 	END;
 END; # end view t_cell
 
-
-MACRO attr_value_table BLOCK;
+MACRO attr_value_table( data_table ) BLOCK;
 
 IF data_table.tbody.size > 0;
 	headers = data_table.thead; %]

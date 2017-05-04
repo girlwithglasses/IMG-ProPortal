@@ -32,14 +32,41 @@ table.lined {
 }
 
 .col1 {
-	width: 200px; }
+	width: 200px;
+}
 
 .subheader {
 	margin-top: .5rem;
 }
 
+.taxon-gene-list {
+
+	&__row--total {
+		font-weight: bold;
+	}
+
+	&__attr {
+		&--rna {
+			text-indent: 1rem;
+		}
+
+		&--rrna, &--trna, &--xrna {
+			text-indent: 2rem;
+		}
+
+		&--5s_rrna, &--16s_rrna, &--23s_rrna {
+			text-indent: 3rem;
+		}
+	}
+	&__val {
+		text-align: right;
+	}
+}
+
+
+
 .indent1 {
-	text-indent: 2rem;
+	text-indent: 1rem;
 }
 
 .indent2 {
@@ -50,13 +77,13 @@ table.lined {
 	text-indent: 6rem;
 }
 
-// This doesn't go in the table, but sits above it.  Styles a div.
-div.tableTitle {
-//	width: 100%;
+// styling a title element above a table
+.tableTitle {
 	padding: 2rem 0 .5rem 0;
 	margin-bottom: .25rem;
 	@include b_border(1px, $border-lighter);
 }
+
 
 caption {
 	@if variable-exists(caption-bg) {

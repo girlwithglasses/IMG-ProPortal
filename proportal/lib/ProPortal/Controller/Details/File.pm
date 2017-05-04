@@ -16,6 +16,7 @@ has '+page_id' => (
 
 sub _render {
 	my $self = shift;
+
 	return $self->get_data( @_ );
 # 	if ( 'success' eq $self->status ) {
 # 		return $self->results;

@@ -1,10 +1,17 @@
 <pre class="debug">
 [%
 	USE dumper(Indent = 1);
-	IF results;
-		dumper.dump( results );
-	END;
 
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
+
+#	TRY;
+#		js_obj = results.json;
+#		dumper.dump( js_obj );
+#	CATCH;
+		IF results;
+			dumper.dump( results );
+		END;
+#	END;
 #	IF settings;
 #		dumper.dump( settings );
 #	END;

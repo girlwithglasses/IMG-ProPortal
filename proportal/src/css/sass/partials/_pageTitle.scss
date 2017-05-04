@@ -3,6 +3,6 @@ page title for a details page
 */
 
 .title-section__container {
-	margin-bottom: .5rem;
+	margin-bottom: $gutter;
 	@include b_border($element-border-width, $element-border-color);
 }

@@ -621,6 +621,77 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Table(qw/TaxonTigrCount              TAXON_TIGR_COUNT               unknown_pk         /)
 ->Table(qw/TaxonUpdateRequest          TAXON_UPDATE_REQUEST           unknown_pk         /)
 
+## views!
+->Table(qw/AnnotBiocycPathway ANNOT_BIOCYC_PATHWAY  unknown_pk/)
+->Association(
+	[qw/Gene			gene					1	gene_oid /],
+	[qw/AnnotBiocycPathway	annot_biocyc_pathways	*	gene_oid /])
+
+->Table(qw/AnnotCog	ANNOT_COG	unknown_pk /)
+->Association(
+	[qw/Gene			gene		1	gene_oid /],
+	[qw/AnnotCog		annot_cogs	*	gene_oid /])
+
+->Table(qw/AnnotEnzyme	ANNOT_ENZYME	unknown_pk /)
+->Association(
+	[qw/Gene			gene			1	gene_oid /],
+	[qw/AnnotEnzyme		annot_enzymes	*	gene_oid /])
+
+->Table(qw/AnnotGo	ANNOT_GO	unknown_pk /)	# no scaff, taxon
+->Association(
+	[qw/Gene			gene		1	gene_oid /],
+	[qw/AnnotGo			annot_go	*	gene_oid /])
+
+->Table(qw/AnnotImgTerm	ANNOT_IMG_TERM	unknown_pk /)
+->Association(
+	[qw/Gene			gene			1	gene_oid /],
+	[qw/AnnotImgTerm	annot_img_terms	*	gene_oid /])
+
+->Table(qw/AnnotKoModule	ANNOT_KO_MODULE	unknown_pk /)
+->Association(
+	[qw/Gene			gene				1	gene_oid /],
+	[qw/AnnotKoModule	annot_ko_modules	*	gene_oid /])
+
+->Table(qw/AnnotKoPathway	ANNOT_KO_PATHWAY	unknown_pk /)
+->Association(
+	[qw/Gene			gene				1	gene_oid /],
+	[qw/AnnotKoPathway	annot_ko_pathways	*	gene_oid /])
+
+->Table(qw/AnnotKoTerm	ANNOT_KO_TERM	unknown_pk /)
+->Association(
+	[qw/Gene			gene			1	gene_oid /],
+	[qw/AnnotKoTerm		annot_ko_terms	*	gene_oid /])
+
+->Table(qw/AnnotKog		ANNOT_KOG	unknown_pk /)
+->Association(
+	[qw/Gene			gene		1	gene_oid /],
+	[qw/AnnotKog		annot_kogs	*	gene_oid /])
+
+->Table(qw/AnnotPdb		ANNOT_PDB	unknown_pk /)
+->Association(
+	[qw/Gene			gene		1	gene_oid /],
+	[qw/AnnotPdb		annot_pdbs	*	gene_oid /])
+
+->Table(qw/AnnotSeed	ANNOT_SEED	unknown_pk /)
+->Association(
+	[qw/Gene			gene		1	gene_oid /],
+	[qw/AnnotSeed		annot_seeds	*	gene_oid /])
+
+->Table(qw/AnnotTc		ANNOT_TC	unknown_pk /)
+->Association(
+	[qw/Gene			gene		1	gene_oid /],
+	[qw/AnnotTc			annot_tcs	*	gene_oid /])
+
+->Table(qw/AnnotTigrfam	ANNOT_TIGRFAM	unknown_pk /)
+->Association(
+	[qw/Gene			gene			1	gene_oid /],
+	[qw/AnnotTigrfam	annot_tigrfams	*	gene_oid /])
+
+->Table(qw/AnnotXref	ANNOT_XREF	unknown_pk /)
+->Association(
+	[qw/Gene			gene		1	gene_oid /],
+	[qw/AnnotXref		annot_xrefs	*	gene_oid /])
+
 #---------------------------------------------------------------------#
 #                      ASSOCIATION DECLARATIONS                       #
 #---------------------------------------------------------------------#
@@ -833,6 +904,10 @@ DBIx::DataModel  # no semicolon (intentional)
 ->Association(
   [qw/Gene                        gene                             1    gene_oid  /],
   [qw/GeneFragCoords              gene_frag_coords                 *    gene_oid  /])
+
+->Association(
+  [qw/Gene                        gene                             1    gene_oid  /],
+  [qw/BioClusterFeaturesNew       bio_cluster_features_new         *    gene_oid  /])
 
 ->Composition(
   [qw/ParalogGroup                paralog_group                    1    group_oid            /],
@@ -1251,29 +1326,29 @@ DataModel::IMG_Core->metadm->define_type(
 		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
 	});
 
-DataModel::IMG_Core->metadm->define_table(
-	class       => 'GoTerms',
-	db_name     => 'GENE_GO_TERMS INNER JOIN GO_TERM ON gene_go_terms.go_id = go_term.go_id',
-#	db_name     => 'GENE_GO_TERMS => go_term',
-	where       => { 'go_term.go_type' => "molecular_function" },
-	default_columns => 'gene_oid, go_evidence, reference, go_term.*',
-	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneGoTerms GoTerm ) ],
-);
-
-DataModel::IMG_Core->metadm->define_table(
-	class       => 'CogTerms',
-	db_name     => 'GENE_COG_GROUPS INNER JOIN COG ON gene_cog_groups.cog = cog.cog_id',
-	default_columns => 'gene_oid, cog.*',
-	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneCogGroups Cog ) ],
-);
-
-DataModel::IMG_Core->metadm->define_table(
-	class       => 'KogTerms',
-	db_name     => 'GENE_KOG_GROUPS INNER JOIN KOG ON gene_kog_groups.kog = kog.kog_id',
-	default_columns => 'gene_oid, kog.*',
-	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneKogGroups Kog ) ],
-);
-
+# DataModel::IMG_Core->metadm->define_table(
+# 	class       => 'GoTerms',
+# 	db_name     => 'GENE_GO_TERMS INNER JOIN GO_TERM ON gene_go_terms.go_id = go_term.go_id',
+# #	db_name     => 'GENE_GO_TERMS => go_term',
+# 	where       => { 'go_term.go_type' => "molecular_function" },
+# 	default_columns => 'gene_oid, go_evidence, reference, go_term.*',
+# 	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneGoTerms GoTerm ) ],
+# );
+#
+# DataModel::IMG_Core->metadm->define_table(
+# 	class       => 'CogTerms',
+# 	db_name     => 'GENE_COG_GROUPS INNER JOIN COG ON gene_cog_groups.cog = cog.cog_id',
+# 	default_columns => 'gene_oid, cog.*',
+# 	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneCogGroups Cog ) ],
+# );
+#
+# DataModel::IMG_Core->metadm->define_table(
+# 	class       => 'KogTerms',
+# 	db_name     => 'GENE_KOG_GROUPS INNER JOIN KOG ON gene_kog_groups.kog = kog.kog_id',
+# 	default_columns => 'gene_oid, kog.*',
+# 	parents     => [ map { DataModel::IMG_Core->metadm->table($_) } qw( GeneKogGroups Kog ) ],
+# );
+#
 
 
 # DataModel::IMG_Core->View(
@@ -1287,17 +1362,17 @@ DataModel::IMG_Core->metadm->define_table(
 # 	);
 
 
-DataModel::IMG_Core->Composition(
-  [qw/Gene                        g                                1    gene_oid        /],
-  [qw/GoTerms                     go_terms                         *    gene_oid        /]);
-
-DataModel::IMG_Core->Composition(
-  [qw/Gene                        g                                1    gene_oid        /],
-  [qw/CogTerms                    cog_terms                        *    gene_oid        /]);
-
-DataModel::IMG_Core->Composition(
-  [qw/Gene                        g                                1    gene_oid        /],
-  [qw/KogTerms                    kog_terms                        *    gene_oid        /]);
+# DataModel::IMG_Core->Composition(
+#   [qw/Gene                        g                                1    gene_oid        /],
+#   [qw/GoTerms                     go_terms                         *    gene_oid        /]);
+#
+# DataModel::IMG_Core->Composition(
+#   [qw/Gene                        g                                1    gene_oid        /],
+#   [qw/CogTerms                    cog_terms                        *    gene_oid        /]);
+#
+# DataModel::IMG_Core->Composition(
+#   [qw/Gene                        g                                1    gene_oid        /],
+#   [qw/KogTerms                    kog_terms                        *    gene_oid        /]);
 
 =cut
 DataModel::IMG_Core->metadm->define_table(
@@ -1521,7 +1596,10 @@ DataModel::IMG_Core
 
 #=cut
 
-sub DataModel::IMG_Core::Gene::pseudogene {
+package DataModel::IMG_Core::Gene;
+
+#sub DataModel::IMG_Core::Gene::pseudogene {
+sub pseudogene {
 	my $self = shift;
 	if ( ( $self->{is_pseudogene} && 'Yes' eq $self->{is_pseudogene} )
 		|| ( $self->{img_orf_type} && 'pseudo' eq $self->{img_orf_type} ) ) {
@@ -1533,10 +1611,12 @@ sub DataModel::IMG_Core::Gene::pseudogene {
 # coordinates: return a formatted coordinate string
 # does the work of GeneUtil::getMultFragCoordsLine
 
-sub DataModel::IMG_Core::Gene::coordinates {
+#sub DataModel::IMG_Core::Gene::coordinates {
+sub coordinates {
 	my $self = shift;
 
 	return 'unknown' unless $self->{start_coord} && $self->{end_coord} && $self->{strand};
+
 	$self->expand('gene_frag_coords', ( -order_by => 'frag_order' ));
 
 	my $coord_str = $self->{start_coord} . '..' . $self->{end_coord};
@@ -1547,8 +1627,7 @@ sub DataModel::IMG_Core::Gene::coordinates {
 		} @{$self->{gene_frag_coords}};
 
 	}
-	elsif ( $self->{cds_frag_coord} ) {
-
+	elsif ( $self->{cds_frag_coord} && $self->{cds_frag_coord} =~ /,/ ) {
 		my $cds_frag_coord = lc( $self->{cds_frag_coord} );
 		$cds_frag_coord =~ s/complement|join//g;
 		$cds_frag_coord =~ s/[<>\(\)]//g;
@@ -1560,18 +1639,102 @@ sub DataModel::IMG_Core::Gene::coordinates {
 	return $coord_str . ' (' . $self->{strand} . ')';
 }
 
-sub DataModel::IMG_Core::Gene::gene_length {
+#sub DataModel::IMG_Core::Gene::gene_length {
+sub gene_length {
 	my $self = shift;
 	return $self->{dna_seq_length} . ' bp' if $self->{dna_seq_length};
 	return 'unknown';
 }
-sub DataModel::IMG_Core::Gene::protein_length {
+
+#sub DataModel::IMG_Core::Gene::protein_length {
+sub protein_length {
 	my $self = shift;
 	return $self->{aa_seq_length} . ' aa' if $self->{aa_seq_length};
+	if ( $self->{locus_type} && $self->{locus_type} =~ /rna/i ) {
+		return 'N/A';
+	}
 	return 'unknown';
 }
 
-sub DataModel::IMG_Core::Enzyme::xref {
+sub gene_source {
+	my $self = shift;
+
+	if ( ! $self->{gene_pangene_compositions} ) {
+		$self->expand( 'gene_pangene_compositions' );
+	}
+	return $self->{gene_pangene_compositions};
+}
+
+#bio_cluster_features_new
+# sub versions {
+# 	my $self = shift;
+# 	my $which = shift;
+# 	# which is either 'prev' or 'next'
+#
+# 	if ( 'prev' eq $which ) {
+# 		$self->expand( 'gene_previous_versions', ( -cols => [ 'prev_version' ], -order_by => [ 'prev_version' ] );
+# 		for ( @{$self->{gene_previous_versions}} ) {
+# 			$_->expand( 'gene', ( -cols => [ qw[ start_coord end_coord strand dna_seq_length aa_seq_length ] ] ) );
+# 		}
+# 	}
+#
+# sub previous_versions {
+# 	my $self = shift;
+#
+#
+#
+#
+# sub is_replacement {
+# 	my $self = shift;
+#
+# 	$
+# # 	      select distinct gene_oid
+# # 	      from gene_replacements
+# # 	      where old_gene_oid = ?
+#
+#
+# }
+#
+#
+# ->Association(
+#   [qw/Gene                        gene                             1    gene_oid             /],
+#   [qw/GenePrevVersions            gene_prev_versions               *    prev_version         /])
+#
+# ->Composition(
+#   [qw/Gene                        gene_2                           1    gene_oid             /],
+#   [qw/GenePrevVersions            gene_prev_versions_2             *    gene_oid             /])
+#
+# ->Composition(
+#   [qw/Gene                        gene                             1    gene_oid             /],
+#   [qw/GeneReplacements            gene_replacements                *    gene_oid             /])
+# ->Composition(
+#   [qw/Gene                        gene                             1    gene_oid             /],
+#   [qw/GeneReplacements            gene_replacements                *    old_gene_oid             /])
+#
+#
+
+
+
+
+1;
+
+package DataModel::IMG_Core::TaxonStats;
+
+sub without_function {
+	my $self = shift;
+	if ( $self->{without_function} ) {
+		$self->{without_function} = $self->{cds_genes} - $self->{gene_w_func_pred};
+	}
+	return $self->{without_function};
+}
+
+1;
+
+
+package DataModel::IMG_Core::Enzyme;
+
+
+sub xref {
 	my $self = shift;
 	if ( ! $self->{xref} ) {
 		my $xref = $self->{ec_number};
@@ -1581,7 +1744,7 @@ sub DataModel::IMG_Core::Enzyme::xref {
 	return $self->{xref};
 }
 
-sub DataModel::IMG_Core::Enzyme::name {
+sub name {
 	my $self = shift;
 	if ( ! $self->{name} ) {
 		my $name = $self->{enzyme_name};
@@ -1590,6 +1753,8 @@ sub DataModel::IMG_Core::Enzyme::name {
 	}
 	return $self->{name};
 }
+
+1;
 
 =cut
 

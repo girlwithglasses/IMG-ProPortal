@@ -2,6 +2,7 @@
 	title = 'CyCOG Release';
 	self = results.vers;
 
+
 	surtitle = 'CyCOG release';
 	# cycog release
 	article_title = 'CyCOG version v' _ self.version;
@@ -48,6 +49,17 @@
 #		END;	# end wrapper
 	END;
 
+	surtitle = 'CyCOG release';
+	# cycog release
+	article_title = 'CyCOG version v' _ self.version;
+	subtitle = 'Released ' _ self.date_created;
+	IF self.comments;
+		subtitle = subtitle _ '; ' _ self.comments;
+	END;
+	subtitle = subtitle _ '.';
+	PROCESS 'inc/generic/title.tt';
+	PROCESS 'inc/generic/container_macros.tt';
+
 	# page navigation
 
 	sections = [
@@ -63,6 +75,7 @@
 		}
 	];
 
+
 	in_page_nav( pagenav = { links => sections } );
 
 	FOR secn IN sections;
@@ -72,6 +85,9 @@
 		PROCESS $stuff WRAPPER $secn.type;
 		
 	END;
+
+	layout_page( sections );
+
 
  	PROCESS 'scripts/datatables.tt';
 

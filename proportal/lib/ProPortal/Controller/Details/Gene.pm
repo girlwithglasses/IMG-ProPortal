@@ -44,11 +44,9 @@ sub get_data {
 		});
 	}
 
-	# check for deleted genes
+# 638824985
 
-	# check for replaced genes
 
-	# check for metagenome genes
 
 
 
@@ -70,48 +68,70 @@ sub get_data {
 	my $gene = $results->[0];
 
 	my $associated = [ qw(
-		gene_cog_groups
+		gene_fusion_components
+
 		gene_eggnogs
+		gene_seed_names
+		gene_swissprot_names
+
+		gene_sig_peptides
+		gene_tmhmm_hits
+		bio_cluster_features_new
+
+		gene_cog_groups
 		gene_enzymes
 		gene_ext_links
-		gene_fusion_components
 		gene_go_terms
 		gene_img_interpro_hits
 		gene_kog_groups
 		gene_pdb_xrefs
-		gene_seed_names
-		gene_sig_peptides
-		gene_swissprot_names
 		gene_tc_families
 		gene_tigrfams
-		gene_tmhmm_hits
 		gene_xref_families
 
-		go_terms
-		cog_terms
-		kog_terms
-
 		scaffold
+
+		annot_cogs
+		annot_enzymes
+		annot_go
+		annot_kogs
+		annot_pdbs
+		annot_tcs
+		annot_tigrfams
+		annot_xrefs
+		annot_biocyc_pathways
+		annot_img_terms
+		annot_ko_modules
+		annot_ko_pathways
+		annot_ko_terms
+		annot_seeds
 	)];
+
+
+
 # 		gene_rna_clusters
 # 		gene_cassette_genes
 # 		img_cluster_member_genes
 
-	my $order = {
-		gene_ext_links => { -order_by => 'db_name, id' }
+	my $extra_args = {
+		gene_ext_links => { -order_by => 'db_name, id' },
+		gene_tmhmm_hits => { -where => { 'feature_type' => 'TMhelix' }, -columns => 'count( gene_oid ) COUNT' },
+		gene_sig_peptides => { -columns => 'count( gene_oid ) COUNT' },
+		bio_cluster_features_new => { -columns => 'cluster_id', -group_by => 'cluster_id', -order_by => 'cluster_id' }
 	};
 
 	for my $assoc ( @$associated ) {
 		if ( $gene->can( $assoc ) ) {
-			$gene->expand( $assoc, ( %{ $order->{$assoc} || {} } ) );
+			$gene->expand( $assoc, ( %{ $extra_args->{$assoc} || {} } ) );
 		}
 	}
+
 
 
 	# fetch the cycogs
 	my $cycogs = $self->_core->run_query({
 		query => 'cycog_by_annotation',
-		where => {
+		-where => {
 			gene_oid => $args->{gene_oid}
 		}
 	});

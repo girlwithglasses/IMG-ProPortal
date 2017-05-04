@@ -18,7 +18,7 @@
 	<ul class="button-bar__container">
 [%		IF button.jbrowse; %]
 			<li class="button-bar__item">
-				<a class="button-bar__link pp-button disabled" rel="external" href="[% link( 'jbrowse', button.jbrowse ); %]">View in JBrowse</a>
+				<a class="button-bar__link pp-button" rel="external" href="[% link( 'jbrowse', button.jbrowse ); %]">View in JBrowse</a>
 			</li>
 [%		END;
 

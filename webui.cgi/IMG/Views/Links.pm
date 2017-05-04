@@ -1326,6 +1326,8 @@ my $old_dynamic = {
 		};
 	},
 
+# Metagenome gene
+#	my $url = "main.cgi?section=MetaGeneDetail&page=metaGeneDetail&data_type=${data_type}&taxon_oid=${merfs_taxon}&gene_oid=${mer_gid}";
 
 #	https://img-proportal-test.jgi.doe.gov/details/taxon/main.cgi?section=GeneCassette&page=occurrence&taxon_oid=2634166547
 	chr_cassette_genes => sub {

@@ -5,6 +5,30 @@
 
 	PROCESS 'inc/generic/link.tt';
 
-	function_link( x = { db => 'ko_term', xref => ko_term.ko_id, text => ko_term.ko_id } ) _ ': ' _ ko_term.ko_name _ ko_term.definition;
+	MACRO kegg_orthology BLOCK;
+
+		function_link( { db => 'ko_term', xref => ko_term.ko_id, text => ko_term.ko_id } ) _ ': ' _ ko_term.ko_name _ ko_term.definition;
+
+	END;
+
+	MACRO kegg_module BLOCK;
+	# KEGG Orthology modules
+#        select distinct km.module_id, km.module_name
+#        from gene_ko_terms gkt, kegg_module_ko_terms kmkt, kegg_module km
+#        where gkt.gene_oid = ?
+#        and gkt.ko_terms = kmkt.ko_terms
+#        and kmkt.module_id = km.module_id
+
+		external_link( { db => 'kegg_module', xref => fn.module_id, text => fn.module_id } ) _ ': ' _ fn.module_name;
+
+
+        my ( $id, $name ) = $cur->fetchrow();
+        last if !$id;
+        my $url = $kegg_module_url . $id;
+        print alink( $url, $name ) . "<br/>\n";
+
+    }
+
+
 
 %]

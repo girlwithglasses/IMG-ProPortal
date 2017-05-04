@@ -33,4 +33,66 @@
 			error;
 		END;
 
-	END %]
+	END;
+
+	MACRO xref_families BLOCK;
+
+
+# 	xref_families
+#
+#       select
+#          gxf.gene_oid gene_oid,
+#          gxf.db_name db_name,
+#          gxf.id id,
+#          gxf.description descrition
+#       from gene_xref_families gxf
+#       where gxf.gene_oid = ?
+#       and gxf.db_name != 'TIGRFam'
+#          union
+#       select
+#          gtf.gene_oid gene_oid,
+#          'TIGRFam' db_name,
+#          gtf.ext_accession id,
+#          tf.expanded_name description
+#       from gene_tigrfams gtf, tigrfam tf
+#       where gtf.gene_oid = ?
+#       and gtf.ext_accession = tf.ext_accession
+#       order by db_name, id
+#
+#
+#         if ($enable_interpro && $db_name eq "InterPro" ) {
+#             my $url = "$ipr_base_url$id";
+#             $link = alink( $url, $id );
+#
+#
+#         } elsif ($enable_interpro && $db_name eq 'SUPERFAMILY' ) {
+#             my $url = "$ipr_base_url2$id";
+#             $link = alink( $url, $id );
+#         } elsif ($enable_interpro && $db_name eq 'ProSiteProfiles'  ) {
+#             my $url = "$ipr_base_url3$id";
+#             $link = alink( $url, $id );
+#
+#         } elsif ($enable_interpro && $db_name eq 'SMART'  ) {
+#             my $url = "$ipr_base_url4$id";
+#             $link = alink( $url, $id );
+#
+#         } elsif ( $db_name eq "TIGRFam" ) {
+#             my $url = "$tigrfam_base_url$id";
+#             $link = alink( $url, $id );
+#         } elsif ( $db_name eq "PIRSF" ) {
+#             my $url = "$pirsf_base_url$id";
+#             $link = alink( $url, $id );
+#         }
+#         my $x;
+#         if ( $db_name eq "TIGRFam" && $contact_oid > 0 ) {
+#             my ( $bit_score, $tc ) = getTfamScores( $dbh, $gene_oid, $id );
+#             if ( $bit_score ne "" && $tc ne "" && $bit_score < $tc ) {
+#                 $x = " <font color='red'>(WARNING: ";
+#                 $x .= "bit_score=$bit_score < trusted_cutoff=$tc)";
+#                 $x .= "</font>";
+#             }
+#         }
+#         print "- " . escHtml($description) . "$x<br/>\n";
+	END;
+
+	%]

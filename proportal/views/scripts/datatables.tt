@@ -1,5 +1,6 @@
 [%	
 
+
     MACRO d_table_init( scr_name ) BLOCK; %]
     
 		$('#[% scr_name %]').DataTable( {
@@ -54,11 +55,13 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
-[%   
-	FOR scr_name IN table_arr; 
-    	d_table_init( scr_name );
-   	END; 
-%] 
+
+[%
+	FOR scr_name IN table_arr;
+		d_table_init( scr_name );
+	END;
+%]
+
 } );
 
 </script>

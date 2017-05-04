@@ -648,8 +648,8 @@ sub category_filter {
 
 	my $cat_filters = {
 		pseudogene => [
-			{ is_pseudogene => 'Yes' },
-			{ locus_type => 'pseudo' },
+			{ is_pseudogene => 'Yes' }, # OR
+			{ locus_type => 'pseudo' }, # OR
 			{ img_orf_type => { -like => '%pseudo%' } }
 		],
 

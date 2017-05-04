@@ -420,7 +420,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 
 				if ( query_parameters->{taxon_oid} ) {
 					if ( query_parameters->{file_type} ) {
-
+						log_debug { 'matched /file with params taxon_oid and file_type' };
 						return dispatch({
 							prefix => 'details',
 							domain => 'file',
@@ -432,7 +432,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 						});
 					}
 					else {
-
+						log_debug { 'matched /file with param taxon_oid' };
 						bootstrap( 'List::File', { tmpl => 'pages/details/file.tt' } );
 						img_app->set_filters( query_parameters );
 						if ( '/api' eq $mode ) {
@@ -444,7 +444,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 				}
 				else {
 
-	# 				log_debug { 'incomplete params' };
+	 				log_debug { 'incomplete params' };
 	# 				bootstrap( 'List::File' );
 	# 				img_app->set_filters( query_parameters );
 	# 				if ( '/api/' eq $mode ) {
@@ -461,32 +461,40 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 				}
 			};
 
-# 			any qr{.*}x => sub {
+ 			any qr{.*}x => sub {
 # 				# documentation
-# 				log_debug { 'matched ' . $mode . '/file.*' };
-# 				return template 'pages/api/file.tt', {
-# 					schema => img_app->filter_schema(':all')
-# 				};
-# 			};
-		};
+				log_debug { 'matched ' . $mode . '/file' };
+				bootstrap( 'List::File', { tmpl => 'pages/api/file.tt' } );
 
-		get qr{/file
-			.*
-			}x => sub {
-
-			log_debug { 'matched ' . $mode . '/file' };
-			bootstrap( 'List::File', { tmpl => 'pages/api/file.tt' } );
-
-			return template img_app->controller->tmpl, {
-				schema => img_app->filter_schema(':all'),
-				query => {
-					base_url => 'file',
-					app => img_app,
-				},
-				output_format => $output_fmt->{url}{$mode},
-				url_prefix => $mode
+				return template img_app->controller->tmpl, {
+					schema => img_app->filter_schema(':all'),
+					query => {
+						base_url => 'file',
+						app => img_app,
+					},
+					output_format => $output_fmt->{url}{$mode},
+					url_prefix => $mode
+				};
 			};
 		};
+
+# 		get qr{/file
+# 			.*
+# 			}x => sub {
+#
+# 			log_debug { 'matched ' . $mode . '/file' };
+# 			bootstrap( 'List::File', { tmpl => 'pages/api/file.tt' } );
+#
+# 			return template img_app->controller->tmpl, {
+# 				schema => img_app->filter_schema(':all'),
+# 				query => {
+# 					base_url => 'file',
+# 					app => img_app,
+# 				},
+# 				output_format => $output_fmt->{url}{$mode},
+# 				url_prefix => $mode
+# 			};
+# 		};
 
 		my $re = join '|', @pp_viz;
 		prefix '/proportal' => sub {
