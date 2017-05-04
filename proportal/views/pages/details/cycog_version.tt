@@ -11,41 +11,55 @@
 	END;
 	subtitle = subtitle _ '.';
 	PROCESS 'inc/generic/title.tt';
-	PROCESS 'inc/generic/container_macros.tt';
+	PROCESS 'inc/generic/container_macros.tt';	
 
+	table_arr = [];
+	
 	BLOCK cycog_list;
+	
+#		WRAPPER 'inc/cart/function_add.tt';
+			data_table = results.cycog_table;
+			data_table.id = 'cycog-version-cycog-list';
+# 			data_table.class = 'function-list';
+#			data_table.caption = 'CyCOGs in release v' _ self.version;
+			data_table.tbody = results.cycog_arr;
+				
+			PROCESS 'inc/generic/table.tt';
 
-		data_table = results.cycog_table;
-		data_table.class = 'gene-cycog-annots-list';
-		data_table.caption = 'CyCOGs in release v' _ self.version;
-		data_table.tbody = results.cycog_arr;
+			table_arr.push(data_table.id);
+#		END; # end wrapper
 
-		PROCESS 'inc/generic/table.tt';
 
-	END;
+	END; # end block
+
 
 	BLOCK taxon_list;
 
-		data_table = results.taxon_table;
-		data_table.class = 'taxon-list';
-		data_table.caption = 'Taxa used to generate release v' _ self.version;
-		data_table.tbody = results.taxon_arr;
+#		WRAPPER 'inc/cart/taxon_add.tt';
+			data_table = results.taxon_table;
+#			data_table.class = 'taxon-list';
+			data_table.id = 'cycog-version-taxon-list';
+#			data_table.caption = 'Taxa used to generate release v' _ self.version;
+			data_table.tbody = results.taxon_arr;
 
-		PROCESS 'inc/generic/table.tt';
+			PROCESS 'inc/generic/table.tt';
 
+			table_arr.push(data_table.id);
+#		END;	# end wrapper
 	END;
 
 	# page navigation
-	temp_title = 'Taxa used in v' _ self.version;
 
 	sections = [
 		{	id => 'cycog_list',
-			title => 'CyCOG list',
-			content => 'cycog_list'
+			title => 'CyCOGs in release v' _ self.version,
+			content => 'cycog_list',
+			type => 'infobox_wide'
 		},
 		{ 	id => 'taxon_list',
-			title => temp_title,
-			content => 'taxon_list'
+			title => 'Taxa used to generate release v' _ self.version,
+			content => 'taxon_list',
+			type => 'infobox_wide'
 		}
 	];
 
@@ -55,8 +69,10 @@
 
 		ibox = { id => secn.id, title => secn.title };
 		stuff = secn.content;
-		PROCESS $stuff WRAPPER 'infobox';
-
+		PROCESS $stuff WRAPPER $secn.type;
+		
 	END;
+
+ 	PROCESS 'scripts/datatables.tt';
 
 	END %]

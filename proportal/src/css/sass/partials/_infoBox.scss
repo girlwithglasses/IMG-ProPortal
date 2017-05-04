@@ -51,7 +51,13 @@ found on details pages
 	}
 }
 
-.infoBox, .infoBox-double {
+.infoBox_wide {
+	width: 100%;
+	clear: both;
+	float: left;
+}
+
+.infoBox, .infoBox_wide {
 	padding: 0 $line-ht $line-ht $line-ht;
 
 	@include infoBox-table( "gene-details" );
@@ -80,6 +86,3 @@ found on details pages
 	border-bottom: $underline;
 }
 
-.infoBox-double {
-	width: 100%;
-}

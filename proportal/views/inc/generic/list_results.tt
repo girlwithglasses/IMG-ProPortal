@@ -1,46 +1,51 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = results.domain _ ' List' | ucfirst;
-%]
-<h2>[% results.domain | ucfirst %] List</h2>
-[%	IF results.params;
-		IF 'gene' == results.domain; %]
-		<h4>
-			<!--  this section needs to be expanded as more links come online -->
-			[%	IF results.params.category;
-					data_filters.schema.category.enum_map.${ results.params.category } || results.params.category;
-				END;
 
-				IF results.params.taxon_oid; %]
-				for taxon <a href="[% link( 'details', { domain => 'taxon', taxon_oid => results.params.taxon_oid } ) %]">[% results.params.taxon_oid %]</a>
-[%				END %]
-		</h4>
-[%		END; # end IF 'gene'
+	subtitle = "";
+	IF results.params;
+		IF 'gene' == results.domain; 
+			IF results.params.category;
+				article_title = data_filters.schema.category.enum_map.${ results.params.category } || results.params.category;
+			END;
+
+			IF results.params.taxon_oid; 
+				subtitle = 'for taxon <a href="' _ link( 'details', { domain => 'taxon', taxon_oid => results.params.taxon_oid } ) _ '">' _ results.params.taxon_oid _ '</a>';
+			END; 
+		END; # end IF 'gene'
 	END; # end IF results.params
 
-	IF results.n_results; %]
-<p class="[% results.table.class %]__count">[% results.n_results %] results</p>
-[%	END;
+	PROCESS 'inc/generic/title.tt';
+	PROCESS 'inc/generic/container_macros.tt';	
 
-	IF results.defined('n_pages') && results.n_pages > 1; %]
-<p>PAGING REQUIRED!</p>
-[%	END; %]
-<div class="[% results.table.class %]__container" id="main">
-[%	IF results.arr.size > 0;
+	table_arr = [];
+	
+	BLOCK result_list;
+		data_table = results.table;
+		data_table.class = results.domain _ "-list";
+		data_table.id = results.domain _ "-list";
+		data_table.tbody = results.arr;
+		table_arr.push(data_table.id);
+		
+		PROCESS 'inc/generic/table.tt';
 
-		form_wrapper = 'inc/cart/' _ results.domain _ '_add.tt';
-		WRAPPER $form_wrapper;
+	END; # end block
+	
+	sections = [
+		{	id => 'result_list',
+			content => 'result_list',
+			type => 'infobox_wide'
+		}
+	];
 
-			data_table = results.table;
-			data_table.class = results.domain _ "-list";
-#			data_table.caption = results.domain _ " List" | ucfirst;
-			data_table.tbody = results.arr;
-			PROCESS 'inc/generic/table.tt';
+	FOR secn IN sections;
 
-		END; # end wrapper
+		ibox = { id => secn.id, title => secn.title };
+		stuff = secn.content;
+		PROCESS $stuff WRAPPER $secn.type;
+		
+	END;
 
-	ELSE %]
-<p>No [% results.domain %]s found</p>
-[%	END;  # END if results.arr.size %]
-</div>
-[% END %]
+ 	PROCESS 'scripts/datatables.tt';
+
+ END; %]
 

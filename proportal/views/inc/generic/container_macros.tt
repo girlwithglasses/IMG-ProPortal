@@ -19,6 +19,21 @@
 	</section>
 [%	END; # end infobox
 
+
+	BLOCK infobox_wide;		%]
+	
+	<section class="[% ibox.class %]"[% IF ibox.id %] id="[% ibox.id %]"[% END %]>
+[%		IF ibox.title %]
+		<h4 class="[% ibox.class %]__title">[% ibox.title %]</h4>
+[%		END; %]
+	[%	content %]
+	<p class="to-top__line"><a class="to-top__link" href="#top">to page top</a></p>
+	</section>
+
+[%	END; # end infobox_wide
+
+
+
 	BLOCK list_container %]
 	<ul class="[% class_name %]__list[%
 		IF class_suffix; '--' _ class_suffix; END; %]">

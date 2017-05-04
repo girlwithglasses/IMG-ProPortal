@@ -38,9 +38,10 @@
 // @import "partials/pageHeader";
 @import "partials/grid";
 @import "partials/list-page";
+@import "partials/datatables";
 
 //Partials for list pages.
-@import "partials/generic-tables";	@include generic-tables;
+//@import "partials/generic-tables";	@include generic-tables;
 @import "partials/generic-carts";	//@include generic-carts;
 
 // print style
