@@ -485,7 +485,7 @@ $select_queries->{cycog_by_annotation} = sub {
 	return {
 		schema => 'img_cycog',
 		join => [ qw[ GeneCycogGroups <=> cycog ] ],
-		-columns => [ 'cycog.*' ],
+		-columns => [ 'cycog.*, gene_cycog_groups.version, gene_cycog_groups.paralogs' ],
 	};
 };
 
@@ -539,6 +539,77 @@ $select_queries->{gene_details} = sub {
 		join => [ qw[ Gene <=> scaffold <=> gold_tax ] ],
 		-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name', 'scaffold_oid', 'scaffold_name' ],
 	};
+
+};
+
+# replaced genes
+$select_queries->{replaced_gene} = sub {
+	return {
+		schema => 'img_core',
+		table  => 'GeneReplacements',
+	};
+};
+
+# unmapped (no longer valid)
+$select_queries->{unmapped_gene} = sub {
+	return {
+		schema => 'img_core',
+		table  => 'UnmappedGenesArchive',
+	};
+};
+
+# old metagenome ID
+$select_queries->{old_metagenome_gene} = sub {
+
+	# gene_oid, merfs_gene_id, locus_tag, taxon
+	return {
+		schema => 'img_core',
+		table => 'MerfsGeneMapping'
+	};
+};
+
+$select_queries->{gene_details_with_checks} = sub {
+	my $self = shift;
+	my $args = shift;
+
+	# check for deleted genes
+	my $stt = $self->_core->run_query({
+		query => 'unmapped_gene',
+		-columns => [ qw[ gene_oid gene_display_name taxon_name locus_tag img_version ] ],
+		-where => { old_gene_oid => $args->{gene_oid} }
+	});
+
+	if ( $stt->row_count > 0 ) {
+		return $stt->all;
+	}
+
+	# check for replaced genes
+	$stt = $self->_core->run_query({
+		query => 'replaced_gene',
+		-where => { old_gene_oid => $args->{gene_oid} },
+		-columns => [ qw[ gene_oid ] ]
+	});
+
+	if ( $stt->row_count > 0 ) {
+		# get the replacement gene
+		my $res = $stt->all;
+		log_debug { 'replacement: ' . Dumper $res };
+		# redirect to replacement
+	}
+
+	# check for metagenome genes
+	$stt = $self->_core->run_query({
+		query => 'old_metagenome_gene',
+		-where => { gene_oid => $args->{gene_oid} }
+	});
+
+	if ( $stt->row_count > 0 ) {
+		# redirect to metagenome gene
+
+	}
+
+	# we have a 'normal' gene!
+	return $self->default_select( $select_queries->{gene_details}->( $self, $args ) );
 
 };
 

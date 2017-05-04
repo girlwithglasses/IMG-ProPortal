@@ -133,9 +133,10 @@ sub get_data {
 	}
 
 	# for scaffold and taxon filters, get the scaffold/taxon and pull up the genes from it
-	if ( $self->filters->{scaffold} || $self->filters->{taxon} ) {
+	if ( $self->filters->{scaffold} ) {
 
-
+	}
+	elsif ( $self->filters->{taxon} ) {
 
 	}
 
@@ -154,7 +155,7 @@ sub examples {
 		desc => 'list all genes for taxon NATL2A (taxon_oid 640069325)'
 	},{
 		url => '/list/gene?db=cycog&xref=0000001',
-		desc => 'list all genes for function CyCOG:0000001 (need to define this further with correct ids, etc.)'
+		desc => 'list all genes for function CyCOG:0000001'
 	},{
 		url => '/list/gene?scaffold_oid=xxxxxxx',
 		desc => 'list all genes on scaffold xxxxxx'

@@ -82,6 +82,16 @@ sub in_versions {
 
 1;
 
+package DataModel::IMG_CyCOG::GeneCycogGroups;
+
+sub get_paralogs {
+	my $self = shift;
+	return [ split ",", ( $self->{paralogs} || '' ) ];
+}
+
+1;
+
+
 # CREATE TABLE CYCOG(
 #   "id" TEXT,
 #   "cluster_size" TEXT,

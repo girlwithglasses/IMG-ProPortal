@@ -15,14 +15,14 @@ found on details pages
 		}
 
 		&__caption {
-			@extend .underline;
+/*			@extend .underline;
 			font-weight: bold;
-			margin: $gutter 0;
+			margin: $gutter 0; */
 			padding-left: 0;
 		}
 
 		&__thead {
-			display: none;
+//			display: none;
 		}
 	}
 
@@ -36,32 +36,64 @@ found on details pages
 	}
 }
 
-.infoBox {
-	/* this may need to be defined somewhere else... */
-	/* Small screen */
-	@media all and (max-width: $half-) {
-		width: 100%;
-		margin-left: 0;
-		margin-right: 0;
-	}
+// half-width infoboxes
+@mixin half_box( $class ) {
 
-	/* Large screen */
-	@media all and (min-width: $half) {
-		width: 50%;
+	.#{$class} {
+
+		padding: 0 $line-ht $line-ht $line-ht;
+
+		/* Small screen */
+		@media all and (max-width: $half-) {
+			width: 100%;
+			margin-left: 0;
+			margin-right: 0;
+		}
+
+		/* Large screen */
+		@media all and (min-width: $half) {
+			width: 50%;
+			float: left;
+		}
 	}
 }
 
-.infoBox, .infoBox-double {
-	padding: 0 $line-ht $line-ht $line-ht;
 
-	@include infoBox-table( "gene-details" );
-	@include infoBox-table( "gene-list" );
-	@include infoBox-table( "taxon-scaffold-details" );
-	@include infoBox-table( "gene-ext-links" );
-	@include infoBox-table( "gene-fn-annots" );
-	@include infoBox-table( "gene-pway-annots" );
-	@include infoBox-table( "gene-cycog-annots" );
+@media all and (min-width: $half) {
+	.content__container section:nth-child(odd) {
+		clear: left;
+	}
+}
 
+// these are on the taxon details page
+@include half_box( 'nat_iso_info' );
+@include half_box( 'gene_counts' );
+@include half_box( 'environment' );
+@include half_box( 'id_ext_links' );
+@include half_box( 'phyl_info' );
+@include half_box( 'seq_info' );
+
+// gene details
+@include half_box( 'gene_details' );
+@include half_box( 'feature_list' );
+@include half_box( 'gene_ext_refs' );
+@include half_box( 'cycog' );
+@include half_box( 'gene_fn_list' );
+@include half_box( 'pathway_annotations' );
+
+
+// gene details page
+@include infoBox-table( "gene-details" );
+@include infoBox-table( "gene-list" );
+@include infoBox-table( "taxon-scaffold-details" );
+@include infoBox-table( "gene-ext-links" );
+@include infoBox-table( "gene-fn-annots" );
+@include infoBox-table( "gene-pway-annots" );
+@include infoBox-table( "gene-cycog-annots" );
+
+
+
+.infoBox {
 
 	// for displaying FASTA sequences, for example
  	.textDisplay {
@@ -73,13 +105,7 @@ found on details pages
 	}
 }
 
-
-
-.infoBoxTitle {
-	margin: $gutter 0 .5rem 0;
+.infoBox__title {
+	margin: $gutter 0 $gutter 0;
 	border-bottom: $underline;
-}
-
-.infoBox-double {
-	width: 100%;
 }

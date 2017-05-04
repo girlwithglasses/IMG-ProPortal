@@ -28,6 +28,7 @@
 @import "partials/nav_breadcrumbs"; // breadcrumbs!
 @import "partials/links";
 @import "partials/nav_inpage";
+@import "partials/tabular_dl";
 @import "partials/extras";	// extra bits and pieces
 @import "partials/graph";
 @import "partials/phyloviewer";
@@ -40,7 +41,8 @@
 @import "partials/list-page";
 
 //Partials for list pages.
-@import "partials/generic-tables";	@include generic-tables;
+@import "partials/generic-tables";
+@include generic-tables;
 @import "partials/generic-carts";	//@include generic-carts;
 
 // print style

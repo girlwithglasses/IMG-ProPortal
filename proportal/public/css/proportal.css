@@ -2441,7 +2441,7 @@ small, .small, pre.debug {
   line-height: 24px;
   line-height: 1.5rem; }
 
-.underline, .infoBox .gene-details__caption, .infoBox-double .gene-details__caption, .infoBox .gene-list__caption, .infoBox-double .gene-list__caption, .infoBox .taxon-scaffold-details__caption, .infoBox-double .taxon-scaffold-details__caption, .infoBox .gene-ext-links__caption, .infoBox-double .gene-ext-links__caption, .infoBox .gene-fn-annots__caption, .infoBox-double .gene-fn-annots__caption, .infoBox .gene-pway-annots__caption, .infoBox-double .gene-pway-annots__caption, .infoBox .gene-cycog-annots__caption, .infoBox-double .gene-cycog-annots__caption {
+.underline {
   border-bottom: 1px solid silver; }
 
 /* standard text size is 16px */
@@ -3036,11 +3036,11 @@ table {
   table .clearStyle {
     border: 0; }
 
-table.condensed td, .infoBox table.gene-details__table td, .infoBox-double table.gene-details__table td, .infoBox table.gene-list__table td, .infoBox-double table.gene-list__table td, .infoBox table.taxon-scaffold-details__table td, .infoBox-double table.taxon-scaffold-details__table td, .infoBox table.gene-ext-links__table td, .infoBox-double table.gene-ext-links__table td, .infoBox table.gene-fn-annots__table td, .infoBox-double table.gene-fn-annots__table td, .infoBox table.gene-pway-annots__table td, .infoBox-double table.gene-pway-annots__table td, .infoBox table.gene-cycog-annots__table td, .infoBox-double table.gene-cycog-annots__table td {
+table.condensed td, table.gene-details__table td, table.gene-list__table td, table.taxon-scaffold-details__table td, table.gene-ext-links__table td, table.gene-fn-annots__table td, table.gene-pway-annots__table td, table.gene-cycog-annots__table td {
   padding: 4px 0 4px 0;
   padding: .25rem 0 .25rem 0; }
 
-table.lined td, .infoBox table.gene-fn-annots__table td, .infoBox-double table.gene-fn-annots__table td, .infoBox table.gene-pway-annots_table td, .infoBox-double table.gene-pway-annots_table td {
+table.lined td, table.gene-fn-annots__table td, table.gene-pway-annots_table td {
   border-bottom: 1px solid silver; }
 
 .col1 {
@@ -3050,9 +3050,27 @@ table.lined td, .infoBox table.gene-fn-annots__table td, .infoBox-double table.g
   margin-top: 8px;
   margin-top: .5rem; }
 
-.indent1 {
+.taxon-gene-list__row--total {
+  font-weight: bold; }
+
+.taxon-gene-list__attr--rna {
+  text-indent: 16px;
+  text-indent: 1rem; }
+
+.taxon-gene-list__attr--rrna, .taxon-gene-list__attr--trna, .taxon-gene-list__attr--xrna {
   text-indent: 32px;
   text-indent: 2rem; }
+
+.taxon-gene-list__attr--5s_rrna, .taxon-gene-list__attr--16s_rrna, .taxon-gene-list__attr--23s_rrna {
+  text-indent: 48px;
+  text-indent: 3rem; }
+
+.taxon-gene-list__val {
+  text-align: right; }
+
+.indent1 {
+  text-indent: 16px;
+  text-indent: 1rem; }
 
 .indent2 {
   text-indent: 64px;
@@ -3062,7 +3080,7 @@ table.lined td, .infoBox table.gene-fn-annots__table td, .infoBox-double table.g
   text-indent: 96px;
   text-indent: 6rem; }
 
-div.tableTitle {
+.tableTitle {
   padding: 32px 0 8px 0;
   padding: 2rem 0 .5rem 0;
   margin-bottom: 4px;
@@ -3794,6 +3812,46 @@ article a {
 .to-top__line {
   text-align: right; }
 
+.tabular {
+  overflow: hidden;
+  z-index: 1;
+  position: relative; }
+
+.tabular dl, .tabular dt, .tabular dd {
+  margin: 0;
+  padding: 0;
+  position: relative; }
+
+.tabular dt, .tabular dd {
+  display: inline-block;
+  vertical-align: top;
+  padding: 12px 2%;
+  padding: 0.75rem 2%;
+  position: relative;
+  border-top: 1px solid #ccc; }
+
+.tabular dt {
+  width: 29%; }
+
+.tabular dd {
+  width: 69%; }
+
+.tabular dd + dd {
+  border-top-color: #fff; }
+
+.tabular dt:after, .tabular dd:after {
+  content: " ";
+  position: absolute;
+  display: block;
+  left: -999em;
+  top: -2px;
+  bottom: 0;
+  right: -999em;
+  z-index: -1; }
+
+.tabular dd + dd {
+  margin-left: 30%; }
+
 /* partials/extras */
 /* remove instructions on pages where clicking brings up info */
 .instructions {
@@ -4162,94 +4220,252 @@ article a {
 /* partials/infoBox
 found on details pages
 */
-.infoBox {
-  /* this may need to be defined somewhere else... */
+@media all and (min-width: 1024px) {
+  .content__container section:nth-child(odd) {
+    clear: left; } }
+
+.nat_iso_info {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
   @media all and (max-width: 1023px) {
-    .infoBox {
+    .nat_iso_info {
       width: 100%;
       margin-left: 0;
       margin-right: 0; } }
   @media all and (min-width: 1024px) {
-    .infoBox {
-      width: 50%; } }
+    .nat_iso_info {
+      width: 50%;
+      float: left; } }
 
-.infoBox, .infoBox-double {
+.gene_counts {
   padding: 0 24px 24px 24px;
-  padding: 0 1.5rem 1.5rem 1.5rem; }
-  .infoBox .gene-details__caption, .infoBox-double .gene-details__caption {
-    font-weight: bold;
-    margin: 12px 0;
-    margin: 0.75rem 0;
-    padding-left: 0; }
-  .infoBox .gene-details__thead, .infoBox-double .gene-details__thead {
-    display: none; }
-  .infoBox .gene-list__caption, .infoBox-double .gene-list__caption {
-    font-weight: bold;
-    margin: 12px 0;
-    margin: 0.75rem 0;
-    padding-left: 0; }
-  .infoBox .gene-list__thead, .infoBox-double .gene-list__thead {
-    display: none; }
-  .infoBox .taxon-scaffold-details__caption, .infoBox-double .taxon-scaffold-details__caption {
-    font-weight: bold;
-    margin: 12px 0;
-    margin: 0.75rem 0;
-    padding-left: 0; }
-  .infoBox .taxon-scaffold-details__thead, .infoBox-double .taxon-scaffold-details__thead {
-    display: none; }
-  .infoBox .gene-ext-links__caption, .infoBox-double .gene-ext-links__caption {
-    font-weight: bold;
-    margin: 12px 0;
-    margin: 0.75rem 0;
-    padding-left: 0; }
-  .infoBox .gene-ext-links__thead, .infoBox-double .gene-ext-links__thead {
-    display: none; }
-  .infoBox .gene-fn-annots__caption, .infoBox-double .gene-fn-annots__caption {
-    font-weight: bold;
-    margin: 12px 0;
-    margin: 0.75rem 0;
-    padding-left: 0; }
-  .infoBox .gene-fn-annots__thead, .infoBox-double .gene-fn-annots__thead {
-    display: none; }
-  .infoBox .gene-pway-annots__caption, .infoBox-double .gene-pway-annots__caption {
-    font-weight: bold;
-    margin: 12px 0;
-    margin: 0.75rem 0;
-    padding-left: 0; }
-  .infoBox .gene-pway-annots__thead, .infoBox-double .gene-pway-annots__thead {
-    display: none; }
-  .infoBox .gene-cycog-annots__caption, .infoBox-double .gene-cycog-annots__caption {
-    font-weight: bold;
-    margin: 12px 0;
-    margin: 0.75rem 0;
-    padding-left: 0; }
-  .infoBox .gene-cycog-annots__thead, .infoBox-double .gene-cycog-annots__thead {
-    display: none; }
-  .infoBox .textDisplay, .infoBox-double .textDisplay {
-    width: 100%;
-    height: 360px;
-    height: 22.5rem;
-    padding: 12px 24px;
-    padding: 0.75rem 1.5rem;
-    overflow: auto;
-    border: 1px solid silver; }
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .gene_counts {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .gene_counts {
+      width: 50%;
+      float: left; } }
 
-.infoBoxTitle {
-  margin: 12px 0 8px 0;
-  margin: 0.75rem 0 0.5rem 0;
+.environment {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .environment {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .environment {
+      width: 50%;
+      float: left; } }
+
+.id_ext_links {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .id_ext_links {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .id_ext_links {
+      width: 50%;
+      float: left; } }
+
+.phyl_info {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .phyl_info {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .phyl_info {
+      width: 50%;
+      float: left; } }
+
+.seq_info {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .seq_info {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .seq_info {
+      width: 50%;
+      float: left; } }
+
+.gene_details {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .gene_details {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .gene_details {
+      width: 50%;
+      float: left; } }
+
+.feature_list {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .feature_list {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .feature_list {
+      width: 50%;
+      float: left; } }
+
+.gene_ext_refs {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .gene_ext_refs {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .gene_ext_refs {
+      width: 50%;
+      float: left; } }
+
+.cycog {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .cycog {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .cycog {
+      width: 50%;
+      float: left; } }
+
+.gene_fn_list {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .gene_fn_list {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .gene_fn_list {
+      width: 50%;
+      float: left; } }
+
+.pathway_annotations {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  @media all and (max-width: 1023px) {
+    .pathway_annotations {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .pathway_annotations {
+      width: 50%;
+      float: left; } }
+
+.gene-details__caption {
+  /*			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0; */
+  padding-left: 0; }
+
+.gene-list__caption {
+  /*			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0; */
+  padding-left: 0; }
+
+.taxon-scaffold-details__caption {
+  /*			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0; */
+  padding-left: 0; }
+
+.gene-ext-links__caption {
+  /*			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0; */
+  padding-left: 0; }
+
+.gene-fn-annots__caption {
+  /*			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0; */
+  padding-left: 0; }
+
+.gene-pway-annots__caption {
+  /*			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0; */
+  padding-left: 0; }
+
+.gene-cycog-annots__caption {
+  /*			@extend .underline;
+			font-weight: bold;
+			margin: $gutter 0; */
+  padding-left: 0; }
+
+.infoBox .textDisplay {
+  width: 100%;
+  height: 360px;
+  height: 22.5rem;
+  padding: 12px 24px;
+  padding: 0.75rem 1.5rem;
+  overflow: auto;
+  border: 1px solid silver; }
+
+.infoBox__title {
+  margin: 12px 0 12px 0;
+  margin: 0.75rem 0 0.75rem 0;
   border-bottom: 1px solid #5a5a5a; }
-
-.infoBox-double {
-  width: 100%; }
 
 /* partials/pageTitle
 page title for a details page
 */
 .title-section__container {
-  margin-bottom: 8px;
-  margin-bottom: .5rem;
+  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
   border-bottom: 1px solid #5a5a5a; }
 
 /* partials/buttonBar
