@@ -2,16 +2,6 @@
 	title = 'CyCOG Release';
 	self = results.vers;
 
-	surtitle = 'CyCOG release';
-	# cycog release
-	article_title = 'CyCOG version v' _ self.version;
-	subtitle = 'Released ' _ self.date_created;
-	IF self.comments;
-		subtitle = subtitle _ '; ' _ self.comments;
-	END;
-	subtitle = subtitle _ '.';
-	PROCESS 'inc/generic/title.tt';
-	PROCESS 'inc/generic/container_macros.tt';
 
 	BLOCK cycog_list;
 
@@ -34,6 +24,17 @@
 		PROCESS 'inc/generic/table.tt';
 
 	END;
+
+	surtitle = 'CyCOG release';
+	# cycog release
+	article_title = 'CyCOG version v' _ self.version;
+	subtitle = 'Released ' _ self.date_created;
+	IF self.comments;
+		subtitle = subtitle _ '; ' _ self.comments;
+	END;
+	subtitle = subtitle _ '.';
+	PROCESS 'inc/generic/title.tt';
+	PROCESS 'inc/generic/container_macros.tt';
 
 	# page navigation
 	temp_title = 'Taxa used in v' _ self.version;

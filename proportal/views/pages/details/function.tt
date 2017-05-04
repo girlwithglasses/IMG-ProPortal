@@ -4,9 +4,6 @@
 
 	self.db = 'CyCOG';
 	self.xref = self.id;
-	article_title = 'CyCOG:' _ self.id _ ': ' _ self.description;
-	PROCESS 'inc/title/function.tt';
-	PROCESS 'inc/generic/container_macros.tt';
 
 	BLOCK cycog_details;
 
@@ -111,6 +108,10 @@
 
 
 	# page layout
+
+	article_title = 'CyCOG:' _ self.id _ ': ' _ self.description;
+	PROCESS 'inc/title/function.tt';
+	PROCESS 'inc/generic/container_macros.tt';
 
 	sections = [{
 		id => 'cycog_details',

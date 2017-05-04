@@ -5,12 +5,6 @@
 	PROCESS 'inc/generic/link.tt';
 	PROCESS 'inc/generic/container_macros.tt';
 
-	surtitle = 'Files';
-	article_title = 'Downloads';
-	subtitle = 'for ' _ taxon_name_link( {}, self );
-
-	PROCESS 'inc/generic/title.tt';
-
 	BLOCK file_dl_taxon; %]
 
 	<p class="file_dl_taxon__text">
@@ -27,6 +21,11 @@
 	</ul>
 [%	END; # end file_dl_taxon
 
+	surtitle = 'Files';
+	article_title = 'Downloads';
+	subtitle = 'for ' _ taxon_name_link( {}, self );
+
+	PROCESS 'inc/generic/title.tt';
 
 	ibox = { class => 'file_dl_taxon', id => 'file_dl_taxon', omit_top_link => 1 };
 

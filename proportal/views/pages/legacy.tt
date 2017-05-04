@@ -23,9 +23,7 @@
 	}
 </style>
 
-[%	BLOCK cycog %]
-
-<!-- h3 id="cycog-section" class="underline">CyCOG Definitions</h3 -->
+[%	BLOCK legacy_cycog %]
 
 <p>
 	Starting with version 6.0, CyCOGs are defined using IMG gene annotations.  When CyCOGs are updated, old CyCOG definitions will still be accessible through flat file download here.  For all CyCOG versions before 6.0, non-IMG gene annotations were used and are therefore not comparable to definitions after version 6.0. <strong>These are indicated with italic version numbers below.</strong>  While these older CyCOG definitions are incompatable with the newer IMG-based CyCOG definitions, we nonetheless make older versions available as a reference for the papers in which they were reported.
@@ -92,7 +90,7 @@
 </table>
 [%	END; # end CyCOG block
 
-	BLOCK microarray; %]
+	BLOCK legacy_microarray; %]
 <table id="microarray_table">
 	<thead>
 		<tr>
@@ -192,7 +190,7 @@
 [%	END; # end block microarray
 
 
-	BLOCK physiology; %]
+	BLOCK legacy_physiology; %]
 <table id="physiology_table">
 	<thead>
 		<tr>
@@ -225,7 +223,7 @@
 
 [%	END; # end physiology section
 
-	BLOCK other; %]
+	BLOCK legacy_other; %]
 <table id="other_table">
 	<thead>
 		<tr>
@@ -263,10 +261,10 @@
 [%	END; # end section other
 
 	sections = [
-		{ id => 'cycog', title => 'CyCOG Definitions' },
-		{ id => 'microarray', title => 'Microarray Data' },
-		{ id => 'physiology', title => 'Physiology Data' },
-		{ id => 'other', title => 'Other Data' }
+		{ id => 'legacy_cycog', title => 'CyCOG Definitions' },
+		{ id => 'legacy_microarray', title => 'Microarray Data' },
+		{ id => 'legacy_physiology', title => 'Physiology Data' },
+		{ id => 'legacy_other', title => 'Other Data' }
 	];
 
 	pagenav = {
