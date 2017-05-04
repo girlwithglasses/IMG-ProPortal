@@ -12,8 +12,6 @@
 #         and br.ec_number = gb.ec_number
 #         and gb.gene_oid = ?
 
-
-
 	PROCESS 'inc/generic/link.tt';
 
 	function_link( x = { db => 'biocyc_pathway', xref => biocyc_pathway.unique_id, text => biocyc_pathway.unique_id } );

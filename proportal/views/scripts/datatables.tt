@@ -1,4 +1,10 @@
-[%	IF ! scr_arr;
+[%
+
+	MACRO d_table_init( scr_name ) BLOCK; %]
+$('#[% scr_name %]').DataTable();
+[%	END;
+
+	IF ! scr_arr;
 		scr_arr = [];
 	END;
 
@@ -11,7 +17,11 @@
 %]
 <script type="text/javascript">
 $(document).ready(function() {
-    $('#cycog_gene_list').DataTable();
+[%
+	FOR scr_name IN table_arr;
+		d_table_init( scr_name );
+	END;
+%]
 } );
 </script>
 

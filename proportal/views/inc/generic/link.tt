@@ -3,13 +3,11 @@
 	# type, params -- to feed into the link as link( x.type, x.params )
 	# text -- link text
 	# optional: class, id, title -- link class, id, title
-	MACRO generic_link BLOCK;
 
-#	USE Dumper( Indent => 1 );
-#	'<pre>' _ Dumper.dump( x ) _ '</pre>';
+	MACRO generic_link( x ) BLOCK;
 
-%]
-<a [%
+	err = undef;
+%]<a [%
 	IF x.keys.exists('class');
 %]class="[% x.class %]" [%
 	END;
@@ -23,58 +21,73 @@
 	END;
 
 	%]href="[%
+
+		#
+	TRY;
 		link( x.type, x.params );
-	%]">[% x.text %]</a>
-[%
+	CATCH;
+		err = error;
+	END;
+
+	%]">[% x.text %]</a>[%
+
+	IF err;
+		'link making did not work! ';
+		USE Dumper( Indent => 1 );
+		'<pre>' _ Dumper.dump( x ) _ '</pre>';
+		error;
+	END;
+
+
 	END; # end MACRO generic_link
 
-	MACRO taxon_id_link BLOCK;
+	MACRO taxon_id_link ( x, obj ) BLOCK;
 		x.text = obj.taxon_oid;
 		x.type = 'details';
 		x.params = { domain => 'taxon', taxon_oid => obj.taxon_oid };
 		generic_link( x );
 	END;
 
-	MACRO taxon_name_link BLOCK;
+	MACRO taxon_name_link ( x, obj ) BLOCK;
 		x.text = obj.taxon_display_name;
 		x.type = 'details';
 		x.params = { domain => 'taxon', taxon_oid => obj.taxon_oid };
 		generic_link( x );
 	END;
 
-	MACRO gene_id_link BLOCK;
+	MACRO gene_id_link ( x, obj ) BLOCK;
 		x.text = obj.gene_oid;
 		x.type = 'details';
 		x.params = { domain => 'gene', gene_oid => obj.gene_oid };
 		generic_link( x );
 	END;
 
-	MACRO gene_name_link BLOCK;
+	MACRO gene_name_link ( x, obj ) BLOCK;
 		x.text = obj.gene_display_name;
 		x.type = 'details';
 		x.params = { domain => 'gene', gene_oid => obj.gene_oid };
 		generic_link( x );
 	END;
 
-	MACRO scaffold_id_link BLOCK;
+	MACRO scaffold_id_link ( x, obj ) BLOCK;
 		x.text = obj.scaffold_oid;
 		x.type = 'details';
 		x.params = { domain => 'scaffold', scaffold_oid => obj.scaffold_oid };
 		generic_link( x );
 	END;
 
-	MACRO scaffold_name_link BLOCK;
+	MACRO scaffold_name_link ( x, obj ) BLOCK;
 		x.text = obj.scaffold_name;
 		x.type = 'details';
 		x.params = { domain => 'scaffold', scaffold_oid => obj.scaffold_oid };
 		generic_link( x );
 	END;
 
-	MACRO function_link BLOCK;
+	MACRO function_link ( x, obj ) BLOCK;
 	#	input hashref
 	#	x.db
 	#	x.xref
-	%]
+-%]
 <a [%
 	IF x.keys.exists('class');
 %]class="[% x.class %]" [%
@@ -90,9 +103,9 @@
 	%]href="[%
 		link( 'fn_details', { db => x.db, xref => x.xref } );
 	%]">[% x.text %]</a>
-[%	END;
+[%-	END;
 
-	MACRO external_link BLOCK; %]
+	MACRO external_link ( x ) BLOCK; %]
 <a rel="external" [%
 	IF x.keys.exists('class');
 %]class="[% x.class %]" [%
@@ -112,5 +125,11 @@
 		ELSE;
 			ext_link( x.db, x.xref );
 		END;
-	%]">[% x.text %]</a>
+	%]">[%
+		IF x.text;
+			x.text;
+		ELSE;
+			x.db _ ':' _ x.xref;
+		END;
+		%]</a>
 [%	END; %]

@@ -1,7 +1,17 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'File List';
+
+	PROCESS 'inc/generic/link.tt';
+	PROCESS 'inc/generic/container_macros.tt';
+
+	surtitle = 'Files';
+	article_title = 'Download List';
+#	subtitle = 'for ' _ taxon_name_link( {}, self );
+
+	PROCESS 'inc/generic/title.tt';
+
+#	BLOCK file_dl_list;
 %]
-<h2>File List</h2>
 [%	IF results.params;
 		IF results.params.taxon_oid; %]
 			for taxon <a href="[% link( 'details', { domain => 'taxon', taxon_oid => results.params.taxon_oid } ) %]">[% results.params.taxon_oid %]</a>
@@ -14,8 +24,7 @@
 [%	IF results.arr.size > 0;
 
 		data_table = results.table;
-		data_table.class = "file-list";
-		data_table.caption = "File List";
+		data_table.class = "file-dl-list";
 		data_table.tbody = results.arr;
 		PROCESS 'inc/generic/table.tt';
 

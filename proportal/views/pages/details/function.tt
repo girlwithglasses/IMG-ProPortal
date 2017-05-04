@@ -87,16 +87,21 @@
 [%	END; # end block
 
 	# Gene list
-	BLOCK gene_list; %]
-	<p>[% self.cycog_genes.size %] gene[% IF self.cycog_genes.size != 1 %]s[% END %] associated with CyCOG:[% self.id %]</p>
-[%
+	BLOCK gene_list;
+
+	n_results =  self.cycog_genes.size _ ' gene';
+	IF self.cycog_genes.size != 1;
+		n_results = n_results _ 's';
+	END;
+	n_results = n_results _ ' associated with CyCOG:' _ self.id;
+
 		IF results.genes && results.genes.size > 0;
 
 			WRAPPER 'inc/cart/gene_add.tt';
 				data_table = results.table;
 				data_table.id = 'cycog_gene_list';
-				data_table.class = "gene-list";
-				data_table.caption = "Gene Members";
+				data_table.class = 'gene-list';
+				data_table.caption = n_results;
 				data_table.tbody = results.genes;
 				PROCESS 'inc/generic/table.tt';
 			END; # end wrapper
@@ -107,7 +112,6 @@
 
 	# page layout
 
-	# page navigation
 	sections = [{
 		id => 'cycog_details',
 		title => 'CyCOG details',
@@ -122,15 +126,6 @@
 		content => 'gene_list'
 	}];
 
-	in_page_nav( pagenav = { links => sections } );
-
-	FOR secn IN sections;
-
-		ibox = { id => secn.id, title => secn.title };
-		stuff = secn.content;
-		PROCESS $stuff WRAPPER 'infobox';
-
-	END;
-
+	layout_page( sections );
 
 END %]

@@ -1,9 +1,16 @@
 [%	PROCESS 'inc/generic/link.tt';
+
 	IF self.genome_type == 'isolate';
-		surtitle = 'Isolate genome';
+		surtitle = 'isolate genome';
 	ELSE;
-		surtitle = self.genome_type | ucfirst;
+		surtitle = self.genome_type;
 	END;
+
+	IF self.obsolete_flag == 'Yes';
+		surtitle = 'obsolete ' _ surtitle;
+	END;
+
+	surtitle = surtitle | ucfirst;
 
 	article_title = self.taxon_display_name;
 
@@ -23,7 +30,7 @@
 		},
 		{	type   => 'details',
 			params => {
-				domain => 'taxon', taxon_oid => self.taxon_oid, output => 'json'
+				domain => 'taxon', taxon_oid => self.taxon_oid, output_format => 'json'
 			},
 			text   => 'Metadata (JSON)'
 		}

@@ -49,14 +49,6 @@
 		}
 	];
 
-	in_page_nav( pagenav = { links => sections } );
-
-	FOR secn IN sections;
-
-		ibox = { id => secn.id, title => secn.title };
-		stuff = secn.content;
-		PROCESS $stuff WRAPPER 'infobox';
-
-	END;
+	layout_page( sections );
 
 	END %]

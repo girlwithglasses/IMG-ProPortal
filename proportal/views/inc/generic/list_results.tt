@@ -28,15 +28,15 @@
 [%	IF results.arr.size > 0;
 
 		form_wrapper = 'inc/cart/' _ results.domain _ '_add.tt';
-		WRAPPER $form_wrapper;
+#		WRAPPER $form_wrapper;
 
 			data_table = results.table;
 			data_table.class = results.domain _ "-list";
 #			data_table.caption = results.domain _ " List" | ucfirst;
 			data_table.tbody = results.arr;
-			PROCESS 'inc/generic/table.tt';
+			PROCESS 'inc/generic/table.tt' WRAPPER $form_wrapper;
 
-		END; # end wrapper
+#		END; # end wrapper
 
 	ELSE %]
 <p>No [% results.domain %]s found</p>

@@ -7,8 +7,10 @@
 
 	PROCESS 'inc/title/scaffold.tt';
 
-%]
+	PROCESS 'inc/generic/container_macros.tt';
+	PROCESS 'inc/generic/attr_value_table.tt';
 
+%]
 <table class="[% class %]__table">
 <caption class="[% class %]__caption">Scaffold information</caption>
 <thead class="[% class %]__thead">
@@ -62,5 +64,7 @@
 </table>
 
 <p class="[% class %]__updated">Added [% self.add_date %]; last modified [% self.last_update %]</p>
+
+
 
 [%	END %]

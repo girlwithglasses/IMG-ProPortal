@@ -1,20 +1,37 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'File Downloads List';
-	self = results.taxon.first;
+	self = results.arr.first;
 
-%]
-<h2>File downloads for [% self.taxon_display_name %]</h2>
-<section>
-	<p>
+	PROCESS 'inc/generic/link.tt';
+	PROCESS 'inc/generic/container_macros.tt';
+
+	surtitle = 'Files';
+	article_title = 'Downloads';
+	subtitle = 'for ' _ taxon_name_link( {}, self );
+
+	PROCESS 'inc/generic/title.tt';
+
+	BLOCK file_dl_taxon; %]
+
+	<p class="file_dl_taxon__text">
 		The following files are available for <a href="[% link( 'details', { domain => 'taxon', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_display_name %]</a>:
 	</p>
-</section>
-<ul class="file-list--taxon__ul">
+	<ul class="file_dl_taxon__ul">
 [%	FOR f IN data_filters.schema.file_type.enum;
 		IF self.$f %]
-	<li class="file-list--taxon__li"><a class="file-list--taxon__link" href="[% link( 'file', { taxon_oid => self.taxon_oid, file_type => f } ) %]" title="[% data_filters.schema.file_type.enum_map.$f %] for [% self.taxon_oid %]">[% self.$f %]</a>: [% data_filters.schema.file_type.enum_map.$f %]</li>
+		<li class="file_dl_taxon__item">
+			<a class="file_dl_taxon__link" href="[% link( 'file', { taxon_oid => self.taxon_oid, file_type => f } ) %]" title="[% data_filters.schema.file_type.enum_map.$f %] for [% self.taxon_oid %]">[% self.$f %]</a>: [% data_filters.schema.file_type.enum_map.$f %]
+		</li>
 [%		END;
 	END; %]
-</ul>
-[% END %]
+	</ul>
+[%	END; # end file_dl_taxon
+
+
+	ibox = { class => 'file_dl_taxon', id => 'file_dl_taxon', omit_top_link => 1 };
+
+	PROCESS file_dl_taxon WRAPPER 'infobox';
+
+	END;
+%]
 

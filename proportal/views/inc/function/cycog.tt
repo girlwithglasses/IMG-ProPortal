@@ -3,8 +3,22 @@
 	PROCESS 'inc/generic/link.tt';
 	# gene_cycog_groups.cycog_oid = cycog.cycog_oid
 
+	function_link({ db => 'cycog', xref => fn.id, text => 'CyCOG:' _ fn.id });
+	': ' _ fn.description _ ' from ';
+	generic_link({
+		text => 'CyCOG v' _ fn.version,
+		type => 'details',
+		params => { cycog_version => fn.version }
+	});
 
-	function_link( x = { db => 'cycog', xref => fn.id, text => 'CyCOG:' _ fn.id } );
-	': ' _ fn.description;
+	# add in a list of paralogs
+	arr = [];
+	FOR p IN fn.get_paralogs;
+		arr.push( gene_id_link( obj = { gene_oid => p } ) );
+	END;
+	IF arr.size > 0;
+		'; paralogs: ' _ arr.join(", ");
+	END;
+
 
 %]
