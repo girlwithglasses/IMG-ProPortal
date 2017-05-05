@@ -74,6 +74,7 @@ found on details pages
 
 .infoBox, .infoBox_wide {
 	padding: 0 $line-ht $line-ht $line-ht;
+}
 
 // these are on the taxon details page
 @include half_box( 'nat_iso_info' );
@@ -119,7 +120,3 @@ found on details pages
 	margin: $gutter 0 $gutter 0;
 	border-bottom: $underline;
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 79a927d04b22de5aeb89726f887eea7dd6728873
