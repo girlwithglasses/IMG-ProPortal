@@ -1,11 +1,16 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = self.display_name;
+	title = 'Function Details';
 	self = results.function;
 
 	self.db = 'CyCOG';
 	self.xref = self.id;
+	
+	PROCESS 'inc/generic/title.tt';
+	PROCESS 'inc/generic/container_macros.tt';	
 
-	BLOCK cycog_details;
+	table_arr = [];
+	
+	BLOCK fn_details_cycog_details;
 
 		vers_arr = [];
 		FOR v IN self.in_versions;
@@ -16,7 +21,6 @@
 
 		data_table = {
 			class => 'function-details',
-			caption => title,
 			tbody => [
 				[ 'CyCOG ID', self.id ],
 				[ 'Description', self.description ],
@@ -31,60 +35,16 @@
 
 	END; # end block
 
-	# Sequence views
-	BLOCK sequence;
-%]
-	<div class="nav_tabs nav_tabs_minimal">
-		<input type="radio" name="seqData" id="tab1_seqData" checked >
-		<label for="tab1_seqData">DNA</label>
-
-		<input type="radio" name="seqData" id="tab2_seqData">
-		<label for="tab2_seqData">Amino Acid</label>
-
-
-		<div id="tabContent1_seqData" class="tabContent">
-			<div class="textDisplay">
-			<code> <span style="color: blue">>640083263 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819] (+)strand</span>
-			ATGAAATTAAATTGTTCTCAATCTGAATTAAATAATGCTCTTCAATTGGT
-			TAGTAGAGCTGTTTCTAATCGACCGACGCACCCTGTATTAGCTAATGTTT
-			TGCTCGCTGCTGATGAGGTAACTGGAAAACTTCGCCTAACTGGTTTTGAC
-			TTAAGTTTAGGAATACAAACTTCAATATCTGCTTCTATAGAGAGCAGTGG
-			TGCCATAACTTTGCCTGCTAAGTTATTTGGTGAAATTGTTTCGAAATTAT
-			CTAACGACTCACCTCTAGTTCTGACATCAGATGAAACTAGTCAACAAGTC
-			GAGTTGACTAGTAAAAGTGGAACGTATCAAGTAAGAGGGATGGTGTCTGA
-			TGATTTTCCTGATTTACCTTTGGTAGAAAGCGGTAATTCATTTAAATTGA
-			ATCCATTATTATTATCTAATGCAATTAAATCAACTTTATTTGCAAGCAGT
-			ACTGATGAGGCTAAACAATTACTTACTGGTGTTAATCTTACTTTTGACGG
-			ATATGGGATTGAATCTGCAGCAACTGACGGACATAGATTAGCTGTTCTTA
-			ATTTAAATAATATATTATCTGATTCAAAAGAGATAGATAGTTCTACTAAA
-			TTCGAAAAATTTTCTATTACATTACCTTCCAAATCTTTAAGAGAAGTGGA
-			AAAATTTTTAAGTACTTGTGATATTAGTCAGCCAATTAATTTTTTTGTTG
-			ATAAAGGACAAGTAGTTTTTATATCAGTAGAAGATATTATAACTATAAGA
-			GCTTTAGAAGGTTCTTATCCAAATTATTCGCAATTATTACCTGATACTTT
-			TGAAAATGAATTAGAGTTTGATAGGAAAGAATTTATATCTTCATTAGAAC
-			GAATTGCTGTTTTAGCAGATCAGCATAATAATGTTATAAAGGTAACGACT
-			GACGGCTCTGCAAATTTAATCAAAATTAGTACGGATGCCCAAGATATTGG
-			AACAGGTTATGAGTCACTACCTGTCTCTTATAAAGGGGATTCATTTCAAA
-			TAGCATTTAATGTTAGATATTTATTAGATGGACTTAAAGTCATAGATTCA
-			AACTTGATTAAATTAAGTTGTAATTCTCCAACTACACCTGCGGTTTTCTC
-			ACCTATTAATAGTGACGTTAATTTCACTTATCTAGTAATGCCCATACAAA
-			TACGAAATTAA
-			</code>
-			</div>
-		</div>
-
-		<div id="tabContent2_seqData" class="tabContent">
-			<div class="textDisplay">
-			<code> <span style="color: blue">>640083263 YP_001013829 DNA polymerase III, beta subunit (EC 2.7.7.7) [Prochlorococcus marinus str. NATL1A: NC_008819]</span>
-			[% self.aa_residue %]
-			</code>
-			</div>
-		</div>
-	</div>
+	# Sequence logo views
+	BLOCK fn_details_logo;		%]
+	
+	<p><span class="noteToSelf"> Sample image </span></p>
+	<img src="/images/sample-cycog-sequence-logo.jpg" alt="Sequence Logo">
 [%	END; # end block
 
+
 	# Gene list
-	BLOCK gene_list;
+	BLOCK fn_details_gene_list;
 
 	n_results =  self.cycog_genes.size _ ' gene';
 	IF self.cycog_genes.size != 1;
@@ -94,14 +54,16 @@
 
 		IF results.genes && results.genes.size > 0;
 
-			WRAPPER 'inc/cart/gene_add.tt';
+			#WRAPPER 'inc/cart/gene_add.tt';
 				data_table = results.table;
 				data_table.id = 'cycog_gene_list';
 				data_table.class = 'gene-list';
-				data_table.caption = n_results;
+				#data_table.caption = n_results;
 				data_table.tbody = results.genes;
+				table_arr.push(data_table.id);
+		
 				PROCESS 'inc/generic/table.tt';
-			END; # end wrapper
+			#END; # end wrapper
 
 		END;
 	END; # end block
@@ -109,24 +71,29 @@
 
 	# page layout
 
-	article_title = 'CyCOG:' _ self.id _ ': ' _ self.description;
+	#article_title = 'CyCOG:' _ self.id _ ': ' _ self.description;
+	article_title = 'CyCOG: ' _ self.id;
+	subtitle = self.description;
+	
 	PROCESS 'inc/title/function.tt';
 	PROCESS 'inc/generic/container_macros.tt';
 
 	sections = [{
-		id => 'cycog_details',
+		id => 'fn_details_cycog_details',
 		title => 'CyCOG details',
-		content => 'cycog_details'
+		content => 'fn_details_cycog_details'
 	},
-	{	id => 'sequence',
-		title => 'CyCOG consensus sequence',
-		content => 'sequence'
+	{	id => 'fn_details_logo',
+		title => 'CyCOG sequence logo',
+		content => 'fn_details_logo'
 	},
-	{	id => 'gene_list',
+	{	id => 'fn_details_gene_list',
 		title => 'Gene members',
-		content => 'gene_list'
+		content => 'fn_details_gene_list'
 	}];
 
 	layout_page( sections );
+
+ 	PROCESS 'scripts/datatables.tt';
 
 END %]

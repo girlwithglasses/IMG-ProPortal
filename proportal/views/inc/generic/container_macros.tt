@@ -45,9 +45,9 @@
 		IF ! ibox.class;
 			ibox.class = ibox.id;
 		END; %]
-	<section class="infoBox [% ibox.class %]"[% IF ibox.id %] id="[% ibox.id %]"[% END %]>
+	<section class="[% ibox.class %]"[% IF ibox.id %] id="[% ibox.id %]"[% END %]>
 [%		IF ibox.title %]
-		<h4 class="infoBox__title">[% ibox.title %]</h4>
+		<h4 class="[% ibox.class %]__title">[% ibox.title %]</h4>
 [%		END; %]
 	[%	content %]
 [%	IF ibox.omit_top_link;
@@ -57,20 +57,6 @@
 [%	END; %]
 	</section>
 [%	END; # end infobox
-
-
-	BLOCK infobox_wide;		%]
-	
-	<section class="[% ibox.class %]"[% IF ibox.id %] id="[% ibox.id %]"[% END %]>
-[%		IF ibox.title %]
-		<h4 class="[% ibox.class %]__title">[% ibox.title %]</h4>
-[%		END; %]
-	[%	content %]
-	<p class="to-top__line"><a class="to-top__link" href="#top">to page top</a></p>
-	</section>
-
-[%	END; # end infobox_wide
-
 
 
 	BLOCK list_container %]
@@ -140,7 +126,6 @@
 			ibox = { id => secn.id, title => secn.title };
 			stuff = secn.content or secn.id;
 			PROCESS $stuff WRAPPER 'infobox';
-
 		END;
 %]
 	</div>

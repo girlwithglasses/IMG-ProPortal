@@ -33,20 +33,13 @@
 	
 	sections = [
 		{	id => 'result_list',
-			content => 'result_list',
-			type => 'infobox_wide'
+			content => 'result_list'
 		}
 	];
 
-	FOR secn IN sections;
+	layout_page( sections );
 
-		ibox = { id => secn.id, title => secn.title };
-		stuff = secn.content;
-		PROCESS $stuff WRAPPER $secn.type;
-		
-	END;
-
- 	PROCESS 'scripts/datatables.tt';
+  	PROCESS 'scripts/datatables.tt';
 
  END; %]
 

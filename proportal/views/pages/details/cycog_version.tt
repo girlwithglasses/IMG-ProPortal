@@ -6,17 +6,32 @@
 	surtitle = 'CyCOG release';
 	# cycog release
 	article_title = 'CyCOG version v' _ self.version;
-	subtitle = 'Released ' _ self.date_created;
-	IF self.comments;
-		subtitle = subtitle _ '; ' _ self.comments;
-	END;
-	subtitle = subtitle _ '.';
+
 	PROCESS 'inc/generic/title.tt';
-	PROCESS 'inc/generic/container_macros.tt';	
+	PROCESS 'inc/generic/container_macros.tt';
 
 	table_arr = [];
 	
-	BLOCK cycog_list;
+	BLOCK cycog_version_details;
+		version = self.version _ '. <i>See <a href="http://img-proportal.dev/legacy">Legacy Data</a> section for older versions.</i>';
+		n_clusters = '<a href=#cycog_version_cycog_list>' _ results.cycog_arr.size _ '</a>';
+		n_taxa = '<a href=#cycog_version_taxon_list>' _ results.taxon_arr.size _ '</a>';
+		
+		data_table.id = 'cycog-version-details';
+		data_table.class = 'cycog-version-details';
+		data_table.tbody => [
+				[ 'Version',  version ],
+				[ 'Date created', self.date_created ],
+				[ 'Comments', self.comments ],
+				[ 'Number of clusters', n_clusters ],
+				[ 'Number of taxa', n_taxa ]
+			];
+		
+		PROCESS 'inc/generic/attr_value_table.tt';
+		attr_value_table( data_table );
+	END;
+	
+	BLOCK cycog_version_cycog_list;
 	
 #		WRAPPER 'inc/cart/function_add.tt';
 			data_table = results.cycog_table;
@@ -34,7 +49,7 @@
 	END; # end block
 
 
-	BLOCK taxon_list;
+	BLOCK cycog_version_taxon_list;
 
 #		WRAPPER 'inc/cart/taxon_add.tt';
 			data_table = results.taxon_table;
@@ -49,45 +64,28 @@
 #		END;	# end wrapper
 	END;
 
-	surtitle = 'CyCOG release';
-	# cycog release
-	article_title = 'CyCOG version v' _ self.version;
-	subtitle = 'Released ' _ self.date_created;
-	IF self.comments;
-		subtitle = subtitle _ '; ' _ self.comments;
-	END;
-	subtitle = subtitle _ '.';
-	PROCESS 'inc/generic/title.tt';
-	PROCESS 'inc/generic/container_macros.tt';
-
 	# page navigation
 
 	sections = [
-		{	id => 'cycog_list',
-			title => 'CyCOGs in release v' _ self.version,
-			content => 'cycog_list',
-			type => 'infobox_wide'
+		{	id => 'cycog_version_details',
+			content => 'cycog_version_details'
+			title => 'CyCOG version details'
 		},
-		{ 	id => 'taxon_list',
-			title => 'Taxa used to generate release v' _ self.version,
-			content => 'taxon_list',
-			type => 'infobox_wide'
-		}
+ 		{	id => 'cycog_version_cycog_list',
+ 			title => 'CyCOGs in release v' _ self.version,
+ 			content => 'cycog_version_cycog_list'
+ 		},
+ 		{ 	id => 'cycog_version_taxon_list',
+ 			title => 'Taxa used to generate release v' _ self.version,
+ 			content => 'cycog_version_taxon_list'
+ 		}
+
 	];
 
 
 	in_page_nav( pagenav = { links => sections } );
 
-	FOR secn IN sections;
-
-		ibox = { id => secn.id, title => secn.title };
-		stuff = secn.content;
-		PROCESS $stuff WRAPPER $secn.type;
-		
-	END;
-
 	layout_page( sections );
-
 
  	PROCESS 'scripts/datatables.tt';
 
