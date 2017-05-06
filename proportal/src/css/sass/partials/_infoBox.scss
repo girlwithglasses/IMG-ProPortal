@@ -40,6 +40,9 @@ found on details pages
 @mixin half_box( $class ) {
 
 	.#{$class} {
+		&__title {
+			@include infobox_title;
+		}
 
 		padding: 0 $line-ht $line-ht $line-ht;
 
@@ -58,6 +61,25 @@ found on details pages
 	}
 }
 
+@mixin full_box( $class ) {
+
+	.#{$class} {
+
+		&__title {
+			@include infobox_title;
+		}
+
+		width: 100%;
+		clear: both;
+		float: left;
+	}
+
+}
+
+@mixin infobox_title {
+	margin: $gutter 0 $gutter 0;
+	border-bottom: $underline;
+}
 
 @media all and (min-width: $half) {
 	.content__container section:nth-child(odd) {
@@ -91,21 +113,15 @@ found on details pages
 @include infoBox-table( "gene-pway-annots" );
 @include infoBox-table( "gene-cycog-annots" );
 
+// function details page
+@include half_box( 'fn_details_cycog_details' );
+@include half_box( 'fn_details_logo' );
+@include full_box( 'fn_details_gene_list' );
 
+// cycog version details page
+@include full_box( 'cycog_version_details' );
+@include full_box( 'cycog_version_cycog_list' );
+@include full_box( 'cycog_version_taxon_list' );
 
-.infoBox {
-
-	// for displaying FASTA sequences, for example
- 	.textDisplay {
-		width: 100%;
-		height: 15*$line-ht;
-		padding: $gutter $line-ht;
-		overflow: auto;
-		@include borders( $element-border-width, $border-lighter );
-	}
-}
-
-.infoBox__title {
-	margin: $gutter 0 $gutter 0;
-	border-bottom: $underline;
-}
+// generic list page
+@include full_box( 'result_list' );

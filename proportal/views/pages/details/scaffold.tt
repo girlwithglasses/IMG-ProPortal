@@ -10,7 +10,11 @@
 	PROCESS 'inc/generic/container_macros.tt';
 	PROCESS 'inc/generic/attr_value_table.tt';
 
+	BLOCK scaffold_details;
+
 %]
+
+
 <table class="[% class %]__table">
 <caption class="[% class %]__caption">Scaffold information</caption>
 <thead class="[% class %]__thead">
@@ -56,15 +60,21 @@
 <tr>
 	<td class="[% class %]__tcell--attr">External references</td>
 	<td class="[% class %]__tcell--val">[%
-		IF self.db_source && self.ext_accession; %]
-	<a href="[%  %]">[% self.db_source %]:[% self.ext_accession %]</a>
-	[%	END; %]
-</tr>
+		IF self.db_source && self.ext_accession;
+			external_link({ db => self.db_source, xref => self.ext_accession });
+		END; %]
+	</tr>
 </tbody>
 </table>
 
-<p class="[% class %]__updated">Added [% self.add_date %]; last modified [% self.last_update %]</p>
+<p class="[% class %]__updated">Added [% self.add_date %][% IF self.last_update %]; last modified [% self.last_update %][% END %].</p>
 
+[%	END; # end scaffold info block
 
+	sections = [{
+		id => 'scaffold_details'
+	}];
 
-[%	END %]
+	layout_page( sections );
+
+	END %]

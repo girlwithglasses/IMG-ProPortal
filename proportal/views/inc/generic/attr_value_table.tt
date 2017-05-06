@@ -6,15 +6,9 @@
 	#
 	#
 
+	PROCESS 'inc/generic/labels.tt';
+
 	MACRO attr_value_dl( data_table ) BLOCK;
-		name_h = {
-			gene_oid => 'Gene ID',
-			coords   => 'DNA coordinates',
-			gc_percent => '% GC',
-			est_copy => 'Estimated copy number',
-			img_product_source => 'IMG product source',
-			img_orf_type => 'IMG ORF type',
-		};
 		dl_class = data_table.class or 'tabular';
 		obj = data_table.obj;
 
@@ -38,11 +32,7 @@ END;
 			## only print if there is data
 			IF ( ! if_present ) || ( if_present && obj.$attr ); %]
 		<dt class='[% dl_class %]__attr'>
-[%				IF name_h.$attr; %]
-			[% name_h.$attr %]
-[%				ELSE; %]
-			[% attr.replace('_',' ') | ucfirst; %]
-[%				END; %]
+[%				labeller( attr ) %]
 		</dt><dd class='[% dl_class %]__value'>
 			[%	obj.$attr %]
 		</dd>
@@ -90,11 +80,7 @@ END;
 				## only print if there is data
 				IF ( ! if_present ) || ( if_present && obj.$attr ); %]
 			<dt class="[% dl_class %]__attr">
-	[%				IF name_h.$attr; %]
-				[% name_h.$attr %]
-	[%				ELSE; %]
-				[% attr.replace('_',' ') | ucfirst; %]
-	[%				END; %]
+[%				labeller( attr ) %]
 			</dt>[%
 					FOR fn IN obj.$attr;
 			%]<dd class='[% dl_class %]__value'>

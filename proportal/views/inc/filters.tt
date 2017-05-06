@@ -1,4 +1,4 @@
-<!-- output the page filters -->
+<!-- output the page filters available as a list of links -->
 [%	IF ! mode || mode != 'galaxy';
 		IF data_filters %]
 <section class="filters">

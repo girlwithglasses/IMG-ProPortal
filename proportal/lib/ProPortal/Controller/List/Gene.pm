@@ -18,7 +18,7 @@ has '+page_wrapper' => (
 
 has '+filter_domains' => (
 	default => sub {
-		return [ qw( pp_subset dataset_type locus_type gene_symbol taxon_oid category scaffold_oid db xref ) ];
+		return [ qw( pp_subset dataset_type locus_type gene_symbol taxon_oid category scaffold_oid db xref scaffold taxon ) ];
 	}
 );
 
@@ -49,65 +49,16 @@ rnas, locus_type => rRNA, gene_symbol => xxx
 sub _render {
 	my $self = shift;
 
-=cut
-	my $table = {
-		thead => {
-			enum => [ 'cbox', 'gene_oid', 'gene_display_name', 'taxon_oid' ],
-			enum_map => {
-				scaffold_oid => 'Gene ID',
-				scaffold_name => 'Gene Name',
-				taxon => 'Taxon'
-			}
-		},
-		transform => {
-			cbox => sub {
-				my $x = shift;
-				return {
-					macro => 'checkbox',
-					name => "gene_oid[]",
-					value => $x->{gene_oid},
-					id => 'cbox_' . $x->{gene_oid}
-				};
-			},
-			gene_oid => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'gene', gene_oid => $x->{gene_oid} },
-					text => $x->{gene_oid}
-				};
-			},
-			gene_display_name => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'gene', gene_oid => $x->{gene_oid} },
-					text => $x->{gene_display_name}
-				};
-			},
-			taxon_oid => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'taxon', taxon_oid => $x->{taxon_oid} },
-					text => $x->{taxon_display_name}
-				};
-			}
-		}
-	};
-=cut
-
 	my $statement = $self->get_data;
+
+	log_debug { 'statement: ' . $statement };
+
 	my $arr = $statement->all;
-	my $n_results = $statement->row_count;
 
 	return { results => {
 		domain => 'gene',
 		arr => $arr,
-		n_results => $n_results,
+		n_results => $statement->row_count,
 		table => $self->get_table('gene'),
 		params => $self->filters
 	} };
@@ -132,16 +83,17 @@ sub get_data {
 		}
 	}
 
+	my $query = 'gene_list';
 	# for scaffold and taxon filters, get the scaffold/taxon and pull up the genes from it
-	if ( $self->filters->{scaffold} ) {
-
+	if ( $self->filters->{scaffold_oid} ) {
+		$query = 'gene_list_by_scaffold';
 	}
-	elsif ( $self->filters->{taxon} ) {
-
+	elsif ( $self->filters->{taxon_oid} ) {
+		$query = 'gene_list_by_taxon';
 	}
 
 	return $self->_core->run_query({
-		query => 'gene_list',
+		query => $query,
 		filters => $self->filters,
 		result_as => 'statement'
 	});

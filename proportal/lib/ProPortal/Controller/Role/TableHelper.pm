@@ -10,11 +10,23 @@ my $table = {
 
 	gene => {
 		thead => {
-			enum => [ 'cbox', 'gene_oid', 'gene_display_name', 'taxon_oid' ],
+
+			enum => [ qw(
+				gene_oid
+				gene_symbol
+				gene_display_name
+				product_name
+				description
+				scaffold_name
+				taxon_display_name
+				pp_subset
+			)],
+
+#			enum => [ 'gene_oid', 'gene_display_name', 'taxon_oid' ],
 			enum_map => {
 				gene_oid => 'Gene ID',
 				gene_display_name => 'Gene Name',
-				taxon_oid => 'Taxon'
+				pp_subset => 'ProPortal subset'
 			}
 		},
 		transform => {
@@ -45,7 +57,16 @@ my $table = {
 					text => $x->{gene_display_name}
 				};
 			},
-			taxon_oid => sub {
+			scaffold_name => sub {
+				my $x = shift;
+				return {
+					macro => 'generic_link',
+					type => 'details',
+					params => { domain => 'scaffold', scaffold_oid => $x->{scaffold_oid} },
+					text => $x->{scaffold_name}
+				};
+			},
+			taxon_display_name => sub {
 				my $x = shift;
 				return {
 					macro => 'generic_link',

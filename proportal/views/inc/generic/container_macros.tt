@@ -1,4 +1,7 @@
 [%
+
+	PROCESS 'inc/generic/labels.tt';
+
 	# generate_attr_val
 	#	obj -- object
 	#	attr -- the object property to retrieve
@@ -9,23 +12,11 @@
 #		IF ! dt_dd_class;
 			dt_dd_class = 'tabular';
 #		END;
-		name_h = {
-			gene_oid => 'Gene ID',
-			coords   => 'DNA coordinates',
-			gc_percent => '% GC',
-			est_copy => 'Estimated copy number',
-			img_product_source => 'IMG product source',
-			img_orf_type => 'IMG ORF type',
-		};
 
 		## only print if there is data
 		IF ( ! if_present ) || ( if_present && obj.$attr ); %]
 		<dt class='[% dt_dd_class %]__attr'>
-[%			IF name_h.$attr; %]
-			[% name_h.$attr %]
-[%			ELSE; %]
-			[% attr.replace('_',' ') | ucfirst; %]
-[%			END; %]
+[%			labeller( attr ); %]
 		</dt><dd class='[% dt_dd_class %]__value'>
 			[%	obj.$attr %]
 		</dd>
@@ -45,18 +36,19 @@
 		IF ! ibox.class;
 			ibox.class = ibox.id;
 		END; %]
-	<section class="infoBox [% ibox.class %]"[% IF ibox.id %] id="[% ibox.id %]"[% END %]>
+	<section class="[% ibox.class %]"[% IF ibox.id %] id="[% ibox.id %]"[% END %]>
 [%		IF ibox.title %]
-		<h4 class="infoBox__title">[% ibox.title %]</h4>
-[%		END; %]
-	[%	content %]
-[%	IF ibox.omit_top_link;
-		# don't do anything!
-	ELSE %]
+		<h4 class="[% ibox.class %]__title">[% ibox.title %]</h4>
+[%		END;
+		content;
+		IF ibox.omit_top_link;
+			# don't do anything!
+		ELSE; %]
 	<p class="to-top__line"><a class="to-top__link" href="#top">back to top</a></p>
-[%	END; %]
+[%		END; %]
 	</section>
 [%	END; # end infobox
+
 
 	BLOCK list_container %]
 	<ul class="[% class_name %]__list[%
@@ -117,7 +109,10 @@
 		END;
 		p_nav.links = sections;
 
-		in_page_nav( p_nav ); %]
+		IF sections.size > 1;
+			in_page_nav( p_nav );
+		END;
+		%]
 	<div class="content__container">
 [%
 		FOR secn IN sections;

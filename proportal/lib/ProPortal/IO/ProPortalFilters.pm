@@ -224,6 +224,14 @@ my $schema = {
 		title => 'Scaffold ID',
 		type => 'number',
 	},
+	scaffold => {
+		id => 'scaffold',
+		type => 'number'
+	},
+	taxon => {
+		id => 'taxon',
+		type => 'number'
+	},
 	locus_type => {
 		id => 'locus_type',
 		title => 'locus type',

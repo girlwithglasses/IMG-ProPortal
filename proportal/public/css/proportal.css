@@ -2824,8 +2824,8 @@ select.pp-form {
   text-transform: uppercase;
   font-size: 14px;
   font-size: 0.9rem;
-  height: 48px;
-  height: 3rem; }
+  height: 40px;
+  height: 2.5rem; }
 
 button, .pp-button, a.button, html input[type="button"],
 input[type="submit"],
@@ -2975,8 +2975,8 @@ input {
   border: 1px solid #5a5a5a;
   padding: 0 24px;
   padding: 0 1.5rem;
-  height: 48px;
-  height: 3rem;
+  height: 40px;
+  height: 2.5rem;
   background: transparent;
   border-radius: 0px; }
 
@@ -4229,6 +4229,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .nat_iso_info__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .nat_iso_info {
       width: 100%;
@@ -4244,6 +4248,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .gene_counts__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .gene_counts {
       width: 100%;
@@ -4259,6 +4267,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .environment__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .environment {
       width: 100%;
@@ -4274,6 +4286,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .id_ext_links__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .id_ext_links {
       width: 100%;
@@ -4289,6 +4305,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .phyl_info__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .phyl_info {
       width: 100%;
@@ -4304,6 +4324,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .seq_info__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .seq_info {
       width: 100%;
@@ -4319,6 +4343,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .gene_details__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .gene_details {
       width: 100%;
@@ -4334,6 +4362,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .feature_list__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .feature_list {
       width: 100%;
@@ -4349,6 +4381,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .gene_ext_refs__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .gene_ext_refs {
       width: 100%;
@@ -4364,6 +4400,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .cycog__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .cycog {
       width: 100%;
@@ -4379,6 +4419,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .gene_fn_list__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .gene_fn_list {
       width: 100%;
@@ -4394,6 +4438,10 @@ found on details pages
   padding: 0 1.5rem 1.5rem 1.5rem;
   /* Small screen */
   /* Large screen */ }
+  .pathway_annotations__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
   @media all and (max-width: 1023px) {
     .pathway_annotations {
       width: 100%;
@@ -4446,19 +4494,88 @@ found on details pages
 			margin: $gutter 0; */
   padding-left: 0; }
 
-.infoBox .textDisplay {
-  width: 100%;
-  height: 360px;
-  height: 22.5rem;
-  padding: 12px 24px;
-  padding: 0.75rem 1.5rem;
-  overflow: auto;
-  border: 1px solid silver; }
+.fn_details_cycog_details {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  .fn_details_cycog_details__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
+  @media all and (max-width: 1023px) {
+    .fn_details_cycog_details {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .fn_details_cycog_details {
+      width: 50%;
+      float: left; } }
 
-.infoBox__title {
-  margin: 12px 0 12px 0;
-  margin: 0.75rem 0 0.75rem 0;
-  border-bottom: 1px solid #5a5a5a; }
+.fn_details_logo {
+  padding: 0 24px 24px 24px;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  /* Small screen */
+  /* Large screen */ }
+  .fn_details_logo__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
+  @media all and (max-width: 1023px) {
+    .fn_details_logo {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0; } }
+  @media all and (min-width: 1024px) {
+    .fn_details_logo {
+      width: 50%;
+      float: left; } }
+
+.fn_details_gene_list {
+  width: 100%;
+  clear: both;
+  float: left; }
+  .fn_details_gene_list__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
+
+.cycog_version_details {
+  width: 100%;
+  clear: both;
+  float: left; }
+  .cycog_version_details__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
+
+.cycog_version_cycog_list {
+  width: 100%;
+  clear: both;
+  float: left; }
+  .cycog_version_cycog_list__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
+
+.cycog_version_taxon_list {
+  width: 100%;
+  clear: both;
+  float: left; }
+  .cycog_version_taxon_list__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
+
+.result_list {
+  width: 100%;
+  clear: both;
+  float: left; }
+  .result_list__title {
+    margin: 12px 0 12px 0;
+    margin: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid #5a5a5a; }
 
 /* partials/pageTitle
 page title for a details page
@@ -4645,8 +4762,8 @@ select.pp-form {
   text-transform: uppercase;
   font-size: 14px;
   font-size: 0.9rem;
-  height: 48px;
-  height: 3rem; }
+  height: 40px;
+  height: 2.5rem; }
 
 button, .pp-button, a.button, html input[type="button"],
 input[type="submit"],
@@ -4796,8 +4913,8 @@ input {
   border: 1px solid #5a5a5a;
   padding: 0 24px;
   padding: 0 1.5rem;
-  height: 48px;
-  height: 3rem;
+  height: 40px;
+  height: 2.5rem;
   background: transparent;
   border-radius: 0px; }
 

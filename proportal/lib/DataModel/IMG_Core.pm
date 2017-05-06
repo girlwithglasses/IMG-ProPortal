@@ -1279,53 +1279,6 @@ DBIx::DataModel  # no semicolon (intentional)
 # ->Table(qw/DtViralSpacer               DT_VIRAL_SPACER                unknown_pk         /)
 
 
-DataModel::IMG_Core->metadm->define_type(
-	name     => 'Distance',
-	handlers => {
-		from_DB  => sub {
-			my ($col_val, $obj, $col_name, $handler) = @_;
-			if ($col_val) {
-				my $nor_m = IMG::Model::UnitConverter::distance_in_m( $col_val );
-				if ($nor_m) {
-					$_[0] = $nor_m;
-				}
-				else {
-					$obj->{ $col_name ."_string"} = $col_val;
-					$_[0] = undef;
-				}
-			}
-		},
-#    to_DB    => sub { },
-#    validate => sub {$_[0] =~ /1?\d?\d/}),
-  });
-
-DataModel::IMG_Core->metadm->define_type(
-	name  => 'GenericClade',
-	handlers => {
-		from_DB => sub {
-			my ($col_val, $obj, $col_name, $handler) = @_;
-			if ($col_val) {
-#				say "args: col value: $col_val, col name: $col_name, handler: $handler, obj: " . Dumper $obj;
-				if ($col_name eq 'generic_clade') {
-					$col_val = coerce_clade( $col_val );
-				}
-				$_[0] = $col_val;
-			}
-		},
-	});
-
-DataModel::IMG_Core->metadm->define_type(
-	name => 'LatLng',
-	handlers => {
-		from_DB => sub { $_[0] = IMG::Model::UnitConverter::convertLatLong( $_[0] ) if $_[0]; },
-	});
-
-DataModel::IMG_Core->metadm->define_type(
-	name => 'EcoNorm',
-	handlers => {
-		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
-	});
-
 # DataModel::IMG_Core->metadm->define_table(
 # 	class       => 'GoTerms',
 # 	db_name     => 'GENE_GO_TERMS INNER JOIN GO_TERM ON gene_go_terms.go_id = go_term.go_id',
@@ -1375,11 +1328,13 @@ DataModel::IMG_Core->metadm->define_type(
 #   [qw/KogTerms                    kog_terms                        *    gene_oid        /]);
 
 =cut
+
 DataModel::IMG_Core->metadm->define_table(
   class       => 'GoldApGenbank',
   db_name     => 'GOLD_AP_GENBANK',
   primary_key => 'id',
 );
+
 =cut
 
 # DataModel::IMG_Core->metadm->define_table(
@@ -1595,6 +1550,69 @@ DataModel::IMG_Core
 #	fromDB => sub {  },
 
 #=cut
+
+
+DataModel::IMG_Core->metadm->define_type(
+	name     => 'Distance',
+	handlers => {
+		from_DB  => sub {
+			my ($col_val, $obj, $col_name, $handler) = @_;
+			if ($col_val) {
+				my $nor_m = IMG::Model::UnitConverter::distance_in_m( $col_val );
+				if ($nor_m) {
+					$_[0] = $nor_m;
+				}
+				else {
+					$obj->{ $col_name ."_string"} = $col_val;
+					$_[0] = undef;
+				}
+			}
+		},
+#    to_DB    => sub { },
+#    validate => sub {$_[0] =~ /1?\d?\d/}),
+  });
+
+DataModel::IMG_Core->metadm->define_type(
+	name  => 'GenericClade',
+	handlers => {
+		from_DB => sub {
+			my ($col_val, $obj, $col_name, $handler) = @_;
+			if ($col_val) {
+#				say "args: col value: $col_val, col name: $col_name, handler: $handler, obj: " . Dumper $obj;
+				if ($col_name eq 'generic_clade') {
+					$col_val = coerce_clade( $col_val );
+				}
+				$_[0] = $col_val;
+			}
+		},
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'LatLng',
+	handlers => {
+		from_DB => sub { $_[0] = IMG::Model::UnitConverter::convertLatLong( $_[0] ) if $_[0]; },
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'EcoNorm',
+	handlers => {
+		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'Date',
+	handlers => {
+		fromDB => sub {
+#			my $t = Time::Piece->strptime( shift, '%Y-%m-%d' );
+			my $t = Time::Piece->strptime( shift, '%d-%b-%Y' );
+			log_debug { 'col handler for date; t: ' . $t; };
+
+			return $t->strftime('%d %b %Y');
+		}
+	});
+
+DataModel::IMG_Core::Scaffold->metadm->define_column_type(Date => qw/add_date last_update/);
+DataModel::IMG_Core::ScaffoldStats->metadm->define_column_type(Date => qw/ mod_date /);
 
 package DataModel::IMG_Core::Gene;
 

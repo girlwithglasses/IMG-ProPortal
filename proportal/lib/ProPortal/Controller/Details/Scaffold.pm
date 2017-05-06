@@ -56,27 +56,27 @@ sub get_data {
 			subject => 'IMG scaffold ' . ( $args->{scaffold_oid} || 'unspecified' )
 		});
 	}
-	$res = $res->[0];
+	my $scaffold = $res->[0];
 
-	my $associated = {
-		multi => [ qw(
-			gene_cog_groups
-			gene_img_interpro_hits
-			gene_kog_groups
-			gene_seed_names
-			gene_tc_families
-			gene_tigrfams
-		)],
-		single => [ qw(
-			scaffold_stats
-		)]
-#			genes # too big!
+	my $extra_args = {
+		taxon => { -columns => [ 'taxon_display_name', 'taxon_oid' ] },
+	};
+
+	my $associated = [
+			'scaffold_stats',
+			'scaffold_ext_links',
+			'taxon'
+# 			gene_cog_groups
+# 			gene_img_interpro_hits
+# 			gene_kog_groups
+# 			gene_seed_names
+# 			gene_tc_families
+# 			gene_tigrfams
 
 # 			bin_scaffolds
 # 			gene_cassettes
 # 			gene_cassette_panfolds
 #
-# 			scaffold_ext_links
 # 			scaffold_intergenics
 # 			scaffold_misc_bindings
 # 			scaffold_misc_features
@@ -85,24 +85,22 @@ sub get_data {
 # 			scaffold_panfold_compositions
 # 			scaffold_repeats
 # 			scaffold_sig_peptides
-	};
+	];
 
-	for my $type ( %$associated ) {
-		for my $assoc ( @{ $associated->{$type} } ) {
-			log_debug { 'looking at ' . $assoc };
 
-			if ( $res->can( $assoc ) ) {
-				my $r = $res->$assoc;
-				if ($r
-					&& ( ( 'multi' eq $type && scalar @$r )
-					|| ( 'single' eq $type && defined $r ) )
-					) {
-					$res->{$assoc} = $r;
-				}
-			}
+	for my $assoc ( @$associated ) {
+		log_debug { 'looking at ' . $assoc };
+
+		if ( $scaffold->can( $assoc ) ) {
+			$scaffold->expand( $assoc, ( %{ $extra_args->{$assoc} || {} } ) );
 		}
 	}
-	return $res;
+
+	my $sth = $scaffold->expand( 'genes', ( -result_as => 'statement' ) );
+	log_debug { 'sth: ' . Dumper $sth };
+	log_debug { 'gene h: ' . $scaffold->{genes} };
+
+	return $scaffold;
 
 }
 

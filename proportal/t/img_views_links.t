@@ -142,13 +142,20 @@ my $links = [
 	comment => 'taxon list, output format'
 },{
 	args => { id => 'file', params => { taxon_oid => 1234, file_type => 'gff' } },
-	url => 'http://example.com/file?file_type=gff&taxon_oid=1234',
+	url => 'http://example.com/file?file_type=gff&amp;taxon_oid=1234',
 	comment => 'file query'
 },{
-	args => { id => 'file', params => [ pp_subset => 'pro', pp_subset => 'syn' ] },
-	url => 'http://example.com/file?pp_subset=pro&pp_subset=syn',
+	args => { id => 'file', params => { pp_subset => [ 'pro', 'syn' ] } },
+	url => 'http://example.com/file?pp_subset=pro&amp;pp_subset=syn',
 	comment => 'pro and syn file downloads'
-}];
+},{
+	args => { id => 'list', params => { taxon_oid => 12345678, pp_subset => [ 'other', 'pro_phage' ], domain => 'gene' } },
+	url => 'http://example.com/list/gene?pp_subset=other&amp;pp_subset=pro_phage&amp;taxon_oid=12345678',
+	comment => 'gene list filtered by taxon_oid and pp_subset'
+}
+#,{
+#}
+];
 
 # 		static link, new style
 # 		is( $app->img_link({ id => 'login' }), 'http://example.com/login' );

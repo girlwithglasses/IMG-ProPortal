@@ -440,6 +440,60 @@ $select_queries->{gene_list} = sub {
 	};
 };
 
+# =head3 gene_list_by_scaffold
+#
+# Get all genes (or a subset of genes) on a scaffold
+
+$select_queries->{gene_list_by_scaffold} = sub {
+	my $self = shift;
+
+	my $arr = $self->run_query({
+		query => 'scaffold_list',
+		-columns => [ qw(
+			scaffold_oid
+			scaffold_name
+			taxon_oid
+			taxon_display_name
+		 )],
+		-where => { 'scaffold_oid' => $self->filters->{scaffold_oid} }
+	});
+
+	log_debug { 'stt: ' . Dumper $arr };
+
+	if ( scalar @$arr != 1 ) {
+		# Crap! an error!
+		log_error { 'row count: ' . scalar @$arr };
+	}
+	my $scaf = $arr->[0];
+	# get the sth for retrieving the gene list
+	my $sth = $scaf->expand( 'genes', ( -result_as => 'statement' ) );
+
+	log_debug { 'statement: ' . Dumper $sth };
+	log_debug { 'n results: ' . $sth->row_count };
+
+	return $sth;
+};
+
+$select_queries->{gene_list_by_taxon} = sub {
+	my $self = shift;
+
+	my $arr = $self->run_query({
+		query => 'taxon_name_public',
+		-where => { 'taxon_oid' => $self->filters->{taxon_oid} },
+	});
+
+	if ( scalar @$arr != 1 ) {
+		# Crap! an error!
+		log_error { 'row count: ' . scalar @$arr };
+	}
+	my $tax = $arr->[0];
+	# get the sth for retrieving the gene list
+	my $sth = $tax->expand( 'genes', ( -result_as => 'statement' ) );
+	return $sth;
+
+};
+
+
 $select_queries->{gene_list_count} = sub {
 
 	return {
@@ -671,8 +725,7 @@ $select_queries->{scaffold_details} = sub {
 
 	return {
 		schema => 'img_core',
-		join => [ qw[ Scaffold <=> gold_tax ] ],
-		-columns => [ 'scaffold.*', 'taxon_oid', 'taxon_display_name' ],
+		table => 'Scaffold'
 	};
 
 };
