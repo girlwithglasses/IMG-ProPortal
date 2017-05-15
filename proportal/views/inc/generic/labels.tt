@@ -1,0 +1,204 @@
+[%	# labels macro
+	# generates a label from an object attribute/string
+
+	metadata_h = {
+
+	# filters, etc.
+		pro_phage => 'Prochlorococcus phage',
+		syn_phage => 'Synechococcus phage',
+		other => 'Other bacteria',
+		other_phage => 'Other phages',
+		phage => 'Phages from Prochlorococcus, Synechococcus, and others',
+		coccus => 'Prochlorococcus and Synechococcus',
+		bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
+		isolate => 'All ProPortal isolates',
+		metagenome => 'Marine metagenomes',
+		pp_isolate => 'All ProPortal isolates',
+		pp_metagenome => 'Marine metagenomes',
+		proportal => 'All isolates and metagenomes',
+		all_proportal => 'All isolates and metagenomes'
+
+		# category filter
+		protein_coding => 'Protein-coding genes',
+		with_function => 'Genes with function assignment',
+		without_function => 'Genes without function assignment',
+		fused => 'Fused protein-coding genes',
+		signalp => 'Protein-coding genes encoding signal peptides',
+		transmembrane => 'Protein-coding genes encoding transmembrane proteins',
+		rna  => 'RNA',
+		rrna => 'rRNA',
+		'5s_rrna'  => '5S rRNA',
+		'16s_rrna' => '16S rRNA',
+		'23s_rrna' => '23S rRNA',
+		trna => 'tRNA',
+		xrna => 'Other RNA',
+		pseudogene => 'Pseudogenes',
+		cassette => 'Genes in chromosomal cassettes',
+		biosynthetic_cluster => 'Genes in biosynthetic clusters',
+
+	# taxon / gold metadata
+		taxon_oid => { label => 'IMG taxon ID' },
+		taxon_display_name => { label => 'Taxon name' },
+		pp_subset => { label => 'ProPortal subset' },
+
+		proport_isolation => { label => 'Isolation details' },
+		proport_ocean => { label => 'Ocean' },
+		geo_location => { label => '<abbr title="National Oceanic and Atmospheric Administration">NOAA</abbr> sea name' },
+		longhurst => { label => 'Longhurst province' },
+		latlong => { label => 'Latitude, longitude' },
+
+	# taxon / gold seq proj
+		depth => {
+			unit => 'm'
+		},
+		altitude => {
+			unit => 'm',
+		},
+		chlorophyll_concentration => {
+			unit => '&mu;g/L'
+		},
+		nitrate_concentration => {
+			unit => '&mu;mol/kg'
+		},
+		oxygen_concentration => {
+			unit => '&mu;mol/kg'
+		},
+		temperature => {
+			unit => '&deg; C',
+		},
+		pressure => {
+			unit => 'dbar'
+		},
+		proport_woa_salinity => {
+			label => 'Salinity',
+		},
+		proport_woa_dissolved_oxygen => {
+			label => 'Dissolved oxygen',
+			unit => 'ml/L'
+		},
+		proport_woa_temperature => {
+			label => 'Temperature',
+			unit => '&deg; C'
+		},
+		proport_woa_nitrate => {
+			label => 'Nitrate',
+			unit => '&mu;mol/L'
+		},
+		proport_woa_phosphate => {
+			label => 'Phosphate',
+			unit => '&mu;mol/L'
+		},
+		proport_woa_silicate => {
+			label => 'Silicate',
+			unit => '&mu;mol/L'
+		},
+		bioproject_accession => {
+			label => 'NCBI Bioproject',
+			ext_link => 'ncbi_bioproject',
+		},
+		biosample_accession => {
+			label => 'NCBI Biosample',
+			ext_link => 'ncbi_biosample',
+		},
+		ncbi_taxon_id => {
+			label => 'NCBI Taxon ID',
+			ext_link => 'ncbi_taxonomy'
+		},
+		ncbi_project_id => {
+			label => 'NCBI Project ID',
+			ext_link => 'ncbi_bioproject'
+		},
+
+		study_gold_id => {
+			label => 'Study project ID',
+			ext_link => 'gold_base_url_study'
+		},
+		gold_id => {
+			label => 'Sequencing project ID',
+			ext_link => 'gold_base_url_project',
+		},
+		analysis_project_id => {
+			label => 'Analysis project ID',
+			ext_link => 'gold_base_url_analysis'
+		},
+
+		dna_seq_length => {
+			label => 'Gene length',
+			unit => '<abbr title="base pairs">bp</abbr>'
+		},
+		aa_seq_length => {
+			label => 'Gene product length',
+			unit => '<abbr title="amino acids">aa</abbr>'
+		},
+		seq_quality => { label => 'Sequence quality' },
+		is_public => { label => 'Public release' },
+		img_version => { label => 'IMG release' },
+
+		distmatrix_date => { label => 'Distance Matrix Calculation Date' },
+		mod_date => { label => 'Date modified' },
+
+	# special
+		cbox => { label => '' },
+
+	# gene
+		gene_oid => { label => 'IMG gene ID' },
+		gene_display_name => { label => 'Gene name' },
+		coords   => { label => 'DNA coordinates' },
+		est_copy => { label => 'Estimated copy number' },
+		img_product_source => { label => 'IMG product source' },
+		img_orf_type => { label => 'IMG ORF type' },
+
+	# cycog_version
+		n_clusters => { label => 'Number of clusters' },
+		n_taxa => { label => 'Number of taxa' },
+
+	# scaffold
+		scaffold_oid => { label => 'IMG scaffold ID' },
+		mol_topology => { label => 'Topology' },
+
+	# stats
+		seq_length => { label => 'Sequence length' },
+		gc_percent => { label => '% GC content' },
+		count_total_gene => { label => 'Total gene count' },
+		count_rna => { label => 'RNA count' },
+	};
+
+
+	MACRO labeller( attr ) BLOCK;
+
+		# if the string exists in name_h, replace it with the name
+		IF metadata_h.$attr && metadata_h.$attr.label;
+			metadata_h.$attr.label;
+		ELSE;
+			txt = '';
+			IF attr.match('.');
+				spl = attr.split('\.');
+				IF metadata_h.${spl.last}.label;
+					txt = metadata_h.${spl.last}.label;
+				END;
+			END;
+			IF txt != '';
+				txt;
+			ELSE;
+			# replace the '_' with spaces, uppercase the first letter
+				attr.replace('_',' ') | ucfirst;
+			END;
+		END;
+	END;
+
+	MACRO units( str ) BLOCK;
+
+		IF metadata_h.$str && metadata_h.$str.unit;
+			' ' _ metadata_h.$str.unit;
+		END;
+
+	END; # end macro
+
+	MACRO linker( str, obj ) BLOCK;
+
+		IF metadata_h.$str && metadata_h.$str.ext_link; %]
+<a rel="external" href="[% ext_link( metadata_h.$str.ext_link ) %][% obj.$str %]">[% obj.$str %]</a>
+[%		END;
+	END; # end macro
+
+%]

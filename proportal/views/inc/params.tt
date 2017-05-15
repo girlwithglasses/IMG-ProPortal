@@ -1,0 +1,28 @@
+<!-- output the parameters on a list query -->
+[%	IF ! mode || mode != 'galaxy'; %]
+<section class="params">
+<h4 class="params__title">Query parameters</h4>
+[%	# filter domain
+	IF results.params;
+
+		USE Dumper( Indent => 1 );
+		'<pre>' _ Dumper.dump( results.params ) _ '</pre>';
+
+
+		IF 'gene' == results.domain; %]
+		<h4>
+			<!--  this section needs to be expanded as more links come online -->
+			[%	IF results.params.category;
+					data_filters.schema.category.enum_map.${ results.params.category } || results.params.category;
+				END;
+
+				IF results.params.taxon_oid; %]
+				for taxon <a href="[% link( 'details', { domain => 'taxon', taxon_oid => results.params.taxon_oid } ) %]">[% results.params.taxon_oid %]</a>
+[%				END %]
+		</h4>
+[%		END; # end IF 'gene'
+	END; # end IF results.params
+%]
+</section><!-- /end section params -->
+[%	END %]
+
