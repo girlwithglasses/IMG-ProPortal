@@ -1,7 +1,7 @@
 ###########################################################################
 # MyImg.pm - Functions supporting MyIMG utilty.
 #    --es 04/16/2005
-# $Id: MyIMG.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
+# $Id: MyIMG.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package MyIMG;
 my $section = "MyIMG";
@@ -179,7 +179,10 @@ sub dispatch {
     } elsif ( paramMatch("updateAnnotations") ne "" ) {
         dbUpdateAnnotation();
         if ( param('source_page') eq 'selected_gene_annot' ) {
-            main::printAppHeader("MyIMG");
+
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("MyIMG");
+            
             my $view_type = param('view_type');
             if ( blankStr($view_type) || $view_type eq 'all' ) {
                 printViewMyAnnotationResults("");
@@ -191,7 +194,9 @@ sub dispatch {
         } else {
 
             # show gene cart
-            main::printAppHeader("AnaCart");
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("AnaCart");
+            
             my $gc = new GeneCartStor();
             $gc->webAddGenes();
             $gc->printGeneCartForm( '', 1 );
@@ -200,7 +205,9 @@ sub dispatch {
         dbDeleteAnnotation();
 
         # show gene cart
-        main::printAppHeader("AnaCart");
+
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("AnaCart");        
         my $gc = new GeneCartStor();
         $gc->webAddGenes();
         $gc->printGeneCartForm( '', 1 );
@@ -324,7 +331,10 @@ sub dispatch {
 
         # show missing gene annotations
         my $source_page = param('source_page');
-        main::printAppHeader("MyIMG");
+            
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("MyIMG");  
+            
         if ( $source_page eq 'group_missing_gene' ) {
             printGrpAllMissingGenesForm('group');
         } elsif ( $source_page eq 'all_missing_gene' ) {
@@ -365,14 +375,14 @@ sub dispatch {
     } elsif ( paramMatch("dbUpdateMyGene") ne "" ) {
         my $mygene_oid = param('mygene_oid');
         if ( !$mygene_oid ) {
-            #main::printAppHeader("MyIMG");
             WebUtil::webErrorHeader("Please select a missing gene annotation to update.");
         }
         dbAddUpdateMyGene($mygene_oid);
 
         # show missing gene annotations
         my $source_page = param('source_page');
-        main::printAppHeader("MyIMG");
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("MyIMG");  
         if ( $source_page eq 'group_missing_gene' ) {
             printGrpAllMissingGenesForm('group');
         } elsif ( $source_page eq 'all_missing_gene' ) {
@@ -390,14 +400,14 @@ sub dispatch {
     } elsif ( paramMatch("dbDeleteMyGene") ne "" ) {
         my $mygene_oid = param('mygene_oid');
         if ( !$mygene_oid ) {
-            #main::printAppHeader("MyIMG");
             WebUtil::webErrorHeader("Please select a missing gene annotation to delete.");
         }
         dbDeleteMyGene($mygene_oid);
 
         # show missing gene annotations
         my $source_page = param('source_page');
-        main::printAppHeader("MyIMG");
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("MyIMG");  
         if ( $source_page eq 'group_missing_gene' ) {
             printGrpAllMissingGenesForm('group');
         } elsif ( $source_page eq 'all_missing_gene' ) {
@@ -432,7 +442,8 @@ sub dispatch {
     } elsif ( paramMatch("dbAddPotentialGene") ne "" ) {
         my $msg = dbAddPotentialGene();
         if ( isInt($msg) && $msg > 0 ) {
-            main::printAppHeader("MyIMG");
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("MyIMG");  
             my $mygene_oid = $msg;
             addUpdateMyTaxonMissingGeneForm($mygene_oid);
         } else {
@@ -445,7 +456,8 @@ sub dispatch {
     } elsif ( paramMatch("dbAddScaffoldGene") ne "" ) {
         my $msg = dbAddScaffoldGene();
         if ( isInt($msg) && $msg > 0 ) {
-            main::printAppHeader("MyIMG");
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("MyIMG");  
             my $mygene_oid = $msg;
             addUpdateMyTaxonMissingGeneForm($mygene_oid);
         } else {
@@ -880,7 +892,7 @@ sub setPublicUser {
 
     #$dbh->disconnect();
     if ( !$contact_oid ) {
-        webDie("setPublicUser: invalid user '$username'\n");
+        WebUtil::webDie("setPublicUser: invalid user '$username'\n");
     }
 
     setSessionParam( "contact_oid", $contact_oid );
@@ -3181,7 +3193,7 @@ sub printGroupAnnotationForm {
     # group user info
     my $grp_cond  = "where img_group = $grp";
     my $grp_cond2 =
-      "where c.contact_oid in (select g.contact_oid from contact_img_groups\@imgsg_dev g where g.img_group = $grp) ";
+      "where c.contact_oid in (select g.contact_oid from contact_img_groups g where g.img_group = $grp) ";
 
     my $sql = "select c.contact_oid, c.username, c.name, c.organization, c.email " . "from contact c " . $grp_cond2;
 
@@ -3241,14 +3253,14 @@ sub printGroupAnnotationForm {
     if ($grp) {
         $grp_cond = " and c.img_group = $grp";
         $grp_cond .=
-" and (ann.is_public = 'Yes' or exists (select gmg.group_id from gene_myimg_groups\@img_ext gmg where gmg.gene_oid = ann.gene_oid and gmg.contact_oid = ann.modified_by and gmg.group_id = $grp))";
+" and (ann.is_public = 'Yes' or exists (select gmg.group_id from gene_myimg_groups gmg where gmg.gene_oid = ann.gene_oid and gmg.contact_oid = ann.modified_by and gmg.group_id = $grp))";
     }
 
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
     my $sql       = qq{
 		select ann.modified_by, count(*)
 		from gene_myimg_functions ann, gene g,
-                     contact_img_groups\@imgsg_dev c
+                     contact_img_groups c
 		where ann.gene_oid = g.gene_oid
 		    and ann.modified_by = c.contact_oid
 		    $grp_cond
@@ -3543,13 +3555,13 @@ sub printGroupGenomeAnnotationForm {
     my %gene_h;
     my $grp_cond = " and c.img_group = $grp ";
     $grp_cond .=
-" and (ann.is_public = 'Yes' or exists (select gmg.group_id from gene_myimg_groups\@img_ext gmg where gmg.gene_oid = ann.gene_oid and gmg.contact_oid = ann.modified_by and gmg.group_id = $grp))";
+" and (ann.is_public = 'Yes' or exists (select gmg.group_id from gene_myimg_groups gmg where gmg.gene_oid = ann.gene_oid and gmg.contact_oid = ann.modified_by and gmg.group_id = $grp))";
     my $rclause   = WebUtil::urClause('g.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
     my $sql       = qq{
 		select g.taxon, count(distinct ann.gene_oid)
 		from gene g, gene_myimg_functions ann,
-                     contact_img_groups\@imgsg_dev c
+                     contact_img_groups c
 		where g.gene_oid = ann.gene_oid
 		    and ann.modified_by = c.contact_oid
                     $grp_cond
@@ -3611,13 +3623,13 @@ sub printGroupGenomeAnnotationForm {
     # genome -> group user count
     my $grp_cond = " and c.img_group = $grp ";
     $grp_cond .=
-" and (ann.is_public = 'Yes' or exists (select gmg.group_id from gene_myimg_groups\@img_ext gmg where gmg.gene_oid = ann.gene_oid and gmg.contact_oid = ann.modified_by and gmg.group_id = $grp))";
+" and (ann.is_public = 'Yes' or exists (select gmg.group_id from gene_myimg_groups gmg where gmg.gene_oid = ann.gene_oid and gmg.contact_oid = ann.modified_by and gmg.group_id = $grp))";
 
     my $imgClause = WebUtil::imgClause('tx');
     my $sql       = qq{
 		select tx.taxon_oid, tx.taxon_name, count(distinct ann.modified_by)
 		from taxon tx, gene g, gene_myimg_functions ann,
-                contact_img_groups\@imgsg_dev c
+                contact_img_groups c
 		where tx.taxon_oid = g.taxon
 		    and g.gene_oid = ann.gene_oid
 		    and ann.modified_by = c.contact_oid
@@ -4628,7 +4640,7 @@ sub printGeneCartAnnotationForm {
 
         # condition on group
         $select_cond .=
-          " and c.contact_oid in (select contact_oid from contact_img_groups\@imgsg_dev where img_group = $grp) ";
+          " and c.contact_oid in (select contact_oid from contact_img_groups where img_group = $grp) ";
     } else {
 
         # only my own annotations
@@ -5527,14 +5539,13 @@ sub printCompareAnnotField {
 sub exportMyAnnotations {
     my $contact_oid = WebUtil::getContactOid();
     if ( blankStr($contact_oid) ) {
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("No genes have been selected.");
         return;
     }
@@ -6807,7 +6818,6 @@ sub dbUpdateAnnotation {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
@@ -6815,12 +6825,12 @@ sub dbUpdateAnnotation {
     my @gene_oids = param("gene_oid");
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader( "No gene selected for update. " . "Please select at least one gene." );
         return;
     }
     if ( $nGenes > $max_gene_annotation_batch ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader( "Number of genes in batch to annotate exceeded. "
               . "Please enter no more than $max_gene_annotation_batch genes." );
         return;
@@ -6853,14 +6863,14 @@ sub dbUpdateAnnotation {
             if ( $fld eq 'ec_number' ) {
                 my $res = DataEntryUtil::checkECNumber($val);
                 if ( !blankStr($res) ) {
-                    #main::printAppHeader("MyIMG");
+
                     WebUtil::webErrorHeader( "ERROR: " . $res );
                     return;
                 }
             } elsif ( $fld eq 'pubmed_id' ) {
                 my $res = DataEntryUtil::checkPubmedId($val);
                 if ( !blankStr($res) ) {
-                    #main::printAppHeader("MyIMG");
+
                     WebUtil::webErrorHeader( "ERROR: " . $res );
                     return;
                 }
@@ -6975,7 +6985,6 @@ sub dbUpdateAnnotation {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
@@ -6989,8 +6998,6 @@ sub dbUpdateAnnotation {
     for my $k (@taxons) {
         updateTaxonAnnStatistics( $dbh, $k );
     }
-
-    #$dbh->disconnect();
 
     return $total_update;
 }
@@ -7010,12 +7017,12 @@ sub dbUpdateMyIMGSharing {
 
     my @sqlList = ();
     for my $gene_oid (@genes) {
-        my $sql = "delete from gene_myimg_groups\@img_ext where gene_oid = $gene_oid and contact_oid = $contact_oid";
+        my $sql = "delete from gene_myimg_groups where gene_oid = $gene_oid and contact_oid = $contact_oid";
         push @sqlList, ($sql);
 
         for my $grp (@groups) {
             $sql =
-"insert into gene_myimg_groups\@img_ext (gene_oid, contact_oid, group_id) values ($gene_oid, $contact_oid, $grp)";
+"insert into gene_myimg_groups (gene_oid, contact_oid, group_id) values ($gene_oid, $contact_oid, $grp)";
             push @sqlList, ($sql);
         }
     }
@@ -7024,7 +7031,7 @@ sub dbUpdateMyIMGSharing {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         my $sql = $sqlList[ $err - 1 ];
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
@@ -7038,18 +7045,18 @@ sub dbDeleteAnnotation {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("Session expired.  Please log in again.");
     }
 
     my @gene_oids = param("gene_oid");
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader( "No gene selected for update. " . "Please select at least one gene." );
     }
     if ( $nGenes > $max_gene_annotation_batch ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader( "Number of genes in batch to annotate exceeded. "
               . "Please enter no more than $max_gene_annotation_batch genes." );
     }
@@ -7099,7 +7106,7 @@ sub dbDeleteAnnotation {
 
             # generate delete from Gene_MyIMG_functions
             $total_update++;
-            $sql = "delete from gene_myimg_groups\@img_ext where gene_oid = $gene_oid and contact_oid = $contact_oid";
+            $sql = "delete from gene_myimg_groups where gene_oid = $gene_oid and contact_oid = $contact_oid";
             push @sqlList, ($sql);
 
             $sql = "delete from Gene_MyIMG_functions " . "where gene_oid = $gene_oid and modified_by = $contact_oid";
@@ -7116,7 +7123,7 @@ sub dbDeleteAnnotation {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
@@ -7126,8 +7133,6 @@ sub dbDeleteAnnotation {
     for my $k (@taxons) {
         updateTaxonAnnStatistics( $dbh, $k );
     }
-
-    #$dbh->disconnect();
 
     return $total_update;
 }
@@ -7317,7 +7322,7 @@ sub printGeneAnnotationForm {
     #temp block none-database genes
     if ( $count == 0 && scalar(@selected_gene_oids) > 0 ) {
         print "<p>selected genes: " . join( ", ", @selected_gene_oids ) . "\n";
-        webError("You have selected file-based genes.  Please select at least one database gene.");
+        WebUtil::webError("You have selected file-based genes.  Please select at least one database gene.");
     }
 
     if ( $count == 0 ) {
@@ -7662,7 +7667,7 @@ sub printGeneAnnotationForm {
     ## share with group?
     my $sql =
         "select cig.img_group, g.group_name "
-      . "from contact_img_groups\@imgsg_dev cig, img_group\@imgsg_dev g "
+      . "from contact_img_groups cig, img_group g "
       . "where cig.contact_oid = ? and cig.img_group = g.group_id ";
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
     my %group_h;
@@ -8596,7 +8601,7 @@ sub printUpdateGeneAnnotForm {
     ## share with group?
     my $sql =
         "select cig.img_group, g.group_name "
-      . "from contact_img_groups\@imgsg_dev cig, img_group\@imgsg_dev g "
+      . "from contact_img_groups cig, img_group g "
       . "where cig.contact_oid = ? and cig.img_group = g.group_id ";
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
     my %group_h;
@@ -8613,7 +8618,7 @@ sub printUpdateGeneAnnotForm {
         ## check existing sharing
         $sql =
             "select gene_oid, contact_oid, group_id "
-          . "from gene_myimg_groups\@img_ext where gene_oid = ? "
+          . "from gene_myimg_groups where gene_oid = ? "
           . "and contact_oid = ? ";
         $cur = execSql( $dbh, $sql, $verbose, $load_gene_oid, $contact_oid );
         my %share_h;
@@ -9043,7 +9048,7 @@ sub dbShareTaxonMyIMGAnnotations {
     my @groups = param('share_w_group');
 
     my $sql = qq{
-        delete from gene_myimg_groups\@img_ext
+        delete from gene_myimg_groups
         where contact_oid = $contact_oid
         and gene_oid in (select f.gene_oid
             from gene_myimg_functions f, gene g
@@ -9056,7 +9061,7 @@ sub dbShareTaxonMyIMGAnnotations {
     if ( $option eq 'group' ) {
         for my $g1 (@groups) {
             $sql =
-                "insert into gene_myimg_groups\@img_ext (gene_oid, contact_oid, group_id) "
+                "insert into gene_myimg_groups (gene_oid, contact_oid, group_id) "
               . "select distinct f.gene_oid, $contact_oid, $g1 "
               . "from gene_myimg_functions f, gene g "
               . "where g.taxon in ($taxon_list) "
@@ -9099,13 +9104,13 @@ sub dbShareTaxonMissingGene {
     my @groups = param('share_w_group');
 
     my $sql =
-"delete from mygene_img_groups\@img_ext where contact_oid = $contact_oid and mygene_oid in (select mygene_oid from mygene where created_by = $contact_oid and taxon in ($taxon_list))";
+"delete from mygene_img_groups where contact_oid = $contact_oid and mygene_oid in (select mygene_oid from mygene where created_by = $contact_oid and taxon in ($taxon_list))";
     my @sqlList = ($sql);
 
     if ( $option eq 'group' ) {
         for my $g1 (@groups) {
             $sql =
-                "insert into mygene_img_groups\@img_ext (mygene_oid, contact_oid, group_id) "
+                "insert into mygene_img_groups (mygene_oid, contact_oid, group_id) "
               . "select g.mygene_oid, g.created_by, $g1 "
               . "from mygene g where g.taxon in ($taxon_list) ";
             push @sqlList, ($sql);
@@ -9167,7 +9172,7 @@ sub shareMissingGeneForm {
     ## share with group?
     my @my_groups = DataEntryUtil::db_getImgGroups($contact_oid);
     my $sql       =
-        "select mig.group_id from mygene_img_groups\@img_ext mig "
+        "select mig.group_id from mygene_img_groups mig "
       . "where mig.contact_oid = ? and mig.mygene_oid = ? "
       . "and mig.group_id is not null";
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $gene_oid );
@@ -9228,11 +9233,11 @@ sub dbUpdateMissingGeneSharing {
     }
 
     my @groups  = param('share_w_group');
-    my $sql     = "delete from mygene_img_groups\@img_ext where mygene_oid = $gene_oid and contact_oid = $contact_oid";
+    my $sql     = "delete from mygene_img_groups where mygene_oid = $gene_oid and contact_oid = $contact_oid";
     my @sqlList = ($sql);
     for my $g1 (@groups) {
         $sql =
-            "insert into mygene_img_groups\@img_ext (mygene_oid, contact_oid, group_id) "
+            "insert into mygene_img_groups (mygene_oid, contact_oid, group_id) "
           . "values ($gene_oid, $contact_oid, $g1)";
         push @sqlList, ($sql);
     }
@@ -9511,7 +9516,7 @@ sub printGrpAllMissingGenesForm {
       . "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
 
     my $grp_cond =
-" and c.contact_oid in (select cig.contact_oid from contact_img_groups\@imgsg_dev cig where cig.img_group = $grp) and (g.is_public = 'Yes' or g.mygene_oid in (select mig.mygene_oid from mygene_img_groups\@img_ext mig where mig.group_id = $grp)) ";
+" and c.contact_oid in (select cig.contact_oid from contact_img_groups cig where cig.img_group = $grp) and (g.is_public = 'Yes' or g.mygene_oid in (select mig.mygene_oid from mygene_img_groups mig where mig.group_id = $grp)) ";
     if ( $view_type eq 'all' ) {
         $grp_cond = " ";
     }
@@ -9686,7 +9691,7 @@ sub printGrpAllTaxonMissingGenesForm {
     }
 
     my $grp_cond =
-" and c.contact_oid in (select cig.contact_oid from contact_img_groups\@imgsg_dev cig where cig.img_group = $grp) and (g.is_public = 'Yes' or g.mygene_oid in (select mig.mygene_oid from mygene_img_groups\@img_ext mig where mig.group_id = $grp)) ";
+" and c.contact_oid in (select cig.contact_oid from contact_img_groups cig where cig.img_group = $grp) and (g.is_public = 'Yes' or g.mygene_oid in (select mig.mygene_oid from mygene_img_groups mig where mig.group_id = $grp)) ";
     if ( $view_type eq 'all' ) {
         $grp_cond = " ";
     }
@@ -10413,7 +10418,7 @@ sub dbAddUpdateMyGene {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
@@ -10421,7 +10426,7 @@ sub dbAddUpdateMyGene {
     # check taxon selection
     my $taxon_oid = param('taxon_oid');
     if ( !$taxon_oid ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("Please select a genome.");
         return;
     }
@@ -10459,11 +10464,10 @@ sub dbAddUpdateMyGene {
                     $fld_display = "DNA Coordinates";
                 }
 
-                #main::printAppHeader("MyIMG");
                 WebUtil::webErrorHeader( "ERROR: Please enter a value for " . $fld_display );
                 return;
             } elsif ( $fld eq 'scaffold' ) {
-                #main::printAppHeader("MyIMG");
+
                 WebUtil::webErrorHeader( "ERROR: Please select a value for " . $fld );
                 return;
             }
@@ -10473,28 +10477,27 @@ sub dbAddUpdateMyGene {
             if ( $fld eq 'ec_number' ) {
                 my $res = DataEntryUtil::checkECNumber($val);
                 if ( !blankStr($res) ) {
-                    #main::printAppHeader("MyIMG");
+
                     WebUtil::webErrorHeader( "ERROR: " . $res );
                     return;
                 }
             } elsif ( $fld eq 'start_coord' || $fld eq 'end_coord' ) {
                 if ( !isInt($val) ) {
-                    #main::printAppHeader("MyIMG");
+
                     WebUtil::webErrorHeader("ERROR: $fld must be an integer.");
                     return;
                 }
             } elsif ( $fld eq 'dna_coords' ) {
 
-                #		my $s2 = checkDNACoords($val);
                 my ( $s_coord, $e_coord, $partial_gene, $s2 ) = WebUtil::parseDNACoords($val);
                 if ($s2) {
-                    #main::printAppHeader("MyIMG");
+
                     WebUtil::webErrorHeader("ERROR: $s2.");
                     return;
                 }
             } elsif ( $fld eq 'hitgene_oid' ) {
                 if ( !isInt($val) ) {
-                    #main::printAppHeader("MyIMG");
+
                     WebUtil::webErrorHeader("ERROR: Hit Gene ID must be an integer.");
 
                     return;
@@ -10503,9 +10506,9 @@ sub dbAddUpdateMyGene {
                 my $dbh  = WebUtil::dbLogin();
                 my $cnt1 = DataEntryUtil::db_findCount( $dbh, 'gene', "gene_oid = $val" );
 
-                #$dbh->disconnect();
+
                 if ( !$cnt1 ) {
-                    #main::printAppHeader("MyIMG");
+
                     WebUtil::webErrorHeader("ERROR: Hit Gene ID is incorrect (not such gene).");
 
                     return;
@@ -10522,8 +10525,6 @@ sub dbAddUpdateMyGene {
 
                     if ( !isInt($g2) ) {
 
-                        #$dbh->disconnect();
-                        #main::printAppHeader("MyIMG");
                         WebUtil::webErrorHeader("ERROR: Replacing Gene ID must be an integer.");
                         return;
                     }
@@ -10532,8 +10533,6 @@ sub dbAddUpdateMyGene {
 
                     if ( !$cnt1 ) {
 
-                        #$dbh->disconnect();
-                        #main::printAppHeader("MyIMG");
                         WebUtil::webErrorHeader("ERROR: Gene ID $g2 is incorrect (not such gene).");
 
                         return;
@@ -10613,13 +10612,11 @@ sub dbAddUpdateMyGene {
     }
     push @sqlList, ($sql);
 
-    #$dbh->disconnect();
-
     # perform database update
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
@@ -10822,20 +10819,20 @@ sub dbDeleteMyGene {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     if ( !$mygene_oid ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("Please select a missing gene annotation.");
         return;
     }
 
     # prepare database update statements
     my @sqlList = ();
-    my $sql     = "delete from mygene_img_groups\@img_ext where mygene_oid = $mygene_oid and contact_oid = $contact_oid";
+    my $sql     = "delete from mygene_img_groups where mygene_oid = $mygene_oid and contact_oid = $contact_oid";
     push @sqlList, ($sql);
 
     $sql = "delete from mygene where mygene_oid = $mygene_oid " . "and created_by = $contact_oid ";
@@ -10845,7 +10842,7 @@ sub dbDeleteMyGene {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
@@ -12295,7 +12292,7 @@ sub printMyIMGGenesTermForm {
     }
 
     if ( scalar( keys %genes_h ) == 0 ) {
-        webError("Cannot find the gene(s).");
+        WebUtil::webError("Cannot find the gene(s).");
         return;
     } else {
         print "<h2>Add/Update Terms to MyIMG Annotation</h2>\n";
@@ -12435,7 +12432,7 @@ sub printConfirmMyIMGGenesTerms {
     }
 
     if ( scalar( keys %genes_h ) == 0 ) {
-        webError("Cannot find the gene(s).");
+        WebUtil::webError("Cannot find the gene(s).");
         return;
     } else {
         print "<h2>Add/Update IMG Terms to MyIMG Annotations</h2>\n";
@@ -12476,7 +12473,7 @@ sub printConfirmMyIMGGenesTerms {
         }
 
         if ( !$func_list ) {
-            webError("Incorrect terms.");
+            WebUtil::webError("Incorrect terms.");
             return;
         }
 
@@ -12550,14 +12547,14 @@ sub dbUpdateMyIMGGeneTerms {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("No gene has been selected.");
         return;
     }
@@ -12587,10 +12584,8 @@ sub dbUpdateMyIMGGeneTerms {
         $cur->finish();
     }
 
-    #$dbh->disconnect();
 
     if ( scalar( keys %gene_name_h ) == 0 ) {
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("You cannot update the gene(s).");
         return;
     }
@@ -12682,7 +12677,6 @@ sub dbUpdateMyIMGGeneTerms {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
@@ -12858,7 +12852,7 @@ sub printConfirmMissingGenesTerms {
     if ( !$gene_oid2 ) {
 
         #$dbh->disconnect();
-        webError("Cannot find the gene.");
+        WebUtil::webError("Cannot find the gene.");
         return;
     } elsif ( $created_by == $contact_oid ) {
         print "<h2>My Missing Gene $gene_oid2: $gene_name</h2>\n";
@@ -12867,7 +12861,7 @@ sub printConfirmMissingGenesTerms {
     } else {
 
         #$dbh->disconnect();
-        webError("Cannot find the gene.");
+        WebUtil::webError("Cannot find the gene.");
         return;
     }
 
@@ -12912,7 +12906,7 @@ sub printConfirmMissingGenesTerms {
         }
 
         if ( !$func_list ) {
-            webError("Incorrect terms.");
+            WebUtil::webError("Incorrect terms.");
             return;
         }
 
@@ -12986,14 +12980,13 @@ sub dbUpdateMissingGeneTerms {
     # check login
     my $contact_oid = WebUtil::getContactOid();
     if ( !$contact_oid ) {
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("Session expired.  Please log in again.");
         return;
     }
 
     my $mygene_oid = param("mygene_oid");
     if ( !$mygene_oid ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("No gene has been selected.");
         return;
     }
@@ -13007,10 +13000,8 @@ sub dbUpdateMissingGeneTerms {
     my ( $gene_oid2, $gene_name, $created_by, $is_public ) = $cur->fetchrow();
     $cur->finish();
 
-    #$dbh->disconnect();
-
     if ( !$gene_oid2 ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("You cannot update this gene.");
         return;
     } elsif ( $created_by == $contact_oid ) {
@@ -13020,7 +13011,6 @@ sub dbUpdateMissingGeneTerms {
 
         # super user can update public missing gene
     } else {
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("You cannot update this gene.");
         return;
     }
@@ -13109,7 +13099,7 @@ sub dbUpdateMissingGeneTerms {
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("SQL Error: $sql");
         return -1;
     }
@@ -13155,7 +13145,7 @@ sub Connect_IMG_EXT {
     my $dsn2 = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid";
     my $dbh2 = DBI->connect( $dsn2, $user2, $pw2 );
     if ( !defined($dbh2) ) {
-        webDie("cannot login to IMG MER V330\n");
+        WebUtil::webDie("cannot login to IMG MER V330\n");
     }
     $dbh2->{LongReadLen} = 50000;
     $dbh2->{LongTruncOk} = 1;

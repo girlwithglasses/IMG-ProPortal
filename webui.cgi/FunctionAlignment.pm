@@ -1,7 +1,7 @@
 ############################################################################
 # FunctionAlignment.pm - new tool
 #
-# $Id: FunctionAlignment.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: FunctionAlignment.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package FunctionAlignment;
 my $section = "FunctionAlignment";
@@ -45,6 +45,13 @@ sub getAppHeaderData {
     my ($self) = @_;
     my @a = ( "FindFunctions", '', '', '', '', 'FunctionAlignment.pdf' );
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
 }
 
 ############################################################################
@@ -204,7 +211,7 @@ sub printSearchResults {
     } elsif ( $type == 1 ) {
         my @func_ids = param("func_id");
         if ( scalar(@func_ids) <= 0 ) {
-            webError("Please select at least one function.");
+            WebUtil::webError("Please select at least one function.");
         }
         my @cog_func_ids  = ();
         my @kog_func_ids  = ();
@@ -233,14 +240,14 @@ sub printSearchResults {
             $searchFilter = 'pfam';
             setSessionParam( "pfam_func_ids", \@pfam_func_ids );
         } else {
-            webError("Please select at least one cog, kog, or pfam function.");
+            WebUtil::webError("Please select at least one cog, kog, or pfam function.");
         }
     } elsif ( $type == 2 ) {
         $searchFilter = 'all';
 
         my @gene_oids = param("gene_oid");
         if ( scalar(@gene_oids) <= 0 ) {
-            webError("Please select at least one gene.");
+            WebUtil::webError("Please select at least one gene.");
         }
 
         setSessionParam( "gene_oids", \@gene_oids );
@@ -585,7 +592,7 @@ sub getGeneOidsInClause {
     if ( scalar(@dbOids) > 0 ) {
         @gene_oids = @dbOids;
     } else {
-        webError("You have selected file-based genes.  Please select at least one database gene.");
+        WebUtil::webError("You have selected file-based genes.  Please select at least one database gene.");
     }
 
     my $geneOidsInClause = '';

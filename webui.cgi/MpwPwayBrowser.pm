@@ -167,7 +167,7 @@ sub Connect_IMG_PG
     my $dsn2 = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid"; 
     my $dbh2 = DBI->connect( $dsn2, $user2, $pw2 ); 
     if( !defined( $dbh2 ) ) { 
-        webDie( "cannot login to IMG PG\n" ); 
+        WebUtil::webDie( "cannot login to IMG PG\n" ); 
     } 
     $dbh2->{ LongReadLen } = 50000; 
     $dbh2->{ LongTruncOk } = 1; 
@@ -572,9 +572,15 @@ sub printMpwPwayDetail {
     printStatusLine( "Loaded.", 2 ); 
 
     #$dbh->disconnect(); 
-    print "<hr>\n";
+    #print "<hr>\n";
 
-    if ( ! blankStr($file_name) ) {
+    # turn this off 
+    # we've lost the data 
+    # dir does not exists 
+    # '/global/projectb/projectdirs/microbial/img/grechkin/Taxonomy/MPW_GRAPH/H2HIVXOXF.CAT.html'
+    # - ken 2017-04-24
+    #
+    if (0 && ! blankStr($file_name) ) {
 	my $path = $mpw_file_path . "/" . $file_name;
 	my $image_file = $path;
 	$image_file =~ s/\.html/\.png/;
@@ -608,7 +614,7 @@ sub printMpwPwayDetail {
     }
 
     print end_form(); 
-    WebUtil::webExit(0);
+    #WebUtil::webExit(0);
 } 
 
 
@@ -780,7 +786,7 @@ sub printMpwEcGenes {
     my $taxon_cond = " 1 = 1 ";
     if ( $taxon_oid ) {
 	if ( ! isInt($taxon_oid) ) {
-	    webError("Incorrect Taxon OID: $taxon_oid");
+	    WebUtil::webError("Incorrect Taxon OID: $taxon_oid");
 	    return;
 	}
 	$taxon_cond = " t.taxon_oid = $taxon_oid "

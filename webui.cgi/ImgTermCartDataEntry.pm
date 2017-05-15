@@ -59,10 +59,10 @@ sub dispatch {
     ## Should not get here.
     my $section = param( "section" );
     if( $section ne "ImgTermCartDataEntry" ) {
-        webDie( "ImgTermCartDataEntry::dispatch: bad section '$section'\n" );
+        WebUtil::webDie( "ImgTermCartDataEntry::dispatch: bad section '$section'\n" );
     }
     if( !$contact_oid ) {
-        webError( "Please login in." );
+        WebUtil::webError( "Please login in." );
     }
 
     my $page = param( "page" );
@@ -484,7 +484,7 @@ sub printAddUpdateTermForm {
 	    $update_term_oid = $selected_term_oids[0];
 	}
 	else {
-	    webError ("No IMG term is selected.");
+	    WebUtil::webError ("No IMG term is selected.");
 	    return;
 	}
     }
@@ -666,7 +666,7 @@ sub printUpdateChildTermForm {
 	@selected_term_oids = param( "selectedTerms" );
     }
     if ( scalar (@selected_term_oids) == 0 ) {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
 
@@ -707,7 +707,7 @@ sub printUpdateChildTermForm {
 	#$dbh->disconnect();
     }
     else {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
 
@@ -778,7 +778,7 @@ sub printImgTermTree {
     my( $searchTerm ) = @_;
 
     if( blankStr( $searchTerm ) ) {
-	webError( "Please enter a search term." );
+	WebUtil::webError( "Please enter a search term." );
     }
 
     # show search results
@@ -834,7 +834,7 @@ sub printImgTermTree {
     printStatusLine( "Loading ...", 1 );
 
     if( $searchTerm !~ /[a-zA-Z0-9]+/ ) {
-	webError( "Search term should have some alphanumeric characters." );
+	WebUtil::webError( "Search term should have some alphanumeric characters." );
     }
     $searchTerm =~ s/\r//g;
     $searchTerm =~ s/^\s+//;
@@ -998,7 +998,7 @@ sub dbAddTerm() {
     # check input
     chomp($newTerm);
     if ( !$newTerm || blankStr($newTerm) ) {
-	webError ("Please enter a new term.");
+	WebUtil::webError ("Please enter a new term.");
 	return -1;
     }
 
@@ -1009,7 +1009,7 @@ sub dbAddTerm() {
     my $id2 = db_findID ($dbh, 'IMG_TERM', 'TERM_OID', 'TERM', $newTerm, '');
     if ( $id2 > 0 ) {
 	#$dbh->disconnect();
-	webError ("Term already exists. (TERM_OID=$id2)");
+	WebUtil::webError ("Term already exists. (TERM_OID=$id2)");
 	return -1;
     }
 
@@ -1070,7 +1070,7 @@ sub dbAddTerm() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
 	$sql = $sqlList[$err-1]; 
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1; 
     } 
     else {
@@ -1093,7 +1093,7 @@ sub printConfirmDeleteTermForm {
 	@selected_term_oids = param( "selectedTerms" );
     }
     if ( scalar (@selected_term_oids) == 0 ) {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
 
@@ -1214,7 +1214,7 @@ sub dbDeleteTerm {
     # get the term oid
     my $old_oid = param( "selectedTerms" );
     if ( blankStr($old_oid) ) {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
 
@@ -1280,7 +1280,7 @@ sub dbDeleteTerm {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1]; 
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1; 
     } 
     else {
@@ -1296,7 +1296,7 @@ sub dbUpdateTerm() {
     # get the term oid
     my @selected_term_oids = param( "selectedTerms" ); 
     if ( scalar (@selected_term_oids) == 0 ) {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
     my $term_oid = $selected_term_oids[0];
@@ -1309,7 +1309,7 @@ sub dbUpdateTerm() {
 
     # check input
     if ( !$newTerm || length($newTerm) == 0 ) {
-	webError ("Please enter a new term.");
+	WebUtil::webError ("Please enter a new term.");
 	return -1;
     }
 
@@ -1321,7 +1321,7 @@ sub dbUpdateTerm() {
 			 "term_oid <> $term_oid");
     if ( $id2 > 0 ) {
 	#$dbh->disconnect();
-	webError ("Term already exists. (TERM_OID=$id2)");
+	WebUtil::webError ("Term already exists. (TERM_OID=$id2)");
 	return -1;
     }
 
@@ -1367,7 +1367,7 @@ sub dbUpdateTerm() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1]; 
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1; 
     } 
     else {
@@ -1383,7 +1383,7 @@ sub dbUpdateChildTerm() {
     # get the term oid
     my @selected_term_oids = param( "selectedTerms" ); 
     if ( scalar (@selected_term_oids) == 0 ) {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
     my $term_oid = $selected_term_oids[0];
@@ -1410,7 +1410,7 @@ sub dbUpdateChildTerm() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1]; 
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1; 
     } 
     else {
@@ -1640,7 +1640,7 @@ sub xx_db_sqlTrans () {
     if ($@) {
 	$dbh->rollback();
 	#$dbh->disconnect();
-	webError ("Incorrect SQL: $last_sql");
+	WebUtil::webError ("Incorrect SQL: $last_sql");
 	return 0;
     }
 
@@ -1743,7 +1743,7 @@ sub printSearchRxnForm {
 
     # check whether the cart is empty
     if ( scalar( @term_oids ) == 0 ) {
-	webError( "There are no terms in the IMG Term Cart." );
+	WebUtil::webError( "There are no terms in the IMG Term Cart." );
 	return;
     }
 
@@ -1808,7 +1808,7 @@ sub printSearchRxnResultsForm {
     print reset( -name => "Reset", -value => "Reset", -class => "smbutton" );
  
     if( $searchReaction eq "" ) { 
-        webError( "Please enter a keyword to search." ); 
+        WebUtil::webError( "Please enter a keyword to search." ); 
         print end_form(); 
         return; 
     } 
@@ -1876,7 +1876,7 @@ sub printSearchRxnResultsForm {
  
     if ( $count == 0 ) { 
         printStatusLine( "$count reaction(s) found.", 2 ); 
-        webError( "No IMG reactions matches the keyword." ); 
+        WebUtil::webError( "No IMG reactions matches the keyword." ); 
         return; 
     } 
  
@@ -1922,7 +1922,7 @@ sub printTermRxnAssignment {
     print hiddenVar ( "rxnSelection", $rxn_oid);
 
     if ( blankStr($rxn_oid) ) {
-        webError( "No IMG reaction has been selected.");
+        WebUtil::webError( "No IMG reaction has been selected.");
 	return;
     }
 
@@ -1945,7 +1945,7 @@ sub printTermRxnAssignment {
 
     # check whether the cart is empty
     if ( scalar( @term_oids ) == 0 ) {
-	webError( "There are no terms in the IMG Term Cart." );
+	WebUtil::webError( "There are no terms in the IMG Term Cart." );
 	return;
     }
 
@@ -2057,7 +2057,7 @@ sub dbAssignTermRxn {
 
     # check whether the cart is empty
     if ( scalar( @term_oids ) == 0 ) {
-	webError( "There are no terms in the IMG Term Cart." );
+	WebUtil::webError( "There are no terms in the IMG Term Cart." );
 	return;
     }
 
@@ -2069,7 +2069,7 @@ sub dbAssignTermRxn {
     }
 
     if ( scalar(@selected_term_oids) == 0 ) {
-        webError( "No IMG terms have been selected.");
+        WebUtil::webError( "No IMG terms have been selected.");
 	return;
     }
 
@@ -2106,7 +2106,7 @@ sub dbAssignTermRxn {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1]; 
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1; 
     } 
     else {
@@ -2129,7 +2129,7 @@ sub printDeleteTermRxnForm {
 	@selected_term_oids = param( "selectedTerms" );
     }
     if ( scalar (@selected_term_oids) == 0 ) {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
 
@@ -2247,13 +2247,13 @@ sub dbRemoveTermRxn {
 
     # check whether the cart is empty
     if ( scalar( @term_oids ) == 0 ) {
-	webError( "There are no terms in the IMG Term Cart." );
+	WebUtil::webError( "There are no terms in the IMG Term Cart." );
 	return;
     }
 
     my @selected_term_rxn_oids = param( "term_rxn_oid" );
     if ( scalar(@selected_term_rxn_oids) == 0 ) {
-        webError( "No IMG term-reaction associations have been selected.");
+        WebUtil::webError( "No IMG term-reaction associations have been selected.");
 	return;
     }
 
@@ -2274,7 +2274,7 @@ sub dbRemoveTermRxn {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1]; 
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1; 
     } 
     else {
@@ -2345,7 +2345,7 @@ sub printValidateTermRxnForm {
     my $filename = param( "fileselect" );
 
     if ( blankStr($filename) ) {
-	webError("No file name is provided.");
+	WebUtil::webError("No file name is provided.");
 	return;
     }
 
@@ -2374,7 +2374,7 @@ sub printValidateTermRxnForm {
     # save the uploaded file to a tmp file, because we need to parse the file
     # more than once
     if ( ! open( FILE, '>', $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -2414,7 +2414,7 @@ sub printValidateTermRxnForm {
     # now read from tmp file
     if ( ! open( FILE, $tmp_upload_file ) ) {
 	printStatusLine( "Failed.", 2 );
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -2573,7 +2573,7 @@ sub dbTermRxnFileUpload {
 
     # open file
     if ( ! open( FILE, $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return 0;
     }
 
@@ -2700,7 +2700,7 @@ sub dbTermRxnFileUpload {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {

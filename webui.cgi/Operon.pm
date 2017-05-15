@@ -2,7 +2,7 @@
 # Operon - Function prediction based on chromosomal clusters.
 #    --km 07/30/2007
 #
-# $Id: Operon.pm 34707 2015-11-13 20:21:17Z klchu $
+# $Id: Operon.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Operon;
 my $section = "Operon";
@@ -73,7 +73,7 @@ sub dispatch {
              and lc($method) ne 'pfam'
              and lc($method) ne 'bbh' )
         {
-            webError "This feature has not been implemented yet";
+            WebUtil::webError "This feature has not been implemented yet";
         }
         if ( param("genePageGeneOid") ) {
 
@@ -313,7 +313,7 @@ sub showConnectionsTree {
     #  replace path with env in webconfig - old code
     my $dir     = "/home/kmavromm/img_ui/clusters/$method/";
     my $members = $dir . "/0.subdm";
-    open( IN, $members ) or webError("cannot read file $members");
+    open( IN, $members ) or WebUtil::webError("cannot read file $members");
     my %id2Rec;
     while ( my $line = <IN> ) {
         chomp $line;
@@ -445,7 +445,7 @@ sub showConnectionsGraph {
         @graph = sort { $$b[3] <=> $$a[3] } @graph;
 
         if ( scalar(@graph) == 0 ) {
-            webError("There are no valid connections for @{$geneClusters}");
+            WebUtil::webError("There are no valid connections for @{$geneClusters}");
         } else {
 
             # Deploying the applet
@@ -453,7 +453,7 @@ sub showConnectionsGraph {
         }
         printStatusLine( "Loading distances...", 1 );
     } else {
-        webError("This feature has not been implemented yet.");
+        WebUtil::webError("This feature has not been implemented yet.");
     }
 }
 
@@ -532,7 +532,7 @@ sub showConnectionsGraph2 {
         @graph = sort { $$b[3] <=> $$a[3] } @graph;
 
         if ( scalar(@graph) == 0 ) {
-            webError("There are no valid connections for @{$geneClusters}");
+            WebUtil::webError("There are no valid connections for @{$geneClusters}");
         } else {
 
             # Deploying the applet
@@ -540,7 +540,7 @@ sub showConnectionsGraph2 {
         }
         printStatusLine( "Loading distances...", 1 );
     } else {
-        webError("This feature has not been implemented yet.");
+        WebUtil::webError("This feature has not been implemented yet.");
     }
 }
 
@@ -716,7 +716,7 @@ sub GeneConnections {
         );
 
     } else {
-        webError("This feature has not been implemented yet.");
+        WebUtil::webError("This feature has not been implemented yet.");
     }
 
     #sort the table on the score
@@ -1257,7 +1257,7 @@ sub GeneExpandedConnections {
         @connections = getGeneExpandedConnections( \@genes, $cluster_method );
 
     } else {
-        webError("This feature has not been implemented yet.");
+        WebUtil::webError("This feature has not been implemented yet.");
     }
     @connections = sort { $$b[2] <=> $$a[2] } @connections;
     &printExpandedConnections( \@connections, $expansion, $gene_oid,

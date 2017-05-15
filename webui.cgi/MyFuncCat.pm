@@ -5,7 +5,7 @@
 #   associated with the user account.
 #     --es 01/19/08
 #
-# $Id: MyFuncCat.pm 34545 2015-10-20 21:36:40Z klchu $
+# $Id: MyFuncCat.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MyFuncCat;
 my $section = "MyFuncCat";
@@ -90,12 +90,12 @@ sub printEditForm {
 
     my $nFuncs = @func_ids;
     if ( $nFuncs > $max_func_batch ) {
-        webError(   "Please select less than $max_func_batch functions "
+        WebUtil::webError(   "Please select less than $max_func_batch functions "
                   . "to add.<br/>\n" );
     }
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webError("Session expired.  Please login again.");
+        WebUtil::webError("Session expired.  Please login again.");
     }
 
     my $dbh = dbLogin();
@@ -656,7 +656,7 @@ sub checkNameExists {
     my ($cnt) = $cur->fetchrow();
     $cur->finish();
     return if $cnt == 0;
-    webError(   "The name <i>'"
+    WebUtil::webError(   "The name <i>'"
               . escHtml($name)
               . "'</i> is already "
               . "used.  Please select another category name.<br/>\n" );
@@ -690,7 +690,7 @@ sub printOtherFuncCats {
 
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webError("Session has expired. Please start over.<br/>\n");
+        WebUtil::webError("Session has expired. Please start over.<br/>\n");
     }
     printStatusLine( "Loading ...", 1 );
 
@@ -755,7 +755,7 @@ sub printUserCat {
 
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webError("Session has expired. Please start over.<br/>\n");
+        WebUtil::webError("Session has expired. Please start over.<br/>\n");
     }
     printStatusLine( "Loading ...", 1 );
 
@@ -812,7 +812,7 @@ sub printUserCat {
         } elsif ( $func_id =~ /^TIGR/ ) {
             $idType = "tigrfam_id";
         } else {
-            webDie("printUserCat: unuspported idType for '$func_id'\n");
+            WebUtil::webDie("printUserCat: unuspported idType for '$func_id'\n");
         }
         print "<input type='checkbox' "
           . "name='$idType' value='$func_id' checked />\n";

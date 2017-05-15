@@ -11,7 +11,7 @@
 
 PROCESS 'inc/generic/cbox.tt';
 PROCESS 'inc/generic/link.tt';
-
+PROCESS 'inc/generic/labels.tt';
 
 # table cell view
 # if the item is a scalar, prints it out
@@ -37,7 +37,6 @@ VIEW t_cell;
 END;
 
 
-
 IF data_table.tbody.size > 0;
 	headers = data_table.thead; %]
 	<table class="[% data_table.class %]__table"[% IF data_table.id %] id="[% data_table.id %]"[% END %]>
@@ -51,7 +50,7 @@ IF data_table.tbody.size > 0;
 			IF headers.enum_map.$th;
 				headers.enum_map.$th;
 			ELSIF 'cbox' != th;
-				th | ucfirst;
+				labeller( th );
 			END; %]</th>
 [%		END; %]
 	</tr>
@@ -79,5 +78,19 @@ IF data_table.tbody.size > 0;
 		</tr>
 [%		END; # FOREACH datum in data_table.tbody %]
 	</tbody>
+[%	IF data_table.tbody.size > 10 %]
+	<tfoot class="[% data_table.class %]__tfoot">
+	<tr>
+[%		FOREACH th IN headers.enum; %]
+	<th class='[% data_table.class %]__th--[% th %]'>[%
+			IF headers.enum_map.$th;
+				headers.enum_map.$th;
+			ELSIF 'cbox' != th;
+				labeller( th );
+			END; %]</th>
+[%		END; %]
+	</tr>
+	</tfoot>
+[%	END %]
 	</table>
 [% END # if data_table.tbody.size %]

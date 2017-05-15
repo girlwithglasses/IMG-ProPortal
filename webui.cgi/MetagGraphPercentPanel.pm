@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MetagGraphPercentPanel.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: MetagGraphPercentPanel.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MetagGraphPercentPanel;
 my $section = "ScaffoldPanel";
@@ -84,11 +84,11 @@ sub new {
 	# Width of panel.
 	my $coord_length = $self->{end_coord} - $self->{start_coord};
 	if($coord_length == 0) {
-        webError("There is no data to plot!");
+        WebUtil::webError("There is no data to plot!");
     }
 	$self->{scale} = $self->{x_width} / $coord_length;
 
-	my $im = new GD::Image( $self->{x_width} + 2, $self->{y_height} + 2 );
+	my $im = GD::Image->new( $self->{x_width} + 2, $self->{y_height} + 2 );
 	$self->{im} = $im;
 	$self->colorAllocates();
 	$self->setBrush();
@@ -229,7 +229,7 @@ sub setBrush {
 	my ($self) = @_;
 
 	my $im = $self->{im};
-	my $brush = new GD::Image( 1, 1 );
+	my $brush = GD::Image->new( 1, 1 );
 	$brush->colorAllocate( 255, 255, 255 );    # white
 	$brush->colorAllocate( 0,   0,   0 );      # black
 	$brush->transparent( $self->{color_white} );
@@ -252,7 +252,7 @@ sub addLine {
 	my $y = ceil( $mid_yheight - $percent * $self->{y_scale} );
 
 	#webLog("y line location $y\n");
-	
+
 	my $x1       = $self->coord2x($start);
 	my $x2       = $self->coord2x($end);
 	my $gene_map = $self->{gene_map};
@@ -262,7 +262,7 @@ sub addLine {
 
 	my $y1 = $y;
 	my $y2 = $y + 1;
-	
+
 	# tool tip box
 	push( @$gene_map,
 		  "$gene_oid\t" . "$x1\t" . "$y1\t" . "$x2\t" . "$y2\t" . "$label" );
@@ -370,19 +370,19 @@ sub makeMapString {
 		split( /\t/, $r );
 	    $s .= "<area shape='rect' coords='$x1,$y1,$x2,$y2' ";
 	    $s .= "href='$gene_page_base_url&gene_oid=$gene_oid' ";
-	    
+
 	    my $twidth = length($label) * .05;
 	    my $x      = "WIDTH=$twidth; FONTSIZE='8px'";
 	    $label =~ s/'/ /g;
 	    my $label_esc = escHtml($label);
 
-            if ( $uselib eq "overlib" ) { 
+            if ( $uselib eq "overlib" ) {
                 $s .= "onMouseOver=\"return overlib('$label_esc')\" ";
                 $s .= "onMouseOut=\"return nd()\" ";
-            } else { 
-                $s .= "onMouseOver=\"$x; Tip('$label_esc');\" "; 
+            } else {
+                $s .= "onMouseOver=\"$x; Tip('$label_esc');\" ";
                 $s .= "onMouseOut=\"UnTip();\" ";
-            } 
+            }
 	    $s .= " />\n";
 	}
 	$s .= "</map>\n";

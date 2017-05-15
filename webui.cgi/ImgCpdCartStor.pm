@@ -553,7 +553,7 @@ sub printValidationResultForm {
     my $filename = param( "fileselect" );
 
     if ( blankStr($filename) ) {
-	webError("No file name is provided.");
+	WebUtil::webError("No file name is provided.");
 	return;
     }
 
@@ -582,7 +582,7 @@ sub printValidationResultForm {
     # save the uploaded file to a tmp file, because we need to parse the file
     # more than once
     if ( ! open( FILE, '>', $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -624,7 +624,7 @@ sub printValidationResultForm {
     # now read from tmp file
     if ( ! open( FILE, $tmp_upload_file ) ) {
 	printStatusLine( "Failed.", 2 );
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -805,7 +805,7 @@ sub dbFileUpload {
 
     # open file
     if ( ! open( FILE, $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return 0;
     }
 
@@ -975,7 +975,7 @@ sub dbFileUpload {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
    }
     else {
@@ -1207,7 +1207,7 @@ sub printAddUpdateCpdForm {
 	    $update_compound_oid = $selected_cpd_oids[0];
 	}
 	else {
-	    webError ("No IMG compound is selected.");
+	    WebUtil::webError ("No IMG compound is selected.");
 	    return;
 	}
     }
@@ -1482,7 +1482,7 @@ sub dbAddCompound() {
     # check input
     chomp($newCompound);
     if ( !$newCompound || blankStr($newCompound) ) {
-	webError ("Please enter a new compound name.");
+	WebUtil::webError ("Please enter a new compound name.");
 	return -1;
     }
 
@@ -1494,7 +1494,7 @@ sub dbAddCompound() {
 			 $newCompound, '');
     if ( $id2 > 0 ) {
 	#$dbh->disconnect();
-	webError ("Compound already exists. (COMPOUND_OID=$id2)");
+	WebUtil::webError ("Compound already exists. (COMPOUND_OID=$id2)");
 	return -1;
     }
 
@@ -1502,7 +1502,7 @@ sub dbAddCompound() {
     my $s = checkKeggCompounds ($dbh, param('kegg_cpds'));
     if ( !blankStr($s) ) {
 	#$dbh->disconnect();
-	webError ("Incorrect KEGG Compound ID");
+	WebUtil::webError ("Incorrect KEGG Compound ID");
 	return -1;
     }
 
@@ -1612,7 +1612,7 @@ sub dbAddCompound() {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
    }
     else {
@@ -1628,7 +1628,7 @@ sub dbUpdateCompound() {
    # get the compound oid
     my @selected_cpd_oids = param( "selectedCompounds" ); 
     if ( scalar (@selected_cpd_oids) == 0 ) {
-	webError ("No IMG compound is selected.");
+	WebUtil::webError ("No IMG compound is selected.");
 	return -1;
     }
     my $compound_oid = $selected_cpd_oids[0];
@@ -1647,7 +1647,7 @@ sub dbUpdateCompound() {
     # check input
     chomp($newCompound);
     if ( !$newCompound || blankStr($newCompound) ) {
-	webError ("Please enter a new compound name.");
+	WebUtil::webError ("Please enter a new compound name.");
 	return -1;
     }
 
@@ -1659,7 +1659,7 @@ sub dbUpdateCompound() {
 			 $newCompound, "compound_oid <> $compound_oid");
     if ( $id2 > 0 ) {
 	#$dbh->disconnect();
-	webError ("Compound already exists. (COMPOUND_OID=$id2)");
+	WebUtil::webError ("Compound already exists. (COMPOUND_OID=$id2)");
 	return -1;
     }
 
@@ -1667,7 +1667,7 @@ sub dbUpdateCompound() {
     my $s = checkKeggCompounds ($dbh, param('kegg_cpds'));
     if ( !blankStr($s) ) {
 	#$dbh->disconnect();
-	webError ("Incorrect KEGG Compound ID");
+	WebUtil::webError ("Incorrect KEGG Compound ID");
 	return -1;
     }
 
@@ -1735,7 +1735,7 @@ sub dbUpdateCompound() {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
    }
     else {
@@ -1758,7 +1758,7 @@ sub printConfirmDeleteCpdForm {
 	@selected_cpd_oids = param( "selectedCompounds" );
     }
     if ( scalar (@selected_cpd_oids) == 0 ) {
-	webError ("No IMG compound is selected.");
+	WebUtil::webError ("No IMG compound is selected.");
 	return -1;
     }
 
@@ -1907,7 +1907,7 @@ sub dbDeleteCompound {
     # get the compound oid
     my $old_oid = param( "selectedCompounds" );
     if ( blankStr($old_oid) ) {
-	webError ("No IMG compound is selected.");
+	WebUtil::webError ("No IMG compound is selected.");
 	return -1;
     }
 
@@ -1946,7 +1946,7 @@ sub dbDeleteCompound {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
    }
     else {
@@ -2157,7 +2157,7 @@ sub printSearchReactionForm {
 
     # check whether the cart is empty
     if ( scalar( @compound_oids ) == 0 ) {
-	webError( "There are no compounds in the IMG Compound Cart." );
+	WebUtil::webError( "There are no compounds in the IMG Compound Cart." );
 	return;
     }
 
@@ -2223,7 +2223,7 @@ sub printSearchReactionResults {
     print reset( -name => "Reset", -value => "Reset", -class => "smbutton" );
 
     if( $searchReaction eq "" ) {
-        webError( "Please enter a keyword to search." );
+        WebUtil::webError( "Please enter a keyword to search." );
 	print end_form();
 	return;
     }
@@ -2291,7 +2291,7 @@ sub printSearchReactionResults {
 
     if ( $count == 0 ) {
         printStatusLine( "$count reaction(s) found.", 2 );
-        webError( "No IMG reactions matches the keyword." );
+        WebUtil::webError( "No IMG reactions matches the keyword." );
         return;
     }
 
@@ -2527,7 +2527,7 @@ sub dbUpdateCpdRxn() {
 	# my $sm = param ("sm_" . $compound_oid);
 	my $sv = param ("sv_" . $compound_oid);
 	if ( !blankStr($sv) && !isInt($sv) ) {
-	    webError( "Stoich value '" . escapeHTML($sv) . "' is not an integer." );
+	    WebUtil::webError( "Stoich value '" . escapeHTML($sv) . "' is not an integer." );
 	    return 0;
 	}
     }
@@ -2582,7 +2582,7 @@ sub dbUpdateCpdRxn() {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return 0;
    }
     else {
@@ -2611,7 +2611,7 @@ sub printConfirmDeleteCompoundReactions {
 
     # check whether the cart is empty
     if ( scalar( @compound_oids ) == 0 ) {
-	webError( "There are no compounds in the IMG Compound Cart." );
+	WebUtil::webError( "There are no compounds in the IMG Compound Cart." );
 	return;
     }
 
@@ -2623,7 +2623,7 @@ sub printConfirmDeleteCompoundReactions {
 
     # check whether there are any selections
     if ( scalar( @selected_cpd_oids ) == 0 ) {
-	webError( "No compounds have been selected." );
+	WebUtil::webError( "No compounds have been selected." );
 	return;
     }
 
@@ -2742,7 +2742,7 @@ sub dbDeleteCpdRxn() {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return 0;
    }
     else {

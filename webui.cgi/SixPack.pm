@@ -2,7 +2,7 @@
 # SixPack.pm - Six  frame translation.
 #    --es 06/22/08
 #
-# $Id: SixPack.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: SixPack.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package SixPack;
 my $section = "SixPack";
@@ -136,10 +136,10 @@ sub printSixPack {
    printStatusLine( "Loading ...", 1 );
 
    if( $up_stream_int > 0 || !isInt( $up_stream ) ) {
-       webError( "Expected negative integer for up stream." );
+       WebUtil::webError( "Expected negative integer for up stream." );
    }
    if( $down_stream_int < 0 || !isInt( $down_stream ) ) {
-       webError( "Expected positive integer for down stream." );
+       WebUtil::webError( "Expected positive integer for down stream." );
    }
 
    my $dbh = dbLogin( );
@@ -193,7 +193,7 @@ sub printSixPack {
       
    my $seq1_len = length( $seq1 );
    if( $seq1_len == 0 ) {
-      webError( "Cannot read sequence for taxon_oid=$taxon " .
+      WebUtil::webError( "Cannot read sequence for taxon_oid=$taxon " .
         "scf_ext_accession='$scf_ext_accession'\n" );
    }
    my $seq2 = wrapSeq( $seq1 );
@@ -255,7 +255,7 @@ sub printSixPack {
    my $st = system( $cmd );
 
    if( $st != 0 ) {
-      webDie( "status=$st '$cmd'\n" );
+      WebUtil::webDie( "status=$st '$cmd'\n" );
    }
 
    my $rfh = newReadFileHandle( $tmpOutFile, "printSixPack" );
@@ -433,7 +433,7 @@ sub getTranslation {
     }
     my $len3 = @a;
     if( $len3 != $len ) {
-       webDie( "getTranslation:  len=$len len3=$len3 offset=$offset\n" );
+       WebUtil::webDie( "getTranslation:  len=$len len3=$len3 offset=$offset\n" );
     }
     return @a;
 }

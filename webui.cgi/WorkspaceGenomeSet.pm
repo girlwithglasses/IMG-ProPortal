@@ -1,13 +1,8 @@
 ###########################################################################
 # WorkspaceGenomeSet.pm
-# $Id: WorkspaceGenomeSet.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: WorkspaceGenomeSet.pm 37032 2017-05-01 20:04:30Z klchu $
 ############################################################################
 package WorkspaceGenomeSet;
-
-require Exporter;
-@ISA    = qw( Exporter );
-@EXPORT = qw(
-);
 
 use strict;
 use Archive::Zip;
@@ -238,7 +233,7 @@ sub printGenomeSetMainForm {
 
     my $sid = WebUtil::getContactOid();
     opendir( DIR, "$workspace_dir/$sid/$folder" )
-      or webDie("failed to open folder list");
+      or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -247,6 +242,8 @@ sub printGenomeSetMainForm {
     printCartDiv($numTaxon);
 
     print "<h2>Genome Sets List</h2>";
+
+    #WorkspaceUtil::getQueueDir();
 
     my $groupSharingDisplay = getSessionParam("groupSharingDisplay");
     #print "printGenomeSetMainForm() groupSharingDisplay=$groupSharingDisplay<br>\n";
@@ -402,7 +399,7 @@ sub printGenomeSetDetail {
         if ( ! $can_view ) { 
             print "<h1>My Workspace - Genome Sets - Individual Genome Set</h1>"; 
             print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
-            webError("Genome set does not exist.");
+            WebUtil::webError("Genome set does not exist.");
             return; 
         }
     } 
@@ -421,7 +418,7 @@ sub printGenomeSetDetail {
 
     # check filename
     if ( $filename eq "" ) {
-        webError("Cannot read file.");
+        WebUtil::webError("Cannot read file.");
         return;
     }
 
@@ -633,11 +630,11 @@ sub validateGenomeSelection {
         $genomeDescription = "genomes";            
     }
     if ( scalar( @genomeCols ) == 0 ) {
-        webError("No $genomeDescription are selected.");
+        WebUtil::webError("No $genomeDescription are selected.");
         return;
     }
     if ( scalar( @genomeCols ) > $max_profile_select ) {
-        webError("Please limit your selection of $genomeDescription to no more than $max_profile_select.\n");
+        WebUtil::webError("Please limit your selection of $genomeDescription to no more than $max_profile_select.\n");
         return;
     }
 
@@ -664,7 +661,7 @@ sub showGenomeFuncCategoryProfile {
     my $functype = param('functype');
     #print "functype $functype<br/>\n";
     if ( $functype eq "" ) {
-        webError("Please select a function type.\n");
+        WebUtil::webError("Please select a function type.\n");
         return;
     }
 
@@ -697,7 +694,7 @@ sub showGenomeFuncCategoryProfile {
     my @func_ids   = sort ( keys %func_names );
     if ( scalar(@func_ids) == 0 ) {
         printEndWorkingDiv();
-        webError("Incorrect function type.\n");
+        WebUtil::webError("Incorrect function type.\n");
         return;
     }
 
@@ -821,7 +818,7 @@ sub showGenomeFuncSetProfile {
     my $func_set_name = param('func_set_name');
     #print "func_set_name $func_set_name<br/>\n";
     if ( ! $func_set_name ) {
-        webError("Please select a function set.\n");
+        WebUtil::webError("Please select a function set.\n");
         return;
     }
     my ( $func_set_owner, $func_set ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $func_set_name, $ownerFilesetDelim, $FUNC_FOLDER );
@@ -868,7 +865,7 @@ sub showGenomeFuncSetProfile {
 
     if ( scalar(@func_ids) == 0 ) {
         printEndWorkingDiv();
-        webError("No function IDs.\n");
+        WebUtil::webError("No function IDs.\n");
         return;
     }
 
@@ -1192,7 +1189,7 @@ sub findDbAndMetaTaxons {
     else {
         # from file
         open( FH, "$input_file" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
         while ( my $line = <FH> ) {
             chomp($line);
             push(@taxons, $line);
@@ -2118,7 +2115,7 @@ sub printGenomeBlast {
     if ($isSet) {
         my @all_files = WorkspaceUtil::getAllInputFiles($sid, 1);
         if ( scalar(@all_files) == 0 ) {
-            webError("No genome sets are selected.");
+            WebUtil::webError("No genome sets are selected.");
             return;
         }
 
@@ -2127,7 +2124,7 @@ sub printGenomeBlast {
         foreach my $file_set_name (@all_files) {
             my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $file_set_name, $ownerFilesetDelim, $folder );
             open( FH, "$workspace_dir/$owner/$folder/$x" )
-              or webError("File size - file error $x");
+              or WebUtil::webError("File size - file error $x");
 
             my @oids;
             while ( my $line = <FH> ) {
@@ -2159,11 +2156,11 @@ sub validateGenomesForBlast {
     my (@genomes) = @_;
 
     if ( scalar(@genomes) == 0 ) {
-        webError("No genomes or genome sets are selected.");
+        WebUtil::webError("No genomes or genome sets are selected.");
         return;
     }
     if ( scalar(@genomes) > $blast_max_genome ) {
-        webError("The total selection of genomes can not be more than $blast_max_genome (including metagenomes).");
+        WebUtil::webError("The total selection of genomes can not be more than $blast_max_genome (including metagenomes).");
         return;
     }
     require FindGenesBlast;
@@ -2258,11 +2255,11 @@ sub printGenomePairwiseANI {
     if ($isSet) {
         my @all_files = WorkspaceUtil::getAllInputFiles($sid, 1);
         if ( scalar(@all_files) == 0 ) {
-            webError("No genome sets are selected.");
+            WebUtil::webError("No genome sets are selected.");
             return;
         }
         if ( scalar(@all_files) < 2 ) {
-            webError("Please select 2 genome sets.");
+            WebUtil::webError("Please select 2 genome sets.");
             return;
         }
         if ( scalar(@all_files) > 2 ) {
@@ -2285,7 +2282,7 @@ sub printGenomePairwiseANI {
             $cnt++;
             my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $file_set_name, $ownerFilesetDelim, $folder );
             open( FH, "$workspace_dir/$owner/$folder/$x" )
-              or webError("File size - file error $x");
+              or WebUtil::webError("File size - file error $x");
 
             my %genomes_h;
             while ( my $line = <FH> ) {
@@ -2312,14 +2309,14 @@ sub printGenomePairwiseANI {
 
         my @intersection = WebUtil::intersectionOfArrays( \@oids1, \@oids2 );
         if ( scalar(@intersection) > 0 ) {
-            webError("Pairwise ANI cannot compare same genome. There are " . scalar(@intersection) . " genomes in both genome sets.");
+            WebUtil::webError("Pairwise ANI cannot compare same genome. There are " . scalar(@intersection) . " genomes in both genome sets.");
             return;
         }
 
     }
 
     if ( scalar(@oids1) == 0 || scalar(@oids2) == 0 ) {
-        webError("Metagenomes are not supported in ANI.");
+        WebUtil::webError("Metagenomes are not supported in ANI.");
         return;
     }
 
@@ -2365,10 +2362,10 @@ sub submitJob {
         $evalue = WebUtil::checkEvalue($evalue);
         $fasta  = param("fasta");
         if ( blankStr($fasta) ) {
-            webError("Query sequence not specified..");
+            WebUtil::webError("Query sequence not specified..");
         }
         if ( $fasta !~ /[a-zA-Z]+/ ) {
-            webError("Query sequence should have letter characters.");
+            WebUtil::webError("Query sequence should have letter characters.");
         }
         $fastaFileName = "fasta.txt"
     }
@@ -2423,7 +2420,7 @@ sub submitJob {
         }
     }
     if ( !$set_names ) {
-        webError("Please select at least one genome set.");
+        WebUtil::webError("Please select at least one genome set.");
         return;
     }    
     if ( $lcJobPrefix eq 'blast' ) {
@@ -2465,7 +2462,7 @@ sub submitJob {
     print $info_fs currDateTime() . "\n";
     close $info_fs;
 
-    my $queue_dir = $env->{workspace_queue_dir};
+    my $queue_dir = WorkspaceUtil::getQueueDir();
     #print "submitJob() queue_dir=$queue_dir<br/>\n";
     my $queue_filename;
     if ( $lcJobPrefix eq 'blast' ) {

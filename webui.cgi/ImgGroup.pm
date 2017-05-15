@@ -226,7 +226,7 @@ sub showAllGroups {
 
     my %group_role;
     my $dbh = dbLogin();
-    my $sql = "select img_group, role from contact_img_groups\@imgsg_dev where contact_oid = ?";
+    my $sql = "select img_group, role from contact_img_groups where contact_oid = ?";
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
     for (;;) {
 	my ( $group_id, $role ) = $cur->fetchrow();
@@ -237,7 +237,7 @@ sub showAllGroups {
     $cur->finish(); 
 
     my %member_no_h;
-    $sql = "select img_group, count(*) from contact_img_groups\@imgsg_dev group by img_group";
+    $sql = "select img_group, count(*) from contact_img_groups group by img_group";
     $cur = execSql( $dbh, $sql, $verbose );
     for (;;) {
 	my ( $group_id, $cnt ) = $cur->fetchrow();
@@ -252,7 +252,7 @@ sub showAllGroups {
                select distinct g.group_id, g.group_name, 
                       c.contact_oid, c.name,
                       to_char(g.add_date, 'yyyy-mm-dd'), g.comments
-               from contact c, img_group\@imgsg_dev g
+               from contact c, img_group g
                where g.lead = c.contact_oid
                };
 	$cur = execSql( $dbh, $sql, $verbose );
@@ -262,8 +262,8 @@ sub showAllGroups {
                select distinct g.group_id, g.group_name,
                       c.contact_oid, c.name,
                       to_char(g.add_date, 'yyyy-mm-dd'), g.comments
-               from contact c, img_group\@imgsg_dev g,
-                    contact_img_groups\@imgsg_dev cig
+               from contact c, img_group g,
+                    contact_img_groups cig
                where g.lead = c.contact_oid
                and g.group_id = cig.img_group
                and cig.contact_oid = ?
@@ -520,7 +520,7 @@ sub hasAccessToGroupInfo {
     }
 
     my $dbh = dbLogin();
-    my $sql = "select lead from img_group\@imgsg_dev where group_id = ?";
+    my $sql = "select lead from img_group where group_id = ?";
     my $cur = execSql( $dbh, $sql, $verbose, $group_id );
     my ($lead) = $cur->fetchrow();
     $cur->finish();
@@ -561,7 +561,7 @@ sub showGroupDetailSection {
                select g.group_id, g.group_name, 
                       c.contact_oid, c.username, c.name, c.email,
                       to_char(g.add_date, 'yyyy-mm-dd'), g.comments
-               from contact c, img_group\@imgsg_dev g
+               from contact c, img_group g
                where g.group_id = ?
                and g.lead = c.contact_oid
                };
@@ -647,7 +647,7 @@ sub db_updateGroupDesc {
     } 
     $group_desc =~ s/'/''/g;   # replace ' with ''
 
-    my $sql = "update img_group\@imgsg_dev set group_name = '" .
+    my $sql = "update img_group set group_name = '" .
 	$group_name . "', comments = '" . $group_desc .
 	"' where group_id = $group_id";
     my @sqlList = ( $sql );
@@ -684,7 +684,7 @@ sub checkCanUpdateGroup {
     my $dbh = dbLogin();
     my $sql = qq{
                select g.group_id, g.lead
-               from img_group\@imgsg_dev g
+               from img_group g
                where g.group_id = ?
                };
     my $cur = execSql( $dbh, $sql, $verbose, $group_id );
@@ -727,7 +727,7 @@ sub showGroupMemberSection {
                select g.img_group, c.contact_oid, c.username, 
                       c.name, c.email, c.organization,
                       g.role
-               from contact c, contact_img_groups\@imgsg_dev g
+               from contact c, contact_img_groups g
                where g.img_group = ?
                and g.contact_oid = c.contact_oid
                and g.role != 'owner'
@@ -869,7 +869,7 @@ sub showGroupNewsSection {
                select n.group_id, n.news_id, n.title, n.description,
                       c.contact_oid, c.username, c.name,
                       n.add_date, n.is_public
-               from contact c, img_group_news\@imgsg_dev n
+               from contact c, img_group_news n
                where n.group_id = ?
                and n.posted_by = c.contact_oid
                order by 8 desc
@@ -988,8 +988,8 @@ sub showNewsWithId {
                       n.news_id, n.title, n.description,
                       c.contact_oid, c.username, c.name,
                       n.add_date, n.is_public
-               from contact c, img_group\@imgsg_dev g,
-                    img_group_news\@imgsg_dev n
+               from contact c, img_group g,
+                    img_group_news n
                where n.group_id = ?
                and n.posted_by = c.contact_oid
                and n.news_id = ? 
@@ -1010,7 +1010,7 @@ sub showNewsWithId {
     }
     else {
 	# check group permission
-	$sql = "select role from contact_img_groups\@imgsg_dev where img_group = ? and contact_oid = ?";
+	$sql = "select role from contact_img_groups where img_group = ? and contact_oid = ?";
 	$cur = execSql( $dbh, $sql, $verbose, $group_id, $contact_oid );
 	my ($role) = $cur->fetchrow();
 	$cur->finish();
@@ -1060,7 +1060,7 @@ sub canReleaseNews {
     }
 
     my $dbh = dbLogin();
-    my $sql = "select role from contact_img_groups\@imgsg_dev where contact_oid = ? and img_group = ? "; 
+    my $sql = "select role from contact_img_groups where contact_oid = ? and img_group = ? "; 
  
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $group_id );
     my ( $role ) = $cur->fetchrow(); 
@@ -1070,7 +1070,7 @@ sub canReleaseNews {
     }
 
     my $id_str = join(", ", @all_news);
-    $sql = "select count(*) from img_group_news\@imgsg_dev where group_id = ? and posted_by != ? ";
+    $sql = "select count(*) from img_group_news where group_id = ? and posted_by != ? ";
     $cur = execSql( $dbh, $sql, $verbose, $group_id, $contact_oid );
     my ( $cnt ) = $cur->fetchrow(); 
     $cur->finish(); 
@@ -1103,7 +1103,7 @@ sub PrintConfirmDeleteGroupMsg {
 
     my $dbh = dbLogin();
     my $sql = "select g.group_id, g.group_name, g.lead " .
-	"from img_group\@imgsg_dev g " .
+	"from img_group g " .
 	"where g.group_id = ? ";
     my $cur = execSql( $dbh, $sql, $verbose, $group_id );
     my ($g_id2, $group_name, $lead) = $cur->fetchrow();
@@ -1156,7 +1156,7 @@ sub db_deleteImgGroup {
 
     my $sql = qq{
            select lead 
-           from img_group\@imgsg_dev g
+           from img_group g
            where g.group_id = ?
            };
     my $cur = execSql( $dbh, $sql, $verbose, $group_id );
@@ -1169,17 +1169,17 @@ sub db_deleteImgGroup {
     }
 
     my @sqlList = ();
-    $sql = "delete from gene_myimg_groups\@img_ext where group_id = $group_id";
+    $sql = "delete from gene_myimg_groups where group_id = $group_id";
     push @sqlList, ( $sql );
-    $sql = "delete from mygene_img_groups\@img_ext where group_id = $group_id";
+    $sql = "delete from mygene_img_groups where group_id = $group_id";
     push @sqlList, ( $sql );
-    $sql = "delete from img_group_news\@imgsg_dev where group_id = $group_id";
+    $sql = "delete from img_group_news where group_id = $group_id";
     push @sqlList, ( $sql );
-    $sql = "delete from contact_img_groups\@imgsg_dev where img_group = $group_id";
+    $sql = "delete from contact_img_groups where img_group = $group_id";
     push @sqlList, ( $sql );
-    $sql = "delete from contact_workspace_group\@imgsg_dev where group_id = $group_id";
+    $sql = "delete from contact_workspace_group where group_id = $group_id";
     push @sqlList, ( $sql );
-    $sql = "delete from img_group\@imgsg_dev where group_id = $group_id";
+    $sql = "delete from img_group where group_id = $group_id";
     push @sqlList, ( $sql );
 
     my $err = db_sqlTrans( \@sqlList );
@@ -1214,7 +1214,7 @@ sub PrintConfirmWithdrawMsg {
 
     my $dbh = dbLogin();
     my $sql = "select g.group_id, g.group_name " .
-	"from img_group\@imgsg_dev g " .
+	"from img_group g " .
 	"where g.group_id = ? ";
     my $cur = execSql( $dbh, $sql, $verbose, $group_id );
     my ($g_id2, $group_name) = $cur->fetchrow();
@@ -1262,7 +1262,7 @@ sub db_withdrawMembership {
 
     my $sql = qq{
            select lead 
-           from img_group\@imgsg_dev g
+           from img_group g
            where g.group_id = ?
            };
     my $cur = execSql( $dbh, $sql, $verbose, $group_id );
@@ -1275,7 +1275,7 @@ sub db_withdrawMembership {
 
     $sql = qq{
                select role
-               from contact_img_groups\@imgsg_dev g
+               from contact_img_groups g
                where g.contact_oid = ? and g.img_group = ?
                };
     $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $group_id );
@@ -1287,7 +1287,7 @@ sub db_withdrawMembership {
     }
 
     my @sqlList = ();
-    $sql = "delete from contact_img_groups\@imgsg_dev where img_group = $group_id and contact_oid = $contact_oid";
+    $sql = "delete from contact_img_groups where img_group = $group_id and contact_oid = $contact_oid";
     push @sqlList, ( $sql );
 
     my $sql2 = removeMyIMGSharing($group_id, $contact_oid);
@@ -1295,10 +1295,10 @@ sub db_withdrawMembership {
 	push @sqlList, ( $sql2 );
     }
 
-    $sql2 = "delete from contact_workspace_group\@imgsg_dev where group_id = $group_id and contact_oid = $contact_oid";
+    $sql2 = "delete from contact_workspace_group where group_id = $group_id and contact_oid = $contact_oid";
     push @sqlList, ( $sql2 );
 
-    $sql2 = "delete from img_group_news\@imgsg_dev where group_id = $group_id and posted_by = $contact_oid";
+    $sql2 = "delete from img_group_news where group_id = $group_id and posted_by = $contact_oid";
     push @sqlList, ( $sql2 );
 
     my $err = db_sqlTrans( \@sqlList );
@@ -1333,7 +1333,7 @@ sub PrintConfirmDeleteMember {
 
     my $dbh = dbLogin();
     my $sql = "select g.group_id, g.group_name " .
-	"from img_group\@imgsg_dev g " .
+	"from img_group g " .
 	"where g.group_id = ? ";
     my $cur = execSql( $dbh, $sql, $verbose, $group_id );
     my ($g_id2, $group_name) = $cur->fetchrow();
@@ -1350,7 +1350,7 @@ sub PrintConfirmDeleteMember {
 
     for my $m ( @members ) {
 	$sql = "select c.username, c.name, g.role " .
-	    "from contact c, contact_img_groups\@imgsg_dev g " .
+	    "from contact c, contact_img_groups g " .
 	    "where c.contact_oid = g.contact_oid " .
 	    "and c.contact_oid = ? " .
 	    "and g.img_group = ? ";
@@ -1397,7 +1397,7 @@ sub db_deleteMember {
     if ( ! $can_update ) {
 	my $sql = qq{
                select role
-               from contact_img_groups\@imgsg_dev g
+               from contact_img_groups g
                where g.contact_oid = ? and g.img_group = ?
                };
 	my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $group_id );
@@ -1420,7 +1420,7 @@ sub db_deleteMember {
     if ( ! $can_update ) {
 	my $sql = qq{
                select count(*)
-               from contact_img_groups\@imgsg_dev g
+               from contact_img_groups g
                where g.role = 'co-owner' and g.img_group = ?
                };
 	$sql .= " and g.contact_oid in (" . join(",", @members) . ")";
@@ -1435,7 +1435,7 @@ sub db_deleteMember {
 
     my @sqlList = ();
     for my $m ( @members ) {
-	my $sql = "delete from contact_img_groups\@imgsg_dev where img_group = $group_id and contact_oid = $m";
+	my $sql = "delete from contact_img_groups where img_group = $group_id and contact_oid = $m";
 	push @sqlList, ( $sql );
 
 	my $sql2 = removeMyIMGSharing($group_id, $m);
@@ -1443,10 +1443,10 @@ sub db_deleteMember {
 	    push @sqlList, ( $sql2 );
 	}
 
-	$sql2 = "delete from contact_workspace_group\@imgsg_dev where group_id = $group_id and contact_oid = $m";
+	$sql2 = "delete from contact_workspace_group where group_id = $group_id and contact_oid = $m";
 	push @sqlList, ( $sql2 );
 
-	$sql2 = "delete from img_group_news\@imgsg_dev where group_id = $group_id and posted_by = $m";
+	$sql2 = "delete from img_group_news where group_id = $group_id and posted_by = $m";
 	push @sqlList, ( $sql2 );
     }
 
@@ -1470,7 +1470,7 @@ sub removeMyIMGSharing {
 	return "";
     }
 
-    my $sql = "delete from gene_myimg_groups\@img_ext where group_id = $group_id and contact_oid = $contact_id";
+    my $sql = "delete from gene_myimg_groups where group_id = $group_id and contact_oid = $contact_id";
 
     return $sql;
 }
@@ -1507,7 +1507,7 @@ sub db_updateMemberRole {
     }
     my @sqlList = ();
     for my $m ( @members ) {
-	my $sql = "update contact_img_groups\@imgsg_dev set role = '$new_role' where img_group = $group_id and contact_oid = $m";
+	my $sql = "update contact_img_groups set role = '$new_role' where img_group = $group_id and contact_oid = $m";
 	push @sqlList, ( $sql );
     }
 
@@ -1534,7 +1534,7 @@ sub db_postNews {
     my $contact_oid = WebUtil::getContactOid();
     my $sql = qq{
                select role
-               from contact_img_groups\@imgsg_dev g
+               from contact_img_groups g
                where g.contact_oid = ? and g.img_group = ?
                };
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $group_id );
@@ -1562,7 +1562,7 @@ sub db_postNews {
 	$news_public = 'No';
     }
 
-    $sql = "select max(news_id) from img_group_news\@imgsg_dev";
+    $sql = "select max(news_id) from img_group_news";
     $cur = execSql( $dbh, $sql, $verbose );
     my ($news_id) = $cur->fetchrow();
     $cur->finish();
@@ -1574,7 +1574,7 @@ sub db_postNews {
     }
 
     my @sqlList = ();
-    my $sql2 = "insert into img_group_news\@imgsg_dev " .
+    my $sql2 = "insert into img_group_news " .
 	"(group_id, news_id, title, description, posted_by, " .
 	"add_date, is_public) values ($group_id, $news_id, '" .
 	$news_title . "', '" . $news_desc . "', $contact_oid, " .
@@ -1615,7 +1615,7 @@ sub db_releaseNews {
 
     my $contact_oid = WebUtil::getContactOid();
     my @sqlList = ();
-    my $sql2 = "update img_group_news\@imgsg_dev " .
+    my $sql2 = "update img_group_news " .
 	"set is_public = 'Yes', released_by = $contact_oid, " .
 	"release_date = sysdate " .
 	"where group_id = $group_id and is_public = 'No' " .
@@ -1655,7 +1655,7 @@ sub db_makePrivateNews {
 
     my $contact_oid = WebUtil::getContactOid();
     my @sqlList = ();
-    my $sql2 = "update img_group_news\@imgsg_dev " .
+    my $sql2 = "update img_group_news " .
 	"set is_public = 'No', released_by = $contact_oid, " .
 	"release_date = sysdate " .
 	"where group_id = $group_id and is_public = 'Yes' " .
@@ -1695,7 +1695,7 @@ sub db_deleteNews {
 
     my $contact_oid = WebUtil::getContactOid();
     my @sqlList = ();
-    my $sql2 = "delete from img_group_news\@imgsg_dev " .
+    my $sql2 = "delete from img_group_news " .
 	"where group_id = $group_id and news_id in ( $id_list ) ";
     push @sqlList, ( $sql2 );
 
@@ -1725,7 +1725,7 @@ sub db_addMember {
     if ( ! $can_update ) {
 	my $sql = qq{
                select role
-               from contact_img_groups\@imgsg_dev g
+               from contact_img_groups g
                where g.contact_oid = ? and g.img_group = ?
                };
 	my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $group_id );
@@ -1749,11 +1749,11 @@ sub db_addMember {
 
     my $sql = qq{
                select g.group_id, g.lead, 'owner'
-               from img_group\@imgsg_dev g
+               from img_group g
                where g.group_id = ?
                union
                select cig.img_group, cig.contact_oid, cig.role
-               from contact_img_groups\@imgsg_dev cig
+               from contact_img_groups cig
                where cig.img_group = ?
                };
     my $cur = execSql( $dbh, $sql, $verbose, $group_id, $group_id );
@@ -1780,7 +1780,7 @@ sub db_addMember {
 	    return "User $m is already a member of this group.";
 	}
 
-	my $sql = "insert into contact_img_groups\@imgsg_dev (contact_oid, img_group, role) values ($c2_oid, $group_id, 'member')";
+	my $sql = "insert into contact_img_groups (contact_oid, img_group, role) values ($c2_oid, $group_id, 'member')";
 	push @sqlList, ( $sql );
     }
 
@@ -1825,7 +1825,7 @@ sub shareGenomesWithMembers {
     my $dbh = dbLogin();
     my $sql = qq{
                select role
-               from contact_img_groups\@imgsg_dev g
+               from contact_img_groups g
                where g.contact_oid = ? and g.img_group = ?
                };
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $group_id );
@@ -1914,7 +1914,7 @@ sub shareGenomesWithMembers {
 		    $my_email = "error: no email";
 		}
 		$sql = "select gold_id, role " .
-		    "from gold_analysis_project_users\@imgsg_dev " .
+		    "from gold_analysis_project_users " .
 		    "where gold_id = ? " .
 		    "and (lower(email) = ? " .
 		    "or caliban_id = ? ) ";
@@ -2056,7 +2056,7 @@ sub db_addNewGroup {
 
     ## check existing group name
     my $dbh = dbLogin();
-    my $sql = "select group_id from img_group\@imgsg_dev where lower(group_name) = ?";
+    my $sql = "select group_id from img_group where lower(group_name) = ?";
     my $cur = execSql( $dbh, $sql, $verbose, lc($group_name) );
     my ($id2) = $cur->fetchrow();
     $cur->finish();
@@ -2081,7 +2081,7 @@ sub db_addNewGroup {
 	$lead_contact = $contact_oid;
     }
 
-    my $sql = "select max(group_id) from img_group\@imgsg_dev";
+    my $sql = "select max(group_id) from img_group";
     my $cur = execSql( $dbh, $sql, $verbose );
     my ($group_id) = $cur->fetchrow();
     $cur->finish();
@@ -2092,11 +2092,11 @@ sub db_addNewGroup {
 	$group_id++;
     }
 
-    my $sql = "insert into img_group\@imgsg_dev (group_id, group_name, " .
+    my $sql = "insert into img_group (group_id, group_name, " .
 	"lead, add_date, comments) values ($group_id, '" .
 	$group_name . "', $lead_contact, sysdate, '" . $group_desc . "')";
     my @sqlList = ( $sql );
-    $sql = "insert into contact_img_groups\@imgsg_dev " .
+    $sql = "insert into contact_img_groups " .
 	"(contact_oid, img_group, role) " .
 	"values ($lead_contact, $group_id, 'owner')";
     push @sqlList, ( $sql );

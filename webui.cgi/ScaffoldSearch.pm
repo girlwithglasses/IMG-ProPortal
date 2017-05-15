@@ -1,7 +1,7 @@
 #
 #
 #
-# $Id: ScaffoldSearch.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: ScaffoldSearch.pm 36954 2017-04-17 19:34:04Z klchu $
 
 package ScaffoldSearch;
 use POSIX qw(ceil floor); 
@@ -80,7 +80,7 @@ sub dispatch {
 sub notBlankAndInt {
     my ( $name, $x ) = @_;
     if ( !blankStr($x) && !isInt($x) ) {
-        webError("$name must be a integer.");
+        WebUtil::webError("$name must be a integer.");
     }
 }
 
@@ -90,15 +90,15 @@ sub pairCheck {
     if ( blankStr($low) && blankStr($high) ) {
         return;
     } elsif ( !blankStr($low) && blankStr($high) ) {
-        webError("$name high value cannot be empty.");
+        WebUtil::webError("$name high value cannot be empty.");
     } elsif ( blankStr($low) && !blankStr($high) ) {
-        webError("$name low value cannot be empty.");
+        WebUtil::webError("$name low value cannot be empty.");
     } elsif ( $low > $high ) {
-        webError("$name low value cannot be greater than the high value.");
+        WebUtil::webError("$name low value cannot be greater than the high value.");
     } elsif ( $low < 0 ) {
-        webError("$name low value cannot be less than zero.");
+        WebUtil::webError("$name low value cannot be less than zero.");
     } elsif ( $high < 0 ) {
-        webError("$name high value cannot be less than zero.");
+        WebUtil::webError("$name high value cannot be less than zero.");
     }
 }
 
@@ -175,7 +175,7 @@ sub printResults {
         my $data_type     = param('q_data_type');
 
         if ( $#taxonOids < 0 ) {
-            webError("Please select at least one genome");
+            WebUtil::webError("Please select at least one genome");
         }
 
         my $gcLow         = param('gcLow');
@@ -216,7 +216,7 @@ sub printResults {
             && $genus   eq 'none'
             && $species eq 'none' )
         {
-            webError("Please set a search criteria.");
+            WebUtil::webError("Please set a search criteria.");
         }
     
         # param pre checks
@@ -994,7 +994,7 @@ sub processStatPramSearchResults {
              && $genus   eq 'none'
              && $species eq 'none' )
         {
-            webError("Please set a search criteria for MER-FS metagenome(s).");
+            WebUtil::webError("Please set a search criteria for MER-FS metagenome(s).");
         }
     }
     
@@ -1008,7 +1008,7 @@ sub processStatPramSearchResults {
              && blankStr($readDepthLow)
              && blankStr($readDepthHigh) )
         {
-            webError("Please set a search criteria for genomes.");
+            WebUtil::webError("Please set a search criteria for genomes.");
         }
     }
 

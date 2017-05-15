@@ -6,7 +6,7 @@
 #     1: func_name
 #     2: batch_id
 #    --es 01/06/2007
-# $Id: FuncCartStor.pm 36615 2017-03-01 19:56:28Z klchu $
+# $Id: FuncCartStor.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package FuncCartStor;
 my $section = "FuncCartStor";
@@ -1009,7 +1009,7 @@ sub webRemoveFuncs {
     my $recs     = $self->{recs};
     my $selected = $self->{selected};
     if ( scalar(@func_ids) == 0 ) {
-        webError("No functions have been selected.");
+        WebUtil::webError("No functions have been selected.");
         return;
     }
     for my $func_id (@func_ids) {
@@ -1498,7 +1498,7 @@ sub printFuncCartProfile_s {
     my $nFuncs = scalar(@func_ids);
     if ( $nFuncs == 0 ) {
         # 1000 limit remove?
-        webError("Please select at least 1 function.");
+        WebUtil::webError("Please select at least 1 function.");
     }
 
     my @taxon_oids = OracleUtil::processTaxonBinOids("t");
@@ -1513,7 +1513,7 @@ sub printFuncCartProfile_s {
     my @bin_oids    = OracleUtil::processTaxonBinOids("b");
     my $nSelections = scalar(@taxon_oids) + scalar(@bin_oids);
     if ( $nSelections == 0 || $nSelections > $max_genome_selections ) {
-        webError("Please select 1 to $max_genome_selections genome(s).");
+        WebUtil::webError("Please select 1 to $max_genome_selections genome(s).");
     }
 
     print "<p>";
@@ -1549,7 +1549,7 @@ sub printFuncCartProfile_s {
          && scalar(@$plist_ids_ref) <= 0
          && ( scalar(@$unrecognized_ids_ref) > 0 || scalar(@$unsurported_func_ids_ref) ) > 0 )
     {
-        webError("Unspported (such as GO and Interpro) or unrecognized functions in Function Profile.");
+        WebUtil::webError("Unspported (such as GO and Interpro) or unrecognized functions in Function Profile.");
     }
 
     if ( scalar(@$unsurported_func_ids_ref) > 0 ) {
@@ -2020,7 +2020,7 @@ sub printFuncCartProfile_t {
     #print "printFuncCartProfile_t() func_ids: @func_ids<br/>\n";
     my $nFuncs   = scalar(@func_ids);
     if ( scalar(@func_ids) == 0 || scalar(@func_ids) > $max_func_batch ) {
-        webError("Please select 1 to $max_func_batch functions.");
+        WebUtil::webError("Please select 1 to $max_func_batch functions.");
     }
 
     my @taxon_oids = OracleUtil::processTaxonBinOids("t");
@@ -2034,7 +2034,7 @@ sub printFuncCartProfile_t {
     my @bin_oids    = OracleUtil::processTaxonBinOids("b");
     my $nSelections = scalar(@taxon_oids) + scalar(@bin_oids);
     if ( $nSelections == 0 || $nSelections > $max_genome_selections ) {
-        webError("Please select 1 to $max_genome_selections genome(s).");
+        WebUtil::webError("Please select 1 to $max_genome_selections genome(s).");
     }
 
     my @taxon_bin_oids;
@@ -2078,7 +2078,7 @@ sub printFuncCartProfile_t {
          && scalar(@$plist_ids_ref) <= 0
          && ( scalar(@$unrecognized_ids_ref) > 0 || scalar(@$unsurported_func_ids_ref) ) > 0 )
     {
-        webError("Unspported (such as GO and Interpro) or unrecognized functions in Function Profile.");
+        WebUtil::webError("Unspported (such as GO and Interpro) or unrecognized functions in Function Profile.");
     }
 
     if ( scalar(@$unsurported_func_ids_ref) > 0 ) {
@@ -2585,13 +2585,13 @@ sub printPhyloOccurProfiles {
     }
     @taxon_oids = QueryUtil::fetchTaxonsOfDomainABE($dbh, \@taxon_oids);
     if ( scalar(@taxon_oids) == 0 ) {
-        webError("Please select at lease 1 genome(s) that belong to Archaea, Bacteria or Eukarya.");
+        WebUtil::webError("Please select at lease 1 genome(s) that belong to Archaea, Bacteria or Eukarya.");
     }
 
     my @func_ids = param("func_id");
     @func_ids = removeDuplicate(@func_ids);
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select at least one function.");
+        WebUtil::webError("Please select at least one function.");
     }
 
     my (
@@ -2616,7 +2616,7 @@ sub printPhyloOccurProfiles {
          && scalar(@$plist_ids_ref) <= 0
          && ( scalar(@$unrecognized_ids_ref) > 0 || scalar(@$unsurported_func_ids_ref) ) > 0 )
     {
-        webError("Unspported (such as GO and Interpro) or unrecognized functions in Phylogenetic Occurrence Profile.");
+        WebUtil::webError("Unspported (such as GO and Interpro) or unrecognized functions in Phylogenetic Occurrence Profile.");
     }
 
     if ( scalar(@$unsurported_func_ids_ref) > 0 ) {
@@ -2629,7 +2629,7 @@ sub printPhyloOccurProfiles {
 
     if ( ( scalar(@func_ids) - scalar(@$unsurported_func_ids_ref) - scalar(@$unrecognized_ids_ref) ) > $maxProfileOccurIds )
     {
-        webError("Please select no more than $maxProfileOccurIds functions.");
+        WebUtil::webError("Please select no more than $maxProfileOccurIds functions.");
     }
 
     ### Load ID information
@@ -2754,7 +2754,7 @@ sub execPhyloOccurProfileSql {
             my $symbId = "$symbToAdd$id";
             my $rh     = $idRecsH_ref->{$symbId};
             if ( !defined($rh) ) {
-                webDie("printPhyloOccurProfiles: cannot find '$symbId'\n");
+                WebUtil::webDie("printPhyloOccurProfiles: cannot find '$symbId'\n");
             }
             my $taxonOidHash = $rh->{taxonOidHash};
             $taxonOidHash->{$taxon} = 1;
@@ -2777,7 +2777,6 @@ sub printExportFuncCart {
     #     webLog(" ======= " . @func_ids  . "\n");
 
     if ( scalar(@func_ids) == 0 ) {
-        #main::printAppHeader();
         WebUtil::webErrorHeader("You must select at least one function to export.");
     }
     my %func_ids_h = WebUtil::array2Hash(@func_ids);
@@ -2809,7 +2808,7 @@ sub uploadFuncCart {
     require MyIMG;
     if ( !MyIMG::uploadIdsFromFile( "func_id,Function ID", \@func_ids, \$errMsg ) ) {
         printStatusLine( "Error.", 2 );
-        webError($errMsg);
+        WebUtil::webError($errMsg);
     }
 
     $self->addFuncBatch( \@func_ids );
@@ -2884,7 +2883,7 @@ sub printPwayAssertionProfile_s {
     my $nSelections = scalar(@taxon_oids) + scalar(@bin_oids);
     my $nTaxons     = @taxon_oids;
     if ( $nTaxons == 0 || $nTaxons > $max_taxon_batch ) {
-        webError("Please select 1 to $max_taxon_batch genomes.");
+        WebUtil::webError("Please select 1 to $max_taxon_batch genomes.");
     }
 
     $self->{selected} = {};
@@ -2901,7 +2900,7 @@ sub printPwayAssertionProfile_s {
     $self->save();
     my $nPwayOids = @pathway_oids;
     if ( $nPwayOids == 0 || $nPwayOids > $max_func_batch ) {
-        webError("Please select 1 to $max_func_batch IMG pathways.");
+        WebUtil::webError("Please select 1 to $max_func_batch IMG pathways.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -3085,7 +3084,7 @@ sub printPwayAssertionProfile_t {
     my $nSelections = scalar(@taxon_oids) + scalar(@bin_oids);
     my $nTaxons     = @taxon_oids;
     if ( $nTaxons == 0 || $nTaxons > $max_taxon_batch ) {
-        webError("Please select 1 to $max_taxon_batch genomes.");
+        WebUtil::webError("Please select 1 to $max_taxon_batch genomes.");
     }
 
     $self->{selected} = {};
@@ -3102,7 +3101,7 @@ sub printPwayAssertionProfile_t {
     $self->save();
     my $nPwayOids = @pathway_oids;
     if ( $nPwayOids == 0 || $nPwayOids > $max_func_batch ) {
-        webError("Please select 1 to $max_func_batch IMG pathways.");
+        WebUtil::webError("Please select 1 to $max_func_batch IMG pathways.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -3318,27 +3317,27 @@ sub printAllGenes {
         $rowIds_ref     = $fp->{colIds};
         $data_type_f    = $fp->{data_type};
     } else {
-        webDie("printAllGenes: unknown profileClass='$profileClass'\n");
+        WebUtil::webDie("printAllGenes: unknown profileClass='$profileClass'\n");
     }
 
     if (    ( $taxon_oids_ref eq '' || scalar(@$taxon_oids_ref) <= 0 )
          && ( $bin_oids_ref eq '' || scalar(@$bin_oids_ref) <= 0 ) )
     {
-        webError("No taxons or bins.\n");
+        WebUtil::webError("No taxons or bins.\n");
     }
     if ( $rowIds_ref eq '' && scalar(@$rowIds_ref) <= 0 ) {
-        webError("No functions.\n");
+        WebUtil::webError("No functions.\n");
     }
 
     ## Deal with Oracle 1000 limit in "in" clause.
     if ( scalar(@$taxon_oids_ref) > 1000 ) {
-        webError("Unsupported: Oracle SQL limit. Too many taxons\n");
+        WebUtil::webError("Unsupported: Oracle SQL limit. Too many taxons\n");
     }
     if ( scalar(@$bin_oids_ref) > 1000 ) {
-        webError("Unsupported: Oracle SQL limit. Too many bins\n");
+        WebUtil::webError("Unsupported: Oracle SQL limit. Too many bins\n");
     }
     if ( $rowIds_ref ne '' && scalar(@$rowIds_ref) > 1000 ) {
-        webError("Unsupported: Oracle SQL limit. Too many functions\n");
+        WebUtil::webError("Unsupported: Oracle SQL limit. Too many functions\n");
     }
 
     print "<h1>All Genes</h1>\n";

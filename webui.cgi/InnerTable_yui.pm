@@ -61,7 +61,7 @@
 #           and descending, the sort direction specfied here will be sort
 #           the first time that column heading is clicked to be sorted.
 #
-# $Id: InnerTable_yui.pm 34655 2015-11-09 21:07:43Z klchu $
+# $Id: InnerTable_yui.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package InnerTable;
 use strict;
@@ -76,6 +76,8 @@ use StaticInnerTable;
 
 my $env         = getEnv( );
 my $main_cgi    = $env->{ main_cgi };
+my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
+my $cgi_dir     = $env->{ cgi_dir };
 my $verbose     = $env->{ verbose };
 my $cgi_url     = $env->{ cgi_url };
 my $YUI         = $env->{yui_dir_28};     #get local path to YUI libraries
@@ -89,15 +91,6 @@ my $yui_headerfile = "datatable_header.html";
 my $datatable_htmlfile = "datatable.html";  # must be prepended with $base_dir
 my $rowsPerPage = 100;                            # default rows per page
 
-my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
-my $yui_dir;
-
-#my $dir = WebUtil::getSessionDir();
-#$dir .= "/yui";
-#if ( !(-e "$dir") ) {
-#    mkdir "$dir" or webError("Can not make $dir!");
-#}
-#$cgi_tmp_dir = $dir;
 
 ############################################################################
 # new - new instance.
@@ -123,11 +116,6 @@ sub new {
    my $self = { };
    bless( $self, $myType );
    $self->{ id } = $id;
-
-	$yui_dir = WebUtil::getSessionDir() . '/yui';
-	if ( ! -e $yui_dir ) {
-		mkdir $yui_dir or webError("Can not make $yui_dir: $!");
-	}
 
    my $stateFile = $self->getStateFile( );
    wunlink( $stateFile ) if $clobberCache;
@@ -160,7 +148,18 @@ sub new {
    }
 
    bless( $self, $myType );
-   return $self;
+   
+   
+       
+    my $dir = WebUtil::getSessionDir();
+    $dir .= "/yui";
+    if ( !(-e "$dir") ) {
+        mkdir "$dir" or die("Can not make $dir!");
+    }
+    $cgi_tmp_dir = $dir;
+   
+   
+    return $self;
 }
 
 ############################################################################
@@ -170,7 +169,7 @@ sub getStateFile {
     my( $self ) = @_;
     my $id = $self->{ id };
     my $sessionId = getSessionId( );
-    my $stateFile = "$yui_dir/$id.$sessionId.stor";
+    my $stateFile = "$cgi_tmp_dir/$id.$sessionId.stor";
     return $stateFile;
 }
 
@@ -390,7 +389,7 @@ sub printOuterTable {
 
    my $nCols = @$colSpec;
    if( $nCols == 0 ) {
-       webError( "Table unavailable. Please refresh the whole page." );
+       WebUtil::webError( "Table unavailable. Please refresh the whole page." );
        webLog "printOuterTable: Missing Colspec\n" if $verbose >= 1;
        return;
    }
@@ -529,7 +528,7 @@ sub printOuterTable {
 
    # check if YUI headers are already on this HTML page
    my $sessionId = getSessionId( );
-   my $yuiStatFile = "$yui_dir/" . $$ . $sessionId; #uniquely identifies an HTML page instance
+   my $yuiStatFile = "$cgi_tmp_dir/" . $$ . $sessionId; #uniquely identifies an HTML page instance
 
    # block loading of datatable.css because it has been loaded earlier on the same page.
    if ( $blockDatatableCss eq 1 ) {
@@ -649,7 +648,7 @@ sub str2TempFile {
     my $file = "yui_dt_" . $hr.$min.$sec.$msec . "_" . $$ . "_" . substr($sid,0,10);
 
     $file = WebUtil::checkFileName($file);
-    my $path = "$yui_dir/$file";
+    my $path = "$cgi_tmp_dir/$file";
 
     str2File ($str, $path);
     webLog "Created YUI Datatable temp file: '$path'" . currDateTime( ) . "\n" if $verbose >= 1;

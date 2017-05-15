@@ -1,6 +1,6 @@
 ############################################################################
 # RNAStudies.pm - displays rna expression data
-# $Id: RNAStudies.pm 35781 2016-06-15 23:37:33Z aratner $
+# $Id: RNAStudies.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package RNAStudies;
 my $section = "RNAStudies";
@@ -74,6 +74,13 @@ sub getAppHeaderData {
         @a = ("RNAStudies", '', '', '', '', "RNAStudies.pdf");
     }
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
 }
 
 sub dispatch {
@@ -204,8 +211,8 @@ sub printOverview {
         select distinct gs.study_name, tx.domain, dts.dataset_type,
                count(distinct dts.reference_taxon_oid),
                count(dts.gold_id)
-        from rnaseq_dataset dts, gold_study\@imgsg_dev gs,
-             gold_sp_study_gold_id\@imgsg_dev gssg, taxon tx
+        from rnaseq_dataset dts, gold_study gs,
+             gold_sp_study_gold_id gssg, taxon tx
         where dts.gold_id = gssg.gold_id
         and gssg.study_gold_id = gs.gold_id
         and dts.reference_taxon_oid = tx.taxon_oid
@@ -284,7 +291,7 @@ sub printOverview {
                tx.taxon_display_name, tx.domain,
                count(dts.gold_id)
         from rnaseq_dataset dts, taxon tx,
-             gold_sp_study_gold_id\@imgsg_dev gssg
+             gold_sp_study_gold_id gssg
         where dts.gold_id = gssg.gold_id
         and dts.reference_taxon_oid = tx.taxon_oid
         $rclause
@@ -369,8 +376,8 @@ sub printGenomesForProposal {
                to_char(tx.mod_date, 'yyyy-mm-dd'),
                tx.is_public, tx.seq_center,
                count(distinct dts.gold_id)
-        from rnaseq_dataset dts, gold_study\@imgsg_dev gs,
-             gold_sp_study_gold_id\@imgsg_dev gssg, taxon tx
+        from rnaseq_dataset dts, gold_study gs,
+             gold_sp_study_gold_id gssg, taxon tx
         where dts.gold_id = gssg.gold_id
         and gssg.study_gold_id = gs.gold_id
         and dts.reference_taxon_oid = tx.taxon_oid
@@ -438,9 +445,9 @@ sub printSamplesForProposal {
         select distinct dts.gold_id, gsp.display_name, dts.dataset_oid,
                dts.reference_taxon_oid, tx.taxon_display_name,
                tx.in_file, tx.genome_type
-        from rnaseq_dataset dts, taxon tx, gold_study\@imgsg_dev gs,
-             gold_sp_study_gold_id\@imgsg_dev gssg,
-             gold_sequencing_project\@imgsg_dev gsp
+        from rnaseq_dataset dts, taxon tx, gold_study gs,
+             gold_sp_study_gold_id gssg,
+             gold_sequencing_project gsp
         where dts.gold_id = gssg.gold_id
         and gssg.study_gold_id = gs.gold_id
         and dts.gold_id = gsp.gold_id
@@ -1298,7 +1305,7 @@ sub printDataForSample {
                dts.reference_taxon_oid, tx.taxon_display_name,
                tx.genome_type, tx.in_file
         from rnaseq_dataset dts, taxon tx,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.dataset_oid = ?
         and dts.gold_id = gsp.gold_id
         and dts.reference_taxon_oid = tx.taxon_oid
@@ -1458,7 +1465,7 @@ sub printDataForSample {
 
         if ( !$total || $total == 0 ) {
             printStatusLine( "no data", 2 );
-            webError("No data was found for dataset $sample.");
+            WebUtil::webError("No data was found for dataset $sample.");
         }
 
         my $sql = qq{
@@ -1708,7 +1715,7 @@ sub normalizeData {
     WebUtil::resetEnvPath();
 
     if ($st != 0) {
-        webError( "Problem running R script: $program." );
+        WebUtil::webError( "Problem running R script: $program." );
     }
     my $rfh = newReadFileHandle
         ( $tmpOutputFile, "readNormalizationResults" );
@@ -1855,9 +1862,9 @@ sub printStudiesForGenome {
     my $sql = qq{
         select distinct gs.study_name, dts.gold_id,
                gsp.display_name, dts.dataset_oid
-        from rnaseq_dataset dts, taxon tx, gold_study\@imgsg_dev gs,
-             gold_sp_study_gold_id\@imgsg_dev gssg,
-             gold_sequencing_project\@imgsg_dev gsp
+        from rnaseq_dataset dts, taxon tx, gold_study gs,
+             gold_sp_study_gold_id gssg,
+             gold_sequencing_project gsp
         where dts.gold_id = gssg.gold_id
         and gssg.study_gold_id = gs.gold_id
         and dts.gold_id = gsp.gold_id
@@ -2150,7 +2157,7 @@ sub printInfoForGene {
     my $sql = qq{
         select distinct dts.dataset_oid, dts.gold_id, gsp.display_name
         from rnaseq_dataset dts,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.gold_id = gsp.gold_id
         and dts.reference_taxon_oid = ?
         $datasetClause
@@ -2248,7 +2255,7 @@ sub printSelectOneSample {
     my $sql = qq{
         select distinct dts.dataset_oid, dts.gold_id, gsp.display_name
         from rnaseq_dataset dts,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.gold_id = gsp.gold_id
         and dts.reference_taxon_oid = ?
         $datasetClause
@@ -2309,7 +2316,7 @@ sub doSpearman {
     webLog "SPEARMAN: $sample1 $sample2 $taxon_oid";
 
     if ($nSamples < 2) {
-        webError( "Please select 2 samples." );
+        WebUtil::webError( "Please select 2 samples." );
     }
 
     printStartWorkingDiv();
@@ -2364,7 +2371,7 @@ sub doSpearman {
 	if (!(-e $wig_dir0)) {
 	    print "<br/>$wig_dir0";
 	}
-	webError( "Could not find the necessary files for $taxon_oid" );
+	WebUtil::webError( "Could not find the necessary files for $taxon_oid" );
     }
 
     # to prevent Perl -Taint error
@@ -2404,7 +2411,7 @@ sub doSpearman {
     }
 
     if (!(-e $tmp_out_file)) {
-	webError( "Cannot find the output file." );
+	WebUtil::webError( "Cannot find the output file." );
     }
     my $rfh = newReadFileHandle( $tmp_out_file, "doSpearman" );
     my $count = 0;
@@ -2616,7 +2623,7 @@ sub doRegression {
     webLog "LINEAR REGRESSION: $sample1 $sample2 $taxon_oid";
 
     if ($nSamples < 2) {
-        webError( "Please select 2 samples." );
+        WebUtil::webError( "Please select 2 samples." );
     }
 
     @sample_oids = ( $sample1, $sample2 ); # more could be selected in ui
@@ -2663,7 +2670,7 @@ sub doRegression {
 
     if ($st != 0) {
 	printEndWorkingDiv();
-        webError( "Problem running R script: $program." );
+        WebUtil::webError( "Problem running R script: $program." );
     }
 
     print "Done computing r-squared.<br/>";
@@ -2985,7 +2992,7 @@ sub printCompareSamples {
     my $genome_type = param("genome_type");
 
     if ($nSamples < 2) {
-        webError( "Please select 2 samples." );
+        WebUtil::webError( "Please select 2 samples." );
     }
 
     my $reference = param( "reference" );
@@ -3263,7 +3270,7 @@ sub printExpressionByFunction {
 
     if ($pairwise ne "") {
         if ($nSamples < 2) {
-            webError( "Please select 2 samples." );
+            WebUtil::webError( "Please select 2 samples." );
         }
         my @samples = (@sample_oids[0], @sample_oids[1]);
         my $reference = param( "reference" );
@@ -3277,7 +3284,7 @@ sub printExpressionByFunction {
         $normalization = "coverage";
     }
     if ($nSamples < 1) {
-	webError( "Please select at least 1 sample." );
+	WebUtil::webError( "Please select at least 1 sample." );
     }
 
     my $cart_genes = param("describe_cart_genes");
@@ -3288,7 +3295,7 @@ sub printExpressionByFunction {
         my $recs = $gc->readCartFile(); # get records
         @cart_gene_oids = sort { $a <=> $b } keys(%$recs);
         if (scalar @cart_gene_oids < 1) {
-            webError( "Your Gene Cart is empty." );
+            WebUtil::webError( "Your Gene Cart is empty." );
         }
     }
 
@@ -3984,7 +3991,7 @@ sub printGeneGroup {
         select dts.gold_id, gsp.display_name,
                tx.taxon_display_name, tx.genome_type, tx.in_file
         from rnaseq_dataset dts, taxon tx,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.gold_id = gsp.gold_id
         and dts.dataset_oid = ?
         and dts.reference_taxon_oid = ?
@@ -4261,11 +4268,11 @@ sub printDescribeSamples {
     my $showall = 0;
     if ($type eq "describe_clustered") {
 	if ($nSamples < 3) {
-	    webError( "Please select at least 3 samples." );
+	    WebUtil::webError( "Please select at least 3 samples." );
 	}
     } else {
 	if ($nSamples < 1) {
-	    webError( "Please select at least 1 sample." );
+	    WebUtil::webError( "Please select at least 1 sample." );
 	}
 	$showall = 1 if $nSamples < 3; # no need to check
     }
@@ -4278,7 +4285,7 @@ sub printDescribeSamples {
 	my $recs = $gc->readCartFile(); # get records
 	@cart_gene_oids = sort { $a <=> $b } keys(%$recs);
 	if (scalar @cart_gene_oids < 1) {
-	    webError( "Your Gene Cart is empty." );
+	    WebUtil::webError( "Your Gene Cart is empty." );
 	}
     }
 
@@ -4297,7 +4304,7 @@ sub printDescribeSamples {
                gsp.display_name, dts.reference_taxon_oid,
                tx.taxon_display_name, tx.in_file, tx.genome_type
         from rnaseq_dataset dts, taxon tx,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.dataset_oid in ($sample_oid_str)
         and dts.gold_id = gsp.gold_id
         and dts.reference_taxon_oid = tx.taxon_oid
@@ -4483,7 +4490,7 @@ sub printDescribeSamples {
 
 	if ($st != 0) {
 	    printEndWorkingDiv();
-	    webError( "Problem running R script: $program." );
+	    WebUtil::webError( "Problem running R script: $program." );
 	}
 
 	$tmpOutputFileName = "cluster$$.groups.txt";
@@ -5059,7 +5066,7 @@ sub makeProfileFile {
         select distinct dts.dataset_oid, dts.gold_id, gsp.display_name,
                dts.reference_taxon_oid, tx.genome_type
         from rnaseq_dataset dts, taxon tx,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.dataset_oid in ($sample_oid_str)
         and dts.gold_id = gsp.gold_id
         and dts.reference_taxon_oid = tx.taxon_oid
@@ -5212,7 +5219,7 @@ sub makeProfileFile {
     if (scalar @gids == 0 && scalar @cart_gene_oids > 0) {
 	printEndWorkingDiv();
 	#$dbh->disconnect();
-	webError("Genes in gene cart are not found in this study.");
+	WebUtil::webError("Genes in gene cart are not found in this study.");
     }
     foreach my $i( @gids ) {
         if (!$show_all && $template{ $i } < $min_abundance) { next; }
@@ -5221,8 +5228,8 @@ sub makeProfileFile {
     if (scalar keys( %template2 ) == 0) {
 	printEndWorkingDiv();
 	#$dbh->disconnect();
-	webError("No genes found in this sample.") if $nSamples == 1;
-	webError("No gene in this study appears (has reads) in $min_abundance samples.");
+	WebUtil::webError("No genes found in this sample.") if $nSamples == 1;
+	WebUtil::webError("No gene in this study appears (has reads) in $min_abundance samples.");
     }
 
     ## Normalized values
@@ -5379,7 +5386,7 @@ sub printPathwaysForSample {
     my $normalization = "coverage";
 
     if ($nSamples < 1) {
-        webError( "Please select 1 sample." );
+        WebUtil::webError( "Please select 1 sample." );
     }
 
     printStatusLine("Loading ...", 1);
@@ -5398,7 +5405,7 @@ sub printPathwaysForSample {
         $cur->finish();
     }
     if ( $taxon_oid eq "" ) {
-        webDie("printPathwaysForSample: taxon_oid not specified");
+        WebUtil::webDie("printPathwaysForSample: taxon_oid not specified");
     }
 
     my $cart_genes = param("describe_cart_genes");
@@ -5409,7 +5416,7 @@ sub printPathwaysForSample {
         my $recs = $gc->readCartFile(); # get records
         @cart_gene_oids = sort { $a <=> $b } keys(%$recs);
         if (scalar @cart_gene_oids < 1) {
-            webError( "Your Gene Cart is empty." );
+            WebUtil::webError( "Your Gene Cart is empty." );
         }
     }
 
@@ -5419,7 +5426,7 @@ sub printPathwaysForSample {
         select dts.gold_id, gsp.display_name,
                tx.taxon_display_name, tx.genome_type, tx.in_file
         from rnaseq_dataset dts, taxon tx,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.dataset_oid = ?
         and dts.gold_id = gsp.gold_id
         and dts.reference_taxon_oid = ?
@@ -5664,7 +5671,7 @@ sub printClusterResults {
     my $normalization = param("normalization");
 
     if ($nSamples < 2) {
-        webError( "Please select at least 2 samples." );
+        WebUtil::webError( "Please select at least 2 samples." );
     }
     if ($min_abundance < 3 ||
 	$min_abundance > $nSamples) {
@@ -5679,7 +5686,7 @@ sub printClusterResults {
         my $recs = $gc->readCartFile(); # get records
         @cart_gene_oids = sort { $a <=> $b } keys(%$recs);
 	if (scalar @cart_gene_oids < 1) {
-	    webError( "Your Gene Cart is empty." );
+	    WebUtil::webError( "Your Gene Cart is empty." );
 	}
     }
 
@@ -6060,14 +6067,14 @@ sub printClusterMapSort {
     my $sortId = param("sortId");
     my $path = "$cgi_tmp_dir/$stateFile";
     if (!( -e $path )) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
     webLog "retrieve '$path' " . currDateTime() . "\n"
 	if $verbose >= 1;
     my $state = retrieve($path);
     if ( !defined($state) ) {
         webLog("printClusterMapSort: bad state from '$stateFile'\n");
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
 
     my $normProfiles_ref = $state->{normProfiles};
@@ -6256,7 +6263,7 @@ sub getNamesForSamples {
     my $sql = qq{
         select dts.dataset_oid, gsp.display_name
         from rnaseq_dataset dts,
-             gold_sequencing_project\@imgsg_dev gsp
+             gold_sequencing_project gsp
         where dts.gold_id = gsp.gold_id
         and dts.dataset_oid in ($sample_oid_str)
         $datasetClause
@@ -6483,7 +6490,7 @@ sub processDifferentialExpression {
         my $sql = qq{
             select distinct dts.dataset_oid, gsp.display_name
             from rnaseq_dataset dts,
-                 gold_sequencing_project\@imgsg_dev gsp
+                 gold_sequencing_project gsp
             where dts.gold_id = gsp.gold_id
             and dts.reference_taxon_oid = ?
             and dts.dataset_oid in ( $dataset_oid_str )
@@ -6574,7 +6581,7 @@ sub downloadDEInTab {
     my $file = param("file");
     my $path = "$cgi_tmp_dir/$file";
     if ( !-e $path ) {
-        webErrorHeader
+        WebUtil::webErrorHeader
 	    ("Export file no longer exist. Please go back and refresh page.");
     }
 
@@ -6598,7 +6605,7 @@ sub downloadDEInRData {
     my $outputFile = "$cgi_tmp_dir/$outFileName";
     generateRDataFile($inputFile, $outputFile);
     if ( !-e $outputFile ) {
-        webErrorHeader
+        WebUtil::webErrorHeader
 	    ("Export file no longer exist. Please go back and refresh page.");
     }
 
@@ -6617,12 +6624,12 @@ sub downloadDEInRData {
 sub generateRDataFile {
     my ($inputFile, $outputFile) = @_;
     if ( !-e $inputFile ) {
-        webErrorHeader("Input file no longer exist. Please refresh page.");
+        WebUtil::webErrorHeader("Input file no longer exist. Please refresh page.");
     }
 
     my $program = "$cgi_dir/bin/exportDE.R";
     if ( !-e $program ) {
-        webErrorHeader("Cannot find the script file " . $program);
+        WebUtil::webErrorHeader("Cannot find the script file " . $program);
     }
 
     # keep it as example:
@@ -6644,7 +6651,7 @@ sub generateRDataFile {
     WebUtil::resetEnvPath();
 
     if ($st != 0) {
-        webError( "Problem running R script: $program." );
+        WebUtil::webError( "Problem running R script: $program." );
     }
 }
 

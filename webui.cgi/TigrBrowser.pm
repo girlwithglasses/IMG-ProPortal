@@ -2,14 +2,13 @@
 # TigrBrowser.pm - TIGRfam browser.
 #   --es 03/22/2006
 #
-# $Id: TigrBrowser.pm 35903 2016-07-20 20:45:44Z klchu $
+# $Id: TigrBrowser.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 package TigrBrowser;
 my $section = "TigrBrowser";
 use strict;
 use CGI qw( :standard );
 use Data::Dumper;
-#use CachedTable;
 use GeneDetail;
 use PhyloTreeMgr;
 use WebConfig;
@@ -816,7 +815,7 @@ sub printTigrRoleGenomeGeneList {
     $cur->finish();
 
     if ( !$tid ) {
-	webError("Cannot find genome $taxon_oid");
+	WebUtil::webError("Cannot find genome $taxon_oid");
         #$dbh->disconnect();
         return;
     }

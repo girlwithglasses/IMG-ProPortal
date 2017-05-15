@@ -18,31 +18,13 @@ has '+page_wrapper' => (
 
 has '+filter_domains' => (
 	default => sub {
-		return [ qw( pp_subset dataset_type locus_type gene_symbol taxon_oid category scaffold_oid db xref scaffold taxon ) ];
+		return [ qw( pp_subset dataset_type taxon_oid scaffold_oid category db xref scaffold taxon ) ];
 	}
 );
 
 =head3 render
 
-List of all genes in the ProPortal, filtered in some manner
-
-@param taxon_oid
-
-@param type =>
-
-proteinCodingGenes
-withFunc
-withoutFunc
-fusedGenes
-signalpGeneList
-transmembraneGeneList
-pseudoGenes  -> IS_PSEUDOGENE
-geneCassette
-biosynthetic_genes
-
-type = rnas
-rnas, locus_type => ( rRNA | tRNA | xRNA )
-rnas, locus_type => rRNA, gene_symbol => xxx
+List of genes, filtered in some manner
 
 =cut
 
@@ -53,12 +35,13 @@ sub _render {
 
 	log_debug { 'statement: ' . $statement };
 
-	my $arr = $statement->all;
+	my $arr = $self->page_me( $statement )->all;
 
 	return { results => {
 		domain => 'gene',
 		arr => $arr,
 		n_results => $statement->row_count,
+		n_pages   => $statement->page_count,
 		table => $self->get_table('gene'),
 		params => $self->filters
 	} };
@@ -83,20 +66,19 @@ sub get_data {
 		}
 	}
 
-	my $query = 'gene_list';
+	my $q_args = {
+		query => 'gene_list',
+		filters => $self->filters,
+		-result_as => 'statement'
+	};
+
 	# for scaffold and taxon filters, get the scaffold/taxon and pull up the genes from it
-	if ( $self->filters->{scaffold_oid} ) {
-		$query = 'gene_list_by_scaffold';
-	}
-	elsif ( $self->filters->{taxon_oid} ) {
-		$query = 'gene_list_by_taxon';
+	if ( $self->filters->{scaffold_oid} || $self->filters->{taxon_oid} ) {
+		delete $self->filters->{pp_subset};
+	#	$q_args->{query} = 'gene_list_by_scaffold';
 	}
 
-	return $self->_core->run_query({
-		query => $query,
-		filters => $self->filters,
-		result_as => 'statement'
-	});
+	return $self->_core->run_query( $q_args );
 
 }
 

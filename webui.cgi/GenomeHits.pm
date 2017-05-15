@@ -1,7 +1,7 @@
 ###########################################################################
 # New Phylogenetic Distribution of Genes from taxon detail page
 #
-# $Id: GenomeHits.pm 36634 2017-03-02 20:09:55Z klchu $
+# $Id: GenomeHits.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package GenomeHits;
 
@@ -596,12 +596,12 @@ sub printPlot1 {
         printStatusLine( "Loaded.", 2 );
 
         #$dbh->disconnect();
-        webError("Please select only 60 metagenomes.");
+        WebUtil::webError("Please select only 60 metagenomes.");
     } elsif ( $#metag_oid < 0 ) {
         printStatusLine( "Loaded.", 2 );
 
         #$dbh->disconnect();
-        webError("Please select at least 1 metagenome.");
+        WebUtil::webError("Please select at least 1 metagenome.");
     }
 
     # get ref  min and max size for plots
@@ -1039,7 +1039,7 @@ sub printHits {
     # '2012932008', '2012932007' ];
 
     if ( $taxon_oid eq "" ) {
-        webError("Please select one genome.");
+        WebUtil::webError("Please select one genome.");
     }
 
     printMainForm();
@@ -1129,7 +1129,7 @@ sub printHits {
     printEndWorkingDiv();
 
     if ( scalar(@$metag_list_aref) == 0 ) {
-        webError("No metagenome hits are found.");
+        WebUtil::webError("No metagenome hits are found.");
         return;
     }
 

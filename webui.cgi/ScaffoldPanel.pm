@@ -4,7 +4,7 @@
 #  tandem in different ways.
 #     --es 09/07/2004
 #
-# $Id: ScaffoldPanel.pm 35651 2016-05-17 00:17:48Z aratner $
+# $Id: ScaffoldPanel.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package ScaffoldPanel;
 use strict;
@@ -100,7 +100,7 @@ sub new {
     $self->{scale}    = $self->{x_width} / $coord_length;
     $self->{y_height} = 45 if $self->{title} eq "";
 
-    my $im = new GD::Image( $self->{x_width} + 2, $self->{y_height} + 2 );
+    my $im = GD::Image->new( $self->{x_width} + 2, $self->{y_height} + 2 );
     $self->{im} = $im;
     $self->colorAllocates();
     $self->setBrush();
@@ -278,7 +278,7 @@ sub setBrush {
     my ($self) = @_;
 
     my $im = $self->{im};
-    my $brush = new GD::Image( 1, 1 );
+    my $brush = GD::Image->new( 1, 1 );
     $brush->colorAllocate( 255, 255, 255 );    # white
     $brush->colorAllocate( 0,   0,   0 );      # black
     $brush->transparent( $self->{color_white} );
@@ -328,7 +328,7 @@ sub addGene {
 
     my $scale       = $self->{scale};
     my $mid_yheight = $self->{mid_yheight};
-    my $arrow       = new GD::Polygon;
+    my $arrow       = GD::Polygon->new;
     my $ptrOffset   = 5;
     my $arrowHeight = 10;
 
@@ -427,7 +427,7 @@ sub addMyGene {
 
     my $scale       = $self->{scale};
     my $mid_yheight = $self->{mid_yheight};
-    my $arrow       = new GD::Polygon;
+    my $arrow       = GD::Polygon->new;
     my $ptrOffset   = 5;
     my $arrowHeight = 10;
 
@@ -540,7 +540,7 @@ sub addPhantomGene {
 
     my $scale       = $self->{scale};
     my $mid_yheight = $self->{mid_yheight};
-    my $arrow       = new GD::Polygon;
+    my $arrow       = GD::Polygon->new;
     my $ptrOffset   = 5;
     my $arrowHeight = 1;
     my $arrowWidth  =
@@ -626,14 +626,6 @@ sub addBox {
 
     }
 
-    #    my $box = new GD::Polygon();
-    #    $box->addPt( $x1, $y1 );
-    #    $box->addPt( $x1, $y2 );
-    #    $box->addPt( $x2, $y2 );
-    #    $box->addPt( $x2, $y1 );
-
-    #    $im->filledPolygon( $box, $color );
-    #    $im->polygon( $box, gdBrushed );
 
     $im->filledRectangle( $x1, $y1, $x2, $y2, $color );
 
@@ -691,14 +683,6 @@ sub addMyGeneBox {
 
     }
 
-    #    my $box = new GD::Polygon();
-    #    $box->addPt( $x1, $y1 );
-    #    $box->addPt( $x1, $y2 );
-    #    $box->addPt( $x2, $y2 );
-    #    $box->addPt( $x2, $y1 );
-
-    #    $im->filledPolygon( $box, $color );
-    #    $im->polygon( $box, gdBrushed );
 
     $im->filledRectangle( $x1, $y1, $x2, $y2, $color );
 
@@ -1018,7 +1002,7 @@ sub makeMapString {
 		    # this depends on whether user wants to link to gene page
 		    # or is using click to select genes into cart
 		    #$s .= "href='$gene_page_base_url&gene_oid=$gene_oid' ";
-		    
+
 		} else {
 		    #my @vals = split(/ /, $gene_oid);
 		    #$gene_oid = $vals[-1];

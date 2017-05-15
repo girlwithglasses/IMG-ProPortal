@@ -3,7 +3,7 @@
 # It follows the same logic as main.pl and inner.pl
 # see xml.cgi
 #
-# $Id: xml.pl 35757 2016-06-13 18:08:02Z klchu $
+# $Id: xml.pl 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 use strict;
 use CGI qw( :standard );
@@ -12,8 +12,21 @@ use CGI::Carp qw( carpout set_message fatalsToBrowser );
 use perl5lib;
 use Data::Dumper;
 use FileHandle;
+use Module::Load;
+
 use WebConfig;
+use WebSession;
+use WebDB;
 use WebUtil;
+use WebSessionPrint;
+
+my $webSession = new WebSession();
+my $webDB = new WebDB();
+my $webSessionPrint = new WebSessionPrint($webSession, $webDB);
+
+WebUtil::setWebSessionObject($webSession);
+WebUtil::setWebDBObject($webDB);
+WebUtil::setWebSessionPrint($webSessionPrint);
 
 $| = 1;
 
@@ -23,18 +36,62 @@ my $base_dir             = $env->{base_dir};
 my $default_timeout_mins = $env->{default_timeout_mins};
 $default_timeout_mins = 5 if $default_timeout_mins eq "";
 
-blockRobots();
-
 timeout( 60 * $default_timeout_mins );
 
 ############################################################################
 # main
 ############################################################################
 
-my $cgi     = WebUtil::getCgi();
 my $section = param("section");
 
-if ( $section eq "tooltip" ) {
+my %validSections = (
+AutoRefresh =>'AutoRefresh',
+ProPortal => 'ProPortal',
+MeshTree => 'MeshTree',
+ANI => 'ANI',
+GenomeListJSON => 'GenomeListJSON',
+PhylumTree => 'PhylumTree',
+BinTree => 'BinTree',
+BarChartImage => 'BarChartImage',
+TaxonList => 'TaxonList',
+IMGProteins => 'IMGProteins',
+RNAStudies => 'RNAStudies',
+PathwayMaps => 'PathwayMaps',
+TableUtil => 'TableUtil',
+Methylomics => 'Methylomics',
+BiosyntheticDetail => 'BiosyntheticDetail',
+BiosyntheticStats => 'BiosyntheticStats',
+GenomeListFilter => 'GenomeListFilter',
+FindGenomesByMetadata => 'FindGenomesByMetadata',
+FunctionAlignment => 'FunctionAlignment',
+Artemis => 'Artemis',
+ACT => 'ACT',
+TreeFile => 'TreeFile',
+Selection => 'Selection',
+TreeFileMgr => 'TreeFileMgr',
+GeneCassetteSearch => 'GeneCassetteSearch',
+GeneDetail => 'GeneDetail',
+Cart => 'Cart',
+Check => 'Check',
+check => 'Check',
+RadialPhyloTree => 'RadialPhyloTree',
+Workspace => 'Workspace',
+);
+
+#if($section eq 'GenomeListJSON' ) {
+#    require GenomeListJSON;
+#    GenomeListJSON::printWebPageHeader();
+#    GenomeListJSON::dispatch();
+#} els
+
+if(exists $validSections{$section}) {
+
+    my $section2 = $validSections{$section};
+    load $section2;
+    $section2->printWebPageHeader();
+    $section2->dispatch();
+
+} elsif ( $section eq "tooltip" ) {
     my $filename = param('filename');
     print header( -type => "text/html" );
 
@@ -59,8 +116,6 @@ if ( $section eq "tooltip" ) {
     #   sort keys
     $Data::Dumper::Sortkeys = 1;
 
-    #print Dumper($obj);
-
     # sort keys in reverse order - use either one
     #$Data::Dumper::Sortkeys = sub { [reverse sort keys %{$_[0]}] };
     #$Data::Dumper::Sortkeys = sub { [sort {$b cmp $a} keys %{$_[0]}] };
@@ -68,224 +123,6 @@ if ( $section eq "tooltip" ) {
 
     print header( -type => "text/plain" );
     print Dumper $env;
-
-} elsif ( $section eq 'AutoRefresh' ) {
-        require AutoRefresh;
-        AutoRefresh::dispatch();
-} elsif ( $section eq 'ProPortal' ) {
-
-    # text/html
-    print header( -type => "text/html" );
-
-    require ProPortal;
-    ProPortal::dispatch();
-
-} elsif ( $section eq 'MeshTree' ) {
-
-    require MeshTree;
-    MeshTree::dispatch();
-
-} elsif ( $section eq 'ANI' ) {
-
-    my $page = param('page');
-    if ( $page eq "selectFiles" ) {
-
-        # xml header
-        print header( -type => "text/xml" );
-    } else {
-        print header( -type => "application/json", -expires => '-1d' );
-    }
-    require ANI;
-    ANI::dispatch();
-
-} elsif ( $section eq 'GenomeListJSON' ) {
-
-    my $page = param('page');
-    if ( $page eq 'json' ) {
-
-        # Stop IE ajax caching
-        print header( -type => "application/json", -expires => '-1d' );
-    } else {
-        print header( -type => "text/plain" );
-    }
-
-    require GenomeListJSON;
-    GenomeListJSON::dispatch();
-
-} elsif ( $section eq "PhylumTree" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require PhylumTree;
-    PhylumTree::dispatch();
-
-} elsif ( $section eq "BinTree" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require BinTree;
-    BinTree::dispatch();
-
-} elsif ( $section eq "TestTree" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-
-    # FOR TESTING
-    require TestTree;
-    TestTree::dispatch();
-
-} elsif ( $section eq "BarChartImage" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require BarChartImage;
-    BarChartImage::dispatch();
-
-} elsif ( $section eq "TaxonList" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require TaxonList;
-    TaxonList::dispatch();
-
-} elsif ( $section eq "IMGProteins" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require IMGProteins;
-    IMGProteins::dispatch();
-
-} elsif ( $section eq "RNAStudies" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require RNAStudies;
-    RNAStudies::dispatch();
-
-} elsif ( $section eq "PathwayMaps" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require PathwayMaps;
-    PathwayMaps::dispatch();
-
-} elsif ( $section eq "TableUtil" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require TableUtil;
-    TableUtil::dispatch();
-
-} elsif ( $section eq "Methylomics" ) {
-
-    print header( -type => "text/xml" );
-    require Methylomics;
-    Methylomics::dispatch();
-
-} elsif ( $section eq "BiosyntheticDetail" ) {
-
-    print header( -type => "text/xml" );
-    require BiosyntheticDetail;
-    BiosyntheticDetail::dispatch();
-
-} elsif ( $section eq "BiosyntheticStats" ) {
-
-    print header( -type => "text/xml" );
-    require BiosyntheticStats;
-    BiosyntheticStats::dispatch();
-
-} elsif ( $section eq "GenomeListFilter" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require GenomeListFilter;
-    GenomeListFilter::dispatch();
-
-} elsif ( $section eq "FindGenomesByMetadata" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require FindGenomesByMetadata;
-    FindGenomesByMetadata::dispatch();
-
-} elsif ( $section eq "FunctionAlignment" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require FunctionAlignment;
-    FunctionAlignment::dispatch();
-
-} elsif ( $section eq "Artemis" ) {
-
-    # xml header
-    #print header( -type => "text/xml" );
-    require Artemis;
-    Artemis::dispatch();
-
-} elsif ( $section eq "ACT" ) {
-
-    # text/html
-    print header( -type => "text/html" );
-    require ACT;
-    ACT::dispatch();
-
-} elsif ( $section eq "TreeFile" ) {
-
-    # text/html
-    print header( -type => "text/html" );
-    require TreeFile;
-    TreeFile::dispatch();
-
-} elsif ( $section eq "Selection" ) {
-
-    # text/html
-    require Selection;
-    Selection::dispatch();
-
-} elsif ( $section eq "TreeFileMgr" ) {
-
-    # text/html
-    print header( -type => "text/html" );
-    require TreeFileMgr;
-    TreeFileMgr::dispatch();
-
-} elsif ( $section eq "GeneCassetteSearch" ) {
-
-    # text/html
-    print header( -type => "text/html" );
-    require GeneCassetteSearch;
-    GeneCassetteSearch::dispatch();
-
-} elsif ( $section eq "GeneDetail" ) {
-
-    # xml header
-    print header( -type => "text/xml" );
-    require GeneDetail;
-    GeneDetail::dispatch();
-
-} elsif ( $section eq "Cart" ) {
-
-    require Cart;
-    Cart::dispatch();
-
-} elsif ( $section eq "Check" || $section eq "check" ) {
-
-    print header( -type => "text/html" );
-    require Check;
-    Check::dispatch();
-
-} elsif ( $section eq "RadialPhyloTree" ) {
-
-    require RadialPhyloTree;
-    RadialPhyloTree::dispatch();
-
-} elsif ( $section eq "Workspace" ) {
-
-    # text header
-    print header( -type => "text/html" );
-    require Workspace;
-    Workspace::dispatch();
 
 } elsif ( $section eq "MessageFile" ) {
 
@@ -307,6 +144,16 @@ if ( $section eq "tooltip" ) {
         my $str = file2Str($message_file);
         print $str;
     }
+
+} elsif ( $section eq 'fitnessblast' ) {
+    my $gene_oid = param('gene_oid');
+    my $dbh = WebUtil::dbLogin();
+    my $aa_residue = WebUtil::geneOid2AASeq($dbh, $gene_oid);
+    my $url = "http://fit.genomics.lbl.gov/cgi-bin/seqservice.cgi?html=1&seq=$aa_residue";
+    WebUtil::webLog("\n$url\n");
+    my $content = WebUtil::urlGet($url);
+    print header( -type => "text/html" );
+    print $content;
 
 } elsif ( $section eq 'scriptEnv' ) {
     print header( -type => "text/plain" );
@@ -348,27 +195,18 @@ if ( $section eq "tooltip" ) {
     print "HTTP_X_FORWARDED_FOR " . $ENV{HTTP_X_FORWARDED_FOR};
     print "\n";
 
-#    
-#    foreach my $key (%ENV) {
-#        print "$key => " . $ENV{$key} . "\n";
-#    }
-#    
-} elsif ( $section eq 'fitnessblast' ) {
-    my $gene_oid = param('gene_oid');
-    my $dbh = WebUtil::dbLogin();
-    my $aa_residue = WebUtil::geneOid2AASeq($dbh, $gene_oid);
-    my $url = "http://fit.genomics.lbl.gov/cgi-bin/seqservice.cgi?html=1&seq=$aa_residue";
-    WebUtil::webLog("\n$url\n");
-    my $content = WebUtil::urlGet($url);
-    print header( -type => "text/html" );
-    print $content;
+
 } else {
     print header( -type => "text/plain" );
-    print "Unknown section='$section'\n";
+    print "Unknown section='$section'\n";   
 }
 
+$webDB->logout();
 WebUtil::webExit(0);
 
+# =================================== 
+#
+#
 sub testCmd {
     my($cmd1) = @_;
     

@@ -1,6 +1,6 @@
 #
 # generate a UPGMA tree from the cassettes that have one or more clusters
-# $Id: OperonTree.pm 33080 2015-03-31 06:17:01Z jinghuahuang $
+# $Id: OperonTree.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 package OperonTree;
 
@@ -85,7 +85,7 @@ sub CassetteTree {
     #clustering can be performed only if we have three or more cassettes
     if ( scalar( keys(%cassetteContent) ) < 3 ) {
         printStatusLine( "Loaded.", 2 );
-        webError("Clustering can be performed with at least 3 cassettes");
+        WebUtil::webError("Clustering can be performed with at least 3 cassettes");
     }
     my %idRef;
     my %isHighLighted;

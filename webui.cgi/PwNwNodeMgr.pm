@@ -180,7 +180,7 @@ sub addNetworkChildren {
     ($$level_ref)++;
     if( $$level_ref > 10 ) {
        my $oid = $n->{ oid };
-       webDie( "addNetworkParents: level=$$level_ref oid=$oid loop in data\n" );
+       WebUtil::webDie( "addNetworkParents: level=$$level_ref oid=$oid loop in data\n" );
     }
     my $level = $$level_ref;
     my $oid = $n->{ oid };

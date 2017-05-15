@@ -10,7 +10,7 @@
 #  Modified to work with the InnerTable.pm variant that uses YUI Datatables
 #  - BSJ 11/16/09
 #
-# $Id: CachedTable_yui.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: CachedTable_yui.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 package CachedTable;
 use strict;
@@ -19,6 +19,13 @@ use Storable;
 use WebConfig;
 use WebUtil;
 use InnerTable;    #InnerTable.pm variant that uses YUI Datatables
+
+
+# =======================================================================
+#
+# OLD ----- use InnerTable instead - ken
+#
+# =======================================================================  
 
 my $env = getEnv( );
 my $cgi_tmp_dir = $env->{ cgi_tmp_dir };

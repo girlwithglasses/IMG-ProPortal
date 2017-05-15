@@ -2,49 +2,60 @@
 	title = self.display_name;
 	self = results.taxon;
 
-	PROCESS 'inc/title/taxon.tt';
 	PROCESS 'inc/generic/container_macros.tt';
 	PROCESS 'inc/generic/attr_value_table.tt';
+	PROCESS 'inc/generic/labels.tt';
 
-	BLOCK nat_iso_info %]
-		<table class="condensed">
-			<tr><td class="col1">Isolation Details</td>	<td>[% self.proport_isolation %]</td></tr>
-			<tr>
-				<td>Latitude, longitude</td>
-				<td>[% self.latitude %]&#176;N, [% self.longitude %]&#176;E</td>
-			</tr>
-			<tr>
-				<td>Depth</td>
-				<td>[% self.depth %]</td>
-			</tr>
-			<tr><td>NOAA Sea Name</td>	<td>[% self.geo_location %]</td></tr>
-			<tr><td>Ocean</td>	<td>[% self.proport_ocean %]</td></tr>
-			<tr><td>Longhurst Province</td>	<td>
-				[%  IF self.longhurst_code && self.longhurst_description;
-					self.longhurst_code _ ', ' _ self.longhurst_description;
-				END %]</td></tr>
-			<tr>
-				<td>Date collected</td>
-				<td>[% self.date_collected %]</td>
-			</tr>
+	BLOCK nat_iso_info;
 
-		</table>
-		<h6 class="tableTitle">Ecosystem Hierarchy</h6>
-		<table class="condensed">
-			<tr><td class="col1"></td><td></td></tr>
-				[%
-					eco_hier = [ 'ecosystem',
-						'ecosystem_category',
-						'ecosystem_type',
-						'ecosystem_subtype',
-						'specific_ecosystem'
-					];
+		iso_data = {
+			obj => self,
+			class => 'taxon_isolation_details',
+			arr => [
+				'proport_isolation',
+				'latlong',
+				'depth',
+				'geo_location',
+				'proport_ocean',
+				'longhurst',
+				'date_collected'
+			]
+		};
+		attr_value_dl( iso_data );
 
-				FOR e IN eco_hier; %]
-				<tr><td>[% e | replace('_', ' ') | ucfirst %]</td>	<td> [% self.$e %]</td>	</tr>
-				[%	END; %]
-		</table>
-[%	END; # end block nat_iso_info
+		eco_data = {
+			caption => 'Ecosystem Hierarchy',
+			class => 'taxon_ecosystem',
+			obj => self,
+			arr =>
+			[	'ecosystem',
+				'ecosystem_category',
+				'ecosystem_type',
+				'ecosystem_subtype',
+				'specific_ecosystem'
+			]
+		};
+		attr_value_dl( eco_data );
+
+		IF self.ecosystem == 'Host-associated';
+
+			eco_extras = {
+				caption => 'Host species',
+				class => 'taxon_host',
+				obj => self,
+				arr => [
+					'host_name',
+					[ 'host_gender', 1],
+					[ 'host_ncbi_taxid', 1 ]
+				]
+			};
+			attr_value_dl( eco_extras );
+
+		END;
+
+
+	END; # end block nat_iso_info
+
 
 	BLOCK gene_counts;
 
@@ -88,147 +99,139 @@
 	</td>
 </tr>
 [%	END %]
-<!--	<tr><td class="indent1"><h6>Chromosomal Cassettes</h6></td>	<td><a href="[% link( 'chr_cassette_genes', { taxon_oid => self.taxon_oid } ) %]"><b>[% self.taxon_stats.total_cassettes %]</b></a></td></tr>
-	<tr><td class="indent2">Genes in Chromosomal Cassettes</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'cassette' } ) %]">[% self.taxon_stats.genes_in_cassettes %]</a></td></tr>
+<tr><td>Chromosomal cassettes</td>
+<td class="taxon-gene-list__val"><!-- a href="[% link( 'chr_cassette_genes', { taxon_oid => self.taxon_oid } ) %]"-->[% self.taxon_stats.total_cassettes %]</td></tr>
+<tr><td>Genes in chromosomal cassettes</td>
+<td class="taxon-gene-list__val"><!-- a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'cassette' } ) %]" -->[% self.taxon_stats.genes_in_cassettes %]
+</td></tr>
 
-	<tr><td class="indent1"><h6>Number of Biosynthetic Clusters</h6></td>	<td><a href="[% link( 'biosyn_cluster_genes', { taxon => self.taxon_oid } ) %]"><b>[% self.taxon_stats.total_biosynthetic %]</b></a></td></tr>
-	<tr><td class="indent2">Genes in Biosynthetic Clusters</td>	<td><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'biosynthetic_cluster' } ) %]">[% self.taxon_stats.genes_in_biosynthetic %]</a></td></tr>
--->
+	<tr>
+	<td class="taxon-gene-list__attr--[% c %]">Biosynthetic clusters</td>
+	<td class="taxon-gene-list__val"><!-- a href="[% link( 'biosyn_cluster_genes', { taxon_oid => self.taxon_oid } ) %]" -->[% self.taxon_stats.total_biosynthetic %]<!-- /a --></td></tr>
+	<tr>
+	<td class="taxon-gene-list__attr--[% c %]">Genes in biosynthetic clusters</td>
+	<td class="taxon-gene-list__val"><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'biosynthetic_cluster' } ) %]">[% self.taxon_stats.genes_in_biosynthetic %]</a></td></tr>
 </tbody>
 </table>
 
 [%	END; # end block genes
 
-	BLOCK environment %]
+	BLOCK environment;
 
-		<h6 class="tableTitle">World Ocean Atlas Averages</h6>
-		<table class="condensed">
-			[%	woa_fields = [
-				'salinity',
-				'temperature',
-				'dissolved_oxygen',
-				'nitrate',
-				'phosphate',
-				'silicate'
-			];
-			FOR e in woa_fields;
-				e = 'proport_woa_' _ e; %]
-			<tr>
-				<td class="col1">
-				[%	IF results.label_data.$e && results.label_data.$e.label;
-						results.label_data.$e.label;
-					ELSE;
-						e | replace('_', ' ') | ucfirst;
-					END;
-				%]
-				</td>
-				<td>[% self.$e %][%
-					IF self.$e && results.label_data.$e.unit;
-						%] &#160; [% results.label_data.$e.unit;
-					END;
-				%]</td>
-			</tr>
-			[%	END %]
-		</table>
+		IF self.has_woa_measurements;
+			woa_fields = {
+				caption => 'World Ocean Atlas Averages',
+				class => 'taxon_woa_data',
+				obj => self,
+				prefix => 'proport_woa_',
+				with_units => 1,
+				prefix_arr => self.woa_measurements
+			};
+			attr_value_dl( woa_fields );
+		END;
 
-		<h6 class="tableTitle">Direct Measurements</h6>
-		<table class="condensed">
-[%	env_meas = [
-		'salinity',
-		'oxygen_concentration',
-		'temperature',
-		'nitrate_concentration',
-		'chlorophyll_concentration',
-		'pressure'
-	];
+		IF self.has_direct_measurements;
+			env_meas = {
+				caption => 'Direct Measurements',
+				class => 'taxon_direct_measurements',
+				obj => self,
+				with_units => 1,
+				arr => self.direct_measurements
+			};
+			attr_value_dl( env_meas );
+		END;
 
-			FOR e in env_meas; %]
-			<tr>
-				<td class="col1">
-				[%	IF results.label_data.$e && results.label_data.$e.label;
-						results.label_data.$e.label;
-					ELSE;
-						e | replace('_', ' ') | ucfirst;
-					END;
-				%]
-				</td>
-				<td>[% self.$e %][%
-					IF self.$e && results.label_data.$e.unit;
-						results.label_data.$e.unit;
-					END;
-				%]</td>
-			</tr>
-			[%	END %]
-			<tr>
-		</table>
-
-[%	END; # end block environment
+	END; # end block environment
 
 	BLOCK phyl_info;
 
-		IF self.genome_type == 'isolate' %]
+		IF self.genome_type == 'isolate';
 
-		<table class="condensed">
-			<tr>
-				<td class="col1">Clade</td>
-				<td>[% self.clade %]</td></tr>
-			<tr>
-				<td>Ecotype</td>
-				<td>[% self.ecotype %]</td>
-			</tr>
-		</table>
-		<h6 class="tableTitle">NCBI Taxonomy</h6>
-		<table class="condensed">
-[% ncbi = [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ];
+			taxon_disp_name = {
+				obj => self,
+				class => 'taxon_display_name',
+				arr => [ 'taxon_display_name' ]
+			};
+			attr_value_dl( taxon_disp_name );
 
-			FOR n IN ncbi;
-				n_field = 'ncbi_' _ n; %]
-			<tr>
-				<td class="col1"> [% n | ucfirst %]</td>
-				<td>[% self.$n_field %]</td>
-			</tr>
-			[%	END %]
-		</table>
+			clade_eco = {
+				obj => self,
+				class => 'taxon_clade_ecotype',
+				arr =>
+				[	'strain',
+					'clade',
+					'ecotype'
+				]
+			};
+			attr_value_dl( clade_eco );
 
-[%		END; # end if self.genome_type == 'isolate'
+			ncbi_tax = {
+				caption => 'NCBI Taxonomy',
+				class => 'taxon_ncbi_taxonomy',
+				obj => self,
+				prefix_arr => [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ],
+				prefix => 'ncbi_'
+			};
 
-	END; # end block eco_info
+			attr_value_dl( ncbi_tax );
 
-	BLOCK id_ext_links %]
-		<table class="condensed">
-			<tr>
-				<td class="col1">IMG Taxon ID</td>
-				<td>[% self.taxon_oid %]</td>
-			</tr>
-			<tr>
-				<td>Project Status</td>
-				<td>[% self.project_status %]</td>
-			</tr>
-		</table>
+		END; # end if self.genome_type == 'isolate'
+
+	END; # end block phyl_info
+
+	BLOCK id_ext_links;
+
+		basic_data = {
+			obj => self,
+			arr => [
+				'taxon_oid',
+				'project_status'
+			]
+		};
+		attr_value_dl( basic_data );
+%]
 
 		<h6 class="tableTitle">GOLD Details</h6>
-		<table class="condensed">
-			<tr><td class="col1">Study ID</td>
-				<td>[%	IF self.study_gold_id %]
+		[%	gold_details = {
+				obj => self,
+				arr => [
+					'study_gold_id',
+					'gold_id',
+					'analysis_project_id'
+				]
+			};
+		%]
+		<dl class="tabular">
+[%			FOR e IN gold_details.arr; %]
+			<dt>[% labeller( e ) %]</dt>
+			<dd>[%
+				IF self.$e;
+					linker( e, self );
+				END; %]
+			</dd>
+[%			END; %]
+		</dl>
+
+
+		<dl class="tabular">
+			<dt>Study ID</dt>
+			<dd>[%	IF self.study_gold_id %]
 					<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
 					[%	END %]
-				</td>
-			</tr>
-			<tr><td>Sequencing Project ID</td>
-				<td>
-					<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
-				</td>
-			</tr>
-			<tr><td>Analysis Project ID</td>
-				<td>[% IF self.analysis_project_id %]
-					<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
-					[%	END; %]
-				</td>
-			</tr>
-		</table>
+			</dd>
+			<dt>Sequencing Project ID</dt>
+			<dd>
+				<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
+			</dd>
+			<dt>Analysis Project ID</dt>
+			<dd>[% IF self.analysis_project_id %]
+				<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
+				[%	END; %]
+			</dd>
+		</dl>
 
 		<h6 class="tableTitle">External Links</h6>
-		<table class="condensed">
+		<dl class="tabular">
 			[%	ext_urls = [
 				'bioproject_accession',
 				'biosample_accession',
@@ -236,113 +239,110 @@
 				'ncbi_project_id',
 			];
 			FOR e in ext_urls; %]
-			<tr><td class="col1">
-				[%	IF results.label_data.$e && results.label_data.$e.label;
-						results.label_data.$e.label;
-					ELSE;
-						e | replace('_', ' ') | ucfirst;
-					END;
-				%]
-				</td>
-				<td>[%
+			<dt>[% labeller( e ) %]</dt><dd>[%
 				IF self.$e;
 					IF results.label_data.$e && results.label_data.$e.ext_link;
 						link_url = results.label_data.$e.ext_link;
 						%]
 						<a rel="external" href="[% ext_link( results.label_data.$e.ext_link ) %][% self.$e %]">[% self.$e %]</a>
-					[%	ELSE;
+				[%	ELSE;
 						self.$e;
 					END;
 				END; %]
-				</td>
-			</tr>
-			[%	END  # end ext_urls section %]
-			<tr><td>NCBI/RefSeq ID</td>	<td></td></tr>
-			<tr><td> Genome publications </td>	<td>
-				[%	IF self.gold_sp_genome_publications.size > 0;
-						FOR p IN self.gold_sp_genome_publications %]
-						<p>"[% p.title %]" in [% p.journal_name %][%
-							IF p.publication_date; " " _ p.publication_date; END;
-							IF p.volume; " volume " _ p.volume; END;
-							IF p.issue; " issue " _ p.issue; END;
-							IF p.page; " pages " _ p.page; END;
+			</dd>
+[%			END;
+			IF self.taxon_ext_links && self.taxon_ext_links.size > 0;
+				FOR e IN self.taxon_ext_links; %]
+			<dt>[% e.db_name %]</dt><dd>[%
+					IF e.custom_url; %]
+	<a rel="external" href="[% e.custom_url %]">[% e.db_name %]:[% e.id %]</a>
+[%					ELSE;
+					external_link({ db => e.db_name, xref => e.id });
+					END;
+				END;
+			END %]
+			<dt>Genome publications</dt>
+[%			IF self.gold_sp_genome_publications.size > 0;
+				FOR p IN self.gold_sp_genome_publications %]
+				<dd>"[% p.title %]" in [% p.journal_name %][%
+					IF p.publication_date; " " _ p.publication_date; END;
+					IF p.volume; " volume " _ p.volume; END;
+					IF p.issue; " issue " _ p.issue; END;
+					IF p.page; " pages " _ p.page; END;
 
-							IF p.pubmed_id; %]
-								<a href="[% ext_link('pubmed') %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>
-				[% 			END;
+					IF p.pubmed_id; %]
+						<a href="[% ext_link('pubmed') %][% p.pubmed_id %]" rel="external">PMID:[% p.pubmed_id %]</a>
+		[% 			END;
 
-							IF p.doi %]
-								<a href="[% ext_link('doi') %][% p.doi %]" rel="external">doi:[% p.doi %]</a></p>
-							[% END;
-						END; # end FOR loop
-					END %]
-			</tr>
-		</table>
+					IF p.doi %]
+						<a href="[% ext_link('doi') %][% p.doi %]" rel="external">doi:[% p.doi %]</a>
+					[% END;
+				'</dd>';
+				END; # end FOR loop
+			ELSE; %]
+			<dd>none</dd>
+[%			END; %]
+		</dl>
 
 [%	END; # end block id_ext_links
 
 
-	BLOCK seq_info %]
+	BLOCK seq_info;
 
-		<table class="condensed">
-			<tr>
-				<td class="col1">Culture Type</td>
-				<td>[% self.culture_type %]</td>
-			</tr>
-			<tr>
-				<td>Quality</td>
-				<td>[% self.seq_quality %]</td>
-			</tr>
-			<tr>
-				<td>Publicly Available</td>
-				<td>[% self.is_public %]</td>
-			</tr>
-		</table>
+		culture_type = {
+			obj => self,
+			arr =>
+			[	'cultured',
+				'culture_type',
+				'uncultured_type',
+				'seq_quality',
+				'is_public'
+			]
+		};
 
+		attr_value_dl( culture_type );
+%]
 		<h6 class="tableTitle">Sequencing Details</h6>
-		<table class="condensed">
-			<tr><td class="col1">Sequencing Status</td>	<td>[% self.seq_status %]</td></tr>
-			<tr><td>Sequencing Center</td>
-				[% IF self.gold_sp_seq_centers.size > 0;
-					FOR sc IN self.gold_sp_seq_centers; '
-						<td>'; IF sc.url; %]<a href="[% sc.url %]" rel="external">[% sc.name %]</a>[% ELSE; sc.name; END; IF sc.country; ', ' _ sc.country; END; '</td>
-					'; END; ELSE; '
-						<td>Not specified</td>
-					'; END; %] </tr>
-			<tr><td>Sequencing Method</td>
-				[% IF self.gold_sp_seq_methods.size > 0; FOR m IN self.gold_sp_seq_methods; '
-				<td>' _ m.seq_method _ '</td>
-					'; END; ELSE; '
-				<td>Not specified</td>
-					'; END; %]	</tr>
-		</table>
+		<dl class="tabular">
+			<dt>Sequencing Status</dt>
+			<dd>[% self.seq_status || 'Not specified' %]</dd>
+			<dt>Sequencing Center</dt>[%
+		IF self.gold_sp_seq_centers.size > 0;
+			FOR sc IN self.gold_sp_seq_centers;
+			%]<dd>[%
+				IF sc.url; %]<a href="[% sc.url %]" rel="external">[% sc.name %]</a>[%
+				ELSE; sc.name;
+				END;
+				IF sc.country; ', ' _ sc.country; END; %]</dd>[%
+			END;
+		ELSE;
+			%]<dd>Not specified</dd>[%
+		END; %]
+			<dt>Sequencing Method</dt>[%
+			IF self.gold_sp_seq_methods.size > 0;
+				FOR m IN self.gold_sp_seq_methods;
+				%]<dd>[% m.seq_method %]</dd>[%
+				END;
+			ELSE;
+		%]<dd>Not specified</dd>[%
+			END; %]
+		</dl>
+[%
+		cur_deets = {
+			obj => self,
+			caption => 'Curation Details',
+			arr =>
+			[	'submission_type',
+				'img_version',
+				'release_date',
+				'add_date',
+				[ 'mod_date', 1 ],
+				'distmatrix_date'
+			]
+		};
+		attr_value_dl( cur_deets );
 
-		<h6 class="tableTitle">Curation Details</h6>
-		<table class="condensed">
-			<tr><td class="col1">Submission Type</td>	<td></td></tr>
-			<tr>
-				<td>IMG Release</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td>Release Date</td>
-				<td>[%	self.release_date %]</td></tr>
-			<tr>
-				<td>Add Date</td>
-				<td>[% self.add_date %]</td></tr>
-		[%	IF self.mod_date; %]
-			<tr>
-				<td>Modified Date</td>
-				<td>[% self.mod_date %]</td>
-			</tr>
-		[%	END; %]
-			<tr>
-				<td>Distance Matrix Calculation Date</td>
-				<td>[% self.distmatrix_date %]</td>
-			</tr>
-		</table>
-
-[%		IF self.scaffolds && self.scaffolds.size > 0 %]
+		IF self.scaffolds && self.scaffolds.size > 0; %]
 		<h6 class="tableTitle">Scaffolds</h6>
 		<ul>
 [%			FOR s IN self.scaffolds; %]
@@ -353,8 +353,9 @@
 		</ul>
 [%	END; # end block seq_info
 
+	## PAGE LAYOUT
 
-
+	PROCESS 'inc/title/taxon.tt';
 
 	titles = {
 		nat_iso_info => 'Natural Isolation Information',
@@ -365,16 +366,33 @@
 		seq_info => 'Sequence Information'
 	};
 
-	sec_list = {
-		isolate => [ 'nat_iso_info', 'gene_counts', 'environment', 'phyl_info', 'id_ext_links', 'seq_info' ],
-		metagenome => [ 'nat_iso_info', 'gene_counts', 'environment', 'id_ext_links', 'seq_info' ],
+	include_block = {
+		nat_iso_info => 1,
+		gene_counts => 1,
+		environment => 1,
+		phyl_info => 1,
+		id_ext_links => 1,
+		seq_info => 1
 	};
 
-	sections = [];
+	block_order = [ 'nat_iso_info', 'gene_counts', 'environment', 'phyl_info', 'id_ext_links', 'seq_info' ];
 
-	FOR x IN sec_list.${ self.genome_type };
-		sections.push( { id => x, title => titles.$x } );
+	IF self.genome_type == 'metagenome';
+		include_block.phyl_info = 0;
 	END;
+
+	IF self.has_woa_measurements || self.has_direct_measurements;
+		include_block.environment = 1;
+	END;
+
+	sections = [];
+	FOR x IN block_order;
+		IF include_block.$x == 1;
+			sections.push( { id => x, title => titles.$x } );
+		END;
+	END;
+
+	# page layout
 
 	TRY;
 		layout_page( sections );

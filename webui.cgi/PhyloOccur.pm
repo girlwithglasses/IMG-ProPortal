@@ -58,7 +58,7 @@ sub printAlignment {
    printMainForm( );
    print "<h1>Phylogenetic Occurrence Profile</h1>\n";
    if( $nRecs  < 1 ) {
-      webError( "You must select at least one cart entry.\n" );
+      WebUtil::webError( "You must select at least one cart entry.\n" );
    }
    print "<p>\n";
    print "Phylogenetic occurrence profile for selected genomes.\n";
@@ -193,7 +193,7 @@ sub printPhyloPanel {
     my $nRecs = @$idRecs_ref;
     my $nRows = @$arrays_ref;
     if( $nRecs != $nRows ) {
-       webDie( "printPhyloPanel: nRecs=$nRecs != nRows=$nRows\n" );
+       WebUtil::webDie( "printPhyloPanel: nRecs=$nRecs != nRows=$nRows\n" );
     }
 
     print "<div>";

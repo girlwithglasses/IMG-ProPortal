@@ -29,11 +29,11 @@ my $vert_spacing = 14;
 my $graph_y_offset = 5;
 my $font_h = 12;
 my $ipr_w = 53;
- 
+
 ############################################################################
 # writeFile - Write image file.
 #   query_len - AA sequence length of query gene.
-#   recs_ref - Records with following fields 
+#   recs_ref - Records with following fields
 #       (from gene_img_interpro_hits) - tab delimited fields
 #     sfstarts
 #     sfends
@@ -41,7 +41,7 @@ my $ipr_w = 53;
 #     iprdesc
 #     domaindb
 #     domainid
-#       
+#
 ############################################################################
 sub writeFile {
     my( $query_len, $recs_ref, $outFile ) = @_;
@@ -49,7 +49,7 @@ sub writeFile {
     my $nRecs = @$recs_ref;
     my $total_height = $vert_spacing * ( $nRecs + 3 );
 
-    my $im = new GD::Image( $total_width, $total_height );
+    my $im = GD::Image->new( $total_width, $total_height );
 
     my $white = $im->colorAllocate( 255, 255, 255 );
     my $black = $im->colorAllocate( 0, 0, 0 );

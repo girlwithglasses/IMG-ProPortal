@@ -1,7 +1,7 @@
 ###########################################################################
 # NrHits - Module to handle precomputed NR hits list.
 #
-# $Id: NrHits.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: NrHits.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package NrHits;
 my $section = "NrHits";
@@ -110,7 +110,7 @@ sub loadNcbiServerHits {
        my @recs;
        for my $s( @lines ) {
  	   if( $s =~ /^ERROR/ ) {
-	      webDie( "Configuration error: $s\n" );
+	      WebUtil::webDie( "Configuration error: $s\n" );
 	   }
            my( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps,
 	       $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =

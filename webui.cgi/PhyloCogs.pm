@@ -5,7 +5,7 @@
 #   The tree results are precomputed.
 #    --es 12/04/2006
 #
-# $Id: PhyloCogs.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: PhyloCogs.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package PhyloCogs;
 my $section = "PhyloCogs";
@@ -574,7 +574,7 @@ sub printPhyloCogsForm {
     my $nTaxons       = @taxon_oids;
     my $taxon_oid_str = join( ',', @taxon_oids );
     if ( blankStr($taxon_oid_str) ) {
-        webError("Please select at least one metagenome.<br/>\n");
+        WebUtil::webError("Please select at least one metagenome.<br/>\n");
     }
     my $minPercIdent   = param("minPercIdent");
     my $minPercAlign   = param("minPercAlign");
@@ -871,8 +871,8 @@ sub printMetagCogGenes {
     my @taxon_oids    = param("taxon_oid");
     my $taxon_oid_str = join( ',', @taxon_oids );
 
-    webError ("Missing COG ID.") if (!$cog_id);
-    webError ("Missing Taxon ID.") if (!scalar @taxon_oids);
+    WebUtil::webError ("Missing COG ID.") if (!$cog_id);
+    WebUtil::webError ("Missing Taxon ID.") if (!scalar @taxon_oids);
 
     my $sql = qq{
         select distinct sg.gene_oid
@@ -899,7 +899,7 @@ sub printPhyloCogGenesForm {
     my $nTaxons       = @taxon_oids;
     my $taxon_oid_str = join( ',', @taxon_oids );
     if ( blankStr($taxon_oid_str) ) {
-        webError("Please select at least one metagenome.<br/>\n");
+        WebUtil::webError("Please select at least one metagenome.<br/>\n");
     }
     my $cog_id         = param("cog_id");
     my $minPercIdent   = param("minPercIdent");
@@ -910,7 +910,7 @@ sub printPhyloCogGenesForm {
     my $bound2         = sprintf( "%.2f", 1 + ( $maxPercLenDiff / 100 ) );
 
     if ( $cog_id eq "" ) {
-        webError("Please select one COG.");
+        WebUtil::webError("Please select one COG.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -1397,13 +1397,13 @@ sub printPhyloCogsMultalin {
         $imageTree = 1;
     }
     if ( $total_genes < 2 ) {
-        webError("Please select two or more genes.<br/>\n");
+        WebUtil::webError("Please select two or more genes.<br/>\n");
     }
     if ( $total_genes > $max_no_cog_genes ) {
-        webError("Please select a maximum of $max_no_cog_genes genes.");
+        WebUtil::webError("Please select a maximum of $max_no_cog_genes genes.");
     }
     if ( $cog_id eq "" ) {
-        webError("Please select a COG.<br/>\n");
+        WebUtil::webError("Please select a COG.<br/>\n");
     }
 
     print "<h1>Multiple Alignment for $cog_id</h1>\n";
@@ -1692,7 +1692,7 @@ sub printImageTree {
     my $newick = file2Str($inFile);
     webLog( $newick . "\n" );
     if ( blankStr($newick) ) {
-        webError("Invalid newick '$newick' string.\n");
+        WebUtil::webError("Invalid newick '$newick' string.\n");
     }
     my %id2Rec;
     my @keys = sort( keys(%$idx2GeneOid_ref) );

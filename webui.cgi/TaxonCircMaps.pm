@@ -1,7 +1,7 @@
 ############################################################################
 # TaxonCircMaps.pm - Circular maps for one taxon.
 #
-# $Id: TaxonCircMaps.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: TaxonCircMaps.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package TaxonCircMaps;
 my $section = "TaxonCircMaps";
@@ -53,7 +53,7 @@ sub dispatch {
     } elsif ( $page eq "circMaps" ) {
         printIndex();
     } else {
-        webError("Please select 1 - $maxScaffolds scaffolds.");
+        WebUtil::webError("Please select 1 - $maxScaffolds scaffolds.");
     }
 }
 
@@ -235,7 +235,7 @@ sub get_scaffolds {
 sub check_scaffolds {
     my @scaffolds = @_;
     if ( scalar(@scaffolds) > $maxScaffolds || scalar(@scaffolds) < 1 ) {
-        webError("Please select 1 to $maxScaffolds scaffolds");
+        WebUtil::webError("Please select 1 to $maxScaffolds scaffolds");
     }
 }
 

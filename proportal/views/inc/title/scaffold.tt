@@ -1,7 +1,7 @@
 [%	PROCESS 'inc/generic/link.tt';
 	surtitle = 'scaffold' | ucfirst;
 	article_title = self.scaffold_name;
-	subtitle = 'from ' _ taxon_name_link( {}, self );
+	subtitle = 'from ' _ taxon_name_link( {}, self.taxon );
 
 	button = {
 		cart => {

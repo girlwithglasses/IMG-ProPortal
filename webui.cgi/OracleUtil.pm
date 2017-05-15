@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: OracleUtil.pm 36784 2017-03-22 04:13:00Z aratner $
+# $Id: OracleUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 #
 #
@@ -453,7 +453,7 @@ sub addIdWhereClause {
         $idWhereClause = WebUtil::joinSqlQuoted( ',', @idTerms );
     }
     if ( WebUtil::blankStr($idWhereClause) && !$noErrorFlag ) {
-        webError("Please enter a comma separated list of valid ID's.");
+        WebUtil::webError("Please enter a comma separated list of valid ID's.");
     }
 
     return ($idWhereClause);
@@ -692,11 +692,11 @@ sub insertDataArray {
     webLog("$t Start gtt insert $size records using execute_array \n$sql\n");
 
     my $cur = $dbh->prepare($sql)
-      or webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
+      or WebUtil::webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
     $cur->bind_param_array( 1, $aref )
-      or webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+      or WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
     $cur->execute_array( { ArrayTupleStatus => \my @status } )
-      or webDie("execSqlBind: cannot execute: $DBI::errstr\n");
+      or WebUtil::webDie("execSqlBind: cannot execute: $DBI::errstr\n");
     $cur->finish();
     $t = currDateTime();
     

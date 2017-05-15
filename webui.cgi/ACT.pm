@@ -1,6 +1,6 @@
 ############################################################################
 # img-act web services package, using xml.cgi xml.pl
-# $Id: ACT.pm 34179 2015-09-03 20:53:31Z aireland $
+# $Id: ACT.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package ACT;
 
@@ -19,7 +19,16 @@ my $verbose  = $env->{verbose};
 my $base_url = $env->{base_url};
 my $YUI      = $env->{yui_dir_28};
 
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    print header( -type => "text/html" );
+}
+
 sub dispatch {
+	my($self) = @_;
+	
     my $page = param("page");
     if ( $page eq "genedetail" ) {
         printGeneDetail();

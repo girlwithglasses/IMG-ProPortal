@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: TreeFile.pm 36842 2017-03-24 23:55:00Z aratner $
+# $Id: TreeFile.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package TreeFile;
 my $section = "TreeFile";
@@ -35,7 +35,7 @@ my $top_base_url = $env->{top_base_url};
 my $dir2 = WebUtil::getSessionDir();
 $dir2 .= "/$section";
 if ( !(-e "$dir2") ) { 
-    mkdir "$dir2" or webError("Can not make $dir2!"); 
+    mkdir "$dir2" or WebUtil::webError("Can not make $dir2!"); 
 }
 $cgi_tmp_dir = $dir2;
 
@@ -99,6 +99,13 @@ sub getAppHeaderData {
 
     my @a = ('FindGenomes');
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/html" );
 }
 
 sub dispatch {
@@ -277,7 +284,7 @@ sub writeSession {
     } elsif ( $file ne "" ) {
         $file = WebUtil::checkFileName($file);
         if ( !-e "$cgi_tmp_dir/$file" ) {
-            webError("Your session timed out, please restart!");
+            WebUtil::webError("Your session timed out, please restart!");
         }
     }
 
@@ -323,7 +330,7 @@ sub writeSessionRemove {
               $url
               </p>  
             };
-            webError("Your session timed out, please restart!");
+            WebUtil::webError("Your session timed out, please restart!");
         }
     }
 

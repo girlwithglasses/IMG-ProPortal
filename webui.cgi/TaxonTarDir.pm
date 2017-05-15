@@ -5,7 +5,7 @@
 #    in the file system.
 #    This has later been modified to be an API for zip files also.
 #    --es 02/14/11
-# $Id: TaxonTarDir.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: TaxonTarDir.pm 37032 2017-05-01 20:04:30Z klchu $
 ############################################################################
 package TaxonTarDir;
 
@@ -254,7 +254,7 @@ sub getOtfHits {
           . "--accel 0.8 --quiet --trunclabels --iddef 4 "
           . "--evalue 1e-2 --blast6out $tmpFile";
     } else {
-        webDie( "getOtfHits: unknown otf_phyloProfiler_method=" . "'$otf_phyloProfiler_method'\n" );
+        WebUtil::webDie( "getOtfHits: unknown otf_phyloProfiler_method=" . "'$otf_phyloProfiler_method'\n" );
     }
     webLog("+ $cmd\n");
 
@@ -263,7 +263,7 @@ sub getOtfHits {
         $dbh = dbLogin();
         my $name = taxonOid2Name( $dbh, $taxon2 );
         my $m = $otf_phyloProfiler_method;
-        print "Compute ($m) against <i>$name</i> ($taxon2) ...\n";
+        print "Compute ($m) against <i>$name</i> ($taxon2) ...<br>\n";
     }
     WebUtil::unsetEnvPath();
 
@@ -273,7 +273,7 @@ sub getOtfHits {
     if ( $stdOutFile == -1 ) {
         Command::killDotThread();
         webLog("getOtfHits: ERROR '$cmd' \n");
-        webDie("$otf_phyloProfiler_method ERROR \n");
+        WebUtil::webDie("$otf_phyloProfiler_method ERROR \n");
     }
     Command::killDotThread();
 

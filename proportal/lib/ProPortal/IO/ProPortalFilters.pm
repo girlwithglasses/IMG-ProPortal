@@ -267,12 +267,12 @@ my $schema = {
 			biosynthetic_cluster
 		)],
 		enum_map => {
-			protein_coding => 'Protein coding genes',
+			protein_coding => 'Protein-coding genes',
 			with_function => 'Genes with function assignment',
 			without_function => 'Genes without function assignment',
-			fused => 'Fused genes',
-			signalp => 'SignalP genes',
-			transmembrane => 'Transmembrane proteins',
+			fused => 'Fused protein-coding genes',
+			signalp => 'Protein-coding genes encoding signal peptides',
+			transmembrane => 'Protein-coding genes encoding transmembrane proteins',
 			rna  => 'RNA',
 			rrna => 'rRNA',
 			'5s_rrna'  => '5S rRNA',
@@ -281,7 +281,7 @@ my $schema = {
 			trna => 'tRNA',
 			xrna => 'Other RNA',
 			pseudogene => 'Pseudogenes',
-			cassette => 'Genes in cassette',
+			cassette => 'Genes in chromosomal cassettes',
 			biosynthetic_cluster => 'Genes in biosynthetic clusters',
 		}
 	},
@@ -401,7 +401,8 @@ all_proportal -- isolate + metagenome
 
 sub pp_subset_filter {
 	my $self = shift;
-	my $f_name = shift // $self->choke({
+	my $args = shift;
+	my $f_name = $args->{filter_value} // $self->choke({
 		err => 'missing',
 		subject => 'filter'
 	});
@@ -428,15 +429,16 @@ sub pp_subset_filter {
 #	$filters->{pp_metagenomes} = $filters->{pp_metagenome};
 #	$filters->{proportal} = { '!=' => undef };
 
-	return { pp_subset => [ map {
+	return {
+		pp_subset => [ map {
 			$self->choke({
 				err => 'invalid',
 				type => 'pp_subset filter',
 				subject => $_
 			}) unless defined $filters->{$_};
 			$filters->{$_}
-		} @$f_name ] };
-
+		} @$f_name ]
+	};
 }
 
 sub default_filter {
@@ -459,42 +461,11 @@ sub default_filter {
 
 sub dataset_type_filter {
 	my $self = shift;
+	my $args = shift;
 	return $self->default_filter({
 		domain => 'dataset_type',
-		filter_value => @_
+		filter_value => $args->{filter_value}
 	});
-}
-
-sub locus_type_valid {
-	return [ qw( xRNA tRNA rRNA ) ];
-}
-
-sub locus_type_filter {
-	my $self = shift;
-	my $f_name = shift // $self->choke({
-		err => 'missing',
-		subject => 'filter'
-	});
-
-	my $l_type_f = {
-		xrna => { like => '%RNA', not_in => [ qw( rRNA tRNA ) ] },
-	};
-
-# 	$self->choke({
-# 		err => 'invalid',
-# 		type => 'data type filter',
-# 		subject => $f_name
-# 	}) unless grep { $f_name eq $_ } @{ locus_type_valid() };
-#
-# 	if ( 'xrna' eq lc( $f_name ) ) {
-# 		return {
-# 			locus_type => {
-# 				like => '%RNA',
-# 				not_in => [ qw( rRNA tRNA ) ]
-# 			}
-# 		};
-# 	}
-	return { locus_type => [ map { $l_type_f->{ lc($_) } || $_ } @$f_name ] };
 }
 
 # 	proteinCodingGenes
@@ -542,77 +513,6 @@ sub locus_type_filter {
 #	{ locus_type => { 'like' => '%RNA' } }
 
 
-# 	fusedGenes
-
-# 	select g.gene_oid, g.gene_display_name, count( gfc.component )
-# 	from gene g, gene_fusion_components gfc
-# 	where g.gene_oid = gfc.gene_oid
-# 	and g.obsolete_flag = 'No'
-# 	and g.taxon = ?
-# 	$rclause
-# 	$imgClause
-# 	group by g.gene_oid, g.gene_display_name
-# 	order by g.gene_oid, g.gene_display_name
-
-#	{ gene_fusion_components.gene_oid => gene.gene_oid }
-sub fusion {
-	my $self = shift;
-	return 'exists (' . $self->schema('img_core')->table('GeneFusionComponents')
-	->select(
-		-columns => [ '1' ],
-		-where => {
-			'gene_fusion_components.gene_oid' => \ "= gene.gene_oid"
-		},
-		-result_as => 'sql' ) . ' )';
-}
-
-# 	signalpGeneList
-#
-# 	select distinct g.gene_oid
-# 	from gene g, gene_sig_peptides gsp
-# 	where g.gene_oid = gsp.gene_oid
-# 	and g.obsolete_flag = 'No'
-# 	and g.locus_type = 'CDS'
-# 	and g.taxon = ?
-#
-sub signalp_filter {
-#	{ locus_type => 'CDS', gene_sig_peptides.gene_oid => gene.gene_oid }
-	my $self = shift;
-	return 'exists (' .
-		$self->schema('img_core')->table('GeneSigPeptides')
-		->select(
-			-columns => [ 1 ],
-			-where => {
-				'gene.locus_type' => 'CDS',
-				'gene_sig_peptides.gene_oid' => \ "= gene.gene_oid"
-			},
-			-result_as => 'sql' ) . ')';
-}
-
-# 	transmembraneGeneList
-#
-# 		select distinct g.gene_oid
-# 		from gene g, gene_tmhmm_hits gth
-# 		where g.taxon = ?
-# 		and g.obsolete_flag = 'No'
-# 		and g.locus_type = 'CDS'
-# 		and g.gene_oid = gth.gene_oid
-# 		and gth.feature_type = 'TMhelix'
-#		{ locus_type => 'CDS',  }
-
-sub tmhelix_filter {
-	my $self = shift;
-	return 'exists (' .
-		$self->schema('img_core')->table('GeneTmhmmHits')
-		->select(
-			-columns => [ 1 ],
-			-where => {
-				'gene_tmhmm_hits.gene_oid' => \ '= gene.gene_oid',
-				'gene_tmhmm_hits.feature_type' => 'TMHelix'
-			},
-			-result_as => 'sql' ) . ')';
-}
-
 # 	geneCassette
 
 
@@ -637,10 +537,34 @@ sub tmhelix_filter {
 # 		or g0.locus_type = 'pseudo' )
 # 	and g0.obsolete_flag = 'No'
 
+sub taxon_oid_filter {
+	my $self = shift;
+	my $args = shift;
+	my $query = $args->{query};
+	if ( $query =~ /gene_list/ ) {
+		return { 'gene.taxon' => $args->{filter_value} };
+	}
+	if ( $query =~ /scaffold/ ) {
+		return { 'scaffold.taxon' => $args->{filter_value} };
+	}
+	return { 'taxon.taxon_oid' => $args->{filter_value} };
+}
+
+sub scaffold_oid_filter {
+	my $self = shift;
+	my $args = shift;
+	my $query = $args->{query};
+	if ( $query =~ /gene_list/ ) {
+		return { 'gene.scaffold' => $args->{filter_value} };
+	}
+	return { scaffold_oid => $args->{filter_value} };
+}
+
 
 sub category_filter {
 	my $self = shift;
-	my $f_name = shift // $self->choke({
+	my $args = shift;
+	my $f_vals = $args->{filter_value} // $self->choke({
 		err => 'missing',
 		subject => 'filter'
 	});
@@ -655,11 +579,13 @@ sub category_filter {
 	}};
 
 	my $cat_filters = {
-		pseudogene => [
-			{ is_pseudogene => 'Yes' }, # OR
-			{ locus_type => 'pseudo' }, # OR
-			{ img_orf_type => { -like => '%pseudo%' } }
-		],
+		pseudogene => {
+			-or => {
+				is_pseudogene => 'Yes', # OR
+				locus_type => 'pseudo', # OR
+				img_orf_type => { -like => '%pseudo%' }
+			}
+		},
 
 		# protein coding
 		protein_coding => { locus_type => 'CDS' },
@@ -695,16 +621,19 @@ sub category_filter {
 
 		# transmembrane -- requires gene_tmhmm_hits
 #		{ locus_type => 'CDS', gene_tmhmm_hits.feature_type => 'TMHelix' },
+		transmembrane => {},
 
 		# signalp -- requires gene_sig_peptides
-#		{ locus_type => 'CDS', gene_sig_peptides.gene_oid => gene.gene_oid },
+		signalp => {},
 
 		# fused -- requires gene_fusion_components
+		fused => {},
 #		{ gene_fusion_components.gene_oid => gene.gene_oid },
 
 		# cassette
 
 		# biosynthetic_cluster
+		biosynthetic_cluster => {}
 
 	};
 
@@ -714,9 +643,9 @@ sub category_filter {
 
 	my %h;
 
-	log_debug { 'filters: ' . Dumper $f_name };
+	log_debug { 'filters: ' . Dumper $f_vals };
 
-	for ( @$f_name ) {
+	for ( @$f_vals ) {
 		$self->choke({
 #				err => 'invalid',
 #				type => 'category filter',
@@ -761,7 +690,7 @@ sub filter_schema {
 		subject => 'filter schema'
 	});
 
-	log_debug { 'looking for filter schema for ' . $f };
+#	log_debug { 'looking for filter schema for ' . $f };
 
 	if ( $schema->{$f} ) {
 		return $schema->{$f};
@@ -786,7 +715,9 @@ Retrieve the SQL filter for a dimension $fd
 
 sub filter_sqlize {
 	my $self = shift;
-	my $filters = shift // $self->choke({
+	my $args = shift;
+
+	my $filters = $args->{filters} // $self->choke({
 		err => 'missing',
 		subject => 'filter schema'
 	});
@@ -810,7 +741,7 @@ sub filter_sqlize {
 				? ( $filters->{$fd} ) # standard hash
 				: $filters->get_all( $fd ); # Hash::MultiValue version
 
-			%f = ( %f, %{ $self->$fd_fn( [ @f ] ) } );
+			%f = ( %f, %{ $self->$fd_fn({ query => $args->{query}, filter_value => [ @f ] }) } );
 		}
 		else {
 			$f{ $fd } = $filters->{$fd};

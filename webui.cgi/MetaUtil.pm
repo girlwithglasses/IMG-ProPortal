@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. web utility functions for file system
-# $Id: MetaUtil.pm 36403 2016-11-03 21:02:34Z klchu $
+# $Id: MetaUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MetaUtil;
 require Exporter;
@@ -97,7 +97,7 @@ sub Connect_IMG_MER_v330 {
     my $dsn2 = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid";
     my $dbh2 = DBI->connect( $dsn2, $user2, $pw2 );
     if ( !defined($dbh2) ) {
-        webDie("cannot login to IMG MER V330\n");
+        WebUtil::webDie("cannot login to IMG MER V330\n");
     }
     $dbh2->{LongReadLen} = 50000;
     $dbh2->{LongTruncOk} = 1;
@@ -179,7 +179,7 @@ sub sanitizeGeneId3 {
     return $s if ( !$s );
 
     if ( $s !~ /^[0-9A-Za-z\_\.\-]+$/ ) {
-        webDie("sanitizeGeneId3: invalid id '$s'\n");
+        WebUtil::webDie("sanitizeGeneId3: invalid id '$s'\n");
     }
     $s =~ /([0-9A-Za-z\_\.\-]+)/;
     $s = $1;
@@ -192,7 +192,7 @@ sub sanitizeGeneId3 {
 sub sanitizeEcId2 {
     my ($s) = @_;
     if ( $s !~ /^[0-9n_\.\-]+$/ ) {
-        webDie("sanitizeEcId2: invalid EC number '$s'\n");
+        WebUtil::webDie("sanitizeEcId2: invalid EC number '$s'\n");
     }
     $s =~ /([0-9n_\.\-]+)/;
     $s = $1;
@@ -483,13 +483,13 @@ sub searchCogFs {
     my $cur  = execSql( $dbh, $sql, $verbose, $term2, $term );
     my $sql2 = "select genes from cog_genes where cog = ?";
     my $cur2 = $dbh2->prepare($sql2)
-      || webDie("searchCogFs: Cannot prep '$sql2'\n");
+      || WebUtil::webDie("searchCogFs: Cannot prep '$sql2'\n");
 
     for ( ; ; ) {
         my ( $id, $name ) = $cur->fetchrow();
         last if !$id;
         $cur2->execute($id)
-          || webDie("searchCogFs: Cannot execute '$id'\n");
+          || WebUtil::webDie("searchCogFs: Cannot execute '$id'\n");
         my $genes2_s = $cur2->fetchrow();
         my @genes2_a = split( /\s+/, $genes2_s );
         for my $g2 (@genes2_a) {
@@ -521,13 +521,13 @@ sub searchPfamFs {
     my $cur  = execSql( $dbh, $sql, $verbose, $term2, $term2, $term );
     my $sql2 = "select genes from pfam_genes where pfam = ?";
     my $cur2 = $dbh2->prepare($sql2)
-      || webDie("searchPfamFs: Cannot prep '$sql2'\n");
+      || WebUtil::webDie("searchPfamFs: Cannot prep '$sql2'\n");
 
     for ( ; ; ) {
         my ( $id, $name ) = $cur->fetchrow();
         last if !$id;
         $cur2->execute($id)
-          || webDie("searchPfamFs: Cannot execute '$id'\n");
+          || WebUtil::webDie("searchPfamFs: Cannot execute '$id'\n");
         my $genes2_s = $cur2->fetchrow();
         my @genes2_a = split( /\s+/, $genes2_s );
         for my $g2 (@genes2_a) {
@@ -1884,8 +1884,8 @@ sub getGeneEstCopy {
     if ( -e $db_file_name ) {
         tie %gene_copies_h, "BerkeleyDB::Hash",
           -Filename => $db_file_name,
-          -Flags    => DB_RDONLY,
-          -Property => DB_DUP;
+          -Flags    => 'DB_RDONLY',
+          -Property => 'DB_DUP';
     }
 
     if ( tied(%gene_copies_h) ) {
@@ -2076,7 +2076,7 @@ sub getGenomeScaffoldWorkspaceId_old {
     }
 
     my @dir_zip_file_members;
-    opendir( DIR, $full_dir_name ) || webDie("Cannot open directory '$full_dir_name' \n");
+    opendir( DIR, $full_dir_name ) || WebUtil::webDie("Cannot open directory '$full_dir_name' \n");
     my @files = readdir(DIR);
     foreach my $file (@files) {
         if ( $file =~ /stats/i ) {
@@ -3093,8 +3093,8 @@ sub getTaxonFuncGenes {
             my %h;
             tie %h, "BerkeleyDB::Hash",
               -Filename => $file_name,
-              -Flags    => DB_RDONLY,
-              -Property => DB_DUP;
+              -Flags    => 'DB_RDONLY',
+              -Property => 'DB_DUP';
 
             if ( tied(%h) ) {
                 if ( $h{$func_id} ) {
@@ -3160,8 +3160,8 @@ sub getTaxonGeneEstCopy {
     if ( -e $db_file_name ) {
         tie %$gene_copies_h, "BerkeleyDB::Hash",
           -Filename => $db_file_name,
-          -Flags    => DB_RDONLY,
-          -Property => DB_DUP;
+          -Flags    => 'DB_RDONLY',
+          -Property => 'DB_DUP';
 
         if ( tied(%$gene_copies_h) ) {
             return;
@@ -3272,8 +3272,8 @@ sub getTaxonFuncGeneEstCopy {
             my %h;
             tie %h, "BerkeleyDB::Hash",
               -Filename => $file_name,
-              -Flags    => DB_RDONLY,
-              -Property => DB_DUP;
+              -Flags    => 'DB_RDONLY',
+              -Property => 'DB_DUP';
 
             if ( tied(%h) ) {
                 if ( $h{$func_id} ) {
@@ -3409,10 +3409,10 @@ sub getTaxonsBcGenes {
     my $oid_str = OracleUtil::getNumberIdsInClause1( $dbh, @$taxon_oids_ref );
     my $taxonClause = " and g.taxon in ($oid_str) ";
     my @bindList_txs = ();
-    
+
     my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
     my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
-    my ( $sql, @bindList ) = getBcGeneListSql_merfs( $idClause, $taxonClause, $rclause, $imgClause, 
+    my ( $sql, @bindList ) = getBcGeneListSql_merfs( $idClause, $taxonClause, $rclause, $imgClause,
         \@bindList_id, \@bindList_txs, \@bindList_ur );
 
     my $cur = execSql( $dbh, $sql, $verbose, @bindList );
@@ -3420,7 +3420,7 @@ sub getTaxonsBcGenes {
     for ( ; ; ) {
         my ( $g_oid, $taxon ) = $cur->fetchrow();
         last if !$g_oid;
-        
+
         my $genes_href = $taxon_genes{$taxon};
         if ( $genes_href && defined($genes_href) ) {
             $genes_href->{$g_oid} = 1;
@@ -3432,7 +3432,7 @@ sub getTaxonsBcGenes {
         }
     }
     $cur->finish();
-    OracleUtil::truncTable( $dbh, "gtt_num_id1" ) 
+    OracleUtil::truncTable( $dbh, "gtt_num_id1" )
         if ( $oid_str =~ /gtt_num_id1/i );
 
     return (%taxon_genes);
@@ -3455,7 +3455,7 @@ sub getTaxonBcGenes {
     my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
     my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
     my ( $sql, @bindList ) =
-      getBcGeneListSql_merfs( $idClause, $taxonClause, $rclause, $imgClause, 
+      getBcGeneListSql_merfs( $idClause, $taxonClause, $rclause, $imgClause,
         \@bindList_id, \@bindList_txs, \@bindList_ur );
 
     my $cur = execSql( $dbh, $sql, $verbose, @bindList );
@@ -3484,7 +3484,7 @@ sub getTaxonBcFuncGenes {
             my ( $i1, $i2 ) = split( /\:/, $func_id );
             $func_id = $i2;
         }
-        
+
         my $idClause;
         $idClause = " and g.cluster_id = ? " if ( $func_id);
         my @bindList_id;
@@ -3492,7 +3492,7 @@ sub getTaxonBcFuncGenes {
 
         my $taxonClause  = " and g.taxon = ? ";
         my @bindList_txs = ($taxon_oid);
-        
+
         my ( $rclause, @bindList_ur ) = WebUtil::urClauseBind("g.taxon");
         my $imgClause = WebUtil::imgClauseNoTaxon("g.taxon");
         my ( $sql, @bindList ) =
@@ -3522,7 +3522,7 @@ sub getMetaTaxonsBcFuncGenes {
     my ( $dbh, $metaOids_ref, $data_type, $func_ids_ref ) = @_;
 
     if ( $data_type eq 'unassembled' ) {
-        webError("Biosynthetic Cluster does not support $data_type.");
+        WebUtil::webError("Biosynthetic Cluster does not support $data_type.");
     }
     $data_type = 'assembled';
 
@@ -4889,8 +4889,8 @@ sub getTaxonFuncMetaGenes {
         my %h;
         tie %h, "BerkeleyDB::Hash",
           -Filename => $db_file_name,
-          -Flags    => DB_RDONLY,
-          -Property => DB_DUP;
+          -Flags    => 'DB_RDONLY',
+          -Property => 'DB_DUP';
 
         if ( tied(%h) ) {
             for my $id2 (@func_list) {
@@ -5014,7 +5014,7 @@ sub getPhyloGeneCounts {
                 from phylo_dist
                 where homo_taxon in ( $taxons_str )
             };
-            
+
             if($xcopy eq 'est_copy' ) {
                 $sql3 = qq{
                 select sum(est_copy)
@@ -5022,7 +5022,7 @@ sub getPhyloGeneCounts {
                 where homo_taxon in ( $taxons_str )
             };
             }
-            
+
             my $sth = $dbh3->prepare($sql3);
             $sth->execute();
             my ($cnt2) = $sth->fetchrow();
@@ -5134,7 +5134,7 @@ sub sanitizePhylum {
     }
 
     if ( $s !~ /^[ 0-9A-Za-z\-\_\:\.]+$/ ) {
-        webDie("sanitizePhylum **: invalid id '$s'\n");
+        WebUtil::webDie("sanitizePhylum **: invalid id '$s'\n");
     }
     $s =~ /([ 0-9A-Za-z\-\_\:\.]+)/;
     $s = $1;
@@ -5151,7 +5151,7 @@ sub sanitizePhylum2 {
     }
 
     if ( $s !~ /^[ 0-9A-Za-z\-\_\:\,\.\-]+$/ ) {
-        webDie("sanitizePhylum2: invalid id '$s'\n");
+        WebUtil::webDie("sanitizePhylum2: invalid id '$s'\n");
     }
     $s =~ /([ 0-9A-Za-z\-\_\:\,\.\-]+)/;
     $s = $1;
@@ -5168,7 +5168,7 @@ sub sanitizeVar {
     }
 
     if ( $s !~ /^[ 0-9A-Za-z\-\_\:\,\.\-]+$/ ) {
-        webDie("sanitizeVar: invalid variable '$s'\n");
+        WebUtil::webDie("sanitizeVar: invalid variable '$s'\n");
     }
     $s =~ /([ 0-9A-Za-z\-\_\:\,\.\-]+)/;
     $s = $1;
@@ -7521,10 +7521,10 @@ sub getAllScaffoldInfo {
         my $dbh = dbLogin();
         my $db_str = OracleUtil::getNumberIdsInClause( $dbh, @db_ids );
         my $sql = qq{
-            select s.scaffold_oid, ss.seq_length, 
-            ss.gc_percent, ss.count_total_gene, s.read_depth 
-            from scaffold s, scaffold_stats ss 
-            where s.scaffold_oid in ($db_str) 
+            select s.scaffold_oid, ss.seq_length,
+            ss.gc_percent, ss.count_total_gene, s.read_depth
+            from scaffold s, scaffold_stats ss
+            where s.scaffold_oid in ($db_str)
             and s.scaffold_oid = ss.scaffold_oid
         };
         my $cur = execSql( $dbh, $sql, $verbose );
@@ -7600,7 +7600,7 @@ sub getAllMetaScaffoldInfo {
 
             # list of scaffold oid
             my $oid_ref = $taxon_scaffolds{$key};
-            
+
             # TODO cache
             my @tmpoids = (); # list of scaffold oids(this is not workspace ids) not in cache
             foreach my $oid (@$oid_ref) {
@@ -7609,13 +7609,13 @@ sub getAllMetaScaffoldInfo {
 print "found in cache: $key2<br>\n" if($img_ken);
                     push(@cacheKeys, $key2); # workspace ids in cache
                 } else {
-print "push oid: $key2<br>\n"  if($img_ken); 
+print "push oid: $key2<br>\n"  if($img_ken);
                     push(@tmpoids, $oid);
                 }
             }
             $oid_ref = \@tmpoids; # I need only to finds oids not in cache
             # end of added cache
-            
+
             if ( $oid_ref ne '' && scalar(@$oid_ref) > 0 ) {
 
                 #stats
@@ -7665,16 +7665,16 @@ print "push oid: $key2<br>\n"  if($img_ken);
     } else {
         foreach my $key (keys %$scaf_href) {
             $cache_href1->{$key} = $scaf_href->{$key};
-        }        
+        }
     }
     store $cache_href1, $cachefile1;
-    
+
     if($cache_href2 eq '') {
         $cache_href2 = $scaf_info_href;
     } else {
         foreach my $key (keys %$scaf_info_href) {
             $cache_href2->{$key} = $scaf_info_href->{$key};
-        }        
+        }
     }
     store $cache_href2, $cachefile2;
 
@@ -7964,7 +7964,7 @@ sub getScaffoldStatsForTaxonScaffolds {
         my $tag = "scaffold_stats";
         doFlieReading( $print_msg, '', $taxon_oid, $data_type, $oids_ref, $tag, \%scaffold_stats_h );
     }
-    
+
     return %scaffold_stats_h;
 }
 
@@ -8919,7 +8919,7 @@ sub parseMetaGeneOid {
 
     if ( isMetaGene($gene_oid) ) {
         my $dtype_goid;
-        # bug fix - ken 
+        # bug fix - ken
         # " , 2 " on the split is needed for one split ion first '.'
         ( $toid,  $dtype_goid ) = split( /\./, $gene_oid, 2 );
         ( $dtype, $goid )       = split( /:/,  $dtype_goid );
@@ -8937,10 +8937,10 @@ sub parseMetaGeneOid {
 sub parseMetaScaffoldOid {
     my ($scaffold_oid) = @_;
     my ( $soid, $dtype, $toid, $extid );
-   
+
     if ( isMetaGene($scaffold_oid) ) {
-    
-        # i should test to see if its 
+
+        # i should test to see if its
         # 3300000547.3300000547.a:PR_CR_10_Liq_2_inCRDRAFT_1000001
         # or
         # 3300000547.a:PR_CR_10_Liq_2_inCRDRAFT_1000001
@@ -8949,7 +8949,7 @@ sub parseMetaScaffoldOid {
         my ($test1, $junk) = split( /:/,  $scaffold_oid );
         my @test2 = split(/\./, $test1);
         my $dotcnt = $#test2 + 1;
-#print "dot cnt  == $dotcnt === $scaffold_oid, $test1<br>\n"; 
+#print "dot cnt  == $dotcnt === $scaffold_oid, $test1<br>\n";
         if($dotcnt == 2) {
             # two items means 1 dot
             # - ken
@@ -8959,12 +8959,12 @@ sub parseMetaScaffoldOid {
 
          my $dtype_goid;
         ( $toid, $extid,  $dtype_goid ) = split( /\./, $scaffold_oid, 3 );
-        
+
 #print "here 2 $toid, $extid,  $dtype_goid<br>\n";
-        
+
         ( $dtype, $soid )       = split( /:/,  $dtype_goid );
-        
-        
+
+
         if ( $dtype eq 'a' || $dtype == 'assembled') {
             $dtype = 'assembled';
         } else {
@@ -8973,7 +8973,7 @@ sub parseMetaScaffoldOid {
     }
     my @v = ( $soid, $dtype, $toid );
 
- #print "here 3 @v<br>\n";   
+ #print "here 3 @v<br>\n";
     return @v;
 
 }
@@ -8992,7 +8992,7 @@ sub getMetaGeneOid {
     } elsif ( $dtype eq 'unassembled' ) {
         $dtype = 'u';
     } elsif ( $dtype ne 'u' && $dtype ne 'a' ) {
-        webDie("Bad data_type for MetaUtil::getMetaGeneOid()\n");
+        WebUtil::webDie("Bad data_type for MetaUtil::getMetaGeneOid()\n");
     }
 
     return $toid . "." . $dtype . ":" . $goid;
@@ -9025,7 +9025,7 @@ sub taxonHashNoBins {
     }
     close $rfh;
     if ( $nBins == 0 ) {
-        webDie( "taxonHasNoBins: cannot find nBins for " . "taxau='$taxau' type='$type0'\n" );
+        WebUtil::webDie( "taxonHasNoBins: cannot find nBins for " . "taxau='$taxau' type='$type0'\n" );
     }
     return $nBins;
 }
@@ -9237,7 +9237,7 @@ sub getPercentClause {
 ############################################################################
 sub getMetaTaxonCrisprList {
     my ( $taxon_oid, $data_type, $scaffolds_ref ) = @_;
-        
+
     my @recs;
 
     $taxon_oid = sanitizeInt($taxon_oid);
@@ -9264,7 +9264,7 @@ sub getMetaTaxonCrisprList {
             for ( ; ; ) {
                 my ( $contig_id, $start, $end, $crispr_no ) = $sth->fetchrow();
                 last if !$contig_id;
-                
+
                 my $rec;
                 $rec .= "$contig_id\t";
                 $rec .= "$start\t";
@@ -9285,7 +9285,7 @@ sub getMetaTaxonCrisprList {
 ############################################################################
 sub getMetaScaffoldCrisprList {
     my ( $taxon_oid, $data_type, $scaffold_oid, $scf_start_coord, $scf_end_coord ) = @_;
-        
+
     my @recs;
 
     $taxon_oid = sanitizeInt($taxon_oid);
@@ -9333,7 +9333,7 @@ sub getMetaScaffoldCrisprList {
             for ( ; ; ) {
                 my ( $contig_id, $start, $end, $crispr_no ) = $sth->fetchrow();
                 last if !$contig_id;
-                
+
                 my $rec;
                 $rec .= "$contig_id\t";
                 $rec .= "$start\t";
@@ -9354,7 +9354,7 @@ sub getMetaScaffoldCrisprList {
 ############################################################################
 sub getMetaScaffoldCrisprDetail {
     my ( $taxon_oid, $data_type, $scaffold_oid, $scf_start_coord, $scf_end_coord ) = @_;
-        
+
     my @recs;
 
     $taxon_oid = sanitizeInt($taxon_oid);
@@ -9409,7 +9409,7 @@ sub getMetaScaffoldCrisprDetail {
                 my ( $contig_id, $crispr_no, $start_coord, $end_coord, $pos, $repeat_seq, $spacer_seq ) =
                   $sth->fetchrow();
                 last if !$contig_id;
-        
+
                 my $rec;
                 $rec .= "$contig_id\t";
                 $rec .= "$crispr_no\t";

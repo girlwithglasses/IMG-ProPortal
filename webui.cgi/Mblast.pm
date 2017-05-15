@@ -69,7 +69,7 @@ sub runMblastM0 {
        $x = $1;
        if( length( $seq ) != length( $x ) ) {
 	   printStatusLine( "Error.", 2 );
-	   webError( "Check that your BLASTX query sequence is DNA." );
+	   WebUtil::webError( "Check that your BLASTX query sequence is DNA." );
            return;
        }
     }

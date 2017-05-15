@@ -2,7 +2,7 @@
 # ImgCompound - Process search and browsing for IMG compound.
 #   imachen 12/08/2006
 #
-# $Id: ImgCompound.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: ImgCompound.pm 36986 2017-04-24 20:21:19Z klchu $
 ###########################################################################
 package ImgCompound;
 use strict;
@@ -208,7 +208,7 @@ sub printBrowse {
     $cur->finish( ); 
 
     $sql = qq{
-             select url_template from compound_ext_db\@img_ext
+             select url_template from compound_ext_db
              where db_name = 'PubChem Compound'
            };
     $cur = execSql( $dbh, $sql, $verbose );
@@ -381,7 +381,7 @@ sub printImgCpdDetail {
     if( $cpd_oid eq "" ) {
         #$dbh->disconnect();
         printStatusLine( "Error.", 2 ); 
-        webError( "Compound $compound_oid not found in this database." );
+        WebUtil::webError( "Compound $compound_oid not found in this database." );
         return; 
     } 
 
@@ -800,7 +800,7 @@ sub printCompoundExtLinks {
     my %url_h;
     my $sql = qq{
         select db_name, url_template
-               from compound_ext_db\@img_ext
+               from compound_ext_db
                where url_template is not null
            };
     my $cur = execSql( $dbh, $sql, $verbose );

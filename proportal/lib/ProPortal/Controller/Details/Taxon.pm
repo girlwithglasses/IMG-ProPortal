@@ -51,7 +51,7 @@ sub get_data {
 
 	my $res = $self->_core->run_query({
 		query => 'taxon_details',
-		where => $args
+		-where => $args
 	});
 
 	if ( scalar @$res != 1 ) {

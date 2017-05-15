@@ -1,7 +1,7 @@
 #!/bin/bash 
 # Control the environment from here for security and other reasons.
 #
-# $Id: main.cgi 35611 2016-05-08 21:22:50Z klchu $
+# $Id: main.cgi 37048 2017-05-04 21:21:49Z klchu $
 #
 # http://aaroncrane.co.uk/2009/02/perl_safe_signals/
 #
@@ -24,6 +24,6 @@ then
    echo "<br/><font color='red'>"
    echo "Oops. This is embarrassing an error has occurred.<br/>"
    echo "Please report this along with your steps on how to reproduce it.<br/>"
-   echo "- IMG email: imgsupp at lists.jgi-psf.org"
+   echo "- IMG email: jgi-imgsupp at lists.lbl.gov"
    echo "</font>"
 fi

@@ -1,6 +1,6 @@
 ############################################################################
 # web services package using xml.cgi xml.pl
-# $Id: Check.pm 34179 2015-09-03 20:53:31Z aireland $
+# $Id: Check.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Check;
 my $section = "Check";
@@ -18,6 +18,11 @@ my $env      = getEnv();
 my $main_cgi = $env->{main_cgi};
 my $verbose  = $env->{verbose};
 my $base_url = $env->{base_url};
+
+sub printWebPageHeader {
+    my($self) = @_;
+    print header( -type => "text/html" );
+}
 
 sub dispatch {
     my $page = param("page");

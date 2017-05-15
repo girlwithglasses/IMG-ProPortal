@@ -1,6 +1,6 @@
 ############################################################################
 #  Append Genome List Filter into other HTML.
-# $Id: GenomeListFilter.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: GenomeListFilter.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GenomeListFilter;
 my $section = "GenomeListFilter"; 
@@ -34,7 +34,17 @@ my $user_restricted_site = $env->{user_restricted_site};
 my $top_base_url = $env->{top_base_url};
 my $tSplitSym = ":::";
 
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
+
 sub dispatch {
+	my($self) = @_;
+	
     my $page = param("page");
     my $isSingleSelect = param("isSingleSelect");
     my $phyloType = param("phyloType");

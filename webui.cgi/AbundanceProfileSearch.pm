@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: AbundanceProfileSearch.pm 36199 2016-09-20 22:03:31Z aratner $
+# $Id: AbundanceProfileSearch.pm 36954 2017-04-17 19:34:04Z klchu $
 # Abundance Profile search / Conditional Function Profile
 ############################################################################
 package AbundanceProfileSearch;
@@ -386,7 +386,7 @@ sub printAbundanceProfileRun {
     if (   ( !(@intoi) || $#intoi < 0 )
         && ( !(@intoiBin) || $#intoiBin < 0 ) )
     {
-        webError( "Please select a genome " . "in the \"Find Functions In\" column." );
+        WebUtil::webError( "Please select a genome " . "in the \"Find Functions In\" column." );
         return;
     }
 
@@ -2500,7 +2500,7 @@ sub sortDataFile {
 
     $path = checkTmpPath($path);
     if ( !( -e $path ) ) {
-        webError("Cannot find data file to sort.");
+        WebUtil::webError("Cannot find data file to sort.");
         return;
     }
 
@@ -2679,7 +2679,7 @@ sub printAbundanceProfileResultsPage {
     my $path = "$cgi_tmp_dir/$cacheFile";
     $path = checkTmpPath($path);
     if ( !( -e $path ) ) {
-        webError("Session has expired. Please start over.");
+        WebUtil::webError("Session has expired. Please start over.");
         return;
     }
 

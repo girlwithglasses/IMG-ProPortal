@@ -1,7 +1,7 @@
 ############################################################################
 # Sequence.pm - DNA Sequence Display
 # all calculations are from Ernest's code in SixPack.pm
-# $Id: Sequence.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: Sequence.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Sequence;
 my $section = "Sequence";
@@ -209,7 +209,7 @@ sub findSequence {
     my $seq_len = length( $seq );
     if( $seq_len == 0 ) {
 	printStatusLine( "Cannot read sequence.", 2 );
-        webError( "Cannot read sequence for taxon_oid=$taxon_oid " .
+        WebUtil::webError( "Cannot read sequence for taxon_oid=$taxon_oid " .
                   "scf_ext_accession='$ext_accession'\n" );
     }
 
@@ -259,10 +259,10 @@ sub computeSequence {
     print "<h1>Sequence Viewer</h1>\n";
 
     if( $up_stream_int > 0 || !isInt( $up_stream ) ) {
-        webError( "Expected negative integer for up stream." );
+        WebUtil::webError( "Expected negative integer for up stream." );
     }
     if( $down_stream_int < 0 || !isInt( $down_stream ) ) {
-        webError( "Expected positive integer for down stream." );
+        WebUtil::webError( "Expected positive integer for down stream." );
     }
 
     my ( $gene_display_name, $taxon, $scf_ext_accession, 
@@ -388,7 +388,7 @@ sub computeSequence {
     }
     my $seq1_len = length( $seq1 );
     if( $seq1_len == 0 ) {
-        webError( "Cannot read sequence for taxon_oid=$taxon " .
+        WebUtil::webError( "Cannot read sequence for taxon_oid=$taxon " .
                   "scf_ext_accession='$scf_ext_accession'\n" );
     }
 
@@ -482,7 +482,7 @@ sub computeSequence {
         webLog( "+ $cmd\n" );
         my $st = system( $cmd );
         if ( $st != 0 ) {
-            webDie( "status=$st '$cmd'\n" );
+            WebUtil::webDie( "status=$st '$cmd'\n" );
         }
 
         print "<hr/>\n";
@@ -1254,7 +1254,7 @@ sub getTranslation {
     }
     my $len3 = @a;
     if( $len3 != $len ) {
-       webDie( "getTranslation:  len=$len len3=$len3 offset=$offset\n" );
+       WebUtil::webDie( "getTranslation:  len=$len len3=$len3 offset=$offset\n" );
     }
     return @a;
 }

@@ -276,7 +276,6 @@
 		error;
 	END;
 
-
 	IF ! scr_arr;
 		scr_arr = [];
 	END;

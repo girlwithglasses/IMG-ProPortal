@@ -1,4 +1,4 @@
-# $Id: ANI.pm 36896 2017-03-29 22:56:53Z aratner $
+# $Id: ANI.pm 36954 2017-04-17 19:34:04Z klchu $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -73,6 +73,18 @@ sub getAppHeaderData {
     my @a = ();
     push(@a, "CompareGenomes", '', '', $js);
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    my $page = param('page');
+    if ( $page eq "selectFiles" ) {
+
+        # xml header
+        print header( -type => "text/xml" );
+    } else {
+        print header( -type => "application/json", -expires => '-1d' );
+    }
 }
 
 sub dispatch {
@@ -630,7 +642,7 @@ sub selectFiles {
     my $folder = "genome";
     my $sid = getContactOid();
     opendir(DIR, "$workspace_dir/$sid/$folder")
-      or webDie("failed to open folder list");
+      or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -834,7 +846,7 @@ sub doPairwise {
         # from quick search using autocomplete:
         my @searchTerms = param("taxonTerm");
         if (scalar @searchTerms == 2) {
-            webError("Cannot compare same genome.")
+            WebUtil::webError("Cannot compare same genome.")
               if @searchTerms[0] eq @searchTerms[1];
 
             my $cur = execSql($dbh, $sql, $verbose, @searchTerms[0]);
@@ -856,7 +868,7 @@ sub doPairwise {
     } else {
         $genomeLabel = "genomes";
     }
-    webError("Please select 2 valid $genomeLabel.")
+    WebUtil::webError("Please select 2 valid $genomeLabel.")
 	if ($nTaxons1 < 1 && (scalar @localfiles1 < 1)) || $nTaxons2 < 1;
 
     printStatusLine("Loading ...", 1);
@@ -884,7 +896,7 @@ sub doPairwise {
         $hasGenome2Genome = 1;
         my ($dataRecs_aref, $precomputed_href) = computePairwiseANI($dbh, \@oids1, \@oids2);
         if (scalar @$dataRecs_aref < 1) {
-            webError("Could not compute data for selected $genomeLabel.");
+            WebUtil::webError("Could not compute data for selected $genomeLabel.");
         }
         printPairwiseTable(\%taxon2name, $dataRecs_aref, $precomputed_href, $msg);
     }
@@ -904,7 +916,7 @@ sub doQuickPairwise {
     # selected from "Genomes in Clique" tab of "Clique Details" page
     my $clique_id = param("clique_id");
     my @cids = param("taxon_filter_oid");
-    webError("Please select 2 genomes for pairwise ANI.") if scalar @cids < 2;
+    WebUtil::webError("Please select 2 genomes for pairwise ANI.") if scalar @cids < 2;
 
     printStatusLine("Loading ...", 1);
 
@@ -931,7 +943,7 @@ sub doQuickPairwise {
     my ($dataRecs_aref, $precomputed_href) = computePairwiseANI($dbh, \@cids, \@cids);
 
     if (scalar @$dataRecs_aref < 1) {
-        webError("Could not compute data for selected genomes.");
+        WebUtil::webError("Could not compute data for selected genomes.");
     }
 
     printPairwiseTable(\%taxon2name, $dataRecs_aref, $precomputed_href, "", $clique_id);
@@ -1195,7 +1207,7 @@ sub doPairwiseWithUpload {
 
     my $nTaxons0 = @oids;
     if ($nTaxons0 < 1) {
-        webError("Please select up to 100 genomes.");
+        WebUtil::webError("Please select up to 100 genomes.");
     }
 
     my $tx_str = join(",", @oids);
@@ -1220,7 +1232,7 @@ sub doPairwiseWithUpload {
     print "</p>";
 
     if (scalar @dataRecs < 1) {
-        webError("Could not compute data for selected genomes.");
+        WebUtil::webError("Could not compute data for selected genomes.");
     }
 
     printPairwiseWithUploadTable(\%taxon2name, \@dataRecs);
@@ -1430,7 +1442,7 @@ sub uploadLocalFile {
     }
 
     if (scalar @myfhs < 1) {
-        webError($error);
+        WebUtil::webError($error);
     }
 
     return (\@myfhs, \@myupload_files);
@@ -2101,7 +2113,7 @@ sub printCliquesForGenusSpecies {
     }
 
     my @cliques = keys %clique2txs;
-    webError("Cannot find cliques for $genus_species") if scalar @cliques < 1;
+    WebUtil::webError("Cannot find cliques for $genus_species") if scalar @cliques < 1;
 
     my $clique_str = join(",", @cliques);
     my $sql = qq{

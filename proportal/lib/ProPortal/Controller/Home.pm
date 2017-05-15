@@ -39,7 +39,7 @@ sub _render {
 	my $stats;
 
 	# counts, grouped by proportal pp_subset
-	$stats->{pp_subsets} = $self->_core->schema('img_core')->table('GoldTaxonVw')
+	$stats->{pp_subsets} = $self->_core->schema('img_core')->table('VwGoldTaxon')
 		->select(
 			-columns => [ 'pp_subset', 'count(taxon_oid)|count' ],
 			-group_by => 'pp_subset',

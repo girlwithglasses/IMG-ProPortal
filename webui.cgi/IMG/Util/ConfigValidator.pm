@@ -74,7 +74,7 @@ sub make_config {
 		IMG::Util::Logger::set_logger_conf( $hash->{engines}{logger}{log4perl} );
 	}
 
-	log_debug { 'hash: ' . Dumper $hash };
+#	log_debug { 'hash: ' . Dumper $hash };
 
 #	log_debug { 'img_conf schema: ' . Dumper $img_conf->{schema} };
 #	log_debug { 'img_conf db: ' . Dumper $img_conf->{db} };

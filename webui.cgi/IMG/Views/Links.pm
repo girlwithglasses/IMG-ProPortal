@@ -975,8 +975,8 @@ my $static_links = {
 		url => 'legacy',
 		label => 'Legacy Data'
 	},
-	
-	## tools	
+
+	## tools
 	'menu/tools' => {
 		url => 'menu/tools',
 		label => 'Tools'
@@ -1156,10 +1156,23 @@ my $static_links = {
 
 sub urlize_params {
 	my $hash = shift;
-	return '' unless keys %$hash;
-	return '?' . join "&amp;", map {
-		$_ . "=" . escape( $hash->{$_} )
-	} sort keys %$hash;
+
+	# hash
+	if ( 'HASH' eq ref $hash ) {
+		return '' unless keys %$hash;
+
+		return '?' . join "&amp;", map {
+			if ( ref $hash->{ $_ } && 'ARRAY' eq ref $hash->{$_} ) {
+				my $hk = $_;
+				join "&amp;", map { $hk . "=" . escape( $_ ) } @{$hash->{$hk}};
+			}
+			else {
+				$_ . "=" . escape( $hash->{$_} )
+			}
+		} sort keys %$hash;
+
+	}
+
 }
 
 
@@ -1175,6 +1188,15 @@ my $dynamic_links;
 =cut
 
 my $dynamic_links = {
+
+	prefixed => sub {
+		my $h = shift;
+		my $url = $h->{base} . $h->{url};
+		if ( $h->{params} ) {
+			$url .= urlize_params( $h->{params} );
+		}
+		return $url;
+	},
 
 	# JBrowse base URL: jbrowse.com/12345678
 	# no JBrowse URL:   base_url/jbrowse/12345678
@@ -1236,7 +1258,7 @@ my $dynamic_links = {
 
 	list => sub {
 		my $h = shift;
-		log_debug { 'list link; h: ' . Dumper $h };
+	#	log_debug { 'list link; h: ' . Dumper $h };
 		if ( ! $h->{params} ) {
 			return $h->{base} . '/list/';
 		}
@@ -1328,6 +1350,15 @@ my $old_dynamic = {
 
 # Metagenome gene
 #	my $url = "main.cgi?section=MetaGeneDetail&page=metaGeneDetail&data_type=${data_type}&taxon_oid=${merfs_taxon}&gene_oid=${mer_gid}";
+	metagenome_gene => sub {
+		return {
+			section => 'MetaGeneDetail',
+			page => 'metaGeneDetail',
+			data_type => $_[0]->{params}{data_type},
+			taxon_oid => $_[0]->{params}{taxon_oid},
+			gene_oid => $_[0]->{params}{gene_oid}
+		}
+	},
 
 #	https://img-proportal-test.jgi.doe.gov/details/taxon/main.cgi?section=GeneCassette&page=occurrence&taxon_oid=2634166547
 	chr_cassette_genes => sub {
@@ -1357,6 +1388,22 @@ my $old_dynamic = {
 			page => 'cluster_detail',
 			taxon_oid => $_[0]->{params}{taxon_oid},
 			cluster => $_[0]->{params}{cluster_id}
+		};
+	},
+
+	signalp => sub {
+		return {
+			section => 'GeneDetail',
+			page => 'sigCleavage',
+			gene_oid => $_[0]->{params}{gene_oid}
+		};
+	},
+
+	tmhelix => sub {
+		return {
+			section => 'GeneDetail',
+			page => 'tmTopo',
+			gene_oid => $_[0]->{params}{gene_oid}
 		};
 	}
 };
@@ -1491,10 +1538,6 @@ sub get_img_link {
 			subject => 'link ID'
 		});
 	}
-# 	else {
-# 		log_debug { 'id: ' . $args->{id} };
-# 		log_debug { 'args: ' . Dumper $args };
-# 	}
 
 	my $base = $base_url_h->{base_url};
 
@@ -1502,7 +1545,9 @@ sub get_img_link {
 	if ( $dynamic_links->{ $args->{id} } ) {
 
 #		log_debug { 'found dynamic link for ' . $args->{id} . '; args: ' . Dumper $args };
-		if ( $args->{params} && defined $args->{params}{output_format} ) {
+		if ( $args->{params}
+			&& 'HASH' eq ref $args->{params}
+			&& defined $args->{params}{output_format} ) {
 			if ( 'csv' eq $args->{params}{output_format} ) {
 				$base .= '/csv_api';
 			}
@@ -1516,6 +1561,13 @@ sub get_img_link {
 		}
 
 		return $dynamic_links->{ $args->{id} }->({ base => $base, %$args } );
+	}
+
+	if ( $old_dynamic->{ $args->{id} } ) {
+		my $pars = $old_dynamic->{ $args->{id} }->( $args );
+		log_debug { 'args: ' . Dumper $pars };
+		return $base_url_h->{main_cgi_url}
+		. urlize_params( $pars );
 	}
 
 	# get the link data or die trying
@@ -1532,7 +1584,7 @@ sub get_img_link {
 
 	if ( ref $l_data ne 'HASH' ) {
 		log_debug { 'l_data: ' . Dumper $l_data };
-		log_debug { 'link library: ' . Dumper $link_library };
+	#	log_debug { 'link library: ' . Dumper $link_library };
 	}
 	if ( $l_data->{abs_url} ) {
 		return $l_data->{abs_url};

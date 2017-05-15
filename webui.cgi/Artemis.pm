@@ -1,7 +1,7 @@
 ############################################################################
 # Artemis.pm - Handle web artemis start up.
 #     --es 09/13/2007
-# $Id: Artemis.pm 35611 2016-05-08 21:22:50Z klchu $
+# $Id: Artemis.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Artemis;
 use strict;
@@ -75,6 +75,11 @@ sub getAppHeaderData {
 
         return @a;
     }
+}
+
+
+sub printWebPageHeader {
+    my($self) = @_;
 }
 
 ############################################################################
@@ -325,9 +330,9 @@ sub printACTPairwise {
     #print "printACTPairwise \@taxon_oids: @taxon_oids <br\> \@order: @order";
 
     if ( $#taxon_oids < 1 && $#order < 1 ) {
-        webError("Please select at least 2 genomes.\n");
+        WebUtil::webError("Please select at least 2 genomes.\n");
     } elsif ( $#taxon_oids > 4 ) {
-        webError("Max. selection of 5 genomes.\n");
+        WebUtil::webError("Max. selection of 5 genomes.\n");
     }
 
     print qq{
@@ -482,9 +487,9 @@ sub printACTPairwise_yui {
     my @orderTaxons = param("taxon_oid");
 
     if ( $#taxon_oids < 1 && $#order < 1 ) {
-        webError("Please select at least 2 genomes.\n");
+        WebUtil::webError("Please select at least 2 genomes.\n");
     } elsif ( $#taxon_oids > 4 ) {
-        webError("Max. selection of 5 genomes.\n");
+        WebUtil::webError("Max. selection of 5 genomes.\n");
     }
 
     print qq{
@@ -701,7 +706,7 @@ sub printReorderForm {
     }
 
     if ( $#orders != $#taxon_oids && $#ignore > -1 ) {
-        webError("You cannot remove all the scaffolds from a genome.\n");
+        WebUtil::webError("You cannot remove all the scaffolds from a genome.\n");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -764,7 +769,7 @@ sub printReorderForm {
 
         } else {
             if ( !-e "$taxon_fna_dir/$toid.fna" ) {
-                webError("$toid.fna file is missing.");
+                WebUtil::webError("$toid.fna file is missing.");
             }
 
             # get order from file
@@ -849,7 +854,7 @@ sub printReorderForm_yui {
     print "<br/>";
 
     if ( $#orders != $#taxon_oids && $#ignore > -1 ) {
-        webError("You cannot remove all the scaffolds from a genome.\n");
+        WebUtil::webError("You cannot remove all the scaffolds from a genome.\n");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -1722,7 +1727,7 @@ sub printArtemisForm {
 
     print "<h1>Create Artemis Data File</h1>\n";
     print "<p>\n";
-    webError(
+    WebUtil::webError(
         "Unable to determine Taxon ID. Please use <b>Find Genomes</b> above
              and select a genome.\n"
     ) if $taxon_oid eq "";
@@ -1832,7 +1837,7 @@ sub processArtemisFile {
     print "<h1>Artemis Data File</h1>\n";
     my $scaffold_oid = param("scaffold_oid");
     if ( $scaffold_oid eq "" ) {
-        webError("Please select one scaffold.\n");
+        WebUtil::webError("Please select one scaffold.\n");
     }
     require EmblFile;
     my $outFile = "$tmp_dir/$$.art";

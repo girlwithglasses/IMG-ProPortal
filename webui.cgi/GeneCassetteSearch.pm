@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: GeneCassetteSearch.pm 36537 2017-01-31 06:09:50Z klchu $
+# $Id: GeneCassetteSearch.pm 36954 2017-04-17 19:34:04Z klchu $
 
 package GeneCassetteSearch;
 my $section = "GeneCassetteSearch";
@@ -70,6 +70,13 @@ sub getAppHeaderData {
 
         push( @a, "IMG Cassette Search", '', '', $js);
         return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/html" );
 }
 
 sub dispatch {
@@ -153,10 +160,10 @@ sub printRunSearch {
 
     $searchtext =~ s/\r//g;
     if ( blankStr($searchtext) ) {
-        webError("No search term specified. Please go back and enter a term.");
+        WebUtil::webError("No search term specified. Please go back and enter a term.");
     }
     if ( $searchtext !~ /[a-zA-Z0-9]+/ ) {
-        webError("Search term should have some alphanumeric characters.");
+        WebUtil::webError("Search term should have some alphanumeric characters.");
     }
 
     my @taxonSelections = param('genomeFilterSelections'); #OracleUtil::processTaxonSelectionParam("genomeFilterSelections");
@@ -1224,7 +1231,7 @@ sub searchCluster {
             };
         }
         my $cur = $dbh->prepare($sql)
-          || webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
 
         foreach my $x (@$text_aref) {
             my $tmp = strTrim($x);
@@ -1236,9 +1243,9 @@ sub searchCluster {
             $tmp =~ s/_/\\_/g;      # replace _ with \_
 
             $cur->bind_param( 1, $tmp )
-              || webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+              || WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
             $cur->execute()
-              || webDie("execSqlBind: cannot execute: $DBI::errstr\n");
+              || WebUtil::webDie("execSqlBind: cannot execute: $DBI::errstr\n");
             for ( ; ; ) {
                 my ($id) = $cur->fetchrow();
                 last if ( !$id );
@@ -1272,7 +1279,7 @@ sub searchCluster {
             };
         }
         my $cur = $dbh->prepare($sql)
-          || webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
 
         webLog("$sql \n");
 
@@ -1287,12 +1294,12 @@ sub searchCluster {
             $tmp =~ s/_/\\_/g;      # replace _ with \_
 
             $cur->bind_param( 1, $tmp )
-              || webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+              || WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
 
             webLog("bind $tmp \n");
 
             $cur->execute()
-              || webDie("execSqlBind: cannot execute: $DBI::errstr\n");
+              || WebUtil::webDie("execSqlBind: cannot execute: $DBI::errstr\n");
             for ( ; ; ) {
                 my ($id) = $cur->fetchrow();
                 last if ( !$id );

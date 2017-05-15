@@ -5,7 +5,7 @@
 # Ported to Perl from PHP version from Yahoo! Datatable example
 # -BSJ 10/13/09
 #
-# $Id: JSONProxy.pm 36521 2017-01-24 22:41:12Z aireland $
+# $Id: JSONProxy.pm 36954 2017-04-17 19:34:04Z klchu $
 ###############################################################
 package JSONProxy;
 use strict;
@@ -38,13 +38,12 @@ sub init {
 	my $env = getEnv();
 	my $default_timeout_mins = $env->{default_timeout_mins} // 5;
 
-	WebUtil::blockRobots();
 	WebUtil::timeout( 60 * $default_timeout_mins );
 	my $cgi = WebUtil::getCgi();
 	my %param = $cgi->Vars();
 	local $@;
 	my $result = eval { run( params => \%param, config => $env ); };
-	webError( $@ ) if $@;
+	WebUtil::webError( $@ ) if $@;
 
 	if ( $result ) {
 		print header( -type => "application/json" );

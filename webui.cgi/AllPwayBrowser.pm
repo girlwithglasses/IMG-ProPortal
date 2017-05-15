@@ -1,35 +1,35 @@
-########################################################################### 
+###########################################################################
 # AllPwayBrowser.pm - Browser module for all IMG pathways
-# $Id: AllPwayBrowser.pm 34545 2015-10-20 21:36:40Z klchu $
-############################################################################ 
-package AllPwayBrowser; 
-use strict; 
+# $Id: AllPwayBrowser.pm 36954 2017-04-17 19:34:04Z klchu $
+############################################################################
+package AllPwayBrowser;
+use strict;
 
-use CGI qw( :standard ); 
-use GD;
-use Data::Dumper; 
+use CGI qw( :standard );
+# use GD;
+use Data::Dumper;
 
-use InnerTable; 
-use GeneDetail; 
-use PhyloTreeMgr; 
-use WebConfig; 
-use WebUtil; 
-use HtmlUtil; 
-use DataEntryUtil; 
+use InnerTable;
+use GeneDetail;
+use PhyloTreeMgr;
+use WebConfig;
+use WebUtil;
+use HtmlUtil;
+use DataEntryUtil;
 use FuncUtil;
-use TaxonList; 
+use TaxonList;
 
-my $section = "AllPwayBrowser";  
-my $env                  = getEnv(); 
-my $main_cgi             = $env->{main_cgi}; 
-my $section_cgi          = "$main_cgi?section=$section"; 
-my $verbose              = $env->{verbose}; 
+my $section = "AllPwayBrowser";
+my $env                  = getEnv();
+my $main_cgi             = $env->{main_cgi};
+my $section_cgi          = "$main_cgi?section=$section";
+my $verbose              = $env->{verbose};
 my $base_dir             = $env->{base_dir};
 my $img_internal         = $env->{img_internal};
-my $tmp_dir              = $env->{tmp_dir}; 
-my $max_gene_batch       = 100; 
+my $tmp_dir              = $env->{tmp_dir};
+my $max_gene_batch       = 100;
 my $max_taxon_batch      = 20;
-my $max_scaffold_batch   = 20; 
+my $max_scaffold_batch   = 20;
 my $user_restricted_site = $env->{user_restricted_site};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $show_private         = $env->{show_private};
@@ -37,12 +37,12 @@ my $tab_panel            = $env->{tab_panel};
 my $content_list         = $env->{content_list};
 my $mpw_pathway          = $env->{mpw_pathway};
 my $all_pathway          = $env->{all_pathway};
-my $tmp_dir              = $env->{tmp_dir}; 
-my $tmp_url              = $env->{tmp_url}; 
+my $tmp_dir              = $env->{tmp_dir};
+my $tmp_url              = $env->{tmp_url};
 my $enzyme_base_url      = $env->{enzyme_base_url};
 
 my $use_cache = 0;
- 
+
 sub getPageTitle {
     return 'All Pathways';
 }
@@ -66,71 +66,71 @@ sub dispatch {
 	    HtmlUtil::cgiCacheInitialize( $section );
 	    HtmlUtil::cgiCacheStart() or return;
 	}
-        printAllPwayMain(); 
+        printAllPwayMain();
 
 	if ( $use_cache ) {
 	    HtmlUtil::cgiCacheStop();
         }
     } elsif ( $page eq "searchAllPathways" ||
 	      paramMatch("searchAllPathways") ne "" ) {
-        SearchAllPathways(); 
+        SearchAllPathways();
     } elsif ( $page eq "searchAllCompounds" ||
 	      paramMatch("searchAllCompounds") ne "" ) {
-        SearchAllCompounds(); 
-    } else { 
-        my $sid = 0; 
+        SearchAllCompounds();
+    } else {
+        my $sid = 0;
     	if ( $use_cache ) {
-    	    HtmlUtil::cgiCacheInitialize( $section ); 
-    	    HtmlUtil::cgiCacheStart() or return; 
+    	    HtmlUtil::cgiCacheInitialize( $section );
+    	    HtmlUtil::cgiCacheStart() or return;
     	}
-        printAllPwayMain(); 
+        printAllPwayMain();
     	if ( $use_cache ) {
     	    HtmlUtil::cgiCacheStop();
         }
-    } 
-} 
+    }
+}
 
-sub printJavaScript { 
-    print qq{ 
-    <script> 
-	function selectAllCheckBoxes3( x ) { 
-	    var f = document.mainForm3; 
-	    for( var i = 0; i < f.length; i++ ) { 
-		var e = f.elements[ i ]; 
-               if( e.name == "mviewFilter" ) 
-                   continue; 
-		if( e.type == "checkbox" ) { 
+sub printJavaScript {
+    print qq{
+    <script>
+	function selectAllCheckBoxes3( x ) {
+	    var f = document.mainForm3;
+	    for( var i = 0; i < f.length; i++ ) {
+		var e = f.elements[ i ];
+               if( e.name == "mviewFilter" )
+                   continue;
+		if( e.type == "checkbox" ) {
 		    e.checked = ( x == 0 ? false : true );
-		} 
-	    } 
-	} 
-    </script> 
-    }; 
-} 
+		}
+	    }
+	}
+    </script>
+    };
+}
 
-############################################################################ 
+############################################################################
 # printAllPwayMain - main page
-############################################################################ 
-sub printAllPwayMain { 
+############################################################################
+sub printAllPwayMain {
     if ($include_metagenomes) {
         WebUtil::printHeaderWithInfo
             ("Search Pathways", "", "", "", 1);
-    } else { 
+    } else {
         WebUtil::printHeaderWithInfo
             ("Search Pathways", "");
-    } 
+    }
 
-    print "<h2>All Pathways in IMG</h2>\n"; 
-    printStatusLine( "Loading ...", 1 ); 
+    print "<h2>All Pathways in IMG</h2>\n";
+    printStatusLine( "Loading ...", 1 );
     printMainForm();
 
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
 
     # IMG pathways
     my $sql = qq{
     	select count(*) from img_pathway
     };
-    my $cur = execSql( $dbh, $sql, $verbose ); 
+    my $cur = execSql( $dbh, $sql, $verbose );
     my ( $img_cnt ) = $cur->fetchrow();
     $cur->finish();
 
@@ -138,7 +138,7 @@ sub printAllPwayMain {
     $sql = qq{
     	select count(*) from kegg_pathway
     };
-    $cur = execSql( $dbh, $sql, $verbose ); 
+    $cur = execSql( $dbh, $sql, $verbose );
     my ( $kegg_cnt ) = $cur->fetchrow();
     $cur->finish();
 
@@ -147,17 +147,17 @@ sub printAllPwayMain {
     $sql = qq{
     	select count(*) from biocyc_pathway
     };
-    $cur = execSql( $dbh, $sql, $verbose ); 
+    $cur = execSql( $dbh, $sql, $verbose );
     ( $metacyc_cnt ) = $cur->fetchrow();
     $cur->finish();
-    
+
     # MPW pathways
     my $mpw_cnt = 0;
     if ( $mpw_pathway ) {
     	$sql = qq{
     	    select count(*) from mpw_pgl_pathway
     	};
-    	$cur = execSql( $dbh, $sql, $verbose ); 
+    	$cur = execSql( $dbh, $sql, $verbose );
     	( $mpw_cnt ) = $cur->fetchrow();
     	$cur->finish();
     }
@@ -169,10 +169,10 @@ sub printAllPwayMain {
     printAttrRowRaw("IMG Pathways", alink($img_pway_url, $img_cnt));
     my $kegg_pway_url = "$main_cgi?section=FindFunctions&page=ffoAllKeggPathways&view=ko";
     printAttrRowRaw("KEGG Pathways", alink($kegg_pway_url, $kegg_cnt));
-    
+
     my $metacyc_url = "$main_cgi?section=MetaCyc";
     printAttrRowRaw("MetaCyc Pathways", alink($metacyc_url, $metacyc_cnt));
-    
+
     if ( $mpw_pathway ) {
     	my $mpw_pway_url = "$main_cgi?section=MpwPwayBrowser&page=mpwPwayBrowser";
     	printAttrRowRaw("MPW Pathways", alink($mpw_pway_url, $mpw_cnt));
@@ -188,7 +188,7 @@ sub printAllPwayMain {
     print "<input type='checkbox' name='pway_type' value='kegg_pway' checked/>KEGG Pathways\n";
     print nbsp(1);
     print "<input type='checkbox' name='pway_type' value='metacyc_pway' checked/>MetaCyc Pathways\n";
-    
+
     if ( $mpw_pathway ) {
     	print nbsp(1);
     	print "<input type='checkbox' name='pway_type' value='mpw_pway' checked/>MPW Pathways\n";
@@ -208,7 +208,7 @@ sub printAllPwayMain {
     print "<p>Keyword: \n";
     print "<input type='text' name='searchKey' size='80' />\n";
     print "<br/>\n";
- 
+
     my $name = "_section_${section}_searchAllPathways";
     print submit( -name => $name, -value => "Search All Pathways",
 		  -class => "meddefbutton" );
@@ -217,16 +217,16 @@ sub printAllPwayMain {
     print "<hr>\n";
     printAllCompounds();
 
-    printJavaScript(); 
+    printJavaScript();
 
     printStatusLine( "Loaded.", 2 );
     print end_form();
 }
 
 
-############################################################################ 
+############################################################################
 # SearchAllPathways
-############################################################################ 
+############################################################################
 sub SearchAllPathways {
     print "<h1>Search Pathway Result</h1>\n";
 
@@ -321,14 +321,14 @@ sub SearchAllPathways {
     }
     print "</p>\n";
 
-    my @recs; 
+    my @recs;
 
-    printStatusLine( "Loading ...", 1 ); 
+    printStatusLine( "Loading ...", 1 );
 
     for my $t1 ( @pway_types ) {
 	if ( $t1 eq 'img_pway' ) {
-	    my $dbh = dbLogin(); 
-	    my $sql = qq{ 
+	    my $dbh = dbLogin();
+	    my $sql = qq{
 		select p.pathway_oid, p.pathway_name
 		    from img_pathway p
 		};
@@ -337,18 +337,18 @@ sub SearchAllPathways {
 		my $sql2 = qq {
 		    where p.pathway_oid in
 		    ((select ipr.pathway_oid
-		     from img_pathway_reactions ipr, 
+		     from img_pathway_reactions ipr,
 		     img_reaction_catalysts irc,
 		     img_term_enzymes ite
-		     where ipr.rxn = irc.rxn_oid 
+		     where ipr.rxn = irc.rxn_oid
 		     and irc.catalysts = ite.term_oid
 		      and ite.enzymes = 'EC:$ec_num')
-		     union 
+		     union
 		     ( select ipr2.pathway_oid
-		     from img_pathway_reactions ipr2, 
+		     from img_pathway_reactions ipr2,
 		     img_reaction_t_components rtc,
 		     img_term_enzymes ite2
-		     where ipr2.rxn = rtc.rxn_oid 
+		     where ipr2.rxn = rtc.rxn_oid
 		     and rtc.term = ite2.term_oid
 		       and ite2.enzymes = 'EC:$ec_num' ))
 		};
@@ -369,27 +369,27 @@ sub SearchAllPathways {
 	    $sql .= " order by 1 ";
 	    # print "<p>SQL: $sql\n";
 
-	    my $cur = execSql( $dbh, $sql, $verbose ); 
+	    my $cur = execSql( $dbh, $sql, $verbose );
 	    my $cnt0 = 0;
-	    for ( ; ; ) { 
-		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow(); 
-		last if !$pathway_oid; 
+	    for ( ; ; ) {
+		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow();
+		last if !$pathway_oid;
 
 		$cnt0++;
 		if ( $cnt0 > 100000 ) {
 		    last;
 		}
 
-		my $r = "IMG\t$pathway_oid\t"; 
-		$r .= "$pathway_name\t"; 
-		push( @recs, $r ); 
-	    } 
-	    $cur->finish(); 
+		my $r = "IMG\t$pathway_oid\t";
+		$r .= "$pathway_name\t";
+		push( @recs, $r );
+	    }
+	    $cur->finish();
 	    #$dbh->disconnect();
 	}
 	elsif ( $t1 eq 'metacyc_pway' ) {
-	    my $dbh = dbLogin(); 
-	    my $sql = qq{ 
+	    my $dbh = dbLogin();
+	    my $sql = qq{
 		select p.unique_id, p.common_name
 		    from biocyc_pathway p
 		};
@@ -398,9 +398,9 @@ sub SearchAllPathways {
 		my $sql2 = qq{
 		    where p.unique_id in
 		    (select brp.in_pwys
-		     from biocyc_reaction_in_pwys brp, 
+		     from biocyc_reaction_in_pwys brp,
 		     biocyc_reaction br
-		     where brp.unique_id = br.unique_id 
+		     where brp.unique_id = br.unique_id
 		     and br.ec_number = 'EC:$ec_num')
 		};
 		$sql .= $sql2;
@@ -420,27 +420,27 @@ sub SearchAllPathways {
 	    $sql .= " order by 1";
 	    # print "<p>SQL: $sql\n";
 
-	    my $cur = execSql( $dbh, $sql, $verbose ); 
+	    my $cur = execSql( $dbh, $sql, $verbose );
 	    my $cnt0 = 0;
-	    for ( ; ; ) { 
-		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow(); 
-		last if !$pathway_oid; 
+	    for ( ; ; ) {
+		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow();
+		last if !$pathway_oid;
 
 		$cnt0++;
 		if ( $cnt0 > 100000 ) {
 		    last;
 		}
 
-		my $r = "MetaCyc\t$pathway_oid\t"; 
-		$r .= "$pathway_name\t"; 
-		push( @recs, $r ); 
-	    } 
-	    $cur->finish(); 
+		my $r = "MetaCyc\t$pathway_oid\t";
+		$r .= "$pathway_name\t";
+		push( @recs, $r );
+	    }
+	    $cur->finish();
 	    #$dbh->disconnect();
 	}
 	elsif ( $t1 eq 'mpw_pway' && $mpw_pathway ) {
-	    my $dbh = dbLogin(); 
-	    my $sql = qq{ 
+	    my $dbh = dbLogin();
+	    my $sql = qq{
 		select p.pathway_oid, p.pathway_name
 		    from mpw_pgl_pathway p
 		};
@@ -467,26 +467,26 @@ sub SearchAllPathways {
 
 	    $sql .= " order by 1";
 
-	    my $cur = execSql( $dbh, $sql, $verbose ); 
+	    my $cur = execSql( $dbh, $sql, $verbose );
 	    my $cnt0 = 0;
-	    for ( ; ; ) { 
-		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow(); 
-		last if !$pathway_oid; 
+	    for ( ; ; ) {
+		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow();
+		last if !$pathway_oid;
 
 		$cnt0++;
 		if ( $cnt0 > 100000 ) {
 		    last;
 		}
 
-		my $r = "MPW\t$pathway_oid\t"; 
-		$r .= "$pathway_name\t"; 
-		push( @recs, $r ); 
-	    } 
-	    $cur->finish(); 
+		my $r = "MPW\t$pathway_oid\t";
+		$r .= "$pathway_name\t";
+		push( @recs, $r );
+	    }
+	    $cur->finish();
 	    #$dbh->disconnect();
 	}
 	elsif ( $t1 eq 'kegg_pway' ) {
-	    my $dbh = dbLogin(); 
+	    my $dbh = dbLogin();
 	    my $sql = qq{
     		select p.pathway_oid, p.pathway_name
 		    from kegg_pathway p
@@ -519,37 +519,37 @@ sub SearchAllPathways {
 
 	    # print "<p>SQL: $sql\n";
 
-	    my $cur = execSql( $dbh, $sql, $verbose ); 
+	    my $cur = execSql( $dbh, $sql, $verbose );
 	    my $cnt0 = 0;
-	    for ( ; ; ) { 
-    		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow(); 
-    		last if !$pathway_oid; 
-    
+	    for ( ; ; ) {
+    		my ( $pathway_oid, $pathway_name ) = $cur->fetchrow();
+    		last if !$pathway_oid;
+
     		$cnt0++;
     		if ( $cnt0 > 100000 ) {
     		    last;
     		}
 
-    		my $r = "KEGG\t$pathway_oid\t"; 
-    		$r .= "$pathway_name\t"; 
-    		push( @recs, $r ); 
-	    } 
-	    $cur->finish(); 
+    		my $r = "KEGG\t$pathway_oid\t";
+    		$r .= "$pathway_name\t";
+    		push( @recs, $r );
+	    }
+	    $cur->finish();
 	    #$dbh->disconnect();
 	}
     }
 
-    my $nRecs = @recs; 
-    if ( $nRecs == 0 ) { 
-        print "<p>\n"; 
-        print "No pathways are found.<br/>\n"; 
-        print "</p>\n"; 
+    my $nRecs = @recs;
+    if ( $nRecs == 0 ) {
+        print "<p>\n";
+        print "No pathways are found.<br/>\n";
+        print "</p>\n";
     	printStatusLine( "Loaded.", 2 );
-        return; 
-    } 
+        return;
+    }
 
-    print "<p>\n"; 
- 
+    print "<p>\n";
+
     my $it = new InnerTable( 1, "allpathwaylist$$", "allpathwaylist", 2 );
     # Select column disabled +BSJ 12/1/11
     # $it->addColSpec("Select");
@@ -557,24 +557,24 @@ sub SearchAllPathways {
     $it->addColSpec( "Pathway OID", "number asc",   "right" );
     $it->addColSpec( "Pathway Name", "char asc",   "left" );
     my $sd = $it->getSdDelim();
- 
-    my $count = 0; 
+
+    my $count = 0;
     for my $r (@recs) {
 	my ( $pathway_type, $pathway_oid, $pathway_name) =
 	    split( /\t/, $r );
 	my $pway_oid = $pathway_oid;
 	if ( isInt($pathway_oid) ) {
-	    $pway_oid = FuncUtil::pwayOidPadded($pathway_oid); 
+	    $pway_oid = FuncUtil::pwayOidPadded($pathway_oid);
 	}
 	$count++;
-	my $r; 
+	my $r;
 	my $new_id = $pathway_type . ':' . $pway_oid;
 
 =Select column disabled +BSJ 12/1/11
 	$r .= $sd
 	    . "<input type='checkbox' name='pway_oid' value='$new_id' />"
 	    . "\t";
-=cut	
+=cut
 	$r .= $pathway_type . $sd . escHtml($pathway_type) . "\t";
 
 	if ( $pathway_type eq 'IMG' ) {
@@ -599,41 +599,41 @@ sub SearchAllPathways {
 
 	if ( ! blankStr($searchKey) ) {
             my $matchText = highlightMatchHTML2( $pathway_name,
-						 $searchKey ); 
-            $r .= $matchText . $sd . $matchText ."\t"; 
+						 $searchKey );
+            $r .= $matchText . $sd . $matchText ."\t";
 	}
 	else {
 #	    $r .= $pathway_name . $sd . escHtml($pathway_name) . "\t";
 	    $r .= $pathway_name . $sd . $pathway_name . "\t";
 	}
 	$it->addRow($r);
-    } 
-    $it->printOuterTable(1); 
-    
-    print "</p>\n"; 
+    }
+    $it->printOuterTable(1);
+
+    print "</p>\n";
     print end_form();
- 
-    printJavaScript(); 
+
+    printJavaScript();
     printStatusLine( "$count Loaded.", 2 );
 
-    print end_form(); 
-} 
+    print end_form();
+}
 
 
-############################################################################ 
+############################################################################
 # printAllCompounds
-############################################################################ 
-sub printAllCompounds { 
+############################################################################
+sub printAllCompounds {
 
-    print "<h2>All Compounds in IMG</h2>\n"; 
+    print "<h2>All Compounds in IMG</h2>\n";
 
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
 
     # IMG compounds
     my $sql = qq{
 	select count(*) from img_compound
     };
-    my $cur = execSql( $dbh, $sql, $verbose ); 
+    my $cur = execSql( $dbh, $sql, $verbose );
     my ( $img_cnt ) = $cur->fetchrow();
     $cur->finish();
 
@@ -641,7 +641,7 @@ sub printAllCompounds {
     $sql = qq{
 	select count(*) from compound
     };
-    $cur = execSql( $dbh, $sql, $verbose ); 
+    $cur = execSql( $dbh, $sql, $verbose );
     my ( $kegg_cnt ) = $cur->fetchrow();
     $cur->finish();
 
@@ -650,7 +650,7 @@ sub printAllCompounds {
     $sql = qq{
 	select count(*) from biocyc_comp
     };
-    $cur = execSql( $dbh, $sql, $verbose ); 
+    $cur = execSql( $dbh, $sql, $verbose );
     ( $metacyc_cnt ) = $cur->fetchrow();
     $cur->finish();
 
@@ -659,21 +659,21 @@ sub printAllCompounds {
     $sql = qq{
 	select count(*) from mpw_pgl_compound
     };
-    $cur = execSql( $dbh, $sql, $verbose ); 
+    $cur = execSql( $dbh, $sql, $verbose );
     ( $mpw_cnt ) = $cur->fetchrow();
     $cur->finish();
-    
+
     print "<table class='img'>\n";
     my $img_pway_url = "$main_cgi?section=ImgCompound&page=browse";
     printAttrRowRaw("IMG Compounds", alink($img_pway_url, $img_cnt));
     my $kegg_pway_url = "$main_cgi?section=KeggPathwayDetail&page=cpdList";
     printAttrRowRaw("KEGG Compounds", alink($kegg_pway_url, $kegg_cnt));
-    
+
     my $metacyc_url = "$main_cgi?section=MetaCyc&page=cpdList";
     printAttrRowRaw("MetaCyc Compounds", alink($metacyc_url, $metacyc_cnt));
     my $mpw_url = "$main_cgi?section=MpwPwayBrowser&page=cpdList";
     printAttrRowRaw("MPW Compounds", alink($mpw_url, $mpw_cnt));
-    
+
     print "</table>\n";
 
     print "<h2>Search All Compounds</h2>\n";
@@ -682,10 +682,10 @@ sub printAllCompounds {
     print "<input type='checkbox' name='cmpd_type' value='img_pway' checked/>IMG\n";
     print nbsp(1);
     print "<input type='checkbox' name='cmpd_type' value='kegg_pway' checked/>KEGG\n";
-    
+
     print nbsp(1);
     print "<input type='checkbox' name='cmpd_type' value='metacyc_pway' checked/>MetaCyc\n";
-    
+
     if ( $mpw_pathway ) {
 	print nbsp(1);
 	print "<input type='checkbox' name='cmpd_type' value='mpw_pway' checked/>MPW\n";
@@ -700,7 +700,7 @@ sub printAllCompounds {
     print "</select> contains : \n";
     print "<input type='text' name='searchCmpdKey' size='80' />\n";
     print "<br/>\n";
- 
+
     my $name = "_section_${section}_searchAllCompounds";
     print submit( -name => $name, -value => "Search All Compounds",
 		  -class => "meddefbutton" );
@@ -709,9 +709,9 @@ sub printAllCompounds {
 }
 
 
-############################################################################ 
+############################################################################
 # SearchAllCompounds
-############################################################################ 
+############################################################################
 sub SearchAllCompounds {
     printMainForm();
     print "<h1>Search Compound Result</h1>\n";
@@ -768,10 +768,10 @@ sub SearchAllCompounds {
     }
     print "</p>\n";
 
-    my @recs; 
-    my $dbh = dbLogin(); 
+    my @recs;
+    my $dbh = dbLogin();
 
-    printStatusLine( "Loading ...", 1 ); 
+    printStatusLine( "Loading ...", 1 );
 
     for my $t1 ( @cmpd_types ) {
     	if ( $t1 eq 'img_pway' ) {
@@ -796,29 +796,29 @@ sub SearchAllCompounds {
         		$sql .= "or c.compound_oid in (select a.compound_oid from img_compound_aliases a ";
         		$sql .= " where lower(a.aliases) like '%" . $db_keyword . "%') ";
     	    }
-    
+
     	    #print "<p>SQL: $sql\n";
-    
-    	    my $cur = execSql( $dbh, $sql, $verbose ); 
+
+    	    my $cur = execSql( $dbh, $sql, $verbose );
     	    my $cnt0 = 0;
-    	    for ( ; ; ) { 
-        		my ( $compound_oid, $compound_name ) = $cur->fetchrow(); 
-        		last if !$compound_oid; 
-        
+    	    for ( ; ; ) {
+        		my ( $compound_oid, $compound_name ) = $cur->fetchrow();
+        		last if !$compound_oid;
+
         		$cnt0++;
         		if ( $cnt0 > 1000000 ) {
         		    last;
         		}
-        
-        		my $r = "IMG\t$compound_oid\t"; 
-        		$r .= "$compound_name\t"; 
-        		push( @recs, $r ); 
-    	    } 
-    	    $cur->finish(); 
+
+        		my $r = "IMG\t$compound_oid\t";
+        		$r .= "$compound_name\t";
+        		push( @recs, $r );
+    	    }
+    	    $cur->finish();
     	}
     	elsif ( $t1 eq 'metacyc_pway' ) {
     	    my $sql = "select c.unique_id, c.common_name from biocyc_comp c ";
-    
+
     	    if ( $filter eq 'cas' ) {
         		$sql .= "where c.unique_id in ";
         		$sql .= " (select a.unique_id from biocyc_comp_ext_links a ";
@@ -842,56 +842,56 @@ sub SearchAllCompounds {
         		$sql .= "or lower(c.systematic_name) like '%" . $db_keyword . "%'";
         		$sql .= "or c.unique_id in (select a.unique_id from biocyc_comp_synonyms a ";
         		$sql .= " where lower(a.synonyms) like '%" . $db_keyword . "%') ";
-    	    }    
+    	    }
     	    #print "<p>SQL: $sql\n";
-    
-    	    my $cur = execSql( $dbh, $sql, $verbose ); 
+
+    	    my $cur = execSql( $dbh, $sql, $verbose );
     	    my $cnt0 = 0;
-    	    for ( ; ; ) { 
-        		my ( $compound_oid, $compound_name ) = $cur->fetchrow(); 
-        		last if !$compound_oid; 
-        
+    	    for ( ; ; ) {
+        		my ( $compound_oid, $compound_name ) = $cur->fetchrow();
+        		last if !$compound_oid;
+
         		$cnt0++;
         		if ( $cnt0 > 1000000 ) {
         		    last;
         		}
-        
-        		my $r = "MetaCyc\t$compound_oid\t"; 
-        		$r .= "$compound_name\t"; 
-        		push( @recs, $r ); 
-    	    } 
-    	    $cur->finish(); 
+
+        		my $r = "MetaCyc\t$compound_oid\t";
+        		$r .= "$compound_name\t";
+        		push( @recs, $r );
+    	    }
+    	    $cur->finish();
     	}
     	elsif ( $t1 eq 'mpw_pway' && $mpw_pathway ) {
     	    if ( $filter ne 'keyword' ) {
         		next;
     	    }
-    
+
     	    my $sql = "select c.compound_oid, c.compound_name from mpw_pgl_compound c ";
     	    $sql .= "where lower(c.compound_name) like '%" . $db_keyword . "%'";
-    
+
     	    #print "<p>SQL: $sql\n";
-    
-    	    my $cur = execSql( $dbh, $sql, $verbose ); 
+
+    	    my $cur = execSql( $dbh, $sql, $verbose );
     	    my $cnt0 = 0;
-    	    for ( ; ; ) { 
-        		my ( $compound_oid, $compound_name ) = $cur->fetchrow(); 
-        		last if !$compound_oid; 
-        
+    	    for ( ; ; ) {
+        		my ( $compound_oid, $compound_name ) = $cur->fetchrow();
+        		last if !$compound_oid;
+
         		$cnt0++;
         		if ( $cnt0 > 1000000 ) {
         		    last;
         		}
-        
-        		my $r = "MPW\t$compound_oid\t"; 
-        		$r .= "$compound_name\t"; 
-        		push( @recs, $r ); 
-    	    } 
-    	    $cur->finish(); 
+
+        		my $r = "MPW\t$compound_oid\t";
+        		$r .= "$compound_name\t";
+        		push( @recs, $r );
+    	    }
+    	    $cur->finish();
     	}
     	elsif ( $t1 eq 'kegg_pway' ) {
     	    my $sql = "select c.ext_accession, c.compound_name from img_compound c ";
-    
+
     	    if ( $filter eq 'cas' ) {
         		$sql .= "where lower(c.cas_number) like '%" . $db_keyword . "%'";
         		$sql .= " or c.ext_accession in ";
@@ -913,38 +913,38 @@ sub SearchAllCompounds {
         		$sql .= "or c.ext_accession in (select a.ext_accession from compound_aliases a ";
         		$sql .= " where lower(a.aliases) like '%" . $db_keyword . "%') ";
     	    }
-    
+
     	    #print "<p>SQL: $sql\n";
-    
-    	    my $cur = execSql( $dbh, $sql, $verbose ); 
+
+    	    my $cur = execSql( $dbh, $sql, $verbose );
     	    my $cnt0 = 0;
-    	    for ( ; ; ) { 
-        		my ( $compound_oid, $compound_name ) = $cur->fetchrow(); 
-        		last if !$compound_oid; 
-        
+    	    for ( ; ; ) {
+        		my ( $compound_oid, $compound_name ) = $cur->fetchrow();
+        		last if !$compound_oid;
+
         		$cnt0++;
         		if ( $cnt0 > 1000000 ) {
         		    last;
         		}
-        
-        		my $r = "Kegg\t$compound_oid\t"; 
-        		$r .= "$compound_name\t"; 
-        		push( @recs, $r ); 
-    	    } 
-    	    $cur->finish(); 
+
+        		my $r = "Kegg\t$compound_oid\t";
+        		$r .= "$compound_name\t";
+        		push( @recs, $r );
+    	    }
+    	    $cur->finish();
     	}
     }
 
-    my $nRecs = @recs; 
-    if ( $nRecs == 0 ) { 
-        print "<p>\n"; 
-        print "No compounds are found.<br/>\n"; 
-        print "</p>\n"; 
+    my $nRecs = @recs;
+    if ( $nRecs == 0 ) {
+        print "<p>\n";
+        print "No compounds are found.<br/>\n";
+        print "</p>\n";
     	printStatusLine( "Loaded.", 2 );
-        return; 
-    } 
+        return;
+    }
 
-    print "<p>\n"; 
+    print "<p>\n";
 
     my $sid = getContactOid();
     my $can_edit = WebUtil::isImgEditor($dbh, $sid);
@@ -958,29 +958,29 @@ sub SearchAllCompounds {
     $it->addColSpec( "Compound OID", "char asc",   "left" );
     $it->addColSpec( "Compound Name", "char asc",   "left" );
     my $sd = $it->getSdDelim();
- 
-    my $count = 0; 
+
+    my $count = 0;
     my $edit_cnt = 0;
     for my $r (@recs) {
     	my ( $compound_type, $compound_oid, $compound_name) =
     	    split( /\t/, $r );
-    
+
     	$count++;
-    	my $r; 
+    	my $r;
     	if ( $can_edit ) {
     	    if ( $compound_type eq 'IMG' ) {
         		my $comp_oid = FuncUtil::compoundOidPadded( $compound_oid );
         		$r .= $sd .
-        		    "<input type='checkbox' name='compound_oid' value='$comp_oid' />\t"; 
+        		    "<input type='checkbox' name='compound_oid' value='$comp_oid' />\t";
         		$edit_cnt++;
     	    }
     	    else {
         		$r .= "" . $sd . "\t";
     	    }
     	}
-    
+
     	$r .= $compound_type . $sd . $compound_type . "\t";
-    
+
     	if ( $compound_type eq 'IMG' ) {
     	    my $url = "main.cgi?section=ImgCompound&page=imgCpdDetail&compound_oid=$compound_oid";
     	    $r .= $compound_oid . $sd . alink( $url, $compound_oid ) . "\t";
@@ -1000,41 +1000,41 @@ sub SearchAllCompounds {
     	else {
     	    $r .= $compound_oid . $sd . $compound_oid . "\t";
     	}
-    
+
     	if ( ! blankStr($searchKey) ) {
             my $matchText = highlightMatchHTML2( $compound_name,
-    					 $searchKey, 1 ); 
-            $r .= $matchText . $sd . $matchText ."\t"; 
+    					 $searchKey, 1 );
+            $r .= $matchText . $sd . $matchText ."\t";
     	}
     	else {
     	    $r .= $compound_name . $sd . $compound_name . "\t";
     	}
     	$it->addRow($r);
-    } 
-    $it->printOuterTable(1); 
-    
-    if ( $can_edit && $edit_cnt ) { 
+    }
+    $it->printOuterTable(1);
+
+    if ( $can_edit && $edit_cnt ) {
         my $name = "_section_CuraCartStor_addCompoundToCuraCart";
         print submit( -name => $name,
-                      -value => 'Add Selected to Curation Cart', -class => 'lgdefbutton' ); 
- 
-        print nbsp( 1 ); 
+                      -value => 'Add Selected to Curation Cart', -class => 'lgdefbutton' );
+
+        print nbsp( 1 );
         print "<input type='button' name='selectAll' value='Select All' " .
             "onClick='selectAllCheckBoxes(1)' class='smbutton' /> ";
-        print nbsp( 1 ); 
+        print nbsp( 1 );
         print "<input type='button' name='clearAll' value='Clear All' " .
             "onClick='selectAllCheckBoxes(0)' class='smbutton' /> ";
         print "<br/>\n";
-    } 
+    }
 
-    print "</p>\n"; 
+    print "</p>\n";
     print end_form();
- 
-    printJavaScript(); 
+
+    printJavaScript();
     printStatusLine( "$count Loaded.", 2 );
 
-    print end_form(); 
-} 
+    print end_form();
+}
 
 
 

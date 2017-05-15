@@ -265,7 +265,7 @@ DBIx::DataModel  # no semicolon (intentional)
 #->Table(qw/PpSubset                    PP_SUBSET                      unknown_pk         /)
 ->Table(qw/TaxonProdVw                 TAXON_PROD_VW                  unknown_pk         /)
 ->Table(qw/TaxonStatsProdVw            TAXON_STATS_PROD_VW            unknown_pk         /)
-->Table(qw/GoldTaxonVw                 VW_GOLD_TAXON                  unknown_pk         /)
+->Table(qw/VwGoldTaxon                 VW_GOLD_TAXON                  unknown_pk         /)
 ->Table(qw/VwTaxon                     VW_TAXON                       unknown_pk         /)
 ->Table(qw/VwTaxonSc                   VW_TAXON_SC                    unknown_pk         /)
 
@@ -910,6 +910,10 @@ DBIx::DataModel  # no semicolon (intentional)
   [qw/BioClusterFeaturesNew       bio_cluster_features_new         *    gene_oid  /])
 
 ->Composition(
+  [qw/BioClusterNew               bio_cluster_new                  1    cluster_id  /],
+  [qw/BioClusterFeaturesNew       bio_cluster_features_new         *    cluster_id  /])
+
+->Composition(
   [qw/ParalogGroup                paralog_group                    1    group_oid            /],
   [qw/ParalogGroupGenes           paralog_group_genes              *    group_oid            /])
 
@@ -1338,7 +1342,7 @@ DataModel::IMG_Core->metadm->define_table(
 =cut
 
 # DataModel::IMG_Core->metadm->define_table(
-# 	class       => 'GoldTaxonVw',
+# 	class       => 'VwGoldTaxon',
 # 	db_name     => 'VW_GOLD_TAXON',
 # 	primary_key => 'gold_id',
 # 	column_types => {
@@ -1452,65 +1456,65 @@ DataModel::IMG_Core
   [qw/GoldSequencingProject      gold                         1    gold_id                 /],
   [qw/GoldSpDisease              gold_sp_diseases             *    gold_id                 /])
 
-# add in links for the GoldTaxonVw table->Association(
+# add in links for the VwGoldTaxon table->Association(
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpGenomePublications   gold_sp_genome_publications  *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpHabitat              gold_sp_habitats             *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpEnergySource         gold_sp_energy_sources       *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpPhenotype            gold_sp_phenotypes           *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpSeqCenter            gold_sp_seq_centers          *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpSeqMethod            gold_sp_seq_methods          *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpRelevance            gold_sp_relevances           *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpCellArrangement      gold_sp_cell_arrangements    *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpMetabolism           gold_sp_metabolisms          *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpStudyGoldId          gold_sp_study_gold_ids       *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpCollaborator         gold_sp_collaborators        *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    gold_id                 /],
+  [qw/VwGoldTaxon                gold_tax                     1    gold_id                 /],
   [qw/GoldSpDisease              gold_sp_diseases             *    gold_id                 /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    taxon_oid      /],
+  [qw/VwGoldTaxon                gold_tax                     1    taxon_oid      /],
   [qw/TaxonExtLinks              taxon_ext_links              *    taxon_oid      /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    taxon_oid      /],
+  [qw/VwGoldTaxon                gold_tax                     1    taxon_oid      /],
   [qw/Gene                       genes                        *    taxon          /])
 
 ->Association(
-  [qw/GoldTaxonVw                gold_tax                     1    taxon_oid      /],
+  [qw/VwGoldTaxon                gold_tax                     1    taxon_oid      /],
   [qw/Scaffold                   scaffold                     *    taxon          /])
 
 ;
@@ -1615,8 +1619,8 @@ DataModel::IMG_Core::Scaffold->metadm->define_column_type(Date => qw/add_date la
 DataModel::IMG_Core::ScaffoldStats->metadm->define_column_type(Date => qw/ mod_date /);
 
 package DataModel::IMG_Core::Gene;
+use IMG::Util::Import 'LogErr';
 
-#sub DataModel::IMG_Core::Gene::pseudogene {
 sub pseudogene {
 	my $self = shift;
 	if ( ( $self->{is_pseudogene} && 'Yes' eq $self->{is_pseudogene} )
@@ -1629,7 +1633,6 @@ sub pseudogene {
 # coordinates: return a formatted coordinate string
 # does the work of GeneUtil::getMultFragCoordsLine
 
-#sub DataModel::IMG_Core::Gene::coordinates {
 sub coordinates {
 	my $self = shift;
 
@@ -1657,14 +1660,12 @@ sub coordinates {
 	return $coord_str . ' (' . $self->{strand} . ')';
 }
 
-#sub DataModel::IMG_Core::Gene::gene_length {
 sub gene_length {
 	my $self = shift;
 	return $self->{dna_seq_length} . ' bp' if $self->{dna_seq_length};
 	return 'unknown';
 }
 
-#sub DataModel::IMG_Core::Gene::protein_length {
 sub protein_length {
 	my $self = shift;
 	return $self->{aa_seq_length} . ' aa' if $self->{aa_seq_length};
@@ -1731,17 +1732,43 @@ sub gene_source {
 #
 #
 
+1;
 
+package DataModel::IMG_Core::GoldSequencingProject;
+use IMG::Util::Import 'LogErr';
 
+sub longhurst {
+	my $self = shift;
+	if ( $self->{longhurst_code} || $self->{longhurst_description} ) {
+		if ( $self->{longhurst_code} && $self->{longhurst_description} ) {
+			return $self->{longhurst_code} . ', ' . $self->{longhurst_description};
+		}
+		return $self->{longhurst_code} || $self->{longhurst_description};
+	}
+	return;
+}
+
+sub latlong {
+	my $self = shift;
+
+	log_debug { 'self: ' . Dumper $self };
+
+	if ( defined $self->{latitude} && defined $self->{longitude} ) {
+		return $self->{latitude} . "&#176;N, " . $self->{longitude} . "&#176;E";
+	}
+	return;
+}
 
 1;
 
 package DataModel::IMG_Core::TaxonStats;
+use IMG::Util::Import 'LogErr';
 
 sub without_function {
 	my $self = shift;
-	if ( $self->{without_function} ) {
-		$self->{without_function} = $self->{cds_genes} - $self->{gene_w_func_pred};
+	log_debug { 'self: ' . Dumper $self };
+	if ( ! $self->{without_function} ) {
+		$self->{without_function} = $self->{cds_genes} - $self->{genes_w_func_pred};
 	}
 	return $self->{without_function};
 }
@@ -1750,7 +1777,7 @@ sub without_function {
 
 
 package DataModel::IMG_Core::Enzyme;
-
+use IMG::Util::Import 'LogErr';
 
 sub xref {
 	my $self = shift;
@@ -1770,6 +1797,58 @@ sub name {
 		$self->{name} = $name;
 	}
 	return $self->{name};
+}
+
+1;
+
+
+
+package DataModel::IMG_Core::GoldSequencingProject;
+use IMG::Util::Import 'LogErr';
+
+sub woa_measurements {
+	return [
+		'salinity',
+		'temperature',
+		'dissolved_oxygen',
+		'nitrate',
+		'phosphate',
+		'silicate'
+	];
+}
+
+sub has_woa_measurements {
+	my $self = shift;
+	my $woa_meas = $self->woa_measurements;
+
+	for ( @$woa_meas ) {
+		if ( defined $self->{'proport_woa_' . $_ } && $self->{'proport_woa_' . $_ } ne '' ) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub direct_measurements {
+	return [
+		'salinity',
+		'oxygen_concentration',
+		'temperature',
+		'nitrate_concentration',
+		'chlorophyll_concentration',
+		'pressure'
+	];
+}
+
+sub has_direct_measurements {
+	my $self = shift;
+	my $dir_meas = $self->direct_measurements;
+	for ( @$dir_meas ) {
+		if ( defined $self->{$_} && $self->{$_} ne '' ) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 1;
@@ -1802,10 +1881,10 @@ $meta_emp->define_column_type(Upcase   => qw/interests/);
 #DataModel::IMG_Core::GoldSequencingProject->ColumnType(latlng => qw/latitude longitude/);
 
 # depth/altitude
-#DataModel::IMG_Core->ColumnType(dist_m =>
+# DataModel::IMG_Core->ColumnType(dist_m =>
 #  fromDB => sub {  },   # SKELETON .. PLEASE FILL IN
 #  toDB   => sub {});
-#DataModel::IMG_Core::GoldSequencingProject->ColumnType(dist_m => qw/depth altitude/);
+# DataModel::IMG_Core::GoldSequencingProject->ColumnType(dist_m => qw/depth altitude/);
 
 
 =cut

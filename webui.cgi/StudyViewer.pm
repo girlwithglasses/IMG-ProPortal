@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: StudyViewer.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: StudyViewer.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package StudyViewer;
 use strict;
@@ -35,7 +35,7 @@ my $YUI                 = $env->{yui_dir_28};
 my $dir2 = WebUtil::getSessionDir();
 $dir2 .= "/$section";
 if ( !( -e "$dir2" ) ) {
-    mkdir "$dir2" or webError("Can not make $dir2!");
+    mkdir "$dir2" or WebUtil::webError("Can not make $dir2!");
 }
 $cgi_tmp_dir = $dir2;
 
@@ -123,7 +123,7 @@ sub printProjectSampleList {
 
     my $sql = qq{
 select p.display_name
-from project_info\@imgsg_dev p
+from project_info p
 where p.project_oid = ?
     };
 
@@ -142,7 +142,7 @@ where p.project_oid = ?
     my $sql       = qq{
 
 select t.taxon_oid, t.taxon_display_name, sub.submission_id, sub.sample_oid, env.sample_display_name, env.gold_id
-from  taxon t, submission\@imgsg_dev sub, env_sample\@imgsg_dev env
+from  taxon t, submission sub, env_sample env
 where t.submission_id =  sub.submission_id
 and sub.sample_oid = env.sample_oid
 and sub.project_info = ?
@@ -150,7 +150,7 @@ $urClause
 $imgClause
 union 
 select t.taxon_oid, t.taxon_display_name, nvl(t.submission_id, -1), env.sample_oid, env.sample_display_name, env.gold_id
-from  taxon t, env_sample\@imgsg_dev env
+from  taxon t, env_sample env
 where t.sample_gold_id = env.gold_id
 and env.project_info = ?
 $urClause
@@ -241,7 +241,7 @@ sub printSampleList {
 select p.project_oid, p.display_name, nvl(t.gold_id, 'n/a'),
 nvl(t.sample_gold_id, 'n/a'), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name
-from taxon t, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, env_sample e, project_info p
 where t.obsolete_flag = 'No'
 and t.genome_type = 'metagenome'
 and t.gold_id = p.gold_stamp_id(+)
@@ -253,7 +253,7 @@ union
 select p.project_oid, p.display_name, nvl(t.gold_id, 'n/a'),
 nvl(t.sample_gold_id, 'n/a'), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name
-from taxon t, submission\@imgsg_dev s,  env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, submission s,  env_sample e, project_info p
 where t.obsolete_flag = 'No'
 and t.genome_type = 'metagenome'
 and t.submission_id = s.submission_id
@@ -343,7 +343,7 @@ sub printGenomeList {
     my $dbh = dbLogin();
     my $sql = qq{
 select t.taxon_oid 
-from taxon t, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, env_sample e, project_info p
 where t.genome_type = 'metagenome'
 and t.gold_id = p.gold_stamp_id
 and t.sample_gold_id = e.gold_id
@@ -353,7 +353,7 @@ $urClause
 $imgClause
 union
 select t.taxon_oid
-from taxon t, submission\@imgsg_dev s,  env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, submission s,  env_sample e, project_info p
 where t.genome_type = 'metagenome'
 and t.submission_id = s.submission_id
 and s.project_info = p.project_oid
@@ -387,7 +387,7 @@ sub printSampleGenomeList {
 
     my $sql = qq{
 select t.taxon_oid
-from taxon t, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, env_sample e, project_info p
 where t.genome_type = 'metagenome'
 and t.gold_id = p.gold_stamp_id
 and t.sample_gold_id = e.gold_id
@@ -396,7 +396,7 @@ $urClause
 $imgClause        
 union
 select t.taxon_oid
-from taxon t, submission\@imgsg_dev s, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, submission s, env_sample e, project_info p
 where t.genome_type = 'metagenome'
 and t.submission_id = s.submission_id
 and s.project_info = p.project_oid
@@ -426,7 +426,7 @@ sub printHtmlSampleTableViewer {
 select p.project_oid, p.display_name, nvl(t.gold_id, p.project_oid),
 nvl(t.sample_gold_id, e.sample_oid), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name
-from taxon t, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, env_sample e, project_info p
 where t.genome_type = 'metagenome'
 and t.gold_id = p.gold_stamp_id
 and t.sample_gold_id = e.gold_id
@@ -436,7 +436,7 @@ union
 select p.project_oid, p.display_name, nvl(t.gold_id, p.project_oid),
 nvl(t.sample_gold_id, e.sample_oid), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name
-from taxon t, submission\@imgsg_dev s, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, submission s, env_sample e, project_info p
 where t.genome_type = 'metagenome'
 and t.submission_id = s.submission_id
 and s.project_info = p.project_oid
@@ -637,7 +637,7 @@ sub printIsolateTableViewer {
 
     my $sql = qq{
 select t.taxon_oid, t.SEQUENCING_GOLD_ID, t.SUBMISSION_ID, p.display_name
-from taxon t, GOLD_SEQUENCING_PROJECT\@imgsg_dev p
+from taxon t, GOLD_SEQUENCING_PROJECT p
 where t.gold_id is not null
 and t.SEQUENCING_GOLD_ID = p.gold_id
 and t.genome_type = 'isolate'
@@ -732,7 +732,7 @@ sub printHtmlTableViewer {
 select p.project_oid, p.display_name, nvl(t.gold_id, 'n/a'),
 nvl(t.sample_gold_id, 'n/a'), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name, e.sample_oid
-from taxon t, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, env_sample e, project_info p
 where t.obsolete_flag = 'No'
 and t.genome_type = 'metagenome'
 and t.gold_id = p.gold_stamp_id
@@ -743,7 +743,7 @@ union
 select p.project_oid, p.display_name, nvl(t.gold_id, 'n/a'),
 nvl(t.sample_gold_id, 'n/a'), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name, e.sample_oid
-from taxon t, submission\@imgsg_dev s,  env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, submission s,  env_sample e, project_info p
 where t.obsolete_flag = 'No'
 and t.genome_type = 'metagenome'
 and t.submission_id = s.submission_id
@@ -916,7 +916,7 @@ sub printHtmlTreeViewer {
 select p.project_oid, p.display_name, nvl(t.gold_id, 'n/a'),
 nvl(t.sample_gold_id, 'n/a'), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name
-from taxon t, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, env_sample e, project_info p
 where t.genome_type = 'metagenome'
 and t.gold_id = p.gold_stamp_id
 and t.sample_gold_id = e.gold_id
@@ -926,7 +926,7 @@ union
 select p.project_oid, p.display_name, nvl(t.gold_id, 'n/a'),
 nvl(t.sample_gold_id, 'n/a'), e.sample_display_name, 
 t.taxon_oid, t.taxon_display_name
-from taxon t, submission\@imgsg_dev s, env_sample\@imgsg_dev e, project_info\@imgsg_dev p
+from taxon t, submission s, env_sample e, project_info p
 where t.obsolete_flag = 'No'
 and t.genome_type = 'metagenome'
 and t.submission_id = s.submission_id
@@ -1154,7 +1154,7 @@ sub printViewer {
 
     my $sql = qq{
 select e.project_info, p.display_name ,nvl(e.gold_id, 'n/a'), t.taxon_oid, t.taxon_display_name
-from project_info\@imgsg_dev p, env_sample\@imgsg_dev e, submission\@imgsg_dev s, taxon t
+from project_info p, env_sample e, submission s, taxon t
 where p.project_oid = e.project_info 
 and s.sample_oid = e.sample_oid
 and s.submission_id = t.submission_id

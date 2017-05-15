@@ -2,7 +2,7 @@
 # PhyloClusterProfiler.pm - Phylogenetic profiler, except using
 #    IMG clusters.         --es 07/13/11
 #
-# $Id: PhyloClusterProfiler.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: PhyloClusterProfiler.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package PhyloClusterProfiler;
 my $section = "PhyloClusterProfiler";
@@ -254,7 +254,7 @@ sub printPhyloProfileFormFull {
 #        $setClause .= ")";
 #    }
     if ( $img_lite && $setClause eq "" && !$full_phylo_profiler ) {
-        webError("No phylogenetic sets defined.");
+        WebUtil::webError("No phylogenetic sets defined.");
     }
 
     printMainForm();
@@ -270,7 +270,7 @@ sub printPhyloProfileFormFull {
     }     
     
     if ( $taxon_filter_oid_str eq "" ) {
-        #webError( $errorMsg );
+        #WebUtil::webError( $errorMsg );
     }
     my $maxProfileCandidateTaxons =
       getSessionParam("maxProfileCandidateTaxons");
@@ -280,7 +280,7 @@ sub printPhyloProfileFormFull {
     if (    scalar(@all_taxon_oids) > $max_taxon_candidates
          || scalar(@all_taxon_oids) < 1 )
     {
-        #webError( $errorMsg );
+        #WebUtil::webError( $errorMsg );
     }
 
     my $hideViruses = getSessionParam("hideViruses");
@@ -675,7 +675,7 @@ sub printPhyloProfileFormJob {
     print "<h1>Phylogenetic Profiler for Job (ID:$my_job_id)</h1>\n";
     if ( $taxon_filter_oid_str eq "" ) {
 
-        #webError( $errorMsg );
+        #WebUtil::webError( $errorMsg );
     }
     my $maxProfileCandidateTaxons =
       getSessionParam("maxProfileCandidateTaxons");
@@ -686,7 +686,7 @@ sub printPhyloProfileFormJob {
          || scalar(@all_taxon_oids) < 1 )
     {
 
-        #webError( $errorMsg );
+        #WebUtil::webError( $errorMsg );
     }
 
     my $hideViruses = getSessionParam("hideViruses");
@@ -1266,14 +1266,14 @@ sub printPhyloProfileRun {
             $toi = $taxon_bin_oid;
         } elsif ( $toi ne "" && $profileVal eq "toi" ) {
             webLog("bad toi='$toi'\n");
-            webError(   "Please select only one genome (bin) "
+            WebUtil::webError(   "Please select only one genome (bin) "
                       . "in the \"Find Genes In\" column." );
             return;
         }
     }
     if ( $toi eq "" ) {
         webLog("bad toi='$toi'\n");
-        webError(   "Please select exactly one genome (bin) "
+        WebUtil::webError(   "Please select exactly one genome (bin) "
                   . "in the \"Find Genes In\" column." );
         return;
     }
@@ -1345,7 +1345,7 @@ sub runJob {
         my $zfilename = getClusterZfileName( $id );
         unless ( -e  $zfilename ) {
             my( $taxon_oid, undef ) = split( /\./, $id );
-            webError("Genome $taxon_oid is missing cluster data file.");
+            WebUtil::webError("Genome $taxon_oid is missing cluster data file.");
         }
     }
 
@@ -1583,7 +1583,7 @@ sub runJob {
     loadClusters( $dbh, $toi, \%taxonBinOid2Clusters );
     my $toiClusters_ref = $taxonBinOid2Clusters{ $toi };
     if( !defined( $toiClusters_ref ) ) {
-       webDie( "runJob: cannot find clusters for '$toi'\n" );
+       WebUtil::webDie( "runJob: cannot find clusters for '$toi'\n" );
     }
     my @keys = keys( %$toiClusters_ref );
     my $count = @keys;
@@ -2097,7 +2097,7 @@ sub printCogs {
     if ( !$rfh ) {
         webLog "Cache '$cachePath' no longer exists\n"
           if $verbose >= 1;
-        webError("This link has expired. Please run the profiler again.");
+        WebUtil::webError("This link has expired. Please run the profiler again.");
         return;
     }
 
@@ -2313,7 +2313,7 @@ sub printPfam {
     if ( !$rfh ) {
         webLog "Cache '$cachePath' no longer exists\n"
           if $verbose >= 1;
-        webError("This link has expired. Please run the profiler again.");
+        WebUtil::webError("This link has expired. Please run the profiler again.");
         return;
     }
 
@@ -2556,7 +2556,7 @@ sub printTigrfam {
     if ( !$rfh ) {
         webLog "Cache '$cachePath' no longer exists\n"
           if $verbose >= 1;
-        webError("This link has expired. Please run the profiler again.");
+        WebUtil::webError("This link has expired. Please run the profiler again.");
         return;
     }
 
@@ -2792,7 +2792,7 @@ sub printCogGeneList {
     if ( !$rfh ) {
         webLog "Cache '$genePath' no longer exists\n"
           if $verbose >= 1;
-        webError("This link has expired. Please run the profiler again.");
+        WebUtil::webError("This link has expired. Please run the profiler again.");
         return;
     }
     my @gene_oids;
@@ -2884,7 +2884,7 @@ sub printPfamGeneList {
     if ( !$rfh ) {
         webLog "Cache '$genePath' no longer exists\n"
           if $verbose >= 1;
-        webError("This link has expired. Please run the profiler again.");
+        WebUtil::webError("This link has expired. Please run the profiler again.");
         return;
     }
     my @gene_oids;
@@ -2989,7 +2989,7 @@ sub printTIGRfamGeneList {
     if ( !$rfh ) {
         webLog "Cache '$genePath' no longer exists\n"
           if $verbose >= 1;
-        webError("This link has expired. Please run the profiler again.");
+        WebUtil::webError("This link has expired. Please run the profiler again.");
         return;
     }
     my @gene_oids;
@@ -3253,7 +3253,7 @@ sub loadClusters {
     # stop if zip file can not be found
     my $fpath = getClusterZfileName($taxon_bin_oid);
     unless ( -e  $fpath ) {
-        webError("The phylogenetic clusters data is not available for this genome ($taxon_oid).");
+        WebUtil::webError("The phylogenetic clusters data is not available for this genome ($taxon_oid).");
     }
 
     my $rfh = newUnzipFileHandle( $fpath, "", "loadClusters" );
@@ -3633,7 +3633,7 @@ sub getPair2Path {
     } elsif ( $ava_batch_dir ne "" ) {
         $path = "$ava_batch_dir/$taxon1/$pair.m8.txt";
     } else {
-        webDie(   "getPair2Path: neither "
+        WebUtil::webDie(   "getPair2Path: neither "
                 . "avagz_batch_dir or ava_batch_dir is set\n" );
     }
     if ( !( -e $path ) ) {
@@ -3695,7 +3695,7 @@ sub printPhyloProfileResultStat {
     if ( !$rfh ) {
         webLog "Cache '$cachePath' no longer exists\n"
           if $verbose >= 1;
-        webError("This link has expired. Please run the profiler again.");
+        WebUtil::webError("This link has expired. Please run the profiler again.");
         return;
     }
     my @gene_oids;
@@ -3749,7 +3749,7 @@ sub printPhyloProfileResultsPage {
     my $path = "$cgi_tmp_dir/$cacheFile";
     $path = checkTmpPath($path);
     if ( !( -e $path ) ) {
-        webError("Session has expired.  Please start over.");
+        WebUtil::webError("Session has expired.  Please start over.");
         return;
     }
 

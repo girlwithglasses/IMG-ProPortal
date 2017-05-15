@@ -1,7 +1,7 @@
 ############################################################################
 # ProfileHeatMap.pm - Generate heat map drawing module for profiles.
 #    --es 10/02/2005
-# $Id: ProfileHeatMap.pm 35066 2016-01-20 19:25:21Z klchu $
+# $Id: ProfileHeatMap.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package ProfileHeatMap;
 my $section = "ProfileHeatMap";
@@ -182,7 +182,7 @@ sub drawSpecial {
     my $cell_height = $self->{cell_height}; 
     my $color_array = $self->{color_array}; 
     my $image_file  = $self->{image_file}; 
-    my $fname       = lastPathTok($image_file); 
+    my $fname       =  WebUtil::lastPathTok($image_file); 
     my $image_url   = "$tmp_url/$fname"; 
     my $colors      = $self->{ colors };
 
@@ -215,7 +215,7 @@ sub drawSpecial {
             my $perc    = $rowVals[$j];
 
             #if ( $perc < -1.0000000 || $perc > 1.0000000 ) { 
-            #    webDie("draw: invalid perc=$perc\n");
+            #    WebUtil::webDie("draw: invalid perc=$perc\n");
             #} 
 
             my $cidx  = int( $perc * 20 );
@@ -406,7 +406,7 @@ sub draw {
     my $cell_height = $self->{cell_height};
     my $color_array = $self->{color_array};
     my $image_file  = $self->{image_file};
-    my $fname       = lastPathTok($image_file);
+    my $fname       =  WebUtil::lastPathTok($image_file);
     my $image_url   = "$tmp_url/$fname";
     my $md0;
     $md0 .= "<img src='$image_url' usemap='#$id' border='0' />\n";
@@ -423,12 +423,12 @@ sub draw {
         for ( my $j = 0; $j < $n_cols; $j++ ) {
             my $idx = ( $i * $n_cols ) + $j;
             if ( $idx >= $nVals ) {
-                webDie("draw: invalid idx='$idx' [$i,$j] nVals=$nVals\n");
+                WebUtil::webDie("draw: invalid idx='$idx' [$i,$j] nVals=$nVals\n");
             }
             my $taxon_oid = $taxonOids_ref->[$j];
             my $perc      = $data_ref->[$idx];
             if ( $perc < 0 || $perc > 1.00 ) {
-                webDie("draw: invalid idx='$idx' [$i,$j] invalid perc=$perc\n");
+                WebUtil::webDie("draw: invalid idx='$idx' [$i,$j] invalid perc=$perc\n");
             }
             my $cidx  = int( $perc * 20 );
             my $color = $color_array->[$cidx];

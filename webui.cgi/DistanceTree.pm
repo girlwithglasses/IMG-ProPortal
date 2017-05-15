@@ -1,6 +1,6 @@
 ###########################################################################
 # DistanceTree.pm - draws a radial phylogenetic tree
-# $Id: DistanceTree.pm 36845 2017-03-25 00:22:54Z aratner $
+# $Id: DistanceTree.pm 37045 2017-05-04 19:45:45Z aratner $
 ############################################################################
 package DistanceTree;
 my $section = "DistanceTree";
@@ -30,10 +30,10 @@ my $verbose       = $env->{ verbose };
 my $base_url      = $env->{ base_url };
 my $base_dir      = $env->{ base_dir };
 my $top_base_dir  = $env->{ top_base_dir };
-my $top_base_url  = $env->{top_base_url};
+my $top_base_url  = $env->{ top_base_url };
 
-my $tool = lastPathTok( $0 );
-my $include_metagenomes = $env->{include_metagenomes};
+my $tool = WebUtil::lastPathTok( $0 );
+my $include_metagenomes = $env->{ include_metagenomes };
 
 my $nvl = getNvl();
 my $decorator_exe = $env->{ decorator_exe };
@@ -48,7 +48,6 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my ($self) = @_;
-
     my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
     $template->param( base_url => $base_url );
     $template->param( YUI      => $YUI );
@@ -114,6 +113,12 @@ sub dispatch {
 		. "value='90' />90+ &nbsp;";
 	    print "</p>\n";
 	}
+	
+	print qq{
+	  <p><font color='red'>End of Metagenome Support.</font>
+          Calculation of metagenome distance data has ended as of Jan. 2016.
+	  </p>  
+	};
 
 	printForm();
 	print end_form();
@@ -152,8 +157,8 @@ sub printForm {
     $template->param( from         => 'DistanceTree' );
 
     if ( $include_metagenomes ) {
-	$template->param( selectedGenome1Title => 'Isolates or Metagenomes (not both)' );
-	$template->param( include_metagenomes => 1 );
+	#$template->param( selectedGenome1Title => 'Isolates or Metagenomes (not both)' );
+	#$template->param( include_metagenomes => 1 );
 	#$template->param( selectedAssembled1  => 1 ); # not one of the params
     }
 
@@ -178,7 +183,7 @@ sub getHomologHitCount {
     my $gene_oid = param("genePageGeneOid");
 
     if ( blankStr($gene_oid) ) {
-        webError( "Query gene cannot be NULL." );
+        WebUtil::webError( "Query gene cannot be NULL." );
     }
 
     my $dbh = dbLogin();
@@ -202,7 +207,7 @@ sub getHomologHitCount {
     } elsif ( $xlogSource eq "otfBlast" ) {
         my $inFile   = "$cgi_tmp_dir/otfTaxonsHit.$gene_oid.txt";
         if ( !( -e $inFile ) ) {
-            webError("Session expired.  Please refresh gene page.");
+            WebUtil::webError("Session expired.  Please refresh gene page.");
         }
         my $rfh = newReadFileHandle( $inFile, "getHomologHitCount" );
         while ( my $s = $rfh->getline() ) {
@@ -265,7 +270,7 @@ sub runTree {
 
     if ( $nTaxons0 < 3 &&
 	 $taxon_selection eq "" ) {
-	webError( "Please select at least 3 genomes." );
+	WebUtil::webError( "Please select at least 3 genomes." );
     }
 
     my $dbh = dbLogin();
@@ -503,7 +508,7 @@ sub runTree {
 
 	    printEndWorkingDiv("runTree");
 	    #print "<p>".$limit_note."</p>";
-	    webError( "Please select no more than $META_LIMIT metagenomes." );
+	    WebUtil::webError( "Please select no more than $META_LIMIT metagenomes." );
 	    return; # for now ...
 	}
 
@@ -576,14 +581,14 @@ sub runTree {
 	my $url = "$base_url/tmp/table$$.map";
 	print alink($url, "View map file", "_blank");
 	print "</p>\n";
-	webError( "Could not create the required newick input file: " );
+	WebUtil::webError( "Could not create the required newick input file. " );
     }
     if (!(-e $decoratedFile)) {
 	print "<p>\n";
 	my $url = "$base_url/tmp/newick$$.txt";
 	print alink($url, "View newick", "_blank");
 	print "</p>\n";
-	webError( "Could not create the required phyloXML input file: " );
+	WebUtil::webError( "Could not create the required phyloXML input file. " );
     }
 
     my $newick_str = "";
@@ -595,7 +600,7 @@ sub runTree {
     close $rfh;
 
     if ( blankStr($newick_str) ) {
-        webError("Invalid newick '$newick_str' string.\n");
+        WebUtil::webError("Invalid newick '$newick_str' string.\n");
     }
 
     print "<p>";
@@ -892,11 +897,11 @@ sub getUnifracDistMatrix {
     $unifrac_file .= $perc_identity.".txt";
     if (!(-e $unifrac_file)) {
 	printEndWorkingDiv("runTree");
-        webError( "Cannot find the file $unifrac_file." );
+        WebUtil::webError( "Cannot find the file $unifrac_file." );
     }
     if (!(-r $unifrac_file)) {
 	printEndWorkingDiv("runTree");
-        webError( "The file $unifrac_file cannot be read." );
+        WebUtil::webError( "The file $unifrac_file cannot be read." );
     }
 
     my $rfh = newReadFileHandle( $unifrac_file, "unifrac_dist_file", 1 );

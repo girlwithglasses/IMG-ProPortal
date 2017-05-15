@@ -73,7 +73,7 @@ sub dispatch {
     	    $fc->printFuncCartForm( '', 1 );
     	}
     	else {
-    	    webError("No functions have been selected.");
+    	    WebUtil::webError("No functions have been selected.");
     	    return;
     	}
     } elsif ( paramMatch("saveFunctionCart") ) {
@@ -94,7 +94,7 @@ sub dispatch {
 	}
 
 	if ( ! $gene_per_taxon ) {
-	    webError("No row is selected.");
+	    WebUtil::webError("No row is selected.");
 	    return;
 	}
 

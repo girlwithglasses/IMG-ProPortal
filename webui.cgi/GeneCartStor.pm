@@ -16,7 +16,7 @@
 #    12: scaffold read depth
 #    --es 03/22/2007
 #
-# $Id: GeneCartStor.pm 36615 2017-03-01 19:56:28Z klchu $
+# $Id: GeneCartStor.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GeneCartStor;
 my $section = "GeneCartStor";
@@ -49,28 +49,28 @@ my $section_cgi = "$main_cgi?section=$section";
 my $cgi_tmp_dir = $env->{cgi_tmp_dir};
 
 #my $log_tmp_dir          = $env->{log_tmp_dir};
-my $include_metagenomes  = $env->{include_metagenomes};
-my $img_lite             = $env->{img_lite};
-my $verbose              = $env->{verbose};
-my $show_myimg_login     = $env->{show_myimg_login};
-my $user_restricted_site = $env->{user_restricted_site};
-my $img_internal         = $env->{img_internal};
-my $scaffold_cart        = $env->{scaffold_cart};
-my $include_bbh_lite     = $env->{include_bbh_lite};
-my $bbh_files_dir        = $env->{bbh_files_dir};
-my $cog_base_url         = $env->{cog_base_url};
-my $pfam_base_url        = $env->{pfam_base_url};
-my $tigrfam_base_url     = $env->{tigrfam_base_url};
-my $enzyme_base_url      = $env->{enzyme_base_url};
-my $kegg_orthology_url   = $env->{kegg_orthology_url};
-my $bbh_zfiles_dir       = $env->{bbh_zfiles_dir};
+my $include_metagenomes   = $env->{include_metagenomes};
+my $img_lite              = $env->{img_lite};
+my $verbose               = $env->{verbose};
+my $show_myimg_login      = $env->{show_myimg_login};
+my $user_restricted_site  = $env->{user_restricted_site};
+my $img_internal          = $env->{img_internal};
+my $scaffold_cart         = $env->{scaffold_cart};
+my $include_bbh_lite      = $env->{include_bbh_lite};
+my $bbh_files_dir         = $env->{bbh_files_dir};
+my $cog_base_url          = $env->{cog_base_url};
+my $pfam_base_url         = $env->{pfam_base_url};
+my $tigrfam_base_url      = $env->{tigrfam_base_url};
+my $enzyme_base_url       = $env->{enzyme_base_url};
+my $kegg_orthology_url    = $env->{kegg_orthology_url};
+my $bbh_zfiles_dir        = $env->{bbh_zfiles_dir};
 my $enable_genomelistJson = $env->{enable_genomelistJson};
-my $base_dir             = $env->{base_dir};
-my $base_url             = $env->{base_url};
-my $http                 = $env->{ http };
-my $domain_name          = $env->{ domain_name };
-my $main_cgi             = $env->{ main_cgi };
-my $YUI                  = $env->{yui_dir_28};
+my $base_dir              = $env->{base_dir};
+my $base_url              = $env->{base_url};
+my $http                  = $env->{ http };
+my $domain_name           = $env->{ domain_name };
+my $main_cgi              = $env->{ main_cgi };
+my $YUI                   = $env->{yui_dir_28};
 my $enable_interpro = $env->{enable_interpro};
 
 # tab panel redirect
@@ -100,7 +100,7 @@ sub getPageTitle {
     } else {
         WebUtil::setSessionParam( "lastCart", $tool );
     }
-    
+
     return 'Gene Cart';
 }
 
@@ -471,7 +471,7 @@ sub printExportSave {
         print "<p>You have 0 genes to export.</p>\n";
     } else {
         print "<input type='radio' name='exportType' value='excel' />\n";
-        print "Gene data in tab-delimited format to Excel " 
+        print "Gene data in tab-delimited format to Excel "
         . "<b>(Gene Cart uploadable format)</b><br/>\n";
         print "</p>\n";
 
@@ -511,8 +511,8 @@ sub new {
 # webConfigureGenes - Configure gene cart display.
 ############################################################################
 sub webConfigureGenes {
-    my ( $self,           $outColClause,   
-         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+    my ( $self,           $outColClause,
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause,
          $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
@@ -537,9 +537,9 @@ sub webConfigureGenes {
             $goid2BatchIds{$gene_oid} = $fields[6]; #6 for batch_id
         }
         my $colIDsNew = GeneDataUtil::flushGeneBatch(
-            $fixedColIDs,    $recs, $dbh, 
-            \@dbOids, \%goid2BatchIds, '',  $outColClause,   
-            $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+            $fixedColIDs,    $recs, $dbh,
+            \@dbOids, \%goid2BatchIds, '',  $outColClause,
+            $taxonJoinClause,$scfJoinClause,   $ssJoinClause,
             $get_gene_tmh,   $get_gene_sig,
             $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
             $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
@@ -556,11 +556,11 @@ sub webConfigureGenes {
             my @fields = split( /\t/, $rec );
             $goid2BatchIds{$mOid} = $fields[6];     #6 for batch_id
         }
-        my $colIDsNew = GeneDataUtil::flushMetaGeneBatch( 
-            $fixedColIDs, $recs, $dbh, 
-            \@metaOids, \%goid2BatchIds, '', 
-            $projectMetadataCols_ref, $outputCol_ref, 
-            '', 1, 1 
+        my $colIDsNew = GeneDataUtil::flushMetaGeneBatch(
+            $fixedColIDs, $recs, $dbh,
+            \@metaOids, \%goid2BatchIds, '',
+            $projectMetadataCols_ref, $outputCol_ref,
+            '', 1, 1
         );
         if ($colIDsNew) {
             $colIDs = $colIDsNew;
@@ -575,8 +575,8 @@ sub webConfigureGenes {
 # webAddGenes - Load gene cart from selections.
 ############################################################################
 sub webAddGenes {
-    my ( $self,           $outColClause,   
-         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+    my ( $self,           $outColClause,
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause,
          $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
@@ -584,8 +584,8 @@ sub webAddGenes {
       = @_;
     my @gene_oids = param("gene_oid");
     #print "webAddGenes() gene_oids: @gene_oids<br/>\n";
-    $self->addGeneBatch( \@gene_oids, $outColClause,   
-         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+    $self->addGeneBatch( \@gene_oids, $outColClause,
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause,
          $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
@@ -607,8 +607,8 @@ sub addGenes {
 ############################################################################
 sub addGeneBatch {
     my (
-         $self,           $gene_oids_ref,   $outColClause,   
-         $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+         $self,           $gene_oids_ref,   $outColClause,
+         $taxonJoinClause,$scfJoinClause,   $ssJoinClause,
          $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
          $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
@@ -629,11 +629,11 @@ sub addGeneBatch {
     {
 	    my @rest;
         (
-           $outColClause,   
-           $taxonJoinClause,$scfJoinClause, $ssJoinClause, 
+           $outColClause,
+           $taxonJoinClause,$scfJoinClause, $ssJoinClause,
            $get_gene_tmh,   $get_gene_sig,
-           $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
-           $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+           $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
+           $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
            $projectMetadataCols_ref, $outputCol_ref,  @rest
           )
           = GeneTableConfiguration::getOutputColClauses($fixedColIDs, $tool);
@@ -657,9 +657,9 @@ sub addGeneBatch {
             #not working using QueryUtil::fetchValidGeneOids
             #@dbOids = QueryUtil::fetchValidGeneOids( $dbh, @dbOids );
             my $colIDsNew = GeneDataUtil::flushGeneBatch
-            ( $fixedColIDs,    $recs, $dbh,     
-              \@dbOids, '', $batch_id, $outColClause,   
-              $taxonJoinClause,$scfJoinClause, $ssJoinClause, 
+            ( $fixedColIDs,    $recs, $dbh,
+              \@dbOids, '', $batch_id, $outColClause,
+              $taxonJoinClause,$scfJoinClause, $ssJoinClause,
               $get_gene_tmh,   $get_gene_sig,
               $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
               $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
@@ -683,9 +683,9 @@ sub addGeneBatch {
             }
             if ( scalar(@metaOidsValid) > 0 ) {
                 my $colIDsNew = GeneDataUtil::flushMetaGeneBatch
-                    ( $fixedColIDs, $recs, $dbh, 
-                      \@metaOidsValid, '', $batch_id, 
-                      $projectMetadataCols_ref, $outputCol_ref, 
+                    ( $fixedColIDs, $recs, $dbh,
+                      \@metaOidsValid, '', $batch_id,
+                      $projectMetadataCols_ref, $outputCol_ref,
                       $workingDivNotNeeded, 0, 1 );
                 if ($colIDsNew) {
                     $colIDs = $colIDsNew;
@@ -707,7 +707,7 @@ sub webRemoveGenes {
 
     my @gene_oids = param("gene_oid");
     if ( scalar(@gene_oids) == 0 ) {
-        webError("No genes have been selected.");
+        WebUtil::webError("No genes have been selected.");
         return;
     }
 
@@ -842,11 +842,11 @@ sub printGeneCartForm {
          || $load eq "configure" )
     {
         my (
-             $outColClause,   
-             $taxonJoinClause, $scfJoinClause, $ssJoinClause, 
+             $outColClause,
+             $taxonJoinClause, $scfJoinClause, $ssJoinClause,
              $get_gene_tmh,   $get_gene_sig,
-             $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
-             $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+             $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
+             $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
              $projectMetadataCols_ref, $outputCol_ref,  @rest
           )
           = GeneTableConfiguration::getOutputColClauses($fixedColIDs, $tool);
@@ -856,29 +856,29 @@ sub printGeneCartForm {
 
         if ( $load eq "upload" ) {
             $self->uploadGeneCart(
-                $outColClause,   
-                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $outColClause,
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause,
                 $get_gene_tmh,   $get_gene_sig,
-                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
-                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
                 $projectMetadataCols_ref, $outputCol_ref
             );
         } elsif ( $load eq "add" ) {
             $self->webAddGenes(
-                $outColClause,   
-                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $outColClause,
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause,
                 $get_gene_tmh,   $get_gene_sig,
-                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
-                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
                 $projectMetadataCols_ref, $outputCol_ref
             );
         } elsif ( $load eq "configure" ) {
             $self->webConfigureGenes(
-                $outColClause,   
-                $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+                $outColClause,
+                $taxonJoinClause,$scfJoinClause,   $ssJoinClause,
                 $get_gene_tmh,   $get_gene_sig,
-                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause, 
-                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause, 
+                $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
+                $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
                 $projectMetadataCols_ref, $outputCol_ref
             );
         }
@@ -971,7 +971,7 @@ sub printGeneCartForm {
     $it->addColSpec( "Gene ID",           "asc", "center" );
     $it->addColSpec( "Locus Tag",         "asc", "center" );
     $it->addColSpec( "Gene Product Name", "asc", "left" );
-    $it->addColSpec( "Genome ID",         "asc", "left" ); 
+    $it->addColSpec( "Genome ID",         "asc", "left" );
     $it->addColSpec( "Genome Name",            "asc", "left" );
     $it->addColSpec( "Batch<sup>1</sup>", "asc", "right" );
 
@@ -1278,8 +1278,8 @@ sub printUploadGeneCartFormContent {
 #   Make this so it's more responsive to the user.
 ############################################################################
 sub uploadGeneCart {
-    my ( $self,           $outColClause,   
-         $taxonJoinClause,$scfJoinClause,      $ssJoinClause, 
+    my ( $self,           $outColClause,
+         $taxonJoinClause,$scfJoinClause,      $ssJoinClause,
          $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause,    $tigrfamQueryClause, $ecQueryClause,
          $koQueryClause,  $imgTermQueryClause, $projectMetadataCols_ref, $outputCol_ref
@@ -1291,12 +1291,12 @@ sub uploadGeneCart {
     my $errmsg;
     if ( !MyIMG::uploadIdsFromFile( "gene_oid,Gene ID,Gene OID,Gene Object ID", \@gene_oids, \$errmsg ) ) {
         printStatusLine( "Error.", 2 );
-        webError($errmsg);
+        WebUtil::webError($errmsg);
     }
 
     if ( scalar(@gene_oids) > CartUtil::getMaxDisplayNum() ) {
         printStatusLine( "Error.", 2 );
-        webError( "Import to gene cart exceeded $maxGeneCartGenes genes. " . "Please import a smaller set." );
+        WebUtil::webError( "Import to gene cart exceeded $maxGeneCartGenes genes. " . "Please import a smaller set." );
     }
 
     my ( $dbOids_ref, $metaOids_ref ) = MerFsUtil::splitDbAndMetaOids(@gene_oids);
@@ -1336,8 +1336,8 @@ sub uploadGeneCart {
         push( @finalOids, @metaOids );
     }
 
-    $self->addGeneBatch( \@finalOids, $outColClause,   
-         $taxonJoinClause,$scfJoinClause,   $ssJoinClause, 
+    $self->addGeneBatch( \@finalOids, $outColClause,
+         $taxonJoinClause,$scfJoinClause,   $ssJoinClause,
          $get_gene_tmh,   $get_gene_sig,
          $cogQueryClause, $pfamQueryClause, $tigrfamQueryClause,
          $ecQueryClause,  $koQueryClause,   $imgTermQueryClause,
@@ -1405,10 +1405,10 @@ sub printPhyloOccurProfiles {
     my @gene_oids = param("gene_oid");
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        webError("Please select at least one gene.");
+        WebUtil::webError("Please select at least one gene.");
     }
     if ( $nGenes > $maxProfileOccurIds ) {
-        webError("Please select no more than $maxProfileOccurIds genes.");
+        WebUtil::webError("Please select no more than $maxProfileOccurIds genes.");
     }
 
     my $gene_oid_str = join( ',', @gene_oids );
@@ -1458,7 +1458,7 @@ sub printPhyloOccurProfiles {
 
         #$dbh->disconnect();
         my $s = join( ',', @badGenes );
-        webError( "Select only protein coding genes. " . "The following RNA genes were found: $s." );
+        WebUtil::webError( "Select only protein coding genes. " . "The following RNA genes were found: $s." );
         return;
     }
 
@@ -1474,7 +1474,7 @@ sub printPhyloOccurProfiles {
                 my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid );
                 my $rh = $idRecsHash{$gene_oid};
                 if ( !defined($rh) ) {
-                    webDie( "printPhyloOccurProfiles: " . "cannot find '$gene_oid'\n" );
+                    WebUtil::webDie( "printPhyloOccurProfiles: " . "cannot find '$gene_oid'\n" );
                 }
                 my $taxonOidHash = $rh->{taxonOidHash};
                 $taxonOidHash->{$staxon} = 1;
@@ -1495,7 +1495,7 @@ sub printPhyloOccurProfiles {
             last if !$gene_oid;
             my $rh = $idRecsHash{$gene_oid};
             if ( !defined($rh) ) {
-                webDie("printPhyloOccurProfiles: cannot find '$gene_oid'\n");
+                WebUtil::webDie("printPhyloOccurProfiles: cannot find '$gene_oid'\n");
             }
             my $taxonOidHash = $rh->{taxonOidHash};
             $taxonOidHash->{$taxon} = 1;
@@ -1542,7 +1542,7 @@ sub addFunctionCart() {
     my @gene_oids = param("gene_oid");
 
     if ( @gene_oids == 0 ) {
-        webError("Please select at least one gene.");
+        WebUtil::webError("Please select at least one gene.");
     }
 
     my ( $dbOids_ref, $metaOids_ref ) = MerFsUtil::splitDbAndMetaOids(@gene_oids);
@@ -1802,7 +1802,7 @@ sub getSize {
     if($href eq '') {
         return 0;
     }
-    
+
     my $s = keys %$href;
     return $s;
 }
@@ -1840,7 +1840,7 @@ sub writeSelectedFile {
 
 sub getFile {
     my ($fileNameEnd) = @_;
-    
+
     my ( $cartDir, $sessionId ) = WebUtil::getCartDir();
     my $sessionFile = "$cartDir/geneCart.$sessionId." . $fileNameEnd;
     return $sessionFile;
@@ -1848,7 +1848,7 @@ sub getFile {
 
 sub readFromFile {
     my ($file) = @_;
-    
+
     my %records;
     my $res = newReadFileHandle( $file, "runJob", 1 );
     if ( !$res ) {

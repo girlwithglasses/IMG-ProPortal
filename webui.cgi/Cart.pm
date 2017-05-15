@@ -1,6 +1,6 @@
 ############################################################################
 # img-act web services package, using xml.cgi xml.pl
-# $Id: Cart.pm 36615 2017-03-01 19:56:28Z klchu $
+# $Id: Cart.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Cart;
 
@@ -29,6 +29,11 @@ sub getAppHeaderData {
     my ($self) = @_;
     my @a = ('AnaCart');
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
 }
 
 
@@ -119,7 +124,7 @@ sub printGeneList {
 	    ( "Gene Ortholog Neighborhoods - Selected Genes",
 	      "", $dbh, \@a, \@b );
     } else {
-        webError("You have not selected any genes.");
+        WebUtil::webError("You have not selected any genes.");
     }
 }
 

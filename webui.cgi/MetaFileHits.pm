@@ -2,7 +2,7 @@
 # Phylogenetic Distribution of Genes from taxon detail
 # (file version)
 #
-# $Id: MetaFileHits.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: MetaFileHits.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package MetaFileHits;
 
@@ -842,7 +842,7 @@ sub printMetagCateFuncGenes {
     my $profileType = param('profileType');
     my $category_display_type = PhyloUtil::getFuncTextVal($profileType);
     if ( !$category_display_type ) {
-        webError("Unknown function type: $profileType\n"); 
+        WebUtil::webError("Unknown function type: $profileType\n"); 
     }
     print "<h3>\n";
     print "$category_display_type Gene List";
@@ -850,7 +850,7 @@ sub printMetagCateFuncGenes {
 
     my $cate_id = param('cate_id');    
     if ( !$cate_id ) {
-        webError("No function is selected.\n");
+        WebUtil::webError("No function is selected.\n");
     }
 
     my ($category_name) = PhyloUtil::getCategoryName( $dbh, $profileType, $cate_id );    
@@ -1153,7 +1153,7 @@ sub printMetagCateFunc {
     my $profileType = param('profileType');
     my $category_display_type = PhyloUtil::getFuncTextVal($profileType);
     if ( !$category_display_type ) {
-        webError("Unknown function type: $profileType\n"); 
+        WebUtil::webError("Unknown function type: $profileType\n"); 
     }
     print "<h3>$category_display_type View</h3>\n";
 
@@ -2802,7 +2802,7 @@ sub Connect_IMG_MER_v330 {
     my $dsn2 = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid";
     my $dbh2 = DBI->connect( $dsn2, $user2, $pw2 );
     if ( !defined($dbh2) ) {
-        webDie("cannot login to IMG MER V330\n");
+        WebUtil::webDie("cannot login to IMG MER V330\n");
     }
     $dbh2->{LongReadLen} = 50000;
     $dbh2->{LongTruncOk} = 1;

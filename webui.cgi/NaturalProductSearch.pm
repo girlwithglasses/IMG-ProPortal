@@ -1,6 +1,6 @@
 #
 #
-# $Id: NaturalProductSearch.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: NaturalProductSearch.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 package NaturalProductSearch;
 
@@ -340,7 +340,7 @@ sub printNaturalProductSearchResult {
         && !$to_num_atoms
         && !$from_mol_weight
         && !$to_mol_weight ) {
-        webError("Please make selections!");
+        WebUtil::webError("Please make selections!");
     }
 
     printStatusLine( "Loading ...", 1 );

@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: ImgStatsOverview.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: ImgStatsOverview.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package ImgStatsOverview;
 
@@ -1224,8 +1224,8 @@ sub printExperiments {
         # metagenomes only:
         my $rnaseq_sql = qq{
             select tx.domain, count(distinct gs.study_name)
-            from rnaseq_dataset dts, gold_study\@imgsg_dev gs,
-                 gold_sp_study_gold_id\@imgsg_dev gssg, taxon tx
+            from rnaseq_dataset dts, gold_study gs,
+                 gold_sp_study_gold_id gssg, taxon tx
             where dts.gold_id = gssg.gold_id
             and gssg.study_gold_id = gs.gold_id
             and dts.reference_taxon_oid = tx.taxon_oid
@@ -1886,7 +1886,7 @@ sub getEnvSample_v20 {
 	    my $count = 0;
 	    my $sql3 = qq{
                 select g.ecosystem_category, count(distinct s.scaffold_oid)
-                from taxon t, scaffold s, gold_sequencing_project\@imgsg_dev g
+                from taxon t, scaffold s, gold_sequencing_project g
                 where t.domain = 'Viruses'
                 and t.obsolete_flag = 'No'
                 and t.is_public = 'Yes'
@@ -1910,7 +1910,7 @@ sub getEnvSample_v20 {
 	    $sql3 = qq{
                 select g.ecosystem_category, count(distinct s.scaffold_id)
                 from taxon t, $viral_table_name s,
-                gold_sequencing_project\@imgsg_dev g
+                gold_sequencing_project g
                 where s.taxon_oid = t.taxon_oid
                 and t.obsolete_flag = 'No'
                 and t.genome_type = 'metagenome'

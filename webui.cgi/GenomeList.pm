@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeList.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: GenomeList.pm 37058 2017-05-08 19:45:30Z klchu $
 ############################################################################
 package GenomeList;
 
@@ -50,8 +50,8 @@ my $mySamplePrefs             = 'mySamplePrefs';                     # filename
 my $myTaxonStatsPrefs         = 'myTaxonStatsPrefs';                 # filename
 my $top_base_url              = $env->{top_base_url};
 
-
-my $cacheDir = "/webfs/scratch/img/gold/";
+my $goldCacheDir = $env->{gold_cache_dir};
+my $cacheDir = $env->{gold_cache_dir};
 my $database = $cacheDir . "projectInfo2.db";    # see ../preComputedData/ProjectMetadata3.pl
 
 $cgi_tmp_dir = $dir;
@@ -136,7 +136,7 @@ my @genomeColumnsOrder = (
     't.img_version',                         
     't.submission_id',
     
-    't.jgi_project_id',                      
+    't.jgi_project_id',
     't.analysis_product_name',     
     't.analysis_project_type',
 
@@ -937,7 +937,7 @@ sub printRedisplay {
     my $from     = param('from');
 
     if ($user_restricted_site) {
-        my $genomeListColPrefs = getSessionParam("genomeListColPrefs");
+        my $genomeListColPrefs = WebUtil::getSessionParam("genomeListColPrefs");
 
         if ( $genomeListColPrefs eq 'Yes' ) {
 
@@ -988,7 +988,7 @@ sub getTaxonsFromGenomeListFile {
 
     #print "getTaxonsFromGenomeListFile() genomeListFilename=$genomeListFilename<br/>\n";
     if ( !-e $genomeListFilename ) {
-        webError('Your session has expired.');
+        WebUtil::webError('Your session has expired.');
     }
     my $rfh = newReadFileHandle($genomeListFilename);
     my @taxon_oids;
@@ -1069,7 +1069,7 @@ sub printGenomesViaList {
     my ( $list_aref, $foundColumns_aref, $title, $filename, $from, $note ) = @_;
 
     if ( $#$list_aref < 0 ) {
-        webError("Genomes list has zero size");
+        WebUtil::webError("Genomes list has zero size");
     }
 
     # - save the oids or sql as a session for re-display
@@ -1136,14 +1136,19 @@ sub printGenomes {
 
     # TODO - pre check those in genome cart ???
 
-    my @taxonColumns           = param('genome_field_col');
-    my @projectMetadataColumns = param('metadata_col');
+     my @taxonColumns           = param('genome_field_col');
+     my @projectMetadataColumns = param('metadata_col');
+     my @statsColumns = param('stats_col');
 
-    my @statsColumns = param('stats_col');
+    #my @taxonColumns           = multi_param('genome_field_col');
+    #my @projectMetadataColumns = multi_param('metadata_col');
+
+    #my @statsColumns           = multi_param('stats_col');
+
 
     #  save and load user preferred columns
     if ($user_restricted_site) {
-        my $genomeListColPrefs = getSessionParam("genomeListColPrefs");
+        my $genomeListColPrefs = WebUtil::getSessionParam("genomeListColPrefs");
 
         if ( $genomeListColPrefs eq 'Yes' ) {
             require Workspace;
@@ -1169,7 +1174,7 @@ sub printGenomes {
                 if ( !exists $projectMetadataColumns{$x} ) {
                     $good = 0;
                     last;
-                }                
+                }
             }
             if ($good) {
                 my @a = hashKeyToArray($href);
@@ -1183,7 +1188,7 @@ sub printGenomes {
                 if ( !exists $statsColumns{$x} ) {
                     $good = 0;
                     last;
-                }                
+                }
             }
             if ($good) {
                 my @a = hashKeyToArray($href);
@@ -1281,7 +1286,7 @@ sub printGenomes {
 
     if ( $from eq 'TaxonList' && $img_ken ) {
         print qq{
-  <div style="white-space: nowrap;">  
+  <div style="white-space: nowrap;">
 };
 
 # input type="image - return false to stop from submitting the form - ken
@@ -1290,24 +1295,24 @@ sub printGenomes {
 #
         print qq{
     <br>
-<input id='configHideShow' title='Hide/Show Attribute Selection' type="image" src="$base_url/images/arrow_left_all.png"  
-onclick="configShow('configtab', '$base_url'); return false;" 
+<input id='configHideShow' title='Hide/Show Attribute Selection' type="image" src="$base_url/images/arrow_left_all.png"
+onclick="configShow('configtab', '$base_url'); return false;"
 style="vertical-align: middle;"
 /> &nbsp;&nbsp;&nbsp;&nbsp;
 <input type="submit" class='smdefbutton' name='_section_${section}_genomeList' value='Redisplay' title='Redisplay genomes with selected attributes' />
     <br>
-  <div id='configtab'>  
+  <div id='configtab'>
 };
 
         printConfigDivTab( \@taxonColumns, \@projectMetadataColumns, \@statsColumns );
 
         # end div configtab
         print qq{
-  </div>  
+  </div>
 };
 
         print qq{
-  <div style="display:inline-block; white-space: normal;">  
+  <div style="display:inline-block; white-space: normal;">
 };
     }
 
@@ -1318,12 +1323,12 @@ style="vertical-align: middle;"
 
         # end div style="display:inline-block; white-space: normal;"
         print qq{
-  </div>  
+  </div>
 };
 
         # end div style="white-space: nowrap;"
         print qq{
-  </div>  
+  </div>
 };
     }
 
@@ -1513,8 +1518,22 @@ sub printTaxonList {
                 }
             }
 
-            if ( $col eq 't.domain' || $col eq 't.seq_status' ) {
-                $row .= $value . $sd . substr( $value, 0, 1 ) . "\t";
+            # || $col eq 't.seq_status'
+            if ( $col eq 't.domain'  ) {
+                #$row .= $value . $sd . substr( $value, 0, 1 ) . "\t";
+                # Hmm lets stop using the first char - ken 2017-05-03
+                if(substr( $value, 0, 1 ) eq '*') {
+                	$row .= 'Metagenome' . $sd . 'Metagenome' . "\t";
+                } elsif($value =~ /^Vir/) {
+                    $row .= 'Virus' . $sd . 'Virus' . "\t";
+                } elsif($value =~ /^Pla/) {
+                    $row .= 'Plasmid' . $sd . 'Plasmid' . "\t";
+                } elsif($value =~ /^GFr/) {
+                    $row .= 'Genome Fragment' . $sd . 'Genome Fragment' . "\t";
+                } else {
+                    $row .= $value . $sd . $value . "\t";
+                }
+                
             } elsif (
                 $col eq 't.seq_center'
                 && (   $value =~ /(DOE Joint Genome Institute)/
@@ -1720,7 +1739,7 @@ where ss1.submission_id in (
     from submission_samples ss
     group by ss.submission_id
     having count(*) > 1
-)    
+)
     };
     my $cur = execSql( $dbh, $sql, $verbose );
     for ( ; ; ) {
@@ -1829,12 +1848,12 @@ sub getSubmitter {
 sub getGapData {
     my ( $dbh, $taxon_data_href ) = @_;
     my $sql = qq{
-select gap.gold_id, 
-t.submission_id, 
+select gap.gold_id,
+t.submission_id,
 nvl(gap.is_gene_primp, 'No'),
-gap.submission_type, 
+gap.submission_type,
 gap.gold_analysis_project_type,
-gap.assembly_method 
+gap.assembly_method
 from gold_analysis_project gap, taxon t
 where gap.gold_id = t.analysis_project_id
 and gap.gold_id is not null
@@ -1910,7 +1929,7 @@ sub getGid2ProjectMetadata {
         if ( scalar(@goldOids) > 0 ) {
             my $str = WebUtil::joinSqlQuoted( ',', @goldOids );
             $sql .= qq{
-                where p.gold_id in ($str)                  
+                where p.gold_id in ($str)
             };
         }
     }
@@ -1918,18 +1937,18 @@ sub getGid2ProjectMetadata {
         my $col = $cols_aref->[0];
         if ( !$goldId_href ) {
             $sql .= qq{
-                where 
+                where
             };
         }
         $sql .= qq{
-            $col is not null            
+            $col is not null
         };
     }
     if ( $col_val && scalar(@$cols_aref) == 1 ) {
         my $col = $cols_aref->[0];
         if ( !$goldId_href ) {
             $sql .= qq{
-                where 
+                where
             };
         }
         $sql .= qq{
@@ -1988,7 +2007,7 @@ sub getTaxonTableData {
         $filename = 'genomeData' . $$ . '_' . $session_id;
     }
     print qq{
-<input type="hidden" name='genomeData' value='$filename' />        
+<input type="hidden" name='genomeData' value='$filename' />
     };
 
     my $rclause   = WebUtil::urClause('t');
@@ -2012,15 +2031,20 @@ sub getTaxonTableData {
     my $columns = join( ',', @all_columns );
     $columns = ", $columns" if ( $columns ne '' );
 
+#        from taxon t left outer join taxon_stats ts
+#        on t.taxon_oid = ts.taxon_oid
+#        $clause =~ s/and /where /;
     my $sql = qq{
         select t.taxon_oid, t.sequencing_gold_id, t.is_public
         $columns
         from taxon t, taxon_stats ts
-        where t.taxon_oid = ts.taxon_oid (+)
+        WHERE
+        t.taxon_oid = ts.taxon_oid (+)
         $clause
         $rclause
         $imgClause
     };
+
 
     my %taxon_data;           # hash of hashes taxon oid => hash columns name to value
     my %goldId_data;          # gold id => hash of taxon_oid
@@ -2142,7 +2166,7 @@ sub getMetagenomeStats {
 
     my $sql = qq{
 select t.taxon_oid, $colStr
-from taxon t left join taxon_stats_merfs ts 
+from taxon t left join taxon_stats_merfs ts
 on t.taxon_oid = ts.taxon_oid
 $dataTypeClause
 where t.taxon_oid in ($taxonStr)
@@ -2221,8 +2245,8 @@ sub printTaxonAttributes {
         my $bold = ( $str eq '' ? 'normal' : 'bold' );
 
         print qq{
-            <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');" value="$key" name="genome_field_col" $str /> 
-            <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');"  style="font-weight: $bold;" title="$value">$value</label> 
+            <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');" value="$key" name="genome_field_col" $str />
+            <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');"  style="font-weight: $bold;" title="$value">$value</label>
             <br/>
         };
         $count++;
@@ -2247,8 +2271,8 @@ sub printProjectAttributes {
         my $bold = ( $str eq '' ? 'normal' : 'bold' );
 
         print qq{
-            <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');"  value="$key" name="metadata_col" $str /> 
-            <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');" style="font-weight: $bold;" title="$value">$value</label> 
+            <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');"  value="$key" name="metadata_col" $str />
+            <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');" style="font-weight: $bold;" title="$value">$value</label>
             <br/>
         };
         $count++;
@@ -2280,7 +2304,7 @@ sub printTaxonStatsAttributes {
             $star = '*';
         }
 
-        print qq{ 
+        print qq{
           <input id='$id' type="checkbox" onclick="changeFontWeight2('$id', '$labelid');" value="$key" name="stats_col" $str />
           <label id='$labelid' for="$id" onclick="changeFontWeight(this, '$id');" style="font-weight: $bold;" title="$value">$star $value</label>
           <br/>
@@ -2311,7 +2335,7 @@ sub printConfigDivTab {
     TabHTML::printTabDiv( "genomeListTab", \@tabIndex, \@tabNames );
 
     # "Genome Field Div"
-    print qq{ 
+    print qq{
               <div id='genomelisttab1' style="overflow: auto;">
                 <input type="button" value="All"   onclick="selectObject(1, 'genome_field_col')">
                 <input type="button" value="Clear" onclick="selectObject(0, 'genome_field_col')">
@@ -2375,7 +2399,7 @@ sub printConfigDivTab {
 };
     }
 
-    print qq{                
+    print qq{
               <br/>
     };
 
@@ -2401,7 +2425,7 @@ sub printConfigDiv {
     $fileTime = Date::Format::time2str( "%b %e %Y", $fileTime );
 
     print qq{
-        <div id='genomeConfiguration'>      
+        <div id='genomeConfiguration'>
           <script type='text/javascript' src='$top_base_url/js/genomeConfig.js'></script>
 
           <table border='0'>
@@ -2432,7 +2456,7 @@ sub printConfigDiv {
     print "</tr><tr>";
 
     # "Genome Field Div"
-    print qq{ 
+    print qq{
             <td>
               <div id='genomeField' class='myborder'>
                 <input type="button" value="All"   onclick="selectObject(1, 'genome_field_col')">
@@ -2526,7 +2550,7 @@ sub printConfigDiv {
 };
     }
 
-    print qq{                
+    print qq{
               <br/>
     };
 
@@ -3023,7 +3047,7 @@ sub getPhylumData2 {
 
         my $sql = qq{
         select $column1, count(*),  $columns
-        from taxon t left join taxon_stats_merfs ts 
+        from taxon t left join taxon_stats_merfs ts
         on t.taxon_oid = ts.taxon_oid
         where t.genome_type = 'metagenome'
         and ts.datatype = '$merfs_data_type'
@@ -3061,7 +3085,7 @@ sub printConfigDiv2 {
     my ($statsColumnsChecked_aref) = @_;
 
     print qq{
-        <div id='genomeConfiguration'>      
+        <div id='genomeConfiguration'>
           <script type='text/javascript' src='$top_base_url/js/genomeConfig.js'></script>
 
           <table border='0'>
@@ -3128,7 +3152,7 @@ sub printConfigDiv2 {
             $star = '*';
         }
 
-        print qq{ 
+        print qq{
           <input id='$id' type="checkbox" value="$key" name="stats_col" $str />$star $value <br/>
         };
     }
@@ -3242,7 +3266,7 @@ sub printCartPhylumList {
     require GenomeCart;
     my $taxons_aref = GenomeCart::getAllGenomeOids();
     if ( $#$taxons_aref < 0 ) {
-        webError("No genomes in genome cart");
+        WebUtil::webError("No genomes in genome cart");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -3527,7 +3551,7 @@ group by $column1
 
         my $sql = qq{
 select $column1, count(*),  $columns
-from taxon t left join taxon_stats_merfs ts 
+from taxon t left join taxon_stats_merfs ts
 on t.taxon_oid = ts.taxon_oid
 where t.genome_type = 'metagenome'
 and ts.datatype = '$merfs_data_type'
@@ -3570,7 +3594,7 @@ sub printCartPhylumGenomeList {
     require GenomeCart;
     my $taxons_aref = GenomeCart::getAllGenomeOids();
     if ( $#$taxons_aref < 0 ) {
-        webError("No genomes in genome cart");
+        WebUtil::webError("No genomes in genome cart");
     }
 
     print qq{
@@ -3699,7 +3723,7 @@ sub getMetadataCategoryTaxonCount {
     my @gids = keys %$gid2projectMetadata_href;
     my $taxon_gidInfo_href = QueryUtil::getTaxonForGids( $dbh, \@gids, $domain );
 
-    foreach my $taxon_oid ( keys $taxon_gidInfo_href ) {
+    foreach my $taxon_oid ( keys %$taxon_gidInfo_href ) {
         my $gold_id   = $taxon_gidInfo_href->{$taxon_oid};
         my $cols_aref = $gid2projectMetadata_href->{$gold_id};
 

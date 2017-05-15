@@ -1,6 +1,6 @@
 #
 #
-# $Id: FindFunctionMERFS.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: FindFunctionMERFS.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 package FindFunctionMERFS;
 
@@ -182,7 +182,7 @@ sub printFindGene {
     };
 
     if ( $#$genomeFilterSelections_ref < 0 ) {
-        webError("Please select at least one genome or one metagenome.");
+        WebUtil::webError("Please select at least one genome or one metagenome.");
     }
 
     printStartWorkingDiv();
@@ -255,7 +255,7 @@ sub printffgFindFunctionsGeneList {
     my $genomeFilterSelections_ref = getSessionParam("genomeFilterSelections");
 
     if ( $#$genomeFilterSelections_ref < 0 ) {
-        webError("Please select at least one genome or one metagenome.");
+        WebUtil::webError("Please select at least one genome or one metagenome.");
     }
 
     my $filename;
@@ -398,7 +398,7 @@ sub printffgFindFunctionsGenomeList {
     my $genomeFilterSelections_ref = getSessionParam("genomeFilterSelections");
 
     if ( $#$genomeFilterSelections_ref < 0 ) {
-        webError("Please select at least one genome or one metagenome.");
+        WebUtil::webError("Please select at least one genome or one metagenome.");
     }
 
     my $funnctionId  = param('id');

@@ -1,6 +1,6 @@
 ############################################################################
 # MetaDetail.pm - Show taxon detail page. (use files)
-# $Id: MetaDetail.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: MetaDetail.pm 36987 2017-04-24 20:40:20Z klchu $
 # *** THIS CODE needs to be merged into TaxonDetail ***
 ############################################################################
 package MetaDetail;
@@ -187,14 +187,14 @@ sub dispatch {
 
         #        my $st = downloadArtemisFile(0);
         #        if ( !$st ) {
-        #            webError("Session for viewing expired.  Please try again.");
+        #            WebUtil::webError("Session for viewing expired.  Please try again.");
         #        }
         WebUtil::webExit(0);
     } elsif ( paramMatch("downloadArtemisFile") ne "" ) {
 
         #        my $st = downloadArtemisFile(1);
         #        if ( !$st ) {
-        #            webError("Session for download expired.  Please try again.");
+        #            WebUtil::webError("Session for download expired.  Please try again.");
         #        }
         WebUtil::webExit(0);
     } elsif ( paramMatch("downloadTaxonFaaFile") ne "" ) {
@@ -1066,11 +1066,11 @@ sub printTaxonStatsProfile {
     } elsif ( $data_type eq 'unassembled' ) {
         $stats_file .= "unassembled/stats_profile.txt";
     } else {
-        webError("No data -- incorrect data type $data_type.");
+        WebUtil::webError("No data -- incorrect data type $data_type.");
     }
 
     if ( !( -e $stats_file ) ) {
-        webError("No data -- missing file $stats_file");
+        WebUtil::webError("No data -- missing file $stats_file");
     }
 
     # check whether there are gene stats file for each function type
@@ -1246,7 +1246,7 @@ sub printGeneFuncStatsList {
         $zip_name .= "unassembled/gene_";
     } else {
         print end_form();
-        webError("No data.");
+        WebUtil::webError("No data.");
     }
 
     my $i2 = "";
@@ -1270,7 +1270,7 @@ sub printGeneFuncStatsList {
         $i2 = "phylo_" . sanitizeInt($bucket);
     } else {
         print end_form();
-        webError("No data.");
+        WebUtil::webError("No data.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -1337,7 +1337,7 @@ sub printGeneFuncStatsList {
 
     if ( $gene_count == 0 ) {
         print end_form();
-        webError("No data.");
+        WebUtil::webError("No data.");
     }
 
     WebUtil::printGeneCartFooter() if $gene_count > 10;
@@ -1387,7 +1387,7 @@ sub printTaxonDetail_ImgGold {
     my $taxon_oid      = param("taxon_oid");
     my $taxon_oid_orig = $taxon_oid;
     if ( $taxon_oid eq "" ) {
-        webDie("taxon_oid not set");
+        WebUtil::webDie("taxon_oid not set");
     }
     $taxon_oid = sanitizeInt($taxon_oid);
 
@@ -1456,7 +1456,7 @@ sub printTaxonDetail_ImgGold {
         printStatusLine( "Error.", 2 );
 
         #$dbh->disconnect();
-        webError("Taxon object identifier $taxon_oid not found\n");
+        WebUtil::webError("Taxon object identifier $taxon_oid not found\n");
     }
 
     printMainForm();
@@ -1625,7 +1625,7 @@ sub printTaxonDetail_ImgGold {
 
     if ( !$taxon_oid ) {
         printStatusLine( "Error.", 2 );
-        webError("Genome for taxon_oid='$taxon_oid_orig' not found\n");
+        WebUtil::webError("Genome for taxon_oid='$taxon_oid_orig' not found\n");
     }
 
     my $jgiUrl = getJgiMicrobeUrl( $domain, $seq_status, $jgi_species_code, $seq_center );
@@ -2166,7 +2166,7 @@ END_MAP
     # publications
     TaxonDetailUtil::printTaxonPublications($dbh, $taxon_oid,
 			  "Genome Publication",
-			  "gold_sp_genome_publications\@imgsg_dev");
+			  "gold_sp_genome_publications");
 
     # inferred phenotypes
     my $d1 = substr( $domain, 0, 1 );
@@ -3597,31 +3597,31 @@ sub printScaffoldSearchResults {
         && blankStr($loRange)
         && blankStr($hiRange) )
     {
-        webError("Please enter a search term or substring or ranges.");
+        WebUtil::webError("Please enter a search term or substring or ranges.");
     }
 
     if ( !blankStr($loRange) || !blankStr($hiRange) ) {
         if ( $loRange < 0 ) {
-            webError("Invalid low range.  Enter a number greater than zero.");
+            WebUtil::webError("Invalid low range.  Enter a number greater than zero.");
         }
         if ( $hiRange < 0 ) {
-            webError("Invalid high range. Enter a number greater than zero.");
+            WebUtil::webError("Invalid high range. Enter a number greater than zero.");
         }
         if ( $loRange > $hiRange ) {
-            webError( "Low range greater than high range. " . "Reverse this order." );
+            WebUtil::webError( "Low range greater than high range. " . "Reverse this order." );
         }
         if ( $rangeType eq "gc_percent" ) {
             if ( $loRange > 1.00 || $hiRange > 1.00 ) {
-                webError("Enter number between 0.00 and 1.00.");
+                WebUtil::webError("Enter number between 0.00 and 1.00.");
             }
         }
         if ( $rangeType eq "seq_length" ) {
             if ( !WebUtil::isInt($loRange) || !WebUtil::isInt($hiRange) ) {
-                webError("Enter integers for low and high range.");
+                WebUtil::webError("Enter integers for low and high range.");
             }
         } else {
             if ( !isNumber($loRange) || !isNumber($hiRange) ) {
-                webError("Enter decimal numbers for low and high range.");
+                WebUtil::webError("Enter decimal numbers for low and high range.");
             }
             $loRange = sprintf( "%.2f", $loRange );
             $hiRange = sprintf( "%.2f", $hiRange );
@@ -3641,7 +3641,7 @@ sub printScaffoldSearchResults {
     my $scaffold_depth_sdb = $web_data_dir . '/mer.fs/' . $taxon_oid . '/' . $dataType . '/scaffold_depth.sdb';
 
     if ( !-e $scaffold_stats_sdb ) {
-        webError( "Cannot finds scaffold data files: $web_data_dir/"
+        WebUtil::webError( "Cannot finds scaffold data files: $web_data_dir/"
               . $taxon_oid . '/'
               . $dataType
               . '/scaffold_stats.sdb' );
@@ -3877,11 +3877,11 @@ sub printScaffolds {
         $data_type = 'assembled';
     }
     if ( $data_type eq 'unassembled' ) {
-        webError("Unassembled data not supported!");
+        WebUtil::webError("Unassembled data not supported!");
     }
 
     if ( $pageSize == 0 ) {
-        webDie("printScaffolds: invalid pageSize='$pageSize'\n");
+        WebUtil::webDie("printScaffolds: invalid pageSize='$pageSize'\n");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -3919,7 +3919,7 @@ sub printScaffolds {
     }
 
     if ( $taxon_oid eq "" ) {
-        webDie("printScaffolds: taxon_oid not specified");
+        WebUtil::webDie("printScaffolds: taxon_oid not specified");
     }
 
     checkTaxonPerm( $dbh, $taxon_oid );
@@ -4300,7 +4300,7 @@ sub addToScaffoldCart {
     }
 
     if ( $pageSize == 0 ) {
-        webDie("printScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
+        WebUtil::webDie("printScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
     }
 
     my $dbh = dbLogin();
@@ -4728,7 +4728,7 @@ sub printScaffoldsByLengthCount {
         $data_type = 'assembled';
     }
     if ( $data_type eq 'unassembled' ) {
-        webError("Unassembled data not supported!");
+        WebUtil::webError("Unassembled data not supported!");
     }
 
     # if this is invoked by the bar chart, then pre-process URL
@@ -4745,7 +4745,7 @@ sub printScaffoldsByLengthCount {
     my $lower = param('lower');
     my $upper = param('upper');
     if ( !WebUtil::isInt($minlength) || !WebUtil::isInt($maxlength) ) {
-        webError("Incorrect scaffold length: $scf_length.");
+        WebUtil::webError("Incorrect scaffold length: $scf_length.");
         return;
     }
     if ( !$lower || !WebUtil::isInt($lower) ) {
@@ -4755,7 +4755,7 @@ sub printScaffoldsByLengthCount {
         $upper = $maxlength;
     }
     if ( $lower < $minlength || $upper > $maxlength ) {
-        webError("Incorrect range: $lower .. $upper.");
+        WebUtil::webError("Incorrect range: $lower .. $upper.");
         return;
     }
 
@@ -4953,7 +4953,7 @@ sub printScaffoldsByGeneCount {
         $data_type = 'assembled';
     }
     if ( $data_type eq 'unassembled' ) {
-        webError("Unassembled data not supported!");
+        WebUtil::webError("Unassembled data not supported!");
     }
 
     # if this is invoked by the bar chart, then pre-process URL
@@ -4963,7 +4963,7 @@ sub printScaffoldsByGeneCount {
     }
 
     if ( $pageSize == 0 ) {
-        webDie("printScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
+        WebUtil::webDie("printScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
     }
 
     my $dbh = dbLogin();
@@ -7441,7 +7441,7 @@ sub printCogGeneListCat {
 sub sanitizeCogId {
     my ($s) = @_;
     if ( $s !~ /^COG[0-9]+$/ ) {
-        webDie("sanitizeCogId: invalid integer '$s'\n");
+        WebUtil::webDie("sanitizeCogId: invalid integer '$s'\n");
     }
     $s =~ /(COG[0-9]+)/;
     $s = $1;
@@ -7454,7 +7454,7 @@ sub sanitizeCogId {
 sub sanitizeDataType {
     my ($s) = @_;
     if ( $s !~ /^[a-zA-Z]+$/ ) {
-        webDie("sanitizeDataType: invalid data type '$s'\n");
+        WebUtil::webDie("sanitizeDataType: invalid data type '$s'\n");
     }
     $s =~ /([a-zA-Z]+)/;
     $s = $1;
@@ -7475,7 +7475,7 @@ sub printCogGeneList {
         @cog_ids = param("func_id");
     }
     if ( scalar(@cog_ids) == 0 ) {
-        webError("No COG has been selected.");
+        WebUtil::webError("No COG has been selected.");
     }
 
     printMainForm();
@@ -7820,7 +7820,7 @@ sub passesSingleCopyCriteria {
 sub sanitizeGeneId2 {
     my ($s) = @_;
     if ( $s !~ /^[0-9\_]+$/ ) {
-        webDie("sanitizeInt: invalid id '$s'\n");
+        WebUtil::webDie("sanitizeInt: invalid id '$s'\n");
     }
     $s =~ /([0-9\_]+)/;
     $s = $1;
@@ -8308,7 +8308,7 @@ sub printTaxonEnzymes {
 sub sanitizeEcId {
     my ($s) = @_;
     if ( $s !~ /^EC\:[0-9_\.\-]+$/ ) {
-        webDie("sanitizeEcId: invalid EC number '$s'\n");
+        WebUtil::webDie("sanitizeEcId: invalid EC number '$s'\n");
     }
     $s =~ /(EC\:[0-9_\.\-]+)/;
     $s = $1;
@@ -8329,7 +8329,7 @@ sub printEnzymeGeneList {
         @ec_ids = param("func_id");
     }
     if ( scalar(@ec_ids) == 0 ) {
-        webError("No enzyme has been selected.");
+        WebUtil::webError("No enzyme has been selected.");
     }
 
     printMainForm();
@@ -9607,7 +9607,7 @@ sub printTaxonPfamCat {
 sub sanitizePfamId {
     my ($s) = @_;
     if ( $s !~ /^pfam[0-9]+$/ ) {
-        webDie("sanitizePfamId: invalid integer '$s'\n");
+        WebUtil::webDie("sanitizePfamId: invalid integer '$s'\n");
     }
     $s =~ /(pfam[0-9]+)/;
     $s = $1;
@@ -9628,7 +9628,7 @@ sub printPfamGeneList {
         @pfam_ids = param("ext_accession");
     }
     if ( scalar(@pfam_ids) == 0 ) {
-        webError("No Pfam has been selected.");
+        WebUtil::webError("No Pfam has been selected.");
     }
 
     printMainForm();
@@ -10445,7 +10445,7 @@ sub printTaxonTIGRfamCat {
 sub sanitizeTigrfamId {
     my ($s) = @_;
     if ( $s !~ /^TIGR[0-9]+$/ ) {
-        webDie("sanitizeTIGRfamId: invalid integer '$s'\n");
+        WebUtil::webDie("sanitizeTIGRfamId: invalid integer '$s'\n");
     }
     $s =~ /(TIGR[0-9]+)/;
     $s = $1;
@@ -10466,7 +10466,7 @@ sub printTIGRfamGeneList {
         @tigrfam_ids = param("ext_accession");
     }
     if ( scalar(@tigrfam_ids) == 0 ) {
-        webError("No TIGRfam has been selected.");
+        WebUtil::webError("No TIGRfam has been selected.");
     }
 
     printMainForm();
@@ -10857,7 +10857,7 @@ sub printInterProGeneList {
     my $ext_accession = param("ext_accession");
 
     if ( $ext_accession eq '' ) {
-        webError("No Interpro has been selected.");
+        WebUtil::webError("No Interpro has been selected.");
     }
 
     my $dbh = dbLogin();
@@ -11153,7 +11153,7 @@ sub printKeggPathwayGenes {
     my $pathway_oid = param("pathway_oid");
 
     if ( $pathway_oid eq '' ) {
-        webError("No KEGG has been selected.");
+        WebUtil::webError("No KEGG has been selected.");
     }
 
     my $dbh     = dbLogin();
@@ -12077,7 +12077,7 @@ sub printMetacycGenes {
         }
     }
     if ( scalar(@metacyc_ids) == 0 ) {
-        webError("No MetaCyc Pathway has been selected.");
+        WebUtil::webError("No MetaCyc Pathway has been selected.");
     }
 
     printMainForm();
@@ -12393,7 +12393,7 @@ sub sanitizeKoId {
         $s = $s2;
     }
     if ( $s !~ /^K[0-9]+$/ ) {
-        webDie("sanitizeKoId: invalid integer '$s'\n");
+        WebUtil::webDie("sanitizeKoId: invalid integer '$s'\n");
     }
     $s =~ /(K[0-9]+)/;
     $s = $1;
@@ -12414,7 +12414,7 @@ sub printKoGenes {
         @ko_ids = param("func_id");
     }
     if ( scalar(@ko_ids) == 0 ) {
-        webError("No KO has been selected.");
+        WebUtil::webError("No KO has been selected.");
     }
 
     printMainForm();
@@ -13025,7 +13025,7 @@ sub printProteinCodingGenes {
 
     if ( $gene_count == 0 ) {
         print end_form();
-        webError("No genes.");
+        WebUtil::webError("No genes.");
     }
 
     WebUtil::printGeneCartFooter() if $gene_count > 10;
@@ -13157,7 +13157,7 @@ sub printGenesWithFunc {
 
     if ( $gene_count == 0 ) {
         print end_form();
-        webError("No genes.");
+        WebUtil::webError("No genes.");
     }
 
     WebUtil::printGeneCartFooter() if $gene_count > 10;
@@ -13781,7 +13781,7 @@ sub downloadTaxonAnnotFile {
     my $sid  = getSessionId();
     my $path = "$cgi_tmp_dir/$taxon_oid.$sid.annot.xls";
     if ( !( -e $path ) ) {
-        webErrorHeader( "Session of annotation download has expired. " . "Please start again." );
+        WebUtil::webErrorHeader( "Session of annotation download has expired. " . "Please start again." );
     }
     my $sz = fileSize($path);
 
@@ -13813,7 +13813,7 @@ sub downloadTaxonInfoFile {
     my $sid  = getSessionId();
     my $path = "$cgi_tmp_dir/$taxon_oid.$sid.info.xls";
     if ( !( -e $path ) ) {
-        webErrorHeader( "Session of information download has expired. Please start again." );
+        WebUtil::webErrorHeader( "Session of information download has expired. Please start again." );
     }
     my $sz = fileSize($path);
 
@@ -14118,7 +14118,7 @@ sub printMetaScaffoldDetail {
            select g.ecosystem, g.ecosystem_category,
                   g.ecosystem_type, g.ecosystem_subtype,
                   g.specific_ecosystem
-           from gold_sequencing_project\@imgsg_dev g, taxon t
+           from gold_sequencing_project g, taxon t
            where t.taxon_oid = ?
            and t.sequencing_gold_id = g.gold_id
            };
@@ -14147,7 +14147,7 @@ sub printMetaScaffoldDetail {
     ## habitat
     $sql = qq{
            select g.habitat
-           from gold_sp_habitat\@imgsg_dev g, taxon t
+           from gold_sp_habitat g, taxon t
            where t.taxon_oid = ?
            and t.sequencing_gold_id = g.gold_id
            and g.habitat is not null
@@ -15183,7 +15183,7 @@ sub scaffoldsLengthBreakDown {
     my $upper = param('upper');
     my ( $minlength, $maxlength ) = split( "-", $scf_length );
     if ( !WebUtil::isInt($minlength) || !WebUtil::isInt($maxlength) ) {
-        webError("Incorrect scaffold length: $scf_length.");
+        WebUtil::webError("Incorrect scaffold length: $scf_length.");
         return;
     }
     if ( !$lower || !WebUtil::isInt($lower) ) {
@@ -15193,7 +15193,7 @@ sub scaffoldsLengthBreakDown {
         $upper = $maxlength;
     }
     if ( $lower < $minlength || $upper > $maxlength ) {
-        webError("Incorrect range: $lower .. $upper.");
+        WebUtil::webError("Incorrect range: $lower .. $upper.");
         return;
     }
 
@@ -15203,7 +15203,7 @@ sub scaffoldsLengthBreakDown {
         $range = 1000;
     }
     if ( !WebUtil::isInt($range) ) {
-        webError("Incorrect scaffold display range: $range.");
+        WebUtil::webError("Incorrect scaffold display range: $range.");
         return;
     }
     if ( $range > ( $upper - $lower ) ) {

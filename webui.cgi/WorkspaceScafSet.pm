@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceScafSet.pm
-# $Id: WorkspaceScafSet.pm 36403 2016-11-03 21:02:34Z klchu $
+# $Id: WorkspaceScafSet.pm 36978 2017-04-20 21:28:17Z klchu $
 ###########################################################################
 package WorkspaceScafSet;
 
@@ -313,7 +313,7 @@ sub printScafSetMainForm {
 
     my $sid = getContactOid();
     opendir( DIR, "$workspace_dir/$sid/$folder" )
-      or webDie("failed to open folder list");
+      or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -621,7 +621,7 @@ sub printScafSetDetail {
     	if ( ! $can_view ) {
     	    print "<h1>My Workspace - Scaffold Sets - Individual Scaffold Set</h1>";
     	    print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
-    	    webError("Scaffold set does not exist.");
+    	    WebUtil::webError("Scaffold set does not exist.");
     	    return;
     	}
     }
@@ -649,7 +649,7 @@ sub printScafSetDetail {
 
     # check filename
     if ( $filename eq "" ) {
-        webError("Cannot read file.");
+        WebUtil::webError("Cannot read file.");
         return;
     }
 
@@ -663,7 +663,7 @@ sub printScafSetDetail {
     	$full_path_name = "$workspace_dir/$owner/$folder/$filename";
     }
     if ( ! (-e $full_path_name) ) {
-    	webError("Scaffold set does not exist.");
+    	WebUtil::webError("Scaffold set does not exist.");
     	return;
     }
 
@@ -675,7 +675,7 @@ sub printScafSetDetail {
     my $trunc = 0;
     my $res   = newReadFileHandle($full_path_name);
     if ( ! $res ) {
-    	webError("Scaffold set does not exist.");
+    	WebUtil::webError("Scaffold set does not exist.");
     	return;
     }
 
@@ -1045,7 +1045,7 @@ sub viewScafGenomes {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid, 1);
     if ( scalar(@all_files) == 0 ) {
-        webError("No scaffold sets are selected.");
+        WebUtil::webError("No scaffold sets are selected.");
         return;
     }
 
@@ -1063,7 +1063,7 @@ sub viewScafGenomes {
 
         # individual scaffolds
         if ( scalar(@scaffold_oids) == 0 ) {
-            webError("No scaffolds are selected.");
+            WebUtil::webError("No scaffolds are selected.");
             return;
         }
 
@@ -1176,11 +1176,11 @@ sub showScafGenes {
 
     my @scaffold_oids = param('scaffold_oid');
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
     if ( scalar(@scaffold_oids) > 1000 ) {
-        webError("Please select no more than 1000 scaffolds.");
+        WebUtil::webError("Please select no more than 1000 scaffolds.");
         return;
     }
 
@@ -1364,7 +1364,7 @@ sub showScafFuncSetProfile {
     my $func_set_name = param('func_set_name');
     #print "func_set_name $func_set_name<br/>\n";
     if ( ! $func_set_name ) {
-        webError("Please select a function set.\n");
+        WebUtil::webError("Please select a function set.\n");
         return;
     }
     my ( $func_set_owner, $func_set ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $func_set_name, $ownerFilesetDelim, $FUNC_FOLDER );
@@ -1639,11 +1639,11 @@ sub validateScaffoldSelection {
         $scaffoldDescription = "scaffolds";            
     }
     if ( scalar( @scaffoldCols ) == 0 ) {
-        webError("No $scaffoldDescription are selected.");
+        WebUtil::webError("No $scaffoldDescription are selected.");
         return;
     }
     if ( scalar( @scaffoldCols ) > $max_profile_select ) {
-        webError("Please limit your selection of $scaffoldDescription to no more than $max_profile_select.\n");
+        WebUtil::webError("Please limit your selection of $scaffoldDescription to no more than $max_profile_select.\n");
         return;
     }
 
@@ -1676,7 +1676,7 @@ sub outputScafFuncGene {
 
         # read scaffold set
         open( FH, "$input_file" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -1764,7 +1764,7 @@ sub countScafFuncGene {
         # read scaffold set
         #print "<p>Reading scaffold set ...\n";
         open( FH, "$input_file" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -1872,7 +1872,7 @@ sub countScafFuncGene_old {
         # read scaffold set
         #print "<p>Reading scaffold set ...\n";
         open( FH, "$input_file" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -2274,7 +2274,7 @@ sub showScafProfileGeneList {
     
     print "<p>Processing $input_file ...<br/>\n";
     open( FH, "$workspace_dir/$owner/$folder/$x" )
-      or webError("File size - file error $input_file");
+      or WebUtil::webError("File size - file error $input_file");
 
     while ( my $line = <FH> ) {
         #print "WorkspaceScafSet::showScafProfileGeneList line: $line<br/>\n";
@@ -2481,7 +2481,7 @@ sub showScafCateProfileGeneList {
     print "<p>Processing $input_file ...<br/>\n";
 
     open( FH, "$workspace_dir/$owner/$folder/$x" )
-      or webError("File size - file error $input_file");
+      or WebUtil::webError("File size - file error $input_file");
 
     my $line_no = 0;
     while ( my $line = <FH> ) {
@@ -2926,7 +2926,7 @@ sub showScafFunctionProfile {
 
         print "<p>Pre-processing workspace file $x ...\n";
         open( FH, "$workspace_dir/$c_oid/$folder/$x" )
-          or webError("File size - file error $x");
+          or WebUtil::webError("File size - file error $x");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -3079,7 +3079,7 @@ sub showScafFunctionProfile {
     	}
         print "<p>Processing workspace scaffold set $x ...\n";
         open( FH, "$workspace_dir/$c_oid/$folder/$x" )
-          or webError("File size - file error $x");
+          or WebUtil::webError("File size - file error $x");
 
         my $count = 0;
         while ( my $line = <FH> ) {
@@ -3334,7 +3334,7 @@ sub showScafFuncCategoryProfile {
     my @func_ids   = sort ( keys %func_names );
     if ( scalar(@func_ids) == 0 ) {
         printEndWorkingDiv();
-        webError("Incorrect function type.\n");
+        WebUtil::webError("Incorrect function type.\n");
         return;
     }
     #print "showScafFuncCategoryProfile() func_names: <br/>\n";
@@ -3386,7 +3386,7 @@ sub showScafFuncCategoryProfile {
 
         print "<p>Pre-processing workspace file $x2 ...\n";
         open( FH, "$workspace_dir/$c_oid/$folder/$x" )
-          or webError("File size - file error $x2");
+          or WebUtil::webError("File size - file error $x2");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -3541,7 +3541,7 @@ sub showScafFuncCategoryProfile {
 
         print "<p>Processing workspace scaffold set $x ...\n";
         open( FH, "$workspace_dir/$c_oid/$folder/$x" )
-          or webError("File size - file error $x");
+          or WebUtil::webError("File size - file error $x");
 
         my $count = 0;
         while ( my $line = <FH> ) {
@@ -3772,7 +3772,7 @@ sub printScafHistogram {
     if ( $isSet ) {
         my @all_files = WorkspaceUtil::getAllInputFiles($sid, 1);
         if ( scalar(@all_files) == 0 ) {
-            webError("No scaffold sets are selected.");
+            WebUtil::webError("No scaffold sets are selected.");
             return;
         }
 
@@ -3785,7 +3785,7 @@ sub printScafHistogram {
         foreach my $file_set_name (@all_files) {
             my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $file_set_name, $ownerFilesetDelim, $folder );
             open( FH, "$workspace_dir/$owner/$folder/$x" )
-              or webError("File size - file error $x");
+              or WebUtil::webError("File size - file error $x");
 
             my @oids;
             while ( my $line = <FH> ) {
@@ -3807,7 +3807,7 @@ sub printScafHistogram {
     } else {
         my @scaffold_oids = param('scaffold_oid');
         if ( scalar(@scaffold_oids) == 0 ) {
-            webError("No scaffolds have been selected. Please select scaffolds for histogram.");
+            WebUtil::webError("No scaffolds have been selected. Please select scaffolds for histogram.");
             return;
         }
         foreach my $scaffold_oid (@scaffold_oids) {
@@ -3840,7 +3840,7 @@ sub editScaffoldSets {
     	my @allscaffold_oids;
         my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $scaf_set, $ownerFilesetDelim, $folder );
     	open( FH, "$workspace_dir/$owner/$folder/$x" )
-    	    or webError("File size - file error $scaf_set");
+    	    or WebUtil::webError("File size - file error $scaf_set");
 	    
     	my %scaf_h;
         while ( my $line = <FH> ) {
@@ -3895,7 +3895,7 @@ sub printHistogramScaffolds {
     	    # see if the link comes from the bar chart:
     	    $scaf_set_name = param('series');
     	    if ( !$scaf_set_name ) {
-        		webError("No scaffold set has been selected.");
+        		WebUtil::webError("No scaffold set has been selected.");
         		return;
     	    }
     	}
@@ -3915,7 +3915,7 @@ sub printHistogramScaffolds {
     if ($isSet) {
         my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $scaf_set_name, $ownerFilesetDelim, $folder );
         open( FH, "$workspace_dir/$owner/$folder/$x" )
-          or webError("File size - file error $scaf_set_name");
+          or WebUtil::webError("File size - file error $scaf_set_name");
 
         my %scaf_h;
         while ( my $line = <FH> ) {
@@ -3972,7 +3972,7 @@ sub printScafKmer {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid, 1);
     if ( scalar(@all_files) == 0 ) {
-        webError("No scaffold sets are selected.");
+        WebUtil::webError("No scaffold sets are selected.");
         return;
     }
 
@@ -3983,7 +3983,7 @@ sub printScafKmer {
             $data_type = 'assembled';
         }
         if ( $data_type ne 'assembled' ) {
-            webError("Only assembled MER_FS scaffold is supported in Kmer.");
+            WebUtil::webError("Only assembled MER_FS scaffold is supported in Kmer.");
             return;
         }
     }
@@ -4003,7 +4003,7 @@ sub printScafKmer {
     	    }
 
             open( FH, "$workspace_dir/$c_oid/$folder/$x" )
-		      or webError("File size - file error $x");
+		      or WebUtil::webError("File size - file error $x");
 
             my %scaf_h;
             while ( my $line = <FH> ) {
@@ -4033,7 +4033,7 @@ sub printScafKmer {
     } else {
         my @s_oids = param('scaffold_oid');
         if ( scalar(@s_oids) == 0 ) {
-            webError("No scaffolds have been selected. Please select scaffolds for Kmer.");
+            WebUtil::webError("No scaffolds have been selected. Please select scaffolds for Kmer.");
             return;
         }
         my %scaf_h;
@@ -4055,7 +4055,7 @@ sub printScafKmer {
     }
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("Only assembled MER_FS scaffold is supported in Kmer.");
+        WebUtil::webError("Only assembled MER_FS scaffold is supported in Kmer.");
         return;
     }
 
@@ -4078,7 +4078,7 @@ sub printScafPhyloDist {
 
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -4090,7 +4090,7 @@ sub printScafPhyloDist {
     if ($isSet) {
         # use selected scaffold sets
         if ( scalar(@all_files) == 0 ) {
-            webError("Select at least one scaffold set for phylogenetic distribution.");
+            WebUtil::webError("Select at least one scaffold set for phylogenetic distribution.");
             return;
         }
 
@@ -4106,7 +4106,7 @@ sub printScafPhyloDist {
 
             #my $full_path = "$workspace_dir/$c_oid/$folder/" . $input_file;
             open( FH, "$workspace_dir/$c_oid/$folder/$input_file" )
-              or webError("File size - file error $input_file");
+              or WebUtil::webError("File size - file error $input_file");
 
             while ( my $line = <FH> ) {
                 chomp($line);
@@ -4122,7 +4122,7 @@ sub printScafPhyloDist {
         my @scaf_oids = param('scaffold_oid');
         if ( scalar(@scaf_oids) == 0 ) {
             printEndWorkingDiv();
-            webError("No scaffolds have been selected.");
+            WebUtil::webError("No scaffolds have been selected.");
             return;
         }
         @scaffold_oids = sort(@scaf_oids);
@@ -5438,7 +5438,7 @@ sub printScafTaxonomyPhyloDist {
     
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -5448,7 +5448,7 @@ sub printScafTaxonomyPhyloDist {
     my @file_scaffolds = param("file_scaffold");
 
     if ( scalar(@db_scaffolds) == 0 && scalar(@file_scaffolds) == 0 ) {
-        webError("Select at least one scaffold set for phylogenetic distribution.");
+        WebUtil::webError("Select at least one scaffold set for phylogenetic distribution.");
         return;
     }
 
@@ -6016,7 +6016,7 @@ sub printScafTaxonomyMetagHits {
 
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -6028,7 +6028,7 @@ sub printScafTaxonomyMetagHits {
     #print "printScafTaxonomyMetagHits() file_scaffolds: @file_scaffolds<br/>\n";
 
     if ( scalar(@db_scaffolds) == 0 && scalar(@file_scaffolds) == 0 ) {
-        webError("Select at least one scaffold set for phylogenetic distribution.");
+        WebUtil::webError("Select at least one scaffold set for phylogenetic distribution.");
         return;
     }
 
@@ -6712,7 +6712,7 @@ sub submitJob {
                 $data_type = 'assembled';
             }
             if ( $data_type ne 'assembled' ) {
-                webError("Only assembled MER_FS scaffold is supported in Kmer.");
+                WebUtil::webError("Only assembled MER_FS scaffold is supported in Kmer.");
                 return;
             }
         }
@@ -6763,7 +6763,7 @@ sub submitJob {
         }
     }
     if ( !$set_names ) {
-        webError("Please select at least one scaffold set.");
+        WebUtil::webError("Please select at least one scaffold set.");
         return;
     }    
 
@@ -6797,43 +6797,7 @@ sub submitJob {
     print $info_fs currDateTime() . "\n";
     close $info_fs;
 
-    #old code that uses .py files, keep it as reference
-    #if ( $env->{client_py_exe} ) {
-    #    $ENV{'PATH'} .= $env->{client_path};
-    #    my @cmd = (
-    #        "client_wrapper.sh", "--program", "scafPhyloDist", "--contact", "$sid", "--output",
-    #        "$output_name",      "--scafset", "$scaf_set_names"
-    #    );
-    #
-    #    printStartWorkingDiv();
-    #    print "<p>cmd: " . join( " ", @cmd ) . "<p>\n";
-    #
-    #    WebUtil::unsetEnvPath();
-    #    my $st = system( $env->{client_py_exe}, @cmd );
-    #    printEndWorkingDiv();
-    #
-    #    if ($st) {
-    #        print "<p><font color='red'>Error Code: $st</font>\n";
-    #    } else {
-    #        print "<p>Job is submitted successfully.\n";
-    #    }
-    #
-    #    if ($st) {
-    #        # print error file
-    #        my $info_file = "$job_file_dir/error.txt";
-    #        my $info_fs   = newWriteFileHandle($info_file);
-    #        print $info_fs "$st\n";
-    #        print $info_fs currDateTime() . "\n";
-    #        close $info_fs;
-    #    }
-    #
-    #    WebUtil::resetEnvPath();
-    #} else {
-    #    print "<p>Cannot find client_wrapper.sh\n";
-    #}
-
-    my $queue_dir = $env->{workspace_queue_dir};
-    #print "submitJob() queue_dir=$queue_dir<br/>\n";
+    my $queue_dir = WorkspaceUtil::getQueueDir();
     my $queue_filename;
     if ( $lcJobPrefix eq 'histogram' ) {
         $queue_filename = $sid . '_scafHistogram_' . $output_name;

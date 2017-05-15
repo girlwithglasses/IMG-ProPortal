@@ -2,7 +2,7 @@
 # ScaffoldHits -- adopted from MetagenomeHits
 # change from taxon_oid to a set of scaffold oids
 #
-# $Id: ScaffoldHits.pm 35581 2016-04-21 19:42:33Z jinghuahuang $
+# $Id: ScaffoldHits.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package ScaffoldHits;
 
@@ -176,7 +176,7 @@ sub printMetagenomeStats {
 
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -184,7 +184,7 @@ sub printMetagenomeStats {
     my @scaffold_oids = @$oids_aref;
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
     printStatusLine( "Loading ...", 1 );
@@ -1164,7 +1164,7 @@ sub printMetagenomeHits {
 
     my @scaffold_oids = split( /\,/, $scaffold_str );
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -1569,7 +1569,7 @@ sub printFamilyStats {
     my $scaffold_str = param('scaffold_oids');
     my @scaffold_oids = split( /\,/, $scaffold_str );
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -2052,7 +2052,7 @@ sub printSpeciesStats {
     my $scaffold_str = param('scaffold_oids');
     my @scaffold_oids = split( /\,/, $scaffold_str );
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -2560,7 +2560,7 @@ sub getFamilyGeneOids {
 
     my @scaffold_oids = split( /\,/, $scaffold_str );
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -2662,7 +2662,7 @@ sub printTaxonomyMetagHits {
     my $scaffold_str = param('scaffold_oids');
     my @scaffold_oids = split( /\,/, $scaffold_str );
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 

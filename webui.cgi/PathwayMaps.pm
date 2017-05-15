@@ -1,6 +1,6 @@
 ###########################################################################
 # PathwayMaps.pm - for display of pathway maps
-# $Id: PathwayMaps.pm 35066 2016-01-20 19:25:21Z klchu $
+# $Id: PathwayMaps.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package PathwayMaps;
 my $section = "PathwayMaps";
@@ -64,6 +64,13 @@ sub getAppHeaderData {
 }
 
 
+sub printWebPageHeader {
+    my($self) = @_;
+
+    # xml header
+    print header( -type => "text/xml" );
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
@@ -114,7 +121,7 @@ sub pathwaysForSelectedGeneFns {
     print "<br/>";
 
     if ( scalar(@gene_oids) == 0 ) {
-        webError("Please select some genes.");
+        WebUtil::webError("Please select some genes.");
     }
 
     my ($dbOids_ref, $metaOids_ref) =
@@ -198,7 +205,7 @@ sub pathwaysForSelectedGeneFns {
     }
 
     if ( scalar(@kofuncs) == 0 && scalar(@ecfuncs) == 0 ) {
-	webError("Selected genes do not map to KO or EC functions.");
+	WebUtil::webError("Selected genes do not map to KO or EC functions.");
     }
 
     pathwaysForFunctions(\@kofuncs, \@ecfuncs, \%func2genes);
@@ -216,7 +223,7 @@ sub pathwaysForSelectedFns {
     print "<br/>";
 
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select some functions.");
+        WebUtil::webError("Please select some functions.");
     }
 
     my @koids;
@@ -230,7 +237,7 @@ sub pathwaysForSelectedFns {
     }
 
     if ( scalar(@koids) == 0 && scalar(@ecids) == 0 ) {
-        webError("Please select some KO or EC functions.");
+        WebUtil::webError("Please select some KO or EC functions.");
     }
 
     pathwaysForFunctions(\@koids, \@ecids);
@@ -379,7 +386,7 @@ sub showMapForFunctions {
         }
     }
     if ( scalar(@koids) == 0 && scalar(@ecids) == 0  ) {
-        webDie("showMapForFunctions: no KO or EC funcs\n");
+        WebUtil::webDie("showMapForFunctions: no KO or EC funcs\n");
     }
 
     my $dbh = dbLogin();
@@ -395,7 +402,7 @@ sub showMapForFunctions {
     my $inFile = "$pngDir/$map_id.png";
     my $im = new GD::Image($inFile);
     if ( !$im ) {
-        webDie("showMapForFunctions: cannot read '$inFile'\n");
+        WebUtil::webDie("showMapForFunctions: cannot read '$inFile'\n");
     }
 
     my @recs;
@@ -597,10 +604,10 @@ sub showMap {
     my $nTaxons = @oids;
 
     if ( $pathway_oid eq "" ) {
-        webError("Please select a pathway to display.<br/>\n");
+        WebUtil::webError("Please select a pathway to display.<br/>\n");
     }
     if ( $nTaxons < 1 ) {
-        webError("Please select at least 1 genome.<br/>\n");
+        WebUtil::webError("Please select at least 1 genome.<br/>\n");
     }
     my $dbh = dbLogin();
     if ( $nTaxons == 1 ) {
@@ -1012,7 +1019,7 @@ sub showMapForTaxons {
     GD::Image->trueColor(1);
     my $im = new GD::Image($inFile);
     if ( !$im ) {
-        webDie("showMapForTaxons: cannot read '$inFile'\n");
+        WebUtil::webDie("showMapForTaxons: cannot read '$inFile'\n");
     }
 
     applyHighlights( $im, \@blueRecs, "blue" );
@@ -1056,10 +1063,10 @@ sub showMapForSamples {
     my $nSamples = @sample_oids;
 
     if ( $map_id eq "" ) {
-        webError("Please select a pathway to display.<br/>\n");
+        WebUtil::webError("Please select a pathway to display.<br/>\n");
     }
     if ($nSamples < 1) {
-        webError( "Please select at least 1 sample." );
+        WebUtil::webError( "Please select at least 1 sample." );
     } elsif ($nSamples == 1) {
 	showMapForOneSample($map_id, @sample_oids[0], $study);
 	return;
@@ -1557,7 +1564,7 @@ sub showMapForSamples {
     GD::Image->trueColor(1);
     my $im = new GD::Image($inFile);
     if ( !$im ) {
-        webDie("showMap: cannot read '$inFile'\n");
+        WebUtil::webDie("showMap: cannot read '$inFile'\n");
     }
 
     my %ko2genes;
@@ -1613,7 +1620,7 @@ sub showMapForSamples {
         # read the cluster id for each gene:
 	my $clusterFile = $tmp_dir."/".$clusterFileName;
 	if (! -e $clusterFile) {
-	    webError("Cannot find the cdt cluster file $clusterFile. "
+	    WebUtil::webError("Cannot find the cdt cluster file $clusterFile. "
 		   . "Please reload clusters to pathways mapping.");
 	}
 
@@ -2344,7 +2351,7 @@ sub printExpressionForGenes {
 sub showMapForOneSample {
     my ( $map_id, $sample_oid, $study ) = @_;
     if ( $map_id eq "" ) {
-        webError("Please select a pathway to display.<br/>\n");
+        WebUtil::webError("Please select a pathway to display.<br/>\n");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -2456,7 +2463,7 @@ sub showMapForOneSample {
 
 	    if ($total eq "") {
 		printEndWorkingDiv();
-		webError("Could not compute abundances for sample $sample_oid.");
+		WebUtil::webError("Could not compute abundances for sample $sample_oid.");
 	    }
 	    my $sql = qq{
 	        select distinct es.IMG_gene_oid,
@@ -2745,7 +2752,7 @@ sub showMapForOneSample {
     GD::Image->trueColor(1);
     my $im = new GD::Image($inFile);
     if ( !$im ) {
-        webDie("showMapForOneSample: cannot read '$inFile'\n");
+        WebUtil::webDie("showMapForOneSample: cannot read '$inFile'\n");
     }
     colorByAbundance( $im, \%roi2gene, \%profile );
 

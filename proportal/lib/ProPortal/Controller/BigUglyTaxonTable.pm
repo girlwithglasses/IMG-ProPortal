@@ -24,7 +24,7 @@ has '+page_id' => (
 
 =head3 render
 
-Get all the GoldTaxonVw table data
+Get all the VwGoldTaxon table data
 
 =cut
 

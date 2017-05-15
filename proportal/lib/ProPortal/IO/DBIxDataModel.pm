@@ -51,15 +51,8 @@ The queries themselves are in ProPortal::IO::DBIxDataModelQueryLib
     query     the name of the query to be run
               (i.e. the name of the method in this package)
 
-    where     the query parameter(s), e.g.
-              { taxon_oid => [ 123, 456, 789 ] }
-
     filters       (optional) hashref of standardised filters,
                   e.g. implemented by ProPortalFilters
-
-    return_as     (optional) return the statement object in a specific
-                  format, e.g. result_as => 'flat_arrayref'
-                  see DBIx::DataModel for options
 
     check_results (optional) run check_results on the db results
                   specify params for check_results as hashref, i.e.
@@ -69,6 +62,13 @@ The queries themselves are in ProPortal::IO::DBIxDataModelQueryLib
                   	query => [ 123, 456, 789 ],
                   	subject => 'taxon_oids'
                   }
+
+    -where     the query parameter(s), e.g.
+              { taxon_oid => [ 123, 456, 789 ] }
+
+    -return_as    (optional) return the statement object in a specific
+                  format, e.g. result_as => 'flat_arrayref'
+                  see DBIx::DataModel for options
 
 	TODO: count results, return paged results
 
@@ -102,8 +102,9 @@ sub run_query {
 	# add filters
 	if ($args->{filters}) {
 		$stt = $self->add_filters({
+			filters => $args->{filters},
+			query => $args->{query},
 			statement => $stt,
-			filters => $args->{filters}
 		});
 	}
 
@@ -120,9 +121,8 @@ sub run_query {
 #			return $stt->refine( -result_as => $args->{result_as} );
 #		}
 	}
-
-	if ( $args->{dbixdm} ) {
-		return $stt->refine( %{$args->{dbixdm}} );
+	elsif ( $args->{-result_as} ) {
+		return $stt->refine( -result_as => $args->{-result_as} );
 	}
 
 	if ( $args->{check_results} ) {
@@ -209,7 +209,6 @@ Add the filters for the query
 =cut
 
 sub add_filters {
-
 	my $self = shift;
 	my $args = shift;
 
@@ -225,7 +224,7 @@ sub add_filters {
 	}
 
 	## This is implemented by ProPortal::IO::ProPortalFilters
-	my $f = $self->filter_sqlize( $args->{filters} );
+	my $f = $self->filter_sqlize( $args );
 
 	$args->{statement}->refine( -where => $f );
 

@@ -2,7 +2,7 @@
 # TaxonList - Show list of taxons in alphabetical or phylogenetic order.
 # --es 09/17/2004
 #
-# $Id: TaxonList.pm 36635 2017-03-02 21:05:04Z klchu $
+# $Id: TaxonList.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package TaxonList;
 my $section = "TaxonList";
@@ -77,6 +77,13 @@ sub getAppHeaderData {
     
     
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
 }
 
 sub dispatch {
@@ -1392,7 +1399,7 @@ sub uploadTaxonSelections {
     my $errmsg;
     if ( !MyIMG::uploadOidsFromFile( "taxon_oid", \@taxon_oids, \$errmsg ) ) {
         printStatusLine( "Error.", 2 );
-        webError($errmsg);
+        WebUtil::webError($errmsg);
     }
     my $dbh = dbLogin();
     my @finalOids;
@@ -2069,7 +2076,7 @@ sub printPrivateGenomeUsers {
     my @master_contact_oids = sort( keys(%masterUsers) );
     my $nMasterContactOids  = @master_contact_oids;
     if ( $nMasterContactOids > 1000 ) {
-        webDie("printPrivateGenomeUsers: $nMasterContactOids, too many");
+        WebUtil::webDie("printPrivateGenomeUsers: $nMasterContactOids, too many");
     }
     my $masterClause;
     my $x = join( ',', @master_contact_oids );

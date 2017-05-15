@@ -1,6 +1,6 @@
 ###########################################################################
 # RadialPhyloTree.pm - draws a radial phylogenetic tree as seen on MG-RAST
-# $Id: RadialPhyloTree.pm 36233 2016-09-27 21:18:18Z klchu $
+# $Id: RadialPhyloTree.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package RadialPhyloTree;
 my $section = "RadialPhyloTree";
@@ -101,6 +101,10 @@ sub getAppHeaderData {
         @a = ( "CompareGenomes", '', '', $js );
     }
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
 }
 
 
@@ -331,7 +335,7 @@ sub runTree {
       if ( $type eq "metagenome" );
 
     if ( scalar(@oids) <= 0 ) {
-        webError("Please select at least 1 item");
+        WebUtil::webError("Please select at least 1 item");
     }
 
     printHeader();

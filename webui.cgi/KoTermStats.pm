@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: KoTermStats.pm 34568 2015-10-23 20:35:43Z klchu $
+# $Id: KoTermStats.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package KoTermStats;
 my $section = "KoTermStats";
@@ -695,7 +695,7 @@ sub printParalogTableIndex {
     my $rowsperpage = 100;
 
     if ( $index eq "" ) {
-        webError("Page index cannot be blank!");
+        WebUtil::webError("Page index cannot be blank!");
     }
 
     print qq{
@@ -712,7 +712,7 @@ sub printParalogTableIndex {
     my $str = join( ",", @$set_aref );
 
     if ( $str eq "" ) {
-        webError("Str index cannot be blank!");
+        WebUtil::webError("Str index cannot be blank!");
     }
 
     print "i Getting terms genome count.<br/>\n";

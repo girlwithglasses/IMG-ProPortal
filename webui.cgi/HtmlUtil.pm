@@ -1,6 +1,6 @@
 ############################################################################
 #   Misc. utility functions to support HTML.
-# $Id: HtmlUtil.pm 36801 2017-03-23 05:10:17Z aratner $
+# $Id: HtmlUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package HtmlUtil;
 
@@ -9,7 +9,7 @@ use Time::localtime;
 use WebConfig;
 use WebUtil;
 use DBI;
-use GD;
+# use GD;
 use CGI qw( :standard );
 use MIME::Base64 qw( encode_base64 decode_base64 );
 use FileHandle;
@@ -63,7 +63,7 @@ if ($cgi_cache_enable) {
     } else {
         $cgi_cache_enable = 1;
     }
-    
+
     #webLog("======================================\n");
     #webLog(" >>$userCacheEnable<<   >>$cgi_cache_enable<< \n");
     #webLog("======================================\n");
@@ -73,7 +73,7 @@ if ($cgi_cache_enable) {
 # Is cgi cache enabled
 #
 # All tools / files should call this method for find out if to use cache.
-# Never get cache flag from the WebConfig directly since 
+# Never get cache flag from the WebConfig directly since
 # users can override cache flag in their prefs.
 # MyIMG.pm is only file that should use the WebConfig cache flag to setup prefs correctly
 # - ken
@@ -88,14 +88,14 @@ sub isCgiCacheEnable {
 #
 sub cgiCacheInitialize {
     my ( $namespace, $override_cache_size, $override_expires_time, $forcePublicCache ) = @_;
-    
+
     # $forcePublicCache = 1; # lets just share cache - ken 2016-09-29
     # the force messed up the home page user's private counts
-    
+
     if($forcePublicCache || !$user_restricted_site) {
         # public system shared cache
         $namespace = $namespace . '_0';
-    
+
     } elsif($user_restricted_site) {
         # session cache
         my $sid = WebUtil::getSessionId();
@@ -104,7 +104,7 @@ sub cgiCacheInitialize {
         # public system shared cache
         $namespace = $namespace . '_0';
     }
-    
+
 
     if ($cgi_cache_enable) {
         my $query = WebUtil::getCgi();
@@ -229,9 +229,9 @@ sub flushGeneBatch {
     my $gene_oid_str = OracleUtil::getNumberIdsInClause( $dbh, @$gene_oids_ref );
 
     my $sql = qq{
-       select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_type, 
-         tx.taxon_oid, tx.ncbi_taxon_id, 
-         tx.taxon_display_name, tx.genus, tx.species, 
+       select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_type,
+         tx.taxon_oid, tx.ncbi_taxon_id,
+         tx.taxon_display_name, tx.genus, tx.species,
          g.aa_seq_length, tx.seq_status, scf.ext_accession, ss.seq_length
        from taxon tx, scaffold scf, scaffold_stats ss, gene g
        where g.taxon = tx.taxon_oid
@@ -246,7 +246,7 @@ sub flushGeneBatch {
     for ( ; ; ) {
         my (
             $gene_oid,      $gene_display_name,  $gene_symbol,   $locus_type, $taxon_oid,
-            $ncbi_taxon_id, $taxon_display_name, $genus,         $species, 
+            $ncbi_taxon_id, $taxon_display_name, $genus,         $species,
             $aa_seq_length, $seq_status,         $ext_accession, $seq_length
           )
           = $cur->fetchrow();
@@ -345,10 +345,10 @@ sub flushGeneBatch {
 
 sub flushGeneBatchSort {
     my ( $dbh, $gene_oids_ref, $it, $taxon_oid_ortholog, $showSeqLen ) = @_;
-    
+
     my @gene_oids_select = param("gene_oid");
     my %geneOidsSelect  = WebUtil::array2Hash(@gene_oids_select);
-    
+
     if ( $#$gene_oids_ref < 0 ) {
         return;
     }
@@ -357,9 +357,9 @@ sub flushGeneBatchSort {
     my $gene_oid_str = OracleUtil::getNumberIdsInClause( $dbh, @$gene_oids_ref );
 
     my $sql = qq{
-       select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_type, 
-         tx.taxon_oid, tx.ncbi_taxon_id, 
-         tx.taxon_display_name, tx.genus, tx.species, 
+       select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_type,
+         tx.taxon_oid, tx.ncbi_taxon_id,
+         tx.taxon_display_name, tx.genus, tx.species,
          g.aa_seq_length, tx.seq_status, scf.ext_accession, ss.seq_length
        from taxon tx, scaffold scf, scaffold_stats ss, gene g
        where g.taxon = tx.taxon_oid
@@ -374,7 +374,7 @@ sub flushGeneBatchSort {
     for ( ; ; ) {
         my (
             $gene_oid,      $gene_display_name,  $gene_symbol,   $locus_type, $taxon_oid,
-            $ncbi_taxon_id, $taxon_display_name, $genus,         $species, 
+            $ncbi_taxon_id, $taxon_display_name, $genus,         $species,
             $aa_seq_length, $seq_status,         $ext_accession, $seq_length
           )
           = $cur->fetchrow();
@@ -405,7 +405,7 @@ sub flushGeneBatchSort {
     for my $r (@recs) {
         my (
             $gene_oid,      $gene_display_name,  $gene_symbol,   $locus_type, $taxon_oid,
-            $ncbi_taxon_id, $taxon_display_name, $genus,         $species, 
+            $ncbi_taxon_id, $taxon_display_name, $genus,         $species,
             $aa_seq_length, $seq_status,         $ext_accession, $seq_length
           )
           = split( /\t/, $r );
@@ -466,9 +466,9 @@ sub flushGeneBatchBig {
     return if blankStr($gene_oid_str);
 
     my $sql = qq{
-       select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_type, 
-         tx.taxon_oid, tx.ncbi_taxon_id, 
-         tx.taxon_display_name, tx.genus, tx.species, 
+       select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_type,
+         tx.taxon_oid, tx.ncbi_taxon_id,
+         tx.taxon_display_name, tx.genus, tx.species,
          g.aa_seq_length, tx.seq_status, scf.ext_accession, ss.seq_length
        from taxon tx, scaffold scf, scaffold_stats ss, gene g
        where g.taxon = tx.taxon_oid
@@ -480,7 +480,7 @@ sub flushGeneBatchBig {
     $sql = bigInQuery( $sql, "_XXX_", $gene_oids_ref );
 
     $sql = qq{
-       select * 
+       select *
        from (
            $sql
        )
@@ -492,7 +492,7 @@ sub flushGeneBatchBig {
     for ( ; ; ) {
         my (
             $gene_oid,      $gene_display_name,  $gene_symbol,   $locus_type, $taxon_oid,
-            $ncbi_taxon_id, $taxon_display_name, $genus,         $species, 
+            $ncbi_taxon_id, $taxon_display_name, $genus,         $species,
             $aa_seq_length, $seq_status,         $ext_accession, $seq_length
           )
           = $cur->fetchrow();
@@ -520,7 +520,7 @@ sub flushGeneBatchBig {
     for my $r (@recs) {
         my (
             $gene_oid,      $gene_display_name,  $gene_symbol,   $locus_type, $taxon_oid,
-            $ncbi_taxon_id, $taxon_display_name, $genus,         $species, 
+            $ncbi_taxon_id, $taxon_display_name, $genus,         $species,
             $aa_seq_length, $seq_status,         $ext_accession, $seq_length
           )
           = split( /\t/, $r );
@@ -557,7 +557,7 @@ sub flushGeneBatchBig {
         $row .= $gene_display_name . $sd . escHtml($gene_display_name) . " ${seqLen} $scfInfo\t";
 
         $row .= $taxon_oid . $sd . $taxon_oid . "\t";
-        my $turl = "$main_cgi?section=TaxonDetail&page=taxonDetail" 
+        my $turl = "$main_cgi?section=TaxonDetail&page=taxonDetail"
             . "&taxon_oid=$taxon_oid";
         $row .= $taxon_display_name . $sd . alink( $turl, $taxon_display_name2 ) . "\t";
 
@@ -570,9 +570,9 @@ sub flushGeneBatchBig {
 # flushGeneBatchSorting - a html table with sorting
 ############################################################################
 sub flushGeneBatchSorting {
-    my ( $dbh, $gene_oids_ref, $it, $showSeqLen, $hideGenome, 
+    my ( $dbh, $gene_oids_ref, $it, $showSeqLen, $hideGenome,
         $extraColName, $extracolumn_href, $extracollink_href ) = @_;
-   
+
     my @gene_oids_select = param("gene_oid");
     my %geneOidsSelect  = WebUtil::array2Hash(@gene_oids_select);
 
@@ -587,9 +587,9 @@ sub flushGeneBatchSorting {
     my $imgClause = WebUtil::imgClause('tx');
 
     my $sql = qq{
-        select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_tag, g.locus_type, 
-               tx.taxon_oid, tx.ncbi_taxon_id, 
-               tx.taxon_display_name, tx.genus, tx.species, 
+        select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_tag, g.locus_type,
+               tx.taxon_oid, tx.ncbi_taxon_id,
+               tx.taxon_display_name, tx.genus, tx.species,
                g.aa_seq_length, tx.seq_status, scf.ext_accession, ss.seq_length
         from taxon tx, scaffold scf, scaffold_stats ss, gene g
         where g.gene_oid in ( $geneInnerClause )
@@ -680,10 +680,10 @@ sub flushGeneBatchSorting {
         $r .= $tmpname . $sd . "\t";
 
         if ( !$hideGenome ) {
-            $r .= $taxon_oid . $sd . $taxon_oid . "\t";            
+            $r .= $taxon_oid . $sd . $taxon_oid . "\t";
             my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
             $url = alink( $url, "$taxon_display_name" );
-            $r .= $taxon_display_name . $sd . $url . "\t";            
+            $r .= $taxon_display_name . $sd . $url . "\t";
         }
 
         if ( $extraColName && defined $extracolumn_href) {
@@ -697,7 +697,7 @@ sub flushGeneBatchSorting {
                 }
             }
             else {
-                $r .= $sd . "\t";                
+                $r .= $sd . "\t";
             }
         }
 
@@ -715,7 +715,7 @@ sub flushGeneBatchSorting {
 ############################################################################
 sub flushGeneBatchSorting2 {
     my ( $dbh, $gene_oids_ref, $it, $showSeqLen, $extrasql, $extraurl ) = @_;
-    
+
     my @gene_oids_select = param("gene_oid");
     my %geneOidsSelect  = WebUtil::array2Hash(@gene_oids_select);
 
@@ -757,9 +757,9 @@ sub flushGeneBatchSorting2 {
     my $imgClause = WebUtil::imgClause('tx');
 
     my $sql = qq{
-        select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_tag, g.locus_type, 
-               tx.taxon_oid, tx.ncbi_taxon_id, 
-               tx.taxon_display_name, tx.genus, tx.species, 
+        select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_tag, g.locus_type,
+               tx.taxon_oid, tx.ncbi_taxon_id,
+               tx.taxon_display_name, tx.genus, tx.species,
                g.aa_seq_length, tx.seq_status, scf.ext_accession, ss.seq_length
         from taxon tx, scaffold scf, scaffold_stats ss, gene g
         where g.gene_oid in ( $geneInnerClause )
@@ -823,7 +823,7 @@ sub flushGeneBatchSorting2 {
         my $r;
         $r .= $sd . "<input type='checkbox' name='gene_oid' value='$gene_oid' $ck /> \t";
 
-        my $url = "$main_cgi?section=GeneDetail" 
+        my $url = "$main_cgi?section=GeneDetail"
 	        . "&page=geneDetail&gene_oid=$gene_oid";
         $r .= $gene_oid . $sd
 	    . "<a href='" . $url . "'>  $gene_oid </a>" . "\t";
@@ -882,7 +882,7 @@ sub flushMetagGeneBatch {
 
     my $sql = qq{
         select g.gene_oid, g.gene_display_name, g.gene_symbol, g.locus_type,
-               tx.taxon_oid, tx.ncbi_taxon_id, tx.taxon_display_name, 
+               tx.taxon_oid, tx.ncbi_taxon_id, tx.taxon_display_name,
                tx.genus, tx.species, g.aa_seq_length,
                tx.seq_status, scf.ext_accession, ss.seq_length,
            ss.gc_percent, scf.read_depth, g.est_copy
@@ -899,7 +899,7 @@ sub flushMetagGeneBatch {
     for ( ; ; ) {
         my (
             $gene_oid,       $gene_display_name,  $gene_symbol,       $locus_type,     $taxon_oid,
-            $ncbi_taxon_id,  $taxon_display_name, $genus,             $species, 
+            $ncbi_taxon_id,  $taxon_display_name, $genus,             $species,
             $aa_seq_length,  $seq_status,         $scf_ext_accession, $scf_seq_length, $scf_gc_percent,
             $scf_read_depth, $est_copy
           )
@@ -924,7 +924,7 @@ sub flushMetagGeneBatch {
         push( @recs, $rec );
     }
     $cur->finish();
-    
+
     OracleUtil::truncTable( $dbh, "gtt_num_id" )
       if ( $gene_oid_str =~ /gtt_num_id/i );
 
@@ -966,7 +966,7 @@ sub flushMetagGeneBatch {
         $row .= "${seqLen} (est_copy=$est_copy) " . "\t";
         $row .= $scfInfo . "\t";
 
-        my $turl = "$main_cgi?section=TaxonDetail&page=taxonDetail" 
+        my $turl = "$main_cgi?section=TaxonDetail&page=taxonDetail"
             . "&taxon_oid=$taxon_oid";
         if ($taxonlink) {
             # genome column is not displayed if only single genome
@@ -1006,7 +1006,7 @@ sub flushMetaGeneBatchSorting {
 
         my @vals = split(/ /, $workspace_id);
         if ( scalar(@vals) >= 3 ) {
-            $taxon_oid_h{$vals[0]} = 1; 
+            $taxon_oid_h{$vals[0]} = 1;
         }
     }
     my @taxonOids = keys(%taxon_oid_h);
@@ -1014,7 +1014,7 @@ sub flushMetaGeneBatchSorting {
 
     my %taxon_name_h;
     if (scalar(@taxonOids) > 0) {
-        %taxon_name_h = QueryUtil::fetchTaxonOid2NameHash($dbh, \@taxonOids);    
+        %taxon_name_h = QueryUtil::fetchTaxonOid2NameHash($dbh, \@taxonOids);
     }
     #print "flushMetaGeneBatchSorting() 0b " . currDateTime() . "<br/>\n";
 
@@ -1026,7 +1026,7 @@ sub flushMetaGeneBatchSorting {
 
     my @recs;
     for my $workspace_id ( @$meta_gene_oids_ref ) {
-        
+
         my ($taxon_oid, $data_type, $gene_oid) = split(/ /, $workspace_id);
         if ( ! exists($taxon_name_h{$taxon_oid}) ) {
             #$taxon_oid not in hash, probably due to permission
@@ -1034,9 +1034,9 @@ sub flushMetaGeneBatchSorting {
             next;
         }
 
-        my ($locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaffold_oid, $tid2, $dtype2) 
+        my ($locus_type, $locus_tag, $gene_display_name, $start_coord, $end_coord, $strand, $scaffold_oid, $tid2, $dtype2)
              = split(/\t/, $gene_info_h{$workspace_id});
-        
+
         if ( !$taxon_oid && $tid2 ) {
             $taxon_oid = $tid2;
             if ( ! exists($taxon_name_h{$taxon_oid})) {
@@ -1048,14 +1048,14 @@ sub flushMetaGeneBatchSorting {
         # taxon
         my $taxon_display_name = $taxon_name_h{$taxon_oid};
         $taxon_display_name = appendMetaTaxonNameWithDataType($taxon_display_name, $data_type);
-        
+
         if ( $gene_name_h{$workspace_id} ) {
             $gene_display_name = $gene_name_h{$workspace_id};
         }
         if ( ! $gene_display_name ) {
             $gene_display_name = 'hypothetical protein';
         }
-        
+
         my $rec = "$workspace_id\t";
         $rec .= "$gene_display_name\t";
         $rec .= "\t"; #gene_symbol
@@ -1072,8 +1072,8 @@ sub flushMetaGeneBatchSorting {
         $rec .= "\t"; #ext_accession
         $rec .= "\t"; #seq_length
         push( @recs, $rec );
-        
-        #print "flushMetaGeneBatchSorting() rec: ". $rec."<br/>\n";      
+
+        #print "flushMetaGeneBatchSorting() rec: ". $rec."<br/>\n";
     }
 
     # now print soriing html
@@ -1095,7 +1095,7 @@ sub flushMetaGeneBatchSorting {
         my $r;
         $r = $sd . "<input type='checkbox' name='gene_oid' value='$workspace_id' />\t";
 
-        my $gene_url = "$main_cgi?section=MetaGeneDetail" . 
+        my $gene_url = "$main_cgi?section=MetaGeneDetail" .
             "&page=metaGeneDetail&data_type=$data_type" .
             "&taxon_oid=$taxon_oid&gene_oid=$gene_oid";
         $r .= $workspace_id . $sd . alink( $gene_url, $gene_oid ) . "\t";
@@ -1105,10 +1105,10 @@ sub flushMetaGeneBatchSorting {
         $r .= $gene_display_name . $sd . $gene_display_name . "\t";
 
         if ( !$hideGenome ) {
-            $r .= $taxon_oid . $sd . $taxon_oid . "\t";            
-            my $taxon_url = "$main_cgi?section=MetaDetail" . 
+            $r .= $taxon_oid . $sd . $taxon_oid . "\t";
+            my $taxon_url = "$main_cgi?section=MetaDetail" .
                 "&page=metaDetail&taxon_oid=$taxon_oid";
-            $r .= $taxon_display_name . $sd . alink( $taxon_url, $taxon_display_name ) . "\t";            
+            $r .= $taxon_display_name . $sd . alink( $taxon_url, $taxon_display_name ) . "\t";
         }
 
         if ( $extraColName ) {
@@ -1122,7 +1122,7 @@ sub flushMetaGeneBatchSorting {
                 }
             }
             else {
-                $r .= $sd . "\t";                
+                $r .= $sd . "\t";
             }
         }
 
@@ -1158,7 +1158,7 @@ sub printGeneListSection {
 
     if ( getSessionParam("maxGeneListResults") ne "" ) {
         $maxGeneListResults = getSessionParam("maxGeneListResults");
-    }    
+    }
 
     my @gene_oids;
     my $count = 0;
@@ -1178,7 +1178,7 @@ sub printGeneListSection {
     printGeneCartFooter() if ( $count > 10 );
     flushGeneBatch( $dbh, \@gene_oids );
     printGeneCartFooter();
-    
+
     if ( $trunc ) {
         my $s = "Results limited to $maxGeneListResults genes.\n";
         $s .= "( Go to " . alink( $preferences_url, "Preferences" ) . " to change \"Max. Gene List Results\" limit. )\n";
@@ -1235,7 +1235,7 @@ sub printGeneListSectionSort {
     printGeneCartFooter() if $count > 10;
     $it->printOuterTable(1);
     printGeneCartFooter();
-    
+
     if ( $trunc ) {
         my $s = "Results limited to $maxGeneListResults genes.\n";
         $s .= "( Go to " . alink( $preferences_url, "Preferences" ) . " to change \"Max. Gene List Results\" limit. )\n";
@@ -1252,14 +1252,14 @@ sub printGeneListSectionSort {
 sub printGeneListSectionBatch {
     my ( $sql, $title, @binds ) = @_;
 
-    printStatusLine( "Loading ...", 1 );    
+    printStatusLine( "Loading ...", 1 );
     my $dbh = dbLogin();
     my $cur = execSql( $dbh, $sql, $verbose, @binds );
 
     if ( getSessionParam("maxGeneListResults") ne "" ) {
         $maxGeneListResults = getSessionParam("maxGeneListResults");
     }
-        
+
     my @gene_oids;
     my $count = 0;
     my $trunc = 0;
@@ -1277,7 +1277,7 @@ sub printGeneListSectionBatch {
     $cur->finish();
 
     if ( $count == 0 ) {
-        webError("No genes found.");
+        WebUtil::webError("No genes found.");
         return;
     }
     if ( $count == 1 ) {
@@ -1380,7 +1380,7 @@ sub printMetagGeneListSection {
 # printGeneListHtmlTable
 ############################################################################
 sub printGeneListHtmlTable {
-    my ( $title, $subtitle, $dbh, $genes_ref, $meta_genes_ref, $hideGenome, 
+    my ( $title, $subtitle, $dbh, $genes_ref, $meta_genes_ref, $hideGenome,
         $extraColName, $extracolumn_href, $extracollink_href ) = @_;
 
     my @gene_oids;
@@ -1432,11 +1432,11 @@ sub printGeneListHtmlTable {
     $it->addColSpec( "Locus Tag",         "asc", "left" );
     $it->addColSpec( "Gene Product Name", "asc", "left" );
     if ( !$hideGenome ) {
-        $it->addColSpec( "Genome ID",   "asc", "right" );        
-        $it->addColSpec( "Genome Name",   "asc", "left" );        
+        $it->addColSpec( "Genome ID",   "asc", "right" );
+        $it->addColSpec( "Genome Name",   "asc", "left" );
     }
     if ( $extraColName ) {
-        $it->addColSpec( "$extraColName", "asc", "left" );        
+        $it->addColSpec( "$extraColName", "asc", "left" );
     }
 
     my $count = 0;
@@ -1455,7 +1455,7 @@ sub printGeneListHtmlTable {
             @batch = @gene_oids;
             $count += scalar(@gene_oids);
         }
-        flushGeneBatchSorting( $dbh, \@batch, $it, '', $hideGenome, $extraColName, $extracolumn_href, $extracollink_href );        
+        flushGeneBatchSorting( $dbh, \@batch, $it, '', $hideGenome, $extraColName, $extracolumn_href, $extracollink_href );
     }
 
     if (scalar(@meta_gene_oids) > 0) {
@@ -1467,7 +1467,7 @@ sub printGeneListHtmlTable {
                 if ( $count >= $maxGeneListResults ) {
                     last;
                 }
-            }            
+            }
         }
         else {
             @batch = @meta_gene_oids;
@@ -1527,7 +1527,7 @@ sub printGenomeListHtmlTable {
 
     printMainForm() if(!$disableFormPrint);
     printStatusLine( "Loading ...", 1 );
-        
+
     if ( $title ne '' ) {
         print "<h1>\n";
         if ( defined $notitlehtmlesc ) {
@@ -1593,8 +1593,8 @@ sub printGenomeListHtmlTable {
     $it->addColSpec( "Genome ID", "asc", "left" );
     $it->addColSpec( "Genome Name", "asc", "left" );
     if ( $extraColName ) {
-        $extracol_position = "left" if ( !$extracol_position ); 
-        $it->addColSpec( "$extraColName", "asc", "$extracol_position" );        
+        $extracol_position = "left" if ( !$extracol_position );
+        $it->addColSpec( "$extraColName", "asc", "$extracol_position" );
     }
 
     my $select_id_name = "taxon_filter_oid";
@@ -1631,13 +1631,13 @@ sub printGenomeListHtmlTable {
                 }
             }
             else {
-                $row .= $sd . "\t";                
+                $row .= $sd . "\t";
             }
         }
 
         $it->addRow($row);
     }
-    
+
     my $txTableName = "genomelist";    # name of current instance of taxon table
     if ($count > 10) {
         print submit(
@@ -1648,7 +1648,7 @@ sub printGenomeListHtmlTable {
         );
         print nbsp(1);
         WebUtil::printButtonFooter();
-    }    
+    }
     $it->printOuterTable(1);
     print submit(
           -name    => 'setTaxonFilter',
@@ -2055,7 +2055,7 @@ sub printTaxonName {
     my $url = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid";
     print "Genome: " . alink( $url, $taxon_name, "_blank" );
     if ( ! $noEndTag ) {
-        print "</p>\n";        
+        print "</p>\n";
     }
 
     return $taxon_name;
@@ -2070,9 +2070,9 @@ sub printMetaTaxonName {
     my $url = "$main_cgi?section=MetaDetail&page=metaDetail&taxon_oid=$taxon_oid";
     print "Genome: " . alink( $url, $taxon_name, "_blank" );
     if ( ! $noEndTag ) {
-        print "</p>\n";        
+        print "</p>\n";
     }
-    
+
     return $taxon_name;
 }
 
@@ -2090,7 +2090,7 @@ sub printTaxonNameWithDataType {
     else {
         printTaxonName( $taxon_oid, $taxon_name );
     }
-    
+
     return $taxon_name;
 }
 
@@ -2101,7 +2101,7 @@ sub appendMetaTaxonNameWithDataType {
     if ( $data_type =~ /assembled/i || $data_type =~ /unassembled/i ) {
         $taxon_name .= " ($data_type)";
     }
-    
+
     return ($taxon_name);
 }
 
@@ -2112,7 +2112,7 @@ sub appendMetaTaxonNameWithDataTypeAtBreak {
     if ( $data_type =~ /assembled/i || $data_type =~ /unassembled/i ) {
         $taxon_name .= "<br/>($data_type)";
     }
-    
+
     return ($taxon_name);
 }
 
@@ -2126,7 +2126,7 @@ sub printMetaDataTypeChoice {
             };
         }
         print qq{
-            MER-FS Metagenome: &nbsp; 
+            MER-FS Metagenome: &nbsp;
             <select name="data_type$suffix" >
             <option value="assembled" > Assembled </option>
         };
@@ -2137,7 +2137,7 @@ sub printMetaDataTypeChoice {
             if ( ! $noBoth ) {
                 print qq{
                     <option value="both" > Both (very slow) </option>
-                };        
+                };
             }
         }
         print qq{
@@ -2167,7 +2167,7 @@ sub printMetaDataTypeSelection {
 # google event tracker for an url
 #
 #<a href='forgot.cgi' onClick="_gaq.push(['_trackEvent', 'Password', 'IMG Account', 'reset']);">
-# Reset IMG Account Password</a> 
+# Reset IMG Account Password</a>
 #
 # Export, user contact oid, what was exported
 # eg Export, 3038, yui table ....
@@ -2179,15 +2179,15 @@ sub printMetaDataTypeSelection {
 # print qq{
 #   <input id='exportButton$tabpage' class='lgdefbutton' name='$name' type="submit" value="Export Tab Delimited To Excel" $str>
 # };
-#  
+#
 sub trackEvent {
     my ( $action, $opt_label, $opt_value, $postJS) = @_;
-    
+
     # 'Password', 'IMG Account', 'reset'
     my $str = qq{
 onClick="_gaq.push(['_trackEvent', '$action', '$opt_label', '$opt_value']); $postJS"
     };
-    
+
     return $str;
 }
 
@@ -2201,7 +2201,7 @@ sub getGoldUrl {
     my $tmp = $goldId;
     #$tmp =~ s/^G\w[0]+//; # remove the Gx00...
     # Gold now supports the full id Gp001234 etc
-    
+
     my $url;
     if ( $goldId =~ /^Gp/ ) {
         $url = $env->{gold_base_url_project} . $tmp;

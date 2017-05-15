@@ -1,7 +1,7 @@
 ############################################################################
 # IMGContent.pm- shows the history of IMG content - i.e. how many genes and 
 #     genomes were in IMG at different version releases
-# $Id: IMGContent.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: IMGContent.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package IMGContent;
 my $section = "CompareGenomes";
@@ -69,7 +69,7 @@ sub printIMGContentHistory {
     };
 
     # Exit gracefully on DB error, such as missing columns +BSJ 11/17/11
-    webError("Insufficient information in database. "
+    WebUtil::webError("Insufficient information in database. "
 	   . "Unable to display content history.")
 	if (!$dbh->prepare($sql));
 

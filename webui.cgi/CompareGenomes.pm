@@ -3,7 +3,7 @@
 #   cumulative statistics.  Formerly taxonStatsRdbms.pl
 #      --es 07/07/2005
 #
-# $Id: CompareGenomes.pm 36779 2017-03-21 01:30:39Z aratner $
+# $Id: CompareGenomes.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package CompareGenomes;
 my $section = "CompareGenomes";
@@ -902,12 +902,6 @@ sub printTaxonBreakdownKeggStats {
         print "<h2>Export Genome Table</h2>";
         my $name = "_section_CompareGenomes_excel_exportCompStats";
 
-#        print main::submit(
-#            -name  => $name,
-#            -value => "Export Tab Delimited To Excel",
-#            -class => 'lgdefbutton'
-#        );
-
         print "<input type='submit' class='lgdefbutton' "
         . "name='_section_CompareGenomes_excel_exportCompStats' value='Export Tab Delimited to Excel' />";
 
@@ -1427,13 +1421,7 @@ sub printKeggConfigTable {
     print hiddenVar( "statTableName", "dt_kegg_stats" );
     print hiddenVar( "pangenome_oid" , $pangenome_oid );
 
-#    my $name = "_section_CompareGenomes_setTaxonBreakdownStatCols";
-#    print main::submit(
-#        -id    => "dispGenomesButton",
-#        -name  => $name,
-#        -value => "Display Genomes Again",
-#        -class => "meddefbutton"
-#    );
+
 	print  "<input type='submit' class='meddefbutton' id='dispGenomesButton' "
 	. "name='_section_CompareGenomes_setTaxonBreakdownStatCols' value='Display Genomes Again' />\n";
     # added id attribute to all buttons to distinguish from main table
@@ -1488,13 +1476,6 @@ sub printConfigTable {
     }
     print hiddenVar( "pangenome_oid" , $pangenome_oid );
 
-#    my $name = "_section_CompareGenomes_setTaxonBreakdownStatCols";
-#    print main::submit(
-#        -id    => "dispGenomesButton",
-#        -name  => $name,
-#        -value => "Display Genomes Again",
-#        -class => "meddefbutton"
-#    );
 	print  "<input type='submit' class='meddefbutton' id='dispGenomesButton' "
 	. "name='_section_CompareGenomes_setTaxonBreakdownStatCols' value='Display Genomes Again' />\n";
     # added id attribute to all buttons to distinguish from main table
@@ -4204,13 +4185,7 @@ sub printStats {
     	}
 
     	print "<p>\n";
-#        my $name = "_section_CompareGenomes_requestTaxonRefresh";
 
-#        print main::submit(
-#                        -name  => $name,
-#                        -value => "Submit Request",
-#                        -class => 'lgdefbutton'
-#                       );
         print "<input type='submit' class='lgdefbutton' "
         	. "name='_section_CompareGenomes_requestTaxonRefresh' "
         	. "value='Submit Request' />";
@@ -4442,14 +4417,14 @@ sub addTaxonRefreshRequest {
     printMainForm();
     my $taxon_oid = param('taxon_oid');
     if ( ! $taxon_oid ) {
-	webError("No genome is selected.");
+	WebUtil::webError("No genome is selected.");
 	return;
     }
 
     my $contact_oid = getContactOid();
     my $super_user  = getSuperUser();
     if ( ! $contact_oid || $super_user ne 'Yes' ) {
-	webError("You cannot request update to this genome.");
+	WebUtil::webError("You cannot request update to this genome.");
 	return;
     }
 
@@ -4475,7 +4450,7 @@ sub addTaxonRefreshRequest {
 
     my $err = DataEntryUtil::db_sqlTrans( \@sqlList );
     if ( $err ) {
-	webError($err);
+	WebUtil::webError($err);
     }
     else {
 	print "<h3>Update request has been submitted.</h3>\n";

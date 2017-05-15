@@ -223,7 +223,7 @@ sub printFuncSetMainForm {
 
     my $sid = getContactOid(); 
     opendir( DIR, "$workspace_dir/$sid/$folder" ) 
-        or webDie("failed to open folder list");
+        or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR); 
 
@@ -370,7 +370,7 @@ sub printFuncSetDetail {
         if ( ! $can_view ) { 
             print "<h1>My Workspace - Function Sets - Individual Function Set</h1>"; 
             print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
-            webError("Function set does not exist.");
+            WebUtil::webError("Function set does not exist.");
             return; 
         }
     } 
@@ -388,7 +388,7 @@ sub printFuncSetDetail {
  
     # check filename
     if ( $filename eq "" ) { 
-        webError("Cannot read file."); 
+        WebUtil::webError("Cannot read file."); 
         return; 
     } 
 
@@ -403,7 +403,7 @@ sub printFuncSetDetail {
         $full_path_name = "$workspace_dir/$owner/$folder/$filename";
     } 
     if ( ! (-e $full_path_name) ) { 
-        webError("Function set does not exist."); 
+        WebUtil::webError("Function set does not exist."); 
         return;
     } 
  
@@ -563,7 +563,7 @@ sub showFuncSetScaffoldSearch {
     for my $x2 ( @all_files ) {    
         my ($c_oid, $x) = WorkspaceUtil::splitOwnerFileset( $sid, $x2 );
         open( FH, "$workspace_dir/$c_oid/$folder/$x" )
-            or webError("File size - file error $x"); 
+            or WebUtil::webError("File size - file error $x"); 
 
         my %funcs_h;
         while ( my $line = <FH> ) {
@@ -582,7 +582,7 @@ sub showFuncSetScaffoldSearch {
         @func_ids = param('func_id');
     }
     if ( scalar(@func_ids) == 0 ) {
-        webError("No functions are selected.");
+        WebUtil::webError("No functions are selected.");
         return;
     }
 
@@ -609,7 +609,7 @@ sub showFuncSetScaffoldSearch {
         @taxon_oids = OracleUtil::processTaxonBinOids("t");
     }
     if ( scalar(@taxon_oids) == 0 ) {
-        webError("No genomes are selected.");
+        WebUtil::webError("No genomes are selected.");
         return;
     }        
 
@@ -854,7 +854,7 @@ sub showFuncSetGeneProfile {
 
     # read all function ids in the function set
     if ( $gene_set eq "" ) {
-        webError("Please select a gene set.\n");
+        WebUtil::webError("Please select a gene set.\n");
         return;
     }
 
@@ -882,7 +882,7 @@ sub showFuncSetGeneProfile {
     
         my ($c_oid, $x) = WorkspaceUtil::splitOwnerFileset( $sid, $x2 );
     	open( FH, "$workspace_dir/$c_oid/$folder/$x" )
-    	    or webError("File size - file error $x"); 
+    	    or WebUtil::webError("File size - file error $x"); 
     	my $func_str = "";
     	while ( my $line = <FH> ) {
     	    chomp($line);
@@ -932,7 +932,7 @@ sub showFuncSetGeneProfile {
     my $fullname = "$workspace_dir/$gene_set_owner/$GENE_FOLDER/$gene_filename";
 
     open( FH, $fullname )
-	or webError("File error $fullname.");
+	or WebUtil::webError("File error $fullname.");
 
     my $rclause = WebUtil::urClause('g.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
@@ -1276,7 +1276,7 @@ sub showFuncGeneProfile {
 
     # read all function ids in the function set
     if ( $gene_set eq "" ) {
-        webError("Please select a gene set.\n");
+        WebUtil::webError("Please select a gene set.\n");
         return;
     }
 
@@ -1292,7 +1292,7 @@ sub showFuncGeneProfile {
 
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {
-    	webError("No functions are selected.");
+    	WebUtil::webError("No functions are selected.");
     	return;
     }
 
@@ -1334,7 +1334,7 @@ sub showFuncGeneProfile {
     my $fullname = "$workspace_dir/$sid/$GENE_FOLDER/$gene_filename";
 
     open( FH, $fullname )
-	or webError("File error $gene_filename.");
+	or WebUtil::webError("File error $gene_filename.");
 
     my $dbh = dbLogin();
     my $rclause = WebUtil::urClause('g.taxon');
@@ -1588,7 +1588,7 @@ sub showFuncGenomeProfile {
 
     # read all function ids in the function set
     if ( $genome_set eq "" ) {
-        webError("Please select a genome set.\n");
+        WebUtil::webError("Please select a genome set.\n");
         return;
     }
 
@@ -1604,7 +1604,7 @@ sub showFuncGenomeProfile {
 
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {
-    	webError("No functions are selected.");
+    	WebUtil::webError("No functions are selected.");
     	return;
     }
 
@@ -1646,7 +1646,7 @@ sub showFuncGenomeProfile {
     my $fullname = "$workspace_dir/$sid/$GENOME_FOLDER/$genome_filename";
 
     open( FH, $fullname )
-	or webError("File error $genome_filename.");
+	or WebUtil::webError("File error $genome_filename.");
 
     my $dbh = dbLogin();
     my $rclause = WebUtil::urClause('t');
@@ -1788,7 +1788,7 @@ sub showFuncGenomeTreeProfile {
 
     # read all function ids in the function set
     if ( $genome_set eq "" ) {
-        webError("Please select a genome set.\n");
+        WebUtil::webError("Please select a genome set.\n");
         return;
     }
 
@@ -1804,7 +1804,7 @@ sub showFuncGenomeTreeProfile {
 
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {
-    	webError("No functions are selected.");
+    	WebUtil::webError("No functions are selected.");
     	return;
     }
 
@@ -1830,7 +1830,7 @@ sub showFuncGenomeTreeProfile {
     my $fullname = "$workspace_dir/$sid/$GENOME_FOLDER/$genome_filename";
 
     open( FH, $fullname )
-	or webError("File error $genome_filename.");
+	or WebUtil::webError("File error $genome_filename.");
 
     my $trunc = 0;
     my $row = 0;
@@ -1940,13 +1940,13 @@ sub listFuncInSetForGene
 
     my $filename = param('input_file');
     if ( ! $filename ) {
-    	webError("No function set has been selected.");
+    	WebUtil::webError("No function set has been selected.");
     	return;
     }
 
     my $gene_oid = param('gene_oid');
     if ( ! $gene_oid ) {
-    	webError("No gene has been selected.");
+    	WebUtil::webError("No gene has been selected.");
     	return;
     }
 
@@ -1984,7 +1984,7 @@ sub listFuncInSetForGene
 
     # check all functions in filename
     open( FH, "$workspace_dir/$owner/$folder/$x" )
-    	or webError("File size - file error $filename"); 
+    	or WebUtil::webError("File size - file error $filename"); 
     my @func_ids = ();     # save all functions in set for the selected gene
     my %gene_func;
     while ( my $line = <FH> ) {
@@ -2181,11 +2181,11 @@ sub listFuncInSetForGene
 sub printPhyloOccurProfiles {
     my @func_ids = param("func_id");
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select at least one function.");
+        WebUtil::webError("Please select at least one function.");
     }
 
     if ( scalar(@func_ids) > $maxProfileOccurIds ) {
-        webError( "Please select no more than " . "$maxProfileOccurIds functions." );
+        WebUtil::webError( "Please select no more than " . "$maxProfileOccurIds functions." );
     	return;
     }
 
@@ -2331,7 +2331,7 @@ sub printPwayAssertionProfile_s {
  
     my @taxon_oids = (keys %taxon_oid_h);
     if ( scalar(@taxon_oids) == 0 || scalar(@taxon_oids) > 1000 ) {
-        webError("Please select between 1 and 1000 genomes.");
+        WebUtil::webError("Please select between 1 and 1000 genomes.");
         return; 
     }
 
@@ -2346,7 +2346,7 @@ sub printPwayAssertionProfile_s {
     my $nPwayOids = @pathway_oids;
     my $max_func_batch = 1000;
     if ( $nPwayOids == 0 || $nPwayOids > $max_func_batch ) {
-        webError("Please select 1 to $max_func_batch IMG pathways.");
+        WebUtil::webError("Please select 1 to $max_func_batch IMG pathways.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -2524,7 +2524,7 @@ sub printPwayAssertionProfile_t {
  
     my @taxon_oids = (keys %taxon_oid_h);
     if ( scalar(@taxon_oids) == 0 || scalar(@taxon_oids) > 1000 ) {
-        webError("Please select between 1 and 1000 genomes.");
+        WebUtil::webError("Please select between 1 and 1000 genomes.");
         return; 
     }
 
@@ -2541,7 +2541,7 @@ sub printPwayAssertionProfile_t {
 
     my $nPwayOids = @pathway_oids;
     if ( $nPwayOids == 0 || $nPwayOids > $max_func_batch ) {
-        webError("Please select 1 to $max_func_batch IMG pathways.");
+        WebUtil::webError("Please select 1 to $max_func_batch IMG pathways.");
     }
     printStatusLine( "Loading ...", 1 );
     my $dbh = dbLogin();
@@ -2762,11 +2762,11 @@ sub printEssentialGeneProfiles {
 
     my @func_ids = param("func_id");
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select at least one function.");
+        WebUtil::webError("Please select at least one function.");
     }
 
     if ( scalar(@func_ids) > $maxProfileOccurIds ) {
-        webError( "Please select no more than " . "$maxProfileOccurIds functions." );
+        WebUtil::webError( "Please select no more than " . "$maxProfileOccurIds functions." );
     	return;
     }
 
@@ -3109,7 +3109,7 @@ sub submitJob {
 
     }
     if ( !$set_names ) {
-        webError("Please select at least one function set.");
+        WebUtil::webError("Please select at least one function set.");
         return;
     }
         
@@ -3139,7 +3139,7 @@ sub submitJob {
     print $info_fs currDateTime() . "\n";
     close $info_fs;
 
-    my $queue_dir = $env->{workspace_queue_dir};
+    my $queue_dir = WorkspaceUtil::getQueueDir();
     #print "submitJob() queue_dir=$queue_dir<br/>\n";
     my $queue_filename;
     if ( $lcJobPrefix eq 'func_scaf_search' ) {
@@ -3169,7 +3169,7 @@ sub validateGenomesForFunctionScaffoldSearch {
     my (@genomes) = @_;
 
     if ( scalar(@genomes) == 0 ) {
-        webError("No genomes are selected.");
+        WebUtil::webError("No genomes are selected.");
         return;
     }
 }

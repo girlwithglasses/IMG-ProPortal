@@ -1,6 +1,6 @@
 ############################################################################
 # WorkspaceUtil.pm
-# $Id: WorkspaceUtil.pm 35805 2016-06-21 18:31:50Z klchu $
+# $Id: WorkspaceUtil.pm 36998 2017-04-26 21:19:12Z klchu $
 ############################################################################
 package WorkspaceUtil;
 
@@ -32,7 +32,7 @@ my $workspace_dir        = $env->{workspace_dir};
 my $img_group_share = $env->{img_group_share};
 my $include_metagenomes  = $env->{include_metagenomes};
 my $top_base_url = $env->{top_base_url};
-
+my $img_ken              = $env->{img_ken};
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 
 my $GENOME_FOLDER = "genome";
@@ -51,6 +51,41 @@ my $filename_len       = 60;
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_FromFormat = "____";
 my $ownerFilesetDelim_message = "::::";
+
+
+#
+# out of 3 queues (directory) find the smallest one
+# - ken
+#
+sub getQueueDir {
+    # $e->{workspace_messageSystem_dir} = '/global/projectb/sandbox/IMG_web/messageSystem/';
+    my $message_dir = $env->{workspace_messageSystem_dir};
+    
+    # server gpint205, gpint204, gpint212
+    # queue size
+    my %servers =('gpint205' => 0, 'gpint204' => 0, 'gpint212' => 0);
+    foreach my $server (keys %servers) {
+        my $queue_dir = $message_dir . $server . '/QUEUE/';
+        my @files = WebUtil::dirList($queue_dir);
+        $servers{$server} = $#files + 1;
+    }
+    
+    # TEST
+    #%servers =('gpint205' => 24, 'gpint204' => 20, 'gpint212' => 51);
+    
+    # default is gpint205 ???
+    my @sorted = sort { $servers{$a} <=> $servers{$b} } keys %servers;
+    my $key = $sorted[0]; # this gpintXX has the samllest queue size
+    
+    print qq{
+<br>
+@sorted 
+<br>
+$message_dir  $key  /QUEUE/;
+    } if ($img_ken);
+    
+    return  $message_dir . $key . '/QUEUE/';
+}
 
 ############################################################################
 # getMaxWorkspaceView
@@ -71,6 +106,8 @@ sub printMaxNumMsg {
 # get number of lines in file
 # number of oids
 # wc
+# line count
+#
 sub getFileLineCount {
     my($workspace_dir, $sid, $folder, $file) = @_;
     
@@ -79,7 +116,7 @@ sub getFileLineCount {
     if ($filePath =~ /^(.*)$/) { $filePath = $1; } # untaint
      
     # the original way
-#    open( FH, $filePath ) or webError("File size - file error $file");
+#    open( FH, $filePath ) or WebUtil::webError("File size - file error $file");
 #    while (<FH>) {
 #        $cnt++ if ( !/^\s+?$/ && /[a-zA-Z0-9]+/ );
 #    }
@@ -89,7 +126,7 @@ sub getFileLineCount {
     # http://docstore.mik.ua/orelly/perl/cookbook/ch08_03.htm
     # Here's the fastest solution, assuming your line terminator really is "\n" :
     my $count = 0;
-    open( FILE, $filePath ) or webError("File size - file error $file");
+    open( FILE, $filePath ) or WebUtil::webError("File size - file error $file");
     $count += tr/\n/\n/ while sysread(FILE, $_, 2 ** 16);
     close FILE;
     return $count;  
@@ -652,7 +689,7 @@ sub catalogOidsFromFile {
     for my $input_file (@input_files) {
         my ( $owner, $x ) = splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
         open( FH, "$workspace_dir/$owner/$folder/$x" )
-            or webError("File size - file error $input_file");
+            or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -704,7 +741,7 @@ sub catalogOidsFromFile2 {
     	}
 
         open( FH, "$workspace_dir/$c_oid/$folder/$input_file" )
-            or webError("File size - file error $input_file");
+            or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -755,7 +792,7 @@ sub getOidsFromFile {
         $file2owner{$share_set_name} = $owner;
 
         open( FH, "$workspace_dir/$owner/$folder/$x" )
-            or webError("File size - file error $input_file");
+            or WebUtil::webError("File size - file error $input_file");
         while ( my $line = <FH> ) {
             #print "line: $line<br/>\n";
             chomp($line);
@@ -1826,7 +1863,7 @@ sub getContactImgGroupCnt {
     my $dbh = dbLogin();
     my $sql = qq{
         select cig.img_group 
-        from contact_img_groups\@imgsg_dev cig 
+        from contact_img_groups cig 
         where cig.contact_oid = ? 
     };
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
@@ -1854,7 +1891,7 @@ sub getContactImgGroups {
 
     my $sql = qq{
         select g.group_id, g.group_name 
-        from img_group\@imgsg_dev g, contact_img_groups\@imgsg_dev cig 
+        from img_group g, contact_img_groups cig 
         where cig.contact_oid = ? 
         and g.group_id = cig.img_group
     };
@@ -1903,7 +1940,7 @@ sub getShareToGroups {
 
     my $sql = qq{
         select g.group_id, g.group_name, w.data_set_name 
-        from img_group\@imgsg_dev g, contact_workspace_group\@imgsg_dev w 
+        from img_group g, contact_workspace_group w 
         where w.contact_oid = ? 
         and w.data_set_type = ? 
         and w.group_id = g.group_id 
@@ -1963,9 +2000,9 @@ sub getShareFromGroups {
     my $sql = qq{
         select g.group_id, g.group_name, w.data_set_name,
              c.contact_oid, c.name
-        from img_group\@imgsg_dev g, 
-           contact_img_groups\@imgsg_dev cig,
-           contact_workspace_group\@imgsg_dev w,
+        from img_group g, 
+           contact_img_groups cig,
+           contact_workspace_group w,
            contact c
         where cig.contact_oid = ? 
         and cig.img_group = g.group_id

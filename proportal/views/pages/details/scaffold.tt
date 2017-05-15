@@ -9,63 +9,45 @@
 
 	PROCESS 'inc/generic/container_macros.tt';
 	PROCESS 'inc/generic/attr_value_table.tt';
+	PROCESS 'inc/generic/labels.tt';
 
 	BLOCK scaffold_details;
 
 %]
-
-
-<table class="[% class %]__table">
-<caption class="[% class %]__caption">Scaffold information</caption>
-<thead class="[% class %]__thead">
-<tr>
-	<th class="[% class %]__th--attr">Attribute</th>
-	<th class="[% class %]__th--value">Value</th>
-</tr>
-</thead>
-<tbody class="[% class %]__tbody">
-<tr>
-	<td class="[% class %]__tcell--attr">IMG scaffold ID</td>
-	<td class="[% class %]__tcell--val">[% self.scaffold_oid %]</td>
-</tr>
-<tr>
-	<td class="[% class %]__tcell--attr">Sequence length</td>
-	<td class="[% class %]__tcell--val">[% self.scaffold_stats.seq_length %]</td>
-</tr>
-	<td class="[% class %]__tcell--attr">Topology</td>
-	<td class="[% class %]__tcell--val">[% self.mol_topology %]</td>
-</tr>
-<tr>
-	<td class="[% class %]__tcell--attr">GC content</td>
-	<td class="[% class %]__tcell--val">[% self.scaffold_stats.gc_percent %]</td>
-</tr>
-<tr>
-	<td class="[% class %]__tcell--attr">Genes</td>
-	<td class="[% class %]__tcell--val">[%
-		IF self.defined('scaffold_stats')
-			&& self.scaffold_stats.defined('count_total_gene'); %]
+<dl class="tabular">
+<dt>[% labeller( 'scaffold_oid' ) %]</dt>
+<dd>[% self.scaffold_oid %]</dd>
+<dt>[% labeller( 'scaffold_stats.seq_length' ) %]</dt>
+<dd>[% self.scaffold_stats.seq_length %]</dd>
+<dt>[% labeller( 'scaffold_stats.mol_topology' ) %]</dt>
+<dd>[% self.mol_topology %]</dd>
+<dt>[% labeller( 'scaffold_stats.gc_percent' ) %]</dt>
+<dd>[% self.scaffold_stats.gc_percent %]</dd>
+<dt>[% labeller( 'scaffold_stats.count_total_gene' ) %]</dt>
+<dd>[%
+	IF self.defined('scaffold_stats')
+			&& self.scaffold_stats.count_total_gene != ''; %]
 	<a href="[% link( 'list', { domain => 'gene', scaffold_oid => self.scaffold_oid } ) %]">[% self.scaffold_stats.count_total_gene %]</a>
-	[%	END; %]
-	</td>
-</tr>
-<tr>
-	<td class="[% class %]__tcell--attr">RNA</td>
-	<td class="[% class %]__tcell--val">[%
-		IF self.defined('scaffold_stats')
-			&& self.scaffold_stats.defined('count_rna'); %]
-	<a href="[% link( 'list', { domain => 'gene', scaffold_oid => self.scaffold_oid, category => 'rna' } ) %]">[% self.scaffold_stats.count_rna %]</a>
-	[%	END; %]
-	</td>
-</tr>
-<tr>
-	<td class="[% class %]__tcell--attr">External references</td>
-	<td class="[% class %]__tcell--val">[%
-		IF self.db_source && self.ext_accession;
-			external_link({ db => self.db_source, xref => self.ext_accession });
-		END; %]
-	</tr>
-</tbody>
-</table>
+[%	ELSE;
+		'0';
+	END; %]
+</dd>
+<dt>[% labeller( 'scaffold_stats.count_rna' ) %]</dt>
+<dd>[%
+	IF self.defined('scaffold_stats')
+		&& self.scaffold_stats.count_rna != ''; %]
+<a href="[% link( 'list', { domain => 'gene', scaffold_oid => self.scaffold_oid, category => 'rna' } ) %]">[% self.scaffold_stats.count_rna %]</a>
+[%	ELSE;
+		'0';
+	END; %]
+</dd>
+[%	IF self.db_source && self.ext_accession %]
+<dt>External references</dt>
+<dd>
+[%	external_link({ db => self.db_source, xref => self.ext_accession }); %]
+</dd>
+[%	END; %]
+</dl>
 
 <p class="[% class %]__updated">Added [% self.add_date %][% IF self.last_update %]; last modified [% self.last_update %][% END %].</p>
 

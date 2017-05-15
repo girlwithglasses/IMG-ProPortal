@@ -616,7 +616,7 @@ sub printAddUpdateRxnForm {
 	    $update_rxn_oid = $selected_rxn_oids[0];
 	}
 	else {
-	    webError ("No IMG reaction is selected.");
+	    WebUtil::webError ("No IMG reaction is selected.");
 	    return;
 	}
     }
@@ -718,7 +718,7 @@ sub printConfirmDeleteRxnForm {
 	@selected_rxn_oids = param( "selectedRxns" );
     }
     if ( scalar (@selected_rxn_oids) == 0 ) {
-	webError ("No IMG reaction is selected.");
+	WebUtil::webError ("No IMG reaction is selected.");
 	return -1;
     }
 
@@ -844,7 +844,7 @@ sub dbAddRxn() {
     # check input
     chomp($rxn_name);
     if ( !$rxn_name || blankStr($rxn_name) ) {
-	webError ("Please enter a new reaction name.");
+	WebUtil::webError ("Please enter a new reaction name.");
 	return -1;
     }
 
@@ -930,7 +930,7 @@ sub dbAddRxn() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1]; 
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1; 
     } 
     else {
@@ -946,7 +946,7 @@ sub dbUpdateRxn() {
     # get the reaction oid
     my @selected_rxn_oids = param( "selectedRxns" ); 
     if ( scalar (@selected_rxn_oids) == 0 ) {
-	webError ("No IMG reaction is selected.");
+	WebUtil::webError ("No IMG reaction is selected.");
 	return -1;
     }
     my $rxn_oid = $selected_rxn_oids[0];
@@ -960,7 +960,7 @@ sub dbUpdateRxn() {
 
     # check input
     if ( !$rxn_name || length($rxn_name) == 0 ) {
-	webError ("Please enter a new reaction name.");
+	WebUtil::webError ("Please enter a new reaction name.");
 	return -1;
     }
 
@@ -1028,7 +1028,7 @@ sub dbUpdateRxn() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1]; 
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1; 
     } 
     else {
@@ -1044,7 +1044,7 @@ sub dbDeleteRxn {
     # get the reaction oid
     my @selected_rxn_oids = param( "selectedRxns" ); 
     if ( scalar (@selected_rxn_oids) == 0 ) {
-	webError ("No IMG reaction is selected.");
+	WebUtil::webError ("No IMG reaction is selected.");
 	return -1;
     }
     my $rxn_oid = $selected_rxn_oids[0];
@@ -1093,7 +1093,7 @@ sub dbDeleteRxn {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {

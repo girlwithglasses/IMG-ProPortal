@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id: PhyloUtil.pm 36386 2016-10-27 18:19:02Z klchu $
+# $Id: PhyloUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package PhyloUtil;
 
@@ -1859,7 +1859,7 @@ sub download {
     my $path = "$cgi_tmp_dir/$file";
 
     if ( !-e $path ) {
-        webErrorHeader("Export file no longer exist. Please go back and refresh page.");
+        WebUtil::webErrorHeader("Export file no longer exist. Please go back and refresh page.");
     }
 
     my $sz = fileSize($path);

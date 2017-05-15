@@ -52,7 +52,7 @@ sub getHitsGenomePair_old {
 
     my $dir = "$ava_batch_dir/$gene_taxon_oid";
     if( !-e( $dir ) ) {
-        webDie( "getHits: directory '$dir' does not exist\n" );
+        WebUtil::webDie( "getHits: directory '$dir' does not exist\n" );
     }
     webLog( "+ chdir $dir\n" );
     chdir( $dir );
@@ -72,7 +72,7 @@ sub getHitsGenomePair_old {
         chomp $s;
 	if( $s =~ /ERROR/ ) {
         WebUtil::resetEnvPath();
-	    webDie( $s );
+	    WebUtil::webDie( $s );
 	}
 	my( $fileName, $row ) = split( /:/, $s );
 	my $froot = fileRoot( $fileName );

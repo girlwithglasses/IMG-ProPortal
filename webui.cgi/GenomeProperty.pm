@@ -38,7 +38,7 @@ sub dispatch {
        printGenomePropertyDetails( );
     }
     else {
-       webError( "No genome property found." );
+       WebUtil::webError( "No genome property found." );
     }
 }
 
@@ -322,7 +322,7 @@ sub getGenomeType {
     }
 
     if ( $genome_type eq "") {
-        webError("Taxon_oid $taxon_oid is invalid.");
+        WebUtil::webError("Taxon_oid $taxon_oid is invalid.");
     }
     $cur->finish();
     #$dbh->disconnect();

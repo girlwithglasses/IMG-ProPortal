@@ -290,27 +290,4 @@ sub get_menu_items {
 }
 
 
-=head3 init
-
-Initialise local URL-generating variables
-
-@param   $config  - configuration hash (e.g. from WebConfig or DancerApp->config
-
-sub init {
-	my $config = shift // confess "init requires a configuration hash for URL generation";
-
-	if (! ref $config || ref $config ne 'HASH' || ! $config->{main_cgi_url} ) {
-		confess "init requires a configuration hash for URL generation";
-	}
-	for my $v ( qw( main_cgi_url server base_url ) ) {
-		$url->{$v} = $config->{$v} if defined $config->{$v};
-	}
-	$url->{init_run} = 1;
-	return;
-}
-
-=cut
-
-
-
 1;

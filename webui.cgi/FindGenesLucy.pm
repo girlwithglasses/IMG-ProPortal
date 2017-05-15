@@ -395,17 +395,17 @@ sub printTaxonSelections {
 
     if( blankStr( $searchTerm ) ) {
         printStatusLine( "Error.", 2 );
-	webError( "No search term specified." );
+	WebUtil::webError( "No search term specified." );
 	return;
     }
     if( blankStr( $genomeFilter ) ) {
         printStatusLine( "Error.", 2 );
-	webError( "No genome filter specified." );
+	WebUtil::webError( "No genome filter specified." );
 	return;
     }
     if( $nFuncs ==  0 ) {
         printStatusLine( "Error.", 2 );
-	webError( "No functions specified." );
+	WebUtil::webError( "No functions specified." );
 	return;
     }
     for my $func( @funcs ) {
@@ -480,7 +480,7 @@ sub printTaxonSelections {
     my $nRows = @rows;
     if( $nRows == 0 ) {
        printStatusLine( "Loaded.". 2 );
-       webError( "No rows found for genome filter string ".
+       WebUtil::webError( "No rows found for genome filter string ".
           "<i>'$genomeFilter'</i> and other genome selections." );
        $dbh->disconnect( );
        return;
@@ -682,13 +682,13 @@ sub printFuncSummary {
     };
     if( blankStr( $searchTerm ) ) {
         printStatusLine( "Error.", 2 );
-	webError( "No search term specified." );
+	WebUtil::webError( "No search term specified." );
 	return;
     }
     my $nFuncs = @funcs;
     if( $nFuncs == 0 ) {
         printStatusLine( "Error.", 2 );
-	webError( "No functions specified." );
+	WebUtil::webError( "No functions specified." );
 	return;
     }
     print hiddenVar( "searchTerm", $searchTerm );
@@ -1020,13 +1020,13 @@ sub printGeneList {
     };
     if( blankStr( $searchTerm ) ) {
         printStatusLine( "Error.", 2 );
-	webError( "No search term specified." );
+	WebUtil::webError( "No search term specified." );
 	return;
     }
     my $nFuncs = @funcs;
     if( $nFuncs == 0 ) {
         printStatusLine( "Error.", 2 );
-	webError( "No functions specified." );
+	WebUtil::webError( "No functions specified." );
 	return;
     }
    

@@ -1,7 +1,7 @@
 ############################################################################
 # MetaScaffoldGraph.pm - Show graph of a section of a scaffold used in
 #   chromosomal viewers. (file version)
-# $Id: MetaScaffoldGraph.pm 36162 2016-09-12 16:10:46Z imachen $
+# $Id: MetaScaffoldGraph.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MetaScaffoldGraph;
 my $section = "MetaScaffoldGraph";
@@ -220,30 +220,30 @@ sub printMetaScaffoldGraph {
     $start_coord0 =~ s/\s+//g;
     $end_coord0   =~ s/\s+//g;
     if ( !isInt($start_coord0) ) {
-        webError("Expected integer for start coordinate.");
+        WebUtil::webError("Expected integer for start coordinate.");
     }
     if ( !isInt($end_coord0) ) {
-        webError("Expected integer for end coordinate.");
+        WebUtil::webError("Expected integer for end coordinate.");
     }
     if ( $start_coord0 < 1 ) {
-        webError("Start coordinate should be greater or equal to 1.");
+        WebUtil::webError("Start coordinate should be greater or equal to 1.");
     }
     if ( $end_coord0 > $seq_length && $seq_length > 0 ) {
-        webError( "End coordinate should be "
+        WebUtil::webError( "End coordinate should be "
               . "less than or equal to $seq_length." );
     }
     if ( $start_coord0 > $end_coord0 ) {
-        webError( "Start coordinate should be "
+        WebUtil::webError( "Start coordinate should be "
               . "less than or equal to the end coordinate." );
     }
     if ( $phantom_start_coord ne "" && !isInt($phantom_start_coord) ) {
-        webError("Please enter a valid integer for phantom start coordinate");
+        WebUtil::webError("Please enter a valid integer for phantom start coordinate");
     }
     if ( $phantom_end_coord ne "" && !isInt($phantom_end_coord) ) {
-        webError("Please enter a valid integer for phantom end coordinate");
+        WebUtil::webError("Please enter a valid integer for phantom end coordinate");
     }
     if ( $scaffold_oid eq "" ) {
-        webDie("printMetaScaffoldGraph: scaffold_oid not defined\n");
+        WebUtil::webDie("printMetaScaffoldGraph: scaffold_oid not defined\n");
     }
 
     my $taxon_rescale = 1.0;

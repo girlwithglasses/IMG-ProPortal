@@ -1,7 +1,7 @@
 ############################################################################
 # Utility functions to support to generate GenBank/EMBL file.
 #
-# $Id: GenerateArtemisFile.pm 36788 2017-03-22 06:08:09Z jinghuahuang $
+# $Id: GenerateArtemisFile.pm 37048 2017-05-04 21:21:49Z klchu $
 ############################################################################
 package GenerateArtemisFile;
 
@@ -90,7 +90,7 @@ sub processArtemisFile2 {
     $myEmail =~ s/^\s+//;
     $myEmail =~ s/\s+$//;
 
-    webError("Invalid email address $myEmail\n") if ( ! MailUtil::validateEMail($myEmail) );
+    WebUtil::webError("Invalid email address $myEmail\n") if ( ! MailUtil::validateEMail($myEmail) );
     #print "processArtemisFile2() taxon_oid=$taxon_oid, myEmail: $myEmail<br/>\n";
 
     # untaint
@@ -175,7 +175,7 @@ sub threadjob2 {
 
     };
     if ($@) {
-        my $monitor = "imgsupp\@lists.jgi-psf.org";
+        my $monitor = $env->{img_support_email};
         my $subject = "NCBI filed for submission processing failed.";
         my $content = "Genome $taxon_oid failed reason ==> $@ \n";
         MailUtil::sendEMailTo( $myEmail, $monitor, $subject, $content );
@@ -589,15 +589,15 @@ sub processArtemisFile {
     my $nScaffolds = scalar(@scaffold_oids);
     #print "\$nScaffolds: $nScaffolds<br/>\n";
     if ( $nScaffolds == 0 ) {
-        webError("Please select at least one scaffold.\n");
+        WebUtil::webError("Please select at least one scaffold.\n");
     }
     if ( $nScaffolds > $max_artemis_scaffolds ) {
-        webError( "Please select at most " + $max_artemis_scaffolds + " scaffolds." );
+        WebUtil::webError( "Please select at most " + $max_artemis_scaffolds + " scaffolds." );
     }
     if ( $nScaffolds > $artemis_scaffolds_switch ) {
-        webError("Please enter your email address since you have selected over $artemis_scaffolds_switch entries.")
+        WebUtil::webError("Please enter your email address since you have selected over $artemis_scaffolds_switch entries.")
           if ( blankStr($myEmail) );
-        webError("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
+        WebUtil::webError("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
     }
 
     my $title;
@@ -811,7 +811,6 @@ sub processFastaFile {
     my $nOids = scalar(@$oids_ref);
     if ( $nOids > $switchNum ) {
         if ($isFromWorkspace) {
-            #main::printAppHeader("AnaCart");
             WebUtil::webErrorHeader("Please enter your email address since you have selected over $switchNum entries.")
               if ( blankStr($myEmail) );
             WebUtil::webErrorHeader("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );
@@ -823,7 +822,8 @@ sub processFastaFile {
         }
 
         if ($isFromWorkspace) {
-            main::printAppHeader("AnaCart");
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("AnaCart");
             #print "Content-type: text/html\n";
             #print "Content-Disposition: inline;filename=exportFasta\n";
             #print "\n";
@@ -964,7 +964,7 @@ sub prepareProcessGeneFastaFile {
     my @gene_oids = param("gene_oid");
 
     if ( scalar(@gene_oids) == 0) {
-        webError("Select genes to export first.");
+        WebUtil::webError("Select genes to export first.");
     }
 
     processFastaFile(\@gene_oids, $isAA, 0, $GENE_FOLDER);
@@ -1053,7 +1053,6 @@ sub processDataFile {
     my $nOids = scalar(@$oids_ref);
     if ( $nOids > $switchNum ) {
         if ($isFromWorkspace) {
-            #main::printAppHeader("AnaCart");
             WebUtil::webErrorHeader("Please enter your email address since you have selected over $switchNum entries.")
               if ( blankStr($myEmail) );
             WebUtil::webErrorHeader("Invalid email address $myEmail\n") if ( !MailUtil::validateEMail($myEmail) );            

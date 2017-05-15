@@ -2,7 +2,7 @@
 # GeneDetail.pm - 2nd version
 #      --es 01/09/2007
 #
-# $Id: GeneDetail.pm 36898 2017-03-30 20:20:59Z klchu $
+# $Id: GeneDetail.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 package GeneDetail;
 my $section = "GeneDetail";
@@ -154,6 +154,12 @@ sub getAppHeaderData {
     return @a;
 }
 
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
 
 
 ############################################################################
@@ -322,7 +328,7 @@ sub printRnaHomologPage {
 sub printGeneDetailBySymbol {
     my ($geneSymbol) = @_;
     if ( $geneSymbol eq "" ) {
-        webError("Enter gene symbol.");
+        WebUtil::webError("Enter gene symbol.");
         return;
     }
     my $dbh       = dbLogin();
@@ -339,7 +345,7 @@ sub printGeneDetailBySymbol {
     $cur->finish();
 
     if ( !$gene_oid ) {
-        webError("Gene symbol '$geneSymbol' not found.\n");
+        WebUtil::webError("Gene symbol '$geneSymbol' not found.\n");
         return;
     }
     printGeneDetail($gene_oid);
@@ -351,7 +357,7 @@ sub printGeneDetailBySymbol {
 sub printGeneDetailByLocusTag {
     my ($locus_tag) = @_;
     if ( $locus_tag eq "" ) {
-        webError("Enter locus tag.");
+        WebUtil::webError("Enter locus tag.");
         return;
     }
     my $dbh       = dbLogin();
@@ -368,7 +374,7 @@ sub printGeneDetailByLocusTag {
     $cur->finish();
 
     if ( !$gene_oid ) {
-        webError("Locus tag '$locus_tag' not found.\n");
+        WebUtil::webError("Locus tag '$locus_tag' not found.\n");
         return;
     }
     printGeneDetail($gene_oid);
@@ -381,7 +387,7 @@ sub printGeneDetailByGiNo {
     my $giNo = param("giNo");
 
     if ( $giNo eq "" ) {
-        webError("Enter GI number.");
+        WebUtil::webError("Enter GI number.");
         return;
     }
     my $dbh = dbLogin();
@@ -396,7 +402,7 @@ sub printGeneDetailByGiNo {
     $cur->finish();
 
     if ( !$gene_oid ) {
-        webError("GI number '$giNo' not found.\n");
+        WebUtil::webError("GI number '$giNo' not found.\n");
         return;
     }
     printGeneDetail($gene_oid);
@@ -409,7 +415,7 @@ sub printGeneDetailByGiNo {
 sub printGeneDetailByExtAccession {
     my ($accId) = @_;
     if ( $accId eq "" ) {
-        webError("Enter external accession.");
+        WebUtil::webError("Enter external accession.");
         return;
     }
     my $dbh       = dbLogin();
@@ -425,7 +431,7 @@ sub printGeneDetailByExtAccession {
     $cur->finish();
 
     if ( !$gene_oid ) {
-        webError("External Accession '$accId' not found.\n");
+        WebUtil::webError("External Accession '$accId' not found.\n");
         return;
     }
     printGeneDetail($gene_oid);
@@ -459,7 +465,7 @@ sub printGeneDetail {
 
     $gene_oid = param("gene_oid") if $gene_oid eq "";
     if ( blankStr($gene_oid) ) {
-        webError("No Gene ID specified.");
+        WebUtil::webError("No Gene ID specified.");
     }
 
     my $dbh = dbLogin();
@@ -565,7 +571,7 @@ EOF
             }
         }
         printStatusLine( "Loaded.", 2 );
-        webError("Gene ID $gene_oid not found.");
+        WebUtil::webError("Gene ID $gene_oid not found.");
     }
 
     if ($content_list) {
@@ -807,7 +813,7 @@ sub printGeneInfo {
     $gc_percent = sprintf( "%.2f", $gc_percent );
 
     if ( blankStr($gene_oid) ) {
-        webError("Gene ID $gene_oid_orig not found.");
+        WebUtil::webError("Gene ID $gene_oid_orig not found.");
     }
 
     printAttrRowRaw( "Gene ID",      $gene_oid );
@@ -5333,8 +5339,6 @@ sub printOrthologCategoryHits {
     $baseUrl .= "&categoryVal=" . massageToUrl($categoryVal);
     my $clobberCache = param("clobberCache");
     my $ct           = new InnerTable( $clobberCache, "orthologCatHits$$", "ortholog", 7, $baseUrl );
-
-    #my $ct = new CachedTable( "orthologCat$gene_oid", $baseUrl );
     $ct->addColSpec("Select");
     $ct->addColSpec( "Ortholog",             "number asc",  "left" );
     $ct->addColSpec( "Product Name",         "char asc",    "left" );
@@ -5754,7 +5758,7 @@ sub printRnaHomologsBlast {
         $rfh = new LwpHandle( $rna_server_url, \%args );
     } 
     if ( !$rfh ) {
-        webDie("rna_server_url not set\n");
+        WebUtil::webDie("rna_server_url not set\n");
     }
 
     my $count = 0;
@@ -6050,7 +6054,7 @@ sub getScaffoldAttributes {
           = split( /\t/, $scaffoldRec{$sid} );
         next if $scaffold_oid eq "";
         if ( $taxon . '.' . $ext_accession ne $sid ) {
-            webDie("getGeneTaxonAttributes: '$ext_accession' != '$sid'\n");
+            WebUtil::webDie("getGeneTaxonAttributes: '$ext_accession' != '$sid'\n");
         }
 
         my $r2 = "$ext_accession\t";
@@ -6117,7 +6121,7 @@ sub getGeneTaxonAttributes {
           = split( /\t/, $geneRec{$sid} );
         next if $homolog_oid eq "";
         if ( $homolog_oid ne $sid ) {
-            webDie("getGeneTaxonAttributes: '$homolog_oid' != '$sid'\n");
+            WebUtil::webDie("getGeneTaxonAttributes: '$homolog_oid' != '$sid'\n");
         }
         my $r2 = "$sid\t";
         $r2 .= "$gene_display_name\t";
@@ -6998,7 +7002,6 @@ sub printGenePageOrthologHits {
     my $clobberCache = param("clobberCache");
     my $ct           = new InnerTable( $clobberCache, "orthologHits$$", "ortholog", 7, $baseUrl );
 
-    #my $ct = new CachedTable( "orthologHits$gene_oid", $baseUrl );
     $ct->addColSpec("Select");
     $ct->addColSpec( "Ortholog",             "number asc",  "left" );
     $ct->addColSpec( "Product Name",         "char asc",    "left" );

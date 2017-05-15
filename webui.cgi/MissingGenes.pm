@@ -1,7 +1,7 @@
 ###########################################################################
 # MissingGenes - Module for searching for missing genes.
 #
-# $Id: MissingGenes.pm 35027 2016-01-08 18:55:14Z imachen $
+# $Id: MissingGenes.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MissingGenes;
 my $section = "MissingGenes";
@@ -144,7 +144,7 @@ sub dispatch {
     } elsif ( paramMatch("dbUpdateSimGeneTerm") ) {
         my $msg2 = dbUpdateSimGeneTerm();
         if ( !blankStr($msg2) ) {
-            webError($msg2);
+            WebUtil::webError($msg2);
         }
 
         # return to taxon detail
@@ -210,7 +210,7 @@ sub printSimilarityPage {
     my @gene_oids = param("gene_oid");
 
     if ( scalar(@gene_oids) == 0 ) {
-        webError("No gene was selected. Please select a gene.");
+        WebUtil::webError("No gene was selected. Please select a gene.");
     }
     my $gene_oid = $gene_oids[0];
 
@@ -266,7 +266,7 @@ sub printCandidatesForm {
     print hiddenVar( "procId",         $procId );
 
     if ( !$taxon_oid ) {
-        webError("No taxon was selected. Please select a taxon.");
+        WebUtil::webError("No taxon was selected. Please select a taxon.");
     }
 
     # all functions in the profile
@@ -931,7 +931,7 @@ sub printHomologCandidates {
 
         if ( scalar(@taxon_oids) == 0 ) {
             printStatusLine( "Error!", 2 );
-            webError("No taxons were selected. Please select other options.");
+            WebUtil::webError("No taxons were selected. Please select other options.");
         }
     } else {
         my @bindList = ();
@@ -1396,7 +1396,7 @@ sub printSimGeneTermAssocForm {
         }
     }
     if ( scalar(@term_oids) == 0 ) {
-        webError("No terms were selected. Please select a term.");
+        WebUtil::webError("No terms were selected. Please select a term.");
     }
 
     my $taxon_oid    = param("taxon_oid");
@@ -2266,7 +2266,7 @@ sub printPriamCandidateList {
     } else {
 
         #$dbh->disconnect();
-        webError("This function is only applicable to enzymes.");
+        WebUtil::webError("This function is only applicable to enzymes.");
         return;
     }
 
@@ -2913,7 +2913,7 @@ sub addGeneTermAssoc {
     my @gene_oids = sort( keys(%hits) );
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        webError("No hits were selected. Please select a hit.");
+        WebUtil::webError("No hits were selected. Please select a hit.");
     }
 
     my $contact_oid = getContactOid();
@@ -2925,7 +2925,7 @@ sub addGeneTermAssoc {
     if ( !isImgEditor( $dbh, $contact_oid ) ) {
 
         #$dbh->disconnect();
-        webError("You do not have permission to modify IMG terms.");
+        WebUtil::webError("You do not have permission to modify IMG terms.");
         return;
     }
 
@@ -3042,7 +3042,7 @@ sub printGeneTermAssocForm {
     my @gene_oids = sort( keys(%hits) );
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        webError("No genes were selected. Please select a gene.");
+        WebUtil::webError("No genes were selected. Please select a gene.");
     }
 
     my $minPercIdent = param("minPercIdent");
@@ -3295,7 +3295,7 @@ sub dbUpdateGeneTerm {
     my $nGenes = @gene_oids;
     if ( $nGenes == 0 ) {
 
-        #	webError( "No genes were selected. Please select a gene." );
+        #	WebUtil::webError( "No genes were selected. Please select a gene." );
         return;
     }
 
@@ -3399,7 +3399,7 @@ sub dbUpdateGeneTerm {
     my $err = db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        webError("SQL Error: $sql");
+        WebUtil::webError("SQL Error: $sql");
         return -1;
     } else {
         return $term_oid;
@@ -3631,9 +3631,9 @@ sub printMyImgGeneEnzymeForm {
     my @gene_oids = sort( keys(%hits) );
     my $nGenes    = @gene_oids;
     if ( $nGenes == 0 ) {
-        webError("No genes were selected. Please select a gene.");
+        WebUtil::webError("No genes were selected. Please select a gene.");
     } elsif ( $nGenes > 1000 ) {
-        webError("Please select no more than 1000 gene.");
+        WebUtil::webError("Please select no more than 1000 gene.");
     }
 
     my $contact_oid = getContactOid();
@@ -3860,7 +3860,7 @@ sub printAddMyGeneEnzymeForm {
     if ( scalar(@ec_hits) == 0 ) {
 
         #$dbh->disconnect();
-        webError("No enzymes were selected. Please select an enzyme.");
+        WebUtil::webError("No enzymes were selected. Please select an enzyme.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -3946,7 +3946,7 @@ sub dbUpdateMyImgGeneEnzyme {
     my $nGenes = @gene_oids;
     if ( $nGenes == 0 ) {
 
-        #webError( "No genes were selected. Please select a gene." );
+        #WebUtil::webError( "No genes were selected. Please select a gene." );
         return;
     }
 
@@ -4043,7 +4043,7 @@ sub dbUpdateMyImgGeneEnzyme {
     my $err = db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        webError("SQL Error: $sql");
+        WebUtil::webError("SQL Error: $sql");
         return -1;
     } else {
         return $funcId;
@@ -4169,7 +4169,7 @@ sub dbUpdMyGeneEnzyme {
     my $err = db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        webError("SQL Error: $sql");
+        WebUtil::webError("SQL Error: $sql");
         return -1;
     } else {
         return $gene_oid;
@@ -4188,7 +4188,7 @@ sub printGenesWithPriamInTaxon {
 
     print "<h1>Genes w/o enzymes but with candidate KO based enzymes</h1>\n";
     if ( !$taxon_oid ) {
-        webError("No genome is selected.");
+        WebUtil::webError("No genome is selected.");
     }
 
     my $dbh        = dbLogin();
@@ -4357,7 +4357,7 @@ sub printGenesWithKOInTaxon {
     my ($taxon_oid) = @_;
 
     if ( !$taxon_oid ) {
-        webError("No genome is selected.");
+        WebUtil::webError("No genome is selected.");
     }
 
     printMainForm();
@@ -4663,7 +4663,7 @@ sub dbUpdTaxonGeneEnzyme {
     my $err = 0;
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        webError("SQL Error: $sql");
+        WebUtil::webError("SQL Error: $sql");
         return -1;
     } else {
         return 1;
@@ -4814,7 +4814,7 @@ sub dbUpdTaxonGeneKO {
     my $err = db_sqlTrans( \@sqlList );
     if ($err) {
         $sql = $sqlList[ $err - 1 ];
-        webError("SQL Error: $sql");
+        WebUtil::webError("SQL Error: $sql");
         return -1;
     } else {
         return 1;
@@ -4830,7 +4830,7 @@ sub printFindProdNamePage {
     my $disp_opt = param("findProdNameOption");
 
     if ( !$gene_oid ) {
-        webError("No gene was selected. Please select a gene.");
+        WebUtil::webError("No gene was selected. Please select a gene.");
     }
 
     my $contact_oid = getContactOid();
@@ -5795,19 +5795,19 @@ sub dbAddMyImgProdName {
     my $gene_oid_hit = param('gene_oid_hit');
 
     if ( !$gene_oid_hit ) {
-        webError("No gene was selected. Please select a gene.");
+        WebUtil::webError("No gene was selected. Please select a gene.");
         return;
     }
 
     my ( $gene_oid, $gene_oid2, $all_term_oids ) = split( /\,/, $gene_oid_hit );
     if ( !$gene_oid || !$gene_oid2 ) {
-        webError("No gene was selected. Please select a gene.");
+        WebUtil::webError("No gene was selected. Please select a gene.");
         return;
     }
 
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webError("Incorrect login.");
+        WebUtil::webError("Incorrect login.");
         return;
     }
 
@@ -5828,7 +5828,7 @@ sub dbAddMyImgProdName {
 	    };
         $new_prod_name = db_getValues2( $dbh, $term_sql, "", $gene_oid2 );
         if ( blankStr($new_prod_name) ) {
-            webError("No IMG terms for selected gene $gene_oid2");
+            WebUtil::webError("No IMG terms for selected gene $gene_oid2");
             return;
         }
     } elsif ( $fld_myimgprod eq 'tigrfam' ) {
@@ -5842,7 +5842,7 @@ sub dbAddMyImgProdName {
 	    };
         $new_prod_name = db_getValues2( $dbh, $tigr_sql, "", $gene_oid2 );
         if ( blankStr($new_prod_name) ) {
-            webError("No TIGRfam for selected gene $gene_oid2");
+            WebUtil::webError("No TIGRfam for selected gene $gene_oid2");
             return;
         }
     } elsif ( $fld_myimgprod eq 'cog' ) {
@@ -5854,7 +5854,7 @@ sub dbAddMyImgProdName {
 	    };
         $new_prod_name = db_getValues2( $dbh, $cog_sql, "", $gene_oid2 );
         if ( blankStr($new_prod_name) ) {
-            webError("No COG for selected gene $gene_oid2");
+            WebUtil::webError("No COG for selected gene $gene_oid2");
             return;
         }
     } elsif ( $fld_myimgprod eq 'pfam' ) {
@@ -5866,7 +5866,7 @@ sub dbAddMyImgProdName {
 	    };
         $new_prod_name = db_getValues2( $dbh, $pfam_sql, "", $gene_oid2 );
         if ( blankStr($new_prod_name) ) {
-            webError("No Pfam for selected gene $gene_oid2");
+            WebUtil::webError("No Pfam for selected gene $gene_oid2");
             return;
         }
     } elsif ( $fld_myimgprod eq 'ko' ) {
@@ -5878,7 +5878,7 @@ sub dbAddMyImgProdName {
 	    };
         $new_prod_name = db_getValues2( $dbh, $ko_sql, "", $gene_oid2 );
         if ( blankStr($new_prod_name) ) {
-            webError("No KO Term for selected gene $gene_oid2");
+            WebUtil::webError("No KO Term for selected gene $gene_oid2");
             return;
         }
     } else {
@@ -5886,7 +5886,7 @@ sub dbAddMyImgProdName {
         # prod name
         $new_prod_name = db_findVal( $dbh, 'gene', 'gene_oid', $gene_oid2, 'gene_display_name', '' );
         if ( blankStr($new_prod_name) ) {
-            webError("No gene product name for selected gene $gene_oid2");
+            WebUtil::webError("No gene product name for selected gene $gene_oid2");
             return;
         }
     }
@@ -5921,7 +5921,7 @@ sub dbAddMyImgProdName {
 
     #$dbh->disconnect();
 
-    #    webError("SQL: " . $sql);
+    #    WebUtil::webError("SQL: " . $sql);
 
     # perform database update
     push @sqlList, ($sql);
@@ -5972,7 +5972,7 @@ sub printKoEcCandidateList {
     } else {
 
         #$dbh->disconnect();
-        webError("This function is only applicable to enzymes or KOs.");
+        WebUtil::webError("This function is only applicable to enzymes or KOs.");
         return;
     }
 
@@ -6885,7 +6885,7 @@ sub listClosureGenes {
     }
 
     if ( $n_func <= 0 ) {
-	webError("Please select at least one function.");
+	WebUtil::webError("Please select at least one function.");
 	return;
     }
 

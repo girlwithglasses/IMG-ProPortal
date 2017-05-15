@@ -3,7 +3,7 @@
 #   using secondary tools.  This is the perl wrapper for handling
 #   the display forms pertaining to CLUSTAL W alignments.
 #    --es 10/22/2004
-#  $Id: ClustalW.pm 35957 2016-08-05 19:31:06Z aratner $
+#  $Id: ClustalW.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package ClustalW;
 
@@ -116,15 +116,15 @@ sub runClustalw {
     my $nGenes = @gene_oids;
 
     if ($nGenes < 2) {
-	webError( "Please select at least 2 genes for alignment." );
+	WebUtil::webError( "Please select at least 2 genes for alignment." );
     }
     if ($alignment eq "nucleic" &&
 	$nGenes > $max_genes_nuc) {    # depends on alignment
-	webError( "Please select no more than $max_genes_nuc genes " .
+	WebUtil::webError( "Please select no more than $max_genes_nuc genes " .
 		  "for DNA alignment." );
     } else {
 	if ( $nGenes > $max_genes ) {
-	    webError( "Please select no more than $max_genes genes " .
+	    WebUtil::webError( "Please select no more than $max_genes genes " .
 		      "for protein alignment." );
 	}
     }
@@ -224,7 +224,7 @@ sub runClustalw {
     webLog "tmpAlnFile='$tmpAlnFile'\n" if $verbose >= 1;
     if ( !( -r $tmpAlnFile ) ) {
 	printEndWorkingDiv();
-	webError( "Clustal cannot align sequences." );
+	WebUtil::webError( "Clustal cannot align sequences." );
     }
 
     printEndWorkingDiv();
@@ -265,7 +265,7 @@ sub runClustalw {
     # must have at least 3 items for a neighbor-joining run:
     if ($nGenes < 3) {
 	printStatusLine( "$nGenes genes analyzed.", 2 );
-	webError( "Must have at least 3 items for a neighbor-joining run." );
+	WebUtil::webError( "Must have at least 3 items for a neighbor-joining run." );
     }
 
     ### run PHYLIP's PROTDIST to get distance data ###
@@ -341,7 +341,7 @@ sub runClustalw {
     close $rfh;
 
     if ( blankStr($newick_str) ) {
-        webError("Invalid newick '$newick_str' string.\n");
+        WebUtil::webError("Invalid newick '$newick_str' string.\n");
     }
 
     print "<p>";
@@ -365,7 +365,7 @@ sub runClustalw {
 
     my $newick = file2Str($newickFile);
     if ( blankStr($newick) ) {
-	webError("Invalid newick '$newick' string.\n");
+	WebUtil::webError("Invalid newick '$newick' string.\n");
     }
 
     my %hash = ();   # placeholder
@@ -1013,7 +1013,7 @@ sub loadSeq {
 	if ( !blankStr( $badGenes ) ) {
 	    if (scalar keys %$gene2Seq_ref < 2) {
 		printStatusLine( "Missing amino acid sequences.", 2 );
-		webError( "Could not find the amino acid sequences for gene(s) $badGenes. ".
+		WebUtil::webError( "Could not find the amino acid sequences for gene(s) $badGenes. ".
 			  "Check for RNA, Pseudogene, or gene without a ".
 			  "protein sequence."  );
 	    } else {
@@ -1226,7 +1226,7 @@ sub printGeneRec {
 ############################################################################
 sub printBioJSMSAViewer {
     my( $alnFile, $nGenes, $alignment, $lbmax ) = @_;
-    my $fileName = lastPathTok( $alnFile );
+    my $fileName = WebUtil::lastPathTok( $alnFile );
     my $alnFileUrl = "$tmp_url/$fileName";
     my $alnLink = alink($alnFileUrl, "alignment", "_blank");
     
@@ -1349,7 +1349,7 @@ sub printBioJSMSAViewer {
 ############################################################################
 sub printJalView {
    my( $alnFile, $nGenes, $alignment ) = @_;
-   my $fileName = lastPathTok( $alnFile );
+   my $fileName = WebUtil::lastPathTok( $alnFile );
    my $alnFileUrl = "$tmp_url/$fileName";
 
    my $height;
@@ -1610,7 +1610,7 @@ sub printClustalAlignFnaSeq {
 
     if ( scalar(@gene_oids) == 0 ) {
     	print "<p>\n";
-    	webError( "Select genes first." );
+    	WebUtil::webError( "Select genes first." );
     }
 
     my @db_genes = ();
@@ -1625,11 +1625,11 @@ sub printClustalAlignFnaSeq {
 
     if ($up_stream_int > 0 || !isInt( $up_stream )) {
     	print "<p>\n";
-    	webError( "Expected negative integer for up stream." );
+    	WebUtil::webError( "Expected negative integer for up stream." );
     }
     if ($down_stream_int < 0 || !isInt( $down_stream )) {
     	print "<p>\n";
-    	webError( "Expected positive integer for down stream." );
+    	WebUtil::webError( "Expected positive integer for down stream." );
     }
 
     my %records;

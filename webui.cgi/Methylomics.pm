@@ -1,6 +1,6 @@
 ############################################################################
 # Methylomics.pm - displays DNA methylation data
-# $Id: Methylomics.pm 35640 2016-05-13 01:05:18Z aratner $
+# $Id: Methylomics.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Methylomics;
 my $section = "Methylomics";
@@ -14,14 +14,14 @@ use DBI;
 use WebConfig;
 use WebUtil;
 use InnerTable;
-use GD;
+# use GD;
 
 $| = 1;
 
 my $env          = getEnv();
-my $cgi_dir      = $env->{ cgi_dir }; 
-my $cgi_url      = $env->{ cgi_url }; 
-my $cgi_tmp_dir  = $env->{ cgi_tmp_dir }; 
+my $cgi_dir      = $env->{ cgi_dir };
+my $cgi_url      = $env->{ cgi_url };
+my $cgi_tmp_dir  = $env->{ cgi_tmp_dir };
 my $tmp_url      = $env->{ tmp_url };
 my $tmp_dir      = $env->{ tmp_dir };
 my $main_cgi     = $env->{ main_cgi };
@@ -50,6 +50,13 @@ sub getAppHeaderData {
     my ($self) = @_;
     my @a = ( "Methylomics", '', '', '', '', "Methylomics.pdf" );
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+
+    # xml header
+    print header( -type => "text/xml" );
 }
 
 sub dispatch {
@@ -97,7 +104,7 @@ sub dispatch {
 # printOverview - prints all the methylomics experiments in IMG
 ############################################################################
 sub printOverview {
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
     my $d = param("domain");
     my $domainClause = "";
     $domainClause = " and tx.domain = '$d' " if $d ne "";
@@ -106,24 +113,24 @@ sub printOverview {
     my $imgClause = WebUtil::imgClause("tx");
     my $expClause = expClause("e");
     my $expClause = ""; # for now
-    my $sql = qq{ 
-        select distinct m.motif_summ_oid, e.exp_oid 
+    my $sql = qq{
+        select distinct m.motif_summ_oid, e.exp_oid
         from meth_motif_summary m, meth_experiment e
         where e.exp_oid = m.experiment
         $expClause
-    }; 
-    my $cur = execSql( $dbh, $sql, $verbose ); 
-    my %motifCntHash; 
-    for ( ;; ) { 
-        my ($motif, $exp) = $cur->fetchrow(); 
-        last if !$exp; 
-        $motifCntHash{ $exp }++; 
-    } 
+    };
+    my $cur = execSql( $dbh, $sql, $verbose );
+    my %motifCntHash;
+    for ( ;; ) {
+        my ($motif, $exp) = $cur->fetchrow();
+        last if !$exp;
+        $motifCntHash{ $exp }++;
+    }
 
-    my $sql = qq{ 
+    my $sql = qq{
         select e.exp_oid,
                e.exp_name,
-               $nvl(e.project_name, 'unknown'), 
+               $nvl(e.project_name, 'unknown'),
                $nvl(e.chemistry_type, ''),
                tx.domain,
                tx.taxon_oid,
@@ -140,12 +147,12 @@ sub printOverview {
       group by e.exp_oid, e.exp_name, e.project_name,
                e.chemistry_type, tx.domain,
                tx.taxon_oid, tx.taxon_display_name
-      order by e.exp_oid 
-    }; 
-    $cur = execSql( $dbh, $sql, $verbose ); 
+      order by e.exp_oid
+    };
+    $cur = execSql( $dbh, $sql, $verbose );
     #and tx.is_public = 'Yes'
 
-    print "<h1>Methylomics Experiments</h1>\n"; 
+    print "<h1>Methylomics Experiments</h1>\n";
     print "<p>*Showing experiments and stats for $d only</p>" if $d ne "";
 
     setLinkTarget("_blank");
@@ -159,9 +166,9 @@ sub printOverview {
         </script>
     };
 
-    my @tabIndex = ( "#allexptab1", "#allexptab2", 
+    my @tabIndex = ( "#allexptab1", "#allexptab2",
 		     "#allexptab4", "#allexptab5" );
-    my @tabNames = ( "Experiments", "Stats by Chemistry", 
+    my @tabNames = ( "Experiments", "Stats by Chemistry",
 		     "Explore Motifs", "Stats by Function" );
 
     TabHTML::printTabDiv("allexperimentsTab", \@tabIndex, \@tabNames);
@@ -183,10 +190,10 @@ sub printOverview {
     my @exps;
     my %unique_txs;
     my %exp2name;
-    for ( ;; ) { 
-        my ($exp_oid, $experiment, $project, $chemistry, 
+    for ( ;; ) {
+        my ($exp_oid, $experiment, $project, $chemistry,
 	    $domain, $taxon_oid, $taxon_name, $num_samples)
-	    = $cur->fetchrow(); 
+	    = $cur->fetchrow();
         last if !$exp_oid;
 
 	push @exps, $exp_oid if $exp_oid > 3;
@@ -196,15 +203,15 @@ sub printOverview {
 	my $url = "$section_cgi&page=experiments&exp_oid=$exp_oid";
 	$exp2name{ $exp_oid } = $experiment." [".$taxon_name."]\t".$url;
 
-        my $row; 
+        my $row;
         my $row = $sd."<input type='checkbox' "
                 . "name='exp_oid' value='$exp_oid' />\t";
-        $row .= $exp_oid."\t"; 
+        $row .= $exp_oid."\t";
         $row .= $experiment.$sd.alink($url, $experiment)."\t";
 	#$row .= $project."\t";
 	$row .= $chemistry."\t";
         $row .= $num_samples."\t";
-	$row .= $motifCntHash{$exp_oid}."\t"; 
+	$row .= $motifCntHash{$exp_oid}."\t";
 
         my $dm = substr( $domain, 0, 1 );
 	$row .= $dm."\t" if $d eq "";
@@ -213,9 +220,9 @@ sub printOverview {
 	          . "&page=taxonDetail&taxon_oid=$taxon_oid";
         $row .= $taxon_name.$sd.alink($txurl, $taxon_name)."\t";
 
-        $it->addRow($row); 
-    } 
-    $cur->finish(); 
+        $it->addRow($row);
+    }
+    $cur->finish();
 
     print "<input type=button id='allstudies1' "
         . "name='selectAll' value='Select All' "
@@ -226,7 +233,7 @@ sub printOverview {
         . "name='clearAll' value='Clear All' "
 	. "onClick='selectAllByName(\"exp_oid\", 0)' "
         . "class='smbutton' />\n";
-    $it->printOuterTable(1); 
+    $it->printOuterTable(1);
     #$dbh->disconnect();
     print "</div>"; # end allexptab1
 
@@ -344,7 +351,7 @@ sub printOverview {
     print nbsp( 1 );
     print "<input type='button' name='clearAllMtf' value='Clear All' "
 	. "onClick='clearAllIds()' class='smbutton' />\n";
-    
+
     my $size = 30;
     $size = $nmotifs if $nmotifs < 30;
     print "<p>";
@@ -437,7 +444,7 @@ sub printOverview {
     #my $fnStr = joinSqlQuoted(",", @cart_keys);
     #$fnClause = "and mfc.function_id in ($fnStr)" if (scalar @cart_keys > 0);
     my $sql = qq{
-        select mfc.exp_oid, mfc.function_type, 
+        select mfc.exp_oid, mfc.function_type,
                mfc.function_id, mfc.modification_count
           from meth_function_coverage mfc
          where mfc.exp_oid > 3
@@ -495,7 +502,7 @@ sub printOverview {
         last if !$id;
         $cogDict{$id} = $name."\t".$url."&cog_id=$id";
     }
-    
+
     # see: AbundanceToolkit::getFuncDict($dbh, $fntype);
     my %pfamDict;
     my $sql = "select ext_accession, description from pfam_family";
@@ -573,7 +580,7 @@ sub printOverview {
     Storable::store( $state4, checkTmpPath("$cgi_tmp_dir/$stateFile4") );
 
     printHeatMap($state, 0, 0);
-    
+
     print "</div>"; # end allexptab5
 
     TabHTML::printTabDivEnd();
@@ -602,23 +609,23 @@ sub newHeatMap {
     my $stateFile0 = "cog_".$hm;
     my $path = "$cgi_tmp_dir/$stateFile0";
     if (!( -e $path )) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
     my $state0 = retrieve($path);
     if ( !defined($state0) ) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
 
     my $stateFile2 = $state0->{stateFile};
     if ( $stateFile2 ne $stateFile0 ) {
-        webError( "newHeatMap: stateFile mismatch "
+        WebUtil::webError( "newHeatMap: stateFile mismatch "
                 . "'$stateFile2' vs. '$stateFile0'\n" );
     }
     my $expids_ref  = $state0->{expids};
     my $colDict_ref = $state0->{colDict};
     my $exp_str = join(",", @$expids_ref);
 
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
 
     use FuncCartStor;
     my $fc = new FuncCartStor();
@@ -663,7 +670,7 @@ sub newHeatMap {
         $fnDict{$id} = $name."\t".$url."&cog_id=$id";
     }
     my $sql = qq{
-        select ext_accession, description 
+        select ext_accession, description
         from pfam_family where ext_accession in ($fnStr)
     };
     my $cur = execSql( $dbh, $sql, $verbose );
@@ -673,7 +680,7 @@ sub newHeatMap {
         $fnDict{$id} = $name."\t".$url."&pfam_id=$id";
     }
     my $sql = qq{
-        select ko_id, definition from ko_term 
+        select ko_id, definition from ko_term
         where ko_id in ($fnStr)
     };
     my $cur = execSql( $dbh, $sql, $verbose );
@@ -683,7 +690,7 @@ sub newHeatMap {
         $fnDict{$id} = $name."\t".$url."&ko_id=$id";
     }
     my $sql = qq{
-        select ec_number, enzyme_name 
+        select ec_number, enzyme_name
         from enzyme where ec_number in ($fnStr)
     };
     my $cur = execSql( $dbh, $sql, $verbose );
@@ -720,16 +727,16 @@ sub loadHeatMap {
 
     my $path = "$cgi_tmp_dir/$stateFile";
     if (!( -e $path )) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
     my $state = retrieve($path);
     if ( !defined($state) ) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
 
     my $stateFile2 = $state->{stateFile};
     if ( $stateFile2 ne $stateFile ) {
-        webError( "loadHeatMap: stateFile mismatch "
+        WebUtil::webError( "loadHeatMap: stateFile mismatch "
                 . "'$stateFile2' vs. '$stateFile'\n" );
     }
 
@@ -903,7 +910,7 @@ sub printMethModificationChart {
     my $exps_str = join(",", @exps);
 
     if (scalar @motifs < 2) {
-        webError( "Please select at least 2 motifs." );
+        WebUtil::webError( "Please select at least 2 motifs." );
     }
 
     print "<h1>Methylation modification fraction for selected motifs</h1>";
@@ -1029,16 +1036,16 @@ sub printHeatMapIndex {
 
     my $path = "$cgi_tmp_dir/$stateFile";
     if (!( -e $path )) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
     my $state = retrieve($path);
     if ( !defined($state) ) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
 
     my $stateFile2 = $state->{stateFile};
     if ( $stateFile2 ne $stateFile ) {
-        webError( "printHeatMapIndex: stateFile mismatch "
+        WebUtil::webError( "printHeatMapIndex: stateFile mismatch "
 		. "'$stateFile2' vs. '$stateFile'\n" );
     }
     printHeatMap($state, $row_idx, $col_idx);
@@ -1065,7 +1072,7 @@ sub printHeatMap {
     my $row_max = $batch_size + $row_idx;
     $row_max = $n_fns if ($row_max > $n_fns);
     my @myfns = @$fnids_ref[$row_idx..($row_max - 1)];
-    
+
     use AbundanceProfiles;
     my %table;
     my %normTable;
@@ -1076,7 +1083,7 @@ sub printHeatMap {
 	    my $cnt = $fnrecs_ref->{$e.$c};
 	    $cnt = 0 if $cnt eq "";
 	    $str .= $cnt."\t";
-	    
+
 	    my $val2 = AbundanceProfiles::countToBound($cnt);
 	    $str2 .= $val2."\t";
 	}
@@ -1098,7 +1105,7 @@ sub printHeatMap {
 	stateFile => $stateFile2,
     };
     Storable::store( $state2, checkTmpPath("$cgi_tmp_dir/$stateFile2") );
-    
+
     print "<tr>\n";
     print "<td valign='top'>\n";
     printHeatMapSection($row_idx, $col_idx, $state2);
@@ -1131,25 +1138,25 @@ sub printHeatMap {
     print "</div>"; # div for re-display
 }
 
-############################################################################ 
+############################################################################
 # printHeatMapSection - Generates one heat map section.
-############################################################################ 
-sub printHeatMapSection { 
-    my ($row_idx, $col_idx, $state) = @_; 
+############################################################################
+sub printHeatMapSection {
+    my ($row_idx, $col_idx, $state) = @_;
 
-    my $expids_ref    = $state->{expids}; 
-    my $fnids_ref     = $state->{fnids}; 
-    my $fntype        = $state->{fntype}; 
-    my $table_ref     = $state->{table}; 
-    my $normTable_ref = $state->{normTable}; 
-    my $rowDict_ref   = $state->{rowDict}; 
-    my $colDict_ref   = $state->{colDict}; 
-    my $stateFile     = $state->{stateFile}; 
+    my $expids_ref    = $state->{expids};
+    my $fnids_ref     = $state->{fnids};
+    my $fntype        = $state->{fntype};
+    my $table_ref     = $state->{table};
+    my $normTable_ref = $state->{normTable};
+    my $rowDict_ref   = $state->{rowDict};
+    my $colDict_ref   = $state->{colDict};
+    my $stateFile     = $state->{stateFile};
 
-    my $id      = "${row_idx}_${col_idx}_methexp_${fntype}fns_heatMap$$"; 
-    my $outFile = "$tmp_dir/$id.png"; 
-    my $n_rows  = scalar @$fnids_ref; 
-    my $n_cols  = scalar @$expids_ref; 
+    my $id      = "${row_idx}_${col_idx}_methexp_${fntype}fns_heatMap$$";
+    my $outFile = "$tmp_dir/$id.png";
+    my $n_rows  = scalar @$fnids_ref;
+    my $n_cols  = scalar @$expids_ref;
 
     my $chars = 3;          # for now - length($exp_oid)
     my $args = {
@@ -1228,7 +1235,7 @@ sub printStatsByChemTableView {
 	print "<td>&nbsp;&nbsp;&nbsp;</td>"; # spacing
     }
     print "</tr>";
-    print "</table>";    
+    print "</table>";
 }
 
 sub printStatsByChemGraphicalView {
@@ -1291,41 +1298,41 @@ sub printStatsByChemGraphicalView {
     };
 }
 
-############################################################################ 
-# printDataForSample - prints info for one sample of an experiment 
-############################################################################ 
-sub printDataForSample { 
-    my $sample = param("sample"); 
+############################################################################
+# printDataForSample - prints info for one sample of an experiment
+############################################################################
+sub printDataForSample {
+    my $sample = param("sample");
 
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
     printStatusLine("Loading ...", 1);
- 
+
     #my $expClause = expClause("e");
     my $expClause = "";
-    my $sql = qq{ 
+    my $sql = qq{
         select $nvl(s.description, 'unknown'),
                e.exp_oid,
-               e.exp_name, 
+               e.exp_name,
                $nvl(e.project_name, 'unknown'),
 	       s.IMG_taxon_oid
         from meth_sample s, meth_experiment e, taxon tx
         where s.sample_oid = ?
-        and s.experiment = e.exp_oid 
+        and s.experiment = e.exp_oid
         and s.IMG_taxon_oid = tx.taxon_oid
 	$expClause
-    }; 
-    my $cur = execSql( $dbh, $sql, $verbose, $sample ); 
-    my ($sample_desc, $exp_oid, $exp_name, 
-	$project_name, $taxon_oid) = $cur->fetchrow(); 
-    $cur->finish(); 
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $sample );
+    my ($sample_desc, $exp_oid, $exp_name,
+	$project_name, $taxon_oid) = $cur->fetchrow();
+    $cur->finish();
 
     if ($sample_desc eq "") {
         printStatusLine( "unauthorized user", 2 );
         printMessage( "You do not have permission to view this experiment." );
-	#$dbh->disconnect(); 
-        return; 
+	#$dbh->disconnect();
+        return;
     }
- 
+
     print "<h1>Base Modifications</h1>\n";
     print "<p>Sample: $sample_desc</p>\n";
 
@@ -1337,15 +1344,15 @@ sub printDataForSample {
     print "<span style='font-size: 12px; "
 	. "font-family: Arial, Helvetica, sans-serif;'>\n";
     my $url = "$section_cgi&page=experiments"
-	    . "&exp_oid=$exp_oid"; 
-    print alink($url, $exp_name, "_blank")."\n"; 
+	    . "&exp_oid=$exp_oid";
+    print alink($url, $exp_name, "_blank")."\n";
     print "</span>\n";
 
-    printMainForm(); 
+    printMainForm();
 
     my $sql = qq{
         select distinct m.modification_oid, $nvl(m.IMG_scaffold_oid, ''),
-               $nvl(m.motif_string, ''), m.start_coord, m.end_coord, 
+               $nvl(m.motif_string, ''), m.start_coord, m.end_coord,
                m.methylation_coord, m.score,
                m.strand, $nvl(m.context, ''), m.coverage
         from meth_modification m, meth_sample s
@@ -1371,7 +1378,7 @@ sub printDataForSample {
     $it->addColSpec( "Scaffold ID", "asc", "right" );
 
     my $count = 0;
-    my $cur = execSql( $dbh, $sql, $verbose, $sample, $taxon_oid ); 
+    my $cur = execSql( $dbh, $sql, $verbose, $sample, $taxon_oid );
     for ( ;; ) {
         my ($motif_oid, $scaffold_oid, $motif_str, $start, $end, $mcoord,
 	    $score, $strand, $context, $coverage) = $cur->fetchrow();
@@ -1400,104 +1407,104 @@ sub printDataForSample {
 	$row .= $coverage."\t";
 	if ($scaffold_oid ne "") {
 	    $row .= $scaffold_oid.$sd.alink($url, $scaffold_oid)."\t";
-	} else {	
+	} else {
 	    $row .= $scaffold_oid."\t";
 	}
         $it->addRow($row);
 	$count++;
     }
 
-    $it->printOuterTable(1); 
-    #$dbh->disconnect(); 
+    $it->printOuterTable(1);
+    #$dbh->disconnect();
 
     print end_form();
     printStatusLine("$count genes loaded.", 2);
-} 
+}
 
-############################################################################ 
+############################################################################
 # printStudiesForGenome - prints all studies that use a given genome
-############################################################################ 
-sub printStudiesForGenome { 
+############################################################################
+sub printStudiesForGenome {
     my $taxon_oid = param("taxon_oid");
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
 
-    my $sql = qq{ 
-        select taxon_name 
+    my $sql = qq{
+        select taxon_name
         from taxon
         where taxon_oid = ?
-    }; 
-    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid ); 
-    my ($taxon_name) = $cur->fetchrow(); 
-    $cur->finish(); 
- 
-    my $sql = qq{ 
-        select distinct m.motif_summ_oid, s.experiment 
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
+    my ($taxon_name) = $cur->fetchrow();
+    $cur->finish();
+
+    my $sql = qq{
+        select distinct m.motif_summ_oid, s.experiment
         from meth_motif_summary m, meth_sample s
         where s.sample_oid = m.sample
 	and s.IMG_taxon_oid = ?
-    }; 
-    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid ); 
+    };
+    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
     my %motifCntHash;
-    for ( ;; ) { 
+    for ( ;; ) {
         my ($motif, $exp) = $cur->fetchrow();
         last if !$exp;
-        $motifCntHash{ $exp }++; 
-    } 
-    $cur->finish(); 
+        $motifCntHash{ $exp }++;
+    }
+    $cur->finish();
 
     my $rclause = urClause("tx");
     my $imgClause = WebUtil::imgClause('tx');
-    my $sql = qq{ 
-        select e.exp_oid, 
+    my $sql = qq{
+        select e.exp_oid,
                e.exp_name, count(s.sample_oid)
-        from meth_experiment e, 
-             meth_sample s, taxon tx 
-        where e.exp_oid = s.experiment 
+        from meth_experiment e,
+             meth_sample s, taxon tx
+        where e.exp_oid = s.experiment
         and s.IMG_taxon_oid = tx.taxon_oid
         and tx.taxon_oid = ?
         $rclause
         $imgClause
         group by e.exp_oid, e.exp_name
-        order by e.exp_oid 
-    }; 
+        order by e.exp_oid
+    };
     #and tx.is_public = 'Yes'
-    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid ); 
- 
+    my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
+
     my $url = "$main_cgi?section=TaxonDetail"
 	     ."&page=taxonDetail&taxon_oid=$taxon_oid";
-    print "<h1>Methylomics Experiments</h1>\n"; 
+    print "<h1>Methylomics Experiments</h1>\n";
     print "<p style='width: 650px;'>";
-    print "<u>Genome</u>: ".alink($url, $taxon_name)."</p>\n"; 
+    print "<u>Genome</u>: ".alink($url, $taxon_name)."</p>\n";
 
     my $it = new InnerTable(1, "methylomics$$", "methylomics", 0);
     $it->hideAll();
- 
+
     my $sd = $it->getSdDelim();
-    $it->addColSpec( "Experiment ID", "asc", "right" ); 
+    $it->addColSpec( "Experiment ID", "asc", "right" );
     $it->addColSpec( "Experiment Name", "asc", "left" );
     $it->addColSpec( "Total Samples", "desc", "right" );
     $it->addColSpec( "Unique Motifs", "desc", "right" );
 
-    for ( ;; ) { 
-        my ($exp_oid, $experiment, $num_samples) = $cur->fetchrow(); 
-        last if !$exp_oid; 
- 
+    for ( ;; ) {
+        my ($exp_oid, $experiment, $num_samples) = $cur->fetchrow();
+        last if !$exp_oid;
+
         my $url = "$section_cgi&page=experiments"
 	        . "&exp_oid=$exp_oid"
-	        . "&taxon_oid=$taxon_oid"; 
+	        . "&taxon_oid=$taxon_oid";
 
         my $row;
-        $row .= $exp_oid."\t"; 
-        $row .= $experiment.$sd.alink($url, $experiment)."\t"; 
+        $row .= $exp_oid."\t";
+        $row .= $experiment.$sd.alink($url, $experiment)."\t";
         $row .= $num_samples."\t";
 	$row .= $motifCntHash{$exp_oid}."\t";
 
-        $it->addRow($row); 
-    } 
-    $cur->finish(); 
+        $it->addRow($row);
+    }
+    $cur->finish();
     $it->printOuterTable("nopage");
-    #$dbh->disconnect(); 
-} 
+    #$dbh->disconnect();
+}
 
 ############################################################################
 # printSelectOneSample - prints a table of all samples for the genome
@@ -1507,11 +1514,11 @@ sub printStudiesForGenome {
 sub printSelectOneSample {
     my ($taxon_oid) = @_;
     if ($taxon_oid eq "") {
-	$taxon_oid = param("taxon_oid"); 
+	$taxon_oid = param("taxon_oid");
     }
 
-    my $dbh = dbLogin(); 
-    printStatusLine("Loading ...", 1); 
+    my $dbh = dbLogin();
+    printStatusLine("Loading ...", 1);
 
     my $sql = qq{
         select s.IMG_taxon_oid, s.sample_oid,
@@ -1525,72 +1532,72 @@ sub printSelectOneSample {
     };
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
 
-    my $it = new InnerTable(1, "methexps$$", "methexps", 1); 
+    my $it = new InnerTable(1, "methexps$$", "methexps", 1);
     $it->{pageSize} = 10;
-    my $sd = $it->getSdDelim(); 
+    my $sd = $it->getSdDelim();
     $it->addColSpec( "Choose" );
     $it->addColSpec( "Sample ID", "asc", "right" );
     $it->addColSpec( "Sample Name","asc", "left" );
     $it->addColSpec( "Motif Count", "desc", "right" );
 
-    my $count; 
-    for ( ;; ) { 
-        my ($taxon, $sample, $desc, $motifCount) = $cur->fetchrow(); 
-        last if !$sample; 
+    my $count;
+    for ( ;; ) {
+        my ($taxon, $sample, $desc, $motifCount) = $cur->fetchrow();
+        last if !$sample;
 
-        my $url = "$section_cgi&page=sampledata&sample=$sample"; 
+        my $url = "$section_cgi&page=sampledata&sample=$sample";
 
-        my $row; 
+        my $row;
         my $row = $sd."<input type='radio' "
                 . "onclick='setStudy(\"$study\")' "
 	        . "name='exp_samples' value='$sample'/>\t";
-        $row .= $sample."\t"; 
+        $row .= $sample."\t";
         $row .= $desc.$sd.alink($url, $desc, "_blank")."\t";
-        $row .= $motifCount."\t"; 
+        $row .= $motifCount."\t";
         $it->addRow($row);
-        $count++; 
-    } 
-    $cur->finish(); 
-    $it->printOuterTable(1); 
+        $count++;
+    }
+    $cur->finish();
+    $it->printOuterTable(1);
     #$dbh->disconnect();
 }
 
 ############################################################################
 # printExperiments - prints all experiments (for the genome)
 ############################################################################
-sub printExperiments { 
-    my $taxon_oid = param("taxon_oid"); 
+sub printExperiments {
+    my $taxon_oid = param("taxon_oid");
     my $exp_oid = param("exp_oid");
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
     printStatusLine("Loading ...", 1);
 
     #my $expClause = expClause("e");
     my $expClause = ""; # for now ...
-    my $sql = qq{ 
+    my $sql = qq{
         select e.exp_name, $nvl(e.project_name, 'unknown'),
-               e.description, e.exp_contact, 
+               e.description, e.exp_contact,
                $nvl(eel.custom_url, 'unknown')
         from meth_experiment e
-	left outer join meth_experiment_ext_links eel 
+	left outer join meth_experiment_ext_links eel
 	on e.exp_oid = eel.exp_oid
         where e.exp_oid = ?
 	$expClause
-    }; 
-    my $sql = qq{ 
-        select e.exp_name, e.project_name, 
+    };
+    my $sql = qq{
+        select e.exp_name, e.project_name,
                e.description, e.exp_contact, ''
         from meth_experiment e
         where e.exp_oid = ?
-    }; 
+    };
     my $cur = execSql( $dbh, $sql, $verbose, $exp_oid );
-    my ($exp_name, $project_name, 
+    my ($exp_name, $project_name,
 	$exp_desc, $exp_contact, $curl) = $cur->fetchrow();
-    $cur->finish(); 
+    $cur->finish();
 
     if ($exp_name eq "") {
         printStatusLine( "unauthorized user", 2 );
         printMessage( "You do not have permission to view this experiment." );
-        return; 
+        return;
     }
 
     my $sql = qq{
@@ -1619,10 +1626,10 @@ sub printExperiments {
 	$text .= "$exp_contact";
     }
 
-    WebUtil::printHeaderWithInfo 
-	("Methylomics Experiment", $text, 
-	 "show description for this experiment", 
-	 "Experiment Description", 0, "Methylomics.pdf"); 
+    WebUtil::printHeaderWithInfo
+	("Methylomics Experiment", $text,
+	 "show description for this experiment",
+	 "Experiment Description", 0, "Methylomics.pdf");
 
     my $total_genomes = 0;
     my %taxon2info;
@@ -1681,13 +1688,13 @@ sub printExperiments {
     setLinkTarget("_blank");
     printMainForm();
 
-    use TabHTML; 
+    use TabHTML;
     TabHTML::printTabAPILinks("experimentsTab");
 
     my @tabIndex = ( "#exptab1" );
     my @tabNames = ( "Select Samples" );
     my $idx = 2;
-    
+
     push @tabIndex, "#exptab".$idx++;
     push @tabNames, "View in GBrowse";
 
@@ -1696,17 +1703,17 @@ sub printExperiments {
 
     my @recs;
     my $sql = qq{
-	select s.IMG_taxon_oid, s.sample_oid, 
+	select s.IMG_taxon_oid, s.sample_oid,
                $nvl(s.description, 'unknown'),
                count(m.motif_summ_oid)
 	from meth_sample s
-        left join meth_motif_summary m 
+        left join meth_motif_summary m
         on s.sample_oid = m.sample and s.experiment = m.experiment
 	where s.experiment = ?
         group by s.IMG_taxon_oid, s.sample_oid, s.description
         order by s.IMG_taxon_oid, s.sample_oid
     };
-    my $cur = execSql( $dbh, $sql, $verbose, $exp_oid );  
+    my $cur = execSql( $dbh, $sql, $verbose, $exp_oid );
     for ( ;; ) {
 	my ($taxon, $sample, $desc, $cnt) = $cur->fetchrow();
 	last if !$sample;
@@ -1736,7 +1743,7 @@ sub printExperiments {
 
 	my $row;
         my $row = $sd."<input type='checkbox' "
-	        . "name='exp_samples' value='$sample'/>\t"; 
+	        . "name='exp_samples' value='$sample'/>\t";
         $row .= $sample."\t";
 
 	my $link1 = "<a href='$url' id='link$sample' target='_blank'>"
@@ -1756,27 +1763,27 @@ sub printExperiments {
                 .alink($txurl, $genome, "_blank")."\t";
         }
 
-        $it->addRow($row); 
+        $it->addRow($row);
 	$count++;
-    } 
+    }
 
     if ($count > 10) {
 	print "<input type=button name='selectAll' value='Select All' "
 	    . "onClick='selectAllByName(\"exp_samples\", 1)' "
-	    . "class='smbutton' />\n"; 
-	print nbsp( 1 ); 
+	    . "class='smbutton' />\n";
+	print nbsp( 1 );
 	print "<input type='button' name='clearAll' value='Clear All' "
-	    . "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n"; 
+	    . "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
     }
     $it->printOuterTable("nopage");
     print "<input type=button name='selectAll' value='Select All' "
 	. "onClick='selectAllByName(\"exp_samples\", 1)' "
-	. "class='smbutton' />\n"; 
-    print nbsp( 1 ); 
+	. "class='smbutton' />\n";
+    print nbsp( 1 );
     print "<input type='button' name='clearAll' value='Clear All' "
-	. "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n"; 
+	. "onClick='selectAllCheckBoxes(0)' class='smbutton' />\n";
 
-    #$dbh->disconnect(); 
+    #$dbh->disconnect();
     print "</div>"; # end exptab1
 
     if (scalar @study_taxons > 1) {
@@ -1798,36 +1805,36 @@ sub printExperiments {
 	my $tx = encode($study.$taxon_oid);
 	#print "<br/>> encoded tx: $tx"; ## anna for configuring gbrowse
 	$gbrowseUrl .= $tx;
-	
-	print qq{ 
+
+	print qq{
 	    <p>
             <a href=$gbrowseUrl target="_blank">
-            <img src="$base_url/images/GBrowse-ME.jpg" 
-                 width="320" height="217" border="0" 
+            <img src="$base_url/images/GBrowse-ME.jpg"
+                 width="320" height="217" border="0"
                  style="border:2px #99CCFF solid;" alt="View in GBrowse"
                  title="View genome sequence in GBrowse"/>
 	    </a>
 	    <br/><a href=$gbrowseUrl target="_blank">View in GBrowse</a>
-            </p> 
-	}; 
+            </p>
+	};
     }
     print "</div>"; # end exptab2
-    TabHTML::printTabDivEnd(); 
+    TabHTML::printTabDivEnd();
 
     print end_form();
     printStatusLine("$count sample(s) loaded.", 2);
-} 
+}
 
 ############################################################################
 # printMotifSummary - prints unique motifs for a specified sample,
 #                     experiment, and taxon
 ############################################################################
 sub printMotifSummary {
-    my $taxon_oid = param("taxon_oid"); 
+    my $taxon_oid = param("taxon_oid");
     my $sample = param("sample_oid");
     my $exp_oid = param("exp_oid");
 
-    my $dbh = dbLogin(); 
+    my $dbh = dbLogin();
     my $expClause = "";
     my $sql = qq{
         select $nvl(s.description, 'unknown'),
@@ -1845,7 +1852,7 @@ sub printMotifSummary {
     if ($sample_desc eq "") {
         printStatusLine( "unauthorized user", 2 );
         printMessage( "You do not have permission to view this experiment." );
-	#$dbh->disconnect(); 
+	#$dbh->disconnect();
         return;
     }
 
@@ -1864,7 +1871,7 @@ sub printMotifSummary {
 
     print "<h1>Motif Summary</h1>\n";
     print "<p style='width: 650px;'>";
-    print "Genome: ".alink($url, $taxon_name, "_blank"); 
+    print "Genome: ".alink($url, $taxon_name, "_blank");
     print "<br/>";
     print "Sample: ".alink($surl, $sample_desc, "_blank");
     print "<br/>";
@@ -1878,7 +1885,7 @@ sub printMotifSummary {
     my $sql = qq{
         select m.motif_summ_oid, m.motif_string,
                m.center_pos, m.fraction, m.n_detected,
-               m.n_genome, m.group_tag, 
+               m.n_genome, m.group_tag,
                $nvl(m.partner_motif_string, ''),
                m.mean_score, m.mean_ipd_ratio, m.mean_coverage,
                m.objective_score, m.modification_type,
@@ -1925,7 +1932,7 @@ sub printMotifSummary {
         #$row .= $motif_oid."\t";
 
 	my $motif_str2 = $motif_str;
-	if ($motif_str ne "" && $center_pos ne "" 
+	if ($motif_str ne "" && $center_pos ne ""
 	    && length($motif_str) >= $center_pos) {
 	    my @chars = split("", $motif_str);
 	    my $start = substr($motif_str, 0, $center_pos);
@@ -1952,7 +1959,7 @@ sub printMotifSummary {
     }
     $it->printOuterTable("nopage");
 
-    #$dbh->disconnect(); 
+    #$dbh->disconnect();
 
     use Motifs;
     Motifs::selectScaffolds($taxon_oid, $sample, $exp_oid);
@@ -1962,7 +1969,7 @@ sub printMotifSummary {
 # addMethylations - mark areas where there are methylated bases
 ############################################################################
 sub addMethylations {
-    my ( $dbh, $scaffold_oid, $scf_panel, $panelStrand, 
+    my ( $dbh, $scaffold_oid, $scf_panel, $panelStrand,
 	 $scf_start_coord, $scf_end_coord, $sample ) = @_;
 
     # see if there is any methylomics data:
@@ -1992,37 +1999,37 @@ sub addMethylations {
 }
 
 sub expClause {
-    my ($alias) = @_; 
+    my ($alias) = @_;
 
     return "" if !$user_restricted_site;
     my $super_user = getSuperUser();
     return "" if ( $super_user eq "Yes" );
     my $contact_oid = getContactOid();
-    return "" if !$contact_oid; 
+    return "" if !$contact_oid;
 
-    my $exp_oid_attr = "exp_oid"; 
+    my $exp_oid_attr = "exp_oid";
     $exp_oid_attr = "$alias.exp_oid"
-	if $alias ne "" 
-	&& $alias ne "exp_oid" 
-	&& $alias !~ /\./; 
+	if $alias ne ""
+	&& $alias ne "exp_oid"
+	&& $alias !~ /\./;
 
-    $exp_oid_attr = $alias 
-	if $alias ne "" 
-	&& $alias ne "exp_oid" 
+    $exp_oid_attr = $alias
+	if $alias ne ""
+	&& $alias ne "exp_oid"
 	&& $alias =~ /\./;
-    
-    my $clause = qq{ 
+
+    my $clause = qq{
 	and $exp_oid_attr in
             ( select exp.exp_oid
 	      from meth_experiment exp
-	      where exp.is_public = 'Yes' 
+	      where exp.is_public = 'Yes'
 	      union all
 	      select cmp.meth_permissions
 	      from contact_meth_permissions cmp
 	      where cmp.contact_oid = $contact_oid
-	    ) 
-	}; 
-    
+	    )
+	};
+
     return $clause;
 }
 

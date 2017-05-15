@@ -7,7 +7,7 @@
 # filenames with white spaces     $filename =~ s/\s/_/g;
 # - ken
 #
-# $Id: Workspace.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
+# $Id: Workspace.pm 37047 2017-05-04 21:02:24Z klchu $
 #
 ############################################################################
 package Workspace;
@@ -81,8 +81,9 @@ my $SCAF_FOLDER   = "scaffold";
 my $FUNC_FOLDER   = "function";
 my $RULE_FOLDER   = "rule";
 my $BC_FOLDER     = 'bc';
-my @subfolders    = ( $GENOME_FOLDER, $GENE_FOLDER, $SCAF_FOLDER, $FUNC_FOLDER, $BC_FOLDER );
-my @allSubfolders = ( $GENOME_FOLDER, $GENE_FOLDER, $SCAF_FOLDER, $FUNC_FOLDER, $BC_FOLDER, $RULE_FOLDER );
+#my $BLAST_FOLDER  = 'blast';
+my @subfolders    = ( $GENOME_FOLDER, $GENE_FOLDER, $SCAF_FOLDER, $FUNC_FOLDER, $BC_FOLDER, 'job' );
+my @allSubfolders = ( $GENOME_FOLDER, $GENE_FOLDER, $SCAF_FOLDER, $FUNC_FOLDER, $BC_FOLDER, 'job', $RULE_FOLDER );
 
 my $ownerFilesetDelim = "|";
 my $ownerFilesetDelim_message = "::::";
@@ -117,18 +118,32 @@ sub initialize {
     # check if workspace area is available - ken
     # check to see user's folder has been created
     if ( !-e "$workspace_dir" ) {
-        mkdir "$workspace_dir" or webError("Workspace is down!");
+        mkdir "$workspace_dir" or WebUtil::webError("Workspace is down!");
     }
 
     if ( !-e "$workspace_dir/$sid" ) {
-        mkdir "$workspace_dir/$sid" or webError("Workspace is down!");
+        mkdir "$workspace_dir/$sid" or WebUtil::webError("Workspace is down!");
     }
 
     foreach my $x (@subfolders) {
         if ( !-e "$workspace_dir/$sid/$x" ) {
-            mkdir "$workspace_dir/$sid/$x" or webError("Workspace is down!");
+            mkdir "$workspace_dir/$sid/$x" or WebUtil::webError("Workspace is down!");
         }
     }
+    
+    # let make sure job is there on webfs and sandbox - ken 2017-05-04
+    # makesure job dir is there
+    my $job_dir = "$workspace_dir/$sid/job";
+    my $job_dir2 = "$workspace_sandbox_dir/$sid/job";
+    if ( !-e $job_dir ) {
+        umask 0002;
+        mkdir $job_dir or WebUtil::webError("Workspace is down!");
+    }
+
+    if ( !-e $job_dir2 ) {
+        umask 0002;
+        mkdir $job_dir2 or WebUtil::webError("Workspace is down!");
+    }   
 }
 
 sub getPageTitle {
@@ -148,6 +163,14 @@ sub getAppHeaderData {
     }
     return @a;
 }
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/html" );
+}
+
 
 sub dispatch {
     my ( $self, $numTaxon ) = @_;
@@ -386,7 +409,7 @@ sub saveUserPreferences {
     }
 
     if ( !-e "$workspace_dir/$sid" ) {
-        mkdir "$workspace_dir/$sid" or webError("Workspace is down!");
+        mkdir "$workspace_dir/$sid" or WebUtil::webError("Workspace is down!");
     }
 
     my $wfh = newWriteFileHandle($filename);
@@ -463,7 +486,7 @@ sub printMainPage {
         my $wksSubdir = "$workspace_dir/$sid/$subdir";
 
         opendir( DIR, $wksSubdir )
-          or webDie("failed to read files");
+          or WebUtil::webDie("failed to read files");
         my @files = readdir(DIR);
         closedir(DIR);
 
@@ -529,7 +552,7 @@ sub printMainPage {
     my $job_dir = "$workspace_dir/$sid/job";
     if ( -d $job_dir ) {
         my $cnt = 0;
-        opendir( DIR, $job_dir ) or webDie("failed to read files");
+        opendir( DIR, $job_dir ) or WebUtil::webDie("failed to read files");
         my @files = readdir(DIR);
         closedir(DIR);
 
@@ -592,7 +615,7 @@ sub getDataSetNames {
 
     my $sid = getContactOid();
     opendir( DIR, "$workspace_dir/$sid/$folder" )
-        or webDie("failed to open folder list");
+        or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -617,7 +640,7 @@ sub breakLargeSet {
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     #print "breakLargeSet() input_files @input_files<br/>\n";
     if ( scalar(@all_files) != 1 ) {
-        webError("Please select only one set to break.");
+        WebUtil::webError("Please select only one set to break.");
         return;
     }
 
@@ -637,7 +660,7 @@ sub breakLargeSet {
         $breaksize = param("breaksize");        
     }
     if ( !$breaksize ) {
-        webError("Please select a size to break the $folder set.");
+        WebUtil::webError("Please select a size to break the $folder set.");
         return;
     }
 
@@ -655,7 +678,7 @@ sub breakLargeSet {
     
     my $nOids = scalar( @$oids_ref );
     if ( $breaksize >= $nOids ) {
-        webError("The selected $folder set has $nOids $folder(s), smaller than the selected break size $breaksize.");
+        WebUtil::webError("The selected $folder set has $nOids $folder(s), smaller than the selected break size $breaksize.");
         return;
     }
 
@@ -733,7 +756,7 @@ sub saveGeneCart {
     # form selected genes
     my @genes = param("gene_oid");
     if ( $#genes < 0 ) {
-        webError("Please select some genes to save.");
+        WebUtil::webError("Please select some genes to save.");
         return;
     }
 
@@ -777,7 +800,7 @@ sub saveGeneCart2 {
     }
 
     if ( $#genes < 0 ) {
-        webError("Please select some genes to save.");
+        WebUtil::webError("Please select some genes to save.");
         return;
     }
 
@@ -820,7 +843,7 @@ sub saveAllGeneCart {
     }
     #print "saveAllGeneCart() all_files: @all_files<br/>\n";
     if ( scalar(@all_files) == 0 ) {
-        webError("There are no genes to save. Please select genes.");
+        WebUtil::webError("There are no genes to save. Please select genes.");
         return;
     }
 
@@ -829,7 +852,7 @@ sub saveAllGeneCart {
     my @func_ids = param("func_id");
     #print "saveAllGeneCart() func_ids @func_ids<br/>\n";
     if ( scalar(@func_ids) == 0 ) {
-        webError("There are no genes to save. Please select a function.");
+        WebUtil::webError("There are no genes to save. Please select a function.");
         return;
     }
 
@@ -886,14 +909,14 @@ sub saveSelectedFuncGenes {
         @oids = param("taxon_oid");
         #print "taxon_oids: @oids<br/>\n";
         if ( scalar(@oids) == 0 ) {
-            webError("There are no genes to save. Please select a genome.");
+            WebUtil::webError("There are no genes to save. Please select a genome.");
             return;
         }
     } elsif ( $folder eq $SCAF_FOLDER ) {
         @oids = param("scaffold_oid");
         #print "scaffold_oids: @oids<br/>\n";
         if ( scalar(@oids) == 0 ) {
-            webError("There are no genes to save. Please select a scaffold.");
+            WebUtil::webError("There are no genes to save. Please select a scaffold.");
             return;
         }
     }
@@ -901,7 +924,7 @@ sub saveSelectedFuncGenes {
     my @func_ids = param("func_id");
     #print "func_ids: @func_ids<br/>\n";
     if ( scalar(@func_ids) == 0 ) {
-        webError("There are no genes to save. Please select a function.");
+        WebUtil::webError("There are no genes to save. Please select a function.");
         return;
     }
 
@@ -946,7 +969,7 @@ sub saveAllTaxonFuncGenes {
     my @func_ids  = param("func_id");
 
     if ( !$taxon_oid || scalar(@func_ids) == 0 ) {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
 
@@ -979,7 +1002,7 @@ sub outputFuncGene {
     my %taxon_datatype_h;
 
     open( FH, "$input_file" )
-      or webError("File size - file error $input_file");
+      or WebUtil::webError("File size - file error $input_file");
 
     my $rclause   = WebUtil::urClause('g.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
@@ -1300,7 +1323,7 @@ sub outputFuncsGenes {
     my $func_tag = MetaUtil::getFuncTagFromFuncId( $func_id );
 
     open( FH, "$input_file" )
-      or webError("File size - file error $input_file");
+      or WebUtil::webError("File size - file error $input_file");
 
     my $rclause   = WebUtil::urClause('g.taxon');
     my $imgClause = WebUtil::imgClauseNoTaxon('g.taxon');
@@ -1989,7 +2012,7 @@ sub saveAllTaxonRnaGenes {
     my $gene_symbol = param("gene_symbol");
 
     if ( !$taxon_oid || !$locus_type ) {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
 
@@ -2067,7 +2090,7 @@ sub saveAllGeneFuncList {
         || !$func_type
         || !$bucket )
     {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
 
@@ -2078,7 +2101,7 @@ sub saveAllGeneFuncList {
     } elsif ( $data_type eq 'unassembled' ) {
         $zip_name .= "unassembled/gene_";
     } else {
-        webError("No data");
+        WebUtil::webError("No data");
         return;
     }
 
@@ -2102,7 +2125,7 @@ sub saveAllGeneFuncList {
         $zip_name .= "phylo_stats.zip";
         $i2 = "phylo_" . sanitizeInt($bucket);
     } else {
-        webError("No data");
+        WebUtil::webError("No data");
         return;
     }
 
@@ -2153,7 +2176,7 @@ sub saveAllCDSGeneList {
     my $data_type = param("data_type");
 
     if ( !$taxon_oid ) {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
     if ( !$data_type ) {
@@ -2227,7 +2250,7 @@ sub saveAllRnaGeneList {
     my $data_type = param("data_type");
 
     if ( !$taxon_oid ) {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
     if ( !$data_type ) {
@@ -2289,7 +2312,7 @@ sub saveAllGeneProdList {
     my $data_type = param("data_type");
 
     if ( !$taxon_oid ) {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
     if ( !$data_type ) {
@@ -2500,7 +2523,7 @@ sub execSaveAllGeneList {
     my $data_type = param("data_type");
 
     if ( !$taxon_oid && $type !~ /Cluster/i ) {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
     if ( !$data_type ) {
@@ -2618,7 +2641,7 @@ sub saveBcCart {
     # form selected bc ids
     my @oids =  param('bc_id');
     if ( scalar(@oids) == 0 ) {
-        webError("Please select some BC IDs to save.");
+        WebUtil::webError("Please select some BC IDs to save.");
         return;
     }
 
@@ -2714,7 +2737,7 @@ sub inspectWorkspaceUsage {
             print "</p>";
         }
         else {
-            webError("Your workspace usage is over 5GB.  Please delete some of your files.");
+            WebUtil::webError("Your workspace usage is over 5GB.  Please delete some of your files.");
         }
         return 1;
     }
@@ -2770,7 +2793,7 @@ sub inspectSaveToWorkspace {
     $filename =~ s/\W+/_/g;
 
     if ( !$filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -2785,7 +2808,7 @@ sub inspectSaveToWorkspace {
     if ( $ws_save_mode eq 'save'
         && -e "$workspace_dir/$sid/$folder/$filename" )
     {
-        webError("File name $filename already exists. Please enter a new file name.");
+        WebUtil::webError("File name $filename already exists. Please enter a new file name.");
         return;
     }
 
@@ -2814,7 +2837,7 @@ sub printWorkspaceSetDetail {
 
     # check filename
     if ( $filename eq "" ) {
-        webError("Cannot read file.");
+        WebUtil::webError("Cannot read file.");
         return;
     }
 
@@ -2826,7 +2849,7 @@ sub printWorkspaceSetDetail {
         }
     }
     if ( !$valid ) {
-        webError("Invalid directory ($folder).");
+        WebUtil::webError("Invalid directory ($folder).");
     }
 
     WebUtil::checkFileName($filename);
@@ -3178,7 +3201,7 @@ sub printSetOpSection {
     my $sid = getContactOid();
 
     opendir( DIR, "$workspace_dir/$sid/$folder" )
-      or webDie("failed to open folder list");
+      or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -3458,7 +3481,7 @@ sub saveAllMetaHits {
     my $data_type = param("data_type");
 
     if ( !$taxon_oid ) {
-        webError("There are no genes to save.");
+        WebUtil::webError("There are no genes to save.");
         return;
     }
 
@@ -3610,7 +3633,7 @@ sub removeAndSaveScaffolds {
 
     my @oids = param("scaffold_oid");
     if ( $#oids < 0 ) {
-        webError("Please select some scaffolds to remove.");
+        WebUtil::webError("Please select some scaffolds to remove.");
         return;
     }
     my %remove_these;
@@ -3624,7 +3647,7 @@ sub removeAndSaveScaffolds {
     WebUtil::checkFileName($filename);
 
     if (! -e "$workspace_dir/$sid/$folder/$filename") {
-        webError("File name $filename does not exist.");
+        WebUtil::webError("File name $filename does not exist.");
         return;
     }
 
@@ -3663,7 +3686,7 @@ sub saveScaffoldCart {
     # form selected genes
     my @oids = param("scaffold_oid");
     if ( $#oids < 0 ) {
-        webError("Please select some scaffolds to save.");
+        WebUtil::webError("Please select some scaffolds to save.");
         return;
     }
 
@@ -3698,13 +3721,13 @@ sub saveScaffoldDistToWorkspace {
     my $sid       = getContactOid();
     my $taxon_oid = param('taxon_oid');
     if ( !$taxon_oid ) {
-        webError("Unknown Taxon ID.");
+        WebUtil::webError("Unknown Taxon ID.");
         return;
     }
     my $dist_type = param('dist_type');
     #print "saveScaffoldDistToWorkspace() dist_type=$dist_type<br/>\n";
     if ( !$dist_type ) {
-        webError("Distribution type unknown.");
+        WebUtil::webError("Distribution type unknown.");
         return;
     }
 
@@ -3712,7 +3735,7 @@ sub saveScaffoldDistToWorkspace {
     my @ids = param($dist_type);
     #print "saveScaffoldDistToWorkspace() ids=@ids<br/>\n";
     if ( $#ids < 0 ) {
-        webError("Please select some scaffolds to save.");
+        WebUtil::webError("Please select some scaffolds to save.");
         return;
     }
 
@@ -3747,7 +3770,7 @@ sub saveScaffoldDistToWorkspace {
             @lines = @$lines_ref;
 
         } else {
-            webError("Cannot find dist type.");
+            WebUtil::webError("Cannot find dist type.");
             return;
         }
 
@@ -3792,7 +3815,7 @@ sub saveFunctionCart {
 
     my @oids = param($save_func_id_name);
     if ( $#oids < 0 ) {
-        webError("Please select some functions to save.");
+        WebUtil::webError("Please select some functions to save.");
         return;
     }
 
@@ -3862,7 +3885,7 @@ sub saveGenomeCart {
         @oids = param("taxon_filter_oid");
     }
     if ( scalar(@oids) == 0 ) {
-        webError("Please select some genomes to save.");
+        WebUtil::webError("Please select some genomes to save.");
         return;
     }
 
@@ -3907,7 +3930,7 @@ sub saveAllBrowserGenomeList {
     require GenomeList;
     my @oids = GenomeList::getTaxonsFromGenomeListFile($genomeListFilename);
     if ( scalar(@oids) <= 0 ) {
-        webError('No Genome can be saved.');
+        WebUtil::webError('No Genome can be saved.');
     }
 
     my $folder = $GENOME_FOLDER;
@@ -3943,7 +3966,7 @@ sub saveGenomeSetCreation {
     # get the genomes in the selected box:
     my @oids = param("selectedGenome1");
     if ( scalar(@oids) == 0 ) {
-        webError("Please select some genomes to save.");
+        WebUtil::webError("Please select some genomes to save.");
         return;
     }
 
@@ -3989,7 +4012,7 @@ sub checkFolder {
     my $found = WebUtil::inArray( $f, @subfolders );
 
     if ( !$found ) {
-        webDie("Invalid folder name: $f\n");
+        WebUtil::webDie("Invalid folder name: $f\n");
     }
 }
 
@@ -4004,7 +4027,6 @@ sub readFile {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) == 0 ) {
-        #main::printAppHeader("MyIMG");
         WebUtil::webErrorHeader("Please select at least one data set to load.");
         return;
     }
@@ -4040,13 +4062,19 @@ sub readFile {
 
         # show gene cart
         setSessionParam( "lastCart", "geneCart" );
-        main::printAppHeader("AnaCart");
+
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("AnaCart");
+            
         my $gc = new GeneCartStor();
         $gc->addGeneBatch( \@oids );
         $gc->printGeneCartForm( '', 1 );
     } elsif ( $folder eq $FUNC_FOLDER ) {
         setSessionParam( "lastCart", "funcCart" );
-        main::printAppHeader("AnaCart");
+    
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("AnaCart");
+    
         require FuncCartStor;
         my $fc = new FuncCartStor();
         $fc->addFuncBatch( \@oids );
@@ -4054,14 +4082,18 @@ sub readFile {
     } elsif ( $folder eq $SCAF_FOLDER ) {
         require ScaffoldCart;
         setSessionParam( "lastCart", "scaffoldCart" );
-        main::printAppHeader("AnaCart");
+
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("AnaCart");
 
         # scaffold add checks for user permission - user restriction clause
         ScaffoldCart::addToScaffoldCart( \@oids );
         ScaffoldCart::printIndex();
     } elsif ( $folder eq $GENOME_FOLDER ) {
         setSessionParam( "lastCart", "genomeCart" );
-        main::printAppHeader("AnaCart");
+
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("AnaCart");
 
         # check permission
         my $rclause   = WebUtil::urClause('t');
@@ -4094,7 +4126,9 @@ sub readFile {
         GenomeCart::dispatch();
     } elsif ( $folder eq $BC_FOLDER ) {
         setSessionParam( "lastCart", "bcCart" );
-        main::printAppHeader("AnaCart");
+
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("AnaCart");
 
         require WorkspaceBcSet;
         WorkspaceBcSet::addBcIds( \@oids );
@@ -4114,7 +4148,7 @@ sub viewFile {
     # check filename
     my $filename = param("filename");
     if ( $filename eq "" ) {
-        webError("Cannot read file.");
+        WebUtil::webError("Cannot read file.");
         return;
     }
 
@@ -4127,7 +4161,7 @@ sub viewFile {
         }
     }
     if ( !$valid ) {
-        webError("Invalid directory ($folder).");
+        WebUtil::webError("Invalid directory ($folder).");
     }
 
     WebUtil::checkFileName($filename);
@@ -4174,7 +4208,7 @@ sub deleteFile {
     }
 
     if ( scalar(@files) == 0 ) {
-        webError("Please select at least one data set to delete.");
+        WebUtil::webError("Please select at least one data set to delete.");
         return;
     }
 
@@ -4187,7 +4221,7 @@ sub deleteFile {
         }
     }
     if ( !$valid ) {
-        webError("Invalid directory.");
+        WebUtil::webError("Invalid directory.");
     }
 
     my $text = '';
@@ -4202,7 +4236,7 @@ sub deleteFile {
     	$db_file_name =~ s/'/''/g;    # replace ' with ''
         $filename = WebUtil::validFileName($filename);
 
-    	my $sql2 = "delete from contact_workspace_group\@imgsg_dev " .
+    	my $sql2 = "delete from contact_workspace_group " .
     	    "where contact_oid = $sid " .
     	    " and data_set_type = '" . $folder .
     	    "' and data_set_name = '" . $db_file_name . "'";
@@ -4245,7 +4279,7 @@ sub showProfileGeneList {
 
     my $func_id = param('func_id');
     if ( ! $func_id ) {
-        webError("No function is selected.\n");
+        WebUtil::webError("No function is selected.\n");
         return;
     }
 
@@ -4281,7 +4315,7 @@ sub showProfileGeneList {
     printStartWorkingDiv();
 
     open( FH, "$workspace_dir/$owner/$folder/$x" )
-      or webError("File size - file error $input_file");
+      or WebUtil::webError("File size - file error $input_file");
 
     print "<p>processing $input_file ...\n";
 
@@ -4525,19 +4559,19 @@ sub addSharing {
 
     my @input_files = param("filename");
     if ( scalar(@input_files) == 0 ) {
-        webError("Select at least 1 $folder set to share.");
+        WebUtil::webError("Select at least 1 $folder set to share.");
         return;
     }
 
     my $group_share = param("group_share");
     if ( ! $group_share ) {
-        webError("Select a group to share.");
+        WebUtil::webError("Select a group to share.");
         return;
     }
 
     my %group_h = WorkspaceUtil::getContactImgGroups();
     if ( ! $group_h{$group_share} ) {
-    	webError("You do not belong to the group.");
+    	WebUtil::webError("You do not belong to the group.");
     	return;
     }
     my $group_name = $group_h{$group_share};
@@ -4557,7 +4591,7 @@ sub addSharing {
     	}
     
     	$file_name =~ s/'/''/g;   # replace ' with ''
-    	my $sql2 = "insert into contact_workspace_group\@imgsg_dev (contact_oid, data_set_type, data_set_name, group_id) values ($sid, '" . $folder .
+    	my $sql2 = "insert into contact_workspace_group (contact_oid, data_set_type, data_set_name, group_id) values ($sid, '" . $folder .
     	    "', '" . $file_name . "', $group_share) ";
     	push @sqlList, ( $sql2 );
     	$total++;
@@ -4566,7 +4600,7 @@ sub addSharing {
     	my $err = db_sqlTrans( \@sqlList );
     	if ( $err ) {
     	    my $sql = $sqlList[$err-1];
-    	    webError("SQL error: $sql");
+    	    WebUtil::webError("SQL error: $sql");
     	    return;
     	}
     }
@@ -4590,7 +4624,7 @@ sub removeSharing {
 
     my @input_files = param("filename");
     if ( scalar(@input_files) == 0 ) {
-        webError("Select at least 1 $folder set to remove sharing.");
+        WebUtil::webError("Select at least 1 $folder set to remove sharing.");
         return;
     }
 
@@ -4602,7 +4636,7 @@ sub removeSharing {
     	if ( scalar(@already_share) > 0 ) {
     	    # remove sharing
     	    $file_name =~ s/'/''/g;   # replace ' with ''
-    	    my $sql2 = "delete from contact_workspace_group\@imgsg_dev where contact_oid = $sid and data_set_type = '" . $folder .
+    	    my $sql2 = "delete from contact_workspace_group where contact_oid = $sid and data_set_type = '" . $folder .
     		"' and data_set_name = '" . $file_name . "' ";
     	    push @sqlList, ( $sql2 );
     	    $total++;
@@ -4613,7 +4647,7 @@ sub removeSharing {
     	my $err = db_sqlTrans( \@sqlList );
     	if ( $err ) {
     	    my $sql = $sqlList[$err-1];
-    	    webError("SQL error: $sql");
+    	    WebUtil::webError("SQL error: $sql");
     	    return;
     	}
     }
@@ -4639,7 +4673,7 @@ sub saveIntersection {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) < 2 ) {
-        webError("Select at least 2 $folder sets to get intersection.");
+        WebUtil::webError("Select at least 2 $folder sets to get intersection.");
         return;
     }
 
@@ -4651,7 +4685,7 @@ sub saveIntersection {
     
     $ws_filename =~ s/\W+/_/g;
     if ( !$ws_filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -4664,7 +4698,7 @@ sub saveIntersection {
 
     # check if ws_filename already exist
     if ( -e "$workspace_dir/$sid/$folder/$ws_filename" ) {
-        webError("File name $ws_filename already exists. Please enter a new file name.");
+        WebUtil::webError("File name $ws_filename already exists. Please enter a new file name.");
         return;
     }
 
@@ -4694,7 +4728,7 @@ sub saveIntersection {
     }
 
     if ( !$file_size ) {
-        webError("No data in selected $folder sets. ($msg)");
+        WebUtil::webError("No data in selected $folder sets. ($msg)");
         return;
     }
 
@@ -4704,7 +4738,7 @@ sub saveIntersection {
     undef %item_counts;
 
     open( FH, "$workspace_dir/$min_c_oid/$folder/$min_file" )
-      or webError("File size - file error $min_file");
+      or WebUtil::webError("File size - file error $min_file");
     while ( my $line = <FH> ) {
         chomp($line);
 
@@ -4737,7 +4771,7 @@ sub saveIntersection {
 
     my @keys = keys %item_counts;
     if ( scalar(@keys) == 0 ) {
-        webError("No data in selected $folder sets. (item size = 0)");
+        WebUtil::webError("No data in selected $folder sets. (item size = 0)");
         return;
     }
 
@@ -4749,7 +4783,7 @@ sub saveIntersection {
         }
 
         open( FH2, "$workspace_dir/$c_oid/$folder/$input_file" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH2> ) {
             chomp($line);
@@ -4796,7 +4830,7 @@ sub saveUnion {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) < 2 ) {
-        webError("Select at least 2 $folder sets to get union.");
+        WebUtil::webError("Select at least 2 $folder sets to get union.");
         return;
     }
 
@@ -4808,7 +4842,7 @@ sub saveUnion {
     
     $ws_filename =~ s/\W+/_/g;
     if ( !$ws_filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -4821,7 +4855,7 @@ sub saveUnion {
 
     # check if ws_filename already exist
     if ( -e "$workspace_dir/$sid/$folder/$ws_filename" ) {
-        webError("File name $ws_filename already exists. Please enter a new file name.");
+        WebUtil::webError("File name $ws_filename already exists. Please enter a new file name.");
         return;
     }
 
@@ -4836,7 +4870,7 @@ sub saveUnion {
     	    next;
     	}
         open( FH2, "$workspace_dir/$c_oid/$folder/$input_file" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH2> ) {
             chomp($line);
@@ -4940,7 +4974,7 @@ sub saveSetOp {
     my $ws_filename = param("op_res_filename");
     $ws_filename =~ s/\W+/_/g;
     if ( !$ws_filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -4953,7 +4987,7 @@ sub saveSetOp {
 
     # check if ws_filename already exist
     if ( -e "$workspace_dir/$sid/$folder/$ws_filename" ) {
-        webError("File name $ws_filename already exists. Please enter a new file name.");
+        WebUtil::webError("File name $ws_filename already exists. Please enter a new file name.");
         return;
     }
 
@@ -4973,7 +5007,7 @@ sub saveSetOp {
         my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $filename, $ownerFilesetDelim, $folder );
         my $fullPathName = "$workspace_dir/$owner/$folder/$x";
         open( FH, $fullPathName )
-          or webError("File size - file error $filename");
+          or WebUtil::webError("File size - file error $filename");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -4988,9 +5022,9 @@ sub saveSetOp {
     my @keys = keys %item_counts;
     if ( scalar(@keys) == 0 ) {
         if ( $set_select_mode eq 'only_selected' ) {
-            webError( "No " . $folder . "s have been selected." );
+            WebUtil::webError( "No " . $folder . "s have been selected." );
         } else {
-            webError("No data in selected $folder sets. (item size = 0)");
+            WebUtil::webError("No data in selected $folder sets. (item size = 0)");
         }
         return;
     }
@@ -4998,7 +5032,7 @@ sub saveSetOp {
     my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $setopname2, $ownerFilesetDelim, $folder );
     my $fullPathName2 = "$workspace_dir/$owner/$folder/$x";
     open( FH2, $fullPathName2 )
-      or webError("File size - file error $setopname2");
+      or WebUtil::webError("File size - file error $setopname2");
 
     while ( my $line = <FH2> ) {
         chomp($line);
@@ -5063,14 +5097,14 @@ sub saveGeneGenomes {
     if ($isSet) {
         @input_files = WorkspaceUtil::getAllInputFiles($sid);
         if ( scalar(@input_files) == 0 ) {
-            webError("Select at least one gene set to save genomes.");
+            WebUtil::webError("Select at least one gene set to save genomes.");
             return;
         }
     } else {
         @gene_oids = param("gene_oid");
         print "gene_oids: @gene_oids<br/>\n";
         if ( scalar(@gene_oids) == 0 ) {
-            webError("There are no genomes to save. Please select a gene.");
+            WebUtil::webError("There are no genomes to save. Please select a gene.");
             return;
         }
     }
@@ -5106,7 +5140,7 @@ sub saveGeneGenomes {
     #print "ws_filename: $ws_filename<br/>\n";
     $ws_filename =~ s/\W+/_/g;
     if ( !$ws_filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -5121,7 +5155,7 @@ sub saveGeneGenomes {
     if ( $ws_save_mode eq 'save'
         && -e "$workspace_dir/$sid/$folder/$ws_filename" )
     {
-        webError("File name $ws_filename already exists for genome sets. Please enter a new file name.");
+        WebUtil::webError("File name $ws_filename already exists for genome sets. Please enter a new file name.");
         return;
     }
 
@@ -5257,14 +5291,14 @@ sub saveGeneScaffolds {
     if ($isSet) {
         @input_files = WorkspaceUtil::getAllInputFiles($sid);
         if ( scalar(@input_files) == 0 ) {
-            webError("Select at least one gene set to save scaffolds.");
+            WebUtil::webError("Select at least one gene set to save scaffolds.");
             return;
         }
     } else {
         @gene_oids = param("gene_oid");
         print "gene_oids: @gene_oids<br/>\n";
         if ( scalar(@gene_oids) == 0 ) {
-            webError("There are no scaffolds to save. Please select a gene.");
+            WebUtil::webError("There are no scaffolds to save. Please select a gene.");
             return;
         }
     }
@@ -5300,7 +5334,7 @@ sub saveGeneScaffolds {
     #print "ws_filename: $ws_filename<br/>\n";
     $ws_filename =~ s/\W+/_/g;
     if ( !$ws_filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -5315,7 +5349,7 @@ sub saveGeneScaffolds {
     if ( $ws_save_mode eq 'save'
         && -e "$workspace_dir/$sid/$folder/$ws_filename" )
     {
-        webError("File name $ws_filename already exists for scaffold sets. Please enter a new file name.");
+        WebUtil::webError("File name $ws_filename already exists for scaffold sets. Please enter a new file name.");
         return;
     }
 
@@ -5512,14 +5546,14 @@ sub saveScaffoldGenes {
     if ($isSet) {
         @input_files = WorkspaceUtil::getAllInputFiles($sid);
         if ( scalar(@input_files) == 0 ) {
-            webError("Select at least one scaffold set to save genes.");
+            WebUtil::webError("Select at least one scaffold set to save genes.");
             return;
         }
     } else {
         @scaffold_oids = param("scaffold_oid");
         #print "scaffold_oids: @scaffold_oids<br/>\n";
         if ( scalar(@scaffold_oids) == 0 ) {
-            webError("There are no genes to save. Please select a scaffold.");
+            WebUtil::webError("There are no genes to save. Please select a scaffold.");
             return;
         }
     }
@@ -5555,7 +5589,7 @@ sub saveScaffoldGenes {
     #print "ws_filename: $ws_filename<br/>\n";
     $ws_filename =~ s/\W+/_/g;
     if ( !$ws_filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -5570,7 +5604,7 @@ sub saveScaffoldGenes {
     if ( $ws_save_mode eq 'save'
         && -e "$workspace_dir/$sid/$folder/$ws_filename" )
     {
-        webError("File name $ws_filename already exists for gene sets. Please enter a new file name.");
+        WebUtil::webError("File name $ws_filename already exists for gene sets. Please enter a new file name.");
         return;
     }
 
@@ -5720,14 +5754,14 @@ sub saveScaffoldGenomes {
     if ($isSet) {
         @input_files = WorkspaceUtil::getAllInputFiles($sid);
         if ( scalar(@input_files) == 0 ) {
-            webError("Select at least one scaffold set to save genomes.");
+            WebUtil::webError("Select at least one scaffold set to save genomes.");
             return;
         }
     } else {
         @scaffold_oids = param("scaffold_oid");
         #print "scaffold_oids: @scaffold_oids<br/>\n";
         if ( scalar(@scaffold_oids) == 0 ) {
-            webError("There are no genomes to save. Please select a scaffold.");
+            WebUtil::webError("There are no genomes to save. Please select a scaffold.");
             return;
         }
     }
@@ -5763,7 +5797,7 @@ sub saveScaffoldGenomes {
     #print "ws_filename: $ws_filename<br/>\n";
     $ws_filename =~ s/\W+/_/g;
     if ( !$ws_filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -5778,7 +5812,7 @@ sub saveScaffoldGenomes {
     if ( $ws_save_mode eq 'save'
         && -e "$workspace_dir/$sid/$folder/$ws_filename" )
     {
-        webError("File name $ws_filename already exists for genome sets. Please enter a new file name.");
+        WebUtil::webError("File name $ws_filename already exists for genome sets. Please enter a new file name.");
         return;
     }
 
@@ -5912,14 +5946,14 @@ sub exportGeneFiles {
     
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) == 0 ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("Select at least one gene set to export.");
         return;
     }
@@ -5933,7 +5967,7 @@ sub exportGeneFiles {
     for my $input_file (@all_files) {
         my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
         open( FH, "$workspace_dir/$owner/$folder/$x" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -5958,7 +5992,7 @@ sub exportGeneFiles {
 
     my @keys = ( keys %genes );
     if ( scalar(@keys) == 0 ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("No genes have been selected.");
         return;
     }
@@ -6005,7 +6039,7 @@ sub getScaffoldsFromSets {
 
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
@@ -6023,7 +6057,7 @@ sub getScaffoldsFromSets {
     for my $input_file (@all_files) {
         my ( $owner, $x ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $input_file, $ownerFilesetDelim, $folder );
         open( FH, "$workspace_dir/$owner/$folder/$x" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
 
         while ( my $line = <FH> ) {
             chomp($line);
@@ -6048,7 +6082,7 @@ sub getScaffoldsFromSets {
 
     my @keys = ( keys %scaffolds );
     if ( scalar(@keys) == 0 ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
@@ -6457,7 +6491,7 @@ sub importWorkspace {
 
     my $fh = upload("uploadFile");
     if ( $fh && cgi_error() ) {
-        webError( header( -status => cgi_error() ) );
+        WebUtil::webError( header( -status => cgi_error() ) );
     }
 
     # Save imported file to tmpFile.
@@ -6627,7 +6661,7 @@ sub exportWorkspace {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid);
     if ( scalar(@all_files) == 0 ) {
-        #main::printAppHeader("MyIMG");
+
         WebUtil::webErrorHeader("Please select at least one data set to export.");
         return;
     }
@@ -6666,7 +6700,7 @@ sub exportAll {
 
         ## count own
         opendir( DIR, "$workspace_dir/$sid/$setType" )
-          or webDie("failed to read files");
+          or WebUtil::webDie("failed to read files");
         my @files = readdir(DIR);
         closedir(DIR);
 
@@ -6717,7 +6751,7 @@ sub exportFile {
             }
         }
         if ( !$valid ) {
-            webError("Invalid directory ($setType).");
+            WebUtil::webError("Invalid directory ($setType).");
         }
 
         WebUtil::checkFileName($filename);
@@ -7106,7 +7140,7 @@ sub submitFuncProfile {
             $job_result_name = param('job_result_name');
         }
         if ( !$job_result_name ) {
-            webError("Please specify a job name.");
+            WebUtil::webError("Please specify a job name.");
             return;
         }
     } else {
@@ -7116,7 +7150,7 @@ sub submitFuncProfile {
             $job_result_name = param('selected_job_name');
         }
         if ( ! $job_result_name ) {
-            webError("Please select a job.");
+            WebUtil::webError("Please select a job.");
             return;
         }
     }
@@ -7133,7 +7167,7 @@ sub submitFuncProfile {
     if ( $ws_profile_type eq 'func_category' ) {
         $functype = param('functype');
         if ( !$functype ) {
-            webError("No function category has been selected.");
+            WebUtil::webError("No function category has been selected.");
             return;
         }
         print "<h2>Computation Job Submission (function category)</h2>\n";
@@ -7144,7 +7178,7 @@ sub submitFuncProfile {
     	### FIXME: set to my own data set only
     	my ( $owner, $x) = WorkspaceUtil::splitOwnerFileset( $sid, $func_set_name );
         if ( !$x ) {
-            webError("No function set has been selected.");
+            WebUtil::webError("No function set has been selected.");
             return;
         }
         $x = MetaUtil::sanitizeGeneId3($x);
@@ -7179,7 +7213,7 @@ sub submitFuncProfile {
         }
     }
     if ( !$set_names ) {
-        webError("Please select at least one $folder set.");
+        WebUtil::webError("Please select at least one $folder set.");
         return;
     }
 
@@ -7215,68 +7249,8 @@ sub submitFuncProfile {
     print $info_fs currDateTime() . "\n";
     close $info_fs;
 
-    #old code that uses .py files, keep it as reference
-    #if ( $env->{client_py_exe} ) {
-    #    #$ENV{'PATH'}.='/global/homes/i/imachen/amy_home/img_dev/v2/webUI/webui.cgi/';
-    #    $ENV{'PATH'} .= $env->{client_path};
-    #    my @cmd = ();
-    #    if ( $folder =~ /gene/i ) {
-    #        @cmd = (
-    #            "client_wrapper.sh", "--program", "geneFuncSetProfile", "--contact", "$sid", "--output",
-    #            "$output_name",      "--geneset", "$set_names"
-    #        );
-    #    } elsif ( $folder =~ /scaffold/i ) {
-    #        @cmd = (
-    #            "client_wrapper.sh", "--program", "scafFuncSetProfile", "--contact", "$sid", "--output",
-    #            "$output_name",      "--scafset", "$set_names"
-    #        );
-    #    }
-    #
-    #    if ( $ws_profile_type eq 'func_category' ) {
-    #        push @cmd, ( "--functype", "$functype" );
-    #    } else {
-    #        push @cmd, ( "--funcset", "$func_set_name" );
-    #    }
-    #
-    #    printStartWorkingDiv();
-    #    print "<p>cmd: " . join( " ", @cmd ) . "<p>\n";
-    #
-    #    WebUtil::unsetEnvPath();
-    #    my $st = system( $env->{client_py_exe}, @cmd );
-    #
-    #    #my $st = runCmdNoExit($cmd);
-    #    #print "<p>st: ".($st>>8)."\n";
-    #    printEndWorkingDiv();
-    #
-    #    if ($st) {
-    #        print "<p><font color='red'>Error Code: $st</font>\n";
-    #    } else {
-    #        print "<p>Job is submitted successfully.\n";
-    #    }
-    #
-    #    #my $fh = newCmdFileHandle( $cmd, 'client_py' );
-    #    #my $line = "";
-    #    #while ( $line = $fh->getline() ) {
-    #    #    chomp($line);
-    #    #    print "<p>$line\n";
-    #    #}
-    #    #close $fh;
-    #
-    #    if ($st) {
-    #        # print error file
-    #        my $info_file = "$job_file_dir/error.txt";
-    #        my $info_fs   = newWriteFileHandle($info_file);
-    #        print $info_fs "$st\n";
-    #        print $info_fs currDateTime() . "\n";
-    #        close $info_fs;
-    #    }
-    #
-    #    WebUtil::resetEnvPath();
-    #} else {
-    #    print "<p>Cannot find client_wrapper.sh\n";
-    #}
 
-    my $queue_dir = $env->{workspace_queue_dir};
+    my $queue_dir = WorkspaceUtil::getQueueDir();
     my $queue_filename = $sid . '_' . $folder . '_' . $output_name;
     my $wfh = newWriteFileHandle($queue_dir . $queue_filename);
 
@@ -7348,7 +7322,7 @@ sub submitSaveFuncGene {
     my @func_ids = param("func_id");
     #print "submitSaveFuncGene() func_ids @func_ids<br/>\n";
     if ( scalar(@func_ids) == 0 ) {
-        webError("There are no genes to save. Please select a function.");
+        WebUtil::webError("There are no genes to save. Please select a function.");
         return;
     }
     my $oidsFileName = "oidsfile.txt";
@@ -7374,7 +7348,7 @@ sub submitSaveFuncGene {
     }
     #print "submitSaveFuncGene() all_files: @all_files<br/>\n";
     if ( scalar(@all_files) == 0 ) {
-        webError("There are no genes to save. Please select genes.");
+        WebUtil::webError("There are no genes to save. Please select genes.");
         return;
     }
     
@@ -7395,7 +7369,7 @@ sub submitSaveFuncGene {
 
     }
     if ( !$set_names ) {
-        webError("Please select at least one function set.");
+        WebUtil::webError("Please select at least one function set.");
         return;
     }
 
@@ -7429,7 +7403,7 @@ sub submitSaveFuncGene {
     print $info_fs currDateTime() . "\n";
     close $info_fs;
 
-    my $queue_dir = $env->{workspace_queue_dir};
+    my $queue_dir = WorkspaceUtil::getQueueDir();
     #print "submitSaveFuncGene() queue_dir=$queue_dir<br/>\n";
     my $queue_filename = $sid . '_' . $folder. 'savefuncgene' . '_' . $output_name;
     #print "submitSaveFuncGene() queue_filename=$queue_filename<br/>\n";
@@ -7474,7 +7448,7 @@ sub validJobSetNameToSaveOrReplace {
         my $job_result_param = $lcJobPrefix . '_job_result_name';
         $job_result_name = param($job_result_param);
         if ( ! $job_result_name ) {
-            webError("Please specify a job name.");
+            WebUtil::webError("Please specify a job name.");
             return;
         }
     } else {
@@ -7485,7 +7459,7 @@ sub validJobSetNameToSaveOrReplace {
             $job_result_name = param('selected_job_name');
         }
         if ( ! $job_result_name ) {
-            webError("Please select a job.");
+            WebUtil::webError("Please select a job.");
             return;
         }
     }
@@ -7505,12 +7479,12 @@ sub getJobFileDirReady {
     my $job_dir = "$workspace_dir/$sid/job";
     if ( !-e $job_dir ) {
         umask 0002;
-        mkdir $job_dir or webError("Workspace is down!");
+        mkdir $job_dir or WebUtil::webError("Workspace is down!");
     }
 
     my $job_file_dir = "$job_dir/$output_name";
     if ( !-e $job_file_dir ) {
-        mkdir $job_file_dir or webError("Workspace is down!");
+        mkdir $job_file_dir or WebUtil::webError("Workspace is down!");
     }
     else {
         cleanOldFiles( $job_file_dir );
@@ -7529,7 +7503,7 @@ sub cleanOldFiles {
 
     if ( -e $job_file_dir ) {
         opendir( DIR, $job_file_dir )
-          or webDie("failed to read files");
+          or WebUtil::webDie("failed to read files");
         my @files = readdir(DIR);
         closedir(DIR);
 
@@ -7552,7 +7526,7 @@ sub rsync {
     my ($contact_oid) = @_;
 
     if ( ! $contact_oid ) {
-        webError("contact oid cannot be null.");
+        WebUtil::webError("contact oid cannot be null.");
     }
 
     #

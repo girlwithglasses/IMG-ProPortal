@@ -79,7 +79,7 @@ sub runIprScan {
       processContent( $res->content, $seq );
    }
    else {
-      webError( $res->status_line );
+      WebUtil::webError( $res->status_line );
       webLog $res->status_line;
    }
    WebUtil::webExit(0);

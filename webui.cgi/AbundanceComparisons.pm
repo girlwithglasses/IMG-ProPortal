@@ -2,7 +2,7 @@
 # AbundanceComparisons.pm - Tool to allow for multiple pairwise
 #   genome abundance comparisons.
 #        --es 06/11/2007
-# $Id: AbundanceComparisons.pm 35599 2016-04-26 19:22:22Z klchu $
+# $Id: AbundanceComparisons.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package AbundanceComparisons;
 
@@ -376,10 +376,10 @@ sub printAbundanceResults {
     my $nQueryGenomes     = @queryGenomes;
     my $nReferenceGenomes = @referenceGenomes;
     if ( $nQueryGenomes == 0 ) {
-        webError("Please select one query genome.<br/>\n");
+        WebUtil::webError("Please select one query genome.<br/>\n");
     }
     if ( $nReferenceGenomes == 0 ) {
-        webError( "Please select 1 to $max_reference_taxons " . "reference genomes.<br/>\n" );
+        WebUtil::webError( "Please select 1 to $max_reference_taxons " . "reference genomes.<br/>\n" );
     }
 
     my $dbh = dbLogin();
@@ -408,7 +408,7 @@ sub printAbundanceResults {
     }
 
     @queryGenomes = @validGenomes;
-    webError("Selected query genome does not have any $q_data_type data.")
+    WebUtil::webError("Selected query genome does not have any $q_data_type data.")
 	if !$returnval;
 
     my %merfs_rtaxons = MerFsUtil::fetchTaxonsInFile($dbh, @referenceGenomes);
@@ -434,7 +434,7 @@ sub printAbundanceResults {
     }
 
     @referenceGenomes = @validGenomes;
-    webError("Selected reference genome(s) do not have any $r_data_type data.")
+    WebUtil::webError("Selected reference genome(s) do not have any $r_data_type data.")
 	if !$returnval;
 
     printMainForm();
@@ -508,7 +508,7 @@ sub printAbundanceResults {
 
     if (scalar keys %refTaxonResults == 0) {
     	printEndWorkingDiv();
-    	webError("Could not find scores for selected genomes.");
+    	WebUtil::webError("Could not find scores for selected genomes.");
     }
 
     my %refTaxonPvalues;
@@ -1001,7 +1001,7 @@ sub sortAbundanceFile {
     my $pagerFileIdx  = "$pagerFileRoot.idx";
     if ( !( -e $pagerFileRows ) || !( -e $pagerFileIdx ) ) {
         webLog("Expired session file '$pagerFileRows' or '$pagerFileIdx'\n");
-        webError("Session file expired.<br/>Please start your 'Function Comparison' study from the beginning.\n");
+        WebUtil::webError("Session file expired.<br/>Please start your 'Function Comparison' study from the beginning.\n");
     }
 
     my $rfh = newReadFileHandle( $pagerFileRows, "sortAbudanceFile" );
@@ -1081,19 +1081,19 @@ sub printOnePage {
     my $pagerFileXls  = "$pagerFileRoot.xls";
     if ( !-e ($pagerFileIdx) ) {
         warn("$pagerFileIdx not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
     if ( !-e ($pagerFileRows) ) {
         warn("$pagerFileRows not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
     if ( !-e ($pagerFileMeta) ) {
         warn("$pagerFileMeta not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
     if ( !-e ($pagerFileXls) ) {
         warn("$pagerFileXls not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
 
     my %metaData      = loadMetaData($pagerFileMeta);
@@ -1534,7 +1534,7 @@ sub printAbundanceDownload {
     my $pagerFileRoot = getPagerFileRoot( $function, $xcopy, $estNormalization, $normalization, $outType );
     my $path = "$pagerFileRoot.xls";
     if ( !( -e $path ) ) {
-        webErrorHeader( "Session of download has expired. " . "Please start again." );
+        WebUtil::webErrorHeader( "Session of download has expired. " . "Please start again." );
     }
     my $sz = fileSize($path);
 
@@ -1800,7 +1800,7 @@ sub getZlors {
         $n2 += $cnt;
     }
     if ( $nKeys1 != $nKeys2 ) {
-        #webDie("getZlors - getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match\n");
+        #WebUtil::webDie("getZlors - getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match\n");
         webLog("Warning: getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match\n ");
         print "Warning: getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match<br/>\n";
     }
@@ -2000,7 +2000,7 @@ sub getPvalues {
         my @keys        = sort( keys(%$dscores_ref) );
         my $nFuncs2     = @keys;
         if ( $nFuncs > 0 && $nFuncs != $nFuncs2 ) {
-            webDie( "getPvalues: taxon_oid=$taxon_oid " . "nFuncs=$nFuncs nFuncs2=$nFuncs2\n" );
+            WebUtil::webDie( "getPvalues: taxon_oid=$taxon_oid " . "nFuncs=$nFuncs nFuncs2=$nFuncs2\n" );
         }
 
 	#print "<br/>getPvalues ($taxon_oid) ".$nFuncs2."<br/>";
@@ -2045,7 +2045,7 @@ sub getPvalues {
         my @pvalues = split( / /, $s );
         my $nPvalues = @pvalues;
         if ( $nPvalues != $nFuncs ) {
-            webDie("getPvalues: nPvalues=$nPvalues nFuncs=$nFuncs\n");
+            WebUtil::webDie("getPvalues: nPvalues=$nPvalues nFuncs=$nFuncs\n");
         }
         my %funcPvalues;
         for ( my $i = 0 ; $i < $nPvalues ; $i++ ) {

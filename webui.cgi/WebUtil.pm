@@ -1,516 +1,7 @@
-#sub logstuff
-{
-	package LogStuff;
-	use strict;
-	use warnings;
-	use feature ':5.16';
-	use WebConfig;
-	use FileHandle;
-	use WebUtil qw();
-	use Data::Dumper;
-	use Carp qw( longmess );
-
-	my $env = getEnv();
-
-	my $web_log_override = 0;
-
-	sub stackTrace {
-		my ( $title, $text, $contact_oid, $sid ) = @_;
-
-		if ( ! $contact_oid ) {
-			$contact_oid = WebUtil::getContactOid() || "";
-		}
-		if ( ! $sid ) {
-			$sid = WebUtil::getSessionId() || "";
-		}
-
-		# Natalia or Ken
-		if (   $env->{img_ken}
-			|| $contact_oid eq '10'
-			|| $contact_oid eq '3038' )
-		{
-			my $dump = longmess();
-			my $date = WebUtil::dateTimeStr();
-
-			my $str = qq{
-
-	======== Stack Trace $title ============
-	$date
-		$text
-		contact id = $contact_oid
-		session id = $sid
-	$dump
-	======== End of Stack Trace ============
-
-			};
-
-			my $afh = new FileHandle( $env->{web_log_file}, "a" ); #newAppendFileHandle( $web_log_file, "stackTrace" );
-			if ( !$afh ) {
-				print "Content-type: text/html\n\n";
-				print "Stack Trace Error FileHandle\n";
-				exit( -1 );
-			}
-			print { $afh } $str;
-			close $afh;
-		}
-	}
-
-	############################################################################
-	# setLogStuff::webLogOverride - Set flag for overriding web logging file.
-	#   Mainly used by test applications.
-	############################################################################
-	sub setWebLogOverride {
-		my ($bf) = @_;
-		$web_log_override = $bf;
-	}
-
-	############################################################################
-	# delete the web logs after given size
-	#
-	# new for 3.3 - ken
-	############################################################################
-	#sub purgeLogs {
-	#    my ($file) = @_;
-	#
-	#    # return in bytes
-	#    my $filezie = -s $file;
-	#
-	#    # 100 MB
-	#    my $maxsize = 100 * 1024 * 1024;
-	#
-	#    if ( $filezie > $maxsize ) {
-	#
-	#        #webErrLog("$filezie unlinked\n");
-	#        unlink($file);
-	#    }
-	#}
-
-	############################################################################
-	# LogStuff::webLog - Do logging to file.
-	############################################################################
-	sub webLog {
-		my ($s) = @_;
-		return unless $env->{verbose};
-
-
-		if ( $env->{web_log_file} && -e $env->{web_log_file} ) {
-			my $afh = WebUtil::newAppendFileHandle( $env->{web_log_file}, "webLog" );
-			print { $afh } $s;
-			close $afh;
-		}
-		else {
-#			WebUtil::webDie("env{ web_log_file } not defined in WebConfig.pm\n") unless defined $env->{err_log_file};
-			warn $s;
-		}
-
-		#    my $enable_purge = $env->{enable_purge};
-		#    if ($enable_purge) {
-		#        purgeLogs($web_log_file);
-		#    }
-
-	}
-
-	############################################################################
-	# webErrLog - Do logging to STDERR to file.
-	############################################################################
-	sub webErrLog {
-		my ($s) = @_;
-
-		if ( $env->{err_log_file} && -e $env->{err_log_file} ) {
-			my $afh = WebUtil::newAppendFileHandle( $env->{err_log_file}, "webErrLog" );
-			print $afh $s;
-			close $afh;
-		}
-		else {
-			warn $s;
-#			WebUtil::webDie("env{ err_log_file } not defined in WebConfig.pm\n") unless defined $env->{err_log_file};
-		}
-	}
-
-	# trace logins and logouts
-	# $loginType - login or logout
-	# $sso - img or sso
-	sub loginLog {
-		my ( $loginType, $sso ) = @_;
-		if ( $env->{login_log_file} ) {
-
-=cut
-			my $afh         = newAppendFileHandle( $env->{login_log_file} );
-			my $time        = dateTimeStr();
-			my $session     = getSessionId();
-			my $contactId   = getContactOid();
-			my $url         = $env->{cgi_url};
-			my $remote_addr = $ENV{REMOTE_ADDR};
-			my $servername  = getHostname();
-
-			print $afh $time;
-			print $afh "\t";
-			print $afh $loginType;
-			print $afh "\t";
-			print $afh $sso;
-			print $afh "\t";
-			print $afh $contactId;
-			print $afh "\t";
-			print $afh $remote_addr;
-			print $afh "\t";
-			print $afh $servername;
-			print $afh "\t";
-			print $afh $url;
-			print $afh "\t";
-			print $afh $session;
-			print $afh "\n";
-=cut
-		my $afh         = WebUtil::newAppendFileHandle( $env->{login_log_file} );
-		my $time        = WebUtil::dateTimeStr();
-		my $session_id  = WebUtil::getSessionId();
-		my $contactId   = WebUtil::getContactOid();
-		my $servername  = WebUtil::getHostname();
-
-		print { $afh } join( "\t", ( $time, $loginType, $sso, $contactId, $ENV{REMOTE_ADDR}, $servername, $env->{cgi_url}, $session_id ) ) . "\n";
-
-
-			close $afh;
-		}
-	}
-
-	1;
-}
-
-{
-#sub dbstuff
-	package DatabaseStuff;
-	use strict;
-	use warnings;
-	use feature ':5.16';
-	use WebConfig;
-	use DBI;
-	use MIME::Base64 qw( encode_base64 decode_base64 );
-	use POSIX;
-
-	my $env = getEnv();
-	my $DBH_IMG;
-	my $DBH_GOLD;
-	my $oracle_config            = $env->{oracle_config} || undef;
-	my $maxClobSize = 38000;
-
-	my $timeoutSec;
-	my $dbLoginTimeout = 10;    # 10 seconds
-
-
-	sub setTimeoutSec {
-		if ($_[0]) {
-			$timeoutSec = shift;
-		}
-	}
-
-	sub set_dbh {
-		my %args = @_;
-		$DBH_IMG = $args{img_core} if $args{img_core};
-		$DBH_GOLD = $args{img_gold} if $args{img_gold};
-	}
-
-	############################################################################
-	# dbLogin - Login to oracle or some RDBMS and return handle.
-	############################################################################
-	sub dbLogin {
-		if ( defined $DBH_IMG ) {
-
-			#http://search.cpan.org/~pythian/DBD-Oracle-1.64/lib/DBD/Oracle.pm#ping
-			#        my  $rv = $DBH_IMG->ping;
-			#        if($rv) {
-			LogStuff::webLog("img using pooled connection \n");
-			return $DBH_IMG;
-
-			#        }
-		}
-
-		require $oracle_config if $oracle_config;
-
-		my ( $dsn, $user, $pw, $ora_port, $ora_host, $ora_sid );
-		if ( $oracle_config ) {
-			$dsn      = $ENV{ORA_DBI_DSN};
-			$user     = $ENV{ORA_USER};
-			$pw       = $ENV{ORA_PASSWORD};
-			$ora_port = $ENV{ORA_PORT};
-			$ora_host = $ENV{ORA_HOST};
-			$ora_sid  = $ENV{ORA_SID};
-		}
-
-		if ( $ora_port ne "" && $ora_host ne "" && $ora_sid ne "" ) {
-			$dsn = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid;";
-		}
-
-		my $mask   = POSIX::SigSet->new(SIGALRM);    # signals to mask in the handler
-		my $action = POSIX::SigAction->new(
-			sub {
-				WebUtil::webErrorHeader("Database connection timeout. UI is waiting too long. Please try again later.");
-			},       # the handler code ref
-			$mask # not using (perl 5.8.2 and later) 'safe' switch or sa_flags
-		);
-
-		my $oldaction = POSIX::SigAction->new();
-		sigaction( SIGALRM, $action, $oldaction );
-		eval {
-			alarm($dbLoginTimeout);                  # seconds before time out
-			$DBH_IMG = DBI->connect( $dsn, $user, pwDecode($pw) );
-			alarm(0);                                # cancel alarm (if connect worked fast)
-		};
-		alarm(0);                                    # cancel alarm (if eval failed)
-
-		# restore original signal handler
-		sigaction( SIGALRM, $oldaction );
-		alarm($timeoutSec) if $timeoutSec;
-
-		if ($@) {
-			webError($@);
-		} elsif ( !defined($DBH_IMG) ) {
-			my $error = $DBI::errstr;
-
-			#LogStuff::webLog("$error\n");
-			if ( $error =~ "ORA-00018" ) {
-
-				# "ORA-00018: maximum number of sessions exceeded"
-				WebUtil::webErrorHeader( "<br/> Sorry, database is very busy. " . "Please try again later. <br/> $error", 1 );
-			} else {
-				WebUtil::webErrorHeader(
-					"<br/>  This is embarrassing. Sorry, database is down. " . "Please try again later. <br/> $error", 1 );
-			}
-		}
-		$DBH_IMG->{LongReadLen} = $maxClobSize;
-		$DBH_IMG->{LongTruncOk} = 1;
-
-		my $max = getMaxSharedConn( $DBH_IMG );
-		$max = $max * 0.9;    # 90% threshold
-		my $opn = getOpenSharedConn( $DBH_IMG );
-		LogStuff::webLog("max = $max , open = $opn\n");
-		if ( ! $env->{ignore_db_check} && $opn >= $max ) {
-			WebUtil::webErrorHeader( "<br>We are sorry. The database is very busy ($opn, $max). Please try again later. <br> ", 1 );
-		}
-
-		return $DBH_IMG;
-	}
-
-	#
-	# max number of possible shared connections
-	#
-	sub getMaxSharedConn {
-		my ($dbh) = @_;
-
-		if ( $env->{img_edu} ) {
-
-	#SELECT name, value
-	#  FROM v$parameter
-	# WHERE name = 'sessions'
-			return 200;
-		} else {
-			return 500; # all other img system
-		}
-
-		my $sql = qq{
-	select value from v\$parameter where name = 'max_shared_servers'
-		};
-		my $cur = execSql( $dbh, $sql, $env->{verbose} );
-		my ($cnt) = $cur->fetchrow();
-
-		return $cnt;
-	}
-
-	#
-	# the number of current open shared connections
-	#
-	# I should take 80% ??? of the max to test against to throw a db busy message
-	#
-	sub getOpenSharedConn {
-		my ($dbh) = @_;
-		my $sql = qq{
-	select count(*) from v\$session where server != 'DEDICATED'
-		};
-
-		if ( $env->{img_edu} ) {
-			$sql = qq{
-	select count(*) from v\$session
-			};
-		}
-
-		my $cur = execSql( $dbh, $sql, $env->{verbose} );
-		my ($cnt) = $cur->fetchrow();
-
-		return $cnt;
-	}
-
-	sub dbGoldLogin {
-		my ($isAjaxCall) = @_;
-
-		if ( defined $DBH_GOLD ) {
-
-			#        my  $rv = $DBH_GOLD->ping;
-			#        if($rv) {
-			LogStuff::webLog("gold using pooled connection \n");
-			return $DBH_GOLD;
-
-			#        }
-		}
-
-		# use the new database imgsg_dev
-		my $user;        #     = "imgsg_dev";
-		my $pw;          #       = decode_base64('VHVlc2RheQ==');
-		my $ora_host;    # = 'muskrat.jgi-psf.org';                 #"jericho.jgi-psf.org";
-		my $ora_port;    # = "";
-		my $ora_sid;     #  = "imgiprd";
-		my $dsn;         #      = "dbi:Oracle:" . $ora_sid;
-
-		my $img_ken_localhost      = $env->{img_ken_localhost};
-		my $img_gold_oracle_config = $env->{img_gold_oracle_config};
-
-		if ($img_ken_localhost) {
-
-			# used by ken for local testing only!
-
-			$user = "imgsg_dev";
-			$pw   = decode_base64('VHVlc2RheQ==');
-
-			$ora_host = "localhost";
-			$ora_port = "1531";
-			$ora_sid  = "imgiprd";
-		} elsif ($img_gold_oracle_config) {
-
-			require $img_gold_oracle_config;
-			$dsn      = $ENV{ORA_DBI_DSN_GOLD};
-			$user     = $ENV{ORA_USER_GOLD};
-			$pw       = pwDecode( $ENV{ORA_PASSWORD_GOLD} );
-			$ora_port = "";
-			$ora_sid  = "";
-			$ora_host = "";
-
-			#LogStuff::webLog("===== using gold snapshot db ===========\n");
-		}
-
-		if ( $ora_port ne "" ) {
-			$dsn = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid";
-		}
-
-		my $mask   = POSIX::SigSet->new(SIGALRM);    # signals to mask in the handler
-		my $action = POSIX::SigAction->new(
-			sub {
-				if ($isAjaxCall) {
-					return '';
-					webExit(0);
-				} else {
-					webErrorHeader("GOLD database connection timeout. UI is waiting too long. Please try again later.");
-				}
-
-			},                                       # the handler code ref
-			$mask
-
-			  # not using (perl 5.8.2 and later) 'safe' switch or sa_flags
-		);
-
-		my $oldaction = POSIX::SigAction->new();
-		sigaction( SIGALRM, $action, $oldaction );
-		eval {
-			alarm($dbLoginTimeout);                  # seconds before time out
-			$DBH_GOLD = DBI->connect( $dsn, $user, pwDecode($pw) );
-			alarm(0);                                # cancel alarm (if connect worked fast)
-		};
-		alarm(0);                                    # cancel alarm (if eval failed)
-
-		# restore original signal handler
-		sigaction( SIGALRM, $oldaction );
-		alarm($timeoutSec) if $timeoutSec;
-
-		if ($@) {
-			webError("$@");
-		} elsif ( ! defined( $DBH_GOLD ) ) {
-			my $error = $DBI::errstr;
-
-			#LogStuff::webLog("$error\n");
-			if ( $error =~ "ORA-00018" ) {
-
-				# "ORA-00018: maximum number of sessions exceeded"
-				webErrorHeader( "<br/> DB GOLD: Sorry, database is very busy. " . "Please try again later. <br/> $error", 1 );
-			} else {
-				webErrorHeader(
-					"<br/> DB GOLD: This is embarrassing. Sorry, database is down. " . "Please try again later. <br/> $error",
-					1 );
-			}
-		}
-		$DBH_GOLD->{LongReadLen} = $maxClobSize;
-		$DBH_GOLD->{LongTruncOk} = 1;
-		return $DBH_GOLD;
-	}
-
-	#
-	# logout of img
-	#
-	sub dbLogoutImg {
-		if ( defined $DBH_IMG ) {
-			LogStuff::webLog("img pooled connection logout\n");
-			$DBH_IMG->disconnect();
-			undef $DBH_IMG;
-		}
-
-		LogStuff::stackTrace("WebUtil::dbLogoutImg()");
-	}
-
-	#
-	# logout of gold
-	#
-	sub dbLogoutGold {
-		if ( defined $DBH_GOLD ) {
-			LogStuff::webLog("gold pooled connection logout\n");
-			$DBH_GOLD->disconnect();
-			undef $DBH_GOLD;
-		}
-	}
-
-	1;
-
-}
-
-{
-	package CGIStuff;
-	use strict;
-	use warnings;
-	use feature ':5.16';
-	use WebConfig qw(getEnv);
-	use CGI;
-	my $env = getEnv();
-
-	my $cgi;
-
-	sub set_cgi {
-
-
-
-	}
-
-}
-
-{
-	package SessionStuff;
-	use strict;
-	use warnings;
-	use feature ':5.16';
-	use WebConfig qw(getEnv);
-	my $env = getEnv();
-
-	my $session;
-
-	sub set_session {
-
-
-	}
-
-
-
-}
-
-{
-
 ############################################################################
 #   Misc. web utility functions.
 # 	--es 04/15/2004
-# $Id: WebUtil.pm 36678 2017-03-08 19:48:02Z klchu $
+# $Id: WebUtil.pm 37032 2017-05-01 20:04:30Z klchu $
 ############################################################################
 package WebUtil;
 
@@ -538,13 +29,12 @@ BEGIN {
   binOid2TaxonOid
   blankStr
   blastProcCheck
-  blockRobots
   bsearchFpos
   buttonUrl
   buttonUrlNewWindow
-  canEditBin
   canEditGeneTerm
   canEditPathway
+  canEditBin
   catOid2Name
   checkAccess
   checkBlankVar
@@ -568,6 +58,7 @@ BEGIN {
   currDateTime
   dateSortVal
   dateTimeStr
+  dbLogin
   decode
   dirList
   domainLetterNote
@@ -578,8 +69,8 @@ BEGIN {
   emailLinkParen
   encode
   enzymeName
-  escapeQuote
   escHtml
+  escapeQuote
   excelHeaderName
   execSql
   execSqlBind
@@ -590,7 +81,6 @@ BEGIN {
   fileAtime
   fileRoot
   fileSize
-  flushBrowser
   gcContent
   geneOid2AASeq
   geneOid2AASeqLength
@@ -654,11 +144,9 @@ BEGIN {
   hasHomolog
   hiddenVar
   highlightMatchHTML
-  highlightMatchHTML_p12
   highlightMatchHTML2
+  highlightMatchHTML_p12
   highlightMatchHTML3
-  highlightRect
-  highlightRectRgb
   histogramBar
   imgTerm2PartsList
   imgTerm2Pathways
@@ -673,7 +161,6 @@ BEGIN {
   isStopCodon
   joinSqlQuoted
   keggPathwayName
-  lastPathTok
   loadFuncMap
   loadGeneOid2AltName4OidList
   locusTagCount
@@ -685,12 +172,12 @@ BEGIN {
   newAppendFileHandle
   newCmdFileHandle
   newReadFileHandle
-  newUnzipFileHandle
   newWriteFileHandle
+  newUnzipFileHandle
   pageAnchor
   pageLink
-  paramCast
   paramMatch
+  paramCast
   parseBlastTab
   parseDNACoords
   pearsonCorr
@@ -702,23 +189,20 @@ BEGIN {
   printCuraCartFooter
   printEndWorkingDiv
   printExcelHeader
-  printFile
   printFuncCartFooter
   printGeneCartFooter
   printGenesToExcel
   printGeneTableExport
   printHeaderWithInfo
+  printInfoTipLink
   printHiliteAttrRow
   printHint
   printHint2
-  printInfoTipLink
   printMainForm
   printMessage
   printNoCache
   printOptAttrRow
   printPhyloSelectionList
-  printPhyloSelectionListOld
-  printResetFormButton
   printStartWorkingDiv
   printStatusBox
   printStatusBoxUp
@@ -733,6 +217,7 @@ BEGIN {
   readFasta
   readFileIndexed
   readMultiFasta
+  printResetFormButton
   resetContactOid
   resetEnvPath
   runCmd
@@ -742,8 +227,6 @@ BEGIN {
   setLinkTarget
   setSessionParam
   setTaxonSelections
-  showFile
-  showFileStderr
   sortByTaxonName
   splitTerm
   sqlInClause
@@ -765,49 +248,24 @@ BEGIN {
   validateGenePerms
   validEnvBlastDbs
   validOid
-  webDie
-  webError
-  webErrorHeader
+  webLog
   wrapSeq
   wsystem
   wunlink
-
-	dbLogin
-	webErrLog
-	webLog
-
+  highlightRect
+  highlightRectRgb
 );
 
 }
 
 
-sub dbLogin { return DatabaseStuff::dbLogin(@_); }
-sub webErrLog { return LogStuff::webErrLog( @_ ); }
-sub webLog { return LogStuff::webLog( @_ ); }
 
-=cut
-
-sub dbGoldLogin { return DatabaseStuff::dbGoldLogin(@_); }
-sub dbLogoutGold { return DatabaseStuff::dbLogoutGold(@_); }
-sub dbLogoutImg { return DatabaseStuff::dbLogoutImg( @_ ); }
-sub getMaxSharedConn { return DatabaseStuff::getMaxSharedConn( @_ ); }
-sub getOpenSharedConn { return DatabaseStuff::getOpenSharedConn( @_ ); }
-
-sub loginLog { return LogStuff::loginLog( @_ ); }
-sub purgeLogs { return LogStuff::purgeLogs( @_ ); }
-sub set_dbh {
-sub setTimeoutSec { return LogStuff::setTimeoutSec( @_ ); }
-sub setWebLogOverride { return LogStuff::setWebLogOverride( @_ ); }
-sub stackTrace { return LogStuff::stackTrace( @_ ); }
-
-=cut
 
 use Time::localtime;
-use WebConfig;
+
 use DBI;
 use GD;
 use CGI qw( :standard );
-use CGI::PSGI;
 use CGI::Session qw/-ip-match/;    # for security - ken
 use CGI::Cookie;
 use MIME::Base64 qw( encode_base64 decode_base64 );
@@ -817,35 +275,39 @@ use LWP;
 use LWP::UserAgent;
 use HTTP::Request::Common qw( GET );
 use Storable;
-
-#use CGI::Carp qw( fatalsToBrowser carpout set_message  );
 use CGI::Carp qw( carpout set_message  );
 use Cwd;
 use File::Path qw(make_path remove_tree);
 use Sys::Hostname;
-use Carp qw(cluck);
+use Carp qw(longmess);
 use POSIX ':signal_h';
 use JSON;
 
-# use IMG::Util::Untaint;
+use Sub::Override;
 
-my $timeoutSec;    # set by main.pl; see WebUtil::timeout()
+use WebConfig;
+use WebIO;
+use WebPrint;
+use WebSession;
+use WebDB;
+
+my $timeoutSec = 0;    # set by main.pl; see WebUtil::timeout()
 
 # Force flush
 $| = 1;
 
-$ENV{TESTING} = 1;
 ###
 # Environment variables
 #
 my $env                      = getEnv();
 my $main_cgi                 = $env->{main_cgi};
 my $base_url                 = $env->{base_url};
+#my $oracle_config            = $env->{oracle_config} || undef;
+my $site_pw_md5              = $env->{site_pw_md5};
 my $show_sql_verbosity_level = $env->{show_sql_verbosity_level};
 my $top_base_url = $env->{top_base_url};
-$env->{dev_site} = 1 if $ENV{TESTING};
 
-#require $mysql_config  if $mysql_config  ne "";
+
 my $img_internal        = $env->{img_internal};
 my $include_metagenomes = $env->{include_metagenomes};
 my $img_lite            = $env->{img_lite};
@@ -857,6 +319,7 @@ my $env_blast_dbs         = $env->{env_blast_dbs};
 my $env_blast_defaults    = $env->{env_blast_defaults};
 my $snp_blast_data_dir    = $env->{snp_blast_data_dir};
 my $img_term_overlay      = $env->{img_term_overlay};
+
 my $img_ken               = $env->{img_ken};
 my $img_er                = $env->{img_er};
 my $img_geba              = $env->{img_geba};
@@ -870,9 +333,10 @@ my $blastall_bin          = $env->{blastall_bin};
 my $img_hmms_serGiDb      = $env->{img_hmms_serGiDb};
 my $img_hmms_singletonsDb = $env->{img_hmms_singletonsDb};
 my $jira_email_error      = $env->{jira_email_error};
-my $img_nr = $env->{img_nr};
 
-my $site_pw_md5              = $env->{site_pw_md5};
+my $web_log_override      = 0;
+
+my $img_nr = $env->{img_nr};
 
 # need this for IMG 2.3
 my $show_myimg_login = $env->{show_myimg_login};
@@ -880,42 +344,10 @@ my $show_myimg_login = $env->{show_myimg_login};
 # html bookmark - ken
 my $content_list = $env->{content_list};
 
-my $mysql_config             = $env->{mysql_config} || undef;
-
-my ( $dsn, $user, $pw );
-if ( $mysql_config ) {
-    $dsn  = $ENV{MYSQL_DBI_DSN};
-    $user = $ENV{MYSQL_USER};
-    $pw   = $ENV{MYSQL_PASSWORD};
-}
-#
-# gold dbh and img dbh
-# let's create a single instance of these db handlers
-# I would use connect_cache but its does not work (very buggy) for inserts, updates and deletes
-# - ken
-
 my $base_dir    = $env->{base_dir};
 my $tmp_dir     = $env->{tmp_dir};
 my $tmp_url     = $env->{tmp_url};
-my $cgi_tmp_dir = $env->{cgi_tmp_dir};
 my $log_dir     = $env->{log_dir};
-
-# Force the temporary files directory to dir abc - for files uploads see CGI.pm docs
-# http://perldoc.perl.org/CGI.html search for -private_tempfiles
-#$CGITempFile::TMPDIRECTORY = '/opt/img/temp';
-#$CGITempFile::TMPDIRECTORY = $TempFile::TMPDIRECTORY = '/opt/img/temp';
-#or
-#$ENV{TMPDIR} = '/opt/img/temp';
-# http://www.webdeveloper.com/forum/showthread.php?157639-CGI-Perl-uploading-files
-#
-$CGITempFile::TMPDIRECTORY = $TempFile::TMPDIRECTORY = "$cgi_tmp_dir";
-
-# For sqlite
-$ENV{TMP}     = "$cgi_tmp_dir";
-$ENV{TEMP}    = "$cgi_tmp_dir";
-$ENV{TEMPDIR} = "$cgi_tmp_dir";
-$ENV{TMPDIR}  = "$cgi_tmp_dir";
-$ENV{SQLITE_TMPDIR}  = "$cgi_tmp_dir";
 
 
 my $cgi_dir             = $env->{cgi_dir};
@@ -927,19 +359,12 @@ my $taxon_reads_fna_dir = $env->{taxon_reads_fna_dir};
 my $taxon_lin_fna_dir   = $env->{taxon_lin_fna_dir};
 my $wsimHomologs_bin    = $env->{wsimHomologs_bin};
 my $all_fna_files_dir   = $env->{all_fna_files_dir};
-
-#my $gene_homlogs_tab_file = $env->{ gene_homologs_tab_file };
-#my $gene_homlogs_fpos_file = $env->{ gene_homologs_fpos_file };
 my $fastacmd_bin  = $env->{fastacmd_bin};
 my $scaffold_cart = $env->{scaffold_cart};
-
-#my $use_func_cart = $env->{ use_func_cart };
 my $use_func_cart = 1;
 
 # oracle in statement limit
 my $ORACLEMAX = 999;
-
-my $dbLoginTimeout = 10;    # 10 seconds
 
 my $max_gene_batch        = 100;
 my $max_taxon_batch       = 500;
@@ -949,90 +374,105 @@ my $maxGeneListResults    = 1000;
 my $user_restricted_site  = $env->{user_restricted_site};
 my $no_restricted_message = $env->{no_restricted_message};
 
-#blockRobots();
-#my $max_db_conn           = $env->{max_db_conn};
-my $cgi;
-my $g_session;
-
-# see http://search.cpan.org/~sherzodr/CGI-Session-3.95/Session/Tutorial.pm
-# section INITIALIZING EXISTING SESSIONS
-# idea:
-# before we create a session id lets check the cookies
-# if it exists use existing cookie sid
-# also the cookie name is now system base url specific
-# - Ken
-my $cookie_name = "CGISESSID_" . ( $env->{urlTag} || ( split m!/!, $base_url )[-1] );
-
 my $linkTarget;
 
-
 ## --es 05/05/2005 limit no. of concurrent BLAST jobs.
-my $max_blast_jobs = $env->{max_blast_jobs} || 20;
-#$max_blast_jobs = 20 if $max_blast_jobs == 0;
+my $max_blast_jobs = $env->{max_blast_jobs};
+$max_blast_jobs = 20 if $max_blast_jobs == 0;
 
 my $verbose = $env->{verbose};
-## For web servers only, but not for developer doing "perl -c ...".
-if ( defined $ENV{GATEWAY_INTERFACE}  && $env->{err_log_file} ) {
-    my $err_fh = newAppendFileHandle( $env->{err_log_file}, "a" );
-    if ( !defined($err_fh) ) {
-        webDie('Unable to write ' . $env->{err_log_file} . "\n");
-    }
-    carpout($err_fh);
-}
 
 # if a blast process is running and was called using the blast wrapper
 # the child process id should be store here for the timeout to kill it
 # - ken
-my $blast_PID = 0;
+# - no longer used - ken 2017-05-01
+#my $blast_PID = 0;
 
+# WebDB Oject
+my $webDBObject;
+my $webSessionObject;
+my $webSessionPrint;
 
-    my $cookie_sid = $cgi->cookie($cookie_name) || undef;
-    
-    # test last host cookie
-    my $hostname = WebUtil::getHostname();
-    my $cookie_host = $cgi->cookie('img_host' . $env->{urlTag}) || undef;
-    webLog("\n\nHOST $hostname === cookie host $cookie_host\n\n");
-    if(defined($cookie_host) && $hostname ne $cookie_host) {        
-        printSessionExpired("over 1+ hour idle time.");
+sub dispatch {
+	my $self = shift;
+	my $junk = shift;
+	my $sessionObj = shift;
+	my $dbObj = shift;
+
+	setWebSessionObject($sessionObj);
+	setWebDBObject($dbObj);
+}
+
+=head3 init_from_proportal
+
+Initialise common WebUtil params from the ProPortal App
+
+@param   $img_app   the IMG application object
+
+@return  (various variables initialised)
+
+=cut
+
+sub init_from_proportal {
+
+	say 'running init_from_proportal!';
+
+	my $img_app = shift;
+
+#	say 'img_app: ' . Dumper $img_app;
+
+	CGI::initialize_globals();
+
+	my $cgi = CGI->new();
+
+	$webDBObject = WebDB->new({
+		imgDbh => $img_app->connection_for_schema('img_core')->dbh,
+		goldDbh => $img_app->connection_for_schema('img_gold')->dbh
+	});
+
+	$webSessionObject = WebSession->new({
+		_cgi => $cgi,
+		_cookie_name => 'cookie name',
+		_g_session => $img_app->app->session,
+		_env => $img_app->config
+	});
+
+}
+
+#
+# get the dboject
+#
+sub setWebDBObject {
+    $webDBObject = shift;
+}
+
+sub setWebSessionObject {
+    $webSessionObject = shift;
+}
+
+sub setWebSessionPrint {
+    $webSessionPrint = shift;
+}
+
+sub getWebDBObject {
+	if(!$webDBObject) {
+		die("webDBObject was not initiialized!");
+	}
+    return $webDBObject;
+}
+
+sub getWebSessionObject {
+    if(!$webSessionObject) {
+        die("webSessionObject was not initiialized!");
     }
-    
-    # http://search.cpan.org/~markstos/CGI-Session-4.48/lib/CGI/Session/Tutorial.pm
-    # Above example is worth an attention. Remember, all expired sessions are empty sessions, 
-    # but not all empty sessions are expired sessions.
-    my $sessiontest = CGI::Session->load(undef, $cookie_sid, { Directory => $cgi_tmp_dir });
-    if ( $sessiontest->is_expired ) {
-        webLog( "\n\nYOUR session expired. $cookie_sid\n\n");
+    return $webSessionObject;
+}
 
-        # if not from the login page jgi sso
-        my $oldLogin = param('oldLogin');
-        if($oldLogin eq '') {
-            printSessionExpired("over 55+ min idle time.");
-        }
-    } 
-    
-    if ( $sessiontest->is_empty ) {
-        # my login out or expired session
-        webLog( "\n\nYOUR session is_empty: $cookie_sid\n\n");
-        $g_session = $sessiontest->new(); 
-        my $newid = getSessionId();
-        webLog( "\n\nYOUR NEW session created in is_empty(): $newid\n\n");
-    } else {
-        $g_session = $sessiontest;
+sub getWebSessionPrint {
+    if(!$webSessionPrint) {
+        die("webSessionPrint was not initiialized!");
     }
-    
-    # OLD way for cgi session v3.x+
-    #$g_session = new CGI::Session( undef, $cookie_sid, { Directory => $cgi_tmp_dir } ); # this works better
-    #$g_session              = new CGI::Session( undef, $cgi, { Directory => $cgi_tmp_dir } ); # does not as well
-    webLog("\n\nYOUR session id ===== " . getSessionId());
-    webLog("  cookie id: ===== $cookie_sid\n\n");
-    
-    webLog("script =======  $0\n\n");
-    
-    # the cookie expires 55min
-    #$g_session->expire('+1h');    # expire after 1 hour
-    $g_session->expire('+55m');    # expire after 55 mins
-
-    stackTrace( "WebUtil::initialize()", "TEST: cookie ids ======= cookie_name => $cookie_name sid => " . ( $cookie_sid || "" ) );
+    return $webSessionPrint;
 }
 
 #
@@ -1040,58 +480,9 @@ my $blast_PID = 0;
 # why ? sso is 24 hours
 # user do not know they have been logout by img and relogin by jgi sso
 # hence their carts stuff disappears etc....
-# 
+#
 sub printSessionExpired {
-    my($text) = @_;
-    
-    # for the xml.pl json_proxy.pl
-    # just return
-    my $script = $0;
-    if($script =~/^xml/ || $script =~/^json_proxy/ || $script =~/^inner/) {
-        return;
-    }
-    
-    my $sso_url                 = $env->{sso_url};
-    my $sso_domain              = $env->{sso_domain};
-
-    my $cookie_host = makeCookieHostname();
-
-#    my $cookie_name = getCookieName();
-#    my $cookie = CGI::Cookie->new(
-#            -name   => $cookie_name,
-#            -value  => 0,
-#            -expires => '-1d'
-#    );
-    my $cookie = makeCookieSession(-1, '-1d');
-
-
-    # make sure we set the correct host name cookie
-    print $cgi->header(-type => "text/html", -cookie => [$cookie, $cookie_host ] );
-    
-    printHeader();
-    
-    my $buttonText = 'Refresh Session';
-    if($user_restricted_site || $public_login) {
-        $buttonText = 'Sign In Again';
-    }
-    
-    print qq{
-<br><br>
-Your IMG session has expired: $text 
-<br><br>
-<input class='smdefbutton' type='button' name='signin' value='$buttonText'
-onclick="window.open('main.cgi', '_self')";>
-<br>
-
-</body>
-    };
-    
-    printMainFooter();
-    
-    # I cannot jgi sso logout - what they were using the portal and forgot about
-    # the img window
-
-    webExit();
+    $webSessionObject->printSessionExpired( @_ );
 }
 
 # this creates a cookie named 'img_host' . $env->{urlTag}
@@ -1099,22 +490,16 @@ onclick="window.open('main.cgi', '_self')";>
 # the cookie expires with 2 hours idle time
 # - ken
 sub makeCookieHostname {
-    my $hostname = getHostname();    
-    my $cookie_host = CGI::Cookie->new(
-            -name   => 'img_host' . $env->{urlTag},
-            -value  => $hostname,
-            -expires => '+2h'
-    );     
-    return $cookie_host;    
+    return $webSessionObject->makeCookieHostname();
 }
 
 # creates cgi session cookie
-# 
-# input
-# cookie value - the default is cgi session id 
-# expire time: default is 2 hours idle time 
 #
-# +45m 
+# input
+# cookie value - the default is cgi session id
+# expire time: default is 2 hours idle time
+#
+# +45m
 # +90m expire after 90 minutes
 # +24h - 24 hour cookie
 # +1d - one day
@@ -1122,82 +507,25 @@ sub makeCookieHostname {
 # +1y   1 year from now
 #
 # $session->expire("+1d");
-# - ken 
+# - ken
 sub makeCookieSession {
-    my($value, $expiresTime) = @_;
-    
-    $expiresTime = '+2h' if(!$expiresTime);
-    
-    if(!$value) {
-        $value = getSessionId();
-    }
-    
-    
-    my $cookie_name = getCookieName();
-    my $cookie = CGI::Cookie->new(
-            -name   => $cookie_name,
-            -value  => $value,
-            -expires => $expiresTime
-    );
-    return $cookie;
+#    my($value, $expiresTime) = @_;
+    return $webSessionObject->makeCookieSession( @_ ) ;
 }
 
 
 # creates jgi sso return cookie
 #
 sub makeCookieSsoReturn {
-    my($url) = @_;
-    my $sso_domain      = $env->{sso_domain};
-    my $sso_cookie_name = $env->{sso_cookie_name};
-    
-     my $cookie_return = CGI::Cookie->new(
-            -name   => $sso_cookie_name,
-            -value  => $url,
-            -domain => $sso_domain
-     );
-     
-     return $cookie_return;
+#    my($url) = @_;
+	return $webSessionObject->makeCookieSsoReturn( @_);
 }
 
 #
 # print an img header with no js source files just css files
 #
 sub printHeader {
-    print <<EOF;
-<!DOCTYPE html>
-<html>
-<head>
-<title>IMG</title>
-<meta charset="UTF-8">
-<meta name="description" content="Integrated Microbial Genomes" />
-<meta name="keywords" content="gene,genome,metagenome,microbe,microbial,img,jgi, virus" />
-<meta http-equiv="Cache-Control" content="max-age=3600"/>
-<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/jgi.css" />
-<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/div-v33.css" />
-<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/menu-v40.css" />
-<link rel="stylesheet" type="text/css" href="https://img.jgi.doe.gov/css/img-v33.css" />
-<link rel="icon" href="https://img.jgi.doe.gov/images/favicon.ico"/>
-<link rel="SHORTCUT ICON" href="https://img.jgi.doe.gov/images/favicon.ico" />
-
-</head>
-
-<body id="body_frame" class="yui-skin-sam">
-<header id="jgi-header">
-<div id="jgi-logo">
-<a href="http://jgi.doe.gov/" title="DOE Joint Genome Institute - IMG">
-<img width="480" height="70" src="https://img.jgi.doe.gov//images/logo-JGI-IMG.png" alt="DOE Joint Genome Institute's IMG logo"/>
-</a>
-</div>
-<nav class="jgi-nav">
-    <ul>
-    <li><a href="http://jgi.doe.gov">JGI Home</a></li>
-    <li><a href="https://sites.google.com/a/lbl.gov/img-form/contact-us">Contact Us</a></li>
-    </ul>
-</nav>
-</header>
-<div id="myclear"></div>
-
-EOF
+    WebPrint::printHeader();
 }
 
 #
@@ -1206,44 +534,7 @@ EOF
 sub printMainFooter {
     my ( $homeVersion, $postJavascript ) = @_;
 
-    # HTTP_X_FORWARDED_FOR gets true client ip address when there is a load balancer port forwarding to web server
-    # REMOTE_ADDR will be the 127.xxxxx ip address which is imcorrect - ken
-    my $remote_addr =  getIpAddress();
-
-
-    # try to get true hostname
-    # can't use back ticks with -T
-    # - ken
-    my $servername = $ENV{SERVER_NAME}; # this does not work on the new gpweb36/37 - ken
-    my $hostname = getHostname();
-
-    my $img_rdbms = '';
-    if($img_ken) {
-        $img_rdbms = '<br>' . $env->{oracle_config_dir};
-    }
-
-    $servername = $hostname . " $img_rdbms " . $ENV{ORA_SERVICE} . ' ' . $];
-
-    my $copyright_year = $env->{copyright_year};
-    my $version_year   = $env->{version_year};
-    my $img            = param("img");
-
-    # no exit read
-    my $buildDate = file2Str( "$base_dir/buildDate", 1 );
-    my $templateFile = "$base_dir/footer-v33.html";
-
-    #$templateFile = "$base_dir/footer-v33.html" if ($homeVersion);
-    my $s = file2Str( $templateFile, 1 );
-    $s =~ s/__main_cgi__/$main_cgi/g;
-    $s =~ s/__base_url__/$base_url/g;
-    $s =~ s/__copyright_year__/$copyright_year/;
-    $s =~ s/__version_year__/$version_year/;
-    $s =~ s/__server_name__/$servername/;
-    $s =~ s/__build_date__/$buildDate $remote_addr/;
-    $s =~ s/__google_analytics__//;
-    $s =~ s/__post_javascript__/$postJavascript/;
-    $s =~ s/__top_base_url__/$top_base_url/g;
-    print "$s\n";
+    WebPrint::printMainFooter($homeVersion, $postJavascript);
 }
 
 
@@ -1255,34 +546,47 @@ return; # turn off for now  - ken
     if ( !$contact_oid ) {
 		$contact_oid = getContactOid() || "";
 	}
-	else {
-		cluck "Running WebUtil initialise";
-
-		$cgi = CGI->new();
-
-		# see http://search.cpan.org/~sherzodr/CGI-Session-3.95/Session/Tutorial.pm
-		# section INITIALIZING EXISTING SESSIONS
-		# idea:
-		# before we create a session id lets check the cookies
-		# if it exists use existing cookie sid
-		# also the cookie name is now system base url specific
-		# - Ken
-		CGI::Session->name($cookie_name);    # override default cookie name CGISESSID
-		$CGI::Session::IP_MATCH = 1;
-
-		my $cookie_sid = $cgi->cookie($cookie_name) || undef;
-		$g_session = CGI::Session->new( undef, $cookie_sid, { Directory => $cgi_tmp_dir } );
-
-		LogStuff::stackTrace( "WebUtil::initialize()", "TEST: cookie ids ======= cookie_name => $cookie_name sid => " . ( $cookie_sid || "" ) );
-
+    if ( !$sid ) {
+		$sid = getSessionId() || "";
 	}
+
+    # Natalia or Ken
+    if (   $img_ken
+        || $contact_oid eq '10'
+        || $contact_oid eq '3038' )
+    {
+        my $dump = longmess();
+        my $date = dateTimeStr();
+
+        my $str = qq{
+
+======== Stack Trace $title ============
+$date
+    $text
+    contact id = $contact_oid
+    session id = $sid
+$dump
+======== End of Stack Trace ============
+
+        };
+
+        my $web_log_file          = $env->{web_log_file};
+        my $afh = new FileHandle( $web_log_file, "a" ); #newAppendFileHandle( $web_log_file, "stackTrace" );
+        if ( !$afh ) {
+            print "Content-type: text/html\n\n";
+            print "Stack Trace Error FileHandle\n";
+            exit -1;
+        }
+        print $afh $str;
+        close $afh;
+    }
 }
 
 #
 # clear cgi session id file and directory after logout and after block bots calls
 #
 sub clearSession {
-    LogStuff::webLog("clear cgi session\n");
+    webLog("clear cgi session\n");
     my $contact_oid = getContactOid();
     my $session     = getSession();
     my $session_id  = getSessionId();
@@ -1297,175 +601,36 @@ sub clearSession {
     $session->delete();
     $session->flush();                # Recommended practice says use flush() after delete().
 
-    LogStuff::webLog( "clear cgi session: $cgi_tmp_dir/cgisess_" . $session_id . "\n" );
-    wunlink( "$cgi_tmp_dir/cgisess_" . $session_id );
+    webLog( "clear cgi session: " . $env->{cgi_tmp_dir} . "/cgisess_" . $session_id . "\n" );
+    wunlink( "$env->{cgi_tmp_dir}/cgisess_" . $session_id );
 
-    LogStuff::webLog( "clear cgi session: $cgi_tmp_dir/" . $session_id . "\n" );
-    remove_tree( "$cgi_tmp_dir/" . $session_id ) if ( $session_id ne '' );
+    webLog( "clear cgi session: " . $env->{cgi_tmp_dir} . "/$session_id\n" );
+    remove_tree( $env->{cgi_tmp_dir} . "/" . $session_id ) if ( $session_id ne '' );
 
-    LogStuff::stackTrace( "WebUtil::clearSession()", '', $contact_oid, $session_id );
+    stackTrace( "WebUtil::clearSession()", '', $contact_oid, $session_id );
 }
 
 sub getCookieName {
-    return $cookie_name;
+    return $webSessionObject->getCookieName();;
 }
 
 # set the pid to kill - see timeout method
 # - ken
-#
+# - no longer used 2017-05-01
+# - ken 
 sub setBlastPid {
     my ($pid) = @_;
-    $blast_PID = $pid;
-    $blast_PID = sanitizeInt($blast_PID);
-    LogStuff::webLog("child pid set = $pid\n");
+#    $blast_PID = $pid;
+#    $blast_PID = sanitizeInt($blast_PID);
+#    webLog("child pid set = $pid\n");
 }
 
-
-############################################################################
-# blockRobots - Block robots from using this script.
-#   (robots.txt doesn't always work; so a little brute force ...)
-############################################################################
-sub blockRobots {
-    ## .htaccess and robots.txt does not work; we force it.
-    my $http_user_agent = $ENV{HTTP_USER_AGENT};
-    LogStuff::webLog("HTTP_USER_AGENT='$http_user_agent'\n") if $verbose >= 1;
-    my $remote_addr = getIpAddress();
-    LogStuff::webLog("REMOTE_ADDR=$remote_addr\n") if $verbose >= 1;
-
-    #
-    # NCBI LinkOut Link Check Utility
-    # IP proxy: 130.14.254.25 or 130.14.254.26
-    # User agent : "LinkOut Link Check Utility"
-    # IP range: 130.14.*.*
-    #
-    if ($http_user_agent =~ /LinkOut Link Check Utility/
-        && ( $remote_addr =~ /^130\.14\./ || $remote_addr eq '128.55.71.38' )) {
-        # its must go thru genome.php
-        my $ip = param('ip');
-        my $useragent = param('useragent');
-
-        # last test last Apr 27 2015
-        # next one Mar 7 2016
-        webLog("\nNCBI bot ignored for LinkOut test Apr 27 2015\n");
-        webLog("$remote_addr === $ip\n");
-        webLog("$http_user_agent === $useragent\n\n");
-
-        return;
-    }
-
-    # potential fix for error resulted from single plus sign input
-    my $page;
-    eval { $page = param("page"); };
-
-    my $bot_patterns = $env->{bot_patterns};
-    my $match        = 0;
-
-    if ( defined($bot_patterns) ) {
-        for my $pattern (@$bot_patterns) {
-            if ( $http_user_agent =~ /$pattern/ ) {
-                $match = 1;
-                last;
-            }
-        }
-    }
-    my $allow_hosts = $env->{allow_hosts};
-    if ( defined($allow_hosts) ) {
-        my @parts0 = split( /\./, $remote_addr );
-        my $n = @parts0;
-        for my $allow_host (@$allow_hosts) {
-            my @parts1 = split( /\./, $allow_host );
-            my $allPartsMatch = 1;
-            for ( my $i = 0 ; $i < $n ; $i++ ) {
-                my $part0 = $parts0[$i];
-                my $part1 = $parts1[$i];
-                if ( $part0 ne $part1 && $part1 ne "*" ) {
-                    $allPartsMatch = 0;
-                    last;
-                }
-            }
-            if ($allPartsMatch) {
-
-                # Nullify bot pattern match
-                $match = 0;
-                LogStuff::webLog("'$remote_addr' allowed by '$allow_host' rule\n");
-                last;
-            }
-        }
-    }
-
-    if ( $match && $page ne "home" && $page ne "help" && $page ne "uiMap" ) {
-
-        my $file = "$base_dir/403-Forbidden.html";
-        my $rfh  = newReadFileHandle( $file, "blockbots", 1 );
-
-        if ( !$rfh ) {
-            print header( -status => 403 );
-            print "<html>\n";
-            print "<head>\n";
-            print "<title>403 Forbidden</title>\n";
-            print "</head>\n";
-            print "<body>\n";
-            print "<h1>Forbidden</h1>\n";
-            print "$http_user_agent.<br/>\n";
-            print "Bots don't have permission.\n";
-            print "</body>\n";
-            print "</html>\n";
-        } else {
-            print header( -type => "text/html" );
-            while ( my $s = $rfh->getline() ) {
-                print "$s";
-            }
-        }
-        close $rfh;
-        LogStuff::webLog("== Exit for HTTP_USER_AGENT $http_user_agent\n");
-        clearSession();
-        webExit(0);
-    }
-
-    blockIpAddress();
-}
-
-sub blockIpAddress {
-    my $remote_addr = getIpAddress();
-
-    my $file = $env->{block_ip_address_file};
-    if ( $file ne '' && -e $file ) {
-        my $rfh = newReadFileHandle( $file, 'blockIpAddress', 1 );
-        if ($rfh) {
-            while ( my $s = $rfh->getline() ) {
-                chomp $s;
-                next if ( $s =~ /^#/ );
-                next if ( blankStr($s) );
-
-                my ( $ip, $comment ) = split( /=/, $s );
-                if ( $ip eq $remote_addr ) {
-
-                    # blocked ip
-                    # 429 Too Many Requests
-                    print header( -status => '429 Too Many Requests' );
-                    print "<html>\n";
-                    print "<head>\n";
-                    print "<title>429 Too Many Requests</title>\n";
-                    print "</head>\n";
-                    print "<body>\n";
-                    print "<h1>429 Too Many Requests</h1>\n";
-                    print "Your IP address $remote_addr has been blocked.\n";
-                    print "</body>\n";
-                    print "</html>\n";
-                    clearSession();
-                    webExit(0);
-                }
-            }
-            close $rfh;
-        }
-    }
-}
 
 #
 # get a single cgi object - perl 5.10 bug fix
 # - ken
 sub getCgi {
-    return $cgi;
+    return $webSessionObject->getCgi();
 }
 
 ############################################################################
@@ -1483,32 +648,39 @@ sub getCgi {
 ############################################################################
 sub timeout {
     my ($secs) = @_;
-    $timeoutSec = $secs;
-	DatabaseStuff::setTimeoutSec( $secs );
+    
+    
+    if($secs > $timeoutSec) {
+        $timeoutSec = $secs;
+    }
 
-    my $cwd = getcwd();
-    my $dt  = currDateTime();
+    #my $cwd = getcwd();
+    #my $dt  = currDateTime();
     $SIG{ALRM} = sub {
-        print "<p><font color='red'>Session has timed out. Process is taking too long to run.</font></p>\n";
-        if ( $blast_PID > 0 ) {
+#        print "<p><font color='red'>Session has timed out. Process is taking too long to run.</font></p>\n";
+#        if ( $blast_PID > 0 ) {
+#
+#            $blast_PID = sanitizeInt($blast_PID);
+#
+#            # kill any child pid set in $blast_PID
+#            # we've tried kill HUP => -$$; but it still waits for blast to
+#            # finish - I've already tested with simple scripts
+#            # and the parent still waits for the child to finish
+#            # test model
+#            # parent.pl -> child.sh -> child.pl
+#            #
+#            #webLog("killing PID $blast_PID\n");
+#            kill 9, $blast_PID;
+        
+            die "Session has timed out. Process is taking too long to run: $!\n";
+        };
 
-            $blast_PID = sanitizeInt($blast_PID);
 
-            # kill any child pid set in $blast_PID
-            # we've tried kill HUP => -$$; but it still waits for blast to
-            # finish - I've already tested with simple scripts
-            # and the parent still waits for the child to finish
-            # test model
-            # parent.pl -> child.sh -> child.pl
-            #
-            #LogStuff::webLog("killing PID $blast_PID\n");
-            kill 9, $blast_PID;
-        }
-
-        #print "<p><font color='red'>Session has timed out. Process is taking too long to run.</font></p>\n";
-        webDie("$dt: $cwd: $0: pid=$$ timeout=($secs seconds)\n");
-    };
-    alarm $secs;
+    alarm $timeoutSec;
+    
+    webLog("TIMEOUT: $timeoutSec\n");
+    
+    #alarm 5;
 }
 
 ############################################################################
@@ -1532,14 +704,15 @@ sub printResetFormButton {
 #######################################################################
 sub printTaxonButtons {
     my ($txTableName) = @_;
-#    print submit(
-#        -name    => 'setTaxonFilter',
-#        -value   => 'Add Selected to Genome Cart',
-#        -class   => 'meddefbutton',
-#        -onClick => "return isGenomeSelected('$txTableName');"
-#    );
-    print "<input class='meddefbutton' type='submit' name='setTaxonFilter' value='Add Selected to Genome Cart' onClick='return isGenomeSelected(\"$txTableName\");' />\n";
-    print "<input type='button' name='selectAll' value='Select All' " . "onClick='selectAllTaxons(1)' class='smbutton' />\n";
+    print submit(
+        -name    => 'setTaxonFilter',
+        -value   => 'Add Selected to Genome Cart',
+        -class   => 'meddefbutton',
+        -onClick => "return isGenomeSelected('$txTableName');"
+    );
+    print nbsp(1);
+    print "<input type='button' name='selectAll' value='Select All' " . "onClick='selectAllTaxons(1)' class='smbutton' />";
+    print nbsp(1);
     print "<input type='button' name='clearAll' value='Clear All' " . "onClick='selectAllTaxons(0)' class='smbutton' />";
 }
 
@@ -1547,7 +720,7 @@ sub printTaxonButtons {
 # resetContactOid - Compare base_url's.  If new one for the first time
 #  reset contact_oid so old user is not carried over to next site.
 ############################################################################
-sub resetContactOid {
+sub resetContactOid_old {
     my $base_url_x = getSessionParam("base_url");
     if ( $base_url_x ne $base_url ) {
         setSessionParam( "contact_oid", 0 );
@@ -1556,85 +729,38 @@ sub resetContactOid {
 }
 
 
-############################################################################
-# delete the web logs after given size
-#
-# new for 3.3 - ken
-############################################################################
-#sub purgeLogs {
-#    my ($file) = @_;
-#
-#    # return in bytes
-#    my $filezie = -s $file;
-#
-#    # 100 MB
-#    my $maxsize = 100 * 1024 * 1024;
-#
-#    if ( $filezie > $maxsize ) {
-#
-#        #webErrLog("$filezie unlinked\n");
-#        unlink($file);
-#    }
-#}
 
 ############################################################################
 # webLog - Do logging to file.
 ############################################################################
 sub webLog {
-    my ($s) = @_;
-    return if ( $verbose < 0 );
-
-    #    my $enable_purge = $env->{enable_purge};
-    #    if ($enable_purge) {
-    #        purgeLogs($web_log_file);
-    #    }
-
-    my $afh = newAppendFileHandle( $web_log_file, "webLog" );
-    print $afh $s;
-    close $afh;
+#    my ($s) = @_;
+    WebIO::webLog( @_ );
 }
 
 ############################################################################
 # webErrLog - Do logging to STDERR to file.
 ############################################################################
 sub webErrLog {
-    my ($s) = @_;
-    my $afh = newAppendFileHandle( $err_log_file, "webErrLog" );
-    print $afh $s;
-    close $afh;
+#    my ($s) = @_;
+    WebIO::webErrLog( @_ );
 }
+
 
 # trace logins and logouts
 # $loginType - login or logout
 # $sso - img or sso
 sub loginLog {
     my ( $loginType, $sso ) = @_;
-    my $login_log_file = $env->{login_log_file};
-    if ( $login_log_file ne '' ) {
-        my $afh         = newAppendFileHandle($login_log_file);
+    if ( $env->{login_log_file} ) {
+        my $afh         = newAppendFileHandle( $env->{login_log_file} );
         my $time        = dateTimeStr();
         my $session     = getSessionId();
         my $contactId   = getContactOid();
         my $url         = $env->{cgi_url};
         my $remote_addr = getIpAddress();
         my $servername  = getHostname();
-
-        print $afh $time;
-        print $afh "\t";
-        print $afh $loginType;
-        print $afh "\t";
-        print $afh $sso;
-        print $afh "\t";
-        print $afh $contactId;
-        print $afh "\t";
-        print $afh $remote_addr;
-        print $afh "\t";
-        print $afh $servername;
-        print $afh "\t";
-        print $afh $url;
-        print $afh "\t";
-        print $afh $session;
-        print $afh "\n";
+		print { $afh } join "\t", ( $time, $loginType, $sso, $contactId, $remote_addr, $servername, $url, $session, "\n" );
         close $afh;
     }
 }
@@ -1643,9 +769,7 @@ sub loginLog {
 # getRdbms - Get rdbms type from configuration file.
 ############################################################################
 sub getRdbms {
-    return "mysql"  if $mysql_config;
-    return "oracle" if defined $env->{oracle_config};
-    webDie("rdbms: rdbm configuration file not set\n");
+    return "oracle";
 }
 
 ############################################################################
@@ -1653,7 +777,6 @@ sub getRdbms {
 #   RDBMS's like mysql.
 ############################################################################
 sub getNvl {
-    return "ifnull" if getRdbms() eq "mysql";
     return "nvl";
 }
 
@@ -1661,14 +784,6 @@ sub getNvl {
 # unsetEnvPath - Unset the environment path for external calls.
 ############################################################################
 sub unsetEnvPath {
-
-	my @envs = qw( BASH_ENV CDPATH ENV IFS PATH );
-
-	for my $e (@envs) {
-		if ( $ENV{$e} =~ /^(.*)$/ ) {
-			$ENV{$e} = $1;
-		}
-	}
 
     my $envPath = $ENV{PATH};
     if ( $envPath =~ /^(.*)$/ ) {
@@ -1693,8 +808,8 @@ sub checkBlankVar {
     my ($s) = @_;
     return if !blankStr($s);
     printStatusLine( "No data.", 2 );
-    webError("No data retrieved.");
-    webExit(0);
+    WebUtil::webError("No data retrieved.");
+    WebUtil::webExit(0);
 }
 
 ###########################################################################
@@ -1710,11 +825,11 @@ sub checkAccess {
         if (   ( blankStr($pw_curr) && $pw_prev_md5 ne $site_pw_md5 )
             || ( !blankStr($pw_curr) && $pw_curr_md5 ne $site_pw_md5 ) )
         {
-            webErrorHeader("Invalid access");
+            WebUtil::webErrorHeader("Invalid access");
         }
     }
     if ( $user_restricted_site && !$contact_oid ) {
-        webErrorHeader("Invalid access");
+        WebUtil::webErrorHeader("Invalid access");
     }
 }
 
@@ -1726,7 +841,7 @@ sub checkEvalue {
     $evalue =~ /([0-9]+e-?[0-9]+)/;
     my $evalue2 = $1;
     if ( $evalue2 eq "" ) {
-        webDie("checkEvalue: invalid evalue='$evalue'\n");
+        WebUtil::webDie("checkEvalue: invalid evalue='$evalue'\n");
     }
     return $evalue2;
 }
@@ -1736,21 +851,7 @@ sub checkEvalue {
 ############################################################################
 sub checkPath {
     my ($path) = @_;
-    ## Catch bad pattern first.
-    my @toks = split( /\//, $path );
-    for my $t (@toks) {
-        next if $t eq "";    # for double slashes
-        if ( $t !~ /^[a-zA-Z0-9_\.\-\~]+$/ || $t eq ".." ) {
-            webDie("checkPath:1: invalid path '$path' tok='$t'\n");
-        }
-    }
-    ## Untaint.
-    $path =~ /([a-zA-Z0-9\_\.\-\/]+)/;
-    my $path2 = $1;
-    if ( $path2 eq "" ) {
-        webDie("checkPath:2: invalid path '$path2'\n");
-    }
-    return $path2;
+    return WebIO::checkPath($path);
 }
 
 
@@ -1760,19 +861,7 @@ sub checkPath {
 #
 sub checkFileName {
     my ($fname) = @_;
-    if (   $fname =~ /\\/
-        || $fname =~ /\.\./
-        || $fname =~ /\//
-        || $fname =~ /~/
-        || $fname =~ /\'/
-        || $fname =~ /\"/
-        || $fname =~ /`/ )
-    {
-
-        #return "bad";
-        webDie("Invalid filename: $fname\n");
-    }
-    return $fname;
+    return WebIO::checkFileName($fname);
 }
 
 ############################################################################
@@ -1780,12 +869,7 @@ sub checkFileName {
 ############################################################################
 sub validFileName {
     my ($fname) = @_;
-    $fname =~ /([a-zA-Z0-9\._-]+)/;
-    my $fname2 = $1;
-    if ( $fname2 eq "" ) {
-        webDie("validFileName: invalid file name '$fname'\n");
-    }
-    return $fname2;
+    WebIO::validFileName($fname);
 }
 
 ############################################################################
@@ -1798,7 +882,7 @@ sub wunlink {
 
     #my $fname = lastPathTok( $path );
     #my $fname2 = validFileName( $fname );
-    LogStuff::webLog("unlink '$path'\n") if $verbose >= 2;
+    webLog("unlink '$path'\n") if $verbose >= 2;
     unlink($path);
 }
 
@@ -1824,15 +908,7 @@ sub wsystem {
 sub newReadFileHandle {
     my ( $path, $func, $noExit ) = @_;
 
-    $func = "newReadFileHandle" if $func eq "";
-    $path = checkPath($path);
-    my $fh = new FileHandle( $path, "r" );
-    if ( !$fh && !$noExit ) {
-        webDie("$func: cannot read '$path'\n");
-    } elsif ( !$fh ) {
-        LogStuff::webLog("$func: cannot read '$path'\n");
-    }
-    return $fh;
+    return WebIO::newReadFileHandle($path, $func, $noExit);
 }
 
 ############################################################################
@@ -1841,15 +917,7 @@ sub newReadFileHandle {
 sub newWriteFileHandle {
     my ( $path, $func, $noExit ) = @_;
 
-    $func = "newWriteFileHandle" if $func eq "";
-    $path = checkPath($path);
-    my $fh = new FileHandle( $path, "w" );
-    if ( !$fh && !$noExit ) {
-        webDie("$func: cannot write '$path'\n");
-    } elsif ( !$fh ) {
-        LogStuff::webLog("$func: cannot write '$path'\n");
-    }
-    return $fh;
+    return WebIO::newWriteFileHandle($path, $func, $noExit);
 }
 
 ############################################################################
@@ -1858,22 +926,7 @@ sub newWriteFileHandle {
 sub newAppendFileHandle {
     my ( $path, $func, $noExit ) = @_;
 
-    $func = "newAppendFileHandle" if $func eq "";
-    $path = checkPath($path);
-    my $fh = new FileHandle( $path, "a" );
-
-#	say "func: $func";
-
-    # to stop infinite loop when log files cannot be open - ken
-    if ( ! $fh && ( $func eq "webLog" || $func eq "webErrLog" ) ) {
-        print "Cannot open log file $path \n";
-        webExit(-1);
-    }
-
-    if ( !$fh && !$noExit ) {
-        webDie("$func: cannot append '$path'\n");
-    }
-    return $fh;
+    return WebIO::newAppendFileHandle($path, $func, $noExit );
 }
 
 ############################################################################
@@ -1882,24 +935,7 @@ sub newAppendFileHandle {
 sub newCmdFileHandle {
     my ( $cmd, $func, $noExit ) = @_;
 
-    $func = "newCmdFileHandle" if $func eq "";
-
-    # http://perldoc.perl.org/perlipc.html#Using-open()-for-IPC
-    #
-    # see section "Using open() for IPC"
-    # - ken
-    #$SIG{PIPE} = 'IGNORE';
-    $SIG{PIPE} = sub {
-        die "<p><font color='red'> pipe failed. </font></p>\n";
-    };
-
-    LogStuff::webLog "+ $cmd\n";
-    my $fh = new FileHandle("$cmd |");
-    if ( !$fh && !$noExit ) {
-        LogStuff::webLog("$func: cannot '$cmd'\n");
-        webExit(-1);
-    }
-    return $fh;
+    return WebIO::newCmdFileHandle($cmd, $func, $noExit );
 }
 
 ############################################################################
@@ -1908,7 +944,7 @@ sub newCmdFileHandle {
 sub newUnzipFileHandle {
     my ( $inZipFile, $member, $func, $noExit ) = @_;
 
-    LogStuff::webLog("newUnzipFileHandle: '$inZipFile':'$member'\n");
+    webLog("newUnzipFileHandle: '$inZipFile':'$member'\n");
     $func = "newUnzipileHandle" if $func eq "";
     my $cmd = "/usr/bin/unzip -p $inZipFile $member";
 
@@ -1924,11 +960,12 @@ sub newUnzipFileHandle {
         $fh = newReadFileHandle( "/dev/null", $func );
     }
     if ( !$fh && !$noExit ) {
-        webDie("$func: cannot '$cmd' or read /dev/null\n");
+        WebUtil::webDie("$func: cannot '$cmd' or read /dev/null\n");
     }
 
     return $fh;
 }
+
 
 #############################################################################
 # runCmd - Run external command line tool.  Exit on failure, non-zero
@@ -1936,10 +973,10 @@ sub newUnzipFileHandle {
 #############################################################################
 sub runCmd {
     my ($cmd) = @_;
-    LogStuff::webLog "+ $cmd\n";
+    webLog "+ $cmd\n";
     my $st = wsystem($cmd);
     if ( $st != 0 ) {
-        webDie("runCmd: execution error status $st\n");
+        WebUtil::webDie("runCmd: execution error status $st\n");
     }
 }
 
@@ -1948,7 +985,7 @@ sub runCmd {
 #############################################################################
 sub runCmdNoExit {
     my ($cmd) = @_;
-    LogStuff::webLog "+ $cmd\n";
+    webLog "+ $cmd\n";
     my $st = wsystem($cmd);
     return $st;
 }
@@ -1959,15 +996,8 @@ sub runCmdNoExit {
 ############################################################################
 sub checkTmpPath {
     my ($path) = @_;
-    my $common_tmp_dir = $env->{common_tmp_dir};
-    if ( $path !~ /^$tmp_dir/ && $path !~ /^$cgi_tmp_dir/ && $path !~ /^$common_tmp_dir/ ) {
-        LogStuff::webLog( "checkTmpPath: expected full temp directory " . "'$tmp_dir' or '$cgi_tmp_dir'; got path '$path'\n" );
-        webExit(-1);
-    }
-    $path = checkPath($path);
-    my $fname  = lastPathTok($path);
-    my $fname2 = validFileName($fname);
-    return $path;
+
+    return WebIO::checkTmpPath($path);
 }
 
 ###########################################################################
@@ -1976,35 +1006,14 @@ sub checkTmpPath {
 sub file2Str {
     my ( $file, $noexit ) = @_;
 
-    my $rfh  = newReadFileHandle( $file, "file2Str", $noexit );
-    my $line = "";
-    my $s    = "";
-    if ( !$rfh && $noexit ) {
-        return $s;
-    }
 
-    while ( $line = $rfh->getline() ) {
-        $s .= $line;
-    }
-    close $rfh;
-    return $s;
+    return WebIO::file2Str($file, $noexit);
 }
 
 sub conditionalFile2Str {
     my ( $file, $origLine, $newLine ) = @_;
 
-    my $rfh  = newReadFileHandle( $file, "file2Str" );
-    my $line = '';
-    my $s    = '';
-    while ( $line = $rfh->getline() ) {
-        if ( $line =~ /$origLine/i ) {
-            $s .= $newLine;
-        } else {
-            $s .= $line;
-        }
-    }
-    close $rfh;
-    return $s;
+    return WebIO::conditionalFile2Str($file, $origLine, $newLine );
 }
 
 #############################################################################
@@ -2022,25 +1031,20 @@ sub str2File {
 #############################################################################
 sub appendFile {
     my ( $file, $str ) = @_;
-    my $afh = newAppendFileHandle( $file, "appendFile" );
-    print $afh $str;
-    close $afh;
+
+
+    WebIO::appendFile($file, $str);
 }
 
 #############################################################################
 # currDateTime - Get current date time string.
 #############################################################################
 sub currDateTime {
-#    my $s = sprintf(
-#        "%d/%d/%d %d:%d:%d",
-#        localtime->mon() + 1, localtime->mday(), localtime->year() + 1900,
-#        localtime->hour(),    localtime->min(),  localtime->sec()
-#    );
     my $s = sprintf(
         "%04d/%02d/%02d %02d:%02d:%02d",
-        localtime->year() + 1900, localtime->mon() + 1, localtime->mday(), 
+        localtime->year() + 1900, localtime->mon() + 1, localtime->mday(),
         localtime->hour(),    localtime->min(),  localtime->sec()
-    );    
+    );
     return $s;
 }
 
@@ -2111,58 +1115,15 @@ sub trimIntLeadingZero {
     return $s;
 }
 
-###########################################################################
-# showFile - Show file to standard error output.
-###########################################################################
-sub showFile {
-    my $file = shift;
 
-    my $rfh = newReadFileHandle( $file, "showFile" );
-    my $line = "";
-    while ( $line = $rfh->getline() ) {
-        LogStuff::webLog($line);
-    }
-    close $rfh;
-}
-
-###########################################################################
-# printFile - Show file to standard output.
-###########################################################################
-sub printFile {
-    my $file = shift;
-
-    my $rfh = newReadFileHandle( $file, "printFile" );
-    my $line = "";
-    while ( $line = $rfh->getline() ) {
-        print $line;
-    }
-    close $rfh;
-}
-
-###########################################################################
-# showFileStderr - Show file to standard err output.
-###########################################################################
-sub showFileStderr {
-    my $file = shift;
-
-    my $rfh = newReadFileHandle( $file, "showFileStderr" );
-    my $line = "";
-    while ( $line = $rfh->getline() ) {
-        LogStuff::webLog "$line";
-    }
-    close $rfh;
-}
 
 #############################################################################
 # fileSize - Return file size of file name.
 #############################################################################
 sub fileSize {
     my ($fileName) = @_;
-    my $rfh = newReadFileHandle( $fileName, "fileSize", 1 );
-    return 0 if !$rfh;
-    my ( $dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks ) = stat($rfh);
-    close $rfh;
-    return $size;
+
+    return WebIO::fileSize($fileName);
 }
 
 #############################################################################
@@ -2170,13 +1131,8 @@ sub fileSize {
 #############################################################################
 sub fileAtime {
     my ($fileName) = @_;
-    my $rfh = newReadFileHandle( $fileName, "fileAtime", 1 );
-    return 0 if !$rfh;
-    my ( $dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks ) = stat($rfh);
-    close $rfh;
 
-    #return $atime;
-    return $mtime;
+    return WebIO::fileAtime($fileName);
 }
 
 #
@@ -2187,46 +1143,19 @@ sub fileAtime {
 sub fileTouch {
     my ($fileName) = @_;
 
-    # cannot use with perl -T
-    my $now = time;
-
-    $fileName = checkPath($fileName);
-
-    if ( $fileName =~ /^(.*)$/ ) {
-    	$fileName = $1;
-    }
-    utime( $now, $now, $fileName );
-
-    #if ($fileName =~ /^(.*)$/) { $fileName = $1; }
-    # fileName is now untainted
-
+    WebIO::fileTouch($fileName);
 }
 
-#############################################################################
-# lastPathTok - Last path token in file path, i.e, the file name.
-#############################################################################
-sub lastPathTok {
-    my ($path) = @_;
-    my @toks = split( /\//, $path );
-    my $i;
-    my @toks2;
-    foreach $i (@toks) {
-        next if $i eq "";
-        push( @toks2, $i );
-    }
-    my $nToks = @toks2;
-    return $toks2[ $nToks - 1 ];
-}
 
 #############################################################################
 # dirList - Directory list of files given a directory.
 #############################################################################
 sub dirList {
     my ($dir) = @_;
-    opendir( Dir, $dir ) || webDie("dirList: cannot read '$dir'\n");
+    opendir( Dir, $dir ) || WebUtil::webDie("dirList: cannot read '$dir'\n");
     my @paths = sort( readdir(Dir) );
     closedir(Dir);
-    my @paths2;
+    my @paths2 = ();
     my $i;
     for $i (@paths) {
         next if $i =~ /^\./;
@@ -2235,22 +1164,6 @@ sub dirList {
     }
     return @paths2;
 }
-
-
-# dir list of all files
-sub dirListAll {
-    my ($dir) = @_;
-    opendir( Dir, $dir ) || webDie("dirList: cannot read '$dir'\n");
-    my @paths = sort( readdir(Dir) );
-    closedir(Dir);
-    my @paths2;
-    my $i;
-    for $i (@paths) {
-        push( @paths2, $i );
-    }
-    return @paths2;
-}
-
 
 ############################################################################
 # getSequence - Get substring sequence given start < end,
@@ -2297,26 +1210,6 @@ sub arrayRef2HashRef {
     }
 }
 
-############################################################################
-# getaa - Get amino acids from sequence.
-############################################################################
-
-=cut
-
-sub getaa {
-    my ( $seq, $sp ) = @_;
-    my $i;
-    my $len = length($seq);
-    my $aaSeq;
-    for ( $i = 0 ; $i < $len ; $i += 3 ) {
-        my $s2 = substr( $seq, $i, 3 );
-        my $aa = geneticCode($s2);
-        $aaSeq .= $aa;
-    }
-    return $aaSeq;
-}
-
-=cut
 
 ############################################################################
 # wrapSeq - Wrap a sequence for pretty printing.
@@ -2450,7 +1343,7 @@ sub readFasta {
     my $s;
     my $rfh = newReadFileHandle( $inFile, "readFasta", 1 );
     if ( !$rfh ) {
-        LogStuff::webLog("readFasta: WARNING: cannot read '$inFile'\n");
+        webLog("readFasta: WARNING: cannot read '$inFile'\n");
         return "";
     }
     my $seq;
@@ -2472,14 +1365,14 @@ sub readMultiFasta {
     my ( $inFile, $id ) = @_;
     my $rfh = newReadFileHandle( $inFile, "readMultiFasta", 1 );
     if ( !$rfh ) {
-        LogStuff::webLog("readMultiFasta: cannot read '$inFile'\n");
+        webLog("readMultiFasta: cannot read '$inFile'\n");
         return "";
     }
     my $pos     = -1;
     my $idxFile = "$inFile.idx";
     my $rfh2    = newReadFileHandle( $idxFile, "readMultiFasta", 1 );
     if ( !$rfh2 ) {
-        LogStuff::webLog("readMultiFasta: cannot read '$idxFile'\n");
+        webLog("readMultiFasta: cannot read '$idxFile'\n");
     } else {
         while ( my $s = $rfh2->getline() ) {
             chomp $s;
@@ -2492,7 +1385,7 @@ sub readMultiFasta {
         close $rfh2;
     }
     if ( $pos == -1 ) {
-        LogStuff::webLog("readMultiFasta: cannot find index for $inFile:'$id'\n");
+        webLog("readMultiFasta: cannot find index for $inFile:'$id'\n");
         $pos = 0;
     }
     my $seq;
@@ -2527,22 +1420,22 @@ sub readLinearFasta {
 
    #print("readLinearFasta() inFile=$inFile, id=$id, start_coord=$start_coord, end_coord=$end_coord, strand=$strand, adjustedCoordLines_ref=@$adjustedCoordLines_ref<br/>\n");
 
-    LogStuff::webLog("Reading file: $inFile\n");
+    webLog("Reading file: $inFile\n");
     my $rfh = newReadFileHandle( $inFile, "readLinearFasta", 1 );
     if ( !$rfh ) {
-        LogStuff::webLog("WARNING: readLinearFasta() cannot read '$inFile'\n");
+        webLog("WARNING: readLinearFasta() cannot read '$inFile'\n");
         return "";
     }
 
     my $idxFile = "$inFile.idx";
 
     #print("readLinearFasta() inFile.idx=$inFile.idx<br/>\n");
-    LogStuff::webLog("Reading file: $idxFile\n");
+    webLog("Reading file: $idxFile\n");
 
     my ( $pos1, $pos2 ) = ( -1, -1 );
     my $rfh2    = newReadFileHandle( $idxFile, "readLinearFasta", 1 );
     if ( !$rfh2 ) {
-        LogStuff::webLog("WARNING: readLinearFasta() cannot read '$idxFile'\n");
+        webLog("WARNING: readLinearFasta() cannot read '$idxFile'\n");
         return "";
     } else {
         while ( my $s = $rfh2->getline() ) {
@@ -2556,18 +1449,18 @@ sub readLinearFasta {
         }
         close $rfh2;
     }
-    LogStuff::webLog("Index position for $id: $pos1, $pos2\n");
+    webLog("Index position for $id: $pos1, $pos2\n");
     #print "Index position for $id: $pos1, $pos2<br/>\n";
 
     if ( $pos1 == -1 ) {
-        LogStuff::webLog("WARNING: readLinearFasta() cannot find index for $inFile:'$id'\n");
+        webLog("WARNING: readLinearFasta() cannot find index for $inFile:'$id'\n");
         return "";
     }
 
     #print("readLinearFasta() pos1=$pos1, pos2 = $pos2<br/>\n");
 
     if ( $start_coord > $end_coord ) {
-        LogStuff::webLog("WARNING: readLinearFasta() bad start_coord=$start_coord end_coord=$end_coord\n");
+        webLog("WARNING: readLinearFasta() bad start_coord=$start_coord end_coord=$end_coord\n");
         return "";
     }
     if ( $start_coord == 0 && $end_coord == 0 ) {
@@ -2577,7 +1470,7 @@ sub readLinearFasta {
 
     my $pos1r = $pos1 + $start_coord - 1;
     if ( $pos1r < 0 ) {
-        LogStuff::webLog("WARNING: readLinearFasta() bad pos1r=$pos1r\n");
+        webLog("WARNING: readLinearFasta() bad pos1r=$pos1r\n");
         return "";
     }
     #if ( $pos1r < $pos1 ) {
@@ -2587,7 +1480,7 @@ sub readLinearFasta {
     my $len   = $end_coord - $start_coord + 1;
     my $pos2r = $pos1r + $len - 1;
     if ( $pos2r > $pos2 ) {
-        LogStuff::webLog("WARNING: readLinearFasta() bad pos2r=$pos2r > pos2=$pos2; resetting\n");
+        webLog("WARNING: readLinearFasta() bad pos2r=$pos2r > pos2=$pos2; resetting\n");
         $pos2r = $pos2;
         $len   = $pos2r - $pos1r + 1;
     }
@@ -2605,13 +1498,13 @@ sub readLinearFasta {
 
             my $fragPos1r = $pos1 + $fragStart - 1;
             if ( $fragPos1r > $pos2 ) {
-                LogStuff::webLog("WARNING: readLinearFasta() bad fragPos1r=$fragPos1r > pos2=$pos2; skipping\n");
+                webLog("WARNING: readLinearFasta() bad fragPos1r=$fragPos1r > pos2=$pos2; skipping\n");
                 next;
             }
             my $fragLen   = $fragEnd - $fragStart + 1;
             my $fragPos2r = $fragPos1r + $fragLen - 1;
             if ( $fragPos2r > $pos2 ) {
-                LogStuff::webLog("WARNING: readLinearFasta() bad fragPos2r=$fragPos2r > pos2=$pos2; resetting\n");
+                webLog("WARNING: readLinearFasta() bad fragPos2r=$fragPos2r > pos2=$pos2; resetting\n");
                 $fragPos2r = $pos2;
                 $fragLen   = $fragPos2r - $fragPos1r + 1;
             }
@@ -2647,11 +1540,6 @@ sub readLinearFasta {
 ############################################################################
 sub parseBlastTab {
     my ($s) = @_;
-
-    my %blast_h;
-	@blast_h{ qw( qid sid percIdent alen nMisMatch nGaps qstart qend sstart send evalue bitscore ) } = split /\t/, $s;
-	return \%blast_h;
-
     my ( $qid, $sid, $percIdent, $alen, $nMisMatch, $nGaps, $qstart, $qend, $sstart, $send, $evalue, $bitScore ) =
       split( /\t/, $s );
     my $hash_ref = {
@@ -2715,88 +1603,29 @@ sub hiddenVar {
 
 #
 # web exit
-# this should be use instead of the perl exit command
+# this should be used instead of the perl exit command
 # - ken
 #
 sub webExit {
-    my ($code) = @_;
-
-    $code = 0 if ! $code;
-
-    DatabaseStuff::dbLogoutImg();
-    DatabaseStuff::dbLogoutGold();
-    exit($code);
+#    my ($code) = @_;
+    WebPrint::webExit( @_ );
 }
 
 ############################################################################
-# webError - Show error message.
+# WebUtil::webError - Show error message.
 ############################################################################
 sub webError {
-    my ( $txt, $exitcode, $noHtmlEsc ) = @_;
+#    my ( $txt, $exitcode, $noHtmlEsc ) = @_;
+    WebPrint::webError( @_ );
 
-    if ($img_ken) {
-        print "Content-type: text/html\n\n";    # test from ken
-
-        my @names = param();
-        foreach my $p (@names) {
-            my $x = param($p);
-            print "$p => $x <= <br>\n";
-        }
-    }
-    my $copyright_year = $env->{copyright_year};
-    my $version_year   = $env->{version_year};
-
-    my $remote_addr = getIpAddress() // '';
-    my $servername;
-    my $s = getHostname();
-    $servername = $s . ' ' . ( $ENV{ORA_SERVICE} || "" ) . ' ' . $];
-    my $buildDate = file2Str( "$base_dir/buildDate", 1 ) // '';
-
-    print "<div id='error'>\n";
-    print "<img src='$base_url/images/error.gif' " . "width='46' height='46' alt='Error' />\n";
-    print "<p>\n";
-    if ( defined $noHtmlEsc && $noHtmlEsc == 0 ) {
-        print escHtml($txt);
-    } else {
-        print $txt;
-    }
-    print "</p>\n";
-    print "</div>\n";
-    print "<div class='clear'></div>\n";
-    my $templateFile = "$base_dir/footer.html";
-    my $str            = file2Str($templateFile);
-    $str =~ s/__main_cgi__/$main_cgi/g;
-    $str =~ s/__google_analytics__//g;
-
-    $str =~ s/__copyright_year__/$copyright_year/;
-    $str =~ s/__version_year__/$version_year/;
-
-    $str =~ s/__server_name__/$servername/;
-    $str =~ s/__build_date__/$buildDate $remote_addr/;
-    $str =~ s/__post_javascript__//;
-
-    print "$str\n";
-
-    printStatusLine( "Error", 2 );
-    webExit($exitcode);
 }
 
 ############################################################################
-# webErrorHeader - Show error with header.
+# WebUtil::webErrorHeader - Show error with header.
 ############################################################################
 sub webErrorHeader {
-    my ( $msg, $noHtmlEsc, $exitcode ) = @_;
-
-    print header( -type => "text/html" );
-    print "<br>\n";
-    webError( $msg, $exitcode, $noHtmlEsc );
-
-    #    if ($noHtmlEsc) {
-    #        print $msg;
-    #    } else {
-    #        print escHtml($msg);
-    #    }
-    #    webExit($exitcode);
+#    my ( $msg, $noHtmlEsc, $exitcode ) = @_;
+    WebPrint::webErrorHeader( @_ );
 }
 
 ############################################################################
@@ -2819,24 +1648,18 @@ sub printHint2 {
 # printHint - Print hint box with message.
 ############################################################################
 sub printHint {
-	print returnHint(@_);
-}
-sub returnHint {
-
     my ( $txt, $maxwidth ) = @_;
-    my $html;
     if ( $maxwidth ne '' ) {
-        $html = "<div id='hint' style='width:" . $maxwidth . "px;'>\n";
+        print "<div id='hint' style='width:" . $maxwidth . "px;'>\n";
     } else {
-        $html = "<div id='hint'>\n";
+        print "<div id='hint'>\n";
     }
-    $html .= qq{
-	<img src='$base_url/images/hint.gif' width='67' height='32' alt='Hint' />
-	<p>$txt</p>
-	</div>
-	<div class='clear'></div>
-};
-
+    print "<img src='$base_url/images/hint.gif' " . "width='67' height='32' alt='Hint' />";
+    print "<p>\n";
+    print $txt;
+    print "</p>\n";
+    print "</div>\n";
+    print "<div class='clear'></div>\n";
 }
 
 ############################################################################
@@ -2866,31 +1689,12 @@ sub printMessage {
 }
 
 ############################################################################
-# webDie - Code dies a serious death.   Show on web.
+# WebUtil::webDie - Code dies a serious death.   Show on web.
 ############################################################################
 sub webDie {
-    my ($s) = @_;
-
-    #webError($s);
-    print "Content-type: text/html\n\n";
-    print header( -status => '404 Not Found' );
-    print "<html>\n";
-    print "<p>\n";
-    print "SCRIPT ERROR:\n";
-    print "<p>\n";
-    print "<font color='red'>\n";
-    print "<b>$s</b>\n";
-    print "</font>\n";
-
-    webExit(0);
+    WebPrint::webDie( @_ );
 }
 
-############################################################################
-# flushBrowser - Flush browser buffering for progress indication.
-############################################################################
-sub flushBrowser {
-    print " " x 100000;
-}
 
 ############################################################################
 # nbsp - "space" character in HTML.
@@ -2906,258 +1710,31 @@ sub nbsp {
 
 ############################################################################
 # dbLogin - Login to oracle or some RDBMS and return handle.
-# 
+#
 # http://search.cpan.org/~lbaxter/Sys-SigAction/dbd-oracle-timeout.POD
 #
 ############################################################################
 sub dbLogin {
-	
-	
-	webLog("\n\nStatus: dbLogin ============================== \n\n");
-	
-    if ( $DBH_IMG ne '' ) {
-
-        #http://search.cpan.org/~pythian/DBD-Oracle-1.64/lib/DBD/Oracle.pm#ping
-        #        my  $rv = $DBH_IMG->ping;
-        #        if($rv) {
-        webLog("img using pooled connection \n");
-        return $DBH_IMG;
-
-        #        }
-    }
-
-    if ( $ora_port ne "" && $ora_host ne "" && $ora_sid ne "" ) {
-        $dsn = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid;";
-    }
-
-    my $mask   = POSIX::SigSet->new(SIGALRM);    # signals to mask in the handler
-    my $action = POSIX::SigAction->new(
-        sub {
-        	webErrorHeader("Database connection timeout. UI is waiting too long. Please try again later.");
-        },       # the handler code ref
-        $mask # not using (perl 5.8.2 and later) 'safe' switch or sa_flags
-    );
-
-    my $oldaction = POSIX::SigAction->new();
-    sigaction(SIGALRM, $action, $oldaction );
-    my $dbh;
-    eval {
-        alarm($dbLoginTimeout);                  # seconds before time out
-        $dbh = DBI->connect( $dsn, $user, pwDecode($pw) );
-        alarm(0);                                # cancel alarm (if connect worked fast)
-    };
-    alarm(0);                                    # cancel alarm (if eval failed)
-
-    # restore original signal handler
-    sigaction(SIGALRM, $oldaction );
-    alarm($timeoutSec) if ( $timeoutSec ne '' && $timeoutSec > 0 );
-
-    if ($@) {
-        webError("$@");
-    } elsif ( !defined($dbh) ) {
-        my $error = $DBI::errstr;
-
-        #webLog("$error\n");
-        if ( $error =~ "ORA-00018" ) {
-
-            # "ORA-00018: maximum number of sessions exceeded"
-            webErrorHeader( "<br/> Sorry, database is very busy. " . "Please try again later. <br/> $error", 1 );
-        } else {
-            webErrorHeader(
-                "<br/>  This is embarrassing. Sorry, database is down. " . "Please try again later. <br/> $error", 1 );
-        }
-    }
-    $dbh->{LongReadLen} = $maxClobSize;
-    $dbh->{LongTruncOk} = 1;
-
-    $DBH_IMG = $dbh;
-
-    my $max = getMaxSharedConn($dbh);
-    my $opn = getOpenSharedConn($dbh);
-    webLog("max = $max , open = $opn\n");
-    webErrLog("max = $max , open = $opn\n");
-    if ( !$env->{ignore_db_check} && $opn >= $max ) {
-        dbLogoutImg();
-        dbLogoutGold();        
-        webErrorHeader( "<br>We are sorry. The database is very busy ($opn, $max). Please try again later. <br> ", 1 );
-    }
-
-    return $dbh;
-}
-
-#
-# max number of possible shared connections
-#
-sub getMaxSharedConn {
-    my ($dbh) = @_;
-
-
-    return 100; # all other img system
-
-#    my $sql = qq{
-#select value from v\$parameter where name = 'max_shared_servers'
-#    };
-#    my $cur = execSql( $dbh, $sql, $verbose );
-#    my ($cnt) = $cur->fetchrow();
-#
-#    return $cnt;
-}
-
-#
-# the number of current open shared connections
-#
-# I should take 80% ??? of the max to test against to throw a db busy message
-#
-sub getOpenSharedConn {
-    my ($dbh) = @_;
-    my $sql = qq{
-select count(*) from v\$session where server != 'DEDICATED'
-    };
-
-    my $cur = execSql( $dbh, $sql, $verbose );
-    my ($cnt) = $cur->fetchrow();
-
-    return $cnt;
+    return $webDBObject->dbLogin();	
 }
 
 sub dbGoldLogin {
     my ($isAjaxCall) = @_;
-
-    if ( $DBH_GOLD ne '' ) {
-
-        #        my  $rv = $DBH_GOLD->ping;
-        #        if($rv) {
-        webLog("gold using pooled connection \n");
-        return $DBH_GOLD;
-
-        #        }
-    }
-
-    # use the new database imgsg_dev
-    my $user;        #     = "imgsg_dev";
-    my $pw;          #       = decode_base64('VHVlc2RheQ==');
-    my $ora_host;    # = 'muskrat.jgi-psf.org';                 #"jericho.jgi-psf.org";
-    my $ora_port;    # = "";
-    my $ora_sid;     #  = "imgiprd";
-    my $dsn;         #      = "dbi:Oracle:" . $ora_sid;
-
-    my $img_ken_localhost      = $env->{img_ken_localhost};
-    my $img_gold_oracle_config = $env->{img_gold_oracle_config};
-
-    if ($img_ken_localhost) {
-
-        # used by ken for local testing only!
-
-        $user = "imgsg_dev";
-        $pw   = decode_base64('VHVlc2RheQ==');
-
-        $ora_host = "localhost";
-        $ora_port = "1531";
-        $ora_sid  = "imgiprd";
-    } elsif ($img_gold_oracle_config) {
-
-        require $img_gold_oracle_config;
-        $dsn      = $ENV{ORA_DBI_DSN_GOLD};
-        $user     = $ENV{ORA_USER_GOLD};
-        $pw       = pwDecode( $ENV{ORA_PASSWORD_GOLD} );
-        $ora_port = "";
-        $ora_sid  = "";
-        $ora_host = "";
-
-        #webLog("===== using gold snapshot db ===========\n");
-    }
-
-    if ( $ora_port ne "" ) {
-        $dsn = "dbi:Oracle:host=$ora_host;port=$ora_port;sid=$ora_sid";
-    }
-
-    my $mask   = POSIX::SigSet->new(SIGALRM);    # signals to mask in the handler
-    my $action = POSIX::SigAction->new(
-        sub {
-            if ($isAjaxCall) {
-                return '';
-                webExit(0);
-            } else {
-                webErrorHeader("GOLD database connection timeout. UI is waiting too long. Please try again later.");
-            }
-
-        },                                       # the handler code ref
-        $mask
-
-          # not using (perl 5.8.2 and later) 'safe' switch or sa_flags
-    );
-
-    my $oldaction = POSIX::SigAction->new();
-    sigaction(SIGALRM, $action, $oldaction );
-    my $dbh;
-    eval {
-        alarm($dbLoginTimeout);                  # seconds before time out
-        $dbh = DBI->connect( $dsn, $user, pwDecode($pw) );
-        alarm(0);                                # cancel alarm (if connect worked fast)
-    };
-    alarm(0);                                    # cancel alarm (if eval failed)
-
-    # restore original signal handler
-    sigaction(SIGALRM, $oldaction );
-    alarm($timeoutSec) if ( $timeoutSec ne '' && $timeoutSec > 0 );
-
-    if ($@) {
-        webError("$@");
-    } elsif ( !defined($dbh) ) {
-        my $error = $DBI::errstr;
-
-        #webLog("$error\n");
-        if ( $error =~ "ORA-00018" ) {
-
-            # "ORA-00018: maximum number of sessions exceeded"
-            webErrorHeader( "<br/> DB GOLD: Sorry, database is very busy. " . "Please try again later. <br/> $error", 1 );
-        } else {
-            webErrorHeader(
-                "<br/> DB GOLD: This is embarrassing. Sorry, database is down. " . "Please try again later. <br/> $error",
-                1 );
-        }
-    }
-    $dbh->{LongReadLen} = $maxClobSize;
-    $dbh->{LongTruncOk} = 1;
-
-    $DBH_GOLD = $dbh;
-    
-    my $max = getMaxSharedConn($dbh);
-    my $opn = getOpenSharedConn($dbh);
-    webLog("max = $max , open = $opn\n");
-    webErrLog("max = $max , open = $opn\n");
-    if ( !$env->{ignore_db_check} && $opn >= $max ) {
-        dbLogoutImg();
-        dbLogoutGold();
-        webErrorHeader( "<br>We are sorry. The GOLD database is very busy ($opn, $max). Please try again later. <br> ", 1 );
-    }    
-    
-    
-    return $dbh;
+    return $webDBObject->dbGoldLogin($isAjaxCall);
 }
 
 #
 # logout of img
 #
 sub dbLogoutImg {
-    if ( $DBH_IMG ne '' ) {
-        webLog("img pooled connection logout\n");
-        $DBH_IMG->disconnect();
-        $DBH_IMG = '';
-    }
-
-    #stackTrace("WebUtil::dbLogoutImg()");
+    $webDBObject->dbLogoutImg();
 }
 
 #
 # logout of gold
 #
 sub dbLogoutGold {
-    if ( $DBH_GOLD ne '' ) {
-        webLog("gold pooled connection logout\n");
-        $DBH_GOLD->disconnect();
-        $DBH_GOLD = '';
-    }
+    $webDBObject->dbLogoutGold();
 }
 
 ############################################################################
@@ -3165,21 +1742,7 @@ sub dbLogoutGold {
 ############################################################################
 sub execSql {
     my ( $dbh, $sql, $verbose, @args ) = @_;
-    LogStuff::webLog("$sql\n") if ( $verbose >= $show_sql_verbosity_level );
-    my $nArgs = @args;
-    if ( $nArgs > 0 ) {
-        my $s;
-        for ( my $i = 0 ; $i < $nArgs ; $i++ ) {
-            my $a = $args[$i];
-            $s .= "arg[$i] '$a'\n";
-        }
-        LogStuff::webLog($s) if ( $verbose >= $show_sql_verbosity_level );
-    }
-    my $cur = $dbh->prepare($sql)
-      or webDie("execSql: cannot preparse statement: $DBI::errstr\n");
-    $cur->execute(@args)
-      or webDie("execSql: cannot execute: $DBI::errstr\n");
-    return $cur;
+    return $webDBObject->execSql($dbh, $sql, $verbose, @args);
 }
 
 ############################################################################
@@ -3188,21 +1751,7 @@ sub execSql {
 ############################################################################
 sub execSqlOnly {
     my ( $dbh, $sql, $verbose, @args ) = @_;
-    LogStuff::webLog("$sql\n") if ( $verbose >= $show_sql_verbosity_level );
-    my $cur = $dbh->prepare($sql)
-      or webDie("execSql: cannot preparse statement: $DBI::errstr\n");
-    my $nArgs = @args;
-    if ( $nArgs > 0 ) {
-        my $s;
-        for ( my $i = 0 ; $i < $nArgs ; $i++ ) {
-            my $a = $args[$i];
-            $s .= "arg[$i] '$a'\n";
-        }
-        LogStuff::webLog($s) if ( $verbose >= $show_sql_verbosity_level );
-    }
-    $cur->execute(@args)
-      or webDie("execSql: cannot execute: $DBI::errstr\n");
-    $cur->finish();
+    $webDBObject->execSqlOnly($dbh, $sql, $verbose, @args);
 }
 
 ############################################################################
@@ -3218,17 +1767,8 @@ sub execSqlOnly {
 ############################################################################
 sub execSqlBind {
     my ( $dbh, $sql, $bindList_aref, $verbose ) = @_;
-    LogStuff::webLog "$sql\n"             if ( $verbose >= $show_sql_verbosity_level );
-    LogStuff::webLog("@$bindList_aref\n") if ( $verbose >= $show_sql_verbosity_level );
-    my $cur = $dbh->prepare($sql)
-      or webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
-    for ( my $i = 0 ; $i <= $#$bindList_aref ; $i++ ) {
-        $cur->bind_param( ( $i + 1 ), $bindList_aref->[$i] )
-          or webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
-    }
-    $cur->execute()
-      or webDie("execSqlBind: cannot execute: $DBI::errstr\n");
-    return $cur;
+    return $webDBObject->execSqlBind($dbh, $sql, $bindList_aref, $verbose);
+
 }
 
 ############################################################################
@@ -3236,10 +1776,7 @@ sub execSqlBind {
 ############################################################################
 sub prepSql {
     my ( $dbh, $sql, $verbose ) = @_;
-    LogStuff::webLog "$sql\n" if $verbose >= 1;
-    my $cur = $dbh->prepare($sql)
-      or webDie("prepSql: cannot preparse statement: $DBI::errstr\n");
-    return $cur;
+    return $webDBObject->prepSql($dbh, $sql, $verbose);
 }
 
 ############################################################################
@@ -3247,8 +1784,7 @@ sub prepSql {
 ############################################################################
 sub execStmt {
     my ( $cur, @vars ) = @_;
-    $cur->execute(@vars)
-      or webDie("execStmt: cannot execute $DBI::errstr\n");
+    $webDBObject->execStmt($cur, @vars);
 }
 
 ############################################################################
@@ -3548,7 +2084,7 @@ sub printGeneTableExport {
     my $gene_oid_str = join( ",", @$gene_oids_ref );
     return if blankStr($gene_oid_str);
 
-    my $dbh = DatabaseStuff::dbLogin();
+    my $dbh = dbLogin();
     my $sql = qq{
        select g.gene_oid, g.gene_display_name, g.locus_tag, g.gene_symbol,
          tx.taxon_oid, tx.ncbi_taxon_id, tx.genus, tx.species
@@ -3599,7 +2135,10 @@ sub printGeneTableExport {
 # getSessionId - Get session ID.
 ############################################################################
 sub getSessionId {
-    initialize() unless $g_session;
+    my $g_session = $webSessionObject->getSession();
+    if(!$g_session)  {
+        die("web session has not been setup correctly\n");
+    }
     return $g_session->id();
 }
 
@@ -3607,8 +2146,7 @@ sub getSessionId {
 # getSession - Get session cookie
 ############################################################################
 sub getSession {
-    initialize() unless $g_session;
-    return $g_session;
+    return $webSessionObject->getSession();
 }
 
 ############################################################################
@@ -3616,25 +2154,14 @@ sub getSession {
 ############################################################################
 sub getSessionParam {
     my ($arg) = @_;
-
-	initialize() unless $g_session;
-	if ( $g_session->can('param') ) {
-	    return $g_session->param($arg);
-	}
-	else {
-		return $g_session->read($arg);
-	}
+	return $webSessionObject->getSession()->param(@_);
 }
 
 ############################################################################
-# getContactOid - Get current contact_oid for user restricted site.
+# getContactOid - Get currenct contact_oid for user restricted site.
 ############################################################################
 sub getContactOid {
-    if ( ! $user_restricted_site && ! $public_login ) {
-        return 0;
-    }
-    initialize() unless $g_session;
-    return getSessionParam("contact_oid");
+    return $webSessionObject->getContactOid();
 }
 
 ############################################################################
@@ -3642,28 +2169,19 @@ sub getContactOid {
 # user - login id
 ############################################################################
 sub getUserName {
-    if ( !$user_restricted_site && !$public_login ) {
-        return "";
-    }
-    return getSessionParam("username");
+    return $webSessionObject->getUserName();
 }
 
 # gets users "name" from contact table
 sub getUserName2 {
-    if ( !$user_restricted_site && !$public_login ) {
-        return "";
-    }
-    return getSessionParam("name");
+    return $webSessionObject->getUserName2();
 }
 
 ############################################################################
 # getSuperUser - Get contact.super_user status.
 ############################################################################
 sub getSuperUser {
-    if ( !$user_restricted_site ) {
-        return "";
-    }
-    return getSessionParam("super_user");
+	return $webSessionObject->getSuperUser();
 }
 
 ############################################################################
@@ -3672,23 +2190,22 @@ sub getSuperUser {
 ############################################################################
 sub isImgEditor {
     my ( $dbh, $contact_oid ) = @_;
-    return 0 unless $contact_oid;
-    return 0 if 901 == $contact_oid;
+    return 0 if !$contact_oid;
+    return 0 if ( $contact_oid == 901 );
 
     my $x = getSessionParam("editor");
-    #LogStuff::webLog("editor == $x \n");
+    if ( $x ne "" ) {
 
-    return $x if defined $x;
-
+        #webLog("editor == $x \n");
+        return $x;
+    }
     my $sql = qq{
        select img_editor
        from contact
        where contact_oid = ?
     };
-
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid );
     my ($img_editor) = $cur->fetchrow();
-
     $cur->finish();
 
     if ( $img_editor eq "Yes" ) {
@@ -3700,11 +2217,12 @@ sub isImgEditor {
     return 1 if $img_editor eq "Yes";
     return 0;
 }
+
 ## Wrapped version, no extern db login.
 sub isImgEditorWrap {
     my $contact_oid = getContactOid();
-    return 0 if ! $contact_oid;
-    my $dbh = DatabaseStuff::dblogin();
+    return 0 if !$contact_oid;
+    my $dbh = dbLogin();
     my $b   = isImgEditor( $dbh, $contact_oid );
 
     #$dbh->disconnect();
@@ -3825,7 +2343,7 @@ sub canEditBin {
 ############################################################################
 sub setSessionParam {
     my ( $arg, $val ) = @_;
-    $g_session->param( $arg, $val );
+    $webSessionObject->setSessionParam( $arg, $val );
 }
 
 ############################################################################
@@ -3837,7 +2355,7 @@ sub getTaxonCount {
     if ( $dbh_param ne "" ) {
         $dbh = $dbh_param;
     } else {
-        $dbh = DatabaseStuff::dblogin();
+        $dbh = dbLogin();
     }
     my $rclause   = urClause("tx");
     my $imgClause = imgClause('tx');
@@ -3873,7 +2391,7 @@ sub getUrOids {
     my ($dbh) = @_;
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webDie("Invalid session.");
+        WebUtil::webDie("Invalid session.");
     }
     my $sql = qq{
       select taxon_oid
@@ -4023,6 +2541,7 @@ sub getTaxonFilterHash {
     return \%taxonFilterHash;
 }
 
+
 ############################################################################
 # highlightRect - Highlight rectangular area (and fill) for Kegg maps.
 ############################################################################
@@ -4030,12 +2549,12 @@ sub highlightRect {
     my ( $im, $x, $y, $w, $h, $colorName ) = @_;
 
     if ( $w < 1 ) {
-        LogStuff::webLog("highlightRect: bad w=$w\n");
+        webLog("highlightRect: bad w=$w\n");
         print STDERR "highlightRect: bad w=$w\n";
         return;
     }
     if ( $h < 1 ) {
-        LogStuff::webLog("highlightRect: bad h=$h\n");
+        webLog("highlightRect: bad h=$h\n");
         print STDERR "highlightRect: bad h=$h\n";
         return;
     }
@@ -4043,7 +2562,7 @@ sub highlightRect {
     my $rect = new GD::Image( $w, $h );
 
     if ( !$rect ) {
-        webDie("highlightRect failed w, h = $w,$h color=$colorName  \n");
+        WebUtil::webDie("highlightRect failed w, h = $w,$h color=$colorName  \n");
     }
 
     my $color;
@@ -4067,7 +2586,7 @@ sub highlightRect {
         $color = $rect->colorAllocate( 255, 255, 0 );
         $perc = 50;
     } else {
-        webDie("highlightRect: unsupported color: '$colorName'\n");
+        WebUtil::webDie("highlightRect: unsupported color: '$colorName'\n");
     }
     $rect->filledRectangle( 0, 0, $w, $h, $color );
     $im->copyMerge( $rect, $x + 1, $y + 1, 0, 0, $w - 1, $h - 1, $perc );
@@ -4092,18 +2611,19 @@ sub highlightRectRgb {
     $rect->colorDeallocate($color);
 }
 
+
 ############################################################################
 # alignImage - Show alignment bar on for ortholog, paralog, homolog pages.
 ############################################################################
 sub alignImage {
     my ( $start, $end, $length, $image_len ) = @_;
     if ( $length < $start ) {
-        LogStuff::webLog("alignImage: length=$length < end=$end\n")
+        webLog("alignImage: length=$length < end=$end\n")
           if $verbose >= 2;
         $start = $length;
     }
     if ( $length < $end ) {
-        LogStuff::webLog("alignImage: length=$length < end=$end\n")
+        webLog("alignImage: length=$length < end=$end\n")
           if $verbose >= 2;
         $end = $length;
     }
@@ -4111,15 +2631,15 @@ sub alignImage {
     my $startPerc = $start / $length;
     my $endPerc   = $end / $length;
     $image_len = 50 if ( $image_len == 0 || $image_len eq '' );
-    LogStuff::webLog "start=$start end=$end length=$length\n"    if $verbose >= 3;
-    LogStuff::webLog "  startPerc=$startPerc endPerc=$endPerc\n" if $verbose >= 3;
+    webLog "start=$start end=$end length=$length\n"    if $verbose >= 3;
+    webLog "  startPerc=$startPerc endPerc=$endPerc\n" if $verbose >= 3;
     my $start_pos = $startPerc * $image_len;
     my $end_pos   = $endPerc * $image_len;
     my $seg1      = int($start_pos);
     my $seg2      = int( $end_pos - $start_pos );
     my $seg3      = int( $image_len - $end_pos );
     $seg2 = 1 if $seg2 < 1;
-    LogStuff::webLog "  seg1=$seg1 seg2=$seg2 seg3=$seg3\n" if $verbose >= 3;
+    webLog "  seg1=$seg1 seg2=$seg2 seg3=$seg3\n" if $verbose >= 3;
     my $s = "<img src='$base_url/images/rect.blue.png' " . "width='$seg1' height='1' />";
     $s .= "<img src='$base_url/images/rect.green.png' " . "width='$seg2' height='5' />";
     $s .= "<img src='$base_url/images/rect.blue.png' " . "width='$seg3' height='1' />";
@@ -4217,18 +2737,18 @@ sub printAlignFnaSeq {
     my $gene_oid_str = join( ',', @gene_oid );
     if ( blankStr($gene_oid_str) ) {
         print "<p>\n";
-        webError("Select genes first.");
+        WebUtil::webError("Select genes first.");
     }
     if ( $up_stream_int > 0 || !isInt($up_stream) ) {
         print "<p>\n";
-        webError("Expected a negative integer for up stream.");
+        WebUtil::webError("Expected a negative integer for up stream.");
     }
     if ( $down_stream_int < 0 || !isInt($down_stream) ) {
         print "<p>\n";
-        webError("Expected a positive integer for down stream.");
+        WebUtil::webError("Expected a positive integer for down stream.");
     }
 
-    my $dbh = DatabaseStuff::dblogin();
+    my $dbh = dbLogin();
     my $sql = qq{
         select g.gene_oid, g.gene_display_name,
 	  tx.taxon_oid, tx.genus, tx.species,
@@ -4282,14 +2802,14 @@ sub printAlignFnaSeq {
             $start_coord = $start_coord0 - $down_stream;
             $end_coord   = $end_coord0 - $up_stream;
         }
-        LogStuff::webLog "$ext_accession: $start_coord..$end_coord " . "($strand)\n"
+        webLog "$ext_accession: $start_coord..$end_coord " . "($strand)\n"
           if $verbose >= 1;
         print $wfh ">$gene_oid\n";
 
         my $path = "$taxon_lin_fna_dir/$taxon_oid.lin.fna";
         my $seq1 = readLinearFasta( $path, $ext_accession, $start_coord, $end_coord, $strand );
         if ( blankStr($seq1) ) {
-            LogStuff::webLog( "naSeq.cgi: no sequence for '$path' " . "$start_coord..$end_coord ($strand)\n" );
+            webLog( "naSeq.cgi: no sequence for '$path' " . "$start_coord..$end_coord ($strand)\n" );
             next;
         }
         my $us_len = $start_coord0 - $start_coord;    # upstream length
@@ -4314,14 +2834,14 @@ sub printAlignFnaSeq {
         $c3StopCodon = 1 if isStopCodon($stopCodon0);
 
         if ( $verbose >= 1 ) {
-            LogStuff::webLog "up_stream=$up_stream ";
-            LogStuff::webLog "start_coord0=$start_coord0 ";
-            LogStuff::webLog "start_coord=$start_coord\n";
-            LogStuff::webLog "end_coord=$end_coord ";
-            LogStuff::webLog "end_coord0=$end_coord0 ";
-            LogStuff::webLog "c0=$c0 c1=$c1 c2=$c2 c3=$c3 c4=$c4\n";
-            LogStuff::webLog "startCodon0='$startCodon0' " . "c1StartCodon=$c1StartCodon\n";
-            LogStuff::webLog "stopCodon0 ='$stopCodon0' c3StopCodon=$c3StopCodon\n";
+            webLog "up_stream=$up_stream ";
+            webLog "start_coord0=$start_coord0 ";
+            webLog "start_coord=$start_coord\n";
+            webLog "end_coord=$end_coord ";
+            webLog "end_coord0=$end_coord0 ";
+            webLog "c0=$c0 c1=$c1 c2=$c2 c3=$c3 c4=$c4\n";
+            webLog "startCodon0='$startCodon0' " . "c1StartCodon=$c1StartCodon\n";
+            webLog "stopCodon0 ='$stopCodon0' c3StopCodon=$c3StopCodon\n";
         }
 
         my @bases        = split( //, $seq1 );
@@ -4413,7 +2933,7 @@ sub getFposLinear {
     my ( $fileName, $gene_oid0 ) = @_;
     my $rfh = newReadFileHandle( $fileName, "getFposLinear", 1 );
     if ( !$rfh ) {
-        LogStuff::webLog("getFposLinear: WARNING: cannot read '$fileName'\n");
+        webLog("getFposLinear: WARNING: cannot read '$fileName'\n");
         return -1;
     }
     while ( my $s = $rfh->getline() ) {
@@ -4471,7 +2991,7 @@ sub getIdxHomologs {
     my $cmd = "$wsimHomologs_bin -i $gene_oid -d $avaTaxonDir ";
     $cmd .= "-g $geneOidsFile -f $fposFile -l $lineCountFile ";
     $cmd .= "-t $tmpFile ";
-    LogStuff::webLog "+ $cmd\n" if $verbose >= 1;
+    webLog "+ $cmd\n" if $verbose >= 1;
     unsetEnvPath();
     my $cfh = newCmdFileHandle( $cmd, "getIdxHomologs" );
     my %done;
@@ -4503,7 +3023,7 @@ sub getAllTaxonsHashed {
     my $filename = $dir . '/getAllTaxonsHashed_' . $genomeType;
     if ( -e $filename ) {
         my $href = retrieve("$filename");
-        LogStuff::webLog("reading cache data for getAllTaxonsHashed: $filename\n");
+        webLog("reading cache data for getAllTaxonsHashed: $filename\n");
         #print "reading cache data for getAllTaxonsHashed: $filename<br/>\n";
         return %$href;
     }
@@ -4538,7 +3058,7 @@ sub getAllTaxonsHashed {
     $cur->finish();
 
     my $size = keys %h;
-    LogStuff::webLog( "caching rows " . $size . "\n" );
+    webLog( "caching rows " . $size . "\n" );
     store \%h, "$filename";
     return %h;
 }
@@ -4607,7 +3127,7 @@ sub getFileHomologs {
     close $rfh;
     my @keys = sort( keys(%ignored) );
     for my $k (@keys) {
-        LogStuff::webLog "getFileHomologs: taxon='$k' ignored\n"
+        webLog "getFileHomologs: taxon='$k' ignored\n"
           if $verbose >= 1;
     }
 }
@@ -4651,7 +3171,7 @@ sub getAvaTabAndFposFiles {
 sub getPhyloDomainCounts {
     my ($taxon_filter_oid_str) = @_;
 
-    my $dbh         = DatabaseStuff::dblogin();
+    my $dbh         = dbLogin();
     my $taxonClause = txsClause( "tx", $dbh );
     my $rclause     = urClause("tx");
     my $imgClause   = imgClause('tx');
@@ -4695,14 +3215,14 @@ sub printCartFooter {
             -value => $buttonLabel,
             -class => $buttonClass,
             -onclick => $jsCall
-        );        
+        );
     }
     else {
         print submit(
             -name  => $id,
             -value => $buttonLabel,
             -class => $buttonClass
-        );        
+        );
     }
     print nbsp(1);
     printButtonFooter($form_id);
@@ -4978,30 +3498,17 @@ sub getTaxonOid4GeneOid {
 # printStatusLine - Show status line in the UI.
 ############################################################################
 sub printStatusLine {
-	my $sl = returnStatusLine( @_ );
-	print $sl if $sl;
-}
-
-sub returnStatusLine {
     my ( $s, $z_index ) = @_;
     my $zidx = 1;
     if ( $z_index > 1 || blankStr($s) ) {
         $zidx = 2;
     }
-
-    #print "<div id='status_line_z$zidx'>\n";
     if ( $s =~ /Loading/ ) {
-
-        #        print qq{
-        #        <script language='javascript' type='text/javascript'>
-        #            var e0 = document.getElementById( "loading" );
-        #            e0.innerHTML = "<font color='red'> $s </font> <img src='$base_url/images/ajax-loader.gif'> ";
-        #        </script>
-        #        };
+        #
     } else {
         $s =~ s/\n/ /g;
         $s =~ s/"/'/g;
-        return qq{
+        print qq{
         <script language='javascript' type='text/javascript'>
             var e0 = document.getElementById( "loading" );
             if(e0 != null) {
@@ -5012,24 +3519,6 @@ sub returnStatusLine {
     }
 }
 
-sub printStatusLine_old {
-    my ( $s, $z_index ) = @_;
-    my $zidx = 1;
-    if ( $z_index > 1 || blankStr($s) ) {
-        $zidx = 2;
-    }
-    print "<div id='status_line_z$zidx'>\n";
-    if ( $s =~ /Loading/ ) {
-        print "<font color='red'><blink>$s</blink></font>\n";
-
-        #print "<font color='red'>$s</font>\n";
-        #print "<span style='color: #ff0000; text-decoration: blink'>" .
-        #  "$s</span>\n";
-    } else {
-        print "$s\n";
-    }
-    print "</div>\n";
-}
 
 ############################################################################
 # printStatusBox - Show status box in the UI.
@@ -5204,7 +3693,7 @@ sub selectUrl {
 ############################################################################
 sub locusTagCount {
     my ($id) = @_;
-    my $dbh  = DatabaseStuff::dblogin();
+    my $dbh  = dbLogin();
     my $sql  = qq{
       select count(*)
       from gene
@@ -5223,7 +3712,7 @@ sub locusTagCount {
 ############################################################################
 sub extAccIdCount {
     my ($id) = @_;
-    my $dbh  = DatabaseStuff::dblogin();
+    my $dbh  = dbLogin();
     my $sql  = qq{
       select count(*)
       from gene
@@ -5335,7 +3824,7 @@ sub readFileIndexed {
         my (@vals) = split( /\t/, $s );
         my $nVals = @vals;
         if ( $sortColIdx < 0 || $sortColIdx >= $nVals ) {
-            webDie("readFileIndexed: bad sortColIdx=$sortColIdx nVals=$nVals\n");
+            WebUtil::webDie("readFileIndexed: bad sortColIdx=$sortColIdx nVals=$nVals\n");
         }
         push( @$outRows_ref, $s );
         push( @idxVals,      $vals[$sortColIdx] . "\t" . "$rowIdx" );
@@ -5353,11 +3842,11 @@ sub readFileIndexed {
 ############################################################################
 sub printExcelHeader {
     my ($fileName, $sz) = @_;
-    
+
     print "Content-type: application/vnd.ms-excel\n";
     print "Content-Disposition: inline;filename=$fileName\n";
     if ( $sz && $sz > 0 ) {
-        print "Content-length: $sz\n";        
+        print "Content-length: $sz\n";
     }
     print "\n";
 }
@@ -5367,11 +3856,11 @@ sub printExcelHeader {
 ############################################################################
 sub printTxtHeader {
     my ($fileName, $sz) = @_;
-    
+
     print "Content-type: application/text\n";
     print "Content-Disposition: inline;filename=$fileName\n";
     if ( $sz && $sz > 0 ) {
-        print "Content-length: $sz\n";        
+        print "Content-length: $sz\n";
     }
     print "\n";
 }
@@ -5381,9 +3870,8 @@ sub printTxtHeader {
 ############################################################################
 sub fileRoot {
     my ($path) = @_;
-    my $fileName = lastPathTok($path);
-    my ( $fileRoot, @exts ) = split( /\./, $fileName );
-    return $fileRoot;
+
+    return WebIO::fileRoot($path);
 }
 
 ############################################################################
@@ -5412,7 +3900,7 @@ sub phyloSimMask {
         last if !$flag;
         $bitMap{$taxon_oid} = $count++;
     }
-    LogStuff::webLog("phyloSimMask mask size=$count\n");
+    webLog("phyloSimMask mask size=$count\n");
     $cur->finish();
     my $bitMapSize  = $count;
     my $whereClause = txsClause( "tx", $dbh );
@@ -5439,7 +3927,7 @@ sub phyloSimMask {
     }
     $cur2->finish();
     my $len = length($bitVec);
-    LogStuff::webLog("Length bitVec=$len\n");
+    webLog("Length bitVec=$len\n");
     return $bitVec;
 }
 
@@ -5469,7 +3957,7 @@ sub geneOidMap {
     }
     if ( scalar(@gene_oids) != 1 ) {
         my $gene_oid_str = join( ',', @gene_oids );
-        LogStuff::webLog( "geneOidMap: multiple gene_oids='$gene_oid_str' for " . "original gene_oid0='$gene_oid0'\n" );
+        webLog( "geneOidMap: multiple gene_oids='$gene_oid_str' for " . "original gene_oid0='$gene_oid0'\n" );
     }
     return $gene_oids[0];
     return 0;
@@ -5537,7 +4025,7 @@ sub taxonOidMap {
     }
     if ( scalar(@taxon_oids) != 1 ) {
         my $taxon_oid_str = join( ',', @taxon_oids );
-        LogStuff::webLog( "taxonOidMap: multiple taxon_oids='$taxon_oid_str' for " . "original taxon_oid0='$taxon_oid0'\n" );
+        webLog( "taxonOidMap: multiple taxon_oids='$taxon_oid_str' for " . "original taxon_oid0='$taxon_oid0'\n" );
     }
     return $taxon_oids[0];
     return 0;
@@ -5592,7 +4080,7 @@ sub taxonOidsMap {
 ############################################################################
 sub blastProcCheck {
     my $cmd = "/bin/ps -ef";
-    LogStuff::webLog "+ $cmd\n" if $verbose >= 5;
+    webLog "+ $cmd\n" if $verbose >= 5;
     my $count = 0;
     unsetEnvPath();
     my $cfh = newCmdFileHandle( $cmd, "blastProcCheck" );
@@ -5602,9 +4090,9 @@ sub blastProcCheck {
     }
     close $cfh;
     resetEnvPath();
-    LogStuff::webLog "$count blastall's running\n" if $verbose >= 1;
+    webLog "$count blastall's running\n" if $verbose >= 1;
     if ( $count >= $max_blast_jobs ) {
-        webError( "Maximum BLAST jobs ($max_blast_jobs) currently running. " . "Please try again later." );
+        WebUtil::webError( "Maximum BLAST jobs ($max_blast_jobs) currently running. " . "Please try again later." );
     }
 }
 
@@ -5613,15 +4101,14 @@ sub blastProcCheck {
 ############################################################################
 sub maxCgiProcCheck {
     my $scriptName = shift || 'main.cgi';
-#    $scriptName = 'main.cgi' if ( $scriptName eq '' );
 
     my $max_cgi_procs = $env->{max_cgi_procs};
-    LogStuff::webLog("maxCgiProcCheck: $max_cgi_procs allowed processes\n");
+    webLog("maxCgiProcCheck: $max_cgi_procs allowed processes\n");
 
     return if ! $max_cgi_procs;
     my $cmd = "/bin/ps -ef";
 
-    #LogStuff::webLog "+ $cmd\n" if $verbose >= 5;
+    #webLog "+ $cmd\n" if $verbose >= 5;
     my $count = 0;
     unsetEnvPath();
     my $cfh = newCmdFileHandle( $cmd, "maxCgiProcCheck" );
@@ -5630,13 +4117,12 @@ sub maxCgiProcCheck {
         $count++ if $s =~ /$scriptName/;
     }
     close $cfh;
-    resetEnvPath();
 
-    LogStuff::webLog("maxCgiProcCheck: $count $scriptName running\n");
+    webLog("maxCgiProcCheck: $count $scriptName running\n");
 
     if ( $count > $max_cgi_procs ) {
 
-        #LogStuff::webLog "WARNING: max_cgi_procs exceeded.\n";
+        #webLog "WARNING: max_cgi_procs exceeded.\n";
         print header( -type => "text/html", -status => '503' );
         print <<EOF;
 <html>
@@ -5662,7 +4148,7 @@ sub maxCgiProcCheck {
 </html>
 EOF
 
-        webExit(0);
+        WebUtil::webExit(0);
     }
 }
 
@@ -5754,20 +4240,7 @@ sub pwDecode {
 #    for user restricted sites.
 ############################################################################
 sub urClause {
-    my $aliasOrAttr = shift;
-
-    #LogStuff::webLog("====== user_restricted_site $user_restricted_site  \n");
-    #LogStuff::webLog("====== public_login $public_login  \n");
-
-    return "" if ! $user_restricted_site ;
-    my $contact_oid = getContactOid();
-
-    #LogStuff::webLog("====== contact_oid $contact_oid\n");
-
-    return "" if ! $contact_oid;
-
-    my $super_user = getSuperUser();
-    return "" if $super_user eq "Yes";
+    my ($aliasOrAttr) = @_;
 
     my $taxon_oid_attr = "taxon_oid";
     $taxon_oid_attr = "$aliasOrAttr.taxon_oid"
@@ -5778,6 +4251,30 @@ sub urClause {
       if $aliasOrAttr ne ""
       && $aliasOrAttr ne "taxon_oid"
       && $aliasOrAttr =~ /\./;
+
+    #webLog("====== user_restricted_site $user_restricted_site  \n");
+    #webLog("====== public_login $public_login  \n");
+
+    return "" if ( !$user_restricted_site );
+    my $contact_oid = getContactOid();
+
+    #webLog("====== contact_oid $contact_oid\n");
+
+    return "" if !$contact_oid;
+
+    my $super_user = getSuperUser();
+    if ( $super_user eq "Yes" ) {
+
+        #        my $clause = qq{
+        #      and $taxon_oid_attr in(
+        #         select tx.taxon_oid
+        #         from taxon tx
+        #         where tx.obsolete_flag = 'No'
+        #      )
+        #        };
+        #        return $clause;
+        return "";
+    }
 
     my $clause = qq{
       and $taxon_oid_attr in(
@@ -6008,11 +4505,11 @@ sub checkTaxonPerm {
     return if $super_user eq "Yes";
 
     if ( $taxon_oid !~ /^[0-9]+$/ ) {
-        webError("Illegal taxon_oid='$taxon_oid'\n");
+        WebUtil::webError("Illegal taxon_oid='$taxon_oid'\n");
     }
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webError( "Session expired. " . "You do not have permission to view this genome." );
+        WebUtil::webError( "Session expired. " . "You do not have permission to view this genome." );
     }
     my $sql = qq{
       select count(*)
@@ -6043,8 +4540,8 @@ sub checkTaxonPerm {
     #$dbh->disconnect();
 
     # Changed per Amy's request. +BSJ 10/05/11
-    # webError("You do not have permission on this genome.");
-    webError("Taxon object identifier $taxon_oid not found.");
+    # WebUtil::webError("You do not have permission on this genome.");
+    WebUtil::webError("Taxon object identifier $taxon_oid not found.");
 }
 
 ############################################################################
@@ -6060,7 +4557,7 @@ sub checkTaxonPermHeader {
 
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webErrorHeader("Session expired. You do not have permission to view this genome.");
+        WebUtil::webErrorHeader("Session expired. You do not have permission to view this genome.");
     }
     my $sql = qq{
       select count(*)
@@ -6089,7 +4586,7 @@ sub checkTaxonPermHeader {
     printStatusLine( "Error.", 2 );
 
     #$dbh->disconnect();
-    webErrorHeader("You do not have permission to view this genome.");
+    WebUtil::webErrorHeader("You do not have permission to view this genome.");
 }
 
 ############################################################################
@@ -6113,7 +4610,7 @@ sub checkGenePerm {
         my $cnt = $cur->fetchrow();
         $cur->finish();
         if ( $cnt > 0 ) {
-            webError("The gene you are looking for does not exist or it may have been removed from IMG.");
+            WebUtil::webError("The gene your are looking for does not exist or it may have been removed from IMG.");
         }
     }
 
@@ -6123,7 +4620,7 @@ sub checkGenePerm {
     my $super_user  = getSuperUser();
     return 1 if $super_user eq "Yes";
     if ( !$contact_oid ) {
-        webError("Session expired. You do not have permission to view this genome.");
+        WebUtil::webError("Session expired. You do not have permission to view this genome.");
     }
     my $sql = qq{
       select count(*)
@@ -6182,7 +4679,7 @@ sub checkGenePerm {
     printStatusLine( "Error.", 2 );
 
     #$dbh->disconnect();
-    webError("You do not have permission to view genes in this genome.");
+    WebUtil::webError("You do not have permission to view genes in this genome.");
     return 0;
 }
 
@@ -6276,8 +4773,8 @@ sub validateGenePerms {
         if ( $urOidsHash{$taxon} eq "" ) {
 
             #printStatusLine( "Error.", 2 );
-            #webError( "Invalid gene_oid=$gene_oid.  No access permission." );
-            LogStuff::webLog "validateGenePerms: bad gene_oid='$gene_oid'\n"
+            #WebUtil::webError( "Invalid gene_oid=$gene_oid.  No access permission." );
+            webLog "validateGenePerms: bad gene_oid='$gene_oid'\n"
               if $verbose >= 1;
             push( @$badGeneOids_ref, $gene_oid );
             $stat = 0;
@@ -6297,7 +4794,7 @@ sub checkScaffoldPerm {
 
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webError("Session expired. You do not have permission to view this genome.");
+        WebUtil::webError("Session expired. You do not have permission to view this genome.");
     }
     my $super_user = getSuperUser();
     return if $super_user eq "Yes";
@@ -6329,7 +4826,7 @@ sub checkScaffoldPerm {
     return if $cnt > 0;
 
     printStatusLine( "Error.", 2 );
-    webError("You do not have permission to view this genome.");
+    WebUtil::webError("You do not have permission to view this genome.");
 }
 
 ############################################################################
@@ -6623,187 +5120,8 @@ sub printPhyloSelectionList {
     print "<br/>\n";
 }
 
-############################################################################
-# printPhyloBinSelectionList - Show phylogenetically ordered
-#   taxon with bins selection list.
-# marked obsolete because it is not in use by any scripts
-############################################################################
-sub printPhyloBinSelectionList_OBSOLETE {
-    my ($dbh) = @_;
 
-    my $imgClause = imgClause('tx');
 
-    my $hideViruses = getSessionParam("hideViruses");
-    $hideViruses = "Yes" if $hideViruses eq "";
-    my $virusClause;
-    $virusClause = "and tx.domain not like 'Vir%'" if $hideViruses eq "Yes";
-
-    my $hidePlasmids = getSessionParam("hidePlasmids");
-    $hidePlasmids = "Yes" if $hidePlasmids eq "";
-    my $plasmidClause;
-    $plasmidClause = "and tx.domain not like 'Plasmid%'"
-      if $hidePlasmids eq "Yes";
-
-    my $hideGFragment = getSessionParam("hideGFragment");
-    $hideGFragment = "Yes" if $hideGFragment eq "";
-    my $GFragmentClause;
-    $GFragmentClause = "and tx.domain not like 'GFragment%'"
-      if $hideGFragment eq "Yes";
-
-    my %defaultBins;
-    getDefaultBins( $dbh, \%defaultBins );
-    my $rclause     = urClause("tx");
-    my $taxonClause = txsClause( "tx", $dbh );
-    my $sql         = qq{
-      select tx.domain, tx.seq_status, tx.taxon_oid, tx.taxon_display_name,
-         b.bin_oid, b.display_name
-      from taxon_stats ts, taxon tx
-      left join env_sample_gold es
-         on tx.env_sample = es.sample_oid
-      left join bin b
-         on es.sample_oid = b.env_sample
-      where tx.taxon_oid = ts.taxon_oid
-      $rclause
-      $taxonClause
-      $virusClause
-      $plasmidClause
-      $GFragmentClause
-      $imgClause
-      order by tx.domain, tx.taxon_display_name, tx.taxon_oid, b.display_name
-   };
-    my $cur = execSql( $dbh, $sql, $verbose );
-    print "<select name='profileTaxonBinOid' size='10' multiple>\n";
-    my $old_domain;
-    my $old_phylum;
-    my $old_genus;
-    my $old_taxon_oid;
-
-    for ( ; ; ) {
-        my ( $domain, $seq_status, $taxon_oid, $taxon_display_name, $bin_oid, $bin_display_name ) = $cur->fetchrow();
-        last if !$taxon_oid;
-        if ( $old_taxon_oid ne $taxon_oid ) {
-            print "<option value='t:$taxon_oid'>\n";
-            print escHtml($taxon_display_name);
-            my $d = substr( $domain,     0, 1 );
-            my $c = substr( $seq_status, 0, 1 );
-            print " ($d)[$c]";
-            print "</option>\n";
-        }
-        if ( $bin_oid ne "" && $defaultBins{$bin_oid} ) {
-            print "<option value='b:$bin_oid'>\n";
-            print "-- ";
-            print escHtml($bin_display_name);
-            print " (b)";
-            print "</option>\n";
-        }
-        $old_taxon_oid = $taxon_oid;
-    }
-    print "</select>\n";
-    print "<script language='JavaScript' type='text/javascript'>\n";
-    print qq{
-      function clearProfileTaxonOidSelections( ) {
-         var selector = document.mainForm.profileTaxonBinOid;
-	 for( var i = 0; i < selector.length; i++ ) {
-	    var e = selector[ i ];
-	    e.selected = false;
-	 }
-	 document.mainForm.minPercIdent.selectedIndex = 0;
-	 document.mainForm.maxEvalue.selectedIndex = 0;
-      }
-   };
-    print "</script>\n";
-    print "<br/>\n";
-}
-
-############################################################################
-# printPhyloSelectionListOld - Show phylogenetically ordered
-#   taxon selection list.  Old version.  Still need to keep around
-#   because used by Abundance.pm.
-############################################################################
-sub printPhyloSelectionListOld {
-    my ($dbh) = @_;
-
-    my $imgClause = imgClause('tx');
-
-    my $hideViruses = getSessionParam("hideViruses");
-    $hideViruses = "Yes" if $hideViruses eq "";
-    my $virusClause;
-    $virusClause = "and tx.domain not like 'Vir%'" if $hideViruses eq "Yes";
-
-    my $hidePlasmids = getSessionParam("hidePlasmids");
-    $hidePlasmids = "Yes" if $hidePlasmids eq "";
-    my $plasmidClause;
-    $plasmidClause = "and tx.domain not like 'Plasmid%'"
-      if $hidePlasmids eq "Yes";
-
-    my $hideGFragment = getSessionParam("hideGFragment");
-    $hideGFragment = "Yes" if $hideGFragment eq "";
-    my $GFragmentClause;
-    $GFragmentClause = "and tx.domain not like 'GFragment%'"
-      if $hideGFragment eq "Yes";
-
-    my $rclause     = urClause("tx");
-    my $taxonClause = txsClause( "tx", $dbh );
-    my $sql         = qq{
-      select tx.domain, tx.seq_status, tx.taxon_oid, tx.taxon_display_name
-      from taxon tx
-      where 1 = 1
-      $rclause
-      $taxonClause
-      $virusClause
-      $plasmidClause
-      $GFragmentClause
-      $imgClause
-      order by tx.domain, tx.taxon_display_name
-   };
-    my $cur = execSql( $dbh, $sql, $verbose );
-    print "<select name='profileTaxonOid' size='10' multiple>\n";
-    my $old_domain;
-    my $old_phylum;
-    my $old_genus;
-
-    for ( ; ; ) {
-        my ( $domain, $seq_status, $taxon_oid, $taxon_display_name ) = $cur->fetchrow();
-        last if !$taxon_oid;
-        print "<option value='$taxon_oid'>\n";
-        print escHtml($taxon_display_name);
-        my $d = substr( $domain,     0, 1 );
-        my $c = substr( $seq_status, 0, 1 );
-        print " ($d)[$c]";
-        print "</option>\n";
-    }
-    print "</select>\n";
-    print "<script language='JavaScript' type='text/javascript'>\n";
-    print qq{
-      function clearProfileTaxonOidSelections( ) {
-         var selector = document.mainForm.profileTaxonOid;
-	 for( var i = 0; i < selector.length; i++ ) {
-	    var e = selector[ i ];
-	    e.selected = false;
-	 }
-      }
-   };
-    print "</script>\n";
-    print "<br/>\n";
-}
-
-############################################################################
-# getTaxonBinOids - Get taxon or bin oid from printPhyloBinSelectionList.
-#    Currently type is either "t" (taxon) or "b" (bin).
-# marked obsolete because it is not in use by any scripts
-############################################################################
-sub getTaxonBinOids_OBSOLETE {
-    my ($type) = @_;
-    my @toids = param("profileTaxonBinOid");
-    my @oids2;
-    for my $toid (@toids) {
-        my ( $type2, $oid ) = split( /:/, $toid );
-        if ( $type2 eq $type ) {
-            push( @oids2, $oid );
-        }
-    }
-    return @oids2;
-}
 
 ############################################################################
 # pageLink - Show link within the same HTML page.
@@ -7009,7 +5327,7 @@ sub sqlInClause {
     return "" if scalar(@vals) == 0;
     my $nVals = @vals;
     if ( $nVals > 1000 ) {
-        LogStuff::webLog("inSqlClause: too many values: $nVals\n");
+        webLog("inSqlClause: too many values: $nVals\n");
         return;
     }
     my $s = " in(";
@@ -7034,7 +5352,7 @@ sub taxonCategoryStrings {
     my @keys  = keys(%$taxonOid2Str_ref);
     my $nKeys = @keys;
     if ( $nKeys > 1000 ) {
-        LogStuff::webLog("taxonCategoryStrings: too many taxon_oid's: $nKeys\n");
+        webLog("taxonCategoryStrings: too many taxon_oid's: $nKeys\n");
     }
     my $taxon_oid_str = join( ",", @keys );
     my $whereClause;
@@ -7077,7 +5395,7 @@ sub taxonCategoryStrings {
 sub sanitizeInt {
     my ($s) = @_;
     if ( $s !~ /^[0-9]+$/ ) {
-        webDie("sanitizeInt: invalid integer '$s'\n");
+        WebUtil::webDie("sanitizeInt: invalid integer '$s'\n");
     }
     $s =~ /([0-9]+)/;
     $s = $1;
@@ -7223,7 +5541,7 @@ sub getScaffoldSeq {
     my ( $taxon, $ext_accession ) = $cur->fetchrow();
     $cur->finish();
     if ( $taxon eq "" ) {
-        LogStuff::webLog( "getScaffoldSeq: cannot find value for " . "scaffold_oid=$scaffold_oid\n" );
+        webLog( "getScaffoldSeq: cannot find value for " . "scaffold_oid=$scaffold_oid\n" );
         return "";
     }
     my $path = "$taxon_lin_fna_dir/$taxon.lin.fna";
@@ -7233,7 +5551,7 @@ sub getScaffoldSeq {
     $path = checkPath($path);
     my $seq = readLinearFasta( $path, $ext_accession, $start_coord, $end_coord, $strand );
     if ( $seq eq "" ) {
-        LogStuff::webLog( "getScaffoldSeq: cannot find sequence from " . "'$path':'$ext_accession'\n" );
+        webLog( "getScaffoldSeq: cannot find sequence from " . "'$path':'$ext_accession'\n" );
     }
     return $seq;
 }
@@ -7261,10 +5579,10 @@ sub checkMysqlSearchTerm {
     my @toks = split( /\s+/, $term );
     my $nToks = @toks;
     if ( $nToks != 1 ) {
-        webError("Only one keyword is supported.");
+        WebUtil::webError("Only one keyword is supported.");
     }
     if ( length($term) < 4 ) {
-        webError("Keyword should be at least 4 characters long.");
+        WebUtil::webError("Keyword should be at least 4 characters long.");
     }
 }
 
@@ -7380,10 +5698,10 @@ sub getTaxonRescale {
             my $rescale = int( $len / 300 );
             $taxon_rescale = $rescale
               if $rescale > 1;
-            LogStuff::webLog "taxon_rescale=$taxon_rescale\n" if $verbose >= 1;
+            webLog "taxon_rescale=$taxon_rescale\n" if $verbose >= 1;
         }
     }
-    LogStuff::webLog "taxon_rescale=$taxon_rescale\n" if $verbose >= 2;
+    webLog "taxon_rescale=$taxon_rescale\n" if $verbose >= 2;
     return $taxon_rescale;
 }
 
@@ -7423,7 +5741,7 @@ sub loadGeneOid2AltName {
 
         #loadProxyGeneName( $dbh, $sql, $geneOid2AltName_ref, $bind_ref );
     }
-    LogStuff::webLog("loadGeneOid2AltName done.\n");
+    webLog("loadGeneOid2AltName done.\n");
 }
 
 sub loadGeneOid2AltNameMyImg {
@@ -7450,7 +5768,7 @@ sub loadGeneOid2AltNameMyImg {
     my @toks = split( / /, $sql );
     my $gAlias = getGeneNameTableAlias( \@toks );
     if ( $gAlias eq "" ) {
-        LogStuff::webLog( "loadGeneOid2AltName: cannot find " . "gene_display_name table alias " . "for '$sql'\n" );
+        webLog( "loadGeneOid2AltName: cannot find " . "gene_display_name table alias " . "for '$sql'\n" );
         return;
     }
     ## --es 04/10/2006 "distinct" not work with text type
@@ -7474,7 +5792,7 @@ sub loadGeneOid2AltNameMyImg {
     $sql2 .= getSqlClause( \@toks, "where", { "group" => 1, "order" => 1 } );
     $sql2 .= "\n";
 
-    LogStuff::webLog ">>> MyIMG alternate SQL\n" if $verbose >= 1;
+    webLog ">>> MyIMG alternate SQL\n" if $verbose >= 1;
 
     #print ">>> MyIMG alternate SQL:<br/>$sql2<br/>\n";
     my $cur2;
@@ -7506,9 +5824,9 @@ sub loadGeneOid2AltNameImgTerm {
     my ( $dbh, $sql, $geneOid2AltName_ref, $bind_ref ) = @_;
 
     if ( invalidUnion($sql) ) {
-        LogStuff::webLog("loadGeneOid2AltNameImgTerm: union SQL not supported\n");
+        webLog("loadGeneOid2AltNameImgTerm: union SQL not supported\n");
         print STDERR "loadGeneOid2AltNameImgTerm: union SQL not supported\n";
-        LogStuff::webLog($sql);
+        webLog($sql);
         return;
     }
     my $sql2;
@@ -7522,7 +5840,7 @@ sub loadGeneOid2AltNameImgTerm {
     my $gAlias = getGeneNameTableAlias( \@toks );
 
     if ( $gAlias eq "" ) {
-        LogStuff::webLog( "loadGeneOid2AltName: cannot find gene_display_name " . "table alias for '$sql'\n" );
+        webLog( "loadGeneOid2AltName: cannot find gene_display_name " . "table alias for '$sql'\n" );
         return;
     }
     $sql2 .= "select distinct $gAlias.gene_oid, gifx.f_order, ";
@@ -7537,7 +5855,7 @@ sub loadGeneOid2AltNameImgTerm {
     #$sql2 .= "\norder by $gAlias.gene_oid, gifx.f_order\n";
     $sql2 .= "\n";
 
-    LogStuff::webLog ">>> IMG Term alternate SQL\n" if $verbose >= 1;
+    webLog ">>> IMG Term alternate SQL\n" if $verbose >= 1;
 
     #print ">>> IMG Term alternate SQL:<br/>$sql2<br/>\n";
     my $cur;
@@ -7586,7 +5904,7 @@ sub loadProxyGeneName {
     my @toks = split( / /, $sql );
     my $gAlias = getGeneNameTableAlias( \@toks );
     if ( $gAlias eq "" ) {
-        LogStuff::webLog( "loadGeneOid2AltName: cannot find " . "gene_display_name table alias " . "for '$sql'\n" );
+        webLog( "loadGeneOid2AltName: cannot find " . "gene_display_name table alias " . "for '$sql'\n" );
         return;
     }
     my $to_char = "to_char";
@@ -7610,7 +5928,7 @@ sub loadProxyGeneName {
     $sql2 .= getSqlClause( \@toks, "where", { "group" => 1, "order" => 1 } );
     $sql2 .= "\n";
 
-    LogStuff::webLog ">>> Proxy gene alternate SQL\n" if $verbose >= 1;
+    webLog ">>> Proxy gene alternate SQL\n" if $verbose >= 1;
 
     #print ">>> Proxy gene alternate SQL:<br/>$sql2<br/>\n";
     my $cur;
@@ -7643,7 +5961,7 @@ sub loadDtProxyGeneInfo_old {
     my @toks = split( / /, $sql );
     my $gAlias = getGeneNameTableAlias( \@toks );
     if ( $gAlias eq "" ) {
-        LogStuff::webLog( "loadGeneOid2AltName: cannot find " . "gene_display_name table alias " . "for '$sql'\n" );
+        webLog( "loadGeneOid2AltName: cannot find " . "gene_display_name table alias " . "for '$sql'\n" );
         return;
     }
     my $to_char = "to_char";
@@ -7661,7 +5979,7 @@ sub loadDtProxyGeneInfo_old {
     $sql2 .= getSqlClause( \@toks, "where", { "group" => 1, "order" => 1 } );
     $sql2 .= "\n";
 
-    LogStuff::webLog ">>> Dt Proxy gene alternate SQL\n" if $verbose >= 1;
+    webLog ">>> Dt Proxy gene alternate SQL\n" if $verbose >= 1;
 
     #print ">>> Dt Proxy gene alternate SQL:<br/>$sql2<br/>\n";
     my $cur;
@@ -7851,7 +6169,7 @@ sub getTaxonGeneCount {
     my $nTaxons    = @taxon_oids;
     return if $nTaxons == 0;
     if ( $nTaxons > 1000 ) {
-        webDie("getTaxonGeneCounts: too many taxons $nTaxons\n");
+        WebUtil::webDie("getTaxonGeneCounts: too many taxons $nTaxons\n");
     }
     my $taxon_oid_str = join( ',', @taxon_oids );
     checkBlankVar($taxon_oid_str);
@@ -7879,7 +6197,7 @@ sub getBinGeneCount {
     my $nBins    = @bin_oids;
     return if $nBins == 0;
     if ( $nBins > 1000 ) {
-        webDie("getBinGeneCounts: too many bins $nBins\n");
+        WebUtil::webDie("getBinGeneCounts: too many bins $nBins\n");
     }
     my $bin_oid_str = join( ',', @bin_oids );
     my $sql         = qq{
@@ -7913,7 +6231,7 @@ sub getClusterScaleMeanStdDev {
     my $nIds = @ids;
     return if $nIds == 0;
     if ( $nIds > 1000 && $oracle_gtt_str eq "" ) {
-        webDie("getClusterScaleMeanStdDev: too many ID's $nIds\n");
+        WebUtil::webDie("getClusterScaleMeanStdDev: too many ID's $nIds\n");
     }
     my $id_str = joinSqlQuoted( ",", @ids );
     $id_str = $oracle_gtt_str if ( $oracle_gtt_str ne "" );
@@ -7943,13 +6261,13 @@ sub geneCountWrap {
     return $gene_count if !$znorm;
     if ( $total_gene_count == 0 ) {
 
-        #LogStuff::webLog( "geneCountWrap: total_gene_count=$total_gene_count\n" );
+        #webLog( "geneCountWrap: total_gene_count=$total_gene_count\n" );
         return 0;
     }
     my $r = $clusterScaleMeanStdDev_ref->{$cluster_id};
     my ( $scale, $mean, $std_dev ) = split( /\t/, $r );
     if ( $std_dev == 0 ) {
-        LogStuff::webLog( "geneCountWrap: cluster_id='$cluster_id' " . "bad std_dev=$std_dev r='$r'\n" );
+        webLog( "geneCountWrap: cluster_id='$cluster_id' " . "bad std_dev=$std_dev r='$r'\n" );
         return 0;
     }
     my $x    = ( $gene_count / $total_gene_count ) * $scale;
@@ -8026,7 +6344,7 @@ sub imgTerm2Pathways {
     for my $term_oid0 (@$terms_ref) {
         my $n = $root->findNode($term_oid0);
         if ( !defined($n) ) {
-            LogStuff::webLog("imgTerm2Pathways: cannot find term_oid='$term_oid0'\n");
+            webLog("imgTerm2Pathways: cannot find term_oid='$term_oid0'\n");
             next;
         }
         $n->loadAllParentTermOidsHashed( \%term_oids_h );
@@ -8071,7 +6389,7 @@ sub imgTerm2PartsList {
     for my $term_oid0 (@$terms_ref) {
         my $n = $root->findNode($term_oid0);
         if ( !defined($n) ) {
-            LogStuff::webLog("imgTerm2PartsList: cannot find term_oid='$term_oid0'\n");
+            webLog("imgTerm2PartsList: cannot find term_oid='$term_oid0'\n");
             next;
         }
         $n->loadAllParentTermOidsHashed( \%term_oids_h );
@@ -8079,7 +6397,7 @@ sub imgTerm2PartsList {
     my @term_oids = keys(%term_oids_h);
     my $term_oid_str = join( ',', @term_oids );
     if ( blankStr($term_oid_str) ) {
-        webDie("imgTerms2PartsList: ERROR no term_oids retrieved\n");
+        WebUtil::webDie("imgTerms2PartsList: ERROR no term_oids retrieved\n");
     }
     my $sql = qq{
         select plt.parts_list_oid
@@ -8228,7 +6546,7 @@ sub getAnnotation {
     }
     $cur->finish();
     if ( $count > 1 ) {
-        LogStuff::webLog( "getAnnotation: found $count annotation for " . "gene_oid=$gene_oid contact_oid=$contact_oid\n" );
+        webLog( "getAnnotation: found $count annotation for " . "gene_oid=$gene_oid contact_oid=$contact_oid\n" );
     }
     return $text;
 }
@@ -8261,7 +6579,7 @@ sub dateSortVal {
     my ($s) = @_;
     my ( $dy, $mon, $yr ) = split( /-/, $s );
     if ( $dy < 0 || $dy > 31 ) {
-        webDie("dateSortVal: unexpected day '$dy'\n");
+        WebUtil::webDie("dateSortVal: unexpected day '$dy'\n");
     }
     my %months = (
         JAN => 1,
@@ -8279,7 +6597,7 @@ sub dateSortVal {
     );
     my $mnVal = $months{$mon};
     if ( $mnVal eq "" ) {
-        webDie("dateSortVal: unexpected month '$mon'\n");
+        WebUtil::webDie("dateSortVal: unexpected month '$mon'\n");
     }
     my $val = sprintf( "%02d-%02d-%02d", $yr, $mnVal, $dy );
     return $val;
@@ -8385,7 +6703,7 @@ sub urlGet {
     my $ua = myLwpUserAgent();
     $ua->timeout(5);
     $ua->agent("IMG 2.0 ");
-    my $req = HTTP::Request->new( 'GET' => $url );
+    my $req = new HTTP::Request 'GET' => $url;
     my $res = $ua->request($req);
     if ( $res->is_success ) {
         if ( $res->content =~ /error/i ) {
@@ -8401,7 +6719,7 @@ sub urlGet {
         }
         return $res->content;
     } else {
-        LogStuff::webLog( $res->status_line() . "\n" );
+        webLog( $res->status_line() . "\n" );
         return "";
     }
 }
@@ -8410,7 +6728,7 @@ sub urlGet {
 # ssl bad cert temp fix / work around
 #
 sub myLwpUserAgent {
-    my $ua = LWP::UserAgent->new();
+    my $ua = new LWP::UserAgent();
 
     # a temp fix for ssl cert issues - ken 2014-07-28
     # Doug has fixed the bad cert - I can commit out the below line
@@ -8428,6 +6746,7 @@ sub myLwpUserAgent {
 # printAllParams - print all params for debugging  uses
 ############################################################################
 sub printAllParams {
+    my $cgi = $webSessionObject->getCgi();
     my @all_params = $cgi->param;
     foreach my $p (@all_params) {
         my @values = param($p);
@@ -8442,10 +6761,10 @@ sub printAllParams {
 ############################################################################
 sub paramMatch {
     my ($pattern) = @_;
-
+    my $cgi = $webSessionObject->getCgi();
     my @all_params = $cgi->param;
 
-    #    LogStuff::webLog("all_params: @all_params\n");
+    #    webLog("all_params: @all_params\n");
     for my $p (@all_params) {
         if ( $p =~ /$pattern/ ) {
             return $p;
@@ -8455,7 +6774,7 @@ sub paramMatch {
 }
 
 ############################################################################
-# paramCast - Cast parameter value to a certain format for perl taint.
+# paramCast - Cast parmater value to a certain format for perl taint.
 ############################################################################
 sub paramCast {
     my ( $tag, $pattern ) = @_;
@@ -8485,7 +6804,7 @@ sub printGenesToExcel {
     return if blankStr($gene_oid_str);
     my @genes_oids = sort(@$gene_oids_ref);
     my @batch;
-    my $dbh = DatabaseStuff::dblogin();
+    my $dbh = dbLogin();
 
     for my $gene_oid (@genes_oids) {
         if ( scalar(@batch) > 500 ) {
@@ -8609,7 +6928,7 @@ sub pearsonCorr {
 sub getArrayFromFile {
     my ( $filename, $stripOption, $cleanOption ) = @_;
     my @newArray = ();
-    my $rfh      = newReadFileHandle("$cgi_tmp_dir/$filename");
+    my $rfh      = newReadFileHandle($env->{cgi_tmp_dir} . "/" . $filename);
     while ( my $line = $rfh->getline() ) {
         chomp $line if ( $stripOption eq 1 );
         push( @newArray, $line ) if ( $cleanOption ne 1 || $line ne "" );
@@ -8910,9 +7229,9 @@ sub printStartWorkingDiv {
 ############################################################################
 sub printEndWorkingDiv {
     my ( $name, $noClear ) = @_;
-    
+
     $noClear = 1 if($img_ken);
-    
+
     print qq{
        </p>
        </div>
@@ -9045,7 +7364,7 @@ sub getGoogleMapsKey {
 sub getGoogleAnalyticsKey {
     my $servername = $ENV{SERVER_NAME};
 
-    #LogStuff::webLog("===== $servername\n");
+    #webLog("===== $servername\n");
 
     my $gkeys = $env->{google_analytics_keys};
     foreach my $key ( keys %$gkeys ) {
@@ -9236,13 +7555,6 @@ sub geneOidDirs {
     return sprintf( "%03d/%03d", $mid3, $last3 );
 }
 
-sub geneOidDirs_old {
-    my ($gene_oid) = @_;
-
-    my $len = length($gene_oid);
-    my $last3 = substr( $gene_oid, $len - 3, 3 );
-    return sprintf( "%03d", $last3 );
-}
 
 ############################################################################
 # splitTerm - Split comma separated list of ID's
@@ -9277,10 +7589,10 @@ sub splitTerm {
 
     my $nTerms = @terms;
     if ( $nTerms > 1000 ) {
-        webError("Please enter no more than 1000 terms.");
+        WebUtil::webError("Please enter no more than 1000 terms.");
     }
     if ( $nTerms == 0 && $intFlag && !$noErrorFlag ) {
-        webError("Invalid integer identifier.");
+        WebUtil::webError("Invalid integer identifier.");
     }
 
     return @terms;
@@ -9331,23 +7643,23 @@ sub processSearchTermCheck {
 
     if ( blankStr($searchTerm) ) {
         if ($searchTermName) {
-            webError("No $searchTermName specified. Please go back and enter a search term.");
+            WebUtil::webError("No $searchTermName specified. Please go back and enter a search term.");
         } else {
-            webError("No search term specified. Please go back and enter a term.");
+            WebUtil::webError("No search term specified. Please go back and enter a term.");
         }
     }
     if ( !isInt($searchTerm) && length($searchTerm) <= 2 ) {
         if ($searchTermName) {
-            webError("$searchTermName must be at least 3 char long.");
+            WebUtil::webError("$searchTermName must be at least 3 char long.");
         } else {
-            webError("Search term must be at least 3 char long.");
+            WebUtil::webError("Search term must be at least 3 char long.");
         }
     }
     if ( $searchTerm !~ /[a-zA-Z0-9]+/ ) {
         if ($searchTermName) {
-            webError("$searchTermName should have some alphanumeric characters.");
+            WebUtil::webError("$searchTermName should have some alphanumeric characters.");
         } else {
-            webError("Search term should have some alphanumeric characters.");
+            WebUtil::webError("Search term should have some alphanumeric characters.");
         }
     }
 }
@@ -9418,7 +7730,7 @@ sub getBBHLiteRows {
 
     # Use new format if turned on. --es 02/26/11
     if ( $bbh_zfiles_dir ne "" ) {
-        my $dbh = DatabaseStuff::dblogin();
+        my $dbh = dbLogin();
         my @a   = getBBHZipRows( $dbh, $gene_oid, $validTaxons_href );
 
         #$dbh->disconnect();
@@ -9428,13 +7740,13 @@ sub getBBHLiteRows {
     my $bbh_file = "$bbh_files_dir/" . geneOidDirs($gene_oid) . "/$gene_oid.m8.txt.gz";
     my @a;
     if ( !-e $bbh_file ) {
-        LogStuff::webLog("Cannot find '$bbh_file'\n");
+        webLog("Cannot find '$bbh_file'\n");
         warn("Cannot find '$bbh_file'\n");
         return @a;
     }
     unsetEnvPath();
     my $cmd = "/bin/zcat $bbh_file";
-    LogStuff::webLog("+ $cmd\n");
+    webLog("+ $cmd\n");
     my $rfh = newCmdFileHandle( $cmd, "getBBHLiteRows" );
     while ( my $s = $rfh->getline() ) {
         chomp $s;
@@ -9468,7 +7780,7 @@ sub getBBHZipRows {
     my $zipFile = "$bbh_zfiles_dir/$taxon_oid.zip";
     my @a;
     if ( !-e $zipFile ) {
-        LogStuff::webLog("getBBHZipRows: file '$zipFile' not found\n");
+        webLog("getBBHZipRows: file '$zipFile' not found\n");
         warn("getBBHZipRows: file '$zipFile' not found\n");
         return @a;
     }
@@ -9501,7 +7813,7 @@ sub getGeneHitsRows {
     my $bbh_file = "$bbh_files_dir/" . geneOidDirs($gene_oid) . "/$gene_oid.m8.txt.gz";
     my %orthologs;
     if ( !-e $bbh_file ) {
-        LogStuff::webLog("Cannot find '$bbh_file'\n");
+        webLog("Cannot find '$bbh_file'\n");
         warn("Cannot find '$bbh_file'\n");
     } else {
         my @rows = getBBHLiteRows( $gene_oid, $validTaxons_href );
@@ -9516,13 +7828,13 @@ sub getGeneHitsRows {
     my $gene_hits_file = "$gene_hits_files_dir/" . geneOidDirs($gene_oid) . "/$gene_oid.m8.txt.gz";
     my @a;
     if ( !-e $gene_hits_file ) {
-        LogStuff::webLog("Cannot find '$gene_hits_file'\n");
+        webLog("Cannot find '$gene_hits_file'\n");
         warn("Cannot find '$gene_hits_file'\n");
         return @a;
     } else {
         unsetEnvPath();
         my $cmd = "/bin/zcat $gene_hits_file";
-        LogStuff::webLog("+ $cmd\n");
+        webLog("+ $cmd\n");
         my $rfh = newCmdFileHandle( $cmd, "getGeneHitsRows" );
         while ( my $s = $rfh->getline() ) {
             chomp $s;
@@ -9576,7 +7888,7 @@ sub getGeneHitsZipRows {
     my @a;
     my $zipFile = "$gene_hits_zfiles_dir/$taxon_oid.zip";
     if ( !-e $zipFile ) {
-        LogStuff::webLog("Cannot find '$zipFile'\n");
+        webLog("Cannot find '$zipFile'\n");
         warn("Cannot find '$zipFile'\n");
         return @a;
     } else {
@@ -9636,12 +7948,12 @@ sub getClusterHomologRows {
 
     $gene_oid = sanitizeInt($gene_oid);
 
-    my $dbh = DatabaseStuff::dblogin();
+    my $dbh = dbLogin();
 
     my %orthologs;
     my $bbh_file = "$bbh_files_dir/" . geneOidDirs($gene_oid) . "/$gene_oid.m8.txt.gz";
     if ( !-e $bbh_file ) {
-        LogStuff::webLog("Cannot find '$bbh_file'\n");
+        webLog("Cannot find '$bbh_file'\n");
         warn("Cannot find '$bbh_file'\n");
     } else {
         my @rows = getBBHLiteRows( $gene_oid, $validTaxons_href );
@@ -9659,19 +7971,19 @@ sub getClusterHomologRows {
     if ( $top_n eq "" && $maxHomologResults ne "" ) {
         $top_n = $maxHomologResults;
     }
-    LogStuff::webLog("top_n=$top_n\n");
+    webLog("top_n=$top_n\n");
 
     my $serGiBlastDb = $img_hmms_serGiDb;
     my $singletonsDb = $img_hmms_singletonsDb;
 
-    my $tool    = lastPathTok($0);
+    my $tool    = WebIO::lastPathTok($0);
     my $verbose = 1;
 
     unsetEnvPath();
 
     require Command;
-    my $cgi_tmp_dir2 = Command::createSessionDir();
-    my $tmpDir = "$cgi_tmp_dir2/clusterHomologs$$.tmpDir";
+    my $temp_dir_name = Command::createSessionDir();
+    my $tmpDir = $temp_dir_name . "/clusterHomologs$$.tmpDir";
     #runCmd("/bin/rm -fr $tmpDir");
     #runCmd("/bin/mkdir -p $tmpDir");
     runCmd("/bin/cp $cgi_dir/BLOSUM62 $tmpDir");
@@ -9680,7 +7992,7 @@ sub getClusterHomologRows {
     my $tmpOutFile1  = "$tmpDir/query.$gene_oid.m8.txt";
     my $tmpOutFile2  = "$tmpDir/singletons.m8.txt.";
 
-    LogStuff::webLog( ">>> Query gene " . currDateTime() . "\n" );
+    webLog( ">>> Query gene " . currDateTime() . "\n" );
     my $sql = qq{
        select g.gene_oid, g.taxon, g.aa_seq_length, g.aa_residue
        from gene g
@@ -9688,7 +8000,7 @@ sub getClusterHomologRows {
     };
     writeFaaFile( $dbh, $sql, $gene_oid, $queryTmpFile );
 
-    LogStuff::webLog( ">>> Subject genes " . currDateTime() . "\n" );
+    webLog( ">>> Subject genes " . currDateTime() . "\n" );
     $sql = qq{
        select distinct sm.serial_gi
        from gene g, gene_img_clusters gic1, gene_img_clusters gic2,
@@ -9712,10 +8024,10 @@ sub getClusterHomologRows {
     #        print $Fgi "$serial_gi\n";
     #    }
     close $Fgi;
-    LogStuff::webLog( "$count GI's written " . currDateTime() . "\n" );
+    webLog( "$count GI's written " . currDateTime() . "\n" );
 
     my $z_arg = "-z 700000000 ";
-    LogStuff::webLog( ">>> Cluster BLAST " . currDateTime() . "\n" );
+    webLog( ">>> Cluster BLAST " . currDateTime() . "\n" );
 
     my $cmd =
         "$blastall_bin/legacy_blast.pl blastall "
@@ -9738,9 +8050,9 @@ sub getClusterHomologRows {
             WebUtil::webExit(-1);
         }
         print "blast done<br>\n";
-    
-    
-    LogStuff::webLog( ">>> Singleton BLAST " . currDateTime() . "\n" );
+
+
+    webLog( ">>> Singleton BLAST " . currDateTime() . "\n" );
 
     $cmd =
         "$blastall_bin/legacy_blast.pl blastall "
@@ -9764,13 +8076,13 @@ sub getClusterHomologRows {
     # --path is needed although fullpath of legacy_blast.pl is
     # specified in the beginning of command! ---yjlin 03/12/2013
     #runCmd($cmd);
-    LogStuff::webLog( ">>> Sort and write " . currDateTime() . "\n" );
+    webLog( ">>> Sort and write " . currDateTime() . "\n" );
 
     my @rows;
     my $cnt = loadHitsMapGi( $dbh, $tmpOutFile1, \@rows, $validTaxons_href );
-    LogStuff::webLog("== $cnt rows loaded from clusters\n");
+    webLog("== $cnt rows loaded from clusters\n");
     $cnt = loadSingletonHits( $tmpOutFile2, \@rows, $validTaxons_href );
-    LogStuff::webLog("== $cnt rows loaded from singletons\n");
+    webLog("== $cnt rows loaded from singletons\n");
     my @rows2 = sort(@rows);
     $count = 0;
     my @rows3;
@@ -9800,8 +8112,8 @@ sub getClusterHomologRows {
         $r .= "$op\t";
         push( @rows3, $r );
     }
-    LogStuff::webLog("== $count rows total\n");
-    LogStuff::webLog( "Done. " . currDateTime() . "\n" );
+    webLog("== $count rows total\n");
+    webLog( "Done. " . currDateTime() . "\n" );
 
     runCmd("/bin/rm -fr $tmpDir");
 
@@ -9834,7 +8146,7 @@ sub writeFaaFile {
     }
     $cur->finish();
     close $wfh;
-    LogStuff::webLog("$count genes written to FASTA\n");
+    webLog("$count genes written to FASTA\n");
 }
 
 ############################################################################
@@ -10028,17 +8340,8 @@ sub printCustomHeader {
 # the information specified in $text
 ############################################################################
 sub printInfoTipLink {
-	my $html = returnInfoTipLink(@_);
-	print $html;
-}
-
-sub returnInfoTipLink {
     my ( $text, $tooltip, $popup_header, $linktothis ) = @_;
-<<<<<<< .mine
-    my $html = "<script src='$base_url/overlib.js'></script>\n";
-=======
     print "<script src='$top_base_url/js/overlib.js'></script>\n";
->>>>>>> .r34733
     my $info =
         "onclick=\"return overlib('$text', "
       . "RIGHT, STICKY, MOUSEOFF, "
@@ -10059,13 +8362,13 @@ sub returnInfoTipLink {
         };
     }
 
-    $html .= qq{
+    my $link = qq{
         <a $info title="$tooltip" style="cursor:pointer; cursor:hand;">
         $linktothis
         </a>
     };
 
-	return $html;
+    print $link;
 }
 
 ############################################################################
@@ -10147,7 +8450,7 @@ sub getGenomeHitsDir {
     my $dir       = getSessionDir();
     $dir .= "/genomeHits";
     if ( !( -e "$dir" ) ) {
-        #mkdir "$dir" or webError("Cannot make $dir!");
+        #mkdir "$dir" or WebUtil::webError("Cannot make $dir!");
         myMakeDir($dir);
     }
     return ( $dir, $sessionId );
@@ -10158,11 +8461,10 @@ sub getCartDir {
     my $dir       = getSessionDir();
     $dir .= "/cart";
     if ( !( -e "$dir" ) ) {
-        #mkdir "$dir" or webError("Cannot make $dir!");
+        #mkdir "$dir" or WebUtil::webError("Cannot make $dir!");
         myMakeDir($dir);
     }
     return ( $dir, $sessionId );
-#    return wantarray ? ( $dir, $sessionId ) : $dir ;
 }
 
 #
@@ -10175,16 +8477,17 @@ sub getSessionDir {
     my ($subDir) = @_;
 
     my $sessionId = getSessionId();
-    my $dir       = "$cgi_tmp_dir/$sessionId";
+
+    my $dir       = $env->{cgi_tmp_dir} . "/" . $sessionId;
     if ( ! -e "$dir" ) {
-        #mkdir "$dir" or webError("Cannot make $dir!");
+        #mkdir "$dir" or WebUtil::webError("Cannot make $dir!");
         myMakeDir($dir);
     }
 
     if ( $subDir ) {
-        $dir = "$cgi_tmp_dir/$sessionId/$subDir";
-        if ( ! -e "$dir" ) {
-            #mkdir "$dir" or webError("Cannot make $dir!");
+        $dir = $env->{cgi_tmp_dir} . "/" . $sessionId . "/" . $subDir;
+        if ( ! -e $dir ) {
+            #mkdir "$dir" or WebUtil::webError("Cannot make $dir!");
             myMakeDir($dir);
         }
     }
@@ -10202,12 +8505,12 @@ sub myMakeDir {
       for my $diag (@$err) {
           my ($file, $message) = %$diag;
           if ($file eq '') {
-              webErrorHeader("Cannot make $dir: general error: $message\n");
+              WebUtil::webErrorHeader("Cannot make $dir: general error: $message\n");
           } else {
-              webErrorHeader("Cannot make $dir: problem unlinking $file: $message\n");
+              WebUtil::webErrorHeader("Cannot make $dir: problem unlinking $file: $message\n");
           }
       }
-    }    
+    }
 }
 
 #
@@ -10231,7 +8534,7 @@ sub getSessionTmpDir {
     my $sessionId = getSessionId();
     my $dir       = "$tmp_dir/public/$sessionId";
     if ( !( -e "$dir" ) ) {
-        #mkdir "$dir" or webError("Cannot make $dir!");
+        #mkdir "$dir" or WebUtil::webError("Cannot make $dir!");
         #chmod( 0777, $dir );
         myMakeDir($dir);
     }
@@ -10239,7 +8542,7 @@ sub getSessionTmpDir {
     if ( $subDir ne '' ) {
         $dir = "$tmp_dir/public/$sessionId/$subDir";
         if ( !( -e "$dir" ) ) {
-            #mkdir "$dir" or webError("Cannot make $dir!");
+            #mkdir "$dir" or WebUtil::webError("Cannot make $dir!");
             #chmod( 0777, $dir );
             myMakeDir($dir);
         }
@@ -10263,25 +8566,25 @@ sub getSessionTmpDirUrl {
         $dirUrl = "$tmp_url/public/$sessionId/$subDir";
         my $subdirTest   = getSessionTmpDir($subDir);
         if ( !( -e $subdirTest ) ) {
-            webError("Cannot find $subdirTest!");
+            WebUtil::webError("Cannot find $subdirTest!");
         }
     }
     else {
         my $dirUrl = "$tmp_url/public/$sessionId";
         my $dirTest = getSessionTmpDir();
         if ( !( -e $dirTest ) ) {
-            webError("Cannot find $dirTest!");
+            WebUtil::webError("Cannot find $dirTest!");
         }
-        #print "getSessionTmpDirUrl() exist dirTest=$dirTest<br/>\n";        
+        #print "getSessionTmpDirUrl() exist dirTest=$dirTest<br/>\n";
     }
 
     return $dirUrl;
 }
 
 sub getGenerateDir {
-    my $dir = "$cgi_tmp_dir/generate";
-    if ( !( -e "$dir" ) ) {
-        #mkdir "$dir" or webError("Cannot make $dir!");
+    my $dir = $env->{cgi_tmp_dir} . "/generate";
+    if ( !( -e $dir ) ) {
+        #mkdir "$dir" or WebUtil::webError("Cannot make $dir!");
         myMakeDir($dir);
     }
     return ($dir);
@@ -10369,17 +8672,7 @@ sub intersectionOfArrays {
 # get server's hostanme eg gpweb04, gpweb05 etc
 #
 sub getHostname {
-    my $host = hostname;
-    if ( $host ne '' ) {
-        return $host;
-    }
-
-    # otherwise try command line way of getting host name
-    unsetEnvPath();    # to avoid -T errors in perl 5.10 - ken
-    delete @ENV{ 'IFS', 'CDPATH', 'ENV', 'BASH_ENV' };
-    my $servername = `/bin/hostname`;
-    chomp $servername;
-    return $servername;
+    return WebPrint::getHostname();
 }
 
 ############################################################################
@@ -10388,27 +8681,7 @@ sub getHostname {
 ############################################################################
 sub sdbLogin {
     my ( $sdb_name, $mode, $exit ) = @_;
-
-    my $sdbh;
-    LogStuff::webLog(">>> sdbLogin: '$sdb_name' (mode='$mode')\n");
-    if ( $sdb_name && ( -e $sdb_name ) ) {
-        $sdbh = DBI->connect( "dbi:SQLite:dbname=$sdb_name", "", "", { RaiseError => 1 }, );
-    } elsif ( $sdb_name && $mode eq "w" ) {
-        unlink($sdb_name);
-        $sdbh = DBI->connect( "dbi:SQLite:dbname=$sdb_name", "", "", { RaiseError => 1 }, );
-    }
-    if ( !defined($sdbh) ) {
-        LogStuff::webLog("sdbLogin: cannot connect dbi:SQLite:dbname=$sdb_name\n");
-        my $error = $DBI::errstr;
-
-        if ($exit) {
-            webErrorHeader(
-"<br/>  This is embarrassing. Sorry, $sdb_name SQLite database is down. Please try again later. <br/> $error",
-                1
-            );
-        }
-    }
-
+    my $sdbh = $webDBObject->sdbLogin($sdb_name, $mode, $exit);
     return $sdbh;
 }
 
@@ -10438,17 +8711,32 @@ sub hasProdege {
     return '';
 }
 
-sub getIpAddress {
-    # HTTP_X_FORWARDED_FOR gets true client ip address when there is a load balancer port forwarding to web server
-    # REMOTE_ADDR will be the 127.xxxxx ip address which is imcorrect - ken
-    my $remote_addr =  $ENV{HTTP_X_FORWARDED_FOR};
-    if (!$remote_addr) {
-        $remote_addr = $ENV{REMOTE_ADDR};
+# dir list of all files
+sub dirListAll {
+    my ($dir) = @_;
+    opendir( Dir, $dir ) || WebUtil::webDie("dirList: cannot read '$dir'\n");
+    my @paths = sort( readdir(Dir) );
+    closedir(Dir);
+    my @paths2;
+    my $i;
+    for $i (@paths) {
+        push( @paths2, $i );
     }
-    return $remote_addr; 
+    return @paths2;
+}
+
+sub getIpAddress {
+    return WebPrint::getIpAddress();
+}
+
+
+#############################################################################
+# lastPathTok - Last path token in file path, i.e, the file name.
+#############################################################################
+sub lastPathTok {
+    my ($path) = @_;
+    WebIO::lastPathTok($path);
 }
 
 1;
 
-
-}

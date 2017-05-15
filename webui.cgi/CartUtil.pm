@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: CartUtil.pm 35760 2016-06-13 21:41:33Z klchu $
+# $Id: CartUtil.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package CartUtil;
 
@@ -66,7 +66,7 @@ sub addFuncGenesToGeneCart {
         
     my @func_ids = param("func_id");
     if ( scalar(@func_ids) <= 0 ) {
-        webError("Please select at least one function.");
+        WebUtil::webError("Please select at least one function.");
     }
     #print "\@func_ids: @func_ids<br/>\n";
     
@@ -79,7 +79,7 @@ sub addFuncGenesToGeneCart {
         @taxon_oids = param("taxon_oid");
     }
     if ( scalar(@taxon_oids) <= 0 ) {
-        webError("Please select at least one genome.");
+        WebUtil::webError("Please select at least one genome.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -304,7 +304,7 @@ sub addFuncGenesToGeneCart {
 
 #            my $sql = qq{
 #                select distinct g.gene_oid
-#                from project_info_natural_prods\@imgsg_dev gnp, 
+#                from project_info_natural_prods gnp, 
 #                    biosynth_cluster_features bc, gene g
 #                where gnp.gold_np_id in ( $funcIdsInClause )
 #                and gnp.bio_cluster_id = bc.biosynthetic_oid
@@ -351,7 +351,7 @@ sub addFuncGenesToGeneCart {
             $funcIdsInClause = OracleUtil::getNumberIdsInClause1( $dbh, @icmpd_ids );
 #            my $sql = qq{
 #                select distinct g.gene_oid
-#                from project_info_natural_prods\@imgsg_dev gnp, cvnatural_prods\@imgsg_dev np, 
+#                from project_info_natural_prods gnp, cvnatural_prods np, 
 #                    biosynth_cluster_features bc, gene g
 #                where gnp.np_id = np.np_id
 #                and np.img_compound_id in ( $funcIdsInClause )

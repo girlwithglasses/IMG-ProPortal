@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MetagGraphScatterPanel.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: MetagGraphScatterPanel.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MetagGraphScatterPanel;
 
@@ -92,13 +92,13 @@ sub new {
     # Width of panel.
     my $coord_length = $self->{end_coord} - $self->{start_coord};
     if ( $coord_length == 0 ) {
-        webError("There is no data to plot!");
+        WebUtil::webError("There is no data to plot!");
     }
 
 #webLog("TEST ========== $self->{end_coord} - $self->{start_coord} = $coord_length \n");
     $self->{scale} = $self->{x_width} / $coord_length if ( $coord_length != 0 );
 
-    my $im = new GD::Image( $self->{x_width} + 2, $self->{y_height} + 2 );
+    my $im = GD::Image->new( $self->{x_width} + 2, $self->{y_height} + 2 );
     $self->{im} = $im;
     $self->colorAllocates();
     $self->setBrush();
@@ -261,7 +261,7 @@ sub setBrush {
     my ($self) = @_;
 
     my $im = $self->{im};
-    my $brush = new GD::Image( 1, 1 );
+    my $brush = GD::Image->new( 1, 1 );
     $brush->colorAllocate( 255, 255, 255 );    # white
     $brush->colorAllocate( 0,   0,   0 );      # black
     $brush->transparent( $self->{color_white} );
@@ -406,7 +406,7 @@ sub makeMapString {
             $s .= "onMouseOut=\"return nd()\" ";
         } else {
             $s .= "onMouseOver=\"$x; Tip('$label_esc');\" ";
-            $s .= "onMouseOut=\"UnTip();\" "; 
+            $s .= "onMouseOut=\"UnTip();\" ";
         }
         $s .= " />\n";
     }

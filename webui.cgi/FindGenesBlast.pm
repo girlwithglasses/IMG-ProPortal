@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 36898 2017-03-30 20:20:59Z klchu $
+# $Id: FindGenesBlast.pm 36998 2017-04-26 21:19:12Z klchu $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -79,7 +79,7 @@ my $blast_max_genome = $env->{blast_max_genome};
 my $mer_data_dir     = $env->{mer_data_dir};
 my $virus     = $env->{virus};
 
-my $max_merfs_metagenome_selections = 20;
+my $max_merfs_metagenome_selections = $blast_max_genome; # 20
 
 my $OFFSET = 6000;    # offset range to get list of known genes
 
@@ -142,7 +142,7 @@ sub validateMerfsTaxonNumber {
         my %mer_fs_taxons = MerFsUtil::fetchTaxonsInFile( $dbh, @taxon_oids );
         my @merfs_taxons  = keys %mer_fs_taxons;
         if ( scalar(@merfs_taxons) > $max_merfs_metagenome_selections ) {
-            webError("You have selected more than $max_merfs_metagenome_selections MER-FS metagenomes.");
+            WebUtil::webError("You have selected more than $max_merfs_metagenome_selections MER-FS metagenomes.");
             return;
         }
     }
@@ -657,7 +657,7 @@ sub getSeq {
         }
     }
     if ( $found == 0 ) {
-        webError("Cannot find $contig in file $file");
+        WebUtil::webError("Cannot find $contig in file $file");
     }
 
     # read seq from 1 to eol - end of line is greater than end and start
@@ -963,10 +963,10 @@ sub printGeneSearchBlastResults {
     my $evalue        = param("blast_evalue");
     my $fasta         = param("fasta");
     if ( blankStr($fasta) ) {
-        webError("Query sequence not specified.");
+        WebUtil::webError("Query sequence not specified.");
     }
     if ( $fasta !~ /[a-zA-Z]+/ ) {
-        webError("Query sequence should have letter characters.");
+        WebUtil::webError("Query sequence should have letter characters.");
     }
 
     my @imgBlastDbs;
@@ -1030,7 +1030,8 @@ sub printGeneSearchBlastResults {
     elsif ($all) {
         print qq{
             <font color='red'>
-                <u>All isolate genomes</u> in IMG (no selection or over $blast_max_genome genomes selected)
+                <u>All IMG isolate genomes</u> were used. 
+                (No datasets were selected or over $blast_max_genome datasets were selected.)
             </font>
             <br>\n
         };
@@ -1088,11 +1089,11 @@ sub printGeneSearchBlastResults {
             printGeneSearchBlastForTaxons( \@taxon_oids );
             HtmlUtil::cgiCacheStop() if ($cgi_blast_cache_enable);
         } elsif ( $nReadDbs > 0 ) {
-            webError("Read databases do not suppport proteins.");
+            WebUtil::webError("Read databases do not suppport proteins.");
         } elsif ( $nMybinDbs > 0 ) {
 
             # TODO my bins -ken
-            #webError("My bins databases do not suppport proteins yet.");
+            #WebUtil::webError("My bins databases do not suppport proteins yet.");
             printEnvBlastForDbs( \@mybinDbs, 1 );
         }
     }
@@ -1115,7 +1116,7 @@ sub printGeneSearchProteinBlastForAll {
     $fasta =~ s/^\s+//;
     $fasta =~ s/\s+$//;
     if ( blankStr($fasta) ) {
-        webError("FASTA query sequence not specified.");
+        WebUtil::webError("FASTA query sequence not specified.");
         return;
     }
 
@@ -1314,8 +1315,8 @@ print "$reportFile<br>\n" if ($img_ken);
     }
     $cfh->close();
     WebUtil::resetEnvPath();
-    wunlink($tmpFile);
-    wunlink($tmpDbFile);
+    #wunlink($tmpFile);
+    #wunlink($tmpDbFile);
 
     if ($anyHits) {
         print "</pre>\n";
@@ -1390,7 +1391,7 @@ sub writePalFile {
     my $super_user  = getSuperUser();
     my $taxon_dir   = $taxon_faa_dir;
     my $all_blastdb = $all_faa_blastdb;
-    my $dbName      = lastPathTok($all_blastdb);
+    my $dbName      = WebUtil::lastPathTok($all_blastdb);
 
     my $title  = "TITLE $dbName";
     my $dblist = "DBLIST $all_blastdb";
@@ -1477,7 +1478,7 @@ sub printGeneSearchDnaBlastForAll {
     $fasta =~ s/^\s+//;
     $fasta =~ s/\s+$//;
     if ( blankStr($fasta) ) {
-        webError("FASTA query sequence not specified.");
+        WebUtil::webError("FASTA query sequence not specified.");
         return;
     }
 
@@ -1543,6 +1544,9 @@ sub printGeneSearchDnaBlastForAll {
     my $reportFile;
 
     if ($blastallm0_server_url ne "" ) {
+        
+print "$blastallm0_server_url <br>\n" if ($img_ken);
+        
 	##print "<p>url: $blastallm0_server_url\n";
         # For security reasons, we don't put in the whole
         # path, but make some assumptions about the report
@@ -1551,6 +1555,9 @@ sub printGeneSearchDnaBlastForAll {
             my $sessionId = getSessionId();
             $reportFile = "blast.$sessionId.$$.m0.txt";
         }
+
+print "$common_tmp_dir<br>\n" if ($img_ken);
+print "$reportFile<br>\n" if ($img_ken);
 
 	   if ( ! $use_db ) {
 	       $use_db = 'allFna';
@@ -1577,6 +1584,13 @@ sub printGeneSearchDnaBlastForAll {
 
         webLog( ">>> Calling '$blastallm0_server_url' database='$database' "
               . "db='$use_db' pgm='$blast_pgm' reportFile='$reportFile'\n" );
+              
+        if ($img_ken) {
+            print "<pre>";
+            print Dumper \%args;
+            print "</pre><br>\n";  
+        }   
+              
         $cfh = new LwpHandle( $blastallm0_server_url, \%args );
     } else {
         my ( $cmdFile, $stdOutFilePath ) = Command::createCmdFile($cmd);
@@ -1627,7 +1641,7 @@ sub printGeneSearchDnaBlastForAll {
             waitForResults( $reportFile, $qFile );
         }
         webLog("Reading reportFile='$common_tmp_dir/$reportFile'\n");
-        #print "Reading reportFile=$common_tmp_dir/$reportFile<br>\n";
+        print "Reading reportFile=$common_tmp_dir/$reportFile<br>\n" if ($img_ken);
         $cfh = newReadFileHandle( "$common_tmp_dir/$reportFile", "printGeneSearchDnaBlastForAll" );
     }
 
@@ -1652,11 +1666,12 @@ sub printGeneSearchDnaBlastForAll {
     }
     $cfh->close();
     WebUtil::resetEnvPath();
-    wunlink($tmpFile);
-    wunlink($tmpDbFile);
+    #wunlink($tmpFile);
+    #wunlink($tmpDbFile);
     my $page = param('page'); # blast16sResults
     
-    if ($anyHits && $use_db ne 'viral_spacer' && $page ne 'blast16sResults') {
+    if ($anyHits && $use_db ne 'viral_spacers' && $page ne 'blast16sResults' &&
+	$use_db ne 'meta_spacers' ) {
         WebUtil::printScaffoldCartFooter();
     } elsif($page eq 'blast16sResults') {
         WebUtil::printGeneCartFooter();
@@ -1666,7 +1681,7 @@ sub printGeneSearchDnaBlastForAll {
     my $dbh = WebUtil::dbLogin();
 
     if( $page eq 'blast16sResults') {
-        processDnaSearchResult16s($dbh, \@lines, '', 0, $evalue);
+        processDnaSearchResult16s($dbh, \@lines);
     } else {
         my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( $dbh, \@lines, '', 0, $evalue );
     }
@@ -1674,7 +1689,8 @@ sub printGeneSearchDnaBlastForAll {
     print "</font></pre>\n";
 
     if ($anyHits) {
-	   if ( $use_db ne 'viral_spacers' && $page ne 'blast16sResults') {
+	   if ( $use_db ne 'viral_spacers' && $page ne 'blast16sResults' &&
+	       $use_db ne 'meta_spacers' ) {
            WebUtil::printScaffoldCartFooter();
 	       WorkspaceUtil::printSaveScaffoldToWorkspace('scaffold_oid');
        } elsif($page eq 'blast16sResults') {
@@ -1708,7 +1724,7 @@ sub writeNalFile {
     my $super_user  = getSuperUser();
     my $taxon_dir   = "$web_data_dir/all.fna.blastdbs";
     my $all_blastdb = $all_fna_blastdb;
-    my $dbName      = lastPathTok($all_blastdb);
+    my $dbName      = WebUtil::lastPathTok($all_blastdb);
 
     my $title  = "TITLE $dbName";
     my $dblist = "DBLIST $all_blastdb";
@@ -1760,7 +1776,7 @@ sub printGeneSearchProteinBlastByTaxon {
     $fasta =~ s/^\s+//;
     $fasta =~ s/\s+$//;
     if ( blankStr($fasta) ) {
-        webError("FASTA query sequence not specified.");
+        WebUtil::webError("FASTA query sequence not specified.");
         return;
     }
 
@@ -1862,7 +1878,7 @@ sub printGeneSearchProteinBlastByTaxon {
     }
     close $cfh;
     WebUtil::resetEnvPath();
-    wunlink($tmpFile);
+    #wunlink($tmpFile);
 
     print "<pre><font color='blue'>\n";
     my $scaffold_oid = param("scaffold_oid");
@@ -1889,7 +1905,7 @@ sub printGeneSearchDnaBlastByTaxon {
 
     $fasta =~ s/^\s+//;
     $fasta =~ s/\s+$//;
-    webError("FASTA query sequence not specified.")
+    WebUtil::webError("FASTA query sequence not specified.")
       if ( blankStr($fasta) );
 
     $evalue = checkEvalue($evalue);
@@ -2033,7 +2049,7 @@ sub printGeneSearchDnaBlastByTaxon {
     }
     close $cfh;
     WebUtil::resetEnvPath();
-    wunlink($tmpFile);
+    #wunlink($tmpFile);
 
     print "<pre><font color='blue'>\n";
     my $dbh = WebUtil::dbLogin();
@@ -2096,7 +2112,7 @@ sub printGeneSearchBlastForTaxons {
 
     my $nRecs = scalar(@recs);
     if ( $nRecs == 0 ) {
-        webError("No genomes selected for BLAST.");
+        WebUtil::webError("No genomes selected for BLAST.");
     }
 
     printStartingForm();
@@ -2465,10 +2481,10 @@ sub xal4Taxons {
         } elsif ( $type eq "fna" ) {
             $taxon_dir = $taxon_fna_dir;
         } else {
-            webDie("xal4Taxons: expected type 'faa' or 'fna': got '$type'\n");
+            WebUtil::webDie("xal4Taxons: expected type 'faa' or 'fna': got '$type'\n");
         }
         if ( $taxon_dir =~ /\/\// ) {
-            webDie("xal4Taxons: illegal taxon_dir='$taxon_dir'\n");
+            WebUtil::webDie("xal4Taxons: illegal taxon_dir='$taxon_dir'\n");
         }
         my $path;
         if ( $sandbox_blast_data_dir ne '' ) {
@@ -2515,7 +2531,7 @@ sub printEnvBlast {
     $fasta =~ s/^\s+//;
     $fasta =~ s/\s+$//;
     if ( blankStr($fasta) ) {
-        webError("FASTA query sequence not specified.");
+        WebUtil::webError("FASTA query sequence not specified.");
         return;
     }
 
@@ -2555,7 +2571,7 @@ sub printEnvBlast {
         }
     } else {
         printStatusLine( "Error.", 2 );
-        webError("BLAST DB not found for '$imgBlastDb'.");
+        WebUtil::webError("BLAST DB not found for '$imgBlastDb'.");
     }
     $cgi_tmp_dir = Command::createSessionDir();    # change dir - ken
     my $tmpFile   = "$cgi_tmp_dir/blast$$.fna";
@@ -2619,8 +2635,8 @@ sub printEnvBlast {
     print "</pre>\n";
     close $cfh;
     WebUtil::resetEnvPath();
-    wunlink($tmpFile);
-    wunlink($tmpDbFile);
+    #wunlink($tmpFile);
+    #wunlink($tmpDbFile);
 
     printStatusLine( "Loaded.", 2 );
     print end_form();
@@ -2646,12 +2662,20 @@ sub printEnvBlast {
 # 3300001621 - taxon oid
 # a - data type
 # JGI20253J16334_100551 - gene oid
+#
+#
+# $use_db_workspace - optional 
+#   - used only by the workspace sequence blast 16s and viral
+#
 sub processDnaSearchResult16s {
-    my ( $dbh, $lines_ref, $taxon_oid, $in_file, $evalue ) = @_;
+    my ( $dbh, $lines_ref, $use_db_workspace  ) = @_;
 
     # isolate16s.fna metaa16s.fna meta1.fna
     my $use_db = param('use_db');   
-
+    if($use_db_workspace) {
+        $use_db = $use_db_workspace;
+    }
+    
     my $inSummary = 0;
     my $inScore = 0;
     my $inScoreTaxonId = 0;
@@ -2767,9 +2791,12 @@ sub findIds16s  {
 ############################################################################
 # processDnaSearchResult - Add links to scaffold regions in chromosome
 #   browser given alignments along scaffold.
-############################################################################
+#
+# $use_db_workspace - optional 
+#   - used only by the workspace sequence blast 16s and viral
+#
 sub processDnaSearchResult {
-    my ( $dbh, $lines_ref, $taxon_oid, $in_file, $evalue ) = @_;
+    my ( $dbh, $lines_ref, $taxon_oid, $in_file, $evalue, $use_db_workspace ) = @_;
 
     my $contact_oid = getContactOid();
     my $super_user  = getSuperUser();
@@ -2784,6 +2811,9 @@ sub processDnaSearchResult {
     my %curr_scaf_id2backup;
 
     my $use_db = param('use_db');
+    if($use_db_workspace) {
+        $use_db = $use_db_workspace;
+    }
 
     # Scan for coordinates in scaffolds
     if ( scalar(@$lines_ref) > 0 ) {
@@ -2793,7 +2823,8 @@ sub processDnaSearchResult {
         my $inSummary = 0;
         
         for my $s (@$lines_ref) {
-	    if ( $use_db eq 'viral_spacers' ) {
+	    if ( $use_db eq 'viral_spacers' ||
+		$use_db eq 'meta_spacers' ) {
 		## spacers
 		next;
 	    }
@@ -2895,7 +2926,8 @@ sub processDnaSearchResult {
     for my $s (@$lines_ref) {
         chomp $s;
 
-	if ( $use_db eq 'viral_spacers' ) {
+	if ( $use_db eq 'viral_spacers' ||
+	    $use_db eq 'meta_spacers' ) {
 	    ## spacers
 	    if ( $s =~ /^>/ ) {
 		my ($s1, $s2) = split(/\|/, $s);

@@ -5,7 +5,7 @@
 # Ported to Perl from PHP version from Yahoo! Datatable example
 # -BSJ 10/13/09
 #
-# $Id: json_proxy.pl 34103 2015-08-24 20:33:28Z klchu $
+# $Id: json_proxy.pl 36954 2017-04-17 19:34:04Z klchu $
 ###############################################################
 package JSON_Proxy;
 use strict;
@@ -14,9 +14,22 @@ use CGI::Session qw/-ip-match/;    # for security - ken
 use JSON;
 use perl5lib;
 use Data::Dumper;
+
 use WebConfig;
+use WebSession;
+use WebDB;
 use WebUtil;
-use Selection;
+use WebSessionPrint;
+
+my $webSession = new WebSession();
+my $webDB = new WebDB();
+my $webSessionPrint = new WebSessionPrint($webSession, $webDB);
+
+WebUtil::setWebSessionObject($webSession);
+WebUtil::setWebDBObject($webDB);
+WebUtil::setWebSessionPrint($webSessionPrint);
+
+require Selection;
 
 my $env                 = getEnv();
 
@@ -35,7 +48,6 @@ my $default_timeout_mins = $env->{default_timeout_mins};
 $default_timeout_mins = 5 if $default_timeout_mins eq "";
 
 timeout( 60 * $default_timeout_mins );
-blockRobots();
 
 
 print header( -type => "application/json" );
@@ -113,6 +125,7 @@ if (defined(param('f')) && defined(param('c'))) {
 # Return the data
 returnData($results, $startIndex, $sort, $dir, $sort_dir, $filter, $column, $type);
 
+$webDB->logout();
 WebUtil::webExit(0);
 
 ###############################################################

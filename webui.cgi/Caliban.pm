@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: Caliban.pm 36826 2017-03-24 17:02:30Z klchu $
+# $Id: Caliban.pm 37048 2017-05-04 21:21:49Z klchu $
 #
 ############################################################################
 package Caliban;
@@ -20,8 +20,7 @@ use HTTP::Request::Common qw( GET POST PUT DELETE);
 use JSON;
 use WebConfig;
 use WebUtil;
-use DataEntryUtil;
-use MailUtil;
+use WebPrint;
 use OracleUtil;
 
 $| = 1;
@@ -81,7 +80,6 @@ sub dispatch {
 
     if ( param("logout") ne "" ) {
         WebUtil::setSessionParam( "blank_taxon_filter_oid_str", "1" );
-        WebUtil::setSessionParam( "oldLogin",                   0 );
         WebUtil::setTaxonSelections("");
         print qq{
             <div id='message'>
@@ -91,22 +89,7 @@ sub dispatch {
             <a href='main.cgi'>Sign in</a>
             </p>
         };
-        my $sso_enabled = $env->{sso_enabled};
-        my $oldLogin    = WebUtil::getSessionParam("oldLogin");
-        if ( !$oldLogin && $sso_enabled ) {
-            logout(1, 4);
-        } else {
-            logout(0, 5);
-        }
-    } elsif ( $page eq 'migrateForm' ) {
-
-        #printMigrateForm();
-    } elsif ( $page eq 'submitMigrate' ) {
-
-        #processMigrateForm();
-    } elsif ( $page eq 'userinfo' ) {
-
-        #getCalibanInfoFromEmail();
+        logout(1, 4);
     }
 }
 
@@ -209,8 +192,6 @@ sub validateUser {
     #    }
     my $url = $sso_url . $id . '.json';
 
-    #webLog("here 4 $url\n");
-    
     # 404 errors reported here on Oct 9 2016
     # maybe pause for 1 sec to let sso finish its db stuff??? - Ken
     webLog("\n\nStatus1: JGI SSO $url\n\n");
@@ -244,9 +225,11 @@ sub validateUser {
 
         my $dbh = dbLogin();
         my ( $contact_oid, $username, $super_user, $name, $email2, $jgi_user, $img_editor ) = getContactOidDb( $dbh, $user_id );
+
         my ( $ans, $login, $email, $userData_href ) = getUserInfo3( $user_id, $user_href );
 
         checkBannedUsers( $username, $email, $email2 );
+
 
         if ( $ans == 1 && $contact_oid eq "" ) {
             $login = CGI::unescape($login);
@@ -301,9 +284,8 @@ Please login again.
 $tipText
         };
         
-        
-        logout(0, 6);
-        #WebUtil::printSessionExpired($text);
+        logout(0, 6); # 0 - to stop the sso javascript - ken
+
         return 0;
     } else {
         # sso issue?
@@ -323,7 +305,7 @@ Please login again.
 $tipText
         };
         
-        logout(0, "7 $code");
+        logout(0, "7 $code"); # 0 - to stop the sso javascript - ken
         WebUtil::webErrorHeader($text, -1, 1);
     }
     return 0;
@@ -359,13 +341,13 @@ sub updateUser {
         caliban_user_name = ?
         where lower(email) = ?
     };
-    my $cur = $dbh->prepare($sql) or webError("cannot preparse statement: $DBI::errstr");
+    my $cur = $dbh->prepare($sql) or WebUtil::webError("cannot preparse statement: $DBI::errstr");
     my $i = 1;
-    $cur->bind_param( $i++, $caliban_id ) or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $login )      or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $email )      or webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $caliban_id ) or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $login )      or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $email )      or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
 
-    $cur->execute() or webError("cannot execute: $DBI::errstr\n");
+    $cur->execute() or WebUtil::webError("cannot execute: $DBI::errstr\n");
     $dbh->commit;
 
     #$dbh->disconnect();
@@ -453,28 +435,28 @@ sub insertUser {
          ?, ?, 'No',
         ?,?,?, ?,?,?, ?,?,?)
     };
-    $cur = $dbh->prepare($sql) or webError("cannot preparse statement: $DBI::errstr");
+    $cur = $dbh->prepare($sql) or WebUtil::webError("cannot preparse statement: $DBI::errstr");
 
     my $comment = 'user created via caliban img';
     my $i       = 1;
-    $cur->bind_param( $i++, $contact_oid_max )                  or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, 'donotuse' . $contact_oid_max )     or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, 'no_password!!' . randomNumbers() ) or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $email )                            or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $comment )                          or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $caliban_id )                       or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $login )                            or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $name )                             or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $phone )                            or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $organization )                     or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $address )                          or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $state )                            or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $country )                          or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $city )                             or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $title )                            or webError("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $department )                       or webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $contact_oid_max )                  or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, 'donotuse' . $contact_oid_max )     or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, 'no_password!!' . randomNumbers() ) or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $email )                            or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $comment )                          or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $caliban_id )                       or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $login )                            or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $name )                             or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $phone )                            or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $organization )                     or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $address )                          or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $state )                            or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $country )                          or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $city )                             or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $title )                            or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $department )                       or WebUtil::webError("$i-1 cannot bind param: $DBI::errstr\n");
 
-    $cur->execute() or webError("cannot execute: $DBI::errstr\n");
+    $cur->execute() or WebUtil::webError("cannot execute: $DBI::errstr\n");
     $dbh->commit;
 
     #$dbh->disconnect();
@@ -598,12 +580,13 @@ select cv_term from countrycv
     }
     $template->param( username => $username );
 
-    main::printAppHeader("login");
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("login");
 
     print $template->output;
 
-    main::printContentEnd();
-    main::printMainFooter();
+    WebPrint::printContentEnd();
+    WebPrint::printMainFooter();
     Caliban::logout(1, 8);
     WebUtil::webExit(0);
 }
@@ -937,14 +920,15 @@ sub checkBannedUsers {
             my $text = qq{
 Your account has been locked. <br>
 If you believe this is an error please email us at:<br>
-imgsupp at lists.jgi-psf.org (imgsupp\@lists.jgi-psf.org)
+jgi-imgsupp at lists.lbl.gov  (jgi-imgsupp\@lists.lbl.gov )
             };
             $cur->finish();
 
-            main::printAppHeader("login");
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("login");
             print $text;
-            main::printContentEnd();
-            main::printMainFooter();
+            WebPrint::printContentEnd();
+            WebPrint::printMainFooter();
             Caliban::logout(1, 3);
             WebUtil::webExit(0);
         }
@@ -1054,7 +1038,8 @@ sub migrateImg2JgiSso {
 
     # webLog("10 migrateImg2JgiSso $caliban_id\n");
 
-    main::printAppHeader("login");
+    my $webSessionPrint = WebUtil::getWebSessionPrint();
+    $webSessionPrint->printAppHeader("login");
 
     if ($caliban_id) {
 
@@ -1073,8 +1058,8 @@ sub migrateImg2JgiSso {
         print $template->output;
     }
 
-    main::printContentEnd();
-    main::printMainFooter(1);
+    WebPrint::printContentEnd();
+    WebPrint::printMainFooter(1);
     WebUtil::webExit(0);
 
     # check to see if email exists in Caliban

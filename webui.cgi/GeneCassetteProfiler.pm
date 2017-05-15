@@ -1,7 +1,7 @@
 ###########################################################################
 #
 #
-# $Id: GeneCassetteProfiler.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: GeneCassetteProfiler.pm 36998 2017-04-26 21:19:12Z klchu $
 #
 #
 #
@@ -116,7 +116,8 @@ sub getAppHeaderData {
         return @a;
     } else {
 
-        push( @a, "FindGenes", '', '', $js );
+        push( @a, "FindGenes", '', '', $js, '', 'PhylogeneticProfilers.pdf' );
+        
         return @a;
     }
 }
@@ -268,7 +269,7 @@ sub fastBitFindCommonPropsInTaxa {
             #$dbh->disconnect();
             printStatusLine( "Loaded.", 2 );
             webLog( "Please select only 1 genome " . "in the \"Find In\" column 1.\n" );
-            webError( "Please select only 1 genome " . "in the \"Find In\" column." );
+            WebUtil::webError( "Please select only 1 genome " . "in the \"Find In\" column." );
             return;
         }
     }    # end for
@@ -279,7 +280,7 @@ sub fastBitFindCommonPropsInTaxa {
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         webLog( "Please select 1 genome " . "in the \"Find In\" column 2.\n" );
-        webError( "Please select 1 genome " . "in the \"Find In\" column." );
+        WebUtil::webError( "Please select 1 genome " . "in the \"Find In\" column." );
         return;
     }
     if ( $#queryTaxons < 0 ) {
@@ -287,14 +288,14 @@ sub fastBitFindCommonPropsInTaxa {
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         webLog("Please select at least 1 genome in the \"Collocated In\" column\n");
-        webError( "Please select at least 1 genome " . "in the \"Collocated In\" column" );
+        WebUtil::webError( "Please select at least 1 genome " . "in the \"Collocated In\" column" );
         return;
     }
     if ( $#queryTaxons > $FASTBIT_LIMIT ) {
 
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
-        webError( "Please only select a max. of $FASTBIT_LIMIT genomes " . "in the \"Collocated In\" column" );
+        WebUtil::webError( "Please only select a max. of $FASTBIT_LIMIT genomes " . "in the \"Collocated In\" column" );
         return;
     }
 
@@ -628,7 +629,7 @@ sub fastBitFindCommonPropsInTaxa3 {
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         webLog( "Please select 1 genome " . "in the \"Find In\" column 2.\n" );
-        webError( "Please select 1 genome " . "in the \"Find In\" column." );
+        WebUtil::webError( "Please select 1 genome " . "in the \"Find In\" column." );
         return;
     }
     if ( $#queryTaxons < 0 ) {
@@ -636,7 +637,7 @@ sub fastBitFindCommonPropsInTaxa3 {
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         webLog("Please select at least 1 genome in the \"Collocated In\" column\n");
-        webError( "Please select at least 1 genome " . "in the \"Collocated In\" column" );
+        WebUtil::webError( "Please select at least 1 genome " . "in the \"Collocated In\" column" );
         return;
     }
     if ( $#queryTaxons > $FASTBIT_LIMIT ) {
@@ -644,7 +645,7 @@ sub fastBitFindCommonPropsInTaxa3 {
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         my $size = $#queryTaxons + 1;
-        webError( "Please only select a max. of $FASTBIT_LIMIT genomes ($size) " . "in the \"Collocated In\" column" );
+        WebUtil::webError( "Please only select a max. of $FASTBIT_LIMIT genomes ($size) " . "in the \"Collocated In\" column" );
         return;
     }
 
@@ -2019,7 +2020,7 @@ sub printGeneContextPhyloProfilerRun2 {
             printStatusLine( "Loaded.", 2 );
             printEndWorkingDiv();
             webLog( "Please select only 1 genome " . "in the \"Find In\" column 1.\n" );
-            webError( "Please select only 1 genome " . "in the \"Find In\" column." );
+            WebUtil::webError( "Please select only 1 genome " . "in the \"Find In\" column." );
             return;
         }
     }    # end for
@@ -2031,7 +2032,7 @@ sub printGeneContextPhyloProfilerRun2 {
         printStatusLine( "Loaded.", 2 );
         printEndWorkingDiv();
         webLog( "Please select 1 genome " . "in the \"Find In\" column 2.\n" );
-        webError( "Please select 1 genome " . "in the \"Find In\" column." );
+        WebUtil::webError( "Please select 1 genome " . "in the \"Find In\" column." );
         return;
     }
     if ( $#collList < 0 && $#notCollList < 0 ) {
@@ -2044,7 +2045,7 @@ sub printGeneContextPhyloProfilerRun2 {
               . "in the \"Collocated In\" column"
               . " or in the \"Not Collocated In\" column.\n" );
 
-        webError( "Please select at least 1 genome " . "in the \"Collocated In\" column" );
+        WebUtil::webError( "Please select at least 1 genome " . "in the \"Collocated In\" column" );
         return;
     }
     my $oraclemax = WebUtil::getORACLEMAX();
@@ -2053,7 +2054,7 @@ sub printGeneContextPhyloProfilerRun2 {
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
         printEndWorkingDiv();
-        webError( "Please select less than $oraclemax genomes " . "in the \"Collocated In\" column" );
+        WebUtil::webError( "Please select less than $oraclemax genomes " . "in the \"Collocated In\" column" );
         return;
     } elsif ( $#notCollList >= $oraclemax ) {
 
@@ -2061,7 +2062,7 @@ sub printGeneContextPhyloProfilerRun2 {
         printStatusLine( "Loaded.", 2 );
 
         printEndWorkingDiv();
-        webError( "Please select less than $oraclemax genomes " . "in the \"Not Collocated In\" column." );
+        WebUtil::webError( "Please select less than $oraclemax genomes " . "in the \"Not Collocated In\" column." );
         return;
     }
 

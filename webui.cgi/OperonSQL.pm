@@ -3,7 +3,7 @@ package OperonSQL;
 # functions that return sql queries
 # used in Operons.pm
 #
-# $Id: OperonSQL.pm 34103 2015-08-24 20:33:28Z klchu $
+# $Id: OperonSQL.pm 36954 2017-04-17 19:34:04Z klchu $
 ########################################################
 use strict;
 use CGI qw( :standard );
@@ -578,7 +578,7 @@ sub getFamilyConnectionSQL {
     } elsif ( lc($cluster_method) eq 'bbh' ) {
         $sql = getBBHFamilyConnections( \@families );
     } else {
-        webError("Unknown clustering method");
+        WebUtil::webError("Unknown clustering method");
     }
 
     # 	print "<p>$sql</p>\n";
@@ -665,7 +665,7 @@ sub getFamily {
         where cluster_id = ?
         };
     } else {
-        webError("Unknown clustering method");
+        WebUtil::webError("Unknown clustering method");
     }
 
     my $dbh = dbLogin();

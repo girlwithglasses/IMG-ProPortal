@@ -7,7 +7,7 @@
 #           the rest of the populations. The 4mer frequencies for
 #           each scaffold are computed and then analyzed using PCA.
 #
-# $Id: Kmer.pm 36217 2016-09-23 18:26:38Z aratner $
+# $Id: Kmer.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package Kmer;
 
@@ -131,9 +131,9 @@ sub kmerPlotScaffolds {
     my $isSet = param('isSet');
     if ( scalar(@scaffold_oids) == 0 ) {
         if ($isSet) {
-            webError("No scaffold sets have been selected.");
+            WebUtil::webError("No scaffold sets have been selected.");
         } else {
-            webError("No scaffolds have been selected.");
+            WebUtil::webError("No scaffolds have been selected.");
         }
         return;
     }
@@ -255,8 +255,8 @@ sub writeScaffoldsMapFile {
 ############################################################################
 sub kmerPlotTaxon {
     my $taxon_oid = param("taxon_oid");
-    webError("Taxon ID missing") if (!$taxon_oid);
-    webError("Invalid Taxon ID") if (!isNumber($taxon_oid));
+    WebUtil::webError("Taxon ID missing") if (!$taxon_oid);
+    WebUtil::webError("Invalid Taxon ID") if (!isNumber($taxon_oid));
 
     my $dbh = dbLogin();
     my $sql = qq{
@@ -336,7 +336,7 @@ sub findKmerSettings {
         my $max  = $kmerParam{$key}{max};
         my $text = $kmerParam{$key}{text};
         if ( $kmerParam{$key}{val} < $min || $kmerParam{$key}{val} > $max) {
-            webError("$text needs to be between $min and $max");
+            WebUtil::webError("$text needs to be between $min and $max");
         }
     }
 
@@ -495,9 +495,9 @@ sub generateKmerSrc {
     my ($inputFasta, $outputPrefix, $scaffoldsMapFile) = @_;
     my $outputFile = "$cgi_tmp_dir/$outputPrefix.${kmerParam{kmerSize}{val}}"
 	           . "mer";
-    webDie("Cannot find input file "      . $inputFasta) if(!-e $inputFasta);
-    webDie("Cannot find the jar file "    . $kMerJar) if(!-e $kMerJar);
-    webDie("Cannot find the script file " . $kMerRscript) if(!-e $kMerRscript);
+    WebUtil::webDie("Cannot find input file "      . $inputFasta) if(!-e $inputFasta);
+    WebUtil::webDie("Cannot find the jar file "    . $kMerJar) if(!-e $kMerJar);
+    WebUtil::webDie("Cannot find the script file " . $kMerRscript) if(!-e $kMerRscript);
 
     #print "generateKmerSrc() inputFasta=$inputFasta<br/>\n";
     #print "generateKmerSrc() kMerJar=$kMerJar<br/>\n";
@@ -568,10 +568,10 @@ sub showScaffoldGraph {
     my $end_coord;
     my $block_size   = 30000; # Length of Chromosome Viewer window
 
-    webError("Unable to proceed with missing scaffold name") if !$extAccession;
+    WebUtil::webError("Unable to proceed with missing scaffold name") if !$extAccession;
 
     if (!$scaffold_oid || $scaffold_oid eq "") {
-    	webError("Unable to proceed with missing taxon_oid")
+    	WebUtil::webError("Unable to proceed with missing taxon_oid")
     	    if !$taxon_oid || $taxon_oid eq "";
     }
 

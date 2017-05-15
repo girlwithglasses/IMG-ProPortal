@@ -240,6 +240,7 @@ dd+dt, dt+dt {
 
 /* ABBREVIATION */
 abbr[title], dfn[title] {
+    text-decoration: none;
 	border-bottom: 1px dotted $text-color;
 	cursor: help;
 }

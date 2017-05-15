@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: QueryUtil.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: QueryUtil.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package QueryUtil;
 
@@ -5263,7 +5263,7 @@ sub getTaxonOidEcosystemSql {
         select t.taxon_oid, sp.ecosystem,
                sp.ecosystem_category, sp.ecosystem_type,
                sp.ecosystem_subtype, sp.specific_ecosystem
-        from taxon t, gold_sequencing_project\@imgsg_dev sp
+        from taxon t, gold_sequencing_project sp
         where t.sequencing_gold_id = sp.gold_id
         $oid_cond
         $rclause
@@ -5272,7 +5272,7 @@ sub getTaxonOidEcosystemSql {
         select t.taxon_oid, ap.ecosystem,
                ap.ecosystem_category, ap.ecosystem_type,
                ap.ecosystem_subtype, ap.specific_ecosystem
-        from taxon t, gold_analysis_project\@imgsg_dev ap
+        from taxon t, gold_analysis_project ap
         where t.sequencing_gold_id is null
         and t.analysis_project_id = ap.gold_id
         $oid_cond

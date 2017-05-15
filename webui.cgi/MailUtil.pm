@@ -1,6 +1,6 @@
 ##########################################################################
 # Send Mail
-# $Id: MailUtil.pm 36226 2016-09-27 07:32:15Z jinghuahuang $
+# $Id: MailUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 ##########################################################################
 package MailUtil;
 
@@ -81,7 +81,7 @@ sub sendMail {
     my ( $emailTo, $ccTo, $subject, $content, $from) = @_;
 
     $emailTo = $bugmasterEmail if ($emailTo eq '');
-    webDie "Invalid email address $emailTo!" if (! validateEMail($emailTo));
+    WebUtil::webDie "Invalid email address $emailTo!" if (! validateEMail($emailTo));
 	
     my $send_from = "From: $bugmasterEmail\n";
     if($from ne '') {
@@ -99,7 +99,7 @@ sub sendMail {
     my $subject = "Subject: $subject\n";
 
     WebUtil::unsetEnvPath();
-	open(SENDMAIL, "|$sendmail -t") or webDie "Cannot open $sendmail: $!";
+	open(SENDMAIL, "|$sendmail -t") or WebUtil::webDie "Cannot open $sendmail: $!";
     print SENDMAIL $send_from;
     print SENDMAIL $reply_to; 
     print SENDMAIL $send_to; 
@@ -118,8 +118,8 @@ sub sendMailAttachment {
     my ( $emailTo, $ccTo, $subject, $content, $outFilePath, $outFile) = @_;
 
     $emailTo = $bugmasterEmail if ($emailTo eq '');
-    webDie "Invalid email address $emailTo!" if (! validateEMail($emailTo));
-    webDie "$outFilePath does not exist!" if (! (-e $outFilePath));
+    WebUtil::webDie "Invalid email address $emailTo!" if (! validateEMail($emailTo));
+    WebUtil::webDie "$outFilePath does not exist!" if (! (-e $outFilePath));
     
 	# create a new message
 	my $msg = MIME::Lite->new(
@@ -152,7 +152,8 @@ sub processSubmittedMessage {
     printProcessSubmittedMessage($content);
 
     my $tmp = printWindowStop();
-    main::printMainFooter( "", $tmp );
+    require WebPrint;
+    WebPrint::printMainFooter( "", $tmp );
 
     # I need to disconnect parent thread before child use db connection because it cannot be shared between
     # connections - ken

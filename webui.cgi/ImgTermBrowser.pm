@@ -2,7 +2,7 @@
 # ImgTermBrowser.pm - Browse IMG terms from this module.
 #   Include IMG term details.
 #
-# $Id: ImgTermBrowser.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: ImgTermBrowser.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package ImgTermBrowser;
 my $section = "ImgTermBrowser";
@@ -696,7 +696,7 @@ sub printImgTermDetail {
     if ( $term_oid eq "" ) {
         #$dbh->disconnect();
         printStatusLine( "Error.", 2 );
-        webError("Term not found in this database.");
+        WebUtil::webError("Term not found in this database.");
         return;
     }
 
@@ -1151,21 +1151,21 @@ sub confirmDeleteGeneTerm {
     my $imgEditor   = isImgEditor( $dbh, $contact_oid );
     if ( ! $imgEditor ) {
         printStatusLine( "Error.", 2 );
-        webError("You do not have the privilege to delete term association.");
+        WebUtil::webError("You do not have the privilege to delete term association.");
         return;
     }
 
     print hiddenVar( 'term_oid', $term_oid );
     if ( ! $term_oid ) {
         printStatusLine( "Error.", 2 );
-        webError("No term has been selected.");
+        WebUtil::webError("No term has been selected.");
         return;
     }
 
     my @selected_genes = param('gene_oid');
     if ( scalar(@selected_genes) == 0 ) {
         printStatusLine( "Error.", 2 );
-        webError("No genes have been selected.");
+        WebUtil::webError("No genes have been selected.");
         return;
     }
     my %selected_gene_h;

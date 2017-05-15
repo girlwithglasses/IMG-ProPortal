@@ -12,7 +12,7 @@ use DBI;
 use Data::Dumper;
 use ScaffoldPanel;
 use Time::localtime;
-use CachedTable;
+use InnerTable;
 use WebConfig;
 use WebUtil;
 use HtmlUtil;
@@ -205,7 +205,7 @@ sub printCogCategoryDetailForSamples {
     my $nSamples = @sample_oids;
 
     if ($nSamples < 1) {
-        webError( "Please select at least 1 sample." );
+        WebUtil::webError( "Please select at least 1 sample." );
     }
 
     printMainForm();
@@ -884,11 +884,11 @@ sub printNullCogCategoryDetail {
 
     my $baseUrl = "$section_cgi&page=null${OG}CategoryDetail";
     $baseUrl .= "&function_code=$function_code";
-    my $cachedTable = new CachedTable( "null${OG}Cat$function_code", $baseUrl );
+    my $cachedTable = new InnerTable(1, "cogcat$$", "null${OG}Cat$function_code", 1 );
     $cachedTable->addColSpec("Select");
     $cachedTable->addColSpec( "${OG} ID",   "asc", "left" );
     $cachedTable->addColSpec( "${OG} Name", "asc", "left" );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $sdDelim = InnerTable::getSdDelim();
 
     my $select_id_name = "func_id";
 
@@ -1493,8 +1493,8 @@ sub printCcdCogGenomeList {
     my $baseUrl = "$section_cgi&page=ccd${OG}GenomeList";
     $baseUrl .= "&${og}_id=$cog_id";
 
-    my $cachedTable = new CachedTable( "ccd${OG}Genomes$cog_id", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $cachedTable = new InnerTable(1, "cdd$$", "ccd${OG}Genomes$cog_id", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     $cachedTable->addColSpec("Select");
     $cachedTable->addColSpec( "Domain", "asc", "center", "",
 "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses"
@@ -2324,14 +2324,14 @@ sub printCcdScaffoldProfile {
     my @scaffold_oids = param("scaffold_oid");
     my $scaffold_selection_str = join( ',', @scaffold_oids );
     if ( blankStr($scaffold_selection_str) ) {
-        webError("Please select scaffolds for profiling.");
+        WebUtil::webError("Please select scaffolds for profiling.");
     }
     my $nScaffolds = @scaffold_oids;
     if ( $nScaffolds < 1 ) {
-        webError("Please select at least one scaffold.");
+        WebUtil::webError("Please select at least one scaffold.");
     }
     if ( $nScaffolds > $max_scaffold_batch ) {
-        webError( "Please select from one to a maximum of "
+        WebUtil::webError( "Please select from one to a maximum of "
               . "$max_scaffold_batch scaffolds." );
     }
     my $dbh        = dbLogin();
@@ -2435,9 +2435,8 @@ sub printCcdScaffoldProfile {
     }
     my @colorMap = ( "1:5:bisque", "5:1000000:yellow", );
     my $cachedTable =
-      new CachedTable( "ccdScaffold$function_code", $baseUrl, \@colSpec,
-        \@colorMap );
-    my $sdDelim = CachedTable::getSdDelim();
+      new InnerTable(1, "ccdScaffold$$", "ccdScaffold$function_code", 1);
+    my $sdDelim = InnerTable::getSdDelim();
     my $sql     = qq{
         select c.${og}_id, c.${og}_name, count( distinct g.gene_oid )
         from ${og}_function cf, ${og}_functions cfs, ${og} c,
@@ -2536,14 +2535,14 @@ sub printCpdScaffoldProfile {
     my @scaffold_oids = param("scaffold_oid");
     my $scaffold_selection_str = join( ',', @scaffold_oids );
     if ( blankStr($scaffold_selection_str) ) {
-        webError("Please select scaffolds for profiling.");
+        WebUtil::webError("Please select scaffolds for profiling.");
     }
     my $nScaffolds = @scaffold_oids;
     if ( $nScaffolds < 1 ) {
-        webError("Please select at least one scaffold.");
+        WebUtil::webError("Please select at least one scaffold.");
     }
     if ( $nScaffolds > $max_scaffold_batch ) {
-        webError( "Please select from one to a maximum of "
+        WebUtil::webError( "Please select from one to a maximum of "
               . "$max_scaffold_batch scaffolds." );
     }
     my $dbh        = dbLogin();
@@ -2646,9 +2645,8 @@ sub printCpdScaffoldProfile {
     }
     my @colorMap = ( "1:5:bisque", "5:1000000:yellow", );
     my $cachedTable =
-      new CachedTable( "cpdScaffold$cog_pathway_oid", $baseUrl, \@colSpec,
-        \@colorMap );
-    my $sdDelim = CachedTable::getSdDelim();
+      new InnerTable(1, "cpdScaffold$$",  "cpdScaffold$cog_pathway_oid", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     my $sql     = qq{
         select c.${og}_id, c.${og}_name, count( distinct g.gene_oid )
         from ${og}_pathway_${og}_members cm, ${og} c,

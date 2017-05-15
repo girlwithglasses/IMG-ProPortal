@@ -1,7 +1,7 @@
 # CircularMap - Generation of circular and linear maps of chromosomes
 #    --km 10/24/2006
 #
-# $Id: CircularMap.pm 35581 2016-04-21 19:42:33Z jinghuahuang $
+# $Id: CircularMap.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package CircularMap;
 use strict;
@@ -98,7 +98,7 @@ sub get_scaffold_info {
     }
 
     if (!defined($length) or !defined($taxon)) {
-	   webError("Error: Unknown scaffold");
+	   WebUtil::webError("Error: Unknown scaffold");
     }
     $length=sanitizeInt($length);
     
@@ -106,20 +106,20 @@ sub get_scaffold_info {
     if (length($1)>0) {
 	   $accession=$1;
     } else {
-	   webError("Error: Unknown accession");
+	   WebUtil::webError("Error: Unknown accession");
     }
     $scaff_name=~/^([\S\s\d]+)/;
     if (length($1)>0) {
 	   $scaff_name=$1;
     } else {
-	   webError("Error: Unknown scaffold name");
+	   WebUtil::webError("Error: Unknown scaffold name");
     }
     $taxon=sanitizeInt($taxon);
     my $topo=$topology;
     if(lc($topo) eq 'linear' || lc($topo) eq 'circular'){$topology=$topo;}
     elsif($topo eq '' && lc($status) eq "finished") {$topology='circular';}
     elsif($topo eq '' && lc($status) eq "draft") {$topology ='linear';}
-    else{webError("Error: Unknown scaffold topology");}
+    else{WebUtil::webError("Error: Unknown scaffold topology");}
 
     return ($length,$accession,$taxon,$topology,$scaff_name);
 }

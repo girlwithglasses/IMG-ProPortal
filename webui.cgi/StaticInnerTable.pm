@@ -25,7 +25,7 @@
 #
 #   The static inner table may be displayed after everything is loaded by
 #       $it->printOuterTable();
-# $Id: StaticInnerTable.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: StaticInnerTable.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package StaticInnerTable;
 use strict;
@@ -126,7 +126,7 @@ sub printOuterTable {
    my $nCols       = @$colSpec;
 
    if( $nCols == 0 ) {
-       webError( "Table unavailable. Please refresh the whole page." );
+       WebUtil::webError( "Table unavailable. Please refresh the whole page." );
        webLog "printOuterTable: Missing Colspec\n" if $verbose >= 1;
        return;
    }

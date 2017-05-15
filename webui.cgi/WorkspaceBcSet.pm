@@ -6,7 +6,7 @@
 #
 # for workspace the temp cart file is teh unsaved buffer file
 #
-# $Id: WorkspaceBcSet.pm 36806 2017-03-23 05:19:59Z aratner $
+# $Id: WorkspaceBcSet.pm 36954 2017-04-17 19:34:04Z klchu $
 ########################################################################
 package WorkspaceBcSet;
 
@@ -791,7 +791,7 @@ Save as a new job with name:
 # getAllBcSetFilenames
 ############################################################################
 sub getAllBcSetFilenames {
-    opendir( DIR, "$BC_DIR" ) or webDie("failed to open folder list");
+    opendir( DIR, "$BC_DIR" ) or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -1138,7 +1138,7 @@ sub printBcSetDetail {
 
     my $path = $BC_DIR . $filename;
     if ( !-e $path ) {
-        webDie("$filename does not exists.");
+        WebUtil::webDie("$filename does not exists.");
         return;
     }
 
@@ -1310,7 +1310,7 @@ sub downloadFile {
     my ($filename, $name, $isTxt) = @_;
 
     if ( !-e $filename ) {
-        webErrorHeader("File $filename not found.");
+        WebUtil::webErrorHeader("File $filename not found.");
     }
 
     my $sz = fileSize($filename);
@@ -1433,7 +1433,6 @@ sub exportInCart {
     my @bc_ids = param("bc_id");
 
     if ( $#bc_ids < 0 ) {
-        #main::printAppHeader();
         WebUtil::webErrorHeader("You must select at least one BC to export.");
     }
 
@@ -1461,7 +1460,7 @@ sub uploadToBcCart {
     #if ( !MyIMG::uploadOidsFromFile( "bc_id", \@bc_oids, \$errmsg) ) {
     if ( !MyIMG::uploadIdsFromFile( "bc_id", \@bc_oids, \$errmsg) ) {
         printStatusLine( "Error.", 2 );
-        webError($errmsg);
+        WebUtil::webError($errmsg);
     }    
     
     addBcIds(\@bc_oids);
@@ -1476,7 +1475,7 @@ sub addToOtherCart {
     #selected bc ids
     my @bcids =  param('bc_id');
     if ( scalar(@bcids) == 0 ) {
-        webError("Please select some BC IDs.");
+        WebUtil::webError("Please select some BC IDs.");
         return;
     }
 

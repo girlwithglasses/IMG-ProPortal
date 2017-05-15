@@ -50,7 +50,7 @@ sub dispatch {
 
 
     if( !$contact_oid ) {
-        webError( "Please login in." );
+        WebUtil::webError( "Please login in." );
     }
 
     my $page = param( "page" );
@@ -329,7 +329,7 @@ sub printSearchRxnResults {
  
     # check whether any pathways are selected
     if ( $selectedPathways eq "" ) {
-	webError ("No IMG pathway is selected.");
+	WebUtil::webError ("No IMG pathway is selected.");
 	return; 
     }
 
@@ -351,7 +351,7 @@ sub printSearchRxnResults {
     print "<br/>\n";
 
     if( $searchTerm eq "" ) {
-        webError( "Please enter a term." );
+        WebUtil::webError( "Please enter a term." );
 	print end_form();
 	return;
     }
@@ -420,7 +420,7 @@ sub printSearchRxnResults {
 
     if ( $count == 0 ) {
         printStatusLine( "$count reaction(s) found.", 2 );
-        webError( "No IMG reactions matches the keyword." );
+        WebUtil::webError( "No IMG reactions matches the keyword." );
         return;
     }
 
@@ -506,7 +506,7 @@ sub printAddUpdatePathwayForm {
 	    $pathway_oid = $selected_pway_oids[0]; 
 	} 
 	else { 
-	    webError ("No IMG pathway is selected.");
+	    WebUtil::webError ("No IMG pathway is selected.");
 	    return; 
 	} 
     }
@@ -638,7 +638,7 @@ sub dbAddPathway() {
     # check input 
     chomp($pathway_name);
     if ( !$pathway_name || blankStr($pathway_name) ) { 
-        webError ("Please enter a new pathway name.");
+        WebUtil::webError ("Please enter a new pathway name.");
         return -1; 
     } 
 
@@ -649,7 +649,7 @@ sub dbAddPathway() {
     my $id2 = db_findID ($dbh, 'IMG_PATHWAY', 'PATHWAY_OID', 'PATHWAY_NAME', $pathway_name, '');
     if ( $id2 > 0 ) {
         #$dbh->disconnect();
-        webError ("Pathway already exists. (PATHWAY_OID=$id2)");
+        WebUtil::webError ("Pathway already exists. (PATHWAY_OID=$id2)");
         return -1;
     } 
 
@@ -701,7 +701,7 @@ sub dbAddPathway() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
     else { 
@@ -733,7 +733,7 @@ sub dbUpdatePathway() {
     # check input 
     chomp($pathway_name);
     if ( !$pathway_name || blankStr($pathway_name) ) { 
-        webError ("Please enter a new pathway name.");
+        WebUtil::webError ("Please enter a new pathway name.");
         return -1; 
     } 
 
@@ -746,7 +746,7 @@ sub dbUpdatePathway() {
 			 "pathway_oid <> $pathway_oid");
     if ( $id2 > 0 ) {
         #$dbh->disconnect();
-        webError ("Pathway already exists. (PATHWAY_OID=$id2)");
+        WebUtil::webError ("Pathway already exists. (PATHWAY_OID=$id2)");
         return -1;
     } 
 
@@ -821,7 +821,7 @@ sub dbUpdatePathway() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
     else { 
@@ -868,7 +868,7 @@ sub printConfirmDeletePathwayForm {
 	$pathway_oid = $selected_pway_oids[0]; 
     } 
     else { 
-	webError ("No IMG pathway is selected.");
+	WebUtil::webError ("No IMG pathway is selected.");
 	return; 
     } 
 
@@ -975,7 +975,7 @@ sub dbDeletePathway {
     # get the pathway oid
     my $old_oid = param( "selectedPathways" );
     if ( blankStr($old_oid) ) {
-	webError ("No IMG pathway is selected.");
+	WebUtil::webError ("No IMG pathway is selected.");
 	return -1;
     }
 
@@ -1023,7 +1023,7 @@ sub dbDeletePathway {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {
@@ -1081,7 +1081,7 @@ sub printUpdatePathwayReactionForm {
 	$pathway_oid = $selected_pway_oids[0]; 
     } 
     else { 
-	webError ("No IMG pathway is selected.");
+	WebUtil::webError ("No IMG pathway is selected.");
 	return; 
     } 
 
@@ -1385,7 +1385,7 @@ sub printConfirmUpdatePwayRxnForm {
     print "<h2>Pathway ($pathway_oid): " . escapeHTML($pathway_name) . "</h2>\n";
 
     if ( $pathway_oid eq "" ) {
-	webError ("No IMG pathway is selected.");
+	WebUtil::webError ("No IMG pathway is selected.");
 	return; 
     } 
 
@@ -1443,7 +1443,7 @@ sub printConfirmUpdatePwayRxnForm {
 			print "</tr>\n";
 			print "</table>\n";
 			#$dbh->disconnect();
-			webError ("Reaction order must be a positive integer. Input '$rxn_order' <= 0.");
+			WebUtil::webError ("Reaction order must be a positive integer. Input '$rxn_order' <= 0.");
 			return;
 		    }
 		}
@@ -1452,7 +1452,7 @@ sub printConfirmUpdatePwayRxnForm {
 		    print "</tr>\n";
 		    print "</table>\n";
 		    #$dbh->disconnect();
-		    webError ("Reaction order must be an integer. Input '$rxn_order' is not an integer.");
+		    WebUtil::webError ("Reaction order must be an integer. Input '$rxn_order' is not an integer.");
 		    return;
 		}
 
@@ -1521,7 +1521,7 @@ sub dbUpdatePwayRxn {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
     else { 
@@ -1592,7 +1592,7 @@ sub printValidatePwayRxnForm {
     my $filename = param( "fileselect" );
 
     if ( blankStr($filename) ) {
-	webError("No file name is provided.");
+	WebUtil::webError("No file name is provided.");
 	return;
     }
 
@@ -1621,7 +1621,7 @@ sub printValidatePwayRxnForm {
     # save the uploaded file to a tmp file, because we need to parse the file
     # more than once
     if ( ! open( FILE, '>', $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -1662,7 +1662,7 @@ sub printValidatePwayRxnForm {
     # now read from tmp file
     if ( ! open( FILE, $tmp_upload_file ) ) {
 	printStatusLine( "Failed.", 2 );
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -1843,7 +1843,7 @@ sub dbPwayRxnFileUpload {
 
     # open file
     if ( ! open( FILE, $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return 0;
     }
 
@@ -1963,7 +1963,7 @@ sub dbPwayRxnFileUpload {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {

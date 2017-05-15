@@ -3,7 +3,7 @@
 # Also, see PhyloNode::printSelectButton for which level of nodes name
 # can be edited.
 #
-# $Id: TaxonEdit.pm 30606 2014-04-10 20:27:50Z klchu $
+# $Id: TaxonEdit.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package TaxonEdit;
 my $section = "TaxonEdit";
@@ -163,7 +163,7 @@ sub dispatch {
             $img_i_taxon_oracle_config<br/>
             $user_status<br/>
         } if ($img_internal);
-        webError("You do not have access to this page!");
+        WebUtil::webError("You do not have access to this page!");
     }
 }
 
@@ -208,7 +208,7 @@ sub runSearch {
 
     if ( !$any ) {
         WebUtil::printStatusLine_old( "Error.", 2 );
-        webError("Please select a value!");
+        WebUtil::webError("Please select a value!");
     }
 
     printMainForm();
@@ -921,7 +921,7 @@ sub taxonDbLogin {
     }
     my $dbh = DBI->connect( $dsn, $user, pwDecode($pw), { AutoCommit => 0 } );
     if ( !defined($dbh) ) {
-        webDie("dbLogin: cannot login '$user' \@ '$dsn'\n");
+        WebUtil::webDie("dbLogin: cannot login '$user' \@ '$dsn'\n");
     }
     $dbh->{LongReadLen} = $maxClobSize;
     $dbh->{LongTruncOk} = 1;
@@ -965,7 +965,7 @@ sub domainUpdate {
     }
 
     if ( $clause eq "" ) {
-        webError("Error in creating update statement!.");
+        WebUtil::webError("Error in creating update statement!.");
     }
 
     my $sql = qq{
@@ -1316,34 +1316,34 @@ sub taxonUpdate {
         # do update
         # undef used to bind null in sql
         if ( blankStr($taxon_display_name) ) {
-            webError("Genome name cannot be null.");
+            WebUtil::webError("Genome name cannot be null.");
         }
         if ( blankStr($genus) ) {
-            webError("Genus name cannot be null.");
+            WebUtil::webError("Genus name cannot be null.");
         }
 
         if ( blankStr($domain) ) {
-            webError("Domain cannot be null.");
+            WebUtil::webError("Domain cannot be null.");
         }
 
         if ( blankStr($seq_status) ) {
-            webError("Seq Status name cannot be null.");
+            WebUtil::webError("Seq Status name cannot be null.");
         } elsif ( $seq_status ne "Draft"
             && $seq_status ne "Finished"
             && $seq_status ne "Permanent Draft" )
         {
-            webError("Seq Status must be Draft, Permanent Draft or Finished.");
+            WebUtil::webError("Seq Status must be Draft, Permanent Draft or Finished.");
         }
 
         if ( blankStr($species) ) {
 
-            #webError("Species name cannot be null.");
+            #WebUtil::webError("Species name cannot be null.");
             $species = undef;
         }
 
         if ( blankStr($strain) ) {
 
-            #webError("Strain name cannot be null.");
+            #WebUtil::webError("Strain name cannot be null.");
             $strain = undef;
         }
 
@@ -1353,7 +1353,7 @@ sub taxonUpdate {
 
             # is all digits
         } else {
-            webError("NCBI Taxon ID can only be a number.");
+            WebUtil::webError("NCBI Taxon ID can only be a number.");
         }
 
         if ( blankStr($refseq_project_id) ) {
@@ -1362,7 +1362,7 @@ sub taxonUpdate {
 
             # is all digits
         } else {
-            webError("RefSeq Project ID can only be a number.");
+            WebUtil::webError("RefSeq Project ID can only be a number.");
         }
 
         if ( blankStr($gbk_project_id) ) {
@@ -1371,11 +1371,11 @@ sub taxonUpdate {
 
             # is all digits
         } else {
-            webError("GenBank Project ID can only be a number.");
+            WebUtil::webError("GenBank Project ID can only be a number.");
         }
 
         if ( blankStr($domain) ) {
-            webError("Domain name cannot be null.");
+            WebUtil::webError("Domain name cannot be null.");
         }
         if ( blankStr($phylum) ) {
             $phylum = undef;
@@ -1537,33 +1537,33 @@ sub taxonOneUpdate {
     # do update
     # undef used to bind null in sql
     if ( blankStr($taxon_display_name) ) {
-        webError("Genome name cannot be null.");
+        WebUtil::webError("Genome name cannot be null.");
     }
     if ( blankStr($domain) ) {
-        webError("Domain cannot be null.");
+        WebUtil::webError("Domain cannot be null.");
     }
 
     if ( blankStr($genus) ) {
-        webError("Genus name cannot be null.");
+        WebUtil::webError("Genus name cannot be null.");
     }
     if ( blankStr($seq_status) ) {
-        webError("Seq Status name cannot be null.");
+        WebUtil::webError("Seq Status name cannot be null.");
     } elsif ( $seq_status ne "Draft"
         && $seq_status ne "Finished"
         && $seq_status ne "Permanent Draft" )
     {
-        webError("Seq Status must be Draft, Permanent Draft, or Finished.");
+        WebUtil::webError("Seq Status must be Draft, Permanent Draft, or Finished.");
     }
 
     if ( blankStr($species) ) {
 
-        #webError("Species name cannot be null.");
+        #WebUtil::webError("Species name cannot be null.");
         $species = undef;
     }
 
     if ( blankStr($strain) ) {
 
-        #webError("Strain name cannot be null.");
+        #WebUtil::webError("Strain name cannot be null.");
         $strain = undef;
     }
 
@@ -1573,7 +1573,7 @@ sub taxonOneUpdate {
 
         # is all digits
     } else {
-        webError("NCBI Taxon ID can only be a number.");
+        WebUtil::webError("NCBI Taxon ID can only be a number.");
     }
 
     if ( blankStr($refseq_project_id) ) {
@@ -1582,7 +1582,7 @@ sub taxonOneUpdate {
 
         # is all digits
     } else {
-        webError("Refseq Project ID can only be a number.");
+        WebUtil::webError("Refseq Project ID can only be a number.");
     }
 
     if ( blankStr($gbk_project_id) ) {
@@ -1591,7 +1591,7 @@ sub taxonOneUpdate {
 
         # is all digits
     } else {
-        webError("GebBank Project ID can only be a number.");
+        WebUtil::webError("GebBank Project ID can only be a number.");
     }
 
     if ( blankStr($phylum) ) {
@@ -1693,7 +1693,7 @@ sub processDtTaxonNodeLite {
 
     my $outFile = "$cgi_tmp_dir/dt_taxon_node_lite.tab.txt";
     print "outFile $outFile<br/>\n";
-    open( Fout, "> $outFile" ) || webDie("cannot write '$outFile'\n");
+    open( Fout, "> $outFile" ) || WebUtil::webDie("cannot write '$outFile'\n");
     print Fout "node_oid\t";
     print Fout "display_name\t";
     print Fout "rank_name\t";
@@ -1733,23 +1733,23 @@ sub insertDtTaxonNodeLite {
         (?,?,?,?,?)
     };
     my $cur = $taxon_dbh->prepare($sql)
-      || webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
+      || WebUtil::webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
     my $count = 0;
     foreach my $line (@$data_aref) {
         my ( $nodeCount, $name, $rank_name, $taxon_oid, $parentNode ) =
           split( /\t/, $line );
         $cur->bind_param( 1, $nodeCount )
-          || webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
         $cur->bind_param( 2, $name )
-          || webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
         $cur->bind_param( 3, $rank_name )
-          || webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
         $cur->bind_param( 4, $taxon_oid )
-          || webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
         $cur->bind_param( 5, $parentNode )
-          || webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
         $cur->execute()
-          || webDie("execSqlBind: cannot execute: $DBI::errstr\n");
+          || WebUtil::webDie("execSqlBind: cannot execute: $DBI::errstr\n");
         $count++;
 
         if ( $count % 500 == 0 ) {
@@ -1802,7 +1802,7 @@ sub taxonEditForm_new {
     # user selected taxons
     my @taxon_filter_oid = param("taxon_filter_oid");
     if ( $#taxon_filter_oid < 0 ) {
-        webError("Please select some genomes to edit");
+        WebUtil::webError("Please select some genomes to edit");
     }
 
     printJavaScript();
@@ -2229,7 +2229,7 @@ sub taxonEditForm {
     # user selected taxons
     my @taxon_filter_oid = param("taxon_filter_oid");
     if ( $#taxon_filter_oid < 0 ) {
-        webError("Please select some genomes to edit");
+        WebUtil::webError("Please select some genomes to edit");
     }
 
     printJavaScript();
@@ -3350,15 +3350,15 @@ sub sqlLoader {
     my $outCtlFile = "$cgi_tmp_dir/dt_taxon_node_lite.ctl";
 
     open( Fin, "< $inTabFile" )
-      || webDie(" cannot read '$inTabFile'\n");
+      || WebUtil::webDie(" cannot read '$inTabFile'\n");
     my $header = <Fin>;
     close Fin;
     chop $header;
     my (@fields) = split( /\t/, $header );
     open( Fout, "> $outCtlFile" )
-      || webDie("cannot write '$outCtlFile'\n");
+      || WebUtil::webDie("cannot write '$outCtlFile'\n");
 
-    my $fileName = lastPathTok($inTabFile);
+    my $fileName = WebUtil::lastPathTok($inTabFile);
     my ( $fileRoot, @exts ) = split( /\./, $fileName );
     print Fout "load data\n";
     print Fout "infile '$inTabFile'\n";
@@ -3424,7 +3424,7 @@ sub getTypes {
 
     my $dbh = DBI->connect( $dsn, $user, pwDecode($pw) );
     if ( !defined($dbh) ) {
-        webDie("getTypes: cannot login '$user' \@ '$dsn'\n");
+        WebUtil::webDie("getTypes: cannot login '$user' \@ '$dsn'\n");
     }
     $tableName =~ tr/a-z/A-Z/;
     my $sql = qq{
@@ -3433,9 +3433,9 @@ sub getTypes {
       where table_name = '$tableName'
    };
     my $cur = $dbh->prepare($sql)
-      || webDie("getTypes: cannot preparse statement: $DBI::errstr\n");
+      || WebUtil::webDie("getTypes: cannot preparse statement: $DBI::errstr\n");
     $cur->execute()
-      || webDie("getTypes: cannot execute: $DBI::errstr\n");
+      || WebUtil::webDie("getTypes: cannot execute: $DBI::errstr\n");
     my %types;
     for ( ; ; ) {
         my ( $column_name, $data_type, $data_length ) = $cur->fetchrow();

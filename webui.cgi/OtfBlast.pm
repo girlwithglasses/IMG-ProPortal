@@ -3,7 +3,7 @@
 #    from gene_oid specification.  Generate temp BLAST db dynamically.
 #   --es 12/03/2005
 #
-# $Id: OtfBlast.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: OtfBlast.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package OtfBlast;
 my $section = "OtfBlast";
@@ -280,7 +280,7 @@ sub genePageTopHits {
         for my $s (@lines) {
             if ( $s =~ /ERROR:/ ) {
                 #print "s: $s<br/>\n";
-                webError($s);
+                WebUtil::webError($s);
             }
             my (
                  $qid,  $sid,    $percIdent, $alen,   $nMisMatch, $nGaps, $qstart,
@@ -1066,7 +1066,7 @@ sub printGenomeBlastResults {
     my $query_seq_length = length($query_sequence);
 
     if ( blankStr($query_sequence) ) {
-        webError("Please select a gene with a protein sequence.");
+        WebUtil::webError("Please select a gene with a protein sequence.");
     }
 
     printMainForm();

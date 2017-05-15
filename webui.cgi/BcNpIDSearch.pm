@@ -1,7 +1,7 @@
 ############################################################################
 # BcNpIDSearch.pm - Formerly geneSearch.pl
 #
-# $Id: BcNpIDSearch.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: BcNpIDSearch.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 package BcNpIDSearch;
 my $section = "BcNpIDSearch";
@@ -11,7 +11,6 @@ use CGI qw( :standard );
 use DBI;
 use Time::localtime;
 use ScaffoldPanel;
-use CachedTable;
 use WebConfig;
 use WebUtil;
 use HtmlUtil;
@@ -226,7 +225,7 @@ sub printFfgFunctionList {
             #print "printFfgFunctionList() merfs sql: $sql<br/>";
             #print "printFfgFunctionList() merfs bindList: @bindList<br/>";
             if ( blankStr($sql) && $searchFilter ne "bc" ) {
-                webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
+                WebUtil::webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
             }
 
             if ( $sql ) {
@@ -259,7 +258,7 @@ sub printFfgFunctionList {
     #print "printFfgFunctionList() sql: $sql<br/>";
     #print "printFfgFunctionList() bindList: @bindList<br/>";
     if ( blankStr($sql) ) {
-        webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
+        WebUtil::webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
     }
 
     my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
@@ -592,7 +591,7 @@ sub printFfgFindFunctionsGeneList {
     #print "printFfgFindFunctionsGeneList() sql: $sql<br/>";
     #print "printFfgFindFunctionsGeneList() bindList: @bindList<br/>";
     if ( blankStr($sql) ) {
-        webDie( "printFfgFunctionsGeneList: Unknown search filter '$searchFilter'\n" );
+        WebUtil::webDie( "printFfgFunctionsGeneList: Unknown search filter '$searchFilter'\n" );
     }
 
     my @gene_oids;
@@ -746,7 +745,7 @@ sub printFfgFindFunctionsGenomeList {
     #print "printFfgFindFunctionsGenomeList sql: $sql<br/>";
     #print "printFfgFindFunctionsGenomeList bindList: @bindList<br/>";
     if ( blankStr($sql) ) {
-        webDie( "printFfgFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
+        WebUtil::webDie( "printFfgFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
     }
 
     my @taxon_oids = HtmlUtil::fetchGenomeList( $dbh, $sql, $verbose, @bindList );
@@ -766,7 +765,7 @@ sub printFfgFindFunctionsGenomeList {
     #    #print "printFfgFunctionGenomeList() merfs sql: $sql<br/>";
     #    #print "printFfgFunctionGenomeList() merfs bindList: @bindList<br/>";
     #    if ( blankStr($sql) ) {
-    #        webDie( "printFfgFindFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
+    #        WebUtil::webDie( "printFfgFindFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
     #    }
     #    my @meta_taxons = HtmlUtil::fetchGenomeList( $dbh, $sql, $verbose, @bindList );
     #    push( @taxon_oids, @meta_taxons );

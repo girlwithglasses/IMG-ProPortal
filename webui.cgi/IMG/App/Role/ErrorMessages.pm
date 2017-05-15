@@ -317,11 +317,11 @@ sub dict {
 		sess_id => 'session ID',
 		sso_config => 'SSO configuration',
 
+		scaffold_oid => 'scaffold ID',
+		scaffold_oids => 'scaffold IDs',
+
 		taxon_oid => 'taxon ID',
 		taxon_oids => 'taxon IDs',
-
-
-
 
 
 	};

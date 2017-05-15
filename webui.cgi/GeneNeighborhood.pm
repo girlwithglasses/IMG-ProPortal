@@ -1,7 +1,7 @@
 ############################################################################
 # GeneNeighborhood - Print gene neighborhoods for multiple orthologs
 #  or for selected genes.
-# $Id: GeneNeighborhood.pm 36202 2016-09-21 22:14:59Z aratner $
+# $Id: GeneNeighborhood.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GeneNeighborhood;
 my $section = "GeneNeighborhood";
@@ -201,7 +201,7 @@ sub printOrthologNeighborhoodsGo {
     if ( $count == 0 ) {
         printStatusLine( "Loaded.", 2 );
         printEndWorkingDiv();
-        webError( "No orthologs for other gene neighborhoods found for roughly the same sized gene." );
+        WebUtil::webError( "No orthologs for other gene neighborhoods found for roughly the same sized gene." );
         return;
     }
     printEndWorkingDiv();
@@ -322,7 +322,7 @@ sub printOrthologNeighborhoodsBBHLite {
     if ( $count == 0 ) {
         printStatusLine( "Loaded.", 2 );
         printEndWorkingDiv();
-        webError( "No orthologs for other gene neighborhoods found for roughly the same sized gene." );
+        WebUtil::webError( "No orthologs for other gene neighborhoods found for roughly the same sized gene." );
         return;
     }
     printEndWorkingDiv();
@@ -386,7 +386,7 @@ sub printOrthologNeighborhoodsCog_new_merfs {
     my $query_aa_seq_length = length($fasta);
 
     if ( blankStr($fasta) ) {
-        webError("FASTA query sequence not specified.");
+        WebUtil::webError("FASTA query sequence not specified.");
         return;
     }
 
@@ -604,7 +604,7 @@ sub printOrthologNeighborhoodsCog_new_merfs {
             No homolog for other gene neighborhoods found
             for roughly the same sized gene.
         };
-        webError($errMsg);
+        WebUtil::webError($errMsg);
         return;
     }
 
@@ -874,7 +874,7 @@ sub printOrthologNeighborhoodsCog_new {
             No homolog for other gene neighborhoods found
             for roughly the same sized gene.
         };
-        webError($errMsg);
+        WebUtil::webError($errMsg);
         return;
     }
 
@@ -1067,7 +1067,7 @@ sub printOrthologNeighborhoodsCog {
 
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
-        webError("No homologs were found from this query.");
+        WebUtil::webError("No homologs were found from this query.");
     }
 
     ### obtain positional info
@@ -1179,7 +1179,7 @@ sub printOrthologNeighborhoodsCog {
             No orthologs for other gene neighborhoods found
             for roughly the same sized gene.
         };
-        webError($errMsg);
+        WebUtil::webError($errMsg);
         return;
     }
 
@@ -1308,7 +1308,7 @@ sub printSelectedNeighborhoods {
     my $gene_oids_ref = \@gene_oids;
     my $nGenes = @$gene_oids_ref;
     if ( $nGenes == 0 ) {
-        webError("Please select some genes to display neighborhoods.");
+        WebUtil::webError("Please select some genes to display neighborhoods.");
         return;
     }
 
@@ -1407,7 +1407,7 @@ sub printSelectedNeighborhoods {
     }
     if ( scalar(@bad_gene_oids) > 0 ) {
         my $gene_oid_str = join( ',', @bad_gene_oids );
-        webError( "Obsolete genes (gene_oid=($gene_oid_str)) "
+        WebUtil::webError( "Obsolete genes (gene_oid=($gene_oid_str)) "
 		. "are not supported for gene neighborhood viewing." );
         return;
     }
@@ -2037,7 +2037,7 @@ sub getColors {
         my $cur = execSql( $dbh, $sql, $verbose, $gene_oid0 );
         ( $scaffold_oid, $start_coord0, $end_coord0, $strand0, $taxon_oid, $taxon_display_name ) = $cur->fetchrow();
         if ( !$scaffold_oid ) {
-            webDie("Cannot find gene_oid '$gene_oid0'\n");
+            WebUtil::webDie("Cannot find gene_oid '$gene_oid0'\n");
         }
         webLog "getColor: gene_oid=$gene_oid0 $start_coord0..$end_coord0 ($strand0) scaffold=$scaffold_oid\n";
         $cur->finish();
@@ -2187,7 +2187,7 @@ sub printCartNeighborhoods {
     my $gstr  = join( ",", @alist );
     my $fgstr = join( ",", @fslist );
     if ( $gstr eq "" && $fgstr eq "" ) {
-        webError("Please select at least 1 neighborhood.");
+        WebUtil::webError("Please select at least 1 neighborhood.");
     }
 
     my $cog_color = param("cog_color");

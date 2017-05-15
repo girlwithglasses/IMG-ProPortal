@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for tables e.g. phylogenetic table
-# $Id: TableUtil.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: TableUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package TableUtil;
 my $section = "TableUtil"; 
@@ -32,10 +32,21 @@ my $SHOW_ALL = 0;
 my $HIDE_METAG = 1;
 my $ONLY_METAG = 2;
 
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
+
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+	my($self) = @_;
+	
     my $page = param("page");
     if ($page eq "allGenomes") {
 	my $merfs = param("merfs");

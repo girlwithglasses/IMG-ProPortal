@@ -2,11 +2,94 @@ package ProPortal::Controller::Role::TableHelper;
 
 use IMG::Util::Import 'MooRole';
 
+my $transforms = {
+
+	gene_oid => sub {
+		my $x = shift;
+		return {
+			macro => 'generic_link',
+			type => 'details',
+			params => { domain => 'gene', gene_oid => $x->{gene_oid} },
+			text => $x->{gene_oid}
+		};
+	},
+
+	gene_display_name => sub {
+		my $x = shift;
+		return {
+			macro => 'generic_link',
+			type => 'details',
+			params => { domain => 'gene', gene_oid => $x->{gene_oid} },
+			text => $x->{gene_display_name}
+		};
+	},
+
+	scaffold_oid => sub {
+		my $x = shift;
+		return {
+			macro => 'generic_link',
+			type => 'details',
+			params => { domain => 'scaffold', scaffold_oid => $x->{scaffold_oid} },
+			text => $x->{scaffold_oid}
+		};
+	},
+
+	scaffold_name => sub {
+		my $x = shift;
+		return {
+			macro => 'generic_link',
+			type => 'details',
+			params => { domain => 'scaffold', scaffold_oid => $x->{scaffold_oid} },
+			text => $x->{scaffold_name}
+		};
+	},
+
+	taxon_oid => sub {
+		my $x = shift;
+		return {
+			macro => 'generic_link',
+			type => 'details',
+			params => { domain => 'taxon', taxon_oid => $x->{taxon_oid} },
+			text => $x->{taxon_oid}
+		};
+	},
+
+	taxon_display_name => sub {
+		my $x = shift;
+		return {
+			macro => 'generic_link',
+			type => 'details',
+			params => { domain => 'taxon', taxon_oid => $x->{taxon_oid} },
+			text => $x->{taxon_display_name}
+		};
+	},
+
+	scaffold_dbxref => sub {
+		my $x = shift;
+		if ( $x->{db_source} && $x->{ext_accession} ) {
+			return {
+				macro => 'external_link',
+				db => $x->{db_source},
+				xref => $x->{ext_accession}
+			};
+		}
+	}
+
+# 	pp_subset => {
+# 		my $x = shift;
+# 		return
+# 	},
+
+};
+
+
 my $table = {
 
 # Gene table
 #
 # cols checkbox, gene_oid, gene_didsplay_name, taxon
+
+
 
 	gene => {
 		thead => {
@@ -39,42 +122,10 @@ my $table = {
 					id => 'cbox_' . $x->{gene_oid}
 				};
 			},
-			gene_oid => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'gene', gene_oid => $x->{gene_oid} },
-					text => $x->{gene_oid}
-				};
-			},
-			gene_display_name => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'gene', gene_oid => $x->{gene_oid} },
-					text => $x->{gene_display_name}
-				};
-			},
-			scaffold_name => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'scaffold', scaffold_oid => $x->{scaffold_oid} },
-					text => $x->{scaffold_name}
-				};
-			},
-			taxon_display_name => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'taxon', taxon_oid => $x->{taxon_oid} },
-					text => $x->{taxon_display_name}
-				};
-			}
+			gene_oid => $transforms->{gene_oid},
+			gene_display_name => $transforms->{gene_display_name},
+			scaffold_name => $transforms->{scaffold_name},
+			taxon_display_name => $transforms->{taxon_display_name}
 		}
 	},
 
@@ -103,24 +154,8 @@ my $table = {
 					value => $x->{taxon_oid}
 				};
 			},
-			taxon_oid => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'taxon', taxon_oid => $x->{taxon_oid} },
-					text => $x->{taxon_oid}
-				};
-			},
-			taxon_display_name => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'taxon', taxon_oid => $x->{taxon_oid} },
-					text => $x->{taxon_display_name}
-				};
-			}
+			taxon_oid => $transforms->{taxon_oid},
+			taxon_display_name => $transforms->{taxon_display_name}
 		},
 	},
 
@@ -187,12 +222,7 @@ my $table = {
 #	checkbox, scaffold ID, scaffold name, taxon
 	scaffold => {
 		thead => {
-			enum => [ 'cbox', 'scaffold_oid', 'scaffold_name', 'taxon' ],
-			enum_map => {
-				scaffold_oid => 'Scaffold ID',
-				scaffold_name => 'Scaffold Name',
-				taxon => 'Taxon'
-			}
+			enum => [ 'cbox', 'scaffold_oid', 'scaffold_name', 'scaffold_dbxref', 'taxon' ],
 		},
 		transform => {
 			cbox => sub {
@@ -204,33 +234,10 @@ my $table = {
 					id => 'cbox_' . $x->{scaffold_oid}
 				};
 			},
-			scaffold_oid => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'scaffold', scaffold_oid => $x->{scaffold_oid} },
-					text => $x->{scaffold_oid}
-				};
-			},
-			scaffold_name => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'scaffold', scaffold_oid => $x->{scaffold_oid} },
-					text => $x->{scaffold_name}
-				};
-			},
-			taxon => sub {
-				my $x = shift;
-				return {
-					macro => 'generic_link',
-					type => 'details',
-					params => { domain => 'taxon', taxon_oid => $x->{taxon_oid} },
-					text => $x->{taxon_display_name}
-				};
-			}
+			scaffold_oid => $transforms->{scaffold_oid},
+			scaffold_name => $transforms->{scaffold_name},
+			taxon => $transforms->{taxon_display_name},
+			scaffold_dbxref => $transforms->{scaffold_dbxref}
 		}
 	}
 

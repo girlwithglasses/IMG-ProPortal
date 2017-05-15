@@ -2,7 +2,7 @@
 # GenBankFile.pm - Generate GenBank files.
 #     --es 04/13/2006
 #
-# $Id: GenBankFile.pm 35375 2016-03-08 21:18:46Z jinghuahuang $
+# $Id: GenBankFile.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GenBankFile;
 my $section = "GenBankFile";
@@ -63,7 +63,7 @@ sub printProcessGenBank {
          $offset, $mygeneOverride, $misc_features ) = @_;
 
     if ( $scaffold_oid eq "" ) {
-        webError("Please select a scaffold.");
+        WebUtil::webError("Please select a scaffold.");
     }
     print "<h1>Generate Genbank File</h1>\n";
     printMainForm();

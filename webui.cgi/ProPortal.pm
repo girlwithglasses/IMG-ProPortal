@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: ProPortal.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: ProPortal.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package ProPortal;
 
@@ -56,6 +56,14 @@ sub getAppHeaderData {
     return @a;
 }
 
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # text/html
+    print header( -type => "text/html" );
+}
+
 sub getDatamartEnv {
     my $e = {};
 
@@ -73,9 +81,9 @@ sub getDatamartEnv {
 
     my %conds;
     $conds{'prochlorococcus'} =
-"lower(t.GENUS) like '%prochlorococcus%' and t.sequencing_gold_id in (select gold_id from gold_sequencing_project\@imgsg_dev where ecosystem_type = 'Marine')";
+"lower(t.GENUS) like '%prochlorococcus%' and t.sequencing_gold_id in (select gold_id from gold_sequencing_project where ecosystem_type = 'Marine')";
     $conds{'synechococcus'} =
-"lower(t.GENUS) like '%synechococcus%' and t.sequencing_gold_id in (select gold_id from gold_sequencing_project\@imgsg_dev where ecosystem_type = 'Marine')";
+"lower(t.GENUS) like '%synechococcus%' and t.sequencing_gold_id in (select gold_id from gold_sequencing_project where ecosystem_type = 'Marine')";
     $conds{'cyanophage'} =
 "lower(t.taxon_display_name) like '%cyanophage%' or lower(t.taxon_display_name) like '%prochlorococcus phage%' or lower(t.taxon_display_name) like '%synechococcus phage%'";
     $e->{member_conds} = \%conds;
@@ -268,7 +276,7 @@ sub getNewsContents {
     }
 
     my $super_user_flag = WebUtil::getSuperUser();
-    my $sql             = "select role from contact_img_groups\@imgsg_dev where contact_oid = ? and img_group = ? ";
+    my $sql             = "select role from contact_img_groups where contact_oid = ? and img_group = ? ";
 
     my $cur = execSql( $dbh, $sql, $verbose, $contact_oid, $group_id );
     my ($role) = $cur->fetchrow();
@@ -284,7 +292,7 @@ sub getNewsContents {
     my $str = "";
     $sql =
         "select n.news_id, n.title, n.add_date "
-      . "from img_group_news\@imgsg_dev n "
+      . "from img_group_news n "
       . "where n.group_id = ? "
       . $cond
       . " order by 3 desc ";
@@ -331,7 +339,7 @@ sub printGenomes {
         $depth =~ s/'/''/g;          # replace ' with ''
         my $depth_set = "('" . $depth . "m', '" . $depth . " m', '" . $depth . " meters', '" . $depth . " meter'" . ")";
         $additional_cond .=
-" and t.sequencing_gold_id in (select p.gold_id from gold_sequencing_project\@imgsg_dev p where p.depth in $depth_set ) ";
+" and t.sequencing_gold_id in (select p.gold_id from gold_sequencing_project p where p.depth in $depth_set ) ";
     }
     my $min_depth = param('min_depth');
     my $max_depth = param('max_depth');
@@ -395,11 +403,11 @@ sub printGenomes {
     } elsif ( $class eq 'marine_other' ) {
         print "<h3>Other</h3>\n";
         $additional_cond .=
-" and t.genome_type = 'isolate' and t.sequencing_gold_id in (select gold_id from gold_sequencing_project\@imgsg_dev where ecosystem_type = 'Marine')";
+" and t.genome_type = 'isolate' and t.sequencing_gold_id in (select gold_id from gold_sequencing_project where ecosystem_type = 'Marine')";
     } elsif ( $class eq 'marine_all' ) {
         print "<h3>Marine Genomes and Metagenomes</h3>\n";
         $additional_cond .=
-" and t.sequencing_gold_id in (select gold_id from gold_sequencing_project\@imgsg_dev where ecosystem_type = 'Marine')";
+" and t.sequencing_gold_id in (select gold_id from gold_sequencing_project where ecosystem_type = 'Marine')";
     } else {
         print "<h3>" . $member_labels->{$class} . "</h3>\n";
         $title = $member_labels->{$class} . " Genome List";
@@ -414,11 +422,11 @@ sub printGenomes {
         $db_subtype =~ s/'/''/g;    # replace ' with ''
         if ( lc($ecosystem_subtype) eq 'unclassified' ) {
             $additional_cond .=
-" and t.sequencing_gold_id in (select p.gold_id from gold_sequencing_project\@imgsg_dev p where p.ecosystem_subtype is null or lower(p.ecosystem_subtype) = '"
+" and t.sequencing_gold_id in (select p.gold_id from gold_sequencing_project p where p.ecosystem_subtype is null or lower(p.ecosystem_subtype) = '"
               . lc($db_subtype) . "')";
         } else {
             $additional_cond .=
-" and t.sequencing_gold_id in (select p.gold_id from gold_sequencing_project\@imgsg_dev p where p.ecosystem_subtype = '"
+" and t.sequencing_gold_id in (select p.gold_id from gold_sequencing_project p where p.ecosystem_subtype = '"
               . $db_subtype . "')";
         }
     }
@@ -430,7 +438,7 @@ sub printGenomes {
         $sql1 =
             "select t.taxon_oid, t.taxon_display_name, t.genus, "
           . "p.ecotype, p.depth, p.clade "
-          . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+          . "from taxon t, gold_sequencing_project p "
           . "where t.obsolete_flag = 'No' and t.is_public = 'Yes' "
           . "and t.sequencing_gold_id = p.gold_id ";
     }
@@ -628,7 +636,7 @@ sub googleMap_new {
             "select t.taxon_oid, t.taxon_display_name, "
           . "p.geo_location, p.latitude, p.longitude, "
           . "p.altitude, p.depth, t.domain, p.clade "
-          . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+          . "from taxon t, gold_sequencing_project p "
           . "where t.sequencing_gold_id = p.gold_id "
           . "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
           . "and p.latitude is not null and p.longitude is not null ";
@@ -637,7 +645,7 @@ sub googleMap_new {
             "select t.taxon_oid, t.taxon_display_name, "
           . "p.geo_location, p.latitude, p.longitude, "
           . "p.altitude, p.depth, t.domain, p.clade "
-          . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+          . "from taxon t, gold_sequencing_project p "
           . "where t.sequencing_gold_id = p.gold_id "
           . "and p.latitude is not null and p.longitude is not null ";
 
@@ -941,7 +949,7 @@ sub depthEcotypeMap {
             "select t.taxon_oid, t.taxon_display_name, t.genome_type, "
           . "p.geo_location, p.latitude, p.longitude, p.altitude, "
           . "p.depth, p.ecotype "
-          . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+          . "from taxon t, gold_sequencing_project p "
           . "where t.sequencing_gold_id = p.gold_id "
           . "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
           . "and p.depth is not null ";
@@ -950,7 +958,7 @@ sub depthEcotypeMap {
             "select t.taxon_oid, t.taxon_display_name, t.genome_type, "
           . "p.geo_location, p.latitude, p.longitude, p.altitude, "
           . "p.depth, p.ecotype "
-          . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+          . "from taxon t, gold_sequencing_project p "
           . "where t.sequencing_gold_id = p.gold_id "
           . "and p.depth is not null ";
 
@@ -1638,7 +1646,7 @@ sub depthCladeMap {
             "select t.taxon_oid, t.taxon_display_name, t.genome_type, "
           . "p.geo_location, p.latitude, p.longitude, p.altitude, "
           . "p.depth, p.clade "
-          . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+          . "from taxon t, gold_sequencing_project p "
           . "where t.sequencing_gold_id = p.gold_id "
           . "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
           . "and p.depth is not null ";
@@ -1647,7 +1655,7 @@ sub depthCladeMap {
             "select t.taxon_oid, t.taxon_display_name, t.genome_type, "
           . "p.geo_location, p.latitude, p.longitude, p.altitude, "
           . "p.depth, p.clade "
-          . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+          . "from taxon t, gold_sequencing_project p "
           . "where t.sequencing_gold_id = p.gold_id "
           . "and p.depth is not null ";
 
@@ -2554,7 +2562,7 @@ sub depthGraph {
         "select t.taxon_oid, t.taxon_display_name, t.genome_type, "
       . "p.geo_location, p.latitude, p.longitude, p.altitude, "
       . "p.depth, t.genus "
-      . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+      . "from taxon t, gold_sequencing_project p "
       . "where t.sequencing_gold_id = p.gold_id "
       . "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
       . "and p.ecosystem_type = 'Marine' "
@@ -3122,7 +3130,7 @@ sub cladeGraph {
         "select t.taxon_oid, t.taxon_display_name, t.genome_type, "
       . "p.geo_location, p.latitude, p.longitude, p.altitude, "
       . "p.depth, p.clade "
-      . "from taxon t, gold_sequencing_project\@imgsg_dev p "
+      . "from taxon t, gold_sequencing_project p "
       . "where t.sequencing_gold_id = p.gold_id "
       . "and t.obsolete_flag = 'No' and t.is_public = 'Yes' "
       . "and (lower(t.genus) like '%prochlorococcus%' or "

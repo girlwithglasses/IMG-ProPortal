@@ -112,8 +112,9 @@
 		IF sections.size > 1;
 			in_page_nav( p_nav );
 		END;
+
 		%]
-	<div class="content__container">
+	<div class="content__container cf">
 [%
 		FOR secn IN sections;
 

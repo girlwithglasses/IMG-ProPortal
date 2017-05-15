@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeListJSON.pm 36089 2016-08-31 21:38:02Z klchu $
+# $Id: GenomeListJSON.pm 37050 2017-05-05 16:41:00Z klchu $
 #
 # issues to fix
 # 1. list name is static to genomeFilterSelection, tree view can be dynamic
@@ -12,12 +12,14 @@ package GenomeListJSON;
 use strict;
 use CGI qw( :standard );
 use DBI;
-use WebConfig;
-use WebUtil;
 use Data::Dumper;
-use OracleUtil;
 use JSON;
 use HTML::Template;
+
+use WebConfig;
+use WebUtil;
+use OracleUtil;
+
 
 my $section              = 'GenomeListJSON';
 my $env                  = getEnv();
@@ -48,18 +50,6 @@ $hidePlasmids = "Yes" if $hidePlasmids eq "";
 my $hideGFragment = getSessionParam("hideGFragment");
 $hideGFragment = "Yes" if $hideGFragment eq "";
 
-#    } elsif ( $section eq 'GenomeListJSON' ) {
-#
-#        # TODO testing forms
-#        require GenomeListJSON;
-#        my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
-#        $template->param( base_url => $base_url );
-#        $template->param( YUI      => $YUI );
-#        my $js = $template->output;
-#        printAppHeader( "AnaCart", '', '', $js );
-#
-#        GenomeListJSON::test();
-#
 sub test {
     my $page = param('page');
 
@@ -143,7 +133,23 @@ sub test {
     }
 }
 
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    my $page = param('page');
+    if ( $page eq 'json' ) {
+
+        # Stop IE ajax caching
+        print header( -type => "application/json", -expires => '-1d' );
+    } else {
+        print header( -type => "text/plain" );
+    }
+}
+
 sub dispatch {
+	my($self) = @_;
+	
     my $page = param('page');
     if ( $page eq 'json' ) {
         printJSONFile();
@@ -691,6 +697,9 @@ sub getTaxon {
         chomp $species;
         chomp $seq_status;
 
+        if(!$seq_status) {
+            $seq_status = 'Draft';
+        }
 
         $taxon_display_name =~ s/^\W+//g;
         $taxon_display_name =~ s/"//g;

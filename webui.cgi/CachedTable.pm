@@ -6,10 +6,16 @@
 #    OR
 #              $e->{ yui_tables } = 0;  #for HTML tables
 #
-# $Id: CachedTable.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: CachedTable.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 use WebUtil;
 use WebConfig;
+
+# =======================================================================
+#
+# OLD ----- use InnerTable instead - ken
+#
+# =======================================================================  
 
 my $env        = getEnv( );
 my $yui_tables = $env->{ yui_tables };

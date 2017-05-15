@@ -6,7 +6,7 @@
 #  These were used in the days before this code was placed in Perl modules.
 #    --es 07/07/2005
 #
-# $Id: FindFunctions.pm 36003 2016-08-12 21:06:56Z jinghuahuang $
+# $Id: FindFunctions.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 package FindFunctions;
 my $section = "FindFunctions";
@@ -16,7 +16,7 @@ use CGI qw( :standard );
 use DBI;
 use Time::localtime;
 use ScaffoldPanel;
-use CachedTable;
+use InnerTable;
 use WebConfig;
 use WebUtil;
 use HtmlUtil;
@@ -607,7 +607,7 @@ sub printFfgFunctionList {
     if ( $searchFilter eq "img_term_iex" || 
 	 $searchFilter eq "img_term_synonyms_iex" ) {
         if ( $searchTerm && length($searchTerm) < 4 ) {
-            webError("Please enter a search term at least 4 characters long.");
+            WebUtil::webError("Please enter a search term at least 4 characters long.");
         }
     }
 
@@ -634,7 +634,7 @@ sub printFfgFunctionList {
     my @genomeFilterSelections = param("selectedGenome1");
     if ( $#genomeFilterSelections < 0 &&
 	 $selectionType eq "selGenomes" ) {
-        webError("Please select at least one genome.");
+        WebUtil::webError("Please select at least one genome.");
     }
     setSessionParam( "geneSearchTaxonFilter",  $geneSearchTaxonFilter );
     setSessionParam( "genomeFilterSelections", \@genomeFilterSelections );
@@ -766,7 +766,7 @@ sub printFfgFunctionList {
                     && $searchFilter ne "tigrfam"
                     && $searchFilter ne "ec"
                     && $searchFilter ne "bc" ) {
-                    webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
+                    WebUtil::webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
                 }
 
                 if ( $sql ) {
@@ -952,7 +952,7 @@ sub printFfgFunctionList {
             #print "printFfgFunctionList() bindList: @bindList<br/>";
 
             if ( blankStr($sql) ) {
-                webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
+                WebUtil::webDie( "printFunctionsList: Unknown search filter '$searchFilter'\n" );
             }
 
             my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
@@ -2623,7 +2623,7 @@ sub printFfgFindFunctionsGeneList {
         #print "printFfgFindFunctionsGeneList() bindList: @bindList<br/>";
 
         if ( blankStr($sql) ) {
-            webDie( "printFfgFunctionsGeneList: Unknown search filter '$searchFilter'\n" );
+            WebUtil::webDie( "printFfgFunctionsGeneList: Unknown search filter '$searchFilter'\n" );
         }
 
         @gene_oids = HtmlUtil::fetchGeneList($dbh, $sql, $verbose, @bindList);
@@ -3927,7 +3927,7 @@ sub printFfgFindFunctionsGenomeList {
         #print "printFfgFindFunctionsGenomeList bindList: @bindList<br/>";
 
         if ( blankStr($sql) ) {
-            webDie( "printFfgFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
+            WebUtil::webDie( "printFfgFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
         }
 
         @taxon_oids = HtmlUtil::fetchGenomeList( $dbh, $sql, $verbose, @bindList );
@@ -4005,7 +4005,7 @@ sub printFfgFindFunctionsGenomeList {
                 && $searchFilter ne "tigrfam"
                 && $searchFilter ne "ec"
                 && $searchFilter ne "bc" ) {
-                webDie( "printFfgFindFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
+                WebUtil::webDie( "printFfgFindFunctionsGenomeList: Unknown search filter '$searchFilter'\n" );
             }
 
             if ( $sql ) {
@@ -5364,10 +5364,10 @@ sub printFfoCogOrgs {
 
     my $baseUrl = "$section_cgi&page=ffo${OG}Orgs";
     $baseUrl .= "&${og}_id=$cog_id";
-    my $cachedTable = new CachedTable( "ffo${OG}Orgs", $baseUrl );
+    my $cachedTable = new InnerTable(1,"ffo$$", "ffo${OG}Orgs", 1 );
     $cachedTable->addColSpec( "Genome",     "asc",  "left" );
     $cachedTable->addColSpec( "Gene Count", "desc", "right" );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $sdDelim = InnerTable::getSdDelim();
     my $count   = 0;
     for ( ; ; ) {
         my ( $taxon_oid, $taxon_display_name, $gene_count ) = $cur->fetchrow();
@@ -5669,7 +5669,7 @@ sub printFindKo {
                 #print "printFindKo() merfs bindList: @bindList<br/>";
 
                 if ( blankStr($sql) ) {
-                    webDie( "printFindKo: Unknown search filter '$searchFilter'\n" );
+                    WebUtil::webDie( "printFindKo: Unknown search filter '$searchFilter'\n" );
                 }
 
                 my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
@@ -5731,7 +5731,7 @@ sub printFindKo {
             #print "printFindKo() bindList: @bindList<br/>";
 
             if ( blankStr($sql) ) {
-                webDie("printFindKo: Unknown search filter '$searchFilter'\n");
+                WebUtil::webDie("printFindKo: Unknown search filter '$searchFilter'\n");
             }
 
             my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
@@ -6635,7 +6635,7 @@ sub printFfgKeggPathwayEnzymes {
 		      $rclause, $imgClause, \@bindList_txs, \@bindList_ur );
 
                 if ( blankStr($sql) ) {
-                    webDie( "printFfgKeggPathwayEnzymes: Unknown search filter '$searchFilter'\n" );
+                    WebUtil::webDie( "printFfgKeggPathwayEnzymes: Unknown search filter '$searchFilter'\n" );
                 }
 
                 my $cur = execSqlBind( $dbh, $sql, \@bindList, $verbose );
@@ -7089,10 +7089,10 @@ sub printFfoKeggPathwayOrgs {
     my $count   = 0;
     my $baseUrl = "$section_cgi&page=ffoKeggPathwayOrgs";
     $baseUrl .= "&pathway_oid=$pathway_oid";
-    my $cachedTable = new CachedTable( "ffoKegg", $baseUrl );
+    my $cachedTable = new InnerTable(1,"ffoKegg$$", "ffoKegg", 1 );
     $cachedTable->addColSpec( "Genome",     "asc",  "left" );
     $cachedTable->addColSpec( "Gene Count", "desc", "right" );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $sdDelim = InnerTable::getSdDelim();
     for ( ; ; ) {
         my ( $taxon_oid, $taxon_display_name, $cnt ) = $cur->fetchrow();
         last if !$taxon_oid;
@@ -7911,7 +7911,7 @@ sub printImgTermTree {
     if ( $searchFilter eq "img_term_iex" ||
 	 $searchFilter eq "img_term_synonyms_iex" ) {
         if ( $searchTerm && length($searchTerm) < 4 ) {
-            webError("Please enter a search term at least 4 characters long.");
+            WebUtil::webError("Please enter a search term at least 4 characters long.");
         }
     }
 
@@ -8257,7 +8257,7 @@ sub loadSearchTermOid2Html {
     my $nTerms   = @term_oids;
     my $term_oid = $n->{term_oid};
     if ( $nTerms > 1000 ) {
-        webDie("loadSearchTermOid2Html: term_oid=$term_oid nTerms=$nTerms\n");
+        WebUtil::webDie("loadSearchTermOid2Html: term_oid=$term_oid nTerms=$nTerms\n");
     }
 
     if ( $cashedTermOid2Html_ref > 0 ) {
@@ -9129,7 +9129,7 @@ sub printEnzymeGenomeList {
 
     $cur = execSql( $dbh, $sql, $verbose, $ec_number );
 
-    my $cachedTable = new CachedTable( "genomelist", "genomelist$$" );
+    my $cachedTable = new InnerTable(1, "genomelist$$", "genomelist", 1 );
     $cachedTable->addColSpec("Select");
     $cachedTable->addColSpec( "Domain", "char asc", "center", "",
                               "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
@@ -9137,7 +9137,7 @@ sub printEnzymeGenomeList {
                               "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
     $cachedTable->addColSpec( "Genome",     "char asc",    "left" );
     $cachedTable->addColSpec( "Gene Count", "number desc", "right" );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $sdDelim = InnerTable::getSdDelim();
 
     my $select_id_name = "taxon_filter_oid";
 
@@ -9496,7 +9496,7 @@ sub printGeneDisplayNames {
     my ( $searchTermPartLc, undef ) = split( /[\%_]/, $searchTermLc );
 
     if ( $searchTerm && length($searchTerm) < 4 ) {
-        webError("Please enter a search term at least 4 characters long.");
+        WebUtil::webError("Please enter a search term at least 4 characters long.");
     }
 
     my $seq_status   = param("seqstatus");
@@ -9517,7 +9517,7 @@ sub printGeneDisplayNames {
     my @genomeFilterSelections = param("selectedGenome1");
     if ( $include_metagenomes && scalar(@genomeFilterSelections) < 1 &&
 	 $selectionType eq "selGenomes" ) {
-        webError("Please select at least one genome or one metagenome.");
+        WebUtil::webError("Please select at least one genome or one metagenome.");
     }
     setSessionParam( "genomeFilterSelections", \@genomeFilterSelections );
 
@@ -9551,7 +9551,7 @@ sub printGeneDisplayNames {
     #print "printGeneDisplayNames() metaTaxons: @metaTaxons<br/>\n";
     if ( $include_metagenomes && isMetaSupported($searchFilter)
         && scalar(@metaTaxons) > $max_metagenome_selection ) {
-        webError("Please select no more than $max_metagenome_selection metagenomes.");
+        WebUtil::webError("Please select no more than $max_metagenome_selection metagenomes.");
     }
 
     # get user product name preference
@@ -9602,7 +9602,7 @@ sub printGeneDisplayNames {
         $allOra = 1 if $nOra > 0 && $nFs == 0;
         if ( $nOra > 0 && $nFs > 0 ) {
             printStatusLine( "Error", 2 );
-            webError("Cannot mix MER-FS genomes with regular genomes. "
+            WebUtil::webError("Cannot mix MER-FS genomes with regular genomes. "
 		   . "Please select one set or the the other, but not both.");
             $dbh->disconnect();
             return;
@@ -10845,7 +10845,7 @@ sub printProdNameProfile {
     if (    scalar(@prodNames) == 0
          || scalar(@prodNames) > $max_prod_name )
     {
-        webError("Please select 1 to $max_prod_name product names.");
+        WebUtil::webError("Please select 1 to $max_prod_name product names.");
     }
 
     #my @taxon_oids = 
@@ -10857,7 +10857,7 @@ sub printProdNameProfile {
     my @bin_oids    = ();
     my $nSelections = scalar(@taxon_oids) + scalar(@bin_oids);
     if ( $nSelections == 0 || $nSelections > $max_genome_selection ) {
-        webError("Please select 1 to $max_genome_selection genome(s).");
+        WebUtil::webError("Please select 1 to $max_genome_selection genome(s).");
     }
 
     my $tclause = "";
@@ -11144,7 +11144,7 @@ sub searchAllFunctions {
     my @genomeFilterSelections = param("selectedGenome1");
     if ( scalar(@genomeFilterSelections) < 1 &&
 	 $selectionType eq "selGenomes" ) {
-        webError("Please select at least one genome.");
+        WebUtil::webError("Please select at least one genome.");
     }
     setSessionParam( "geneSearchTaxonFilter",  $geneSearchTaxonFilter );
     setSessionParam( "genomeFilterSelections", \@genomeFilterSelections );

@@ -2,7 +2,7 @@
 # ImgPwayBrowser.pm - IMG Pathway Browser module.
 #   Includes IMG pathway details.
 #
-# $Id: ImgPwayBrowser.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: ImgPwayBrowser.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 package ImgPwayBrowser;
 my $section = "ImgPwayBrowser";
@@ -10,7 +10,7 @@ my $section = "ImgPwayBrowser";
 use strict;
 use CGI qw( :standard );
 use Data::Dumper;
-use CachedTable;
+use InnerTable;
 use InnerTable;
 use GeneDetail;
 use PhyloTreeMgr;
@@ -439,7 +439,7 @@ sub updateAssertion {
     my $dbh = dbLogin();
     my $contact_oid = getContactOid();
     if ( !$contact_oid ) {
-        webError("Not logged in.");
+        WebUtil::webError("Not logged in.");
     }
 
     my $imgEditor   = 0;
@@ -455,7 +455,7 @@ sub updateAssertion {
     }
 
     if ( !$imgEditor ) {
-        webError("Insufficient editing privileges.");
+        WebUtil::webError("Insufficient editing privileges.");
     }
 
     execSqlOnly( $dbh, "commit work", $verbose );
@@ -1523,7 +1523,7 @@ sub printRxnTaxons {
     $baseUrl .= "&pway_oid=$pway_oid";
     $baseUrl .= "&rxn_oid=$rxn_oid";
     
-    my $ct = new CachedTable( "rxnTaxons$rxn_oid", $baseUrl );
+    my $ct = new InnerTable(1, "rxnTaxons$$", "rxnTaxons$rxn_oid", 1 );
     $ct->addColSpec("Select");
     $ct->addColSpec( "Domain", "char asc", "center", "",
 		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
@@ -1531,7 +1531,7 @@ sub printRxnTaxons {
 		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
     $ct->addColSpec( "Genome",     "char asc",    "left" );
     $ct->addColSpec( "Gene Count", "number desc", "right" );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $sdDelim = InnerTable::getSdDelim();
 
     my $count   = 0;
     for my $taxonRec (@taxonRecs) {
@@ -1925,14 +1925,14 @@ sub printAssertedGenomes_old {
         return;
     }
     my $baseUrl = "$section_cgi&page=imgPwayDetail&pway_oid=$pway_oid";
-    my $ct = new CachedTable( "pwayAssert$pway_oid", $baseUrl );
+    my $ct = new InnerTable(1,  "pwayAssert$$", "pwayAssert$pway_oid", 1 );
     $ct->addColSpec( "Domain", "char asc", "center", "",
 		     "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
     $ct->addColSpec( "Status", "char asc", "center", "",
 		     "Sequencing Status: F=Finished, P=Permanent Draft, D=Draft" );
     $ct->addColSpec( "Genome", "char asc", "left" );
     $ct->addColSpec( "Status", "char asc", "left" );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $sdDelim = InnerTable::getSdDelim();
 
     for my $r0 (@recs) {
         my ( $domain, $seq_status, $pathway_oid, $taxon_oid,
@@ -2250,7 +2250,7 @@ sub pwayRxn2Taxons {
     my @term_oids = keys(%term_oids_h);
     my $term_oid_str = join( ',', @term_oids );
     if ( blankStr($term_oid_str) ) {
-        webDie(   "pwayRxn2Taxons: ERROR no term_oids retrieved for "
+        WebUtil::webDie(   "pwayRxn2Taxons: ERROR no term_oids retrieved for "
                 . "pway_oid=$pway_oid rxn_oid=$rxn_oid\n" );
     }
     my $taxonClause = txsClause("g.taxon", $dbh);
@@ -2295,7 +2295,7 @@ sub pwayRxn2TaxonGenes {
     my @term_oids = keys(%term_oids_h);
     my $term_oid_str = join( ',', @term_oids );
     if ( blankStr($term_oid_str) ) {
-        webDie( "pwayRxn2TaxonGenes: ERROR no term_oids retrieved "
+        WebUtil::webDie( "pwayRxn2TaxonGenes: ERROR no term_oids retrieved "
               . "for pway_oid=$pway_oid rxn_oid=$rxn_oid taxon_oid=$taxon_oid\n"
         );
     }

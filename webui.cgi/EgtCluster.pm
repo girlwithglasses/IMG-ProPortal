@@ -1,7 +1,7 @@
 ############################################################################
 # EgtCluster.pm - Does sample clustering given EGT (ecogenomic tags).
 #     --es 12/22/2006
-# $Id: EgtCluster.pm 36888 2017-03-28 21:06:08Z aratner $
+# $Id: EgtCluster.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package EgtCluster;
 my $section = "EgtCluster";
@@ -456,7 +456,7 @@ sub printResults {
     if ( $nTaxons < $min_genome_selections ||
 	 $nTaxons > $max_genome_selections ) {
         print "<p>$nTaxons genomes were selected.</p>";
-        webError( "Please select $min_genome_selections " .
+        WebUtil::webError( "Please select $min_genome_selections " .
                   "to $max_genome_selections genomes.<br/>\n" );
     }
 
@@ -749,7 +749,7 @@ sub printPcaResults {
     if( $nTaxons < $min_genome_selections ||
 	$nTaxons > $max_genome_selections ) {
 	print "<p>$nTaxons genomes were selected.</p>";
-	webError( "Please select $min_genome_selections " .
+	WebUtil::webError( "Please select $min_genome_selections " .
 		  "to $max_genome_selections genomes.<br/>\n" );
     }
 
@@ -1123,7 +1123,7 @@ sub printHierResults {
     my $nTaxons = @oids;
     if( $nTaxons < $min_genome_selections ||
 	$nTaxons > $max_genome_selections ) {
-	webError( "Please select $min_genome_selections " .
+	WebUtil::webError( "Please select $min_genome_selections " .
 		  "to $max_genome_selections genomes.<br/>\n" );
     }
 
@@ -1273,7 +1273,7 @@ sub printHierResults {
     my $tree = Bio::Phylo::IO->parse_tree('-file' => $xmlFile, '-format' => 'phyloxml');
     my $newick_str = $tree->to_newick;
     if ( blankStr($newick_str) ) {
-        webError("Invalid newick '$newick_str' string.\n");
+        WebUtil::webError("Invalid newick '$newick_str' string.\n");
     }
 
     my $newickFile = $tmp_dir . "/newick$$"."_".$sid.".txt";
@@ -1413,7 +1413,7 @@ sub printCorrMapResults {
     my $nTaxons = @oids;
     if( $nTaxons < $min_genome_selections ||
 	$nTaxons > $max_genome_selections ) {
-	webError( "Please select $min_genome_selections " .
+	WebUtil::webError( "Please select $min_genome_selections " .
 		  "to $max_genome_selections genomes.<br/>\n" );
     }
 

@@ -1,6 +1,6 @@
 ############################################################################
 # Utility subroutines for queries
-# $Id: BcUtil.pm 36804 2017-03-23 05:17:55Z aratner $
+# $Id: BcUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package BcUtil;
 
@@ -115,7 +115,7 @@ sub printAddToCartFooter {
 sub addSelectedToScaffoldCart {
     my @bc_ids = param("bc_id");
     if ( scalar(@bc_ids) <= 0 ) {
-        webError("Please make at least one selection or no Biosynthetic Cluster.");
+        WebUtil::webError("Please make at least one selection or no Biosynthetic Cluster.");
     }
 
     printStartWorkingDiv();
@@ -174,7 +174,7 @@ sub addSelectedToScaffoldCart {
 sub addSelectedToGeneCart {
     my @bc_ids = param("bc_id");
     if ( scalar(@bc_ids) <= 0 ) {
-        webError("Please make at least one selection or no Biosynthetic Cluster.");
+        WebUtil::webError("Please make at least one selection or no Biosynthetic Cluster.");
     }
 
     printStartWorkingDiv();

@@ -5,14 +5,11 @@
 #
 # Added export routine +BSJ 02/22/10
 #
-# $Id: Selection.pm 34180 2015-09-03 21:12:12Z aireland $
+# $Id: Selection.pm 36954 2017-04-17 19:34:04Z klchu $
 ########################################################################
 
 package Selection;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw();
-#@EXPORT = qw(array_multisort array_filter);
+
 use strict;
 use CGI qw( :standard unescape );
 use CGI::Cookie;
@@ -30,31 +27,27 @@ my $base_dir            = $env->{base_dir};
 my $tmp_dir             = $env->{tmp_dir};
 my $tmp_url             = $env->{tmp_url};
 my $cgi_tmp_dir         = $env->{cgi_tmp_dir};
-my $yui_dir;
 
-sub create_yui_dir {
-    $yui_dir = WebUtil::getSessionDir() . '/yui';
-	if ( ! -e $yui_dir ) {
-		mkdir $yui_dir or webError("Can not make $yui_dir: $!");
-	}
+my $dir2 = WebUtil::getSessionDir();
+$dir2 .= "/yui";
+if ( !(-e "$dir2") ) {
+    mkdir "$dir2" or WebUtil::webError("Can not make $dir2!");
 }
-#my $dir2 = WebUtil::getSessionDir();
-#$dir2 .= "/yui";
-#if ( !(-e "$dir2") ) {
-#    mkdir "$dir2" or webError("Can not make $dir2!");
-#}
-#$cgi_tmp_dir = $dir2;
+$cgi_tmp_dir = $dir2;
 
 $| = 1;
+
+
+
+sub printWebPageHeader {
+    my($self) = @_;    
+}
 
 #######################################################################
 # dispatch - Dispatch loop.
 #######################################################################
 sub dispatch {
     my $page = param("page");
-
-	create_yui_dir();
-
     if ($page eq "getCheckboxes") {
     	print header( -type => "application/json" );
     	# print header( -type => "text/plain" );    # uncomment for debugging
@@ -74,8 +67,6 @@ sub dispatch {
 # getCheckboxes - Read checkbox elements from previously created tmpfile
 ########################################################################
 sub getCheckboxes {
-
-	create_yui_dir() unless $yui_dir;
     my $tmpfile = param("tmpfile");
     my $chkState = param("chk"); # 1=checked; 0=unchecked
     my $init = param("init");    # 1=called by oIMGTable instantiation
@@ -83,11 +74,11 @@ sub getCheckboxes {
     my $filter = unescape(param('f')); # get URL unescaped param
     my $column = param('c');
     my $type = param('t');       # search type: "text|regex"
-    my $arrayStr = file2Str("$yui_dir/$tmpfile");
+    my $arrayStr = file2Str("$cgi_tmp_dir/$tmpfile");
     my $highLight = 0;
 
     # Prevent file from being purged by cgi purge timeout +BSJ 01/25/12
-    WebUtil::fileTouch ("$yui_dir/$tmpfile");
+    WebUtil::fileTouch ("$cgi_tmp_dir/$tmpfile");
 
     $arrayStr = each %{{$arrayStr,0}};   # untaint the string
     my @fullArray = eval($arrayStr);
@@ -159,7 +150,7 @@ sub getCheckboxes {
     	$Data::Dumper::Indent = 1;         # indent minimal
     	my $sOutStr = Dumper( \@fullArray );
     	$sOutStr =~ s/\[\n|\]\n//g;        # remove the lines with [ and ] to mimic original file
-    	str2File ($sOutStr, "$yui_dir/$tmpfile"); # Overwrite the same tempfile with new checkbox values
+    	str2File ($sOutStr, "$cgi_tmp_dir/$tmpfile"); # Overwrite the same tempfile with new checkbox values
     }
 }
 
@@ -219,7 +210,7 @@ sub updateCheckBox {
 ################################################################
 sub export {
     require HtmlUtil;
-	create_yui_dir() unless $yui_dir;
+
     my $tmpfile = param("tmpfile");
     my $chkRows = param('rows');
     my $colHeads = param('columns');
@@ -229,11 +220,11 @@ sub export {
     my $type = param('t');
     my $section = param('table');    # to check whether this is a taxonlist
     my $isTaxonList = ($section =~ /(taxontable|genomecart)/i) ? 1 : 0;
-    my $arrayStr = file2Str("$yui_dir/$tmpfile");  # read in the file
+    my $arrayStr = file2Str("$cgi_tmp_dir/$tmpfile");  # read in the file
     my $highLight = 0;
 
     # Prevent file from being purged by cgi purge timeout +BSJ 01/25/12
-    WebUtil::fileTouch ("$yui_dir/$tmpfile");
+    WebUtil::fileTouch ("$cgi_tmp_dir/$tmpfile");
 
     $arrayStr = each %{{$arrayStr,0}};  # untaint the string
     my @checkBoxArray = eval($arrayStr);
@@ -525,8 +516,7 @@ sub array_filter {
 ################################################################
 sub toggleCheckboxes {
     my $tmpfile = param("tmpfile");
-	create_yui_dir() unless $yui_dir;
-    my $arrayStr = file2Str("$yui_dir/$tmpfile");
+    my $arrayStr = file2Str("$cgi_tmp_dir/$tmpfile");
     my $chkState;
 
     $arrayStr = each %{{$arrayStr,0}};   # untaint the string
@@ -564,7 +554,7 @@ sub toggleCheckboxes {
 	$Data::Dumper::Indent = 1;         # indent minimal
 	my $sOutStr = Dumper( \@fullArray );
 	$sOutStr =~ s/\[\n|\]\n//g;        # remove the lines with [ and ] to mimic original file
-	str2File ($sOutStr, "$yui_dir/$tmpfile"); # Overwrite the same tempfile with new checkbox values
+	str2File ($sOutStr, "$cgi_tmp_dir/$tmpfile"); # Overwrite the same tempfile with new checkbox values
 }
 
 1;

@@ -5,7 +5,7 @@
 #   colored red if there's a hit (or occurrence in the genome).
 #    --es 02/06/2005
 #
-# $Id: PhyloDist.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: PhyloDist.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package PhyloDist;
 my $section = "PhyloDist";
@@ -70,7 +70,7 @@ sub printPhyloDistCounted {
     my $gene_oid   = param("genePageGeneOid");
 
     if ( blankStr($gene_oid) ) {
-        webDie("printPhyloDistCounted: null gene_oid\n");
+        WebUtil::webDie("printPhyloDistCounted: null gene_oid\n");
         return;
     }
 
@@ -147,7 +147,7 @@ sub printPhyloDistCounted {
         my $gene_oid = param("genePageGeneOid");
         my $inFile   = "$cgi_tmp_dir/otfTaxonsHit.$gene_oid.txt";
         if ( !( -e $inFile ) ) {
-            webError("Session expired.  Please refresh gene page.");
+            WebUtil::webError("Session expired.  Please refresh gene page.");
         }
         my $rfh = newReadFileHandle( $inFile, "printPhyloDistCounted" );
         while ( my $s = $rfh->getline() ) {
@@ -357,7 +357,7 @@ sub printPhyloOccurProfileResults {
     printMainForm();
     print "<h1>Phylogenetic Occurrence Profile</h1>\n";
     if ( $nGenes < 1 ) {
-        webError("You must select at least one gene.\n");
+        WebUtil::webError("You must select at least one gene.\n");
     }
     checkPhyloOccurGenes();
     print "<p>\n";
@@ -417,7 +417,7 @@ sub checkPhyloOccurGenes {
     my @gene_oids = param("gene_oid");
     my $nGenes    = @gene_oids;
     if ( $nGenes > 100 ) {
-        webError(   "Maximum number of genes (100) selected exceeded. "
+        WebUtil::webError(   "Maximum number of genes (100) selected exceeded. "
                   . "Please select a smaller number." );
     }
     my $dbh         = dbLogin();
@@ -446,7 +446,7 @@ sub checkPhyloOccurGenes {
     #$dbh->disconnect();
     if ( scalar(@badGeneOids) > 0 ) {
         my $geneOidStr = join( ', ', @badGeneOids );
-        webError(   "Genes such as $geneOidStr are not protein coding genes or "
+        WebUtil::webError(   "Genes such as $geneOidStr are not protein coding genes or "
                   . "are obsolete genes.  Please select only "
                   . "non-obsolete protein coding genes." );
     }
@@ -465,7 +465,7 @@ sub printPhyloPanel {
     my $nGenes = @$gene_oids_ref;
     my $nRows  = @$arrays_ref;
     if ( $nGenes != $nRows ) {
-        webDie("printPhyloPanel: nGenes=$nGenes != nRows=$nRows\n");
+        WebUtil::webDie("printPhyloPanel: nGenes=$nGenes != nRows=$nRows\n");
     }
     for ( my $i = 0 ; $i < $nGenes ; $i++ ) {
         my $gene_oid = $gene_oids_ref->[$i];

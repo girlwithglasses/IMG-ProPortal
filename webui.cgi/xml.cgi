@@ -5,7 +5,7 @@
 #
 # see xml.pl
 #
-# $Id: xml.cgi 35611 2016-05-08 21:22:50Z klchu $
+# $Id: xml.cgi 37048 2017-05-04 21:21:49Z klchu $
 #
 # Control the environment from here for security and other reasons.
 #
@@ -29,6 +29,6 @@ then
    echo "<font color='red'>"
    echo "Oops. This is embarrassing an error has occurred in our AJAX script."
    echo "Please reports this along with your steps on how to reproduce it."
-   echo "- IMG email: imgsupp at lists.jgi-psf.org"
+   echo "- IMG email: jgi-imgsupp at lists.lbl.gov"
    echo "</font>"
 fi

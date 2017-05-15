@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: MyGeneDetail.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: MyGeneDetail.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package MyGeneDetail;
 my $section = "MyGeneDetail";
@@ -86,8 +86,8 @@ sub checkMyGeneAccess {
     # get user's group
     my $sql = qq{
         select count(*)
-        from contact_img_groups\@imgsg_dev cig, 
-             mygene_img_groups\@img_ext mig
+        from contact_img_groups cig, 
+             mygene_img_groups mig
         where cig.contact_oid = ?
         and cig.img_group = mig.group_id
         and mig.mygene_oid = ?
@@ -110,14 +110,14 @@ sub printGeneDetail {
     $gene_oid = param("gene_oid") if $gene_oid eq "";
 
     if ( blankStr($gene_oid) ) {
-        webError("No Gene ID specified.");
+        WebUtil::webError("No Gene ID specified.");
     }
     print "<h1>My Gene Detail</h1>\n";
     my $dbh = dbLogin();
 
     my $suc = checkMyGeneAccess( $dbh, $gene_oid );
     if ( $suc == 0 ) {
-        webError("You do not have access to this page!");
+        WebUtil::webError("You do not have access to this page!");
         return;
     }
 
@@ -419,7 +419,7 @@ sub printAminoAcidSeq {
     my $suc = checkMyGeneAccess( $dbh, $gene_oid );
     if ( $suc == 0 ) {
 	#$dbh->disconnect();
-        webError("You do not have access to this page!");
+        WebUtil::webError("You do not have access to this page!");
         return;
     }
 
@@ -474,7 +474,7 @@ sub printSeq {
     my $suc = checkMyGeneAccess( $dbh, $gene_oid );
     if ( $suc == 0 ) {
 	#$dbh->disconnect();
-        webError("You do not have access to this page!");
+        WebUtil::webError("You do not have access to this page!");
         return;
     }
 
@@ -550,7 +550,7 @@ sub getSeq {
 
     if ( !-e $file ) {
         webLog("Seq filename $file\n");
-        webError(
+        WebUtil::webError(
             "Cannot file sequence file all.fna.files/$taxon_oid/$filename");
         return;
     }

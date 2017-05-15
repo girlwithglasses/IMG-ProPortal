@@ -6,7 +6,7 @@
 #		+ Family
 #			+ Genus Species
 #
-# $Id: BinTree.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: BinTree.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 package BinTree;
 
@@ -38,8 +38,17 @@ my $YUI = $env->{yui_dir_28};
 
 my $unknown = "Unknown";
 
-sub dispatch {
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
 
+
+sub dispatch {
+    my($self) = @_;
+    
 	my $page = param("page");
 
 	if ( $page eq "treebin" ) {

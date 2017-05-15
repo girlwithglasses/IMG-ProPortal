@@ -100,7 +100,7 @@ $select_queries->{clade} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ qw( taxon_display_name taxon_oid genome_type domain phylum ir_class ir_order family genus clade clade|generic_clade ) ],
 		-where    => {
 			clade => { '!=', undef },
@@ -120,7 +120,7 @@ $select_queries->{distinct_clade} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns => [ qw( clade clade|generic_clade genus ) ],
 		-where    => {
 			clade => { '!=' => undef },
@@ -135,7 +135,7 @@ $select_queries->{distinct_clade} = sub {
 #
 # No additional arguments
 #
-# Queries the GoldTaxonVw table, which is restricted to public taxa
+# Queries the VwGoldTaxon table, which is restricted to public taxa
 #
 # =cut
 
@@ -143,7 +143,7 @@ $select_queries->{location} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ qw( taxon_display_name taxon_oid genome_type ecosystem_subtype geo_location latitude longitude altitude depth ecotype pp_subset ) ],
 		-where    => {
 			latitude  => { '!=' => undef },
@@ -164,7 +164,7 @@ $select_queries->{longhurst_counts} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ 'count(taxon_oid)|count', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
 		-group_by => [ qw( longhurst_code longhurst_description ) ],
 		-order_by => [ 'longhurst_description' ],
@@ -186,7 +186,7 @@ $select_queries->{longhurst} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ 'taxon_oid', 'taxon_display_name', map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( longhurst_code longhurst_description ) ],
 #		-group_by => [ qw( longhurst_code longhurst_description ) ],
 		-order_by => [ 'longhurst_description', 'taxon_display_name' ],
@@ -211,7 +211,7 @@ $select_queries->{ecosystem} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ qw( taxon_display_name taxon_oid genome_type domain genus ), map { 'coalesce(' . $_ . ", 'Unclassified') \"$_\""  } qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ecotype geo_location ) ],
 		-order_by => [ qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem taxon_display_name ) ],
 	};
@@ -227,7 +227,7 @@ $select_queries->{ecotype} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ qw( taxon_display_name taxon_oid clade clade|generic_clade ecotype ) ],
 		-where => {
 			ecotype => { '!=' => undef },
@@ -246,7 +246,7 @@ $select_queries->{phylogram} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ qw( genome_type taxon_oid taxon_display_name ncbi_taxon_id domain phylum ir_class ir_order family clade ncbi_kingdom ncbi_phylum ncbi_class ncbi_order ncbi_family ncbi_genus ncbi_species pp_subset ) ],
 		-order_by => [ qw( genome_type domain phylum ir_class ir_order family clade taxon_display_name ) ],
 	};
@@ -300,7 +300,7 @@ $select_queries->{subset_stats} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns => [ 'pp_subset', 'count(distinct taxon_oid)|count' ],
 		-group_by => 'pp_subset',
 	};
@@ -312,7 +312,7 @@ $select_queries->{metagenomes_by_ecosystem} = sub {
 
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ 'count(distinct taxon_oid)|count', qw( ecosystem ecosystem_category ecosystem_type ecosystem_subtype specific_ecosystem ) ],
 		-group_by => [ qw( ecosystem ecosystem_category ) ],
 		-where => {
@@ -380,7 +380,7 @@ $select_queries->{metagenomes_by_ecosystem} = sub {
 $select_queries->{taxon_metadata} = sub {
 	return {
 		schema => 'img_core',
-		table  => 'GoldTaxonVw',
+		table  => 'VwGoldTaxon',
 		-columns  => [ '*' ],
 	};
 };
@@ -420,6 +420,13 @@ $select_queries->{gene_oid_taxon_oid} = sub {
 # =cut
 
 $select_queries->{gene_list} = sub {
+	my $self = shift;
+	my $args = shift;
+	if ( $args->{filters}{category} ) {
+		if ( grep { $_ eq $args->{filters}{category} } qw( transmembrane signalp fused biosynthetic_cluster ) ) {
+			return $select_queries->{ 'gene_list_' . $args->{filters}{category} }->( $self, $args );
+		}
+	}
 
 	return {
 		schema => 'img_core',
@@ -430,49 +437,154 @@ $select_queries->{gene_list} = sub {
 			gene_display_name
 			product_name
 			description
-			taxon_oid
+			gene.taxon|taxon_oid
 			taxon_display_name
 			pp_subset
-			scaffold|scaffold_oid
+			gene.scaffold|scaffold_oid
 			scaffold_name
 		) ],
 		-where   => { 'gene.obsolete_flag' => 'No' },
 	};
 };
 
-# =head3 gene_list_by_scaffold
-#
-# Get all genes (or a subset of genes) on a scaffold
+# 	biosynthetic_genes
 
-$select_queries->{gene_list_by_scaffold} = sub {
+# 	select distinct bcf.feature_id
+# 	from bio_cluster_features_new bcf, bio_cluster_new g
+# 	where bcf.feature_type = 'gene'
+# 	and bcf.cluster_id = g.cluster_id
+# 	and g.taxon = $taxon_oid
+# 	$rclause
+# 	$imgClause
+
+$select_queries->{gene_list_biosynthetic_cluster} = sub {
+	my $self = shift;
+	my @cols = qw( gene_oid gene_symbol gene_display_name product_name taxon );
+	my $h = {
+		schema => 'img_core',
+		join  => [ qw[ Gene <=> bio_cluster_features_new ] ],
+		-columns => [
+			map { "gene.$_" } @cols
+		],
+		-where => {
+			'gene.obsolete_flag' => 'No',
+			'bio_cluster_features_new.feature_type' => 'gene'
+		},
+		-group_by => [
+			map { "gene.$_" } @cols
+		],
+		-order_by => 'gene.gene_oid'
+	};
+	$h->{-columns}[-1] .= '|taxon_oid';
+	return $h;
+};
+
+# 	fusedGenes
+
+# 	select g.gene_oid, g.gene_display_name, count( gfc.component )
+# 	from gene g, gene_fusion_components gfc
+# 	where g.gene_oid = gfc.gene_oid
+# 	and g.obsolete_flag = 'No'
+# 	and g.taxon = ?
+# 	$rclause
+# 	$imgClause
+# 	group by g.gene_oid, g.gene_display_name
+# 	order by g.gene_oid, g.gene_display_name
+
+$select_queries->{gene_list_fused} = sub {
 	my $self = shift;
 
-	my $arr = $self->run_query({
-		query => 'scaffold_list',
-		-columns => [ qw(
-			scaffold_oid
-			scaffold_name
-			taxon_oid
-			taxon_display_name
-		 )],
-		-where => { 'scaffold_oid' => $self->filters->{scaffold_oid} }
-	});
+	my @cols = qw( gene_oid gene_symbol gene_display_name product_name taxon );
+	my $h = {
+		schema => 'img_core',
+		join  => [ qw[ Gene_fusion_components <=> gene <=> taxon ] ],
+		-columns => [
+			'taxon_display_name', ( map { "gene.$_" } @cols )
+		],
+		-where => {
+			'gene.obsolete_flag' => 'No'
+		},
+		-group_by => [
+			( map { "gene.$_" } @cols ), 'taxon_display_name'
+		],
+		-order_by => 'gene.gene_oid'
+	};
+	$h->{-columns}[-1] .= '|taxon_oid';
 
-	log_debug { 'stt: ' . Dumper $arr };
+#	log_debug { 'h: ' . Dumper $h };
 
-	if ( scalar @$arr != 1 ) {
-		# Crap! an error!
-		log_error { 'row count: ' . scalar @$arr };
-	}
-	my $scaf = $arr->[0];
-	# get the sth for retrieving the gene list
-	my $sth = $scaf->expand( 'genes', ( -result_as => 'statement' ) );
-
-	log_debug { 'statement: ' . Dumper $sth };
-	log_debug { 'n results: ' . $sth->row_count };
-
-	return $sth;
+	return $h;
 };
+
+# 	signalpGeneList
+#
+# 	select distinct g.gene_oid
+# 	from gene g, gene_sig_peptides gsp
+# 	where g.gene_oid = gsp.gene_oid
+# 	and g.obsolete_flag = 'No'
+# 	and g.locus_type = 'CDS'
+# 	and g.taxon = ?
+#
+
+$select_queries->{gene_list_signalp} = sub {
+	my $self = shift;
+
+	my @cols = qw( gene_oid gene_symbol gene_display_name product_name taxon );
+	my $h = {
+		schema => 'img_core',
+#		join  => [ qw[ Gene <=> gene_sig_peptides ] ],
+		join  => [ qw[ GeneSigPeptides <=> gene <=> taxon ] ],
+		-columns => [
+			'taxon_display_name', ( map { "gene.$_" } @cols )
+		],
+		-where => {
+			'gene.obsolete_flag' => 'No',
+			'gene.locus_type' => 'CDS'
+		},
+		-group_by => [
+			( map { "gene.$_" } @cols ), 'taxon_display_name'
+		],
+		-order_by => 'gene.gene_oid'
+	};
+	$h->{-columns}[-1] .= '|taxon_oid';
+	return $h;
+};
+
+# 	transmembraneGeneList
+#
+# 		select distinct g.gene_oid
+# 		from gene g, gene_tmhmm_hits gth
+# 		where g.taxon = ?
+# 		and g.obsolete_flag = 'No'
+# 		and g.locus_type = 'CDS'
+# 		and g.gene_oid = gth.gene_oid
+# 		and gth.feature_type = 'TMhelix'
+#		{ locus_type => 'CDS',  }
+
+$select_queries->{gene_list_transmembrane} = sub {
+	my $self = shift;
+
+	my @cols = qw( gene_oid gene_symbol gene_display_name product_name taxon );
+	my $h = {
+		schema => 'img_core',
+		join  => [ qw[ GeneTmhmmHits <=> gene <=> gold_tax ] ],
+		-columns => [
+			'taxon_display_name', ( map { "gene.$_|$_" } @cols ),
+		],
+		-where => {
+			'gene.obsolete_flag' => 'No',
+			'gene.locus_type' => 'CDS',
+			'gene_tmhmm_hits.feature_type' => 'TMhelix'
+		},
+		-group_by => [
+			( map { "gene.$_" } @cols ), 'taxon_display_name'
+		],
+		-order_by => 'gene.gene_oid'
+	};
+	$h->{-columns}[-1] .= '|taxon_oid';
+	return $h;
+};
+
 
 $select_queries->{gene_list_by_taxon} = sub {
 	my $self = shift;
@@ -489,6 +601,9 @@ $select_queries->{gene_list_by_taxon} = sub {
 	my $tax = $arr->[0];
 	# get the sth for retrieving the gene list
 	my $sth = $tax->expand( 'genes', ( -result_as => 'statement' ) );
+
+	log_debug { 'sth now: ' . $sth };
+
 	return $sth;
 
 };
@@ -744,7 +859,6 @@ $select_queries->{scaffold_details} = sub {
 
 
 $select_queries->{scaffold_list} = sub {
-
 	return {
 		schema => 'img_core',
 		join => [ qw[ Scaffold <=> gold_tax ] ],
@@ -753,11 +867,12 @@ $select_queries->{scaffold_list} = sub {
 			scaffold_name
 			mol_type
 			mol_topology
-			ext_accession
 			db_source
+			ext_accession
 			taxon_oid
 			taxon_display_name
 			pp_subset
+			dataset_type
 		) ],
 	};
 };
@@ -789,7 +904,7 @@ $select_queries->{taxon_name_public} = sub {
 		schema => 'img_core',
 		table => 'Taxon',
 		-columns => [ $tax_stt, qw( taxon_oid taxon_display_name is_public ) ],
-		-where   => { taxon_oid => $args->{where}{taxon_oid} },
+		-where   => $args->{-where},
 	};
 
 };

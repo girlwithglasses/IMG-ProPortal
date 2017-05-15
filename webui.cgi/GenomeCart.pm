@@ -1,6 +1,6 @@
 ###########################################################################
 # GenomeCart.pm
-# $Id: GenomeCart.pm 36615 2017-03-01 19:56:28Z klchu $
+# $Id: GenomeCart.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GenomeCart;
 
@@ -730,7 +730,6 @@ sub exportGenomesInCart {
     my @genome_oids2 = param('taxon_filter_oid');
     push(@tx_ids, @genome_oids2);
     if ( scalar(@tx_ids) == 0 ) {
-        #main::printAppHeader();
         WebUtil::webErrorHeader("You must select at least one genome to export.");
     }
 
@@ -907,7 +906,7 @@ sub uploadGenomeCart {
 
     if ( !MyIMG::uploadOidsFromFile( "taxon_oid", \@taxon_oids, \$errmsg, "Cart Name", \%upload_cart_names ) ) {
         printStatusLine( "Error.", 2 );
-        webError($errmsg);
+        WebUtil::webError($errmsg);
     }
 
     # check what's already in the cart
@@ -1008,7 +1007,7 @@ sub addToGenomeCart {
     }
 
     if ( scalar(@genome_oids) == 0 ) {
-        webError("No genomes have been selected or can be derived.");
+        WebUtil::webError("No genomes have been selected or can be derived.");
         return;
     }
 
@@ -1016,7 +1015,7 @@ sub addToGenomeCart {
     my %taxon_oid_hash = QueryUtil::fetchValidTaxonOidHash( $dbh, @genome_oids );
     @genome_oids = keys %taxon_oid_hash;
     if ( scalar(@genome_oids) == 0 ) {
-        webError("Obsolete genomes cannot be added into Cart.");
+        WebUtil::webError("Obsolete genomes cannot be added into Cart.");
         return;
     }
 
@@ -1074,7 +1073,7 @@ sub removeFromGenomeCart {
     my @genome_oids2 = param('taxon_filter_oid');
     push(@genome_oids, @genome_oids2);
     if ( scalar(@genome_oids) == 0 ) {
-        webError("No genomes have been selected.");
+        WebUtil::webError("No genomes have been selected.");
         return;
     }
 
@@ -1230,7 +1229,7 @@ sub insertToGtt {
     if ( OracleUtil::tableExist( $dbh, "gtt_taxon_oid" ) ) {
         OracleUtil::insertDataArray( $dbh, "gtt_taxon_oid", $taxon_oids_aref );
     } else {
-        webError(   "Unable to create Genome Cart.<br/>"
+        WebUtil::webError(   "Unable to create Genome Cart.<br/>"
                   . "Required temp table does not exist. "
                   . "Please contact Technical Support" );
     }
@@ -1243,7 +1242,7 @@ sub addGeneGenomeToCart {
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
         printMainForm();
-        webError("No genes have been selected.");
+        WebUtil::webError("No genes have been selected.");
         return;
     }
 
@@ -1260,7 +1259,7 @@ sub addScaffoldGenomeToCart {
     my @scaffold_oids = param('scaffold_oid');
     if ( scalar(@scaffold_oids) == 0 ) {
         printMainForm();
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -1336,6 +1335,15 @@ sub clearAll {
     
     unlink( getColIdFile());
     unlink(getStateFile());
+}
+
+sub getSize {
+    my $taxon_oids = getAllGenomeOids();
+    if ( $taxon_oids ne '' ) {
+        my $size = $#$taxon_oids + 1;
+        return $size;
+    }
+    return 0;	
 }
 
 1;

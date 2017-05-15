@@ -42,13 +42,13 @@ sub _render {
 # 	});
 
 	my $statement = $self->get_data;
-	my $n_results = $statement->row_count;
-	my $arr = $statement->all;
+	my $arr = $self->page_me( $statement )->all;
 
 	return { results => {
 		domain => 'function',
 		arr => $arr,
-		n_results => $n_results,
+		n_results => $statement->row_count,
+		n_pages   => $statement->page_count,
 		table => $self->get_table('cycog'),
 		params => $self->filters,
 	} };
@@ -58,12 +58,12 @@ sub _render {
 sub get_data {
 	my $self = shift;
 
-	my @valid_prefixes = ( qw( cycog cog ) );
+	my @valid_prefixes = ( qw( cycog ) );
 
 	# get basic function info
 	return $self->_core->run_query({
 		query => 'cycog_list',
-		result_as => 'statement'
+		-result_as => 'statement'
 	});
 }
 

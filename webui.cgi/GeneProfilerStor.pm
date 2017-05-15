@@ -3,7 +3,7 @@
 #   results in a matrix.
 #        --es 3/20/2006
 #
-# $Id: GeneProfilerStor.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: GeneProfilerStor.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GeneProfilerStor;
 my $section = "GeneProfilerStor";
@@ -102,7 +102,7 @@ sub new {
     if ( -e $stateFile && !$fromQueryForm ) {
 
         if ( !( -e $stateFile ) ) {
-            webError("Session expired. Please rerun your query again.");
+            WebUtil::webError("Session expired. Please rerun your query again.");
         }
         $self = retrieve($stateFile);
     } else {
@@ -222,24 +222,24 @@ sub processResults {
     my $nGeneOids            = @geneOids;
     my $nProfileTaxonBinOids = @profileTaxonBinOids;
     if ( $nGeneOids == 0 ) {
-        webError("You must select at least one gene.");
+        WebUtil::webError("You must select at least one gene.");
     }
     if ( $nProfileTaxonBinOids == 0 ) {
-        webError("You must select at least one genome or bin.");
+        WebUtil::webError("You must select at least one genome or bin.");
     }
     if ( $nGeneOids == 0 ) {
-        webError("You must select at least one gene.");
+        WebUtil::webError("You must select at least one gene.");
     }
 
     if ( $nProfileTaxonBinOids > $max_taxon_candidates ) {
-        webError( "Too many genomes/bins selected. " 
+        WebUtil::webError( "Too many genomes/bins selected. " 
             . "Please select a maximum of $max_taxon_candidates" );
     }
     
     my $dbh = dbLogin();
     my $bad_oid_str = checkBigEuks( $dbh, \@geneOids );
     if ( !blankStr($bad_oid_str) ) {
-        webError( "Large model organisms are not supported here for " 
+        WebUtil::webError( "Large model organisms are not supported here for " 
             . "gene object identifier(s) $bad_oid_str." );
     }
 
@@ -257,7 +257,7 @@ sub processResults {
         my @rnaGenes_sort = sort( @rnaGenes_a );
         my $s = join( ",", @rnaGenes_sort );
         printStatusLine( "Error.", 2 );
-        webError( "Select only protein coding genes. " 
+        WebUtil::webError( "Select only protein coding genes. " 
             . "The following RNA genes were found: '$s'\n" );
     }
     $self->{gene2Desc} = \%gene2Desc;

@@ -49,7 +49,7 @@ sub dispatch {
     my ( $self, $numTaxon ) = @_;
 
     if( !$contact_oid ) {
-        webError( "Please login in." );
+        WebUtil::webError( "Please login in." );
     } 
  
     my $page = param( "page" );
@@ -328,7 +328,7 @@ sub printAddUpdatePartsListForm {
 	    $plist_oid = $selected_plist_oids[0]; 
 	} 
 	else { 
-	    webError ("No IMG parts list is selected.");
+	    WebUtil::webError ("No IMG parts list is selected.");
 	    return; 
 	} 
     }
@@ -440,7 +440,7 @@ sub printConfirmDeletePartsListForm {
 	$plist_oid = $selected_plist_oids[0]; 
     } 
     else { 
-	webError ("No IMG parts list is selected.");
+	WebUtil::webError ("No IMG parts list is selected.");
 	return; 
     } 
 
@@ -557,7 +557,7 @@ sub printUpdatePartsListTermForm {
 	$plist_oid = $selected_plist_oids[0]; 
     } 
     else { 
-	webError ("No IMG parts list is selected.");
+	WebUtil::webError ("No IMG parts list is selected.");
 	return; 
     } 
 
@@ -597,7 +597,7 @@ sub printUpdatePartsListTermForm {
 	    print "</p>\n";
 	    #$dbh->disconnect();
 
-	    webError ("No IMG terms are associated with this part list.");
+	    WebUtil::webError ("No IMG terms are associated with this part list.");
 	    return;
 	}
     }
@@ -852,7 +852,7 @@ sub printSearchTermResults {
     print reset( -name => "Reset", -value => "Reset", -class => "smbutton" );
 
     if( $searchTerm eq "" ) {
-        webError( "Please enter a term." );
+        WebUtil::webError( "Please enter a term." );
 	print end_form();
 	return;
     }
@@ -880,7 +880,7 @@ sub printSearchTermResults {
     if ( $count == 0 ) {
         ##$dbh->disconnect();
         printStatusLine( "$count term(s) found.", 2 );
-        webError( "No IMG terms matches the keyword." );
+        WebUtil::webError( "No IMG terms matches the keyword." );
         return;
     }
 
@@ -1084,7 +1084,7 @@ sub dbAddPartsList() {
     # check input 
     chomp($parts_list_name);
     if ( !$parts_list_name || blankStr($parts_list_name) ) { 
-        webError ("Please enter a new parts list name.");
+        WebUtil::webError ("Please enter a new parts list name.");
         return -1; 
     } 
 
@@ -1096,7 +1096,7 @@ sub dbAddPartsList() {
 			 'PARTS_LIST_NAME', $parts_list_name, '');
     if ( $id2 > 0 ) {
         #$dbh->disconnect();
-        webError ("Parts list already exists. (PARTS_LIST_OID=$id2)");
+        WebUtil::webError ("Parts list already exists. (PARTS_LIST_OID=$id2)");
         return -1;
     } 
 
@@ -1136,7 +1136,7 @@ sub dbAddPartsList() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
     else { 
@@ -1156,7 +1156,7 @@ sub dbUpdatePartsList() {
     # check input 
     chomp($parts_list_name);
     if ( !$parts_list_name || blankStr($parts_list_name) ) { 
-        webError ("Please enter a new parts list name.");
+        WebUtil::webError ("Please enter a new parts list name.");
         return -1; 
     } 
 
@@ -1169,7 +1169,7 @@ sub dbUpdatePartsList() {
 			 "parts_list_oid <> $parts_list_oid");
     if ( $id2 > 0 ) {
         #$dbh->disconnect();
-        webError ("Parts list already exists. (PARTS_LIST_OID=$id2)");
+        WebUtil::webError ("Parts list already exists. (PARTS_LIST_OID=$id2)");
         return -1;
     } 
 
@@ -1209,7 +1209,7 @@ sub dbUpdatePartsList() {
    my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
     else { 
@@ -1225,7 +1225,7 @@ sub dbDeletePartsList() {
     # get parts list oid
     my $old_oid = param ('selectedPList');
     if ( blankStr($old_oid) ) {
-	webError ("No IMG parts list is selected.");
+	WebUtil::webError ("No IMG parts list is selected.");
 	return -1;
     }
 
@@ -1244,7 +1244,7 @@ sub dbDeletePartsList() {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {
@@ -1269,7 +1269,7 @@ sub printConfirmUpdatePartsListTermForm {
 	"</h2>\n";
 
     if ( $parts_list_oid eq "" ) {
-	webError ("No IMG parts list is selected.");
+	WebUtil::webError ("No IMG parts list is selected.");
 	return; 
     } 
 
@@ -1321,7 +1321,7 @@ sub printConfirmUpdatePartsListTermForm {
 			print "</tr>\n";
 			print "</table>\n";
 			#$dbh->disconnect();
-			webError ("List order must be a positive integer. Input '$list_order' <= 0.");
+			WebUtil::webError ("List order must be a positive integer. Input '$list_order' <= 0.");
 			return;
 		    }
 		}
@@ -1330,7 +1330,7 @@ sub printConfirmUpdatePartsListTermForm {
 		    print "</tr>\n";
 		    print "</table>\n";
 		    #$dbh->disconnect();
-		    webError ("List order must be an integer. Input '$list_order' is not an integer.");
+		    WebUtil::webError ("List order must be an integer. Input '$list_order' is not an integer.");
 		    return;
 		}
 
@@ -1401,7 +1401,7 @@ sub dbUpdatePListTerm {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
     else { 
@@ -1471,7 +1471,7 @@ sub printValidatePListTermForm {
     my $filename = param( "fileselect" );
 
     if ( blankStr($filename) ) {
-	webError("No file name is provided.");
+	WebUtil::webError("No file name is provided.");
 	return;
     }
 
@@ -1500,7 +1500,7 @@ sub printValidatePListTermForm {
     # save the uploaded file to a tmp file, because we need to parse the file
     # more than once
     if ( ! open( FILE, '>', $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -1540,7 +1540,7 @@ sub printValidatePListTermForm {
     # now read from tmp file
     if ( ! open( FILE, $tmp_upload_file ) ) {
 	printStatusLine( "Failed.", 2 );
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -1707,7 +1707,7 @@ sub dbPListTermFileUpload {
 
     # open file
     if ( ! open( FILE, $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return 0;
     }
 
@@ -1816,7 +1816,7 @@ sub dbPListTermFileUpload {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {

@@ -249,8 +249,12 @@ link('biosyn_cluster_detail', { taxon_oid => self.taxon_oid, cluster => fn.clust
 [%			END;
 		END; %]
 		<dt>Signal peptide</dt>
-		<dd>[% IF self.gene_sig_peptides.count > 0;
-		%]<a href="[% link('signalp', { gene_oid => self.gene_oid } ) %]">details</a>[% ELSE %]none[% END %]</dd>
+		<dd>[%
+		IF self.gene_sig_peptides && self.gene_sig_peptides.0.count == 0;
+		%]none[%
+		END;
+		IF self.gene_sig_peptides.0.count != 0;
+		%]<a href="[% link('signalp', { gene_oid => self.gene_oid } ) %]">[% self.gene_sig_peptides.0.count %]; details</a>[% END %]</dd>
 		<dt>Transmembrane helices</dt>
 		<dd>[%	IF self.gene_tmhmm_hits.count > 0;
 		%]<a href="[% link( 'tmhelix', { gene_oid => self.gene_oid } ) %]">[% self.gene_tmhmm_hits.count %] found</a>[% ELSE %]none[% END %]</dd>

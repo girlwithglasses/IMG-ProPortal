@@ -2,7 +2,7 @@
 # Run external PDB Blast.
 #    --es 06/20/2007
 #
-# $Id: PdbBlast.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: PdbBlast.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package PdbBlast;
 my $section = "PdbBlast";
@@ -88,7 +88,7 @@ sub runPdbBlast {
       processContent( $res->content, $gene_oid, $seq );
    }
    else {
-      webError( $res->status_line );
+      WebUtil::webError( $res->status_line );
       webLog $res->status_line;
    }
    WebUtil::webExit(0);

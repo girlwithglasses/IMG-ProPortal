@@ -10,7 +10,7 @@
 #    2: id
 #    3: gene_count
 #
-# $Id: FuncProfile.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: FuncProfile.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package FuncProfile;
 my $section = "FuncProfile";
@@ -91,7 +91,7 @@ sub new {
    bless( $self, $myType );
    my $stateFile = $self->getStateFile( $type, $procId );
    if( param( "sortIdx" ) ne "" && !-e( $stateFile ) ) {
-       webError( "Phylogenetic profile session expired. " .
+       WebUtil::webError( "Phylogenetic profile session expired. " .
          "Please start over again." );
    }
    if( -e $stateFile ) {

@@ -1,6 +1,6 @@
 ###########################################################################
 # DotPlot.pm - Runs mummer for two genomes
-# $Id: DotPlot.pm 36089 2016-08-31 21:38:02Z klchu $
+# $Id: DotPlot.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package DotPlot;
 my $section = "DotPlot";
@@ -191,7 +191,7 @@ sub runPlot {
 
     my $nTaxons = @oids;
     if ( $nTaxons != 2 ) {
-	webError( "Please select 2 genomes.<br/>\n" );
+	WebUtil::webError( "Please select 2 genomes.<br/>\n" );
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -210,7 +210,7 @@ sub runPlot {
     $cur->finish();
 
     if ($genome_type1 eq "metagenome" || $genome_type2 eq "metagenome") {
-	webError("Currently this tool does not support metagenomes. "
+	WebUtil::webError("Currently this tool does not support metagenomes. "
 	       . "Please select isolate genomes only.");
     }
 
@@ -381,7 +381,7 @@ sub runPlot {
 
 #    if ($length1 > 536870908 || $length2 > 536870908) {
 #        printStatusLine( "Input file is too large.", 2 );
-#	webError( "Input file length cannot exceed 536870908.<br/> $txt"
+#	WebUtil::webError( "Input file length cannot exceed 536870908.<br/> $txt"
 #		. "<br/>Please select fewer scaffolds." );
 #    }
 
@@ -389,13 +389,13 @@ sub runPlot {
     print STDERR "\n\nDotPlot: $returnval\n";
     if ( $returnval == 0 ) {
         printStatusLine( "Cannot read sequence.", 2 );
-        webError( "Sequence file for taxon_oid=$oids[0] is empty\n" );
+        WebUtil::webError( "Sequence file for taxon_oid=$oids[0] is empty\n" );
     }
     my $returnval = -s $tmpFile2;
     print STDERR "\n\nDotPlot: $returnval\n";
     if ( $returnval == 0 ) {
         printStatusLine( "Cannot read sequence.", 2 );
-        webError( "Sequence file for taxon_oid=$oids[1] " .
+        WebUtil::webError( "Sequence file for taxon_oid=$oids[1] " .
                   "is empty\n" );
     }
 
@@ -478,7 +478,7 @@ sub runPlot {
     ### need to check if $alignsFile is empty ###
     if ($returnval == 0) {
     	printStatusLine( "No alignments.", 2 );
-        webError( "No alignments found.<br/>\n" );
+        WebUtil::webError( "No alignments found.<br/>\n" );
     }
 
     print "Calling delta-filter to output only the desired alignments.<br/>";

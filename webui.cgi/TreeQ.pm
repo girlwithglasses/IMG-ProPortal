@@ -39,7 +39,7 @@ sub dispatch {
         printApplet( );
      }
      else {
-        webError( "Unsupported page='$page'." );
+        WebUtil::webError( "Unsupported page='$page'." );
      }
 }
 

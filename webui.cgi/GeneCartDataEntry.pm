@@ -65,10 +65,10 @@ sub dispatch {
     ## Should not get here.
     my $section = param( "section" );
     if( $section ne "GeneCartDataEntry" ) {
-        webDie( "GeneCartDataEntry::dispatch: bad section '$section'\n" );
+        WebUtil::webDie( "GeneCartDataEntry::dispatch: bad section '$section'\n" );
     }
     if( !$contact_oid ) {
-        webError( "Please login in." );
+        WebUtil::webError( "Please login in." );
     }
 
     my $page = param( "page" );
@@ -356,7 +356,7 @@ sub printCartGenes {
 
     #temp block none-database genes
     if ( $count == 0 ) {
-        webError("There are no database genes in the cart.");
+        WebUtil::webError("There are no database genes in the cart.");
     }
 
     my $dbh = dbLogin( );
@@ -470,7 +470,7 @@ sub printSearchTermForm {
 
     # check whether the cart is empty
     if ( scalar( @gene_oids ) == 0 ) {
-    	webError( "There are no genes in the Gene Cart." );
+    	WebUtil::webError( "There are no genes in the Gene Cart." );
     	return;
     }
 
@@ -535,7 +535,7 @@ sub printSearchTermResults {
     print reset( -name => "Reset", -value => "Reset", -class => "smbutton" );
 
     if( $searchTerm eq "" ) {
-        webError( "Please enter a term." );
+        WebUtil::webError( "Please enter a term." );
 	print end_form();
 	return;
     }
@@ -563,7 +563,7 @@ sub printSearchTermResults {
     if ( $count == 0 ) {
         #$dbh->disconnect( );
         printStatusLine( "$count term(s) found.", 2 );
-        webError( "No IMG terms matches the keyword." );
+        WebUtil::webError( "No IMG terms matches the keyword." );
         return;
     }
 
@@ -904,7 +904,7 @@ sub printDeleteGeneTerms {
 
     # check whether the cart is empty
     if ( scalar( @gene_oids ) == 0 ) {
-	webError( "There are no genes in the Gene Cart." );
+	WebUtil::webError( "There are no genes in the Gene Cart." );
 	return;
     }
 
@@ -1017,7 +1017,7 @@ sub printEditGeneTerms {
 
     # check whether the cart is empty
     if ( scalar( @gene_oids ) == 0 ) {
-	webError( "There are no genes in the Gene Cart." );
+	WebUtil::webError( "There are no genes in the Gene Cart." );
 	return;
     }
 
@@ -1346,12 +1346,12 @@ sub printConfirmGeneTermUpdateForm {
 		    # check f_order
 		    if ( !isInt($val2) ) {
 			print "</tr></table>\n";
-			webError("F_order ($val2) must be an integer.");
+			WebUtil::webError("F_order ($val2) must be an integer.");
 			return;
 		    }
 		    elsif ( $val2 < 0 ) {
 			print "</tr></table>\n";
-			webError("F_order ($val2) cannot be negative.");
+			WebUtil::webError("F_order ($val2) cannot be negative.");
 			return;
 		    }
 		}
@@ -1728,7 +1728,7 @@ sub printGeneQueryResultForm {
 	}
 	elsif ( $data_type eq 'int' || $data_type eq 'order' ) {
 	    if ( ! isInt($val) || $comp eq 'match' || $comp eq 'not match' ) {
-		webError("Incorrect query condition: $disp_name $comp $val.");
+		WebUtil::webError("Incorrect query condition: $disp_name $comp $val.");
 		return;
 	    }
 
@@ -1818,7 +1818,7 @@ sub printGeneQueryResultForm {
 		$s2 = "$attr_name $comp $val";
 		if ( ! isInt($val) || $comp eq 'match' ||
 		     $comp eq 'not match' ) {
-		    webError("Incorrect query condition: $disp_name $comp $val.");
+		    WebUtil::webError("Incorrect query condition: $disp_name $comp $val.");
 		    return;
 		}
 	    }
@@ -2012,7 +2012,7 @@ sub printGeneQueryResultForm {
 
     if ( $count == 0 ) {
         printStatusLine( "$count item(s) found.", 2 );
-        webError( 'No ' . $display_name . 's satisfy the search condition.' );
+        WebUtil::webError( 'No ' . $display_name . 's satisfy the search condition.' );
         return;
     }
     else {
@@ -2068,7 +2068,7 @@ sub printInferTermResultForm {
     # get gene_oid
     my @selected_gene_oids = param( "gene_oid" );
     if ( scalar(@selected_gene_oids) == 0 ) {
-	webError("No gene has been selected.");
+	WebUtil::webError("No gene has been selected.");
 	return;
     }
     my $gene_oid = $selected_gene_oids[0];
@@ -2738,7 +2738,7 @@ sub printConfirmAddUpdateInfer {
 
 	    if ( blankStr($f_flag) ) {
 		print "</tr></table>\n";
-		webError("Term_flag for term $term_oid is not specified.");
+		WebUtil::webError("Term_flag for term $term_oid is not specified.");
 		return;
 	    }
 
@@ -2748,17 +2748,17 @@ sub printConfirmAddUpdateInfer {
 
 	    if ( blankStr($f_order) ) {
 		print "</tr></table>\n";
-		webError("F_order for term $term_oid is not specified.");
+		WebUtil::webError("F_order for term $term_oid is not specified.");
 		return;
 	    }
 	    elsif ( !isInt($f_order) ) {
 		print "</tr></table>\n";
-		webError("F_order for term $term_oid is not an integer.");
+		WebUtil::webError("F_order for term $term_oid is not an integer.");
 		return;
 	    }
 	    elsif ( $f_order < 0 ) {
 		print "</tr></table>\n";
-		webError("F_order for term $term_oid is negative.");
+		WebUtil::webError("F_order for term $term_oid is negative.");
 		return;
 	    }
 
@@ -2982,7 +2982,7 @@ sub printValidationResultForm {
     my $filename = param( "fileselect" );
 
     if ( blankStr($filename) ) {
-	webError("No file name is provided.");
+	WebUtil::webError("No file name is provided.");
 	return;
     }
 
@@ -3007,7 +3007,7 @@ sub printValidationResultForm {
     # save the uploaded file to a tmp file, because we need to parse the file
     # more than once
     if ( ! open( FILE, '>', $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -3046,7 +3046,7 @@ sub printValidationResultForm {
     # now read from tmp file
     if ( ! open( FILE, $tmp_upload_file ) ) {
 	printStatusLine( "Failed.", 2 );
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -3210,7 +3210,7 @@ sub dbFileUpload {
 
     # open file
     if ( ! open( FILE, $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return 0;
     }
 
@@ -4437,7 +4437,7 @@ sub db_sqlTrans_2 () {
     if ($@) { 
         $dbh->rollback(); 
         ##$dbh->disconnect(); 
-        webError ("Incorrect SQL: $last_sql"); 
+        WebUtil::webError ("Incorrect SQL: $last_sql"); 
         return 0; 
     } 
  

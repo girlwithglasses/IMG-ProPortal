@@ -1,7 +1,7 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 36509 2017-01-17 18:12:31Z klchu $
+# $Id: Help.pm 37064 2017-05-08 21:14:00Z imachen $
 ############################################################################
 package Help;
 use strict;
@@ -321,11 +321,13 @@ sub printSiteMap {
 	    
 	<p>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#menu">Navigation Menus</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anacart">Analysis Carts</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#comp">sub-Pages and Components</a><br/>
         </p>
     };
 
     printNavigationMenus();
+    printAnalysisCartMap();
     printComponentPages();
 }
 
@@ -403,7 +405,9 @@ sub printNavigationMenus {
     printFindGenesMap();
     printFindFunctionsMap();
     printCompareGenomesMap();
-    printAnalysisCartMap($isEditor);
+    printOmicsMap();
+    printWorkspaceMap();
+##    printAnalysisCartMap($isEditor);
     printMyImgMap($contact_oid);
 
     printCompanionSystem();
@@ -421,7 +425,7 @@ sub printFindGenomesMap {
 	    <b>Find Genomes</b> </a>
 	    </td>
 	    <td class='img'>
-	    &nbsp;
+            Find genomes/metagenomes of interest.
 	    </td>
 	    <td class='img'></td>
 	</tr>
@@ -434,10 +438,11 @@ sub printFindGenomesMap {
 
 	    </td>
 	    <td class='img'>
-	    &nbsp; 
+            Browse all public genomes and your own private genomes <br/>
+            (private genomes are in MER only) in table display or tree display. 
 	    </td>
 	    <td class='img'>
-	    <a href='$base_url/../docs/GenomeBrowser.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'genome broeser']);">
+	    <a href='$base_url/../docs/GenomeBrowser.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'genome browser']);">
 	    <img width="20" height="14" border="0"
 	    style="margin-left: 20px; vertical-align:middle"
 	    src="$base_url/images/help_book.gif"> 
@@ -453,14 +458,48 @@ sub printFindGenomesMap {
 	    Genome Search </a>
 	    </td>
 	    <td class='img'>
-	    By Fields <br/>
-	    By Metadata <br/>
+            Search genomes of interest in the IMG database. <br/>
+            Search can be based on keywords or on metadata categories. <br/>
+            Metadata is from GOLD. 
 	    </td>
 	    <td class='img'>
 	    <a href='$base_url/../docs/GenomeSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'genome search']);">
 	    <img width="20" height="14" border="0" 
 	    style="margin-top: 10px;margin-left: 20px; vertical-align:middle"
 	    src="$base_url/images/help_book.gif"> 
+	    </a>
+	    </td>
+	</tr>
+
+	<tr class='img' valign="top">
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <img class="menuimg" src="$base_url/images/binocular.png">
+	    <a href="$main_cgi?section=ScaffoldSearch"> 
+	    Scaffold Search </a>
+	    </td>
+	    <td class='img'>
+            Search scaffolds/contigs based on scaffold IDs, names, or statistics. 
+	    </td>
+	    <td class='img'>
+	    <a href='$base_url/../docs/ScaffoldSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'scaffold search']);">
+	    <img width="20" height="14" border="0" 
+	    style="margin-top: 10px;margin-left: 20px; vertical-align:middle"
+	    src="$base_url/images/help_book.gif"> 
+	    </a>
+	    </td>
+	</tr>
+
+	<tr class='img' valign="top">
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=TaxonDeleted"> 
+	    Deleted Genomes </a>
+	    </td>
+	    <td class='img'>
+            View older genomes/metagenomes that have been deleted from IMG.
+	    </td>
+	    <td class='img'>
 	    </a>
 	    </td>
 	</tr>
@@ -492,7 +531,7 @@ sub printFindGenesMap {
 	    <b>Find Genes</b> </a>
 	    </td>
 	    <td class='img'>
-	    &nbsp;
+            Find genes of interest.
 	    </td>
 	    <td class='img'></td>
 	</tr>
@@ -506,7 +545,7 @@ sub printFindGenesMap {
 
 	    </td>
 	    <td class='img'>
-	    Find genes in selected genomes by keyword.
+            Search genes of interest based on IDs, names, locus tags, etc. 
 	    </td>
 	    <td class='img'>
 	    <a href='$base_url/../docs/GeneSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'gene search']);">
@@ -518,23 +557,25 @@ sub printFindGenesMap {
 	</tr>
     };
 
-    if ( !$include_metagenomes && !$img_lite ) {
-        print qq{
+    print qq{
 	    <tr class='img' valign='top'>
 		<td class='img'> 
 		&nbsp; &nbsp; &nbsp; &nbsp;
 	        <a href="$main_cgi?section=GeneCassetteSearch&page=form">
 		    Cassette Search </a>
-        <img width="45" height="14" border="0"
-        style="margin-left: 5px;" src="$base_url/images/updated.bmp">		    
 		</td>
 		<td class='img'>
-		&nbsp;
+                 Search gene cassette.
 	        </td>
-		<td class='img'></td>
+  	    <td class='img'>
+	    <a href='$base_url/../docs/CassetteSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'cassette search']);">
+	    <img width="20" height="14" border="0"
+	    style="margin-left: 20px; vertical-align:middle"
+	    src="$base_url/images/help_book.gif"> 
+	    </a>
+	    </td>
 	    </tr>
 	};
-    }
 
     print qq{
 	<tr class='img' valign='top'>
@@ -545,7 +586,8 @@ sub printFindGenesMap {
 	    BLAST </a>
 	    </td>
 	    <td class='img'>
-	    Find sequence similarity in IMG database.
+	    Find sequence similarity in IMG database using LAST.<br/>
+            (This option is only available in IMG/MER). 
 	    </td>
             <td class='img'>
 	    <a href='$base_url/../docs/Blast.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'blast']);">
@@ -557,10 +599,7 @@ sub printFindGenesMap {
 	</tr>
     };
 
-    if ( !$no_phyloProfiler ) {
-        if ( !$img_lite || $full_phylo_profiler ) {
-            if ( !$img_lite ) {
-                print qq{
+    print qq{
 		<tr class='img' valign='top'>
 		    <td class='img'> 
 		    &nbsp; &nbsp; &nbsp; &nbsp;
@@ -570,7 +609,13 @@ sub printFindGenesMap {
 		    <td class='img'>
 		    &nbsp;
 		    </td>
-		    <td class='img'></td>
+    	            <td class='img' rowspan='3'>
+                       <a href='$base_url/../docs/PhylogeneticProfilers.pdf' target='_help'>
+                       <img width="20" height="14" border="0" 
+		       style="margin-left: 20px; vertical-align:middle" 
+		       src="$base_url/images/help_book.gif"> 
+                    </a>
+                    </td>
 		</tr>
 		    
 		<tr class='img' valign='top'>
@@ -579,12 +624,9 @@ sub printFindGenesMap {
 		    <a href="$main_cgi?section=PhylogenProfiler&page=phyloProfileForm"> Single Genes </a>
 		    </td>
 		    <td class='img'>
-		    Find genes in genome (bin) of interest qualified by 
-		    similarity to sequences in other genomes (based on BLASTP
-		    alignments). Only user-selected genomes appear in the
-		    profiler. 
+                    Search genes in a selected genome with and/or without <br/>
+                    homologs in other genomes. 
 		    </td>
-		    <td class='img'></td>
 		</tr>
 		    
 		<tr class='img' valign='top'>
@@ -593,52 +635,14 @@ sub printFindGenesMap {
 		    <a href="$main_cgi?section=GeneCassetteProfiler&page=geneContextPhyloProfiler2"> Genes Cassettes </a>
 		    </td>
 		    <td class='img'>
-		    IMG Cassette Profiler. Find collocated genes that are part 
-		    of a cassette in a query genome, that are also part of 
-		    gene cassettes in other genomes of interest 
+                    Find genes in a query genome, that are collocated in the <br/>
+                    query genome as well as across other genomes of interest, <br/>
+                    based on their inclusion in cassettes. <br/>
+                    <b>Limitation:</b> Currently you can only select up to 
+                    <b>50 Collocated In</b> Genomes.
 		    </td>
-		    <td class='img'></td>
 		</tr>
-	    };
-
-            } else {
-                print qq{
-		<tr class='img' valign='top'>
-		    <td class='img'> 
-		    &nbsp; &nbsp; &nbsp; &nbsp;
-		    <a href="$main_cgi?section=PhylogenProfiler&page=phyloProfileForm"> Phylogenetic Profilers </a>
-                    </td>
-		    <td class='img'>
-		    Find genes in genome (bin) of interest qualified by 
-		    similarity to sequences in other genomes (based on 
-		    BLASTP alignments). Only user-selected genomes appear 
-		    in the profiler. 
-		    </td>
-		    <td class='img'></td>
-                </tr>
-	        };
-            }
-        }
-
-        if (   $img_lite
-            && -e $phyloProfiler_sets_file
-            && !$full_phylo_profiler )
-        {
-
-            print qq{
-	      <tr class='img' valign='top'>
-		  <td class='img'> 
-		  &nbsp; &nbsp; &nbsp; &nbsp;
-	          <a href="$main_cgi?section=PhylogenProfiler&page=phyloProfileFormLite"> Phylogenetic Profilers </a>
-		  </td>
-		  <td class='img'>
-		  &nbsp;
-	          </td>
-		  <td class='img'></td>
-	      </tr>
-	  };
-        }
-    }
+            };
 
     if ($img_internal) {
         print qq{
@@ -665,7 +669,7 @@ sub printFindFunctionsMap {
 	    <b>Find Functions</b> </a>
 	    </td>
 	    <td class='img'>
-	    &nbsp;
+            Find functions of interest.
 	    </td>
 	    <td class='img'></td>
 	</tr>
@@ -673,13 +677,12 @@ sub printFindFunctionsMap {
 	<tr class='img' valign='top'>
 	    <td class='img'> 
 	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <img class="menuimg" src="$base_url/images/binocular.png">
 	    <a href="$main_cgi?section=FindFunctions&page=findFunctions">
 		Function Search </a>
-		<img width="45" height="14" border="0" 
-		style="margin-left: 5px;" src="$base_url/images/updated.bmp">
 	    </td>
 	    <td class='img'>
-	    Find functions in selected genomes by keyword.
+	    Find functions in selected genomes based on keyword.
 	    </td>
 	    <td class='img'>
 	    <a href='$base_url/../docs/FunctionSearch.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'function search']);">
@@ -692,32 +695,32 @@ sub printFindFunctionsMap {
 	
     };
 
-    #    print qq{
-    #        <tr class='img' valign='top'>
-    #            <td class='img'>
-    #                &nbsp; &nbsp; &nbsp; &nbsp;
-    #                <a href="$main_cgi?section=AllPwayBrowser&page=allPwayBrowser"> Search Pathways </a>
-    #            </td>
-    #            <td class='img'></td>
-    #            <td class='img'></td>
-    #        </tr>
-    #    };
+     print qq{
+       <tr class='img' valign='top'>
+           <td class='img'>
+               &nbsp; &nbsp; &nbsp; &nbsp;
+	    <img class="menuimg" src="$base_url/images/binocular.png">
+                  <a href="$main_cgi?section=AllPwayBrowser&page=allPwayBrowser"> Search Pathways </a>
+           </td>
+           <td class='img'>
+           Search IMG, KEGG, MetaCyc and/or MPW pathways based on enzyme EC or keyword.
+           </td>
+           <td class='img'></td>
+       </tr>
+    };
 
-    if ($include_metagenomes) {
-        print qq{
-	    <tr class='img' valign='top'>
-		<td class='img'> 
-		&nbsp; &nbsp; &nbsp; &nbsp;
-	        <a href="$main_cgi?section=PhyloCogs&page=phyloCogTaxonsForm">
-		    Phylogenetic Marker COGs </a>
-		</td>
-		<td class='img'>
-		List of COGs 
-		</td>
-		<td class='img'></td>
-	    </tr>
-        };
-    }
+     print qq{
+       <tr class='img' valign='top'>
+           <td class='img'>
+               &nbsp; &nbsp; &nbsp; &nbsp;
+             <a href="https://img.jgi.doe.gov/abc/">Secondary Metabolism</a>
+           </td>
+           <td class='img'>
+           Re-direct to IMG/ABC for biosynthetic gene cluster and secondary metabolite search. 
+           </td>
+           <td class='img'></td>
+       </tr>
+    };
 
     # <img width="25" height="14" border="0" style="margin-left: 5px;" src="$base_url/images/new.gif">
 
@@ -725,23 +728,106 @@ sub printFindFunctionsMap {
     <tr class='img' valign='top'>
 	<td class='img'> 
 	&nbsp; &nbsp; &nbsp; &nbsp;
+        <img class="menuimg" src="$base_url/images/cog.png">
         <a href="$main_cgi?section=FindFunctions&page=ffoAllCogCategories"> COG </a>
 	</td>
 	<td class='img'>
-	List of COGs 
+        Browse and find COG functions
 	</td>
 	<td class='img'></td>
     </tr>
 
+            <tr class='img' valign='top'>
+                <td class='img' nowrap='nowrap'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=ffoAllCogCategories"> COG Browser </a>
+                </td>
+                <td class='img'>
+                Browse all COG functions in IMG. 
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=cogList"> COG List </a>
+                </td>
+                <td class='img'>
+                Browse all COG functions in a table display.
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=cogList&stats=1"> COG List w/ Stats </a>
+                </td>
+                <td class='img'>
+                Browse COG function list with associated isolate genome and metagenome counts<br/>
+                in IMG.
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=cogid2cat"> COG Id to Categories </a>
+                </td>
+                <td class='img'>
+                Browse COG functions and associated COG categories. 
+                </td>
+                <td class='img'></td>
+            </tr>
+
     <tr class='img' valign='top'>
         <td class='img'> 
         &nbsp; &nbsp; &nbsp; &nbsp;
+        <img class="menuimg" src="$base_url/images/kog.png">
         <a href="$main_cgi?section=FindFunctions&page=ffoAllKogCategories"> KOG </a>
                 
         </td>
-        <td class='img'> </td>
+        <td class='img'> 
+        Browse and find KOG functions
+        </td>
         <td class='img'> </td>
     </tr>
+
+            <tr class='img' valign='top'>
+                <td class='img' nowrap='nowrap'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=ffoAllKogCategories"> KOG Browser </a>
+                </td>
+                <td class='img'>
+                Browse all KOG functions in IMG. 
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=kogList"> KOG List </a>
+                </td>
+                <td class='img'>
+                Browse all KOG functions in a table display.
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=kogList&stats=1"> KOG List w/ Stats </a>
+                </td>
+                <td class='img'>
+                Browse KOG function list with associated isolate genome and metagenome counts<br/>
+                in IMG.
+                </td>
+                <td class='img'></td>
+            </tr>
 	
     <tr class='img' valign='top'>
         <td class='img'>
@@ -751,10 +837,55 @@ sub printFindFunctionsMap {
 	Pfam </a>
 	</td>
 	<td class='img'>
-	Pfam list
+        Browse and find Pfam functions
 	</td>
 	<td class='img'></td>
     </tr>
+
+            <tr class='img' valign='top'>
+                <td class='img' nowrap='nowrap'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=pfamCategories"> Pfam Browser </a>
+                </td>
+                <td class='img'>
+                Browse all Pfam functions in IMG. 
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=pfamList"> Pfam List </a>
+                </td>
+                <td class='img'>
+                Browse all Pfam functions in a table display.
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=pfamList&stats=1"> Pfam List w/ Stats </a>
+                </td>
+                <td class='img'>
+                Browse Pfam function list with associated isolate genome and metagenome counts<br/>
+                in IMG.
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=pfamListClans"> Pfam Clans </a>
+                </td>
+                <td class='img'>
+                Browse Pfam functions organized into corresponding clans. 
+                </td>
+                <td class='img'></td>
+            </tr>
     };
 
     if ($include_tigrfams) {
@@ -762,14 +893,49 @@ sub printFindFunctionsMap {
 	    <tr class='img' valign='top'>
 		<td class='img'> 
 		&nbsp; &nbsp; &nbsp; &nbsp;
+                <img class="menuimg" src="$base_url/images/tigrfam.png">
 	        <a href="$main_cgi?section=TigrBrowser&page=tigrBrowser">
 		    TIGRfam </a>
 		</td>
 		<td class='img'>
-		TIGRfam roles and list
+		Browse and find TIGRfam roles and list.
 		</td>
 		<td class='img'></td>
 	    </tr>
+
+            <tr class='img' valign='top'>
+                <td class='img' nowrap='nowrap'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=TigrBrowser&page=tigrBrowser"> TIGRfam Roles </a>
+                </td>
+                <td class='img'>
+                Browse all TIGRfam functions in IMG. 
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=TigrBrowser&page=tigrfamList"> TIGRfam List </a>
+                </td>
+                <td class='img'>
+                Browse all TIGRfam functions in a table display.
+                </td>
+                <td class='img'></td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=TigrBrowser&page=tigrfamList&stats=1"> TIGRfam List w/ Stats </a>
+                </td>
+                <td class='img'>
+                Browse TIGRfam function list with associated isolate genome and metagenome<br/>
+                counts in IMG.
+                </td>
+                <td class='img'></td>
+            </tr>
         };
     }
 
@@ -816,18 +982,82 @@ sub printFindFunctionsMap {
 	<tr class='img' valign='top'>
 	    <td class='img'> 
 	    &nbsp; &nbsp; &nbsp; &nbsp;
+            <img class="menuimg" src="$base_url/images/kegg.png">
 	    <a href="$main_cgi?section=FindFunctions&page=ffoAllKeggPathways&view=brite"> KEGG </a>
-        <img width="45" height="14" border="0" 
-        style="margin-left: 5px;" src="$base_url/images/updated.bmp">
-	    
 	    </td>
 	    <td class='img'>
-	    KEGG Orthology (KO) Terms and Pathways <br/>
-	    KO Term Distribution <br/>
-	    KEGG Orthology (KO) Terms
+            Browse and find KO terms, KEGG pathways or modules. 
 	    </td>
-	    <td class='img'></td>
+	    <td class='img' rowspan='7'>
+                <a href='$base_url/../docs/KEGG.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
 	</tr>
+
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=KeggPathwayDetail&page=koList"> KO List </a>
+                </td>
+                <td class='img'>
+                Browse all KO terms in a table display.
+                </td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=KeggPathwayDetail&page=koList&stats=1"> KO List w/ Stats </a>
+                </td>
+                <td class='img'>
+                Browse KO term list with associated isolate genome and metagenome<br/>
+                counts in IMG.
+                </td>
+            </tr>
+
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=KeggPathwayDetail&page=keggmodulelist"> KEGG Module List </a>
+                </td>
+                <td class='img'>
+                Browse all KEGG modules in a table display.
+                </td>
+            </tr>
+                
+            <tr class='img' valign='top'>
+                <td class='img'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=KeggPathwayDetail&page=keggmodulelist&stats=1"> KEGG Module List w/ Stats </a>
+                </td>
+                <td class='img'>
+                Browse KEGG module list with associated isolate genome and metagenome<br/>
+                counts in IMG.
+                </td>
+            </tr>
+
+            <tr class='img' valign='top'>
+                <td class='img' nowrap='nowrap'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=ffoAllKeggPathways&view=brite"> Orthology KO terms </a>
+                </td>
+                <td class='img'>
+                Browse KEGG Orthology (KO) terms and Pathways. 
+                </td>
+            </tr>
+
+            <tr class='img' valign='top'>
+                <td class='img' nowrap='nowrap'> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=FindFunctions&page=ffoAllKeggPathways&view=ko"> Pathway via KO terms </a>
+                </td>
+                <td class='img'>
+                Browse KEGG pathways via KO terms. 
+                </td>
+            </tr>
     };
 
     if ($include_img_terms) {
@@ -839,12 +1069,15 @@ sub printFindFunctionsMap {
         <a href="$main_cgi?section=ImgNetworkBrowser&page=imgNetworkBrowser"> <b>IMG Network</b> </a>
         </td>
         <td class='img'>
-        IMG Network Browser <br/>
-        IMG Parts List <br/>
-        IMG Pathways <br/>
-        IMG Terms
+        Find IMG terms, pathways or parts list. 
         </td>
-        <td class='img'></td>
+        <td class='img' rowspan='5'>
+             <a href='$base_url/../docs/IMGNetwork.pdf' target='_help'>
+             <img width="20" height="14" border="0" 
+             style="margin-left: 20px; vertical-align:middle" 
+             src="$base_url/images/help_book.gif"> 
+             </a>
+             </td>
         </tr>
             
             <tr class='img' valign='top'>
@@ -853,8 +1086,9 @@ sub printFindFunctionsMap {
                     <img class="menuimg" src="$base_url/images/favicon.ico">
                     <a href="main.cgi?section=ImgNetworkBrowser&page=imgNetworkBrowser"> IMG Network Browser </a>
                 </td>
-                <td class='img'></td>
-                <td class='img'></td>
+                <td class='img'>
+                Browse IMG networks and associated pathways. 
+                </td>
             </tr>
                 
             <tr class='img' valign='top'>
@@ -863,8 +1097,9 @@ sub printFindFunctionsMap {
                     <img class="menuimg" src="$base_url/images/favicon.ico">
                     <a href="main.cgi?section=ImgPartsListBrowser&page=browse"> IMG Parts List </a>
                 </td>
-                <td class='img'></td>
-                <td class='img'></td>
+                <td class='img'>
+                Browse IMG parts list. 
+                </td>
             </tr>
                 
             <tr class='img' valign='top'>
@@ -874,8 +1109,8 @@ sub printFindFunctionsMap {
                     <a href="main.cgi?section=ImgPwayBrowser&page=imgPwayBrowser"> IMG Pathways </a>
                 </td>
                 <td class='img'>
+                Browse IMG pathways in a table display. 
                 </td>
-                <td class='img'></td>
             </tr>
                 
             <tr class='img' valign='top'>
@@ -884,8 +1119,9 @@ sub printFindFunctionsMap {
                     <img class="menuimg" src="$base_url/images/favicon.ico">
                     <a href="main.cgi?section=ImgTermBrowser&page=imgTermBrowser"> IMG Terms </a>
                 </td>
-                <td class='img'></td>
-                <td class='img'></td>
+                <td class='img'>
+                Browse IMG terms. 
+                </td>
             </tr>
         };
     }
@@ -898,26 +1134,37 @@ sub printFindFunctionsMap {
         Enzyme </a>
         </td>
         <td class='img'>
-        List of Enzymes, EC numbers
+        Browse all enzymes with corresponding isolate genome and metagenome counts <br/>
+        in a table display. 
         </td>
-        <td class='img'></td>
+   	        <td class='img'>
+                <a href='$base_url/../docs/Enzyme.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+                </td>
     </tr>    
 };
 
-    if ( !$include_metagenomes ) {
-        print qq{
+    print qq{
 	    <tr class='img' valign='top'>
 		<td class='img'> 
 		&nbsp; &nbsp; &nbsp; &nbsp;
 	        <a href="$main_cgi?section=MetaCyc"> MetaCyc </a>
 		</td>
 		<td class='img'>
-		MetaCyc Pathways
+		Browse MetaCyc pathways in tree display.
 		</td>
-		<td class='img'></td>
+   	        <td class='img'>
+                <a href='$base_url/../docs/MetaCyc.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+                </td>
 	    </tr>
         };
-    }
 
     if ($img_pheno_rule) {
         print qq{
@@ -927,7 +1174,11 @@ sub printFindFunctionsMap {
 	        <a href="$main_cgi?section=ImgPwayBrowser&page=phenoRules">
 		    Phenotypes </a>
 	        </td>
-		<td class='img'></td>
+		<td class='img'>
+                Browse IMG predicted phenotypes in a table display. <br/>
+                All genomes predicted with a selected phenotype can be viewed <br/>
+                in a table or tree display. 
+                </td>
 		<td class='img'></td>
 	    </tr>
         };
@@ -939,12 +1190,19 @@ sub printFindFunctionsMap {
             <td class='img'> 
                 &nbsp; &nbsp; &nbsp; &nbsp;
                 <a href="$main_cgi?section=Interpro"> InterPro List </a>
-                <img width="25" height="14" border="0" style="margin-left: 5px;" src="$base_url/images/new.gif">
             </td>
-            <td class='img'></td>
-            <td class='img'></td>
+            <td class='img'>
+            Browse all InterPro proteins with corresponding isolate genome <br/>
+            and gene counts in a table display. 
+            </td>
+	    <td class='img'>
+	    <a href='$base_url/../docs/InterProGuide.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'interpro']);">
+	    <img width="20" height="14" border="0" 
+	    style="margin-top: 10px;margin-left: 20px; vertical-align:middle"
+	    src="$base_url/images/help_book.gif"> 
+	    </a>
         </tr>
-    };
+       };
     }
 
     print qq{
@@ -952,9 +1210,10 @@ sub printFindFunctionsMap {
             <td class='img' nowrap> 
                 &nbsp; &nbsp; &nbsp; &nbsp;
                 <a href="$main_cgi?section=ImgTermStats&page=functionCompare"> Protein Family Comparison </a>
-                <img width="25" height="14" border="0" style="margin-left: 5px;" src="$base_url/images/new.gif">
             </td>
-            <td class='img'></td>
+            <td class='img'>
+            Check protein family comparisons.
+            </td>
             <td class='img'></td>
         </tr>
     };
@@ -980,9 +1239,15 @@ sub printCompareGenomesMap {
 		Genome Statistics </a>
 	    </td>
 	    <td class='img'>
-	    &nbsp;
+            IMG Genome Summary Statistics.
 	    </td>
-	    <td class='img'></td>
+	    <td class='img'>
+                <a href='$base_url/../docs/GenomeStatistics.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
 	</tr>
 	
 	<tr class='img' valign='top'>
@@ -1036,41 +1301,21 @@ sub printCompareGenomesMap {
 	    </td>
 	    <td class='img'>
 	    ACT (Artemis Comparison Tool) is a viewer based on Artemis for 
-	    pair-wise genome DNA sequence comparisons, whereby comparisons 
+	    pair-wise <br/> genome DNA sequence comparisons,
+            whereby comparisons <br/>
 	    are usually the result of running Mega BLAST search. 
 	    </td>
-	    <td class='img'></td>
-	</tr>
-	
-	<tr class='img' valign='top'>
-	    <td class='img'> 
-	    &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$main_cgi?section=DistanceTree&page=tree">
-		Distance Tree </a>
-        <!-- <img width="45" height="14" border="0" style="margin-left: 5px;" src="$base_url/images/updated.bmp">
-        -->
-	    </td>
 	    <td class='img'>
-	    Circular phylogenetic tree for selected genomes.
-	    </td>
-	    <td class='img'>
-	    <a href='$base_url/../docs/DistanceTree.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'distance tree']);"> 
-	    <img width="20" height="14" border="0" 
-	    style="margin-left: 20px; vertical-align:middle" 
-	    src="$base_url/images/help_book.gif"> 
-	    </td>
+                <a href='$base_url/../docs/ArtemisACT.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
 	</tr>
+     };
 
-	<tr class='img' valign="top">
-            <td class='img' nowrap='nowrap'> 
-	    &nbsp; &nbsp; &nbsp; &nbsp;
-            <a href="$main_cgi?section=RadialPhyloTree"> Radial Phylogenetic Tree </a>
-                    
-	    </td>
-	    <td class='img'> </td>
-	    <td class='img'> </td>
-	</tr>
-	
+    print qq{
 	<tr class='img' valign="top">
 	    <td class='img'> 
 	    &nbsp; &nbsp; &nbsp; &nbsp;
@@ -1148,7 +1393,7 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
 		    Function Comparisons </a>
 	        </td>
 		<td class='img'>
-		Compare metagenomes in terms of relative abundance of COGs, Pfams, TIGRFams, and Enzymes.
+		Compare metagenomes in terms of relative abundance of COGs, Pfams, <br/> TIGRFams, and Enzymes.
 		</td>
                 <td class='img'>
                 <a href='$base_url/../docs/userGuide_m.pdf#page=20' target='_help'>
@@ -1166,7 +1411,8 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
 		    Function Category Comparisons </a>
                 </td>
                 <td class='img'>
-		Compare metagenomes in terms of relative abundance of genes assigned to different functional categories.
+		Compare metagenomes in terms of relative abundance of genes assigned to <br/>
+                different functional categories.
 		</td>
 		<td class='img'> 
                 <a href='$base_url/../docs/userGuide_m.pdf#page=23' target='_help'>
@@ -1180,6 +1426,124 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
     }
 
     print qq{
+	    <tr class='img' valign="top">
+		<td class='img'> 
+		&nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="$main_cgi?section=MetagPhyloDist&page=top">
+		    <b>Phylogenetic Distribution</b> </a>
+	        </td>
+		<td class='img'></td>
+		<td class='img'></td>
+	    </tr>
+	    
+	    <tr class='img' valign="top">
+	        <td class='img' nowrap="nowrap"> 
+		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="main.cgi?section=MetagPhyloDist&page=form">
+		    Metagenomes vs. Genomes </a>
+	        </td>
+		<td class='img'>Phylogenetic Distribution of Metagenomes</td>
+		<td class='img'></td>
+	    </tr>
+
+            <tr class='img' valign="top">
+                <td class='img' nowrap="nowrap"> 
+                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    <a href="main.cgi?section=GenomeHits"> Genome vs Metagenomes </a>
+                </td>
+                <td class='img'>Single Genome vs. Metagenomes Analysis</td>
+                <td class='img'></td>
+            </tr>
+
+	<tr class='img' valign="top">
+            <td class='img' nowrap='nowrap'> 
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+            <a href="$main_cgi?section=RadialPhyloTree"> Radial Tree </a>
+                    
+	    </td>
+	    <td class='img'> Radial Phylogenetic Tree </td>
+	    <td class='img'> </td>
+	</tr>
+    };
+
+    print qq{
+	<tr class='img' valign="top">
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=ANI">
+		<b>Avg Nucleotide Identity</b> </a>
+	    </td>
+	    <td class='img'>
+            Average Nucleotide Identity (ANI) is a measure of nucleotide-level genomic <br/>similarity between the coding regions of two genomes.
+	    </td>
+	    <td class='img'></td>
+	</tr>
+	
+	<tr class='img' valign="top">
+	    <td class='img' nowrap="nowrap"> 
+	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=ANI&page=pairwise">
+		Pairwise ANI </a>
+	    </td>
+	    <td class='img'>
+            BBHs between a genome pair are computed as pairwise bidirectional best <br/>
+            SimScan hits of genes having 70% or more identity and at least 70% coverage <br/>of the shorter gene.
+	    </td>
+	    <td class='img'>
+	    <a href='$base_url/../docs/ANI.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'ani']);"> 
+	    <img width="20" height="14" border="0" 
+	    style="margin-left: 20px; vertical-align:middle" 
+	    src="$base_url/images/help_book.gif"> 
+	    </td>
+        </tr>
+
+	<tr class='img' valign="top">
+	    <td class='img' nowrap="nowrap"> 
+	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=ANI&page=doSameSpeciesPlot">
+		Same Species Plot </a>
+	    </td>
+	    <td class='img'>
+            ANI Same Species Pairwise Analysis.
+	    </td>
+	    <td class='img'> </td>
+        </tr>
+
+	<tr class='img' valign="top">
+	    <td class='img' nowrap="nowrap"> 
+	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=ANI&page=overview">
+		ANI Cliques</a>
+	    </td>
+	    <td class='img'>
+            ANI Cliques List.
+	    </td>
+	    <td class='img'> </td>
+        </tr>
+	};
+
+    print qq{
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=DistanceTree&page=tree">
+		Distance Tree </a>
+        <!-- <img width="45" height="14" border="0" style="margin-left: 5px;" src="$base_url/images/updated.bmp">
+        -->
+	    </td>
+	    <td class='img'>
+	    Circular phylogenetic tree for selected genomes.
+	    </td>
+	    <td class='img'>
+	    <a href='$base_url/../docs/DistanceTree.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'distance tree']);"> 
+	    <img width="20" height="14" border="0" 
+	    style="margin-left: 20px; vertical-align:middle" 
+	    src="$base_url/images/help_book.gif"> 
+	    </td>
+	</tr>
+    };
+
+    print qq{
 	<tr class='img' valign='top'>
 	    <td class='img'> 
 	    &nbsp; &nbsp; &nbsp; &nbsp;
@@ -1187,7 +1551,7 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
 		Function Profile </a>
 	    </td>
 	    <td class='img'>
-	    Display the count (abundance) of genes associated with 
+	    Display the count (abundance) of genes associated with <br/>
 	    a given function and a given genome.
 	    </td>
 	    <td class='img'>
@@ -1225,63 +1589,44 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
     #            </tr>
     #        };
     #    }
-    if ($include_metagenomes) {
-        print qq{
-	    <tr class='img' valign="top">
-		<td class='img'> 
-		&nbsp; &nbsp; &nbsp; &nbsp;
-	        <a href="$main_cgi?section=MetagPhyloDist&page=top">
-		    <b>Phylogenetic Distribution</b> </a>
-	        </td>
-		<td class='img'></td>
-		<td class='img'></td>
-	    </tr>
-	    
-	    <tr class='img' valign="top">
-	        <td class='img' nowrap="nowrap"> 
-		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	        <a href="main.cgi?section=MetagPhyloDist&page=form">
-		    Metagenome Phylogenetic Distribution </a>
-	        </td>
-		<td class='img'></td>
-		<td class='img'></td>
-	    </tr>
 
-            <tr class='img' valign="top">
-                <td class='img' nowrap="nowrap"> 
-                    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-                    <a href="main.cgi?section=GenomeHits"> Genome vs Metagenomes </a>
-                </td>
-                <td class='img'></td>
-                <td class='img'></td>
-            </tr>
-        };
-    }
     print qq{
         <tr class='img' valign='top'>
             <td class='img'> 
                 &nbsp; &nbsp; &nbsp; &nbsp;
-                <a href="$main_cgi?section=GenomeGeneOrtholog"> Genome Gene Ortholog </a>
-                <img width="25" height="14" border="0" style="margin-left: 5px;" src="$base_url/images/new.gif">
+                <a href="$main_cgi?section=GenomeGeneOrtholog"> Genome Gene Best Homologs </a>
             </td>
-            <td class='img'></td>
+            <td class='img'>Find best gene homologs among selected genomes.</td>
             <td class='img'></td>
         </tr>
     };
 
+    if ($include_metagenomes) {
+        print qq{
+	    <tr class='img' valign='top'>
+		<td class='img'> 
+		&nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="$main_cgi?section=PhyloCogs&page=phyloCogTaxonsForm">
+		    Phylogenetic Marker COGs </a>
+		</td>
+		<td class='img'>
+		Show genome alignment against phylogenetic marker COGs.
+		</td>
+		<td class='img'></td>
+	    </tr>
+        };
+    }
 }
 
-sub printAnalysisCartMap {
-    my ($isEditor) = @_;
-
+sub printOmicsMap {
     print qq{
 	<tr class='highlight' valign='top'>
 	    <td class='img'> 
-	    <a href="$main_cgi?section=GeneCartStor&page=geneCart">
-	    <b>Analysis Cart</b> </a>
+	    <a href="$main_cgi?section=ImgStatsOverview#tabview=tab3">
+	    <b>OMICS</b> </a>
 	    </td>
 	    <td class='img'>
-	    &nbsp;
+            Browse and analyze "omics" data in IMG.
 	    </td>
 	    <td class='img'></td>
 	</tr>
@@ -1289,64 +1634,166 @@ sub printAnalysisCartMap {
 	<tr class='img' valign='top'>
 	    <td class='img'> 
 	    &nbsp; &nbsp; &nbsp; &nbsp;
-	    <a href="$main_cgi?section=GeneCartStor&page=geneCart"> Genes </a>
-            <img width="45" height="14" border="0"
-	    style="margin-left: 5px;" src="$base_url/images/updated.bmp">
+	    <a href="$main_cgi?section=IMGProteins&page=proteomics">
+		Protein </a>
+
 	    </td>
 	    <td class='img'>
-	        Gene List <br/>
-		Function Cart <br/>
-		Upload Gene Cart from File <br/>
-		Export Genes <br/>
-		Chromosome Map <br/>
-		Sequence Alignments <br/>
-		Gene Neighborhoods <br/>
-		Gene Profile <br/>
-		Occurrence Profile <br/>
-		Function Alignment
+            Browse protein expression study data. 
 	    </td>
-            <td class='img'>
-                <a href='$base_url/../docs/GeneCart.pdf' target='_help'>
-                <img width="20" height="14" border="0" 
-		style="margin-left: 20px; vertical-align:middle" 
-		src="$base_url/images/help_book.gif"> 
-                </a>
-            </td>
-	    </tr>
+	    <td class='img'>
+	    <a href='$base_url/../docs/Proteomics.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'proteomics']);">
+	    <img width="20" height="14" border="0"
+	    style="margin-left: 20px; vertical-align:middle"
+	    src="$base_url/images/help_book.gif"> 
+	    </a>
+	    </td>
+	</tr>
 	
-	    <tr class='img' valign='top'>
-	        <td class='img'> 
-		&nbsp; &nbsp; &nbsp; &nbsp;
-	        <a href="$main_cgi?section=FuncCartStor&page=funcCart">
-		    Functions </a>
-                <img width="45" height="14" border="0"
-		style="margin-left: 5px;" src="$base_url/images/updated.bmp">
-	        </td>
-	        <td class='img'>
-	            Function List  <br/>
-	            Upload Function Cart from File  <br/>
-	            Export Functions <br/>
-	            Function Profile  <br/>
-	            Occurrence Profiles  <br/>
-	            Function Alignment <br/>
-	            Gene Cart
-	        </td>
-            <td class='img'>
-                <a href='$base_url/../docs/FunctionCart.pdf' target='_help'>
-                <img width="20" height="14" border="0"
-		style="margin-left: 20px; vertical-align:middle" 
-		src="$base_url/images/help_book.gif"> 
-                </a>
-            </td>
-	    </tr>
+	<tr class='img' valign="top">
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=RNAStudies&page=rnastudies"> 
+	    RNASeq </a>
+	    </td>
+	    <td class='img'>
+            Browse RNASeq expression study data, including both <br/>
+            transcriptome and metatranscriptome. 
+	    </td>
+	    <td class='img'>
+	    <a href='$base_url/../docs/RNAStudies.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'rna study']);">
+	    <img width="20" height="14" border="0" 
+	    style="margin-top: 10px;margin-left: 20px; vertical-align:middle"
+	    src="$base_url/images/help_book.gif"> 
+	    </a>
+	    </td>
+	</tr>
 
+	<tr class='img' valign="top">
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=Methylomics&page=methylomics"> 
+	    Methylation </a>
+	    </td>
+	    <td class='img'>
+            Browse Mythylomics experiement data.
+	    </td>
+	    <td class='img'>
+	    <a href='$base_url/../docs/Methylomics.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'methylomics']);">
+	    <img width="20" height="14" border="0" 
+	    style="margin-top: 10px;margin-left: 20px; vertical-align:middle"
+	    src="$base_url/images/help_book.gif"> 
+	    </a>
+	    </td>
+	</tr>
+     };
+}
+
+sub printWorkspaceMap {
+    print qq{
+	<tr class='highlight' valign='top'>
+	    <td class='img'> 
+	    <a href="$main_cgi?section=Workspace">
+	    <b>Workspace</b> </a>
+	    </td>
+	    <td class='img'>
+            Users can store their datasets in workspace to load into analysis carts or for future analysis.
+	    </td>
+	    <td class='img' rowspan='6'>
+	    <a href='$base_url/../docs/IMGWorkspaceUserGuide.pdf' target='_help' onClick="_gaq.push(['_trackEvent', 'Document', 'help', 'workspace']);">
+	    <img width="20" height="14" border="0"
+	    style="margin-left: 20px; vertical-align:middle"
+	    src="$base_url/images/help_book.gif"> 
+	    </a>
+	    </td>
+	</tr>
+	
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=WorkspaceGenomeSet&page=home">
+		Genome Sets </a>
+	    </td>
+	    <td class='img'>
+            Workspace Genome Sets.
+	    </td>
+	</tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=WorkspaceScafSet&page=home">
+		Scaffold Sets </a>
+	    </td>
+	    <td class='img'>
+            Workspace Scaffold Sets.
+	    </td>
+	</tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=WorkspaceFuncSet&page=home">
+		Function Sets </a>
+	    </td>
+	    <td class='img'>
+            Workspace Function Sets.
+	    </td>
+	</tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=WorkspaceGeneSet&page=home">
+		Gene Sets </a>
+	    </td>
+	    <td class='img'>
+            Workspace Gene Sets.
+	    </td>
+	</tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=Workspace">
+		Export Workspace </a>
+	    </td>
+	    <td class='img'>
+            Export all workspace datasets into files.
+	    </td>
+	</tr>
+     };
+}
+
+sub printAnalysisCartMap {
+    my ($isEditor) = @_;
+
+    my $contact_oid = getContactOid();
+    if ($user_restricted_site && ! $isEditor) {
+        my $dbh = dbLogin();
+        $isEditor = isImgEditor( $dbh, $contact_oid );
+    }
+
+    print qq{
+	<a name='anacart' href='#'><h2>Analysis Carts</h2> </a>
+        <p>Analysis carts are shown at the top of the screen.<br/>
+        <table class='img'>
+	    <th class='img'> My Analysis Carts </th>
+	    <th class='img'> Description </th>
+	    <th class='img'> Document </th>
+    };
+
+    print qq{
         <tr class='img' valign='top'>
             <td class='img'> 
 	    &nbsp; &nbsp; &nbsp; &nbsp;
 	    <a href="$main_cgi?section=MyIMG&page=taxonUploadForm">
 		Genomes </a>
             </td>
-            <td class='img'></td>
+            <td class='img'>
+		Genome List <br/>
+		Export and Import Genome Data <br/>
+            </td>
             <td class='img'></td>
         </tr>
     };
@@ -1358,21 +1805,72 @@ sub printAnalysisCartMap {
 		&nbsp; &nbsp; &nbsp; &nbsp;
 	        <a href="$main_cgi?section=ScaffoldCart&page=index">
 		    Scaffolds </a>
-            <img width="45" height="14" border="0"
-        style="margin-left: 5px;" src="$base_url/images/updated.bmp">		    
 		</td>
 		<td class='img'>
 		Scaffold List <br/>
-		Scaffold Cart Name <br/>
-		Function Profile <br/>
 		Export and Import Scaffold Data <br/>
+		Function Profile <br/>
 		Histogram <br/>
-		Phylogenetic Distribution of Genes <br/> 
+		Kmer Analysis <br/> 
 		</td>
 		<td class='img'></td>
 	    </tr>
         };
     }
+
+    print qq{
+	    <tr class='img' valign='top'>
+	        <td class='img'> 
+		&nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="$main_cgi?section=FuncCartStor&page=funcCart">
+		    Functions </a>
+	        </td>
+	        <td class='img'>
+	            Function List  <br/>
+  		    Export and Import Function Data <br/>
+	            Function Profile  <br/>
+	            Occurrence Profiles  <br/>
+	            Function Alignment <br/>
+                    Analysis
+	        </td>
+            <td class='img'>
+                <a href='$base_url/../docs/FunctionCart.pdf' target='_help'>
+                <img width="20" height="14" border="0"
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
+	    </tr>
+
+    };
+
+    print qq{
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	    &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$main_cgi?section=GeneCartStor&page=geneCart"> Genes </a>
+	    </td>
+	    <td class='img'>
+	        Gene List <br/>
+		Add to Function Cart <br/>
+                View KEGG Pathways <br/>
+		Export and Import Gene Data <br/>
+		Chromosome Map <br/>
+		Sequence Alignments <br/>
+		Gene Neighborhoods <br/>
+		Gene Profile <br/>
+		Occurrence Profile <br/>
+		Function Alignment <br/>
+	    </td>
+            <td class='img'>
+                <a href='$base_url/../docs/GeneCart.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
+	    </tr>
+    };
 
     if ($isEditor) {
         print qq{
@@ -1388,10 +1886,16 @@ sub printAnalysisCartMap {
         };
     }
 
+    print "</table>\n";
 }
 
 sub printMyImgMap {
     my ($contact_oid) = @_;
+
+    my $rowspan_cnt = 2;
+    if ( $show_myimg_login ) {
+	$rowspan_cnt = 4;
+    }
 
     print qq{
 	<tr class='highlight' valign='top'>
@@ -1401,7 +1905,13 @@ sub printMyImgMap {
 	    <td class='img'>
 	    &nbsp;
 	    </td>
-	    <td class='img'></td>
+	    <td class='img' rowspan='$rowspan_cnt'>
+                <a href='$base_url/../docs/MyIMG4.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
 	</tr>
 	
 	<tr class='img' valign='top'>
@@ -1410,13 +1920,14 @@ sub printMyImgMap {
 	    <a href="$main_cgi?section=MyIMG&page=home"> MyIMG Home </a>
 	    </td>
 	    <td class='img'>
-	    &nbsp;
+            MyIMG Home page, which includes IMG Group information <br/>
+            (in MER only). 
 	    </td>
-	    <td class='img'></td>
 	</tr>
     };
 
-    if ( $contact_oid > 0 && $show_myimg_login && !$public_nologin_site ) {
+##    if ( $contact_oid > 0 && $show_myimg_login && !$public_nologin_site ) {
+    if ( $show_myimg_login ) {
         print qq{
 	    <tr class='img' valign='top'>
 		<td class='img'> 
@@ -1425,9 +1936,22 @@ sub printMyImgMap {
 		    Annotations </a>
 	        </td>
 		<td class='img'>
-		&nbsp;
+                MyIMG gene annotations. (This is available in MER only.) 
 	        </td>
-	        <td class='img'></td>
+	    </tr>
+        };
+ 
+       print qq{
+	    <tr class='img' valign='top'>
+		<td class='img'> 
+		&nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="$main_cgi?section=MyIMG&page=myJobForm">
+		    MyJob </a>
+	        </td>
+		<td class='img'>
+                View user's computation on demand jobs. <br/>
+                (This is available in MER only.)
+	        </td>
 	    </tr>
         };
     }
@@ -1440,128 +1964,123 @@ sub printMyImgMap {
 		Preferences </a>
 	    </td>
 	    <td class='img'>
-	    &nbsp;
+            Set web browser preferences. 
 	    </td>
 	    <td class='img'></td>
 	</tr>
     };
 
-    if ($user_restricted_site) {
-        print qq{
-            <tr class='img' valign='top'>
-                <td class='img'> 
-                    &nbsp; &nbsp; &nbsp; &nbsp;
-                    <a href="$main_cgi?section=Workspace"> Workspace </a>
-                </td>
-                <td class='img'>
-                    My saved data Genes, Functions, Scaffolds, Genomes
-                </td>
-                <td class='img'></td>
-            </tr>
-        };
-    }
+#    if ($user_restricted_site) {
+#        print qq{
+#            <tr class='img' valign='top'>
+#                <td class='img'> 
+#                    &nbsp; &nbsp; &nbsp; &nbsp;
+#                    <a href="$main_cgi?section=Workspace"> Workspace </a>
+#                </td>
+#                <td class='img'>
+#                    My saved data Genes, Functions, Scaffolds, Genomes
+#                </td>
+#                <td class='img'></td>
+#            </tr>
+#        };
+#    }
 }
 
 sub printCompanionSystem {
     print qq{
     <tr class='highlight' valign='top'>
         <td class='img'> 
-        <a href="/"> <b>Companion Systems</b> </a>
-            <img width="45" height="14" border="0" 
-        style="margin-left: 5px;" src="$base_url/images/updated.bmp">        
+        <a href="https://img.jgi.doe.gov/"> <b>Data Marts</b> </a>
         </td>
         <td class='img'>
-        &nbsp;
+        There's the list of all IMG data marts or companion systems.
         </td>
         <td class='img'></td>
     </tr>
     
-    
     <tr class='img' valign="top">
         <td class='img'> 
             &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="/w"> <b>IMG</b> </a>
+        <a href="https://img.jgi.doe.gov/m/"> <b>IMG/M</b> </a>
         </td>
-        <td class='img'> &nbsp; </td>
+        <td class='img'>
+        IMG/M provides free access to public genome &
+        microbiome datasets. 
+        </td>
         <td class='img'> &nbsp; </td>
     </tr>    
 
+    <tr class='img' valign="top">
+        <td class='img'> 
+            &nbsp; &nbsp; &nbsp; &nbsp; 
+        <a href="https://img.jgi.doe.gov/mer"> IMG/M ER </a>
+        </td>
+        <td class='img'>
+        IMG/M ER provides login access to private and public genome and microbiome <br/>datatsets, with support for data curation, dataset downloads
+        and workspace <br/>analysis and data exports. 
+        </td>
+        <td class='img'> &nbsp; </td>
+    </tr> 
 
     <tr class='img' valign="top">
         <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="/w"> IMG </a>
+            &nbsp; &nbsp; &nbsp; &nbsp;
+        <a href="https://img.jgi.doe.gov/abc/"> IMG ABC </a>
         </td>
-        <td class='img'> &nbsp; </td>
-        <td class='img'> &nbsp; </td>
-    </tr>    
-    <tr class='img' valign="top">
-        <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="https://img.jgi.doe.gov/er"> IMG/ER </a>
+        <td class='img'>
+        IMG/ABC a knowledge base to fuel the discovery of biosynthetic gene clusters<br/>
+        and novel secondary metabolites in IMG .
         </td>
-        <td class='img'> &nbsp; </td>
-        <td class='img'> &nbsp; </td>
-    </tr>   
-    <tr class='img' valign="top">
-        <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="/geba"> IMG/GEBA </a>
-        </td>
-        <td class='img'> &nbsp; </td>
         <td class='img'> &nbsp; </td>
     </tr> 
+
     <tr class='img' valign="top">
         <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="http://img.jgi.doe.gov/img_hmp"> IMG/HMP </a>
+            &nbsp; &nbsp; &nbsp; &nbsp;
+        <a href="https://img.jgi.doe.gov/vr/"> IMG VR </a>
         </td>
-        <td class='img'> &nbsp; </td>
+        <td class='img'>
+        IMG/VR serves as a starting point for the sequence analysis of viral fragments<br/>
+        derived from metagenomic samples. 
+        </td>
         <td class='img'> &nbsp; </td>
     </tr> 
+
     <tr class='img' valign="top">
         <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="/edu"> IMG/EDU IMG/ACT </a>
+            &nbsp; &nbsp; &nbsp; &nbsp;
+        <a href="https://img-proportal-dev.jgi.doe.gov/"> IMG ProPortal BETA </a>
+        </td>
+        <td class='img'>
+        IMG ProPortal is a beta site for Prochlorococcus genome study.
         </td>
         <td class='img'> &nbsp; </td>
+    </tr> 
+
+    <tr class='img' valign="top">
+        <td class='img'> 
+            &nbsp; &nbsp; &nbsp; &nbsp;
+        <a href="https://img.jgi.doe.gov/imgm_hmp/"> IMG HMP </a>
+        </td>
+        <td class='img'>
+        IMG HMP provides users with tools for analyzing HMP specific microbial<br/>
+        genomes and metagenome samples in the context of all public genomes and<br/>
+        metagenome samples in IMG.
+        </td>
+        <td class='img'> &nbsp; </td>
+    </tr> 
+
+    <tr class='img' valign="top">
+        <td class='img'> 
+            &nbsp; &nbsp; &nbsp; &nbsp;
+        <a href="https://img.jgi.doe.gov/submit/"> Submit Data Set </a>
+        </td>
+        <td class='img'>
+        IMG Submission Site allows users to submit their data sets to IMG for<br/>
+        functional annotation and analysis.
+        </td>
         <td class='img'> &nbsp; </td>
     </tr>     
-    
-    
-    <tr class='img' valign="top">
-        <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="/m"> <b>IMG/M</b> </a>
-        </td>
-        <td class='img'> &nbsp; </td>
-        <td class='img'> &nbsp; </td>
-    </tr>    
-    <tr class='img' valign="top">
-        <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="/m"> IMG/M </a>
-        </td>
-        <td class='img'> &nbsp; </td>
-        <td class='img'> &nbsp; </td>
-    </tr>        
-    <tr class='img' valign="top">
-        <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="https://img.jgi.doe.gov/mer"> IMG/MER </a>
-        </td>
-        <td class='img'> &nbsp; </td>
-        <td class='img'> &nbsp; </td>
-    </tr>        
-    <tr class='img' valign="top">
-        <td class='img'> 
-            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <a href="http://img.jgi.doe.gov/imgm_hmp"> IMG/HMPM </a>
-        </td>
-        <td class='img'> &nbsp; </td>
-        <td class='img'> &nbsp; </td>
-    </tr>        
-
     };
 }
 
@@ -1594,7 +2113,7 @@ sub printUsingMap {
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 	    <a href="$base_url/../docs/mission.html"> IMG Mission </a>
 	    </td>
-	    <td class='img'></td>
+	    <td class='img'>What is the mission of IMG</td>
 	    <td class='img'></td>
 	</tr>
 	
@@ -1603,7 +2122,7 @@ sub printUsingMap {
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 	    <a href="$base_url/../docs/faq.html"> FAQ </a>
 	    </td>
-	    <td class='img'></td>
+	    <td class='img'>Frequently Asked Questions</td>
 	    <td class='img'></td>
 	</tr>
 	
@@ -1612,7 +2131,7 @@ sub printUsingMap {
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 	    <a href="$base_url/../docs/related.html"> Related Links </a>
 	    </td>
-	    <td class='img'></td>
+	    <td class='img'>List of other genome systems.</td>
 	    <td class='img'></td>
 	</tr>
 	
@@ -1621,7 +2140,18 @@ sub printUsingMap {
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 	    <a href="$base_url/../docs/credits.html"> Credits </a>
 	    </td>
+	    <td class='img'>List of teams and people who made IMG possible.</td>
 	    <td class='img'></td>
+	</tr>
+
+	<tr class='img' valign="top">
+	    <td class='img' nowrap="nowrap"> 
+	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	    <a href="$base_url/../docs"> IMG Document Archive </a>
+	    </td>
+	    <td class='img'>
+            The archive of all existing IMG documents.
+            </td>
 	    <td class='img'></td>
 	</tr>
 	
@@ -1652,7 +2182,7 @@ sub printUsingMap {
 	    style="margin-left: 5px;" src="$base_url/images/updated.bmp">
 	    </td>
 	    <td class='img'>
-	    Contains links to all tools and documents, including an archive of past What's New documents
+	    Contains links to all tools and documents, including an archive of past <br/> What's New documents
 	    </td>
             <td class='img'>
                 <a href='$base_url/../docs/SiteMap.pdf' target='_help'>
@@ -1667,26 +2197,34 @@ sub printUsingMap {
 	    <td class='img' nowrap="nowrap"> 
 	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 	    <img class="menuimg" src="$base_url/images/icon_pdf.gif">
-	    <a href="$base_url/../docs/uiMap.pdf"> User Interface Map</a>
+	    <a href="https://sites.google.com/a/lbl.gov/img-form/using-img/tutorial"> Tutorial</a>
 	    </td>
-	    <td class='img'></td>
+	    <td class='img'>Links to MGM Workshop Videos.</td>
 	    <td class='img'></td>
 	</tr>
 	
 	<tr class='img' valign="top">
 	    <td class='img' nowrap="nowrap"> 
-	        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	        <img class="menuimg" src="$base_url/images/icon_pdf.gif">
-	        <a href="$base_url/../docs/userGuide.pdf">
-                IMG User Manual</a>
+	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	    <img class="menuimg" src="$base_url/images/icon_pdf.gif">
+	    <a href="$base_url/../docs/uiMap.pdf"> User Interface Map</a>
 	    </td>
+	    <td class='img'>IMG User Interface Guide Map</td>
 	    <td class='img'></td>
+	</tr>
+
+	<tr class='img' valign="top">
+	    <td class='img' nowrap="nowrap"> 
+	    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	    <img class="menuimg" src="$base_url/images/icon_pdf.gif">
+	    <a href="$base_url/../docs/SingleCellDataDecontamination.pdf"> Single Cell Data</a>
+	    </td>
+	    <td class='img'>Documentatation about single cells in IMG.</td>
 	    <td class='img'></td>
 	</tr>
     };
 
-    if ($img_er) {
-        print qq{
+    print qq{
     <tr class='img' valign="top">
         <td class='img' nowrap="nowrap"> 
             &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
@@ -1694,14 +2232,12 @@ sub printUsingMap {
             <a href="$base_url/../docs/userGuideER.pdf">
                 IMG ER Tutorial</a>
         </td>
-        <td class='img'></td>
+        <td class='img'>IMG User Guide</td>
         <td class='img'></td>
     </tr>
         };
-    }
 
-    if ($include_metagenomes) {
-        print qq{
+    print qq{
     <tr class='img' valign="top">
         <td class='img' nowrap="nowrap"> 
             &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
@@ -1709,11 +2245,23 @@ sub printUsingMap {
             <a href="$base_url/../docs/userGuide_m.pdf">
                 IMG/M Addendum</a>
         </td>
-        <td class='img'></td>
+        <td class='img'>IMG Metagenome Addendum</td>
         <td class='img'></td>
     </tr>
         };
-    }
+
+    print qq{
+    <tr class='img' valign="top">
+        <td class='img' nowrap="nowrap"> 
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+            <img class="menuimg" src="$base_url/images/icon_pdf.gif">
+            <a href="$base_url/../docs/IMG_virus_Help.pdf">
+                IMG Virus Help</a>
+        </td>
+        <td class='img'>IMG Virus System Documentation.</td>
+        <td class='img'></td>
+    </tr>
+        };
 
     print qq{
         <tr class='img' valign='top'>
@@ -1737,7 +2285,31 @@ sub printUsingMap {
                 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
                 <a href="$main_cgi?section=Help&page=policypage"> Data Usage Policy </a>
             </td>
+            <td class='img'>IMG Data Usage Policy</td>
             <td class='img'></td>
+        </tr>
+        <tr class='img' valign='top'>
+            <td class='img' nowrap> 
+                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                <a href="http://jgi.doe.gov/data-and-tools/data-management-policy-practices-resources/"> Data Management Policy </a>
+            </td>
+            <td class='img'>DOE Data Management Policy, Practices & Resources</td>
+            <td class='img'></td>
+        </tr>
+        <tr class='img' valign='top'>
+            <td class='img' nowrap> 
+                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                <a href="http://jgi.doe.gov/user-program-info/pmo-overview/policies/"> Collaborate with JGI </a>
+            </td>
+            <td class='img'>JGI Policies re. data release and publications</td>
+            <td class='img'></td>
+        </tr>
+        <tr class='img' valign='top'>
+            <td class='img' nowrap> 
+                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                <a href="https://groups.google.com/a/lbl.gov/d/msg/img-user-forum/o4Pjc_GV1js/EazHPcCk1hoJ"> How to Download </a>
+            </td>
+            <td class='img'>Information re. downloading data from IMG</td>
             <td class='img'></td>
         </tr>
         <tr class='img' valign='top'>
@@ -1745,8 +2317,41 @@ sub printUsingMap {
                 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
                 <a href="http://genome.jgi-psf.org/"> JGI Genome Portal </a>
             </td>
+            <td class='img'>Link to JGI Genome Portal</td>
             <td class='img'></td>
-            <td class='img'></td>
+        </tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	        &nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="https://sites.google.com/a/lbl.gov/img-form/using-img/citation"> Citation </a>
+	    </td>
+	    <td class='img'>
+            How to cite IMG
+	    </td>
+	    <td class='img'></td>
+        </tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	        &nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="http://www.standardsingenomics.com/content/10/1/86"> Genome Annotation SOP </a>
+	    </td>
+	    <td class='img'>
+            Article describing IMG isolate genome annotation SOP.
+	    </td>
+	    <td class='img'></td>
+        </tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	        &nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="http://standardsingenomics.biomedcentral.com/articles/10.1186/s40793-016-0138-x"> Metagenome SOP </a>
+	    </td>
+	    <td class='img'>
+            Article describing IMG metagenome annotation SOP.
+	    </td>
+	    <td class='img'></td>
         </tr>
 	
 	<tr class='img' valign='top'>
@@ -1755,7 +2360,29 @@ sub printUsingMap {
 	        <a href="education.html"> Education </a>
 	    </td>
 	    <td class='img'>
-	        &nbsp;
+            IMG EDU Documentation
+	    </td>
+	    <td class='img'></td>
+        </tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	        &nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="http://mgm.jgi.doe.gov/"> MGM Workshop </a>
+	    </td>
+	    <td class='img'>
+            Link to JGI MGM Workshop.
+	    </td>
+	    <td class='img'></td>
+        </tr>
+
+	<tr class='img' valign='top'>
+	    <td class='img'> 
+	        &nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="https://sites.google.com/a/lbl.gov/img-form/questions"> IMG User Forum </a>
+	    </td>
+	    <td class='img'>
+            Link to IMG User Forum.
 	    </td>
 	    <td class='img'></td>
         </tr>
@@ -1763,10 +2390,22 @@ sub printUsingMap {
         <tr class='img' valign='top'>
 	    <td class='img'> 
 	        &nbsp; &nbsp; &nbsp; &nbsp;
-	        <a href="http://img.jgi.doe.gov/publication.html"> Publications </a>
+                <img class="menuimg" src="$base_url/images/mail.png">
+	        <a href="$main_cgi?section=Questions"> Report Bugs / Issues </a>
             </td>
 	    <td class='img'>
-	        &nbsp;
+            Report any bugs or issues you have encountered when using IMG.
+            </td>
+	    <td class='img'></td>
+	</tr> 
+
+        <tr class='img' valign='top'>
+	    <td class='img'> 
+	        &nbsp; &nbsp; &nbsp; &nbsp;
+	        <a href="https://sites.google.com/a/lbl.gov/img-form/contact-us"> Contact Us </a>
+            </td>
+	    <td class='img'>
+            How to contact the IMG Group.
             </td>
 	    <td class='img'></td>
 	</tr> 
@@ -1786,28 +2425,11 @@ sub printUsingMap {
 	    </tr>
         };
     }
-
-    print qq{
-         <tr class='img' valign='top'>
-            <td class='img' NOWRAP> 
-                &nbsp; &nbsp; &nbsp; &nbsp;
-                <img class="menuimg" src="$base_url/images/mail.png">
-                <a href="$main_cgi?section=Questions"> Questions/Comments</a>
-                <!--
-                <img width="45" height="14" border="0" 
-                style="margin-left: 5px;" src="$base_url/images/updated.bmp">
-                -->
-            </td>
-            <td class='img' >
-                Quesions, comments or feedfack
-            </td>
-            <td class='img'></td>
-        </tr>
-    };
 }
 
 sub printComponentPages {
     print qq{
+
 	<a name='comp' href='#'><h2>sub-Pages and Components</h2> </a>
 	<p>
 	List of important sub-pages and components that are not covered by navigation menus.

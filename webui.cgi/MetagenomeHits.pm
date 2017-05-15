@@ -1,6 +1,6 @@
 ###########################################################################
 # Phylogenetic Distribution of Genes from taxon detail page
-# $Id: MetagenomeHits.pm 34858 2015-12-08 18:48:04Z klchu $
+# $Id: MetagenomeHits.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package MetagenomeHits;
 
@@ -1177,7 +1177,7 @@ sub printMetagCateFuncGenes {
     my $profileType = param('profileType');
     my $category_display_type = PhyloUtil::getFuncTextVal($profileType);
     if ( !$category_display_type ) {
-        webError("Unknown function type: $profileType\n"); 
+        WebUtil::webError("Unknown function type: $profileType\n"); 
     }
     print "<h3>\n";
     print "$category_display_type Gene List";
@@ -1185,7 +1185,7 @@ sub printMetagCateFuncGenes {
 
     my $cate_id = param('cate_id');
     if ( !$cate_id ) {
-        webError("No function is selected.\n");
+        WebUtil::webError("No function is selected.\n");
     }
     
     my ($category_name) = PhyloUtil::getCategoryName( $dbh, $profileType, $cate_id );
@@ -2302,7 +2302,7 @@ sub printMetagCateFunc {
 
     my $category_display_type = PhyloUtil::getFuncTextVal($profileType);
     if ( !$category_display_type ) {
-        webError("Unknown function type: $profileType\n"); 
+        WebUtil::webError("Unknown function type: $profileType\n"); 
     }
     print "<h3>$category_display_type View</h3>\n";
 
@@ -2430,7 +2430,7 @@ sub getGene2Funcs {
         };    
     }
     else {
-        webError("Pending: $profileType\n");         
+        WebUtil::webError("Pending: $profileType\n");         
     }
     #print "getGene2Funcs() sql=$sql<br/>\n";
 
@@ -2490,7 +2490,7 @@ sub printMetagCateFunc_old {
 
     my $category_display_type = PhyloUtil::getFuncTextVal($profileType);
     if ( !$category_display_type ) {
-        webError("Unknown function type: $profileType\n"); 
+        WebUtil::webError("Unknown function type: $profileType\n"); 
     }
     print "<h3>$category_display_type View</h3>\n";
 
@@ -2512,7 +2512,7 @@ sub printMetagCateFunc_old {
             $domain, $phylum, $ir_class, $ir_order, $family, $genus, $species );        
     }
     else {
-        webError("Pending: $profileType\n");         
+        WebUtil::webError("Pending: $profileType\n");         
     }        
 
     #### PREPARE THE PIECHART ######

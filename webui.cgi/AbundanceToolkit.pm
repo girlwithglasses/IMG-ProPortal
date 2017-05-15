@@ -3,7 +3,7 @@
 #     measurements.
 #        --es 05/19/2007
 #
-# $Id: AbundanceToolkit.pm 34262 2015-09-15 20:30:52Z jinghuahuang $
+# $Id: AbundanceToolkit.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package AbundanceToolkit;
 
@@ -248,7 +248,7 @@ sub printAbundanceResults {
         $vir_count = $#scaffold_cart_names + 1;
     }
     if ( $nQueryGenomes == 0 && $vir_count == 0) {
-        webError("Please select 1 to $max_query_taxons genomes.<br/>\n");
+        WebUtil::webError("Please select 1 to $max_query_taxons genomes.<br/>\n");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -590,7 +590,7 @@ sub sortAbundanceFile {
     my $pagerFileIdx  = "$pagerFileRoot.idx";
     if ( !(-e $pagerFileRows) || !(-e $pagerFileIdx)) {
         webLog("Expired session file '$pagerFileRows' or '$pagerFileIdx'\n");
-        webError("Session file expired.<br/>Please start your 'Function Comparison' study from the beginning.\n");
+        WebUtil::webError("Session file expired.<br/>Please start your 'Function Comparison' study from the beginning.\n");
     }
 
     my $rfh           = newReadFileHandle( $pagerFileRows, "sortAbudanceFile" );
@@ -706,20 +706,20 @@ sub printOnePage {
     my $pagerFileXls  = "$pagerFileRoot.xls";
     if ( !-e ($pagerFileIdx) ) {
         warn("$pagerFileIdx not found\n");
-        webError( "Session expired for this page 1 $pagerFileIdx."
+        WebUtil::webError( "Session expired for this page 1 $pagerFileIdx."
               . "  Please start again." );
     }
     if ( !-e ($pagerFileRows) ) {
         warn("$pagerFileRows not found\n");
-        webError("Session expired for this page 2.  Please start again.");
+        WebUtil::webError("Session expired for this page 2.  Please start again.");
     }
     if ( !-e ($pagerFileMeta) ) {
         warn("$pagerFileMeta not found\n");
-        webError("Session expired for this page 3.  Please start again.");
+        WebUtil::webError("Session expired for this page 3.  Please start again.");
     }
     if ( !-e ($pagerFileXls) ) {
         warn("$pagerFileXls not found\n");
-        webError("Session expired for this page 4.  Please start again.");
+        WebUtil::webError("Session expired for this page 4.  Please start again.");
     }
 
     my %metaData      = loadMetaData($pagerFileMeta);
@@ -1493,7 +1493,7 @@ sub printAbundanceDownload {
     my $pagerFileRoot = getPagerFileRoot( $function, $xcopy, $normalization );
     my $path = "$pagerFileRoot.xls";
     if ( !( -e $path ) ) {
-        webErrorHeader(
+        WebUtil::webErrorHeader(
             "Session of download has expired. " . "Please start again." );
     }
     my $sz = fileSize($path);
@@ -1638,7 +1638,7 @@ sub getDScores {
         $n2 += $cnt;
     }
     if ( $nKeys1 != $nKeys2 ) {
-        webDie("getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match\n");
+        WebUtil::webDie("getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match\n");
     }
     if ( $n1 < 1 || $n2 < 1 ) {
         webLog("getDScores: n1=$n1 n2=$n2: no hits to calculate\n");
@@ -1723,7 +1723,7 @@ sub getPvalues {
     close $rfh;
     my $nPvalues = @pvalues;
     if ( $nPvalues != $nKeys ) {
-        webDie("getPvalues: nPvalues=$nPvalues nKeys=$nKeys");
+        WebUtil::webDie("getPvalues: nPvalues=$nPvalues nKeys=$nKeys");
     }
 
     my $idx = 0;

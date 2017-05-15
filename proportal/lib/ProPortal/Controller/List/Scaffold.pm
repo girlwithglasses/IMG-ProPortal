@@ -20,7 +20,7 @@ has '+page_id' => (
 
 has '+filter_domains' => (
 	default => sub {
-		return [ qw( taxon_oid ) ];
+		return [ qw( taxon_oid pp_subset ) ];
 	}
 );
 
@@ -35,13 +35,13 @@ sub _render {
 	my $self = shift;
 
 	my $statement = $self->get_data;
-	my $arr = $statement->all;
-	my $n_results = $statement->row_count;
+	my $arr = $self->page_me( $statement )->all;
 
 	return { results => {
 		domain => 'scaffold',
 		arr => $arr,
-		n_results => $n_results,
+		n_results => $statement->row_count,
+		n_pages   => $statement->page_count,
 		table => $self->get_table('scaffold'),
 		params => $self->filters
 	} };
@@ -56,7 +56,7 @@ sub get_data {
 	return $self->_core->run_query({
 		query => 'scaffold_list',
 		filters => $self->filters,
-		result_as => 'statement'
+		-result_as => 'statement'
 	});
 }
 

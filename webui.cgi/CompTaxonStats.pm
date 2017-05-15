@@ -3,13 +3,11 @@
 #   based on a single RDBMS stats table joined to taxon.
 #     --es 05/06/2005
 #
-# $Id: CompTaxonStats.pm 33827 2015-07-28 19:36:22Z aireland $
+# $Id: CompTaxonStats.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package CompTaxonStats;
-use strict;
-use warnings;
-
 use CGI qw( :standard  );
+use strict;
 use Data::Dumper;
 use DBI;
 use WebConfig;
@@ -113,7 +111,7 @@ sub setColNameIdxs {
 
     ## From sort column
     my $colNameIdxs = param( "colNameIdxs" );
-    return if ! WebUtil::blankStr( $colNameIdxs );
+    return if !WebUtil::blankStr( $colNameIdxs );
 
     ## From resetting output columns
     my @outputCol = param( "outputCol" .  $tabpage);
@@ -349,20 +347,22 @@ sub printExport {
     my( $self, $tabpage ) = @_;
 
     if ($tabpage ne "") {
-		my $name = "_section_CompareGenomes_excel_exportCompStats_" . $tabpage;
-		my $contact_oid = WebUtil::getContactOid();
-		my $str = HtmlUtil::trackEvent("Export", $contact_oid, "img button $name");
+	my $name = "_section_CompareGenomes_excel_exportCompStats_" . $tabpage;
 
-		print qq{
-			<input id='exportButton$tabpage' class='lgdefbutton' name='$name' type="submit" value="Export Tab Delimited To Excel" $str />
-		};
+            my $contact_oid = WebUtil::getContactOid();
+            my $str = HtmlUtil::trackEvent("Export", $contact_oid, "img button $name");
+
+            print qq{
+                <input id='exportButton$tabpage' class='lgdefbutton' name='$name' type="submit" value="Export Tab Delimited To Excel" $str>
+            };
     } else {
-		my $name = "_section_CompareGenomes_excel_exportCompStats";
-		my $contact_oid = WebUtil::getContactOid();
-		my $str = HtmlUtil::trackEvent("Export", $contact_oid, "img button $name");
-		print qq{
-			<input id='exportButton' class='lgdefbutton' name='$name' type="submit" value="Export Tab Delimited To Excel" $str />
-		};
+	my $name = "_section_CompareGenomes_excel_exportCompStats";
+
+            my $contact_oid = WebUtil::getContactOid();
+            my $str = HtmlUtil::trackEvent("Export", $contact_oid, "img button $name");
+            print qq{
+                <input id='exportButton' class='lgdefbutton' name='$name' type="submit" value="Export Tab Delimited To Excel" $str>
+            };
     }
 }
 
@@ -567,28 +567,30 @@ sub printConfigTable {
         # TODO new way for tabbed pages
         # note we need custom javascript for this - ken
         my $name = "_section_CompareGenomes_setTaxonBreakdownStatCols_$tabpage";
-
-        print "<input type='submit' id='dispGenomesButton' class='meddefbutton' "
-        	. "name='$name' value='Display Genomes Again' />\n";
+        print submit( -name => $name, -id => "dispGenomesButton",
+        value => "Display Genomes Again", -class => "meddefbutton" );
+        print "&nbsp";
         # Can not be replaced by WebUtil::printButtonFooter();
-        print "<input id='selAll' type='button' name='selectAll' value='Select All' " .
+        print "<input id='selAll' type=button name='selectAll' value='Select All' " .
         "onClick='selectAllOutputCol".$tabpage."(1)' class='smbutton' />\n";
-        print "<input id='selCnts' type='button' name='selectAll' value='Select Counts Only' " .
+        print "<input id='selCnts' type=button name='selectAll' value='Select Counts Only' " .
         "onClick='selectCountOutputCol".$tabpage."(1)' class='smbutton' />\n";
-        print "<input id='clrAll' type='button' name='clearAll' value='Clear All' " .
+        print "&nbsp";
+        print "<input id='clrAll' type=button name='clearAll' value='Clear All' " .
         "onClick='selectAllOutputCol".$tabpage."(0)' class='smbutton' />\n";
     } else {
         # original way
         my $name = "_section_CompareGenomes_setTaxonBreakdownStatCols";
-
-        print "<input type='submit' id='dispGenomesButton' class='meddefbutton' "
-        	. "name='$name' value='Display Genomes Again' />\n";
+        print submit( -name => $name, -id => "dispGenomesButton",
+        value => "Display Genomes Again", -class => "meddefbutton" );
+        print "&nbsp";
         # Can not be replaced by WebUtil::printButtonFooter();
-        print "<input id='selAll' type='button' name='selectAll' value='Select All' " .
+        print "<input id='selAll' type=button name='selectAll' value='Select All' " .
         "onClick='selectAllOutputCol(1)' class='smbutton' />\n";
-        print "<input id='selCnts' type='button' name='selectAll' value='Select Counts Only' " .
+        print "<input id='selCnts' type=button name='selectAll' value='Select Counts Only' " .
         "onClick='selectCountOutputCol(1)' class='smbutton' />\n";
-        print "<input id='clrAll' type='button' name='clearAll' value='Clear All' " .
+        print "&nbsp";
+        print "<input id='clrAll' type=button name='clearAll' value='Clear All' " .
         "onClick='selectAllOutputCol(0)' class='smbutton' />\n";
     }
 }

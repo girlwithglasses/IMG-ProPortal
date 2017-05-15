@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: GraphUtil.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: GraphUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 ###########################################################################
 package GraphUtil;
@@ -1536,15 +1536,15 @@ sub printFragment {
     }
 
     if ( $#query_scaffold > 999 && $all_scaffolds ne "all" ) {
-        webError(   "Please select less than 999 query scaffolds or"
+        WebUtil::webError(   "Please select less than 999 query scaffolds or"
                   . " check 'Select ALL query scaffolds'" );
     }
 
     if ( $#ref_scaffold > 19 ) {
-        webError("Please only select 20 reference scaffolds!");
+        WebUtil::webError("Please only select 20 reference scaffolds!");
     }
     if ( $#ref_scaffold < 0 && $scaffolds eq "" ) {
-        webError("Please select a reference scaffold!");
+        WebUtil::webError("Please select a reference scaffold!");
     }
 
     # if js combo override any other ref scaffold selection
@@ -1611,7 +1611,7 @@ sub printFragment {
     if( $range eq "" || $range == 0 ) {
         #$dbh->disconnect();
         printStatusLine( "No data.", 2 );
-        webError("There is no data to plot for query scaffold and reference scaffolds you've selected!");
+        WebUtil::webError("There is no data to plot for query scaffold and reference scaffolds you've selected!");
     }
 
     my $end   = ceil( $max / $range ) * $range;
@@ -1819,7 +1819,7 @@ sub printFragment {
 
         # no plots drawn
         printStatusLine( "Loaded.", 2 );
-        webError(   "There are no query genes within reference genomes range"
+        WebUtil::webError(   "There are no query genes within reference genomes range"
                   . " $min to $i!" );
     } else {
         printCogColorLegend( \%cogFunction );

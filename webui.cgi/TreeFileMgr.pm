@@ -1,7 +1,7 @@
 #
 # experimental
 #
-# $Id: TreeFileMgr.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: TreeFileMgr.pm 36954 2017-04-17 19:34:04Z klchu $
 package TreeFileMgr;
 use strict;
 use CGI qw( :standard );
@@ -29,7 +29,7 @@ my $top_base_url = $env->{top_base_url};
 my $dir2 = WebUtil::getSessionDir();
 $dir2 .= "/TreeFileMgr";
 if ( !(-e "$dir2") ) { 
-    mkdir "$dir2" or webError("Can not make $dir2!"); 
+    mkdir "$dir2" or WebUtil::webError("Can not make $dir2!"); 
 }
 $cgi_tmp_dir = $dir2;
 
@@ -79,6 +79,13 @@ my %PHYLUM_NAME = (
                     7 => "Species",
                     8 => "Genome"
 );
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/html" );
+}
 
 sub dispatch {
     my $page = param("page");
@@ -786,7 +793,7 @@ sub writeSession {
     } elsif ( $file ne "" ) {
         $file = WebUtil::checkFileName($file);
         if ( !-e "$cgi_tmp_dir/$file" ) {
-            webError("Your session timed out, please restart!");
+            WebUtil::webError("Your session timed out, please restart!");
         }
     }
 
@@ -833,7 +840,7 @@ sub writeSessionRemove {
             #
             #              </p>
             #            };
-            webError("Your session timed out, please restart!");
+            WebUtil::webError("Your session timed out, please restart!");
         }
     }
 

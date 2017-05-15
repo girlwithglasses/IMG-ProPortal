@@ -7,7 +7,7 @@
 #			+ Genus Species
 #
 #
-# $Id: PhylumTree.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: PhylumTree.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 package PhylumTree;
 
@@ -39,8 +39,15 @@ my $top_base_url = $env->{top_base_url};
 #
 my $YUI = $env->{yui_dir_28};
 
-sub dispatch {
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
 
+sub dispatch {
+    my($self) = @_;
 	my $page = param("page");
 
 	if ( $page eq "tree" ) {

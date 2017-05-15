@@ -13,7 +13,7 @@
 #       to view application log entries in the file specified
 #       by WebConfig.pm: $e->{ web_log_file }.
 #
-# $Id: GeneCartChrViewer.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: GeneCartChrViewer.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GeneCartChrViewer;
 my $section = "GeneCartChrViewer";
@@ -161,7 +161,7 @@ sub print_form {
     @scaffolds = &CircularMap::unique( \@scaffolds, 1 );
     #print "scaffolds size: ".scalar(@scaffolds)."<br/>\n";
     if ( scalar(@scaffolds) > $maxScaffolds ) {
-        webError("Too many scaffolds: Please select genes from no more than "
+        WebUtil::webError("Too many scaffolds: Please select genes from no more than "
          . $maxScaffolds . " scaffolds");
     }
 
@@ -506,7 +506,7 @@ sub check_genes {
     
         for ( my $g = 0 ; $g < scalar(@gene_oids) ; $g++ ) {
             if ( !defined( $good_genes{ $gene_oids[$g][0] } ) ) {
-                webError("Gene $gene_oids[$g][0] does not exist in the database.");
+                WebUtil::webError("Gene $gene_oids[$g][0] does not exist in the database.");
             }
             #print "gene_oids[$g][0]: $gene_oids[$g][0]<br/>\n";
             #print "gene_oids[$g][1]: $gene_oids[$g][1]<br/>\n";
@@ -551,7 +551,7 @@ sub check_genes {
 #        @batches = (1);
 #    }
     if ( scalar(@batch_genes) <= 0 ) {
-        webError("No genes selected: "
+        WebUtil::webError("No genes selected: "
 	       . "please select genes from the gene cart. Only assembled metagenome genes are supported.");
     }
 
@@ -603,7 +603,7 @@ sub checkDomain {
     
         my $bad_oid_str = join( ',', @bad_oids );
         return if blankStr($bad_oid_str);
-        webError(   "Eukaryotes are not supported for this viewer. "
+        WebUtil::webError(   "Eukaryotes are not supported for this viewer. "
                   . "Check gene_oids $bad_oid_str." );
 
     }

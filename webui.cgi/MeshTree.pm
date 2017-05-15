@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MeshTree.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: MeshTree.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MeshTree;
 
@@ -52,6 +52,12 @@ sub getAppHeaderData {
 
     my @a = ( "FindFunctions", '', '', $js );
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # do nothing for now
 }
 
 sub dispatch {

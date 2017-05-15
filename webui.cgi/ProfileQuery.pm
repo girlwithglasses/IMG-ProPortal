@@ -287,7 +287,7 @@ sub printProfileQueryResults {
    my @taxonAbsentFuncs = param( "taxonAbsentFuncs" );
 
    if( scalar( @taxonOutputFuncs ) == 0 ) {
-      webError( "Please select one output genome or bin." );
+      WebUtil::webError( "Please select one output genome or bin." );
    }
    printStatusLine( "Loading ...",  1 );
    printMainForm( );

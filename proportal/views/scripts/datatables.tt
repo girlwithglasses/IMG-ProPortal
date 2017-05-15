@@ -1,8 +1,22 @@
-[%
+[%	MACRO d_table_init( scr_name ) BLOCK;
 
-	MACRO d_table_init( scr_name ) BLOCK; %]
-$('#[% scr_name %]').DataTable({
-	columnDefs: [ {
+#	table set up: '<"dt_top"ilBf>rt<"dt_bottom"p>'
+#    <div class="dt_top">
+#      {information}
+#      {length}
+#      {Buttons}
+#      {filter}
+#	</div>
+#      {processing}
+#      {table}
+#	<div class="dt_bottom">
+#      {pagination}
+#    </div>
+
+
+%]
+$('#[% scr_name %]').DataTable( {
+ 	columnDefs: [ {
 		orderable: false,
 		className: 'select-checkbox',
 		targets:   0
@@ -10,7 +24,7 @@ $('#[% scr_name %]').DataTable({
 	select: {
 		style: 'multi'
 	},
-	"dom": '<"dt_top"ilBf>rt<"dt_bottom"p>',
+	dom: '<"dt_top"ilBf>rt<"dt_bottom"p>',
 	buttons: [
 		'selectAll',
 		'selectNone',
@@ -19,33 +33,37 @@ $('#[% scr_name %]').DataTable({
 			action: function() {}
 		}
 	],
+	pageLength: 100,
+	lengthMenu: [ [50, 100, 200, -1], [50, 100, 200, "All"] ],
 	paging: true
 });
-[%	END;
+[%  END; # end macro d_table_init %]
+<!-- these links contain jQuery, datatables base package, and buttons and select extensions -->
 
+<!-- script type="text/javascript" src="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.js"></script -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/sc-1.4.2/se-1.2.2/datatables.min.css" />
+
+<!-- link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.css"/ -->
+[%
 	IF ! scr_arr;
 		scr_arr = [];
 	END;
 
-#	scr_arr.unshift( 'https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js' );
-#	scr_arr.unshift( '//code.jquery.com/jquery-1.12.4.js' );
+scr_arr.unshift( "https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/sc-1.4.2/se-1.2.2/datatables.min.js" );
 	FOREACH s IN scr_arr;
 		'<script type="text/javascript" src="' _ s _ '"></script>';
 	END;
 %]
-
-<!-- these links contain jQuery, datatables base package, and buttons and select extensions -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.css"/>
-<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.js"></script>
-
-
 <script type="text/javascript">
 $(document).ready(function() {
 [%
-	FOR scr_name IN table_arr;
-		d_table_init( scr_name );
+	FOR t_name IN table_arr;
+		d_table_init( t_name );
 	END;
 %]
+
 } );
+
 </script>
 

@@ -7,15 +7,12 @@ use strict;
 use CGI qw( :standard );
 use DBI;
 use Data::Dumper;
-use CachedTable;
 use WebConfig;
 use WebUtil;
 use HtmlUtil;
 use PhyloTreeMgr;
 use TabHTML;
-## use MetaUtil;
-## use MetaGeneTable;
-## use MerFsUtil;
+
 use WorkspaceUtil;
 use TreeFile;
 

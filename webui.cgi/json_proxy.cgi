@@ -16,6 +16,6 @@ then
    echo "<font color='red'>"
    echo "Oops. This is embarrassing an error has occurred in our JSON script."
    echo "Please reports this along with your steps on how to reproduce it."
-   echo "- IMG email: imgsupp at lists.jgi-psf.org"
+   echo "- IMG email: jgi-imgsupp at lists.lbl.gov"
    echo "</font>"
 fi

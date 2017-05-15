@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MetagPhyloDist.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: MetagPhyloDist.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package MetagPhyloDist;
 
@@ -414,8 +414,8 @@ sub printBodySiteMetagHits {
         my $sql       = qq{                                                             
             select  dt.gene_oid, dt.percent_identity
             from dt_phylum_dist_genes dt, taxon t2,
-                project_info\@imgsg_dev p, 
-                project_info_body_sites\@imgsg_dev b
+                project_info p, 
+                project_info_body_sites b
             where dt.taxon_oid = ?
                 and dt.homolog_taxon = t2.taxon_oid
                 and (t2.gold_id = p.gold_stamp_id 
@@ -926,7 +926,7 @@ sub printResults {
     }
     #print "printResults() find_toi: @find_toi<br/>\n";
     if ( scalar(@find_toi) <= 0 ) {
-        webError("Please select at least 1 genome.<br/>\n");
+        WebUtil::webError("Please select at least 1 genome.<br/>\n");
     }
     my @find_toi_sorted = sort(@find_toi);
     my $find_toi_ref =  \@find_toi_sorted; 
@@ -1088,7 +1088,7 @@ sub printResults {
         printEndWorkingDiv();
     }
 
-    webError(   "Phylogenetic distribution data is not available for "
+    WebUtil::webError(   "Phylogenetic distribution data is not available for "
               . "<b>$text percent identity</b> based on <b>$xcopyText</b> for "
               . "the selected metagenome(s) (<b>$data_type</b>)." )
       if !%$gene_count_href;
@@ -1619,8 +1619,8 @@ sub getGenomeList_BodySite {
     my $sql = qq{
         select distinct t2.taxon_oid, t2.taxon_display_name
         from dt_phylum_dist_genes dt, taxon t2,
-            project_info\@imgsg_dev p, 
-            project_info_body_sites\@imgsg_dev b
+            project_info p, 
+            project_info_body_sites b
         where $percentClause 
             and dt.taxon_oid in ($genome_str)   
             and dt.homolog_taxon = t2.taxon_oid
@@ -1636,7 +1636,7 @@ sub getGenomeList_BodySite {
         $sql = qq{
             select distinct t2.taxon_oid, t2.taxon_display_name
             from dt_phylum_dist_genes dt, taxon t2,
-                 project_info\@imgsg_dev p
+                 project_info p
             where $percentClause 
                 and dt.taxon_oid in ($genome_str)   
                 and dt.homolog_taxon = t2.taxon_oid
@@ -1644,10 +1644,10 @@ sub getGenomeList_BodySite {
                     or t2.taxon_oid = p.img_oid)
                 and p.project_oid in (
                     select p2.project_oid 
-                    from project_info\@imgsg_dev p2
+                    from project_info p2
                     minus 
                     select b.project_oid 
-                    from project_info_body_sites\@imgsg_dev b
+                    from project_info_body_sites b
                 )
                 $rclause
                 $imgClause
@@ -1851,8 +1851,8 @@ sub getGenomeList_sdb_BodySite {
     my $imgClause = WebUtil::imgClause('t2');
     my $sql       = qq{
         select t2.taxon_oid, b.sample_body_site
-        from taxon t2, project_info\@imgsg_dev p, 
-             project_info_body_sites\@imgsg_dev b
+        from taxon t2, project_info p, 
+             project_info_body_sites b
         where (t2.gold_id = p.gold_stamp_id or t2.taxon_oid = p.img_oid)
         and p.project_oid = b.project_oid
         and b.sample_body_site is not null
@@ -2081,8 +2081,8 @@ sub getGenomeCount_BodySite {
         select count(distinct t2.taxon_oid),  
             b.sample_body_site
         from dt_phylum_dist_genes dt, taxon t2, 
-            project_info\@imgsg_dev p, 
-            project_info_body_sites\@imgsg_dev b
+            project_info p, 
+            project_info_body_sites b
         where $percentClause 
             and dt.taxon_oid in ($genome_str)   
             and dt.homolog_taxon = t2.taxon_oid
@@ -2117,7 +2117,7 @@ sub getGenomeCount_BodySite {
     $sql = qq{
         select count(distinct t2.taxon_oid)
         from dt_phylum_dist_genes dt, taxon t2, 
-            project_info\@imgsg_dev p
+            project_info p
         where $percentClause 
             and dt.taxon_oid in ($genome_str)   
             and dt.homolog_taxon = t2.taxon_oid
@@ -2125,10 +2125,10 @@ sub getGenomeCount_BodySite {
                 t2.taxon_oid = p.img_oid) 
             and p.project_oid in (
                 select p2.project_oid 
-                from project_info\@imgsg_dev p2 
+                from project_info p2 
                 minus 
                 select b.project_oid 
-                from project_info_body_sites\@imgsg_dev b
+                from project_info_body_sites b
             )
             $rclause
             $imgClause
@@ -2707,8 +2707,8 @@ sub getGeneCounts_BodySite {
         select dt.taxon_oid, count(dt.gene_oid), 
                count(distinct dt.homolog), b.sample_body_site
         from dt_phylum_dist_genes dt, taxon t2, 
-             project_info\@imgsg_dev p, 
-             project_info_body_sites\@imgsg_dev b
+             project_info p, 
+             project_info_body_sites b
         where $percentClause 
         and dt.taxon_oid in ($genome_str)   
         and dt.homolog_taxon = t2.taxon_oid
@@ -2758,17 +2758,17 @@ sub getGeneCounts_BodySite {
     $sql = qq{
         select dt.taxon_oid, count(dt.gene_oid), count(distinct dt.homolog)
         from dt_phylum_dist_genes dt, taxon t2, 
-             project_info\@imgsg_dev p
+             project_info p
         where $percentClause 
         and dt.taxon_oid in ($genome_str)   
         and dt.homolog_taxon = t2.taxon_oid
         and (t2.gold_id = p.gold_stamp_id or t2.taxon_oid = p.img_oid) 
         and p.project_oid in (
             select p2.project_oid 
-            from project_info\@imgsg_dev p2 
+            from project_info p2 
             minus 
             select b.project_oid 
-            from project_info_body_sites\@imgsg_dev b
+            from project_info_body_sites b
         )
         $rclause
         $imgClause
@@ -2836,8 +2836,8 @@ sub getGeneCounts_sdb_BodySite {
     my $imgClause = WebUtil::imgClause('t2');
     my $sql       = qq{
         select t2.taxon_oid, b.sample_body_site
-        from taxon t2, project_info\@imgsg_dev p, 
-             project_info_body_sites\@imgsg_dev b
+        from taxon t2, project_info p, 
+             project_info_body_sites b
         where (t2.gold_id = p.gold_stamp_id or t2.taxon_oid = p.img_oid)
         and p.project_oid = b.project_oid
         and b.sample_body_site is not null
@@ -3250,7 +3250,7 @@ sub printBodySiteResults {
         @find_toi = param("taxon_oid");
     }
     if ( scalar(@find_toi) <= 0 ) {
-        webError("Please select at least 1 genome.<br/>\n");
+        WebUtil::webError("Please select at least 1 genome.<br/>\n");
     }
     my @find_toi_sorted = sort(@find_toi);
     my $find_toi_ref =  \@find_toi_sorted; 
@@ -3821,7 +3821,7 @@ sub printAllBodySiteResults_merfs {
     # get ref genome - human
     my $sql = qq{
         select p.gold_stamp_id, b.sample_body_site
-        from project_info\@imgsg_dev p, project_info_body_sites\@imgsg_dev b
+        from project_info p, project_info_body_sites b
         where p.project_oid = b.project_oid
         and p.host_name = 'Homo sapiens'
         and b.sample_body_site is not null  
@@ -3932,8 +3932,8 @@ sub printAllBodySiteResults_merfs {
     my $imgClause = WebUtil::imgClause('t');
     my $sql       = qq{
         select t.taxon_oid, p.gold_stamp_id
-        from  taxon t, project_info\@imgsg_dev p, 
-              project_info_body_sites\@imgsg_dev b
+        from  taxon t, project_info p, 
+              project_info_body_sites b
         where p.project_oid = b.project_oid
         and p.host_name = 'Homo sapiens'
         and b.sample_body_site is not null  
@@ -4101,8 +4101,8 @@ sub printRefGenomeList_merfs {
     # get ref genome - human
     my $sql = qq{
         select t.taxon_oid, p.gold_stamp_id, t.taxon_display_name
-        from taxon t, project_info\@imgsg_dev p, 
-             project_info_body_sites\@imgsg_dev b
+        from taxon t, project_info p, 
+             project_info_body_sites b
         where p.project_oid = b.project_oid
         and p.host_name = 'Homo sapiens'
         and b.sample_body_site is not null  
@@ -4114,8 +4114,8 @@ sub printRefGenomeList_merfs {
     if ( $body_site eq 'Other' ) {
         $sql = qq{
         select t.taxon_oid, p.gold_stamp_id, t.taxon_display_name
-        from taxon t, project_info\@imgsg_dev p,
-             project_info_body_sites\@imgsg_dev b
+        from taxon t, project_info p,
+             project_info_body_sites b
         where p.project_oid = b.project_oid
         and p.host_name = 'Homo sapiens'
         and b.sample_body_site is not null  
@@ -4135,8 +4135,8 @@ sub printRefGenomeList_merfs {
             $imgClause
             and t.gold_id not in
               ( select  p.gold_stamp_id
-                from taxon t, project_info\@imgsg_dev p, 
-                     project_info_body_sites\@imgsg_dev b
+                from taxon t, project_info p, 
+                     project_info_body_sites b
                 where p.project_oid = b.project_oid
                 and p.host_name = 'Homo sapiens'
                 and b.sample_body_site is not null  
@@ -4568,8 +4568,8 @@ sub printAllRefGenomeList_merfs {
     # get ref genome - human
     my $sql = qq{
         select t.taxon_oid, p.gold_stamp_id, t.taxon_display_name
-        from taxon t, project_info\@imgsg_dev p,
-             project_info_body_sites\@imgsg_dev b
+        from taxon t, project_info p,
+             project_info_body_sites b
         where p.project_oid = b.project_oid
         and p.host_name = 'Homo sapiens'
         and b.sample_body_site is not null  
@@ -4581,8 +4581,8 @@ sub printAllRefGenomeList_merfs {
     if ( $subjectBodySite eq 'Other' ) {
         $sql = qq{
         select t.taxon_oid, p.gold_stamp_id, t.taxon_display_name
-        from taxon t, project_info\@imgsg_dev p,
-             project_info_body_sites\@imgsg_dev b
+        from taxon t, project_info p,
+             project_info_body_sites b
         where p.project_oid = b.project_oid
         and p.host_name = 'Homo sapiens'
         and b.sample_body_site is not null  
@@ -4603,8 +4603,8 @@ sub printAllRefGenomeList_merfs {
             $imgClause
             and t.gold_id not in
               ( select p.gold_stamp_id
-                from taxon t, project_info\@imgsg_dev p,
-                     project_info_body_sites\@imgsg_dev b
+                from taxon t, project_info p,
+                     project_info_body_sites b
                 where p.project_oid = b.project_oid
                 and p.host_name = 'Homo sapiens'
                 and b.sample_body_site is not null  

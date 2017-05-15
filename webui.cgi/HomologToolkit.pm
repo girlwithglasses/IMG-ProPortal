@@ -64,7 +64,7 @@ sub dispatch {
 sub printQueryForm {
     my $gene_oid = param( "gene_oid" );
     if( blankStr( $gene_oid ) ) {
-       webError( "Gene $gene_oid not found." );
+       WebUtil::webError( "Gene $gene_oid not found." );
     }
     my $dbh = dbLogin( );
     my $gene_name = geneOid2Name( $dbh, $gene_oid );
@@ -1190,15 +1190,15 @@ sub printOnePage {
    my $pagerFileMeta = "$pagerFileRoot.meta";
    if( !-e( $pagerFileIdx ) ) {
        warn( "$pagerFileIdx not found\n" );
-       webError( "Session expired for this page.  Please start again." );
+       WebUtil::webError( "Session expired for this page.  Please start again." );
    }
    if( !-e( $pagerFileRows ) ) {
        warn( "$pagerFileRows not found\n" );
-       webError( "Session expired for this page.  Please start again." );
+       WebUtil::webError( "Session expired for this page.  Please start again." );
    }
    if( !-e( $pagerFileMeta ) ) {
        warn( "$pagerFileMeta not found\n" );
-       webError( "Session expired for this page.  Please start again." );
+       WebUtil::webError( "Session expired for this page.  Please start again." );
    }
 
    my %metaData = loadMetaData( $pagerFileMeta );

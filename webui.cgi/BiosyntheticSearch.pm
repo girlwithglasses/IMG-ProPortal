@@ -1,6 +1,6 @@
 #
 #
-# $Id: BiosyntheticSearch.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: BiosyntheticSearch.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 package BiosyntheticSearch;
 
@@ -316,7 +316,7 @@ sub printBiosyntheticSearchResult {
     my @genomeFilterSelections = 
 	OracleUtil::processTaxonSelectionParam("genomeFilterSelections");
     #if ( scalar(@genomeFilterSelections) >= $taxonLimit ) {
-    #        webError("Your taxon selection in Phylogentic Option is " 
+    #        WebUtil::webError("Your taxon selection in Phylogentic Option is " 
     #            . scalar(@genomeFilterSelections) . ".<br/>" 
     #            . "Please the number to less than $taxonLimit .");
     #}
@@ -448,7 +448,7 @@ sub printBiosyntheticSearchResult {
         && scalar(@npTypes) <= 0
         && scalar(@bcTypes) <= 0
         && !$pfamSearchTerm ) {
-        webError("Please make selections!");
+        WebUtil::webError("Please make selections!");
     }
 
     printStatusLine( "Loading ...", 1 );

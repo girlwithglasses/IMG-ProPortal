@@ -471,13 +471,13 @@ sub printImgPwayCartProfile_s {
     my @pway_oids = param( "pway_oid" );
     if( scalar( @pway_oids ) == 0 || 
         scalar( @pway_oids ) > $max_pway_batch  ) {
-       webError( "Please select 1 to $max_pway_batch pathways." );
+       WebUtil::webError( "Please select 1 to $max_pway_batch pathways." );
     }
     my @taxon_oids = OracleUtil::processTaxonBinOids( "t" );
     my @bin_oids = OracleUtil::processTaxonBinOids( "b" );
     my $nSelections = scalar( @taxon_oids ) + scalar( @bin_oids );
     if( $nSelections == 0 || $nSelections > $max_taxon_batch ) {
-       webError( "Please select at least one genome." );
+       WebUtil::webError( "Please select at least one genome." );
     }
     $self->{ selected } = { };
     my $selected  = $self->{ selected };
@@ -834,13 +834,13 @@ sub printImgPwayCartProfile_t {
     my @pway_oids = param( "pway_oid" );
     if( scalar( @pway_oids ) == 0 || 
         scalar( @pway_oids ) > $max_pway_batch  ) {
-       webError( "Please select 1 to $max_pway_batch pathways." );
+       WebUtil::webError( "Please select 1 to $max_pway_batch pathways." );
     }
     my @taxon_oids = OracleUtil::processTaxonBinOids( "t" );
     my @bin_oids = OracleUtil::processTaxonBinOids( "b" );
     my $nSelections = scalar( @taxon_oids ) + scalar( @bin_oids );
     if( $nSelections == 0 || $nSelections > $max_taxon_batch ) {
-       webError( "Please select at least one genome." );
+       WebUtil::webError( "Please select at least one genome." );
     }
     my @taxon_bin_oids;
     for my $taxon_oid( @taxon_oids ) {
@@ -1205,10 +1205,10 @@ sub printPhyloOccurProfiles {
      my @pway_oids = param( "pway_oid" );
      my $nPways = @pway_oids;
      if( $nPways == 0 ) {
-         webError( "Please select at least one pathway." );
+         WebUtil::webError( "Please select at least one pathway." );
      }
      if( $nPways > $maxProfileOccurIds ) {
-         webError( "Please select no more than $maxProfileOccurIds " . 
+         WebUtil::webError( "Please select no more than $maxProfileOccurIds " . 
 	    "pathways." );
      }
      my $pway_oid_str = join( ',', @pway_oids );
@@ -1293,7 +1293,7 @@ sub printPhyloOccurProfiles {
     	 $id = FuncUtil::pwayOidPadded( $id );
     	 my $rh = $idRecsHash{ $id };
     	 if( !defined( $rh ) ) {
-    	    webDie( "printPhyloOccurProfiles: cannot find '$id'\n" );
+    	    WebUtil::webDie( "printPhyloOccurProfiles: cannot find '$id'\n" );
     	 }
     	 my $taxonOidHash = $rh->{ taxonOidHash };
     	 $taxonOidHash->{ $taxon } = 1;

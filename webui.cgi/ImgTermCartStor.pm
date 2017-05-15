@@ -484,13 +484,13 @@ sub printImgTermCartProfile_s {
     my @term_oids = param( "term_oid" );
     if( scalar( @term_oids ) == 0 || 
         scalar( @term_oids ) > $max_term_batch  ) {
-       webError( "Please select 1 to $max_term_batch terms." );
+       WebUtil::webError( "Please select 1 to $max_term_batch terms." );
     }
     my @taxon_oids = OracleUtil::processTaxonBinOids( "t" );
     my @bin_oids = OracleUtil::processTaxonBinOids( "b" );
     my $nSelections = scalar( @taxon_oids ) + scalar( @bin_oids );
     if( $nSelections == 0 || $nSelections > $max_taxon_batch ) {
-       webError( "Please select at least one genome." );
+       WebUtil::webError( "Please select at least one genome." );
     }
     $self->{ selected } = { };
     my $selected  = $self->{ selected };
@@ -698,13 +698,13 @@ sub printImgTermCartProfile_t {
     my @term_oids = param( "term_oid" );
     if( scalar( @term_oids ) == 0 || 
         scalar( @term_oids ) > $max_term_batch  ) {
-       webError( "Please select 1 to $max_term_batch terms." );
+       WebUtil::webError( "Please select 1 to $max_term_batch terms." );
     }
     my @taxon_oids = OracleUtil::processTaxonBinOids( "t" );
     my @bin_oids = OracleUtil::processTaxonBinOids( "b" );
     my $nSelections = scalar( @taxon_oids ) + scalar( @bin_oids );
     if( $nSelections == 0 || $nSelections > $max_taxon_batch ) {
-       webError( "Please select at least one genome." );
+       WebUtil::webError( "Please select at least one genome." );
     }
     my @taxon_bin_oids;
     for my $taxon_oid( @taxon_oids ) {
@@ -924,10 +924,10 @@ sub printPhyloOccurProfiles {
      my @term_oids = param( "term_oid" );
      my $nTerms = @term_oids;
      if( $nTerms == 0 ) {
-         webError( "Please select at least one term." );
+         WebUtil::webError( "Please select at least one term." );
      }
      if( $nTerms > $maxProfileOccurIds ) {
-         webError( "Please select no more than $maxProfileOccurIds terms." );
+         WebUtil::webError( "Please select no more than $maxProfileOccurIds terms." );
      }
      my $term_oid_str = join( ',', @term_oids );
 
@@ -989,7 +989,7 @@ sub printPhyloOccurProfiles {
 	 $id = FuncUtil::termOidPadded( $id );
 	 my $rh = $idRecsHash{ $id };
 	 if( !defined( $rh ) ) {
-	    webDie( "printPhyloOccurProfiles: cannot find '$id'\n" );
+	    WebUtil::webDie( "printPhyloOccurProfiles: cannot find '$id'\n" );
 	    #next;
 	 }
 	 my $taxonOidHash = $rh->{ taxonOidHash };

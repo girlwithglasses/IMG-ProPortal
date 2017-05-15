@@ -61,7 +61,7 @@ sub getAppHeaderData {
 sub dispatch {
     my ( $self, $numTaxon ) = @_;
     if( !$contact_oid ) {
-        webError( "Please login in." );
+        WebUtil::webError( "Please login in." );
     }
 
     my $page = param( "page" );
@@ -644,7 +644,7 @@ sub printSearchToAddForm {
 
     if ( $count == 0 ) {
         printStatusLine( "$count item(s) found.", 2 );
-        webError( 'No ' . $display_name . 's matches the keyword.' );
+        WebUtil::webError( 'No ' . $display_name . 's matches the keyword.' );
         return;
     }
 
@@ -710,7 +710,7 @@ sub printAddUpdateForm {
     my %db_val;
     if ( $update ) {
 	if ( blankStr($func_id) ) {
-	    webError ("No object is selected.");
+	    WebUtil::webError ("No object is selected.");
 	    return; 
 	}
 	print hiddenVar( "func_id", $func_id );
@@ -992,14 +992,14 @@ sub printAddUpdateForm {
 sub printUpdateNpActivityForm {
     my $func_id = param('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No object is selected.");
+	WebUtil::webError ("No object is selected.");
 	return; 
     }
 
     my $class_name = FuncUtil::funcIdToClassName($func_id);
 
     if ( $class_name ne 'IMG_COMPOUND' ) {
-	webError("Only IMG compound can have Secondary Metabolite activities. Please select a compound first.");
+	WebUtil::webError("Only IMG compound can have Secondary Metabolite activities. Please select a compound first.");
 	return;
     }
 
@@ -1010,7 +1010,7 @@ sub printUpdateNpActivityForm {
 
     my ($tag, $obj_oid) = split (/:/, $func_id);
     if ( ! $obj_oid || ! isInt($obj_oid) ) {
-	webError ("Incorrect IMG Compound Oid: $obj_oid.");
+	WebUtil::webError ("Incorrect IMG Compound Oid: $obj_oid.");
 	return; 
     }
 
@@ -1043,7 +1043,7 @@ sub printUpdateNpActivityForm {
 
     ## get existing SM activities
     my %db_act_h;
-    $sql = "select compound_oid, activity from img_compound_activity\@img_ext " .
+    $sql = "select compound_oid, activity from img_compound_activity " .
 	"where compound_oid = ? and activity is not null";
     $cur = execSql( $dbh, $sql, $verbose, $obj_oid);
     for (;;) { 
@@ -1058,7 +1058,7 @@ sub printUpdateNpActivityForm {
     print "<p>Please select all Secondary Metabolite activities that apply.\n";
     print "<p>\n";
 
-    $sql = "select cv_term, name from np_activity_cv\@img_ext order by 2, 1";
+    $sql = "select cv_term, name from np_activity_cv order by 2, 1";
     $cur = execSql( $dbh, $sql, $verbose );
     for (;;) { 
 	my ( $val, $name ) = $cur->fetchrow( );
@@ -1390,13 +1390,13 @@ sub printDefinePhenoRule {
 
     my $sel = param('img_gold_pheno');
     if ( blankStr($sel) ) {
-	webError("Please select a phenotype first.");
+	WebUtil::webError("Please select a phenotype first.");
 	return;
     }
     my ( $cv_type, $cv_val ) = split(/\|/, $sel);
 #    if ( blankStr($cv_type) || blankStr($cv_val) ) {
     if ( blankStr($cv_type) ) {
-	webError("Please select a phenotype first.");
+	WebUtil::webError("Please select a phenotype first.");
 	return;
     }
     print hiddenVar('img_gold_pheno', $sel);
@@ -1564,13 +1564,13 @@ sub dbAddPhenoRule {
     }
 
     if ( blankStr($rule_name) ) {
-	webError("Please enter a rule name.");
+	WebUtil::webError("Please enter a rule name.");
 	return 0;
     }
 
 #    if ( blankStr($cv_type) || blankStr($cv_val) ) {
     if ( blankStr($cv_type) ) {
-	webError("Please select a category.");
+	WebUtil::webError("Please select a category.");
 	return 0;
     }
 
@@ -1617,7 +1617,7 @@ sub dbAddPhenoRule {
 	    }
 	    else {
 		###$dbh->disconnect();
-		webError("Incorrect value '" . $val . 
+		WebUtil::webError("Incorrect value '" . $val . 
 			 "' at position ($ipos, $jpos)");
 		return 0;
 	    }
@@ -1627,7 +1627,7 @@ sub dbAddPhenoRule {
 				     "pathway_oid = $pway_id");
 	    if ( ! $cnt0 ) {
 		###$dbh->disconnect();
-		webError("Incorrect pathway ID '" . $pway_id .
+		WebUtil::webError("Incorrect pathway ID '" . $pway_id .
 			 "' at position ($ipos, $jpos)");
 		return 0;
 	    }
@@ -1651,7 +1651,7 @@ sub dbAddPhenoRule {
 
     if ( blankStr($rule) ) {
 	###$dbh->disconnect();
-	webError ("No pathway rule has been defined.");
+	WebUtil::webError ("No pathway rule has been defined.");
 	return 0;
     }
 
@@ -1683,7 +1683,7 @@ sub dbAddPhenoRule {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return 0;
     }
     else {
@@ -1707,17 +1707,17 @@ sub dbUpdatePhenoRule {
     }
 
     if ( ! $rule_id ) {
-	webError("Please select a phenotype rule.");
+	WebUtil::webError("Please select a phenotype rule.");
 	return 0;
     }
     if ( blankStr($rule_name) ) {
-	webError("Please enter a rule name.");
+	WebUtil::webError("Please enter a rule name.");
 	return 0;
     }
 
 #    if ( blankStr($cv_type) || blankStr($cv_val) ) {
     if ( blankStr($cv_type) ) {
-	webError("Please select a phenotype category.");
+	WebUtil::webError("Please select a phenotype category.");
 	return 0;
     }
 
@@ -1761,7 +1761,7 @@ sub dbUpdatePhenoRule {
 	    }
 	    else {
 		###$dbh->disconnect();
-		webError("Incorrect value '" . $val . 
+		WebUtil::webError("Incorrect value '" . $val . 
 			 "' at position ($ipos, $jpos)");
 		return 0;
 	    }
@@ -1771,7 +1771,7 @@ sub dbUpdatePhenoRule {
 				     "pathway_oid = $pway_id");
 	    if ( ! $cnt0 ) {
 		###$dbh->disconnect();
-		webError("Incorrect pathway ID '" . $pway_id .
+		WebUtil::webError("Incorrect pathway ID '" . $pway_id .
 			 "' at position ($ipos, $jpos)");
 		return 0;
 	    }
@@ -1795,7 +1795,7 @@ sub dbUpdatePhenoRule {
 
     if ( blankStr($rule) ) {
 	###$dbh->disconnect();
-	webError ("No pathway rule has been defined.");
+	WebUtil::webError ("No pathway rule has been defined.");
 	return 0;
     }
 
@@ -1830,7 +1830,7 @@ sub dbUpdatePhenoRule {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return 0;
     }
     else {
@@ -2096,7 +2096,7 @@ sub printCompoundExtLinkForm {
 
     my @ext_db_names = ();
     my $dbh = dbLogin();
-    my $sql = "select db_name from compound_ext_db\@img_ext order by 1";
+    my $sql = "select db_name from compound_ext_db order by 1";
     my $cur = execSql( $dbh, $sql, $verbose );
     for (;;) {
 	my ($db_name) = $cur->fetchrow();
@@ -2211,7 +2211,7 @@ sub dbAddItem() {
 	if ( $const eq 'U' || $const eq 'Y' ) {
 	    # not null
 	    if ( !$val || blankStr($val) ) {
-		webError ("Please enter a value for $disp_name.");
+		WebUtil::webError ("Please enter a value for $disp_name.");
 		return -1;
 	    }
 
@@ -2222,7 +2222,7 @@ sub dbAddItem() {
 				     $attr_name, $val, '');
 		###$dbh->disconnect();
 		if ( $id2 > 0 ) {
-		    webError ("$disp_name already exists. ($oid_attr=$id2)");
+		    WebUtil::webError ("$disp_name already exists. ($oid_attr=$id2)");
 		    return -1;
 		}
 	    }
@@ -2230,7 +2230,7 @@ sub dbAddItem() {
 	    if ( $data_type eq 'int' ) {
 		# value needs to be an integer
 		if ( !blankStr($val) && !isInt($val) ) {
-		    webError ("$disp_name value must be an integer.");
+		    WebUtil::webError ("$disp_name value must be an integer.");
 		    return -1;
 		}
 	    }
@@ -2238,7 +2238,7 @@ sub dbAddItem() {
 	    if ( $data_type eq 'number' ) {
 		# value needs to be a number
 		if ( !blankStr($val) && !isNumber($val) ) {
-		    webError ("$disp_name value must be a number.");
+		    WebUtil::webError ("$disp_name value must be a number.");
 		    return -1;
 		}
 	    }
@@ -2251,7 +2251,7 @@ sub dbAddItem() {
 	my $s = checkKeggCpds ($dbh, param('kegg_cpds'));
 	if ( !blankStr($s) ) {
 	    ###$dbh->disconnect();
-	    webError ("Incorrect KEGG Compound ID: $s");
+	    WebUtil::webError ("Incorrect KEGG Compound ID: $s");
 	    return -1;
 	}
     }
@@ -2260,7 +2260,7 @@ sub dbAddItem() {
 	my $s = checkEnzymes ($dbh, param('enzymes'));
 	if ( !blankStr($s) ) {
 	    ###$dbh->disconnect();
-	    webError ("Incorrect Enzyme EC Number: $s");
+	    WebUtil::webError ("Incorrect Enzyme EC Number: $s");
 	    return -1;
 	}
     }
@@ -2560,7 +2560,7 @@ sub dbAddItem() {
 
     my $debug_mode = 0;
     if ( $debug_mode ) {
-	webError(join("<br/>", @sqlList));
+	WebUtil::webError(join("<br/>", @sqlList));
 	return -1;
     }
 
@@ -2568,7 +2568,7 @@ sub dbAddItem() {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {
@@ -2583,7 +2583,7 @@ sub dbUpdateItem() {
     # get selected oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected for update.");
+	WebUtil::webError ("No item is selected for update.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
@@ -2609,7 +2609,7 @@ sub dbUpdateItem() {
 	if ( $const eq 'U' || $const eq 'Y' ) {
 	    # not null
 	    if ( !$val || blankStr($val) ) {
-		webError ("Please enter a value for $disp_name.");
+		WebUtil::webError ("Please enter a value for $disp_name.");
 		return -1;
 	    }
 
@@ -2621,7 +2621,7 @@ sub dbUpdateItem() {
 				     "$oid_attr <> $obj_oid");
 		###$dbh->disconnect();
 		if ( $id2 > 0 ) {
-		    webError ("$disp_name already exists. ($oid_attr=$id2)");
+		    WebUtil::webError ("$disp_name already exists. ($oid_attr=$id2)");
 		    return -1;
 		}
 	    }
@@ -2629,7 +2629,7 @@ sub dbUpdateItem() {
 	    if ( $data_type eq 'int' ) {
 		# value needs to be an integer
 		if ( !blankStr($val) && !isInt($val) ) {
-		    webError ("$disp_name value must be an integer.");
+		    WebUtil::webError ("$disp_name value must be an integer.");
 		    return -1;
 		}
 	    }
@@ -2637,7 +2637,7 @@ sub dbUpdateItem() {
 	    if ( $data_type eq 'number' ) {
 		# value needs to be a number
 		if ( !blankStr($val) && !isNumber($val) ) {
-		    webError ("$disp_name value must be a number.");
+		    WebUtil::webError ("$disp_name value must be a number.");
 		    return -1;
 		}
 	    }
@@ -2655,7 +2655,7 @@ sub dbUpdateItem() {
 	my $s = checkKeggCpds ($dbh, param('kegg_cpds'));
 	if ( !blankStr($s) ) {
 	    ###$dbh->disconnect();
-	    webError ("Incorrect KEGG Compound ID: $s");
+	    WebUtil::webError ("Incorrect KEGG Compound ID: $s");
 	    return -1;
 	}
 
@@ -2676,7 +2676,7 @@ sub dbUpdateItem() {
 	my $s = checkEnzymes ($dbh, param('enzymes'));
 	if ( !blankStr($s) ) {
 	    ###$dbh->disconnect();
-	    webError ("Incorrect Enzyme EC Number: $s");
+	    WebUtil::webError ("Incorrect Enzyme EC Number: $s");
 	    return -1;
 	}
 
@@ -3107,14 +3107,14 @@ sub dbUpdateItem() {
     # perform database update
     my $debug_mode = 0;
     if ( $debug_mode ) {
-	webError(join("<br/>", @sqlList));
+	WebUtil::webError(join("<br/>", @sqlList));
 	return 0;
     }
 
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {
@@ -3168,12 +3168,12 @@ sub dbUpdateCompoundExtLinks {
 sub dbUpdateNpActivity {
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected for update.");
+	WebUtil::webError ("No item is selected for update.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
     if ( ! $obj_oid ) {
-	webError ("No compound is selected for update.");
+	WebUtil::webError ("No compound is selected for update.");
 	return -1;
     }
 
@@ -3193,14 +3193,14 @@ sub dbUpdateNpActivity {
     # perform database update
     my $debug_mode = 0;
     if ( $debug_mode ) {
-	webError(join("<br/>", @sqlList));
+	WebUtil::webError(join("<br/>", @sqlList));
 	return 0;
     }
 
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {
@@ -3365,7 +3365,7 @@ sub printUpdChildTermForm {
 
     my $func_id = param('func_id');
     if ( blankStr($func_id) ) {
-	webError (" No IMG Term has been selected.");
+	WebUtil::webError (" No IMG Term has been selected.");
 	return;
     }
 		  
@@ -3373,7 +3373,7 @@ sub printUpdChildTermForm {
     my $class_name = FuncUtil::funcIdToClassName($func_id);
 
     if ( $class_name ne 'IMG_TERM' ) {
-	webError ("No IMG Term has been selected. The current selection is an object of $display_name.");
+	WebUtil::webError ("No IMG Term has been selected. The current selection is an object of $display_name.");
 	return;
     }
 
@@ -3518,7 +3518,7 @@ sub printImgTermTree {
     my ( $searchTerm, $type ) = @_;
 
     if( blankStr( $searchTerm ) ) {
-	webError( "Please enter a search term." );
+	WebUtil::webError( "Please enter a search term." );
     }
 
     # show search results
@@ -3586,7 +3586,7 @@ sub printImgTermTree {
     printStatusLine( "Loading ...", 1 );
 
     if( $searchTerm !~ /[a-zA-Z0-9]+/ ) {
-	webError( "Search term should have some alphanumeric characters." );
+	WebUtil::webError( "Search term should have some alphanumeric characters." );
     }
     $searchTerm =~ s/\r//g;
     $searchTerm =~ s/^\s+//;
@@ -3683,7 +3683,7 @@ sub loadSearchTermOid2Html {
     my $nTerms   = @term_oids;
     my $term_oid = $n->{term_oid};
     if ( $nTerms > 1000 ) {
-        webDie("loadSearchTermOid2Html: term_oid=$term_oid nTerms=$nTerms\n");
+        WebUtil::webDie("loadSearchTermOid2Html: term_oid=$term_oid nTerms=$nTerms\n");
     }
     my $term_oid_str = join( ',', @term_oids );
     my $taxonClause  = txsClause("g.taxon", $dbh);
@@ -3850,11 +3850,11 @@ sub printMergeForm {
 
     # check id
     if ( blankStr($func_id) ) {
-	webError ("No object is selected.");
+	WebUtil::webError ("No object is selected.");
 	return; 
     }
     if ( $class_name ne 'IMG_TERM' ) {
-	webError ("Only merging IMG terms is allowed. You must select an IMG term.");
+	WebUtil::webError ("Only merging IMG terms is allowed. You must select an IMG term.");
 	return;
     }
     print hiddenVar( "func_id", $func_id );
@@ -3893,7 +3893,7 @@ sub dbUpdateChildTerm() {
     # get the term oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No IMG term is selected.");
+	WebUtil::webError ("No IMG term is selected.");
 	return -1;
     }
     my ($tag, $term_oid) = split (/\:/, $func_id);
@@ -3933,7 +3933,7 @@ sub dbUpdateChildTerm() {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
 
@@ -3952,7 +3952,7 @@ sub printUpdateAssocForm {
     # get selected oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected in the Curation Cart.");
+	WebUtil::webError ("No item is selected in the Curation Cart.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
@@ -3963,7 +3963,7 @@ sub printUpdateAssocForm {
     my $assoc_type = FuncUtil::classNameToAssocType ($class_name);
 
     if ( blankStr($assoc_type) ) {
-	webError ("No associations can be specified for $display_name.");
+	WebUtil::webError ("No associations can be specified for $display_name.");
 	return -1;
     }
 
@@ -4856,7 +4856,7 @@ sub printSearchAssocResults {
     # get selected oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected in the Curation Cart.");
+	WebUtil::webError ("No item is selected in the Curation Cart.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
@@ -4867,7 +4867,7 @@ sub printSearchAssocResults {
     my $assoc_type = FuncUtil::classNameToAssocType ($class_name);
 
     if ( blankStr($assoc_type) ) {
-	webError ("No associations can be specified for $display_name.");
+	WebUtil::webError ("No associations can be specified for $display_name.");
 	return -1;
     }
 
@@ -4914,7 +4914,7 @@ sub printSearchAssocResults {
     print reset( -name => "Reset", -value => "Reset", -class => "smbutton" );
 
     if( $searchKey eq "" ) {
-        webError( "Please enter a keyword to search." );
+        WebUtil::webError( "Please enter a keyword to search." );
 	print end_form();
 	return;
     }
@@ -5014,7 +5014,7 @@ sub printSearchAssocResults {
 
     if ( $count == 0 ) {
         printStatusLine( "$count item(s) found.", 2 );
-        webError( 'No ' . $assoc_display_name . 's matches the keyword.' );
+        WebUtil::webError( 'No ' . $assoc_display_name . 's matches the keyword.' );
         return;
     }
 
@@ -5058,7 +5058,7 @@ sub printAdvancedSearchForm {
     # get parameters
     my $class_name = param( "class_name" );
     if ( blankStr($class_name) ) {
-	webError("No class has been selected.");
+	WebUtil::webError("No class has been selected.");
 	return;
     }
 
@@ -5286,7 +5286,7 @@ sub printAdvancedResultForm {
 	}
 	elsif ( $data_type eq 'int' || $data_type eq 'order' ) {
 	    if ( ! isInt($val) || $comp eq 'match' || $comp eq 'not match' ) {
-		webError("Incorrect query condition: $disp_name $comp $val.");
+		WebUtil::webError("Incorrect query condition: $disp_name $comp $val.");
 		return;
 	    }
 
@@ -5295,7 +5295,7 @@ sub printAdvancedResultForm {
 	}
 	elsif ( $data_type eq 'number' ) {
 	    if ( ! isNumber($val) || $comp eq 'match' || $comp eq 'not match' ) {
-		webError("Incorrect query condition: $disp_name $comp $val.");
+		WebUtil::webError("Incorrect query condition: $disp_name $comp $val.");
 		return;
 	    }
 
@@ -5385,7 +5385,7 @@ sub printAdvancedResultForm {
 		$s2 = "$attr_name $comp $val";
 		if ( ! isInt($val) || $comp eq 'match' ||
 		     $comp eq 'not match' ) {
-		    webError("Incorrect query condition: $disp_name $comp $val.");
+		    WebUtil::webError("Incorrect query condition: $disp_name $comp $val.");
 		    return;
 		}
 	    }
@@ -5393,7 +5393,7 @@ sub printAdvancedResultForm {
 		$s2 = "$attr_name $comp $val";
 		if ( ! isNumber($val) || $comp eq 'match' ||
 		     $comp eq 'not match' ) {
-		    webError("Incorrect query condition: $disp_name $comp $val.");
+		    WebUtil::webError("Incorrect query condition: $disp_name $comp $val.");
 		    return;
 		}
 	    }
@@ -5586,7 +5586,7 @@ sub printAdvancedResultForm {
 
     if ( $count == 0 ) {
         printStatusLine( "$count item(s) found.", 2 );
-        webError( 'No ' . $display_name . 's satisfy the search condition.' );
+        WebUtil::webError( 'No ' . $display_name . 's satisfy the search condition.' );
         return;
     }
     else {
@@ -5629,7 +5629,7 @@ sub printConfirmUpdateAssocForm {
     # get selected oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected in the Curation Cart.");
+	WebUtil::webError ("No item is selected in the Curation Cart.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
@@ -5640,7 +5640,7 @@ sub printConfirmUpdateAssocForm {
     my $assoc_type = FuncUtil::classNameToAssocType ($class_name);
 
     if ( blankStr($assoc_type) ) {
-	webError ("No associations can be specified for $display_name.");
+	WebUtil::webError ("No associations can be specified for $display_name.");
 	return -1;
     }
 
@@ -5733,7 +5733,7 @@ sub printConfirmUpdateAssocForm {
 
 	if ( !blankStr($err_msg) ) {
 	    print "</table>\n";
-	    webError($err_msg);
+	    WebUtil::webError($err_msg);
 	    return -1;
 	}
 
@@ -5889,7 +5889,7 @@ sub dbUpdateAssoc {
     my $err = db_sqlTrans( \@sqlList ); 
     if ( $err ) { 
         $sql = $sqlList[$err-1];
-        webError ("SQL Error: $sql");
+        WebUtil::webError ("SQL Error: $sql");
         return -1;
     } 
 
@@ -5905,7 +5905,7 @@ sub printFileUploadForm {
 
     my $file_type = param('file_type');
     if ( blankStr($file_type) ) {
-	webError("No file type has been selected.");
+	WebUtil::webError("No file type has been selected.");
 	return;
     }
 
@@ -5984,7 +5984,7 @@ sub printValidateFileForm {
 
     my $file_type = param( 'file_type' );
     if ( blankStr($file_type) ) {
-	webError("No file type is selected.");
+	WebUtil::webError("No file type is selected.");
 	return;
     }
 
@@ -5993,7 +5993,7 @@ sub printValidateFileForm {
     my $filename = param( "fileselect" );
 
     if ( blankStr($filename) ) {
-	webError("No file name is provided.");
+	WebUtil::webError("No file name is provided.");
 	return;
     }
 
@@ -6043,7 +6043,7 @@ sub printValidateFileForm {
     # save the uploaded file to a tmp file, because we need to parse the file
     # more than once
     if ( ! open( FILE, '>', $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -6086,7 +6086,7 @@ sub printValidateFileForm {
     # now read from tmp file
     if ( ! open( FILE, $tmp_upload_file ) ) {
 	printStatusLine( "Failed.", 2 );
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return;
     }
 
@@ -6306,7 +6306,7 @@ sub dbFileUpload {
 
     # open file
     if ( ! open( FILE, $tmp_upload_file ) ) {
-        webError( "Cannot open tmp file $tmp_upload_file.");
+        WebUtil::webError( "Cannot open tmp file $tmp_upload_file.");
 	return 0;
     }
 
@@ -6550,7 +6550,7 @@ sub dbFileUpload {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
 	$sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
 
@@ -6593,7 +6593,7 @@ sub printConfirmDeleteForm {
     # get selected oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected for deletion.");
+	WebUtil::webError ("No item is selected for deletion.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
@@ -6703,7 +6703,7 @@ sub dbDeleteItem {
     # get selected oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected for deletion.");
+	WebUtil::webError ("No item is selected for deletion.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
@@ -6743,7 +6743,7 @@ sub dbDeleteItem {
     my $err = db_sqlTrans( \@sqlList );
     if ( $err ) {
         $sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {
@@ -6759,7 +6759,7 @@ sub dbMergeTerm {
     # get selected oid
     my $func_id = param ('func_id');
     if ( blankStr($func_id) ) {
-	webError ("No item is selected for merging.");
+	WebUtil::webError ("No item is selected for merging.");
 	return -1;
     }
     my ($tag, $obj_oid) = split (/:/, $func_id);
@@ -6767,7 +6767,7 @@ sub dbMergeTerm {
     # get class name and class info
     my $class_name = FuncUtil::funcIdToClassName($func_id);
     if ( $class_name ne 'IMG_TERM' ) {
-	webError ("Selected object is not an IMG term.");
+	WebUtil::webError ("Selected object is not an IMG term.");
 	return -1;
     }
 
@@ -6789,10 +6789,10 @@ sub dbMergeTerm {
     print "<p>M terms: $m_list</p>\n";
 
     if ( scalar(@mergedTerms) == 0 ) {
-	webError("No terms have been selected for merging.");
+	WebUtil::webError("No terms have been selected for merging.");
     }
     elsif ( scalar(@mergedTerms) > 1000 ) {
-	webError("Too many terms have been selected. Maximum is 1000.");
+	WebUtil::webError("Too many terms have been selected. Maximum is 1000.");
     }
 
     # prepare SQL
@@ -6854,7 +6854,7 @@ sub dbMergeTerm {
     my $err = 0;
     if ( $err ) {
         $sql = $sqlList[$err-1];
-	webError ("SQL Error: $sql");
+	WebUtil::webError ("SQL Error: $sql");
 	return -1;
     }
     else {

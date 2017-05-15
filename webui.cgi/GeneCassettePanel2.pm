@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GeneCassettePanel2.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: GeneCassettePanel2.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GeneCassettePanel2;
 my $section = "GeneCassettePanel2";
@@ -79,7 +79,7 @@ sub new {
     $self->{scale}    = $self->{x_width} / $coord_length;
     $self->{y_height} = 45 if $self->{title} eq "";
 
-    my $im = new GD::Image( $self->{x_width} + 2, $self->{y_height} + 2 );
+    my $im = GD::Image->new( $self->{x_width} + 2, $self->{y_height} + 2 );
     $self->{im} = $im;
     $self->colorAllocates();
     $self->setBrush();
@@ -229,7 +229,7 @@ sub setBrush {
     my ($self) = @_;
 
     my $im = $self->{im};
-    my $brush = new GD::Image( 1, 1 );
+    my $brush = GD::Image->new( 1, 1 );
     $brush->colorAllocate( 255, 255, 255 );    # white
     $brush->colorAllocate( 0,   0,   0 );      # black
     $brush->transparent( $self->{color_white} );
@@ -308,7 +308,7 @@ sub addGene {
 
     my $scale       = $self->{scale};
     my $mid_yheight = $self->{mid_yheight};
-    my $arrow       = new GD::Polygon;
+    my $arrow       = GD::Polygon->new;
     my $ptrOffset   = 5;
     my $arrowHeight = 10;
 
@@ -405,7 +405,7 @@ sub addGene2 {
 
     my $scale       = $self->{scale};
     my $mid_yheight = $self->{mid_yheight};
-    my $arrow       = new GD::Polygon;
+    my $arrow       = GD::Polygon->new;
     my $ptrOffset   = 5;
     my $arrowHeight = 10;
 
@@ -472,7 +472,7 @@ sub addGene2 {
                     "$gene_oid\t" . "$x1\t" . "$y1\t" . "$x2\t" . "$y2\t"
                   . "$label" );
         }
-    }    
+    }
     my $im = $self->{im};
     $im->filledPolygon( $arrow, $color );
     $im->polygon( $arrow, gdBrushed );
@@ -530,7 +530,7 @@ sub addBox {
 
     }
 
-    my $box = new GD::Polygon();
+    my $box = GD::Polygon->new();
     $box->addPt( $x1, $y1 );
     $box->addPt( $x1, $y2 );
     $box->addPt( $x2, $y2 );
@@ -615,16 +615,16 @@ sub makeMapString {
 
         my $twidth = length($label) * .05;
         my $x      = "WIDTH=$twidth; FONTSIZE='8px'";
-        $label =~ s/'/ /g; 
-        my $label_esc = escHtml($label); 
- 
+        $label =~ s/'/ /g;
+        my $label_esc = escHtml($label);
+
         if ( $uselib eq "overlib" ) {
             $s .= "onMouseOver=\"return overlib('$label_esc')\" ";
             $s .= "onMouseOut=\"return nd()\" ";
-        } else { 
+        } else {
             $s .= "onMouseOver=\"$x; Tip('$label_esc');\" ";
             $s .= "onMouseOut=\"UnTip();\" ";
-        } 
+        }
         $s .= " />\n";
     }
 
@@ -643,16 +643,16 @@ sub makeMapString {
 
         my $twidth = length($label) * .05;
         my $x      = "WIDTH=$twidth; FONTSIZE='8px'";
-        $label =~ s/'/ /g; 
-        my $label_esc = escHtml($label); 
- 
+        $label =~ s/'/ /g;
+        my $label_esc = escHtml($label);
+
         if ( $uselib eq "overlib" ) {
             $s .= "onMouseOver=\"return overlib('$label_esc')\" ";
             $s .= "onMouseOut=\"return nd()\" ";
-        } else { 
+        } else {
             $s .= "onMouseOver=\"$x; Tip('$label_esc');\" ";
             $s .= "onMouseOut=\"UnTip();\" ";
-        } 
+        }
         $s .= " />\n";
     }
 

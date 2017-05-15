@@ -19,7 +19,7 @@ proport_ocean => {
 	label => 'Ocean',
 },
 geo_location => {
-	label => '<abbr title="National Oceanic and Atmospheric Administration">NOAA</abbr> sea name</abbr>',
+	label => '<abbr title="National Oceanic and Atmospheric Administration">NOAA</abbr> sea name',
 },
 chlorophyll_concentration => {
 	unit => '&mu;g/L'

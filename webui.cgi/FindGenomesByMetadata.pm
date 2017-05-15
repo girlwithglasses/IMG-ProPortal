@@ -1,7 +1,7 @@
 ############################################################################
 # FindGenomesByMetadata.pm - split from FindGenomes.pm
 #  Handle the options under the "Find Metadata Genomes" tab menu.
-# $Id: FindGenomesByMetadata.pm 36211 2016-09-23 03:49:51Z klchu $
+# $Id: FindGenomesByMetadata.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package FindGenomesByMetadata;
 my $section = "FindGenomes";
@@ -38,10 +38,20 @@ my $top_base_url         = $env->{top_base_url};
 my $img_er_submit_url    = $env->{img_er_submit_url};
 my $img_mer_submit_url   = $env->{img_mer_submit_url};
 
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
+
 ############################################################################
 # dispatch - Dispatch loop.
 ############################################################################
 sub dispatch {
+	my($self) = @_;
+	
     my $page = param("page");
     if ( $page eq "metadataForm" ) {
         my $id = param("id");
@@ -644,10 +654,10 @@ sub printOrgCategoryResults {
     my $nDiseases   = @disease_oids;
     my $nRelevances = @relevance_oids;
     if ( $nPhenotypes + $nEcotypes + $nDiseases + $nRelevances == 0 ) {
-        webError("Please select a category value.");
+        WebUtil::webError("Please select a category value.");
     }
     if ( $nPhenotypes + $nEcotypes + $nDiseases + $nRelevances > 1000 ) {
-        webError("Too many category values selected.  Please select < 1000.");
+        WebUtil::webError("Too many category values selected.  Please select < 1000.");
     }
     my $phenotypeMgr = new TermNodeMgr();
     my $ecotypeMgr   = new TermNodeMgr();
@@ -870,7 +880,7 @@ sub printOrgCategoryResults_ImgGold {
         if ( scalar(@vals) > 0 ) {
 	    if ( scalar(@vals) > 1000 ) {
 		## Add this just in case -- it shouldn't happen though
-		webError("Please select no more than 1000 category values.");
+		WebUtil::webError("Please select no more than 1000 category values.");
 		return;
 	    }
 
@@ -891,7 +901,7 @@ sub printOrgCategoryResults_ImgGold {
     }
 
     if ( scalar(@single_select) == 0 && scalar(@set_select) == 0 && ! $domain_cond ) {
-        webError("Please select a category value.");
+        WebUtil::webError("Please select a category value.");
         return;
     }
 
@@ -962,7 +972,7 @@ sub printOrgCategoryResults_ImgGold {
     if ( scalar(@set_select) > 0 ) {
 	foreach my $attr1 ( @set_select ) {
 	    if ( ! $gold_table_h{$attr1} ) {
-		webError ("ERROR: Cannot find $attr1");
+		WebUtil::webError ("ERROR: Cannot find $attr1");
 		return;
 	    }
 
@@ -1462,7 +1472,7 @@ sub printMetadataCategoryChartResults {
 
     if ( ! $bar_select ) {
     	print end_form();
-        webError("Please select a field for chart display.");
+        WebUtil::webError("Please select a field for chart display.");
     	return;
     }
 

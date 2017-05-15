@@ -1,6 +1,6 @@
 ############################################################################
 # ScaffoldCart.pm - Cart for Scaffolds
-# $Id: ScaffoldCart.pm 36615 2017-03-01 19:56:28Z klchu $
+# $Id: ScaffoldCart.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package ScaffoldCart;
 
@@ -826,13 +826,12 @@ sub printScaffoldDetail {
 
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        #main::printAppHeader("AnaCart");
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     if ( !$scaffold_oid ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("No scaffold has been selected.");
         return;
     }
@@ -873,7 +872,7 @@ sub printScaffoldDetail {
 
     if ( !$s_oid ) {
         #$dbh->disconnect();
-        webError("Scaffold does not exist.");
+        WebUtil::webError("Scaffold does not exist.");
         return;
     }
 
@@ -908,7 +907,7 @@ sub printScaffoldDetail {
            select g.ecosystem, g.ecosystem_category,
                   g.ecosystem_type, g.ecosystem_subtype,
                   g.specific_ecosystem
-           from gold_sequencing_project\@imgsg_dev g, taxon t
+           from gold_sequencing_project g, taxon t
            where t.taxon_oid = ?
            and t.sequencing_gold_id = g.gold_id
            };
@@ -937,7 +936,7 @@ sub printScaffoldDetail {
     ## habitat
     $sql = qq{
            select g.habitat
-           from gold_sp_habitat\@imgsg_dev g, taxon t
+           from gold_sp_habitat g, taxon t
            where t.taxon_oid = ?
            and t.sequencing_gold_id = g.gold_id
            and g.habitat is not null
@@ -1203,7 +1202,7 @@ sub addToScaffoldCart {
     }
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -1287,7 +1286,7 @@ sub removeFromScaffoldCart {
 
     my @scaffold_oids = param('scaffold_oid');
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -1326,7 +1325,7 @@ sub addGeneScaffoldToCart {
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
         printMainForm();
-        webError("No genes have been selected.");
+        WebUtil::webError("No genes have been selected.");
         return;
     }
 
@@ -1386,7 +1385,7 @@ sub addGenomeScaffoldToCart {
     my @genome_oids = param('taxon_filter_oid');
     if ( scalar(@genome_oids) == 0 ) {
         printMainForm();
-        webError("No genomes have been selected.");
+        WebUtil::webError("No genomes have been selected.");
         return;
     }
 
@@ -1395,14 +1394,14 @@ sub addGenomeScaffoldToCart {
     my @metaTaxons = keys(%taxon_in_file);
     if ( scalar(@metaTaxons) > 0 ) {
         if ( scalar(@metaTaxons) > 1 ) {
-            webError("Only one selected metagenome can have its scaffolds added into cart!");
+            WebUtil::webError("Only one selected metagenome can have its scaffolds added into cart!");
         }
 
         my %taxon_gene_cnt_hash = QueryUtil::fetchTaxonOid2GeneCntHash($dbh, \@metaTaxons);
         foreach my $t_oid (keys(%taxon_gene_cnt_hash)) {
             my $total_gene_cnt = $taxon_gene_cnt_hash{$t_oid};
             if ( $total_gene_cnt > $max_gene_cnt_for_taxon ) {
-                webError("Selected genome $t_oid is too large to have its scaffolds added into cart!");
+                WebUtil::webError("Selected genome $t_oid is too large to have its scaffolds added into cart!");
             }
         }
     }
@@ -1454,7 +1453,7 @@ sub addBinScaffoldToCart {
     my @bin_oids = param('selected_bin');
     if ( scalar(@bin_oids) == 0 ) {
         printMainForm();
-        webError("No bins have been selected.");
+        WebUtil::webError("No bins have been selected.");
         return;
     }
 
@@ -1540,7 +1539,7 @@ sub scaffoldFuncProfile {
     my @scaffold_oids = @$oids_aref;
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -1554,7 +1553,7 @@ sub scaffoldFuncProfile {
     my @func_ids = sort( keys(%$recs) );
     my $count    = @func_ids;
     if ( $count == 0 ) {
-        webError("Function Cart is empty.");
+        WebUtil::webError("Function Cart is empty.");
         return;
     }
 
@@ -1577,7 +1576,7 @@ sub scaffoldFuncProfile {
         && scalar(@$plist_ids_ref) <= 0
         && (scalar(@$unrecognized_ids_ref) > 0 || scalar(@$unsurported_func_ids_ref)) > 0 )
     {
-        webError("Unspported (such as GO and Interpro) or unrecognized functions in Function Profile.");
+        WebUtil::webError("Unspported (such as GO and Interpro) or unrecognized functions in Function Profile.");
     }
 
     printMainForm();
@@ -2076,14 +2075,14 @@ sub exportScaffoldCart {
 
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my $scaffold_oids_aref = getSelectedCartOids();
     if ( scalar(@$scaffold_oids_aref) == 0 ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
@@ -2327,7 +2326,7 @@ sub fastaFileForScaffolds {
 
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
@@ -2336,7 +2335,7 @@ sub fastaFileForScaffolds {
     my @scaffold_oids = @$oids_aref;
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
@@ -2372,14 +2371,14 @@ sub exportFasta {
 sub exportFasta_old {
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
 
     my @scaffold_oids = param('scaffold_oid');
     if ( scalar(@scaffold_oids) == 0 ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
@@ -2406,7 +2405,7 @@ sub exportFasta_old {
 
         my $path = "$all_fna_files_dir/$taxon_oid/$ext_acc.fna";
         if ( !-e $path ) {
-            webErrorHeader("File does not exist for download.");
+            WebUtil::webErrorHeader("File does not exist for download.");
         }
 
         push @all_files, ($path);
@@ -2443,7 +2442,7 @@ sub exportGenbankForm {
     my @scaffold_oids      = @$scaffold_oids_aref;
     my $scaffold_count     = scalar(@scaffold_oids);
     if ( $scaffold_count == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -2452,7 +2451,7 @@ sub exportGenbankForm {
     if ( scalar(@$metaOids_ref) > 0 ) {
         my $extracted_oids_str =
           MerFsUtil::getExtractedMetaOidsJoinString(@$metaOids_ref);
-        webError("You have selected scaffolds ($extracted_oids_str), which are MER-FS metagenomes from file.  They are not supported in generating GenBank File.");
+        WebUtil::webError("You have selected scaffolds ($extracted_oids_str), which are MER-FS metagenomes from file.  They are not supported in generating GenBank File.");
     }
 
     my $dbh = dbLogin();
@@ -2487,7 +2486,7 @@ sub exportGenbankForm {
 sub printHistogram {
     my $contact_oid = getContactOid();
     if ( blankStr($contact_oid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -2495,7 +2494,7 @@ sub printHistogram {
     my @scaffold_oids = @$oids_aref;
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 
@@ -2527,7 +2526,7 @@ sub addSelectedScaffoldGenesToCart {
     my @scaffold_oids = param('scaffold_oid');
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        #main::printAppHeader("AnaCart");
+
         WebUtil::webErrorHeader("No scaffolds have been selected.");
         return;
     }
@@ -2576,7 +2575,10 @@ sub addSelectedScaffoldGenesToCart {
 
     # show gene cart
     setSessionParam( "lastCart", "geneCart" );
-    main::printAppHeader("AnaCart");
+
+            my $webSessionPrint = WebUtil::getWebSessionPrint();
+            $webSessionPrint->printAppHeader("AnaCart");      
+    
     my $gc = new GeneCartStor();
     $gc->addGeneBatch( \@gene_oids );
     $gc->printGeneCartForm( '', 1 );
@@ -2691,7 +2693,7 @@ sub uploadScaffoldCart {
       )
     {
         printStatusLine( "Error.", 2 );
-        webError($errmsg);
+        WebUtil::webError($errmsg);
     }
 
     # check what's already in the cart
@@ -2772,11 +2774,11 @@ sub updateCartName {
     my @scaffold_oids = param('scaffold_oid');
 
     if ( scalar(@scaffold_oids) == 0 ) {
-        webError("Please select at least 1 scaffold for the cart.");
+        WebUtil::webError("Please select at least 1 scaffold for the cart.");
         return;
     }
     if ( $cart_name eq "" ) {
-        webError("Please provide a name for your cart.");
+        WebUtil::webError("Please provide a name for your cart.");
         return;
     }
     my %scaffold_oids_hash;
@@ -2912,13 +2914,13 @@ sub saveScaffoldDistToCart {
 
     my $taxon_oid = param('taxon_oid');
     if ( !$taxon_oid ) {
-        webError("Unknown Taxon ID.");
+        WebUtil::webError("Unknown Taxon ID.");
         return;
     }
     my $dist_type = param('dist_type');
     #print "saveScaffoldDistToCart() dist_type=$dist_type<br/>\n";
     if ( !$dist_type ) {
-        webError("Distribution type unknown.");
+        WebUtil::webError("Distribution type unknown.");
         return;
     }
 
@@ -2926,7 +2928,7 @@ sub saveScaffoldDistToCart {
     my @ids = param($dist_type);
     #print "saveScaffoldDistToCart() ids=@ids<br/>\n";
     if ( $#ids < 0 ) {
-        webError("Please select some scaffolds to save.");
+        WebUtil::webError("Please select some scaffolds to save.");
         return;
     }
 
@@ -2957,7 +2959,7 @@ sub saveScaffoldDistToCart {
             @lines = @$lines_ref;
 
         } else {
-            webError("Cannot find dist type.");
+            WebUtil::webError("Cannot find dist type.");
             return;
         }
 

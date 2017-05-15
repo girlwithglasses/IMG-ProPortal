@@ -1,6 +1,6 @@
 ############################################################################
 #
-# $Id: AnalysisProject.pm 34543 2015-10-20 21:04:12Z klchu $
+# $Id: AnalysisProject.pm 37058 2017-05-08 19:45:30Z klchu $
 ############################################################################
 package AnalysisProject;
 
@@ -29,7 +29,7 @@ my $gold_api_base_url = $env->{gold_api_base_url};
 my $gold_auth_code    = $env->{gold_auth_code};
 my $include_metagenomes      = $env->{include_metagenomes};
 
-my $goldCacheDir = '/webfs/scratch/img/gold/';
+my $goldCacheDir = $env->{gold_cache_dir};
 my $isolateVisibilityFile = $goldCacheDir . 'isolateVisibility.bin';
 my $metagenomeVisibilityFile = $goldCacheDir .'metagenomeVisibility.bin';
 

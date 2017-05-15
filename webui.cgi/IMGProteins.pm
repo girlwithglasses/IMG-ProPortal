@@ -1,6 +1,6 @@
 ############################################################################
 # IMGProteins.pm - displays proteomic data
-# $Id: IMGProteins.pm 35066 2016-01-20 19:25:21Z klchu $
+# $Id: IMGProteins.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package IMGProteins;
 my $section = "IMGProteins";
@@ -54,6 +54,14 @@ sub getAppHeaderData {
     my @a = ( "Proteomics", '', '', '', '', "Proteomics.pdf" );
     return @a;
 }
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
+
 
 sub dispatch {
     my ( $self, $numTaxon ) = @_;
@@ -1652,7 +1660,7 @@ sub printCompareSamples {
     my $exp_name = param("exp_name"); 
     my $taxon_oid = param("taxon_oid"); 
     if ($nSamples < 2) { 
-        webError( "Please select 2 samples." );
+        WebUtil::webError( "Please select 2 samples." );
     } 
  
     my $reference = param( "reference" );
@@ -1879,7 +1887,7 @@ sub printExpressionByFunction {
  
     if ($pairwise ne "") {
 	if ($nSamples < 2) { 
-	    webError( "Please select 2 samples." ); 
+	    WebUtil::webError( "Please select 2 samples." ); 
 	}
 	my @samples = (@sample_oids[0], @sample_oids[1]);
         my $reference = param( "reference" );
@@ -1890,7 +1898,7 @@ sub printExpressionByFunction {
 	$nSamples = 2;
     } 
     if ($nSamples < 1) { 
-        webError( "Please select at least 1 sample." ); 
+        WebUtil::webError( "Please select at least 1 sample." ); 
     } 
  
     my $cart_genes = param("describe_cart_genes");
@@ -1901,7 +1909,7 @@ sub printExpressionByFunction {
         my $recs = $gc->readCartFile(); # get records
         @cart_gene_oids = sort { $a <=> $b } keys(%$recs);
         if (scalar @cart_gene_oids < 1) {
-            webError( "Your Gene Cart is empty." ); 
+            WebUtil::webError( "Your Gene Cart is empty." ); 
         } 
     } 
  
@@ -2463,11 +2471,11 @@ sub printDescribeSamples {
 
     if ($describe_clustered ne "") {
         if ($nSamples < 3) { 
-            webError( "Please select at least 3 samples." ); 
+            WebUtil::webError( "Please select at least 3 samples." ); 
         } 
     } else { 
         if ($nSamples < 1) {
-            webError( "Please select at least 1 sample." );
+            WebUtil::webError( "Please select at least 1 sample." );
         }
     } 
 
@@ -2479,7 +2487,7 @@ sub printDescribeSamples {
 	my $recs = $gc->readCartFile(); # get records
 	@cart_gene_oids = sort { $a <=> $b } keys(%$recs);
 	if (scalar @cart_gene_oids < 1) {
-	    webError( "Your Gene Cart is empty." );
+	    WebUtil::webError( "Your Gene Cart is empty." );
 	}
     }
 
@@ -2616,10 +2624,10 @@ sub printDescribeSamples {
         if ($st != 0) {
             printEndWorkingDiv();
 	    if ($nSamples < 5) {
-		webError( "Problem running R script: $program. <br/>"
+		WebUtil::webError( "Problem running R script: $program. <br/>"
 			. "Try selecting a larger number of samples." );
 	    }
-            webError( "Problem running R script: $program." );
+            WebUtil::webError( "Problem running R script: $program." );
         }
 
         $tmpOutputFileName = "cluster$$.groups.txt"; 
@@ -3105,7 +3113,7 @@ sub printPathwaysForSample {
     my $normalization = "coverage"; 
  
     if ($nSamples < 1) { 
-        webError( "Please select 1 sample." ); 
+        WebUtil::webError( "Please select 1 sample." ); 
     } 
  
     my $cart_genes = param("describe_cart_genes"); 
@@ -3116,7 +3124,7 @@ sub printPathwaysForSample {
         my $recs = $gc->readCartFile(); # get records
         @cart_gene_oids = sort { $a <=> $b } keys(%$recs); 
         if (scalar @cart_gene_oids < 1) { 
-            webError( "Your Gene Cart is empty." ); 
+            WebUtil::webError( "Your Gene Cart is empty." ); 
         } 
     } 
  
@@ -3224,7 +3232,7 @@ sub printClusterResults {
     my $min_abundance = param("min_num");
 
     if ($nSamples < 2) {
-        webError( "Please select at least 2 samples." );
+        WebUtil::webError( "Please select at least 2 samples." );
     }
     if ($min_abundance < 3 ||
 	$min_abundance > $nSamples) {
@@ -3239,7 +3247,7 @@ sub printClusterResults {
         my $recs = $gc->readCartFile(); # get records
         @cart_gene_oids = sort { $a <=> $b } keys(%$recs);
 	if (scalar @cart_gene_oids < 1) {
-	    webError( "Your Gene Cart is empty." );
+	    WebUtil::webError( "Your Gene Cart is empty." );
 	}
     } 
 
@@ -3579,14 +3587,14 @@ sub printClusterMapSort {
     my $sortId = param("sortId");
     my $path = "$cgi_tmp_dir/$stateFile";
     if (!( -e $path )) {
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
     webLog "retrieve '$path' " . currDateTime() . "\n"
 	if $verbose >= 1;
     my $state = retrieve($path);
     if ( !defined($state) ) {
         webLog("printClusterMapSort: bad state from '$stateFile'\n");
-        webError("Your session has expired. Please start over again.");
+        WebUtil::webError("Your session has expired. Please start over again.");
     }
 
     my $normProfiles_ref = $state->{normProfiles};

@@ -1,5 +1,5 @@
 ###########################################################################
-# $Id: HistogramUtil.pm 35780 2016-06-15 20:41:20Z klchu $
+# $Id: HistogramUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package HistogramUtil;
 
@@ -1500,7 +1500,7 @@ sub getHistogramScaffoldList {
                 $range_cond .= " <= $upper";
             }
             else {
-                webError("Incorrect upper bound: $upper");
+                WebUtil::webError("Incorrect upper bound: $upper");
                 return;
             }            
         }
@@ -1512,7 +1512,7 @@ sub getHistogramScaffoldList {
                 $range_cond .= " >= $lower";
             }
             elsif ( !isNumber($upper) ) {
-                webError("Incorrect upper bound: $upper");
+                WebUtil::webError("Incorrect upper bound: $upper");
                 return;
             }
             elsif ( $upper == $lower ) {
@@ -1527,7 +1527,7 @@ sub getHistogramScaffoldList {
             }            
         }
         else {
-            webError("Incorrect lower bound: $lower");
+            WebUtil::webError("Incorrect lower bound: $lower");
             return;            
         }
     }
@@ -1661,7 +1661,7 @@ sub printHistogramScaffoldList {
     ($scaffold_oids_ref, $h_type, $lower, $upper, $scaf_set_name, $data_type);
     my $cnt = scalar(@$selected_aref);
     if ( $cnt == 0 ) {
-        webError("No scaffolds have been selected.");
+        WebUtil::webError("No scaffolds have been selected.");
         return;
     }
 

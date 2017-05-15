@@ -1,5 +1,5 @@
 #
-# $Id: GenomeGeneOrtholog.pm 36089 2016-08-31 21:38:02Z klchu $
+# $Id: GenomeGeneOrtholog.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 package GenomeGeneOrtholog;
 
@@ -159,7 +159,7 @@ sub printResults {
 
             #$dbh->disconnect();
             printStatusLine( "Loaded.", 2 );
-            webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
+            WebUtil::webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
             return;
         }
 
@@ -167,7 +167,7 @@ sub printResults {
 
             #$dbh->disconnect();
             printStatusLine( "Loaded.", 2 );
-            webError( "Please select only $max_subject genome " . "in the \"Ortholog In\" column." );
+            WebUtil::webError( "Please select only $max_subject genome " . "in the \"Ortholog In\" column." );
             return;
         }
     }
@@ -177,7 +177,7 @@ sub printResults {
 
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
-        webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
+        WebUtil::webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
         return;
     }
 
@@ -185,7 +185,7 @@ sub printResults {
 
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
-        webError( "Please select at least 1 genome " . "in the \"Ortholog In\" column" );
+        WebUtil::webError( "Please select at least 1 genome " . "in the \"Ortholog In\" column" );
         return;
     }
 
@@ -484,13 +484,13 @@ sub printResults3 {
 
     if ( $#findList > 1 ) {
         printStatusLine( "Loaded.", 2 );
-        webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
+        WebUtil::webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
         return;
     }
 
     if ( $#collList > ( $max_subject - 1 ) ) {
         printStatusLine( "Loaded.", 2 );
-        webError( "Please select only $max_subject genome " . "in the \"Ortholog In\" column." );
+        WebUtil::webError( "Please select only $max_subject genome " . "in the \"Ortholog In\" column." );
         return;
     }
 
@@ -499,7 +499,7 @@ sub printResults3 {
 
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
-        webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
+        WebUtil::webError( "Please select only 1 genome " . "in the \"Find Gene In\" column." );
         return;
     }
 
@@ -507,7 +507,7 @@ sub printResults3 {
 
         #$dbh->disconnect();
         printStatusLine( "Loaded.", 2 );
-        webError( "Please select at least 1 genome " . "in the \"Ortholog In\" column" );
+        WebUtil::webError( "Please select at least 1 genome " . "in the \"Ortholog In\" column" );
         return;
     }
 

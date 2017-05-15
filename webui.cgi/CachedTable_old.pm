@@ -14,6 +14,14 @@ use Storable;
 use WebConfig;
 use WebUtil;
 
+
+# =======================================================================
+#
+# OLD ----- use InnerTable instead - ken
+#
+# =======================================================================  
+
+
 my $env = getEnv( );
 my $main_cgi = $env->{ main_cgi };
 my $cgi_tmp_dir = $env->{ cgi_tmp_dir };
@@ -243,7 +251,7 @@ sub printTable {
     my $nColSpecs = @$colSpecs;
     if( $nColSpecs == 0 ) {
        printStatusLine( "Error.", 2 );
-       webError( "Your session has expired. Please start over again." );
+       WebUtil::webError( "Your session has expired. Please start over again." );
     }
 
     print "<table class='img'  border='1'>\n";

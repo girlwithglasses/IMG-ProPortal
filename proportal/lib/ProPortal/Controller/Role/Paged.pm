@@ -17,7 +17,7 @@ has 'max_results' => (
 
 sub _build_max_results {
 	my $self = shift;
-	return $self->_core->config->{max_results} // 1000;
+	return $self->_core->config->{max_results} // 5000;
 }
 
 has  'page_index' => (
@@ -36,12 +36,7 @@ sub page_me {
 	log_debug { 'page index: ' . $self->page_index };
 
 	# query will be paged; just return the first $self->page_size results
-	$stt->refine( -page_size => $self->page_size, -page_index => $self->page_index );
-
-	my $output;
-	$output->{n_results} = $stt->row_count;
-	$output->{n_pages} = $stt->page_count;
-
+#	$stt->refine( -page_size => $self->page_size, -page_index => $self->page_index );
 
 	log_debug { 'n pages: ' . $stt->page_count };
 	log_debug { 'n rows: ' . $stt->row_count };

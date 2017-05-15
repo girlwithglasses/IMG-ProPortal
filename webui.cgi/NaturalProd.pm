@@ -1,6 +1,6 @@
 ############################################################################
 # NaturalProd.pm
-# $Id: NaturalProd.pm 35967 2016-08-08 04:15:38Z jinghuahuang $
+# $Id: NaturalProd.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package NaturalProd;
 my $section = "NaturalProd";
@@ -1693,7 +1693,7 @@ sub getNPID {
 
     #    my $sql = qq{
     #         select gnp.gold_np_id
-    #         from project_info_natural_prods\@imgsg_dev gnp
+    #         from project_info_natural_prods gnp
     #         where gnp.img_oid = ?
     #         };
     my $sql = qq{
@@ -1714,8 +1714,8 @@ sub printExperimentalNP {
     #    my $sql = qq{
     #         select np.np_id, np.np_product_name, np.np_product_link,
     #                np.img_compound_id, c.compound_name
-    #         from project_info_natural_prods\@imgsg_dev gnp,
-    #              cvnatural_prods\@imgsg_dev np,
+    #         from project_info_natural_prods gnp,
+    #              cvnatural_prods np,
     #              img_compound c
     #         where gnp.gold_np_id = ?
     #         and gnp.np_id = np.np_id
@@ -1759,8 +1759,8 @@ sub printGenbankIdNP {
     #        select gnp.gold_np_id, gnp.project_oid, p.gold_stamp_id,
     #               np.np_id, np.np_product_name, np.np_product_link,
     #               np.img_compound_id, c.compound_name
-    #        from project_info_natural_prods\@imgsg_dev gnp,
-    #             cvnatural_prods\@imgsg_dev np, project_info\@imgsg_dev p,
+    #        from project_info_natural_prods gnp,
+    #             cvnatural_prods np, project_info p,
     #             img_compound c
     #        where gnp.genbank_id = ?
     #        and gnp.np_id = np.np_id
@@ -1772,7 +1772,7 @@ sub printGenbankIdNP {
                np.np_product_name, np.np_product_link, 
                np.compound_oid, c.compound_name
         from natural_product np,
-             project_info\@imgsg_dev p,
+             project_info p,
              img_compound c
         where np.genbank_id = ? 
         and np.project_oid = p.project_oid
@@ -1837,8 +1837,8 @@ sub printBioClusterIdNP {
     #               np.np_id, np.np_product_name, np.np_product_link,
     #               np.np_type, np.np_activity, gnp.modified_by, gnp.mod_date,
     #               np.img_compound_id, c.compound_name
-    #        from project_info_natural_prods\@imgsg_dev gnp,
-    #             cvnatural_prods\@imgsg_dev np, project_info\@imgsg_dev p,
+    #        from project_info_natural_prods gnp,
+    #             cvnatural_prods np, project_info p,
     #             img_compound c
     #        where gnp.bio_cluster_id = ?
     #        and gnp.np_id = np.np_id
@@ -1851,7 +1851,7 @@ sub printBioClusterIdNP {
                np.np_type, np.activity, np.modified_by, np.mod_date,
                np.compound_oid, c.compound_name
         from natural_product np,
-             project_info\@imgsg_dev p,
+             project_info p,
              img_compound c
         where np.cluster_id = ? 
         and np.project_oid = p.project_oid
@@ -1944,7 +1944,7 @@ sub printNPDetail {
     my ( $dbh, $np_id, $compound_href, $alias_href ) = @_;
 
     #    my $sql = "select evidence, activity, genbank_id " .
-    #	" from project_info_natural_prods\@imgsg_dev " .
+    #	" from project_info_natural_prods " .
     #	" where gold_np_id = ?";
 
     my $sql = qq{
@@ -2514,7 +2514,7 @@ sub printPathwayCompound {
 sub printTaxonNPList {
     
     if ( !$enable_biocluster ) {
-        webError("Natutal Product not supported!");
+        WebUtil::webError("Natutal Product not supported!");
     }
 
     my $dbh = dbLogin();

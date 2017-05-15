@@ -3,7 +3,7 @@
 #   Note, this is an HTML server, not a data server.
 #     --es 08/30/2005
 #
-# $Id: inner.pl 30841 2014-05-08 04:32:57Z klchu $
+# $Id: inner.pl 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 use strict;
 use CGI qw( :standard );
@@ -20,7 +20,6 @@ my $verbose = 1;
 
 my $env = getEnv();
 
-blockRobots();
 
 ############################################################################
 # main

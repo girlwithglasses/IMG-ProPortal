@@ -268,10 +268,10 @@ sub printRuleSetMainForm {
     my $sid = getContactOid(); 
     my $rule_dir = "$workspace_dir/$sid/$folder";
     if ( !-e "$rule_dir" ) { 
-        mkdir "$rule_dir" or webError("Workspace is down!");
+        mkdir "$rule_dir" or WebUtil::webError("Workspace is down!");
     } 
     opendir( DIR, $rule_dir )
-        or webDie("failed to open folder list");
+        or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR); 
 
@@ -378,7 +378,7 @@ sub printRuleSetDetail {
  
     # check filename
     if ( $filename eq "" ) { 
-        webError("Cannot read file."); 
+        WebUtil::webError("Cannot read file."); 
         return; 
     } 
 
@@ -668,7 +668,7 @@ sub createNewSet {
  
     $filename =~ s/\W+/_/g; 
     if ( !$filename ) { 
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     } 
  
@@ -681,7 +681,7 @@ sub createNewSet {
 
     # check if filename already exist
     if ( -e "$workspace_dir/$sid/$RULE_FOLDER/$filename" ) { 
-        webError("File name $filename already exists. Please enter a new file name."); 
+        WebUtil::webError("File name $filename already exists. Please enter a new file name."); 
         return; 
     } 
 
@@ -715,7 +715,7 @@ sub defineRule {
  
     $rulename =~ s/\W+/_/g; 
     if ( !$rulename ) { 
-        webError("Please enter a rule name.");
+        WebUtil::webError("Please enter a rule name.");
         return;
     } 
  
@@ -734,7 +734,7 @@ sub defineRule {
 	close $res;
 
 	if ( $found ) {
-	    webError("Rule $rulename already exists.");
+	    WebUtil::webError("Rule $rulename already exists.");
 	    return; 
 	}
     } 
@@ -770,7 +770,7 @@ sub defineRule {
     }
 
     if ( scalar(@funcs) == 0 ) {
-	webError("No functions have been selected.");
+	WebUtil::webError("No functions have been selected.");
 	return;
     }
     
@@ -972,7 +972,7 @@ sub updateRule {
     WebUtil::checkFileName($filename);
 
     if ( scalar(@rule_ids) == 0 ) {
-	webError("No rule has been selected for update.");
+	WebUtil::webError("No rule has been selected for update.");
 	return;
     }
 
@@ -1011,7 +1011,7 @@ sub updateRule {
 	print "<p>Rule Definition: $rule\n";
     }
     else {
-	webError("Cannot find rule $rule_id.");
+	WebUtil::webError("Cannot find rule $rule_id.");
     }
 
     my $func_source = param("func_source");
@@ -1308,7 +1308,7 @@ sub confirmDeleteRule {
     print hiddenVar("filename", $filename);
 
     if ( scalar(@rule_ids) == 0 ) {
-	webError("No rules have been selected.");
+	WebUtil::webError("No rules have been selected.");
 	return;
     }
 
@@ -1425,7 +1425,7 @@ sub showRuleGenomeProfile_old {
     print "<p>selected rule(s): " . join(", ", @rules) . "\n";
 
     if ( $genome_set eq "" ) {
-        webError("Please select a genome set.\n");
+        WebUtil::webError("Please select a genome set.\n");
         return;
     }
 
@@ -1435,7 +1435,7 @@ sub showRuleGenomeProfile_old {
     my $genome_filename = WebUtil::validFileName($genome_set);
 
     open( FH, "$workspace_dir/$sid/$GENOME_FOLDER/$genome_filename" )
-	or webError("File size - file error $genome_filename"); 
+	or WebUtil::webError("File size - file error $genome_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();
@@ -1591,7 +1591,7 @@ sub showRuleGenomeProfile {
     }
 
     if ( $genome_set eq "" ) {
-        webError("Please select a genome set.\n");
+        WebUtil::webError("Please select a genome set.\n");
         return;
     }
 
@@ -1601,7 +1601,7 @@ sub showRuleGenomeProfile {
     my $genome_filename = WebUtil::validFileName($genome_set);
 
     open( FH, "$workspace_dir/$sid/$GENOME_FOLDER/$genome_filename" )
-	or webError("File size - file error $genome_filename"); 
+	or WebUtil::webError("File size - file error $genome_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();
@@ -1830,7 +1830,7 @@ sub showRuleResultTree_old {
     print "<p>selected rule(s): " . join(", ", @rules) . "\n";
 
     if ( $genome_set eq "" ) {
-        webError("Please select a genome set.\n");
+        WebUtil::webError("Please select a genome set.\n");
         return;
     }
 
@@ -1840,7 +1840,7 @@ sub showRuleResultTree_old {
     my $genome_filename = WebUtil::validFileName($genome_set);
 
     open( FH, "$workspace_dir/$sid/$GENOME_FOLDER/$genome_filename" )
-	or webError("File size - file error $genome_filename"); 
+	or WebUtil::webError("File size - file error $genome_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();
@@ -2006,7 +2006,7 @@ sub showRuleResultTree {
     print "<p>selected rule(s): " . join(", ", @rules) . "\n";
 
     if ( $genome_set eq "" ) {
-        webError("Please select a genome set.\n");
+        WebUtil::webError("Please select a genome set.\n");
         return;
     }
 
@@ -2016,7 +2016,7 @@ sub showRuleResultTree {
     my $genome_filename = WebUtil::validFileName($genome_set);
 
     open( FH, "$workspace_dir/$sid/$GENOME_FOLDER/$genome_filename" )
-	or webError("File size - file error $genome_filename"); 
+	or WebUtil::webError("File size - file error $genome_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();
@@ -2556,7 +2556,7 @@ sub showTaxonCondDetail {
     $cur->finish();
 
     if ( ! $t2 ) {
-	webError("Error: Incorrect Taxon OID.");
+	WebUtil::webError("Error: Incorrect Taxon OID.");
 	$dbh->disconnect();
 	return;
     }
@@ -3671,7 +3671,7 @@ sub showGeneSetEvalResult {
     my $gene_filename = WebUtil::validFileName($gene_set);
 
     open( FH, "$workspace_dir/$sid/$GENE_FOLDER/$gene_filename" )
-	or webError("File size - file error $gene_filename"); 
+	or WebUtil::webError("File size - file error $gene_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();
@@ -4267,7 +4267,7 @@ sub showRuleGeneSetProfile {
     }
 
     if ( $gene_set eq "" ) {
-        webError("Please select a gene set.\n");
+        WebUtil::webError("Please select a gene set.\n");
         return;
     }
 
@@ -4277,7 +4277,7 @@ sub showRuleGeneSetProfile {
     my $gene_filename = WebUtil::validFileName($gene_set);
 
     open( FH, "$workspace_dir/$sid/$GENE_FOLDER/$gene_filename" )
-	or webError("File size - file error $gene_filename"); 
+	or WebUtil::webError("File size - file error $gene_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();
@@ -4402,7 +4402,7 @@ sub showRuleGeneProfile {
     }
 
     if ( $gene_set eq "" ) {
-        webError("Please select a gene set.\n");
+        WebUtil::webError("Please select a gene set.\n");
         return;
     }
 
@@ -4412,7 +4412,7 @@ sub showRuleGeneProfile {
     my $gene_filename = WebUtil::validFileName($gene_set);
 
     open( FH, "$workspace_dir/$sid/$GENE_FOLDER/$gene_filename" )
-	or webError("File size - file error $gene_filename"); 
+	or WebUtil::webError("File size - file error $gene_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();
@@ -5575,7 +5575,7 @@ sub showFuncSetGeneProfile {
 
     # read all function ids in the function set
     if ( $gene_set eq "" ) {
-        webError("Please select a gene set.\n");
+        WebUtil::webError("Please select a gene set.\n");
         return;
     }
 
@@ -5611,7 +5611,7 @@ sub showFuncSetGeneProfile {
 	$col_count++;
 
 	open( FH, "$workspace_dir/$sid/$folder/$x" )
-	    or webError("File size - file error $x"); 
+	    or WebUtil::webError("File size - file error $x"); 
 	my $func_str = "";
 	while ( my $line = <FH> ) {
 	    chomp($line);
@@ -5656,7 +5656,7 @@ sub showFuncSetGeneProfile {
     my $fullname = "$workspace_dir/$sid/$GENE_FOLDER/$gene_filename";
 
     open( FH, $fullname )
-	or webError("File error $gene_filename.");
+	or WebUtil::webError("File error $gene_filename.");
 
     my $trunc = 0;
     my $dbh = dbLogin();
@@ -6084,7 +6084,7 @@ sub showFuncGeneProfile {
 
     # read all function ids in the function set
     if ( $gene_set eq "" ) {
-        webError("Please select a gene set.\n");
+        WebUtil::webError("Please select a gene set.\n");
         return;
     }
 
@@ -6110,7 +6110,7 @@ sub showFuncGeneProfile {
 
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {
-	webError("No functions are selected.");
+	WebUtil::webError("No functions are selected.");
 	return;
     }
 
@@ -6152,7 +6152,7 @@ sub showFuncGeneProfile {
     my $fullname = "$workspace_dir/$sid/$GENE_FOLDER/$gene_filename";
 
     open( FH, $fullname )
-	or webError("File error $gene_filename.");
+	or WebUtil::webError("File error $gene_filename.");
 
     my $trunc = 0;
     my $dbh = dbLogin();
@@ -6486,11 +6486,11 @@ sub listFuncInSetForGene
 
     print "<h1>Functions in Function Set for Selected Gene</h1>\n";
     if ( ! $filename ) {
-	webError("No function set has been selected.");
+	WebUtil::webError("No function set has been selected.");
 	return;
     }
     if ( ! $gene_oid ) {
-	webError("No gene has been selected.");
+	WebUtil::webError("No gene has been selected.");
 	return;
     }
 
@@ -6525,7 +6525,7 @@ sub listFuncInSetForGene
     # check all functions in filename
     my $folder = $FUNC_FOLDER;
     open( FH, "$workspace_dir/$sid/$folder/$filename" )
-	or webError("File size - file error $filename"); 
+	or WebUtil::webError("File size - file error $filename"); 
     my @func_ids = ();     # save all functions in set for the selected gene
     my %gene_func;
     while ( my $line = <FH> ) {
@@ -6854,11 +6854,11 @@ sub listFuncInSetForGene
 sub printPhyloOccurProfiles {
     my @func_ids = param("func_id");
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select at least one function.");
+        WebUtil::webError("Please select at least one function.");
     }
 
     if ( scalar(@func_ids) > $maxProfileOccurIds ) {
-        webError( "Please select no more than " . "$maxProfileOccurIds functions." );
+        WebUtil::webError( "Please select no more than " . "$maxProfileOccurIds functions." );
 	return;
     }
 
@@ -7092,7 +7092,7 @@ sub printPwayAssertionProfile_s {
  
     my @taxon_oids = (keys %taxon_oid_h);
     if ( scalar(@taxon_oids) == 0 || scalar(@taxon_oids) > 1000 ) {
-        webError("Please select between 1 and 1000 genomes.");
+        WebUtil::webError("Please select between 1 and 1000 genomes.");
         return; 
     }
 
@@ -7107,7 +7107,7 @@ sub printPwayAssertionProfile_s {
     my $nPwayOids = @pathway_oids;
     my $max_func_batch = 1000;
     if ( $nPwayOids == 0 || $nPwayOids > $max_func_batch ) {
-        webError("Please select 1 to $max_func_batch IMG pathways.");
+        WebUtil::webError("Please select 1 to $max_func_batch IMG pathways.");
     }
 
     printStatusLine( "Loading ...", 1 );
@@ -7282,7 +7282,7 @@ sub printPwayAssertionProfile_t {
  
     my @taxon_oids = (keys %taxon_oid_h);
     if ( scalar(@taxon_oids) == 0 || scalar(@taxon_oids) > 1000 ) {
-        webError("Please select between 1 and 1000 genomes.");
+        WebUtil::webError("Please select between 1 and 1000 genomes.");
         return; 
     }
 
@@ -7299,7 +7299,7 @@ sub printPwayAssertionProfile_t {
 
     my $nPwayOids = @pathway_oids;
     if ( $nPwayOids == 0 || $nPwayOids > $max_func_batch ) {
-        webError("Please select 1 to $max_func_batch IMG pathways.");
+        WebUtil::webError("Please select 1 to $max_func_batch IMG pathways.");
     }
     printStatusLine( "Loading ...", 1 );
     my $dbh = dbLogin();
@@ -7513,11 +7513,11 @@ sub getPwayAssertEvidence {
 sub printEssentialGeneProfiles {
     my @func_ids = param("func_id");
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select at least one function.");
+        WebUtil::webError("Please select at least one function.");
     }
 
     if ( scalar(@func_ids) > $maxProfileOccurIds ) {
-        webError( "Please select no more than " . "$maxProfileOccurIds functions." );
+        WebUtil::webError( "Please select no more than " . "$maxProfileOccurIds functions." );
 	return;
     }
 
@@ -7739,7 +7739,7 @@ sub showRuleBioClusterProfile {
     }
 
     if ( $genome_set eq "" ) {
-        webError("Please select a genome set.\n");
+        WebUtil::webError("Please select a genome set.\n");
         return;
     }
 
@@ -7749,7 +7749,7 @@ sub showRuleBioClusterProfile {
     my $genome_filename = WebUtil::validFileName($genome_set);
 
     open( FH, "$workspace_dir/$sid/$GENOME_FOLDER/$genome_filename" )
-	or webError("File size - file error $genome_filename"); 
+	or WebUtil::webError("File size - file error $genome_filename"); 
 
     timeout( 60 * $merfs_timeout_mins ); 
     my $start_time = time();

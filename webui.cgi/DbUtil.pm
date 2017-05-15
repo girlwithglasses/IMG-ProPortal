@@ -33,9 +33,9 @@ sub execSql{
       print "$s\n" if $verbose >= 1;
    }
    my $cur = $dbh->prepare( $sql ) or
-      webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
+      WebUtil::webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
    $cur->execute( @args ) or
-      webDie( "execSql: cannot execute: $DBI::errstr\n" );
+      WebUtil::webDie( "execSql: cannot execute: $DBI::errstr\n" );
    return $cur;
 }   
 
@@ -56,9 +56,9 @@ sub execSqlFetch1{
       print "$s\n" if $verbose >= 1;
    }
    my $cur = $dbh->prepare( $sql ) ||
-      webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
+      WebUtil::webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
    $cur->execute( @args ) ||
-      webDie( "execSql: cannot execute: $DBI::errstr\n" );
+      WebUtil::webDie( "execSql: cannot execute: $DBI::errstr\n" );
    return $cur->fetchrow( );
 }   
     
@@ -70,7 +70,7 @@ sub execSqlOnly{
    my( $dbh, $sql, $verbose, @args ) = @_;
    print( "$sql\n" ) if $verbose >= 1;
    my $cur = $dbh->prepare( $sql ) ||
-      webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
+      WebUtil::webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
    my $nArgs = @args;
    if( $nArgs > 0 ) {
       my $s;
@@ -81,7 +81,7 @@ sub execSqlOnly{
       print "$s\n";
    }
    $cur->execute( @args ) ||
-      webDie( "execSql: cannot execute: $DBI::errstr\n" );
+      WebUtil::webDie( "execSql: cannot execute: $DBI::errstr\n" );
    $cur->finish( );
 }
 
@@ -92,7 +92,7 @@ sub prepSql{
    my( $dbh, $sql, $verbose ) = @_;
    print "$sql\n" if $verbose >= 1;
    my $cur = $dbh->prepare( $sql ) ||
-      webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
+      WebUtil::webDie( "execSql: cannot preparse statement: $DBI::errstr\n" );
    return $cur;
 }
 ############################################################################
@@ -110,7 +110,7 @@ sub execSqlVars {
        print "\n" if $verbose >= 1;
    }
    $cur->execute( @vars ) ||
-      webDie( "execSqlVars: cannot execute $DBI::errstr\n" );
+      WebUtil::webDie( "execSqlVars: cannot execute $DBI::errstr\n" );
    return $cur;
 }
 
@@ -120,7 +120,7 @@ sub execSqlVars {
 sub execStmt {
    my( $cur, @vars ) = @_;
    $cur->execute( @vars ) ||
-      webDie( "execStmt: cannot execute $DBI::errstr\n" );
+      WebUtil::webDie( "execStmt: cannot execute $DBI::errstr\n" );
    return $cur;
 }
 ############################################################################
@@ -129,7 +129,7 @@ sub execStmt {
 sub execPrepSql {
    my( $cur, @vars ) = @_;
    $cur->execute( @vars ) ||
-      webDie( "execPrepSql: cannot execute $DBI::errstr\n" );
+      WebUtil::webDie( "execPrepSql: cannot execute $DBI::errstr\n" );
    return $cur;
 }
 
@@ -139,7 +139,7 @@ sub execPrepSql {
 sub execStmtFetch {
    my( $cur, @vars ) = @_;
    $cur->execute( @vars ) ||
-      webDie( "execStmt: cannot execute $DBI::errstr\n" );
+      WebUtil::webDie( "execStmt: cannot execute $DBI::errstr\n" );
    return $cur->fetchrow( );
 }
 
@@ -164,7 +164,7 @@ sub oracleLoginPw {
        $dbh = DBI->connect( $oraDsn, $oraUser, pwDecode( $pw ) );
    }
    if( !defined( $dbh ) ) {
-      webDie( "oracleLoginPw: cannot login '$oraUser' '$pw' \@ '$oraDsn'\n" );
+      WebUtil::webDie( "oracleLoginPw: cannot login '$oraUser' '$pw' \@ '$oraDsn'\n" );
    }
    my $maxClobSize = 40000;
    $dbh->{ LongReadLen } = $maxClobSize;
@@ -202,7 +202,7 @@ sub pwDecode {
 sub getTmpFile {
     my( $step, $filename ) = @_;
 
-    $filename = lastPathTok( $filename );
+    $filename = WebUtil::lastPathTok( $filename );
     my $scratchDir = getScratchDir( );
     my $user = $ENV{ USER };
     return "$scratchDir/$user.$$.$step.$filename";
@@ -231,7 +231,7 @@ sub getScratchDir {
       return "/tmp/$subdir";
    }
    else {
-       webDie( "getScratchDir: no suitable writable scratch\n" );
+       WebUtil::webDie( "getScratchDir: no suitable writable scratch\n" );
    }
 }
 

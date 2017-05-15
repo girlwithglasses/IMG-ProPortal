@@ -1,7 +1,7 @@
 ############################################################################
 # KeggPathwayDetail.pm - Show detail page for kegg pathway.
 #   --es 07/08/2005
-# $Id: KeggPathwayDetail.pm 36788 2017-03-22 06:08:09Z jinghuahuang $
+# $Id: KeggPathwayDetail.pm 37049 2017-05-04 22:31:11Z imachen $
 ############################################################################
 package KeggPathwayDetail;
 my $section = "KeggPathwayDetail";
@@ -14,7 +14,7 @@ use GD;
 use Data::Dumper;
 use ScaffoldPanel;
 use Time::localtime;
-use CachedTable;
+use InnerTable;
 use PhyloNode;
 use PhyloTreeMgr;
 use WebConfig;
@@ -1274,7 +1274,13 @@ sub printParticipatingGenomesInPathway {
     $it->addColSpec( "Genome Name", "asc", "left" );
     $it->addColSpec( "Enzyme(s)",  "asc", "left" );
 
+    my $maxGenomeListResults = 1000;
+    if ( getSessionParam("maxGeneListResults") ne "" ) {
+	$maxGenomeListResults = getSessionParam("maxGeneListResults");
+    }
+
     my $count = 0;
+    my $trunc = 0;
     for my $taxon_oid ( @keys ) {
 	my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
 	my ($id2, $domain, $seq_status, $taxon_display_name, $in_file) = 
@@ -1285,6 +1291,10 @@ sub printParticipatingGenomesInPathway {
 	    next;
 	}
 	$count++;
+	if ( $count > $maxGenomeListResults ) {
+	    $trunc = 1;
+	    last;
+	}
 
         my $r;
         $r .= "$domain\t";
@@ -1311,6 +1321,11 @@ sub printParticipatingGenomesInPathway {
     }
 
     printEndWorkingDiv();
+
+    if ($trunc) {
+      WebUtil::printMessage("<font color='red'>There are too many genomes. Only $maxGenomeListResults genomes are displayed.</font>");
+      print "<p>\n";
+    }
 
     if ( $count ) {
 	$it->printOuterTable(1);
@@ -1363,13 +1378,31 @@ sub printPotentialGenomesWithMissingEnzymes {
     }
     $cur->finish();
 
+    timeout( 60 * $merfs_timeout_mins );
+    my $start_time  = time();
+    my $timeout_msg = "";
+
     printStartWorkingDiv();
     my $taxonClause2 = WebUtil::txsClause( "gckt.taxon", $dbh );
     my $rclause2   = WebUtil::urClause("gckt.taxon");
     my $imgClause2 = WebUtil::imgClauseNoTaxon("gckt.taxon");
     my %taxon_h;
+
+    my $cnt2 = 0;
     for my $ec2 ( @ecs ) {
 	print "<p>Checking $ec2 ...\n";
+	$cnt2++;
+
+        if ( ( ( $merfs_timeout_mins * 60 ) - ( time() - $start_time ) ) < 200 ||
+	    $cnt2 > 10 )
+        {
+            $timeout_msg =
+                "Process takes too long to run "
+              . "-- stopped at $ec2. "
+              . "Only partial result is displayed.";
+            last;
+        }
+
 	my $sql = qq{
            (select gckt.taxon, kte.enzymes
            from gene_candidate_ko_terms gckt, ko_term_enzymes kte
@@ -1429,7 +1462,13 @@ sub printPotentialGenomesWithMissingEnzymes {
     $it->addColSpec( "Genome Name", "asc", "left" );
     $it->addColSpec( "Missing Enzyme(s)",  "asc", "left" );
 
+    my $maxGenomeListResults = 1000;
+    if ( getSessionParam("maxGeneListResults") ne "" ) {
+	$maxGenomeListResults = getSessionParam("maxGeneListResults");
+    }
+
     my $count = 0;
+    my $trunc = 0;
     for my $taxon_oid ( @keys ) {
 	my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
 	my ($id2, $domain, $seq_status, $taxon_display_name, $in_file) = 
@@ -1440,6 +1479,10 @@ sub printPotentialGenomesWithMissingEnzymes {
 	    next;
 	}
 	$count++;
+	if ( $count > $maxGenomeListResults ) {
+	    $trunc = 1;
+	    last;
+	}
 
         my $r;
         $r .= "$domain\t";
@@ -1466,6 +1509,15 @@ sub printPotentialGenomesWithMissingEnzymes {
     }
 
     printEndWorkingDiv();
+
+    if ($trunc) {
+      WebUtil::printMessage("<font color='red'>There are too many genomes. Only $maxGenomeListResults genomes are displayed.</font>");
+      print "<p>\n";
+    }
+
+    if ($timeout_msg) {
+	WebUtil::printMessage("<font color='red'>Warning: $timeout_msg</font>");
+    }
 
     if ( $count ) {
 	$it->printOuterTable(1);
@@ -1580,7 +1632,13 @@ sub printParticipatingGenomesInModule {
     $it->addColSpec( "Genome Name", "asc", "left" );
     $it->addColSpec( "KO ID(s)",  "asc", "left" );
 
+    my $maxGenomeListResults = 1000;
+    if ( getSessionParam("maxGeneListResults") ne "" ) {
+        $maxGenomeListResults = getSessionParam("maxGeneListResults");
+    }
+
     my $count = 0;
+    my $trunc = 0;
     for my $taxon_oid ( @keys ) {
 	my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
 	my ($id2, $domain, $seq_status, $taxon_display_name, $in_file) = 
@@ -1591,6 +1649,10 @@ sub printParticipatingGenomesInModule {
 	    next;
 	}
 	$count++;
+        if ( $count > $maxGenomeListResults ) {
+            $trunc = 1;
+            last;
+        }
 
         my $r;
         $r .= "$domain\t";
@@ -1617,6 +1679,11 @@ sub printParticipatingGenomesInModule {
     }
 
     printEndWorkingDiv();
+
+    if ($trunc) {
+      WebUtil::printMessage("<font color='red'>There are too many genomes. Only $maxGenomeListResults genomes are displayed.</font>");
+      print "<p>\n";
+    }
 
     if ( $count ) {
 	$it->printOuterTable(1);
@@ -1669,13 +1736,31 @@ sub printPotentialGenomesWithMissingKOs {
     }
     $cur->finish();
 
+    timeout( 60 * $merfs_timeout_mins );
+    my $start_time  = time();
+    my $timeout_msg = "";
+
     printStartWorkingDiv();
     my %taxon_h;
     my $taxonClause2 = WebUtil::txsClause( "gckt.taxon", $dbh );
     my $rclause2   = WebUtil::urClause("gckt.taxon");
     my $imgClause2 = WebUtil::imgClauseNoTaxon("gckt.taxon");
+
+    my $cnt2 = 0;
     for my $ko2 ( @kos ) {
 	print "<p>Checking $ko2 ...\n";
+	$cnt2++;
+
+        if ( ( ( $merfs_timeout_mins * 60 ) - ( time() - $start_time ) ) < 200 ||
+            $cnt2 > 10 )
+        {
+            $timeout_msg =
+                "Process takes too long to run "
+              . "-- stopped at $ko2. "
+              . "Only partial result is displayed.";
+            last;
+        }
+
 	my $sql = qq{
            (select gckt.taxon, gckt.ko_terms
            from gene_candidate_ko_terms gckt
@@ -1734,7 +1819,13 @@ sub printPotentialGenomesWithMissingKOs {
     $it->addColSpec( "Genome Name", "asc", "left" );
     $it->addColSpec( "Missing KO ID(s)",  "asc", "left" );
 
+    my $maxGenomeListResults = 1000;
+    if ( getSessionParam("maxGeneListResults") ne "" ) {
+        $maxGenomeListResults = getSessionParam("maxGeneListResults");
+    }
+
     my $count = 0;
+    my $trunc = 0;
     for my $taxon_oid ( @keys ) {
 	my $cur2 = execSql( $dbh, $sql2, $verbose, $taxon_oid );
 	my ($id2, $domain, $seq_status, $taxon_display_name, $in_file) = 
@@ -1745,6 +1836,10 @@ sub printPotentialGenomesWithMissingKOs {
 	    next;
 	}
 	$count++;
+        if ( $count > $maxGenomeListResults ) {
+            $trunc = 1;
+            last;
+        }
 
         my $r;
         $r .= "$domain\t";
@@ -1771,6 +1866,15 @@ sub printPotentialGenomesWithMissingKOs {
     }
 
     printEndWorkingDiv();
+
+    if ($trunc) {
+      WebUtil::printMessage("<font color='red'>There are too many genomes. Only $maxGenomeListResults genomes are displayed.</font>");
+      print "<p>\n";
+    }
+
+    if ($timeout_msg) {
+	WebUtil::printMessage("<font color='red'>Warning: $timeout_msg</font>");
+    }
 
     if ( $count ) {
 	$it->printOuterTable(1);
@@ -4947,7 +5051,7 @@ sub printTaxonKoModuleMap {
     }
 
     if ( scalar(@taxons) == 0 ) {
-	webError("No genomes have been selected.");
+	WebUtil::webError("No genomes have been selected.");
 	return;
     }
     my $nTaxons = @taxons;
@@ -5052,8 +5156,8 @@ sub printKpdKeggPathwayDetailGenomes {
     $baseUrl .= "&pathway_oid=$pathway_oid";
     $baseUrl .= "&ec_number=$ec_number";
 
-    my $cachedTable = new CachedTable( "keggGenomes$pathway_oid", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $cachedTable = new InnerTable(1, "keggGenomes$$", "keggGenomes$pathway_oid", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     $cachedTable->addColSpec( "Select" );
     $cachedTable->addColSpec( "Domain", "asc", "center", "",
                               "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids, G=GFragment, V=Viruses" );
@@ -5605,14 +5709,14 @@ sub printKpdScaffoldProfile {
     my @scaffold_oids = param("scaffold_oid");
     my $scaffold_selection_str = join( ',', @scaffold_oids );
     if ( blankStr($scaffold_selection_str) ) {
-        webError("Please select scaffolds for profiling.");
+        WebUtil::webError("Please select scaffolds for profiling.");
     }
     my $nScaffolds = @scaffold_oids;
     if ( $nScaffolds < 1 ) {
-        webError("Please select at least one scaffold.");
+        WebUtil::webError("Please select at least one scaffold.");
     }
     if ( $nScaffolds > $max_scaffold_batch ) {
-        webError( "Please select from one to a maximum of " . "$max_scaffold_batch scaffolds." );
+        WebUtil::webError( "Please select from one to a maximum of " . "$max_scaffold_batch scaffolds." );
     }
     my $dbh = dbLogin();
 
@@ -5724,8 +5828,8 @@ sub printKpdScaffoldProfile {
     }
     my @colorMap = ( "1:5:bisque", "5:1000000:yellow", );
 
-    my $cachedTable = new CachedTable( "keggScaffolds$pathway_oid", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $cachedTable = new InnerTable(1, "keggScaffolds$$", "keggScaffolds$pathway_oid", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     $cachedTable->addColSpec( "EC Number", "asc", "left" );
     $cachedTable->addColSpec( "EC Name",   "asc", "left" );
     for my $r (@scaffoldRecs) {

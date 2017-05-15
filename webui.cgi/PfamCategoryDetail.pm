@@ -4,7 +4,7 @@
 #     was put into perl modules.
 #    --es 10/06/2007
 #
-# $Id: PfamCategoryDetail.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: PfamCategoryDetail.pm 36990 2017-04-25 17:08:44Z klchu $
 ############################################################################
 package PfamCategoryDetail;
 my $section = "PfamCategoryDetail";
@@ -15,7 +15,7 @@ use DBI;
 use Data::Dumper;
 use ScaffoldPanel;
 use Time::localtime;
-use CachedTable;
+use InnerTable;
 use WebConfig;
 use WebUtil;
 use HtmlUtil;
@@ -254,8 +254,8 @@ sub printPfamCategoryDetail {
     my $hasIsolates = scalar (keys %pfam_cnts) > 0 ? 1 : 0;
     my $hasMetagenomes = scalar (keys %m_pfam_cnts) > 0 ? 1 : 0;
 
-    my $cachedTable = new CachedTable( "pfamCat$function_code", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $cachedTable = new InnerTable(1, "pfamCat$$", "pfamCat$function_code", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     $cachedTable->addColSpec( "Select" );
     $cachedTable->addColSpec( "Pfam ID",   "asc", "left" );
     $cachedTable->addColSpec( "Pfam Name", "asc", "left" );
@@ -510,8 +510,8 @@ sub printPfamPathwayDetail {
     my $hasIsolates = scalar (keys %pfam_cnts) > 0 ? 1 : 0;
     my $hasMetagenomes = scalar (keys %m_pfam_cnts) > 0 ? 1 : 0;
 
-    my $cachedTable = new CachedTable( "pfamPway$cog_pathway_oid", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $cachedTable = new InnerTable(1, "pfamPway$$", "pfamPway$cog_pathway_oid", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     $cachedTable->addColSpec("Select");
     $cachedTable->addColSpec( "Pfam ID",   "asc", "left" );
     $cachedTable->addColSpec( "Pfam Name", "asc", "left" );
@@ -735,8 +735,8 @@ sub printPcdPfamGenomeList {
     my $baseUrl = "$section_cgi&page=pcdPfamGenomeList";
     $baseUrl .= "&pfam_id=$pfam_id";
 
-    my $cachedTable = new CachedTable( "pcdPfamGenomes$pfam_id", $baseUrl );
-    my $sdDelim = CachedTable::getSdDelim();
+    my $cachedTable = new InnerTable(1, "pcdPfamGenomes$$", "pcdPfamGenomes$pfam_id", 1 );
+    my $sdDelim = InnerTable::getSdDelim();
     $cachedTable->addColSpec( "Select" );
     $cachedTable->addColSpec( "Domain", "asc", "center", "",
                               "*=Microbiome, B=Bacteria, A=Archaea, E=Eukarya, P=Plasmids,  G=GFragment, V=Viruses" );
@@ -878,6 +878,7 @@ sub printPcdPfamGenomeList {
         WebUtil::printGenomeCartFooter();
     }
     $cachedTable->printTable();
+    
     WebUtil::printGenomeCartFooter();
 
     if ( $count > 0 ) {
@@ -1178,7 +1179,7 @@ sub printPcdPfamGenomeGeneList {
     my $url = "$pfam_base_url$pfam_id2";
     print "<p>$pfam_id - ".alink( $url, $name )."</p>";
 
-    require InnerTable;
+
     my $it = new InnerTable( 1, "pfamGenes$$", "pfamGenes", 1 );
     my $sd = $it->getSdDelim();
 

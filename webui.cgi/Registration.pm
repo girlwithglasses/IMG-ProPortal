@@ -135,28 +135,28 @@ sub processRegistration {
    my $country = paramWrap( "country" );
 
    if( $name eq "" ) {
-      webError( "Please enter first and last name." );
+      WebUtil::webError( "Please enter first and last name." );
    }
    if( $username eq "" ) {
-      webError( "Please enter desired user name." );
+      WebUtil::webError( "Please enter desired user name." );
    }
    if( $password1 eq "" ) {
-      webError( "Please enter password." );
+      WebUtil::webError( "Please enter password." );
    }
    if( $password2 eq "" ) {
-      webError( "Please reenter password." );
+      WebUtil::webError( "Please reenter password." );
    }
    if( $email eq "" ) {
-      webError( "Please enter email address." );
+      WebUtil::webError( "Please enter email address." );
    }
    if( $organization eq "" ) {
-      webError( "Please enter your organization." );
+      WebUtil::webError( "Please enter your organization." );
    }
    if( $username !~ /^[a-zA-Z0-9_]+$/ ) {
-      webError( "Use only the characters in [a-zA-Z0-9_] for username." );
+      WebUtil::webError( "Use only the characters in [a-zA-Z0-9_] for username." );
    }
    if( $password1 ne $password2 ) {
-      webError( "Password entries do not match.  Please retype entries." );
+      WebUtil::webError( "Password entries do not match.  Please retype entries." );
    }
    my $sql = qq{
       select count(*)
@@ -167,7 +167,7 @@ sub processRegistration {
    my $cnt = $cur->fetchrow( );
    $cur->finish( );
    if( $cnt > 0 ) {
-      webError( "Username '$username' is already taken. " .
+      WebUtil::webError( "Username '$username' is already taken. " .
         "Please try another one." );
    };
    my $cur = execSql( $dbh, "set transaction read write", $verbose );

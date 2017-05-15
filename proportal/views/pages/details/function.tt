@@ -1,9 +1,12 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
-	title = self.display_name;
+	title = 'Function Details';
 	self = results.function;
 
 	self.db = 'CyCOG';
 	self.xref = self.id;
+
+	PROCESS 'inc/generic/title.tt';
+	PROCESS 'inc/generic/container_macros.tt';
 
 	PROCESS 'inc/generic/attr_value_table.tt';
 	PROCESS 'inc/generic/container_macros.tt';
@@ -38,7 +41,7 @@
 	<p><span class="noteToSelf"> Sample image </span></p>
 	<img src="/images/sample-cycog-sequence-logo.jpg" alt="Sequence Logo">
 [%
-	END; # end block
+	END; # end block fn_details_logo
 
 
 	# Gene list
@@ -51,6 +54,8 @@
 	n_results = n_results _ ' associated with CyCOG:' _ self.id;
 
 		IF results.genes && results.genes.size > 0;
+
+			#WRAPPER 'inc/cart/gene_add.tt';
 
 			data_table = results.table;
 			data_table.id = 'cycog_gene_list';
@@ -83,6 +88,7 @@
 	layout_page( sections );
 
 	table_arr = [ 'cycog_gene_list' ];
+
  	PROCESS 'scripts/datatables.tt';
 
 END %]

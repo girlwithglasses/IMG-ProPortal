@@ -57,7 +57,7 @@ sub printProcessEmbl {
     my ( $scaffold_oid, $myImgOverride, $imgTermOverride, $gene_oid_note, $misc_features ) = @_;
 
     if ( $scaffold_oid eq "" ) {
-        webError("Please select a scaffold.");
+        WebUtil::webError("Please select a scaffold.");
     }
     print "<h1>Generate EMBL File</h1>\n";
     printMainForm();

@@ -208,13 +208,13 @@ sub showExpandGeneTable {
 
     @gene_oids = ( keys %unique_genes );
     if ( scalar(@gene_oids) == 0 ) {
-        webError("No genes have been selected.");
+        WebUtil::webError("No genes have been selected.");
         return;
     }
 
     my @options = param('expand_gene_table');
     if ( scalar(@options) == 0 ) {
-        webError("No display options have been selected.");
+        WebUtil::webError("No display options have been selected.");
         return;
     }
 
@@ -824,7 +824,7 @@ sub showCogAlignment {
     }
 
     if ( scalar(@gene_oids) == 0 ) {
-        webError("No genes have been selected.");
+        WebUtil::webError("No genes have been selected.");
         return;
     }
 
@@ -1055,7 +1055,7 @@ sub showPfamAlignment {
     }
 
     if ( scalar(@gene_oids) == 0 ) {
-        webError("No genes have been selected.");
+        WebUtil::webError("No genes have been selected.");
         return;
     }
 
@@ -1411,7 +1411,7 @@ sub showGeneSearchResult {
 
     my @options = param('geneSearchDisplay');
     if ( scalar(@options) == 0 ) {
-        webError("No display options have been selected.");
+        WebUtil::webError("No display options have been selected.");
         return;
     }
 
@@ -1457,7 +1457,7 @@ sub showGeneSearchResult {
     my %results_h;
     if ( $search_filter eq 'gene_product_name' ) {
         if ( $data_type ne 'assembled' && $data_type ne 'unassembled' ) {
-            webError("Incorrect data type: $data_type.");
+            WebUtil::webError("Incorrect data type: $data_type.");
             return;
         }
 
@@ -1474,7 +1474,7 @@ sub showGeneSearchResult {
         my @term_list = WebUtil::splitTerm( $keyword, 0, 0 );
         my $term_str = WebUtil::joinSqlQuoted( ',', @term_list );
         if ( blankStr($term_str) ) {
-            webError(
+            WebUtil::webError(
                 "Please enter a comma separated list of valid IMG Gene IDs.");
         }
 

@@ -2,7 +2,7 @@
 #
 # see webUI/worker.cgi
 #
-# $Id: Command.pm 36499 2016-12-13 18:59:08Z klchu $
+# $Id: Command.pm 36963 2017-04-18 20:10:55Z klchu $
 ############################################################################
 package Command;
 
@@ -170,7 +170,8 @@ sub runCmdViaUrl {
 #
 sub killDotThread {
     # Send a signal to a thread
-    print "killDotThread <br>\n";
+    print "Done thread<br>\n";
+    #print "Killing dot thread <br>\n";
     $thr->kill('KILL')->detach();
 }
 

@@ -3,7 +3,7 @@
 #   configuration of the Web UI.
 #    --es 12/15/2005
 #
-# $Id: Metagenome.pm 34545 2015-10-20 21:36:40Z klchu $
+# $Id: Metagenome.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Metagenome;
 my $section = "Metagenome";
@@ -480,7 +480,7 @@ sub printBinScaffolds {
     my $scaffold_oid = param("scaffold_oid");
 
     if ( $pageSize == 0 ) {
-	webDie("printBinScaffolds: invalid pageSize='$pageSize'\n");
+	WebUtil::webDie("printBinScaffolds: invalid pageSize='$pageSize'\n");
     }
     my $dbh = dbLogin();
 
@@ -829,7 +829,7 @@ sub printBinScaffoldsByGeneCount {
     print "</h1>\n";
 
     if ( $pageSize == 0 ) {
-	webDie("printBinScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
+	WebUtil::webDie("printBinScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
     }
 
     printStatusLine( "Loading", 1 );
@@ -873,7 +873,7 @@ sub printBinScaffoldsByGeneCount {
     my $scaffold_list_str = join( ',', @scaffold_oids );
     if ( blankStr($scaffold_list_str) ) {
 	#$dbh->disconnect();
-	webError("No scaffolds found.");
+	WebUtil::webError("No scaffolds found.");
     }
     my $scaffold_clause;
     if ( OracleUtil::useTempTable($#scaffold_oids) ) {

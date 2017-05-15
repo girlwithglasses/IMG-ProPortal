@@ -47,19 +47,17 @@ has '+filter_domains' => (
 sub _render {
 	my $self = shift;
 
-	my $output = {
-		domain => 'taxon',
-		table => $self->get_table('taxon'),
-		params => $self->filters,
-	};
-
 	my $statement = $self->get_data;
-#	$self->page_me( $statement );
-	$output->{n_results} = $statement->row_count;
-#	$output->{n_pages} = $statement->page_count;
-	$output->{arr} = $statement->all;
+	my $arr = $self->page_me( $statement )->all;
 
-	return { results => $output };
+	return { results => {
+		domain => 'taxon',
+		arr => $arr,
+		n_results => $statement->row_count,
+		n_pages   => $statement->page_count,
+		table => $self->get_table('taxon'),
+		params => $self->filters
+	} };
 
 }
 
@@ -71,7 +69,7 @@ sub get_data {
 	return $self->_core->run_query({
 		query => 'taxon_dataset_type',
 		filters => $self->filters,
-		result_as => 'statement'
+		-result_as => 'statement'
 	});
 }
 

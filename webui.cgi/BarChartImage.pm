@@ -1,6 +1,6 @@
 ############################################################################
 # Creates a Bar Chart as a PNG file
-# $Id: BarChartImage.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: BarChartImage.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package BarChartImage;
 
@@ -24,7 +24,16 @@ my $verbose = $env->{verbose};
 my $YUI = $env->{yui_dir_28};
 my $top_base_url = $env->{top_base_url};
 
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
+}
+
 sub dispatch {
+	my($self) = @_;
+	
     my $page = param("page");
 
     if ($page eq "cogStatsMetagenome") {

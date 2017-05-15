@@ -1,6 +1,6 @@
 ############################################################################
 # BiosyntheticStats - detail page for biosynthetic clusters
-# $Id: BiosyntheticStats.pm 36803 2017-03-23 05:17:12Z aratner $
+# $Id: BiosyntheticStats.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package BiosyntheticStats;
 my $section = "BiosyntheticStats";
@@ -74,6 +74,13 @@ sub getAppHeaderData {
     my $js = $template->output;
     my @a = ( "getsme", '', '', $js );
     return @a;
+}
+
+sub printWebPageHeader {
+    my($self) = @_;
+    
+    # xml header
+    print header( -type => "text/xml" );
 }
 
 sub dispatch {
@@ -340,7 +347,7 @@ sub printStats {
         print "<h1>Biosynthetic Clusters - Summary Stats</h1>";
     }
     if (!$enable_biocluster) {
-        webError("Biosynthetic Cluster not supported!");
+        WebUtil::webError("Biosynthetic Cluster not supported!");
     }
 
     printMainForm();
@@ -785,7 +792,7 @@ sub getStatsByNp {
 ######################################################################
 sub printStatsByGenome {
     if (!$enable_biocluster) {
-        webError("Biosynthetic Cluster not supported!");
+        WebUtil::webError("Biosynthetic Cluster not supported!");
     }
     my $domain = param("domain");
     my $phylum = param("phylum");
@@ -1055,7 +1062,7 @@ sub printStatsByNp {
     my ($isType, $evidence0) = @_;
 
     if (!$enable_biocluster) {
-        webError("Biosynthetic Cluster not supported!");
+        WebUtil::webError("Biosynthetic Cluster not supported!");
     }
 
     my $affix;
@@ -1345,7 +1352,7 @@ sub getStatsSqlByNp {
 sub printClustersByNp {
     my ($isType) = @_;
     if (!$enable_biocluster) {
-        webError("Biosynthetic Cluster not supported!");
+        WebUtil::webError("Biosynthetic Cluster not supported!");
     }
 
     my $np = param("np");
@@ -1624,7 +1631,7 @@ sub printStatsByGeneCount {
         $cluster2count{$cluster_id} = $gene_count;
     }
 
-    webError("No gene count data found.") if scalar keys %cluster2count == 0;
+    WebUtil::webError("No gene count data found.") if scalar keys %cluster2count == 0;
 
     my $sql = qq{
         select bcd.cluster_id, bcd.evidence
@@ -1688,7 +1695,7 @@ sub printStatsByGeneCount {
     $str .= " and " if $phylum ne "" && $probability ne "";
     $str .= $probability if $probability ne "";
 
-    webError("No data found $str.") if $exp_cnt == 0 && $pred_cnt == 0;
+    WebUtil::webError("No data found $str.") if $exp_cnt == 0 && $pred_cnt == 0;
 
     printMainForm();
 
@@ -3180,7 +3187,7 @@ sub printClustersByPfamIds {
         @pfam_ids = param("func_id");
     }
     if (scalar(@pfam_ids) == 0) {
-        webError("No Pfam has been selected.");
+        WebUtil::webError("No Pfam has been selected.");
     }
 
     printStatusLine("Loading ...", 1);

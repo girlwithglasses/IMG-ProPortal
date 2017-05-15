@@ -319,7 +319,7 @@ sub printImgRxnDetail {
     if( $r_oid eq "" ) {
         #$dbh->disconnect();
         printStatusLine( "Error.", 2 ); 
-        webError( "Reaction $rxn_oid not found in this database." );
+        WebUtil::webError( "Reaction $rxn_oid not found in this database." );
         return; 
     } 
 

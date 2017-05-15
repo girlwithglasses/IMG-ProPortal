@@ -102,7 +102,7 @@ sub printCorrMapResults {
    my @taxon_oid = OracleUtil::processTaxonSelectionParam("genomeFilterSelections");
    my $nTaxons = @taxon_oid;
    if( $nTaxons < 2 || $nTaxons > 26 ) {
-       webError( "Please select between two and 26 genomes." );
+       WebUtil::webError( "Please select between two and 26 genomes." );
    }
    printStatusLine( "Loading ...", 1 );
    my $dbh = dbLogin( );

@@ -1,6 +1,6 @@
 ############################################################################
 # hmp taxon list data
-# $Id: HmpTaxonList.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: HmpTaxonList.pm 36987 2017-04-24 20:40:20Z klchu $
 ############################################################################
 package HmpTaxonList;
 my $section = "HmpTaxonList";
@@ -247,7 +247,7 @@ sub printMetadataHitCharts {
     #      )
     #      and t.gold_id not in (
     #select p.gold_stamp_id
-    #from  project_info\@imgsg_dev p, project_info_body_sites\@imgsg_dev b
+    #from  project_info p, project_info_body_sites b
     #where p.project_oid = b.project_oid
     #and p.host_name = 'Homo sapiens'
     #and b.sample_body_site is not null
@@ -832,7 +832,7 @@ sub printTaxonList {
     # for new genome list
     my $sqlNew    = qq{
         select distinct t2.taxon_oid
-        from project_info_gold p, taxon t2, project_info_body_sites\@imgsg_dev b
+        from project_info_gold p, taxon t2, project_info_body_sites b
         $genomeTypeClause
         and p.project_oid = b.project_oid (+)
         and t2.is_public = 'Yes'
@@ -890,7 +890,7 @@ sub printTaxonList {
 #    my $taxon_filter_oid_str = join( ',', @taxon_filter_oids );
 #    if ( blankStr($taxon_filter_oid_str) ) {
 #        print header( -type => "text/html" );
-#        webError("You must select at least one genome to export.");
+#        WebUtil::webError("You must select at least one genome to export.");
 #    }
 #    my @taxon_oids   = split( /,/, $taxon_filter_oid_str );
 #    my %taxon_filter = WebUtil::array2Hash(@taxon_oids);

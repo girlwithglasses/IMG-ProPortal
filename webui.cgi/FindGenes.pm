@@ -3,7 +3,7 @@
 #  Module to handle the "Find Genes" menu tab option.
 #    --es 07/07/2005
 #
-# $Id: FindGenes.pm 35581 2016-04-21 19:42:33Z jinghuahuang $
+# $Id: FindGenes.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package FindGenes;
 my $section = "FindGenes";
@@ -429,7 +429,7 @@ sub printFindGeneResults {
     if ( $#genomeFilterSelections < 0 ) {
         if ( $searchFilter ne "gene_symbol_list" && $searchFilter ne "genbank_list" 
           && $searchFilter ne "locus_tag_list" && $searchFilter ne "giNo_list" && $searchFilter ne "gene_oid_list" ) {
-            webError("Please select at least one genome.");
+            WebUtil::webError("Please select at least one genome.");
         }
     }
     setSessionParam( "genomeFilterSelections", \@genomeFilterSelections );
@@ -451,7 +451,7 @@ sub printFindGeneResults {
     #print "printFindGeneResults() metaTaxons: @metaTaxons<br/>\n";
     if ( $include_metagenomes && isMetaSupported($searchFilter)
         && scalar(@metaTaxons) > $max_metagenome_selection ) {
-        webError("Please select no more than $max_metagenome_selection metagenomes.");
+        WebUtil::webError("Please select no more than $max_metagenome_selection metagenomes.");
     }
 
     WebUtil::processSearchTermCheck($searchTerm);
@@ -482,10 +482,10 @@ sub printFindGeneResults {
             $term_str = join( ',', @term_list );
         }
         if ( blankStr($term_str) && scalar(@meta_term_list) == 0 ) {
-            webError("Please enter a comma separated list of valid ID's.");
+            WebUtil::webError("Please enter a comma separated list of valid ID's.");
         }
         if ( scalar(@meta_term_list) > 0 ) {
-            webError(
+            WebUtil::webError(
                 "You have entered ID(s) that are not integers.  If they are Gene IDs for metagenome, please select 'IMG Gene ID (list, only MER-FS Metagenome)' filter to search!"
             );
         }
@@ -499,7 +499,7 @@ sub printFindGeneResults {
         @term_list = WebUtil::splitTerm( $searchTermLc, 0, 0 );
         $term_str = WebUtil::joinSqlQuoted( ',', @term_list );
         if ( blankStr($term_str) ) {
-            webError("Please enter a comma separated list of valid ID's.");
+            WebUtil::webError("Please enter a comma separated list of valid ID's.");
         }
 
         if ( $searchFilter eq "gene_oid_merfs" ) {
@@ -531,7 +531,7 @@ sub printFindGeneResults {
         @term_list = WebUtil::splitTerm( $searchTerm, 1, 0 );
         $term_str = join( ',', @term_list );
         if ( blankStr($term_str) ) {
-            webError("Please enter a comma separated list of valid ID's.");
+            WebUtil::webError("Please enter a comma separated list of valid ID's.");
         }
     }
 
@@ -539,7 +539,7 @@ sub printFindGeneResults {
     #img_term_synonyms_iex: union query takes too long if result set too large
     if ( $searchFilter eq "gene_display_name_iex" || $searchFilter eq "img_term_synonyms_iex" ) {
         if ( $searchTerm && length($searchTerm) < 4 ) {
-            webError("Please enter a search term at least 4 characters long.");
+            WebUtil::webError("Please enter a search term at least 4 characters long.");
         }
     }
 
@@ -2209,14 +2209,14 @@ sub printProteinRegExResults {
     $searchTerm = WebUtil::processSearchTerm( $searchTerm, 1 );
     $searchTerm =~ tr/a-z/A-Z/;
     if ( $searchTerm =~ /"/ || $searchTerm =~ /'/ ) {
-        webError("Quote character is not allowed in expression.");
+        WebUtil::webError("Quote character is not allowed in expression.");
         return;
     }
 
     # check regex syntax
     my $regex = eval { qr/$searchTerm/ };
     if ($@) {
-        webError("Invalid regular expression <br> $searchTerm <br>\n");
+        WebUtil::webError("Invalid regular expression <br> $searchTerm <br>\n");
         return;           
     }
 
@@ -2616,7 +2616,7 @@ sub printDomainSearchResults {
     # get the genomes in the selected box:
     my @genomeFilterSelections = param("selectedGenome1");
     if ( $#genomeFilterSelections < 0 ) {
-        webError("Please select at least one genome.");
+        WebUtil::webError("Please select at least one genome.");
     }
     setSessionParam( "genomeFilterSelections", \@genomeFilterSelections );
 

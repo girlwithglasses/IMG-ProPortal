@@ -3,7 +3,7 @@
 #   for environmental samples.
 #       --es 06/15/2005
 #
-# $Id: GenePageEnvBlast.pm 36260 2016-09-29 19:36:01Z klchu $
+# $Id: GenePageEnvBlast.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package GenePageEnvBlast;
 my $section = "GenePageEnvBlast";
@@ -220,10 +220,10 @@ sub runSnpBlastMERFS {
 	  . "&marker_gene=$gene_oid&seq_length=$scf_seq_length";
     my $link = alink( $url, "$scaffold_oid (${scf_seq_length}bp)" );
     if ( !isInt($up_stream) || $up_stream > 0 ) {
-        webError("Upstream should be zero or negative integer.");
+        WebUtil::webError("Upstream should be zero or negative integer.");
     }
     if ( !isInt($down_stream) || $down_stream < 0 ) {
-        webError("Downstream should be zero or positive integer.");
+        WebUtil::webError("Downstream should be zero or positive integer.");
     }
 
     if ( $use_contig ne "" ) { # use entire contig
@@ -562,10 +562,10 @@ sub runLocalEnvBlast {
         $fasta .= "$seq\n";
     }
     if ( !isInt($up_stream) || $up_stream > 0 ) {
-        webError("Upstream should be zero or negative integer.");
+        WebUtil::webError("Upstream should be zero or negative integer.");
     }
     if ( !isInt($down_stream) || $down_stream < 0 ) {
-        webError("Downstream should be zero or positive integer.");
+        WebUtil::webError("Downstream should be zero or positive integer.");
     }
     if (    isInt($up_stream)
          && isInt($down_stream)
@@ -607,7 +607,7 @@ sub runLocalEnvBlast {
         $fasta .= "$seq\n";
 
         #if( length( $seq ) > $max_blast_scaffold_length ) {
-        #   webError( "Scaffold range specification is too long. " .
+        #   WebUtil::webError( "Scaffold range specification is too long. " .
         # "Try values resulting in < ${max_blast_scaffold_length}bp's." );
         #}
     }
@@ -779,7 +779,7 @@ sub printEcoVista {
     my $blast_out_url  = "$tmp_url/$blastOutFile";
     my $blast_out_file = "$tmp_dir/$blastOutFile";
     if ( !( -e $blast_out_file ) ) {
-        webError("Session expired.  Please re-run BLAST.");
+        WebUtil::webError("Session expired.  Please re-run BLAST.");
     }
 
     print "<h1>SNP VISTA</h1>\n";

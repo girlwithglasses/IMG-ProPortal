@@ -1,6 +1,6 @@
 ############################################################################
 # Pangenome.pm - displays a pangenome and its composing genomes
-# $Id: Pangenome.pm 35375 2016-03-08 21:18:46Z jinghuahuang $
+# $Id: Pangenome.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package Pangenome;
 my $section = "Pangenome";
@@ -1284,20 +1284,20 @@ sub printScaffold {
     $start_coord =~ s/\s+//g;
     $end_coord   =~ s/\s+//g;
     if ( !isInt($start_coord) ) {
-        webError("Expected integer for start coordinate.");
+        WebUtil::webError("Expected integer for start coordinate.");
     }
     if ( !isInt($end_coord) ) {
-        webError("Expected integer for end coordinate.");
+        WebUtil::webError("Expected integer for end coordinate.");
     }
     if ( $start_coord < 1 ) {
-        webError("Start coordinate should be greater or equal to 1.");
+        WebUtil::webError("Start coordinate should be greater or equal to 1.");
     }
     if ( $start_coord > $end_coord ) {
-        webError(   "Start coordinate should be "
+        WebUtil::webError(   "Start coordinate should be "
                   . "less than or equal to the end coordinate." );
     }
     if ( $scaffold_oid eq "" ) {
-        webDie("printScaffold: scaffold_oid not defined\n");
+        WebUtil::webDie("printScaffold: scaffold_oid not defined\n");
     }
     webLog "Start Graph " . currDateTime() . "\n" if $verbose >= 1;
 

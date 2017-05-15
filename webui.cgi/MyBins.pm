@@ -2,7 +2,7 @@
 # MyBins - allow super users to save their scaffolds as a bin
 #
 # - ken
-# $Id: MyBins.pm 35375 2016-03-08 21:18:46Z jinghuahuang $
+# $Id: MyBins.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MyBins;
 
@@ -243,12 +243,12 @@ sub printView {
     my $contact_oid = getContactOid();
     my $bin_oid     = param('bin_oid');
     if ( blankStr($bin_oid) ) {
-        webError("Bin oid cannot be null");
+        WebUtil::webError("Bin oid cannot be null");
         return;
     }
 
     if ( blankStr($username) ) {
-        webError("username cannot be null");
+        WebUtil::webError("username cannot be null");
         return;
     }
     printStatusLine( "Loading", 1 );
@@ -520,17 +520,17 @@ sub editBin {
     return if !$canEditBin;
 
     if ( blankStr($bin_oid) ) {
-        webError("Bin oid cannot be null");
+        WebUtil::webError("Bin oid cannot be null");
         return;
     }
 
     if ( !isInt($bin_oid) ) {
-        webError("Bin oid must be a number");
+        WebUtil::webError("Bin oid must be a number");
         return;
     }
 
     if ( blankStr($username) ) {
-        webError("username cannot be null");
+        WebUtil::webError("username cannot be null");
         return;
     }
 
@@ -556,17 +556,17 @@ sub deleteBin {
 
     my $bin_oid = param('bin_oid');
     if ( blankStr($bin_oid) ) {
-        webError("Bin oid cannot be null");
+        WebUtil::webError("Bin oid cannot be null");
         return;
     }
 
     if ( !isInt($bin_oid) ) {
-        webError("Bin oid must be a number");
+        WebUtil::webError("Bin oid must be a number");
         return;
     }
 
     if ( blankStr($username) ) {
-        webError("username cannot be null");
+        WebUtil::webError("username cannot be null");
         return;
     }
 
@@ -602,20 +602,20 @@ sub deleteBin {
 
     # delete blast
     if ( $sid == 0 ) {
-        webError("Contact oid cannot be 0!");
+        WebUtil::webError("Contact oid cannot be 0!");
     }
 
     # check to see user's folder has been created
     if ( !-e "$workspace_dir" ) {
-        mkdir "$workspace_dir" or webError("Workspace is down!");
+        mkdir "$workspace_dir" or WebUtil::webError("Workspace is down!");
     }
 
     my $blastOutputDir = "$mybin_blast_dir";
     if ( !-e $blastOutputDir ) {
-        mkdir $blastOutputDir or webError("User blast Workspace is down!");
+        mkdir $blastOutputDir or WebUtil::webError("User blast Workspace is down!");
     }
 
-    chdir $blastOutputDir or webError("Cannot change to User blast Workspace!");
+    chdir $blastOutputDir or WebUtil::webError("Cannot change to User blast Workspace!");
 
     print "Delete blast files in $blastOutputDir <br/>\n";
 
@@ -656,24 +656,24 @@ sub saveBin {
     my $binmethod = param("binmethod");
 
     if ( blankStr($filename) ) {
-        webError("Bin name cannot be null");
+        WebUtil::webError("Bin name cannot be null");
         return;
     }
 
     if ( blankStr($binmethod) ) {
-        webError("Bin method cannot be null");
+        WebUtil::webError("Bin method cannot be null");
         return;
     }
 
     if ( $#oids < 0 ) {
-        webError("Please select some scaffolds to save.");
+        WebUtil::webError("Please select some scaffolds to save.");
         return;
     }
 
     my ($dbOids_ref, $metaOids_ref) = MerFsUtil::splitDbAndMetaOids(@oids);
     if ( scalar(@$metaOids_ref) > 0 ) {
         my $extracted_oids_str = MerFsUtil::getExtractedMetaOidsJoinString(@$metaOids_ref);
-        webError("You have selected scaffolds ($extracted_oids_str), which are New MER-FS metagenomes from file.  They are not permitted in Bins.");
+        WebUtil::webError("You have selected scaffolds ($extracted_oids_str), which are New MER-FS metagenomes from file.  They are not permitted in Bins.");
         return;
     }
 
@@ -685,7 +685,7 @@ sub saveBin {
     my $ans = checkScaffolds( $dbh, \@oids );
     if ( $ans > 1 ) {
         #$dbh->disconnect();
-        webError("Please make sure all scaffolds are from the same genome.");
+        WebUtil::webError("Please make sure all scaffolds are from the same genome.");
         return;
     }
 
@@ -735,22 +735,22 @@ sub updateBin {
 
 
     if ( blankStr($bin_oid) ) {
-        webError("Bin oid cannot be null");
+        WebUtil::webError("Bin oid cannot be null");
         return;
     }
 
     if ( blankStr($displayname) ) {
-        webError("Bin name cannot be null");
+        WebUtil::webError("Bin name cannot be null");
         return;
     }
 
     if ( blankStr($binmethod) ) {
-        webError("Bin method cannot be null");
+        WebUtil::webError("Bin method cannot be null");
         return;
     }
 
     if ( $#oids < 0 ) {
-        webError("Please select some scaffolds to save.");
+        WebUtil::webError("Please select some scaffolds to save.");
         return;
     }
 
@@ -801,13 +801,13 @@ sub updateBin {
         and scaffold = ?
     };
     my $cur = $dbh->prepare($sql)
-      or webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
+      or WebUtil::webDie("execSqlBind: cannot preparse statement: $DBI::errstr\n");
     foreach my $scaffold_oid (@oids) {
         webLog("deleting $bin_oid, $scaffold_oid\n");
-        $cur->bind_param( 1, $bin_oid ) or webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+        $cur->bind_param( 1, $bin_oid ) or WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
         $cur->bind_param( 2, $scaffold_oid )
-          or webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
-        $cur->execute() or webDie("execSqlBind: cannot execute: $DBI::errstr\n");
+          or WebUtil::webDie("execSqlBind: cannot bind param: $DBI::errstr\n");
+        $cur->execute() or WebUtil::webDie("execSqlBind: cannot execute: $DBI::errstr\n");
     }
 
     # get and create stats
@@ -886,14 +886,14 @@ sub createStats {
         sysdate)
     };
     webLog("$sql\n");
-    my $cur = $dbh->prepare($sql) or webDie("cannot preparse statement: $DBI::errstr\n");
+    my $cur = $dbh->prepare($sql) or WebUtil::webDie("cannot preparse statement: $DBI::errstr\n");
     my $i = 1;
-    $cur->bind_param( $i++, $bin_oid )    or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $cogCnt )     or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $pfamCnt )    or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $tigrfamCnt ) or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $enzymeCnt )  or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->execute() or webDie("cannot execute: $DBI::errstr\n");
+    $cur->bind_param( $i++, $bin_oid )    or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $cogCnt )     or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $pfamCnt )    or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $tigrfamCnt ) or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $enzymeCnt )  or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->execute() or WebUtil::webDie("cannot execute: $DBI::errstr\n");
 }
 
 # TODO add taxon oid from bin_scaffolds table
@@ -997,14 +997,14 @@ sub insertBin {
         (?,?,?, sysdate, ?)
         };
         webLog("$sql\n");
-        my $cur = $dbh->prepare($sql) or webDie("cannot preparse statement: $DBI::errstr\n");
+        my $cur = $dbh->prepare($sql) or WebUtil::webDie("cannot preparse statement: $DBI::errstr\n");
         my $i = 1;
         $cur->bind_param( $i++, $new_bin_method_oid )
-          or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-        $cur->bind_param( $i++, $binmethod )   or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-        $cur->bind_param( $i++, 'My Bins' )    or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-        $cur->bind_param( $i++, $contact_oid ) or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-        $cur->execute() or webDie("cannot execute: $DBI::errstr\n");
+          or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+        $cur->bind_param( $i++, $binmethod )   or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+        $cur->bind_param( $i++, 'My Bins' )    or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+        $cur->bind_param( $i++, $contact_oid ) or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+        $cur->execute() or WebUtil::webDie("cannot execute: $DBI::errstr\n");
     }
 
     # create a new bin
@@ -1015,14 +1015,14 @@ sub insertBin {
         (?,?,?,?, sysdate, 'Yes')
     };
     webLog("$sql\n");
-    my $cur = $dbh->prepare($sql) or webDie("cannot preparse statement: $DBI::errstr\n");
+    my $cur = $dbh->prepare($sql) or WebUtil::webDie("cannot preparse statement: $DBI::errstr\n");
     my $i = 1;
-    $cur->bind_param( $i++, $new_bin_oid ) or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $filename )    or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->bind_param( $i++, $descr )       or webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $new_bin_oid ) or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $filename )    or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->bind_param( $i++, $descr )       or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
     $cur->bind_param( $i++, $new_bin_method_oid )
-      or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-    $cur->execute() or webDie("cannot execute: $DBI::errstr\n");
+      or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+    $cur->execute() or WebUtil::webDie("cannot execute: $DBI::errstr\n");
 
     # create bin with scaffolds
     my $taxon_oid = QueryUtil::scaffoldOid2TaxonOid( $dbh, $scaffold_oids_aref->[0] );
@@ -1033,12 +1033,12 @@ sub insertBin {
         (?,?, $taxon_oid)
     };
     webLog("$sql\n");
-    my $cur = $dbh->prepare($sql) or webDie("cannot preparse statement: $DBI::errstr\n");
+    my $cur = $dbh->prepare($sql) or WebUtil::webDie("cannot preparse statement: $DBI::errstr\n");
     my $count = 0;
     foreach my $soid (@$scaffold_oids_aref) {
-        $cur->bind_param( 1, $new_bin_oid ) or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-        $cur->bind_param( 2, $soid )        or webDie("$i-1 cannot bind param: $DBI::errstr\n");
-        $cur->execute() or webDie("execSqlBind: cannot execute: $DBI::errstr\n");
+        $cur->bind_param( 1, $new_bin_oid ) or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+        $cur->bind_param( 2, $soid )        or WebUtil::webDie("$i-1 cannot bind param: $DBI::errstr\n");
+        $cur->execute() or WebUtil::webDie("execSqlBind: cannot execute: $DBI::errstr\n");
         $count++;
     }
 
@@ -1074,21 +1074,21 @@ sub createBlastFiles {
     
     my $sid = getContactOid();
     if ( $sid == 0 ) {
-        webError("Contact oid cannot be 0!");
+        WebUtil::webError("Contact oid cannot be 0!");
     }
 
     # check to see user's folder has been created
     if ( !-e "$workspace_dir" ) {
-        mkdir "$workspace_dir" or webError("Workspace is down!");
+        mkdir "$workspace_dir" or WebUtil::webError("Workspace is down!");
     }
 
     #    if ( !-e "$workspace_dir/$sid" ) {
-    #        mkdir "$workspace_dir/$sid" or webError("User Workspace is down!");
+    #        mkdir "$workspace_dir/$sid" or WebUtil::webError("User Workspace is down!");
     #    }
 
     my $blastOutputDir = "$mybin_blast_dir";
     if ( !-e $blastOutputDir ) {
-        mkdir $blastOutputDir or webError("User blast Workspace is down!");
+        mkdir $blastOutputDir or WebUtil::webError("User blast Workspace is down!");
     }
 
     # get scaffold seq
@@ -1102,7 +1102,7 @@ sub createBlastFiles {
 
     $newSeq = wrapSeq($newSeq);
 
-    chdir $blastOutputDir or webError("Cannot change to User blast Workspace!");
+    chdir $blastOutputDir or WebUtil::webError("Cannot change to User blast Workspace!");
     my $file = "$blastOutputDir/$bin_oid" . ".fna";
     my $wfh = newWriteFileHandle( $file, "createBlastFiles" );
     print $wfh "$newSeq\n";

@@ -17,7 +17,7 @@ sub newReadGzFileHandle {
     my( $fileName, $tool ) = @_;
 
     my $z = new IO::Uncompress::Gunzip( $fileName ) or
-       webDie( "$tool: Cannot read '$fileName': $GunzipError\n" );
+       WebUtil::webDie( "$tool: Cannot read '$fileName': $GunzipError\n" );
     return $z;
 }
 

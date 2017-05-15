@@ -2,7 +2,7 @@
 # Run external NCBI Blast.
 #    --es 09/14/2006
 #
-# $Id: NcbiBlast.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: NcbiBlast.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package NcbiBlast;
 my $section = "NcbiBlast";
@@ -182,7 +182,7 @@ sub runNcbiBlast {
     if ( $res->is_success() ) {
         processContent( $res->content, $gene_oid, $seq );
     } else {
-        webError( $res->status_line );
+        WebUtil::webError( $res->status_line );
         webLog $res->status_line;
     }
     WebUtil::webExit(0);

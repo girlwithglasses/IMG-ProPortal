@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGeneSet.pm
-# $Id: WorkspaceGeneSet.pm 36590 2017-02-28 07:04:35Z jinghuahuang $
+# $Id: WorkspaceGeneSet.pm 36954 2017-04-17 19:34:04Z klchu $
 ###########################################################################
 package WorkspaceGeneSet; 
  
@@ -288,7 +288,7 @@ sub printGeneSetMainForm {
     my $sid = getContactOid();
 
     opendir( DIR, "$workspace_dir/$sid/$folder" ) 
-        or webDie("failed to open folder list");
+        or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR); 
 
@@ -513,7 +513,7 @@ sub printGeneSetDetail {
         if ( ! $can_view ) { 
             print "<h1>My Workspace - Gene Sets - Individual Gene Set</h1>"; 
             print "<p><u>File Name</u>: " . escapeHTML($filename) . "</p>";
-            webError("Gene set does not exist.");
+            WebUtil::webError("Gene set does not exist.");
             return; 
         }
     } 
@@ -532,7 +532,7 @@ sub printGeneSetDetail {
 
     # check filename
     if ( $filename eq "" ) { 
-        webError("Cannot read file.");
+        WebUtil::webError("Cannot read file.");
         return;
     }
  
@@ -544,7 +544,7 @@ sub printGeneSetDetail {
         $full_path_name = "$workspace_dir/$owner/$folder/$filename";
     } 
     if ( ! (-e $full_path_name) ) { 
-        webError("Gene set does not exist."); 
+        WebUtil::webError("Gene set does not exist."); 
         return;
     } 
 
@@ -1226,7 +1226,6 @@ sub getGeneSetGeneNames {
 sub exportSelectedGeneFasta {
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        #main::printAppHeader("AnaCart");
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
@@ -1237,7 +1236,7 @@ sub exportSelectedGeneFasta {
     my $folder = $GENE_FOLDER;
 
     if ( scalar(@gene_oids) == 0 ) {
-        webError("Select at least one gene to export.");
+        WebUtil::webError("Select at least one gene to export.");
         return;
     }
 
@@ -1256,10 +1255,10 @@ sub exportSelectedGeneFasta {
     $down_stream =~ s/\s+//g; 
 
     if ( $up_stream_int > 0 || !isInt($up_stream) ) {
-        webError("Expected negative integer for up stream."); 
+        WebUtil::webError("Expected negative integer for up stream."); 
     } 
     if ( $down_stream_int < 0 || !isInt($down_stream) ) { 
-        webError("Expected positive integer for down stream."); 
+        WebUtil::webError("Expected positive integer for down stream."); 
     } 
  
     print "<font color='red'>Red</font> = start or stop codon, "; 
@@ -1362,7 +1361,6 @@ sub exportSelectedGeneFasta {
 sub exportSelectedGeneAA {
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        #main::printAppHeader("AnaCart");
         WebUtil::webErrorHeader("Your login has expired.");
         return;
     }
@@ -1476,7 +1474,7 @@ sub viewGeneGenomes {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid, 1);
     if ( scalar(@all_files) == 0 ) {
-        webError("No gene sets have been selected.");
+        WebUtil::webError("No gene sets have been selected.");
         return;
     }
 
@@ -1492,7 +1490,7 @@ sub viewGeneGenomes {
     else {
         # individual genes
         if ( scalar(@genes) == 0 ) {
-            webError("No genes are selected.");
+            WebUtil::webError("No genes are selected.");
             return;
         }
 
@@ -1638,7 +1636,7 @@ sub viewGeneScaffolds {
 
     my @all_files = WorkspaceUtil::getAllInputFiles($sid, 1);
     if ( scalar(@all_files) == 0 ) {
-        webError("No gene sets have been selected.");
+        WebUtil::webError("No gene sets have been selected.");
         return;
     }
 
@@ -1654,7 +1652,7 @@ sub viewGeneScaffolds {
     else {
         # individual genes
         if ( scalar(@genes) == 0 ) {
-            webError("No genes are selected.");
+            WebUtil::webError("No genes are selected.");
             return;
         }
 
@@ -1962,7 +1960,7 @@ sub showGeneFuncCateProfile {
                 
             print "Pre-processing workspace file $x2 ...<br/>\n";
             open( FH, "$workspace_dir/$c_id/$folder/$x" )
-              or webError("File size - file error $x2");
+              or WebUtil::webError("File size - file error $x2");
 
             my @db_gene_oids;
             my @meta_gene_oids;
@@ -2310,11 +2308,11 @@ sub validateGeneSelection {
         $geneDescription = "genes";            
     }
     if ( scalar( @geneCols ) == 0 ) {
-        webError("No $geneDescription are selected.");
+        WebUtil::webError("No $geneDescription are selected.");
         return;
     }
     if ( scalar( @geneCols ) > $max_profile_select ) {
-        webError("Please limit your selection of $geneDescription to no more than $max_profile_select.\n");
+        WebUtil::webError("Please limit your selection of $geneDescription to no more than $max_profile_select.\n");
         return;
     }
 
@@ -2660,7 +2658,7 @@ sub showGeneFuncSetProfile {
     my $func_set_name = param('func_set_name');
     # read all function ids in the function set
     if ( ! $func_set_name ) {
-        webError("Please select a function set.\n");
+        WebUtil::webError("Please select a function set.\n");
         return;
     }
     my ( $func_set_owner, $func_set ) = WorkspaceUtil::splitAndValidateOwnerFileset( $sid, $func_set_name, $ownerFilesetDelim, $FUNC_FOLDER );
@@ -2946,7 +2944,7 @@ sub findDbAndMetaGenes {
     else {
         # from file
         open( FH, "$input_file" )
-          or webError("File size - file error $input_file");
+          or WebUtil::webError("File size - file error $input_file");
         while ( my $line = <FH> ) {
             chomp($line);
             push(@genes, $line);
@@ -3153,10 +3151,10 @@ sub printPhyloOccurProfiles {
     my @gene_oids = param("gene_oid"); 
     my $nGenes    = @gene_oids; 
     if ( $nGenes == 0 ) { 
-        webError("Please select at least one gene."); 
+        WebUtil::webError("Please select at least one gene."); 
     } 
     if ( $nGenes > $maxProfileOccurIds ) { 
-        webError("Please select no more than $maxProfileOccurIds genes."); 
+        WebUtil::webError("Please select no more than $maxProfileOccurIds genes."); 
     }
 
     printMainForm();
@@ -3242,7 +3240,7 @@ sub printPhyloOccurProfiles {
         		#$dbh->disconnect(); 
         		my $s = join( ',', @badGenes ); 
         		printEndWorkingDiv();
-        		webError("Select only protein coding genes. " 
+        		WebUtil::webError("Select only protein coding genes. " 
         			    . "The following RNA genes were found: $s." ); 
         		return; 
     	    } 
@@ -3290,7 +3288,7 @@ sub printPhyloOccurProfiles {
     	#$dbh->disconnect(); 
     	my $s = join( ',', @badGenes ); 
     	printEndWorkingDiv();
-    	webError(   "Select only protein coding genes. " 
+    	WebUtil::webError(   "Select only protein coding genes. " 
     		    . "The following RNA genes were found: $s." ); 
     	return; 
     } 
@@ -3320,7 +3318,7 @@ sub printPhyloOccurProfiles {
                 my ( $sgene_oid, $staxon, $slen ) = split( /_/, $sid ); 
                 my $rh = $idRecsHash{$gene_oid}; 
                 if ( !defined($rh) ) { 
-                    webDie(   "printPhyloOccurProfiles: " 
+                    WebUtil::webDie(   "printPhyloOccurProfiles: " 
 			      . "cannot find '$gene_oid'\n" ); 
                 } 
                 my $taxonOidHash = $rh->{taxonOidHash};
@@ -3375,7 +3373,7 @@ sub printPhyloOccurProfiles {
         		    # selected
         		    my $rh = $idRecsHash{$gene_oid}; 
         		    if ( !defined($rh) ) { 
-            			webDie(   "printPhyloOccurProfiles: " 
+            			WebUtil::webDie(   "printPhyloOccurProfiles: " 
             				  . "cannot find '$gene_oid'\n" ); 
         		    } 
         		    my $taxonOidHash = $rh->{taxonOidHash};
@@ -3417,11 +3415,11 @@ sub printGeneProfile {
 
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
-    	webError("No genes have been selected.");
+    	WebUtil::webError("No genes have been selected.");
     	return;
     }
     if ( scalar(@gene_oids) > $maxGeneProfileIds ) {
-    	webError("Too many genes. Please select no more than $maxGeneProfileIds genes.");
+    	WebUtil::webError("Too many genes. Please select no more than $maxGeneProfileIds genes.");
     	return;
     }
 
@@ -3435,7 +3433,7 @@ sub printGeneProfile {
     }
 
     if ( scalar(keys %taxon_oids) == 0 ) {
-    	webError("No genomes have been selected.");
+    	WebUtil::webError("No genomes have been selected.");
     	return;
     }
 
@@ -3710,17 +3708,17 @@ sub printGeneProfileTranspose {
 
     my @gene_oids = param('gene_oid');
     if ( scalar(@gene_oids) == 0 ) {
-	webError("No genes have been selected.");
+	WebUtil::webError("No genes have been selected.");
 	return;
     }
     if ( scalar(@gene_oids) > $maxGeneProfileIds ) {
-	webError("Too many genes. Please select no more than $maxGeneProfileIds genes.");
+	WebUtil::webError("Too many genes. Please select no more than $maxGeneProfileIds genes.");
 	return;
     }
 
     my @taxonOids = param("genomeFilterSelections" );
     if ( scalar(@taxonOids) <= 0 ) {
-    	webError("No genomes have been seelected.");
+    	WebUtil::webError("No genomes have been seelected.");
     	return;
     }
 			    
@@ -3742,7 +3740,7 @@ sub printGeneProfileTranspose {
     my @profileTaxonOids = (keys %taxon_name_h);
 
     if ( scalar(@profileTaxonOids) == 0 ) {
-    	webError("No genomes have been selected.");
+    	WebUtil::webError("No genomes have been selected.");
     	return;
     }
 
@@ -4129,10 +4127,10 @@ sub printPhyloOccurProfiles_otf {
     my @gene_oids = param("gene_oid"); 
     my $nGenes    = @gene_oids; 
     if ( $nGenes == 0 ) { 
-        webError("Please select at least one gene."); 
+        WebUtil::webError("Please select at least one gene."); 
     } 
     if ( $nGenes > $maxProfileOccurIds ) { 
-        webError("Please select no more than $maxProfileOccurIds genes."); 
+        WebUtil::webError("Please select no more than $maxProfileOccurIds genes."); 
     }
 
     my $maxEvalue = param('maxEvalue');
@@ -4241,7 +4239,7 @@ sub printPhyloOccurProfiles_otf {
     	    for my $s (@lines) {
         		$line_no++;
         		if ( $s =~ /ERROR:/ ) {
-        		    webError($s); 
+        		    WebUtil::webError($s); 
         		} 
         		my ( 
         		    $qid,    $sid,      $percIdent, $alen,   $nMisMatch,
@@ -4489,7 +4487,7 @@ sub printGeneChrViewerSelection {
     	if ( scalar(keys %scaffold_h) > $maxScaffolds ) {
     	    #$dbh->disconnect();
     	    printEndWorkingDiv();
-    	    webError("There are too many scaffold -- Please limit selection to $maxScaffolds.");
+    	    WebUtil::webError("There are too many scaffold -- Please limit selection to $maxScaffolds.");
     	    return;
     	}
     
@@ -4576,7 +4574,7 @@ sub printGeneChrViewerSelection {
     } 
 
     if ( $cnt == 0 ) {
-    	webError("There are no assembled genes in the selections.");
+    	WebUtil::webError("There are no assembled genes in the selections.");
     	return;
     }
 
@@ -4684,7 +4682,7 @@ sub printChromosomeViewerSelection {
     	    if ( scalar(keys %scaffold_h) > $maxScaffolds ) {
         		#$dbh->disconnect();
         		printEndWorkingDiv();
-        		webError("There are too many scaffold -- Please limit selection to $maxScaffolds.");
+        		WebUtil::webError("There are too many scaffold -- Please limit selection to $maxScaffolds.");
         		return;
     	    }
     
@@ -4773,7 +4771,7 @@ sub printChromosomeViewerSelection {
     } 
 
     if ( $cnt == 0 ) {
-    	webError("There are no assembled genes in the selected gene sets.");
+    	WebUtil::webError("There are no assembled genes in the selected gene sets.");
     	return;
     }
 

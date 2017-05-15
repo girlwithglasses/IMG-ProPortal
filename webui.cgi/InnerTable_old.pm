@@ -42,7 +42,7 @@
 #
 #    --es 09/09/2005
 #
-# $Id: InnerTable_old.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: InnerTable_old.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package InnerTable;
 use strict;
@@ -320,7 +320,7 @@ sub printInnerTable {
    my $nCols = @$colSpec;
    if( $nCols == 0 ||
      ( param( "sortIdx" ) ne "" && !-e( $stateFile ) ) ) {
-       webError( "Inner session expired. Please refresh the whole page." );
+       WebUtil::webError( "Inner session expired. Please refresh the whole page." );
        webLog( "printInnerTable: iframe id='$id' expired\n" );
        return;
    }

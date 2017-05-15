@@ -3,7 +3,7 @@
 # It follows the same logic as main.pl and inner.pl
 # see xml.cgi
 #
-# $Id: XMLProxy.pm 36521 2017-01-24 22:41:12Z aireland $
+# $Id: XMLProxy.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package XMLProxy;
 use strict;
@@ -30,7 +30,6 @@ my $default_timeout_mins = $env->{default_timeout_mins} // 5;
 WebUtil::timeout( 60 * $default_timeout_mins );
 
 sub init {
-	WebUtil::blockRobots();
 	run();
 	exit(0);
 }

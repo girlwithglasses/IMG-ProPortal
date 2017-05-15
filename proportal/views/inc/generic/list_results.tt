@@ -3,10 +3,23 @@
 
 	result_list_id = results.domain _ "-list";
 
+	BLOCK query_params;
+
+		PROCESS 'inc/params.tt';
+
+	END;
+
+	BLOCK no_results;
+
+%]
+<p class="[% results.table.class %]__count">No results found.</p>
+[%
+	END;
+
 	BLOCK result_list;
 
-	IF results.n_results; %]
-<p class="[% results.table.class %]__count">[% results.n_results %] results</p>
+	IF results.arr.size; %]
+<p class="[% results.table.class %]__count">[% results.arr.size %] results</p>
 [%	END;
 
 	IF results.defined('n_pages') && results.n_pages > 1; %]
@@ -23,17 +36,22 @@
 	END; # end block
 
 	article_title = title;
-	PROCESS 'inc/generic/title.tt';
 	PROCESS 'inc/generic/container_macros.tt';
-
-	sections = [ { id => 'result_list' } ];
-
-	layout_page( sections );
+	PROCESS 'inc/generic/title.tt';
+	PROCESS 'inc/params.tt';
 
 	IF results.arr.size > 0;
+
+		layout_page( [{ id => 'result_list' }] );
 		table_arr = [ result_list_id ];
 		PROCESS 'scripts/datatables.tt';
+
+	ELSE;
+
+		layout_page( [{ id => 'no_results' }] );
+
 	END;
 
 END; %]
+
 

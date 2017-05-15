@@ -11,7 +11,7 @@
 #   are still pretty much the same, after sorting.)
 #    --es 10/10/2005
 #
-# $Id: AbundanceProfiles.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: AbundanceProfiles.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package AbundanceProfiles;
 require Exporter;
@@ -678,14 +678,14 @@ sub printMergeResults {
         if (   $nTaxons < 1 && $vir_count == 0
             || $nTaxons > $max_taxon_selection_matrix )
         {
-            webError("Please select 1 to $max_taxon_selection_matrix genomes.");
+            WebUtil::webError("Please select 1 to $max_taxon_selection_matrix genomes.");
         }
 
     } else {
         if (   $nTaxons < 1 && $vir_count == 0
             || $nTaxons > $max_taxon_selection )
         {
-            webError("Please select 1 to $max_taxon_selection genomes.");
+            WebUtil::webError("Please select 1 to $max_taxon_selection genomes.");
         }
     }
 
@@ -780,7 +780,7 @@ sub loadTaxonOid2EstOrfs {
     my $nTaxons = @$taxonOids_ref;
     if ( $nTaxons == 0 ) {
         webLog( "loadTaxonOid2EstOrfs: no taxon selected. " . "Should not get here.\n" );
-        webError("Please select at least one genome.");
+        WebUtil::webError("Please select at least one genome.");
     }
 
     my $taxon_oid_str = join( ',', @$taxonOids_ref );
@@ -876,7 +876,7 @@ sub printAbundanceProfileResults {
 
     my $nTaxons = @taxon_oids;
     if ( $nTaxons < 1 || $nTaxons > $max_taxon_selection ) {
-        webError( "Please select 1 to $max_taxon_selection " . "genomes." );
+        WebUtil::webError( "Please select 1 to $max_taxon_selection " . "genomes." );
     }
     printStatusLine( "Loading ...", 1 );
 
@@ -917,14 +917,14 @@ sub printAbundanceProfileSort {
     print " " x 10000;
     my $path = "$cgi_tmp_dir/$stateFile";
     if ( !( -e $path ) ) {
-        webError("Your session has expired.  Please start over again.");
+        WebUtil::webError("Your session has expired.  Please start over again.");
     }
     webLog "retrieve '$path' " . currDateTime() . "\n"
       if $verbose >= 1;
     my $state = retrieve($path);
     if ( !defined($state) ) {
         webLog("printAbundanceProfileSort: bad state from '$stateFile'\n");
-        webError("Your session has expired.  Please start over again.");
+        WebUtil::webError("Your session has expired.  Please start over again.");
     }
     my $orderedRowIds_ref = $state->{orderedRowIds};
     my $func_type         = $state->{func_type};
@@ -1462,7 +1462,7 @@ sub orderRowsCluster {
     my $nRows = @keys;
     if ( $nRows < 2 ) {
         printStatusLine( "Error.", 2 );
-        webError("Insufficient number of rows ($nRows) for clustering.");
+        WebUtil::webError("Insufficient number of rows ($nRows) for clustering.");
     }
     my $tmpFile1    = "$cgi_tmp_dir/in.matrix$$.tab.txt";
     my $tmpOutRoot2 = "$cgi_tmp_dir/out.matrix$$";

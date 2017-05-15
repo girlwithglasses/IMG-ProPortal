@@ -2,7 +2,7 @@
 # Similar to gene Ortholog Neighborhood viewer, but instead of coloring via
 # cog's we color genes within the same cassette box
 #
-# $Id: GeneCassette.pm 34662 2015-11-10 21:03:55Z klchu $
+# $Id: GeneCassette.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 # When I say "query gene or query cassette" - I mean the initial gene from
 # gene detail page.
@@ -685,7 +685,7 @@ sub printViewer2 {
         print "</p>";
         #$dbh->disconnect();
         my $count = $#$cassette_data_aref + 1;
-        webError( "Query cassette plot $cassette_oid has more than " . "$MAX_BOX_GENES genes ($count)." );
+        WebUtil::webError( "Query cassette plot $cassette_oid has more than " . "$MAX_BOX_GENES genes ($count)." );
     }
 
     # do plot
@@ -1725,7 +1725,7 @@ sub printCassetteBoxDetails {
     if ( $#gene_oid_list < 0 ) {
         printStatusLine( "Loaded.", 2 );
         #$dbh->disconnect();
-        webError("Gene $gene_oid has no cassette data for $title");
+        WebUtil::webError("Gene $gene_oid has no cassette data for $title");
     } elsif ( $#gene_oid_list >= $MAX_BOX_GENES ) {
         printStatusLine( "Loaded.", 2 );
         #$dbh->disconnect();
@@ -1734,7 +1734,7 @@ sub printCassetteBoxDetails {
         print "<p>";
         print alink( $url, "View cassette gene list" );
         print "</p>";
-        webError( "Cassette $cassette_oid has more than $MAX_BOX_GENES " . "genes ($count)." );
+        WebUtil::webError( "Cassette $cassette_oid has more than $MAX_BOX_GENES " . "genes ($count)." );
     }
 
     # hash of cog id => array list of geneoid \t functions
@@ -2963,7 +2963,7 @@ sub getOrthologs {
     if ( $count == 0 ) {
         printStatusLine( "Loaded.", 2 );
         #$dbh->disconnect();
-        webError( "No orthologs for other gene neighborhoods found "
+        WebUtil::webError( "No orthologs for other gene neighborhoods found "
 		. "for roughly the same sized gene." );
         return;
     }
@@ -3024,7 +3024,7 @@ sub getSortedCassettes {
             #$dbh->disconnect();
             print "</font></p></div>\n";
             printStatusLine( "Loaded.", 2 );
-            webError( "Query gene $gene_oid cassette's genes have no $type association." );
+            WebUtil::webError( "Query gene $gene_oid cassette's genes have no $type association." );
         }
     }
 

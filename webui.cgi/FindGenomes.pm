@@ -3,7 +3,7 @@
 #  Handle the options under the "Find Genomes" tab menu.
 #    --es 07/07/2005
 #
-# $Id: FindGenomes.pm 36513 2017-01-18 05:37:04Z jinghuahuang $
+# $Id: FindGenomes.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package FindGenomes;
 my $section = "FindGenomes";
@@ -415,7 +415,7 @@ sub printFindGenomeResults {
 	        my $term_str;
 	        $term_str = splitSearchTerm($taxonSearchTerm, 1, 1);
 	        if ( blankStr($term_str) && !$anyNull ) {
-	            webError("Please enter a comma separated list of valid ID's.");
+	            WebUtil::webError("Please enter a comma separated list of valid ID's.");
 	        } elsif ( !blankStr($term_str) ) {
 	            if ($anyNull) {
 	                $whereClause .= "or ";         
@@ -942,7 +942,7 @@ sub splitSearchTerm {
         $term_str = WebUtil::joinSqlQuoted( ',', @terms );    	
     }
     if ( blankStr($term_str) && !$noFlag) {
-        webError("Please enter a comma separated list of valid ID's.");
+        WebUtil::webError("Please enter a comma separated list of valid ID's.");
     }
     
     return $term_str;
@@ -1046,14 +1046,14 @@ sub printProteinGenomeResults {
     
     $taxonSearchTerm = strTrim($taxonSearchTerm);
     if ( $taxonSearchTerm eq "" ) {
-        webError("Please enter a term to search!");
+        WebUtil::webError("Please enter a term to search!");
     }
 
     my @terms = split( /,/, $taxonSearchTerm );
     # limit the in statement size
     my $max_size = 20;
     if ( $#terms > ( $max_size - 1 ) ) {
-        webError("Please limit to $max_size terms!");
+        WebUtil::webError("Please limit to $max_size terms!");
     }
 
     my @in;
@@ -1082,7 +1082,7 @@ sub printProteinGenomeResults {
     }
 
     if ( $#in < 0 && $#notIn < 0 ) {
-        webError("Please enter a term to search!");
+        WebUtil::webError("Please enter a term to search!");
     }
 
     print "<p>\n";

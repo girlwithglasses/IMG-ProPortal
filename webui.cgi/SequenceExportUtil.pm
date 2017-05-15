@@ -1,6 +1,6 @@
 ###########################################################################
 #
-# $Id: SequenceExportUtil.pm 36514 2017-01-18 06:04:29Z jinghuahuang $
+# $Id: SequenceExportUtil.pm 36954 2017-04-17 19:34:04Z klchu $
 #
 ###########################################################################
 package SequenceExportUtil;
@@ -68,7 +68,7 @@ sub printGeneFaaSeq {
     }
 
     if ( scalar(@gene_oids) <= 0) {
-        webError("Select genes first.");
+        WebUtil::webError("Select genes first.");
     }
 
     my $wfh;
@@ -219,13 +219,13 @@ sub getGeneFnaSeqDb {
     $down_stream =~ s/\s+//g;
 
     if ( scalar(@gene_oids) <= 0) {
-        webError("Select genes first.");
+        WebUtil::webError("Select genes first.");
     }
     if ( $up_stream_int > 0 || !isInt($up_stream) ) {
-        webError("Expected negative integer for up stream.");
+        WebUtil::webError("Expected negative integer for up stream.");
     }
     if ( $down_stream_int < 0 || !isInt($down_stream) ) {
-        webError("Expected positive integer for down stream.");
+        WebUtil::webError("Expected positive integer for down stream.");
     }
 
     my %seqHashDb;
@@ -269,14 +269,14 @@ sub printGeneFnaSeq {
     $down_stream =~ s/\s+//g;
 
     if ( scalar(@gene_oids) <= 0) {
-        webError("Select genes first.");
+        WebUtil::webError("Select genes first.");
     }
 
     if ( $up_stream_int > 0 || !isInt($up_stream) ) {
-        webError("Expected negative integer for up stream.");
+        WebUtil::webError("Expected negative integer for up stream.");
     }
     if ( $down_stream_int < 0 || !isInt($down_stream) ) {
-        webError("Expected positive integer for down stream.");
+        WebUtil::webError("Expected positive integer for down stream.");
     }
 
     my $wfh;

@@ -2,7 +2,7 @@
 # NEW for 3.4  - Common WebConfig param between all sites
 # Params can be overridden in the site's Webconfig.pm
 #
-# $Id: WebConfigCommon.pm 36000 2016-08-11 22:39:36Z klchu $
+# $Id: WebConfigCommon.pm 37048 2017-05-04 21:21:49Z klchu $
 #
 #
 package WebConfigCommon;
@@ -305,14 +305,14 @@ sub common {
     #$e->{jira_submit_url} = "http://contact.jgi-psf.org/cgi-bin/support/contact_send.pl";
 
     # if jira form submit fails display error message with the following email
-    $e->{jira_email_error} = 'imgsupp@lists.jgi-psf.org';
+    $e->{jira_email_error} = 'jgi-imgsupp@lists.lbl.gov ';
 
-    #'jgi-imgsupp@lists.lbl.gov'; #'imgsupp@lists.jgi-psf.org';
-    $e->{img_support_email} = 'imgsupp@lists.jgi-psf.org';
+    #'jgi-imgsupp@lists.lbl.gov'; #'jgi-imgsupp@lists.lbl.gov ';
+    $e->{img_support_email} = 'jgi-imgsupp@lists.lbl.gov ';
 
     # the new cloud jira email
     $e->{jira_email}  = 'jgi-jira+imgsupp@lbl.gov';
-    $e->{jira_email2} = 'imgsupp@lists.jgi-psf.org';
+    $e->{jira_email2} = 'jgi-imgsupp@lists.lbl.gov ';
 
     # --------------------------------------------------------------------------------------------
     #
@@ -432,8 +432,9 @@ sub common {
     $e->{client_py_exe} = $e->{client_path} . "/client_wrapper.sh";
 
     # new queue
-    $e->{workspace_pid_dir}   = '/global/projectb/sandbox/IMG_web/messageSystem/PID/';
-    $e->{workspace_queue_dir} = '/global/projectb/sandbox/IMG_web/messageSystem/QUEUE/';
+    #$e->{workspace_pid_dir}   = '/global/projectb/sandbox/IMG_web/messageSystem/PID/';
+    #$e->{workspace_queue_dir} = '/global/projectb/sandbox/IMG_web/messageSystem/QUEUE/';
+    $e->{workspace_messageSystem_dir} = '/global/projectb/sandbox/IMG_web/messageSystem/';
 
     $e->{enable_carts} = 1;
     $e->{cart_max_szie} = 20000; # no login max 1000

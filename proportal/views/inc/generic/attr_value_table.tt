@@ -1,10 +1,17 @@
 [%	#	create a definition list of attribute / value pairs
 	#	args:
 	#	.obj -- object to get keys from
+	#	.class, .id -- dl class, id (optional)
+	#	.with_units
+	#	.prefix -- prefix for the object attributes
 	#
-	#
-	#
-	#
+	#	.arr -- array of object attributes
+	#	OR
+	#	.prefix_arr -- array of object attributes (add .prefix to get the full attr name)
+	#	OR
+	#	.tbody -- [ 'tag', 'value' ]
+	#	OR
+	#	fn_arr -- for annotation lists
 
 	PROCESS 'inc/generic/labels.tt';
 
@@ -13,9 +20,9 @@
 		obj = data_table.obj;
 
 		IF data_table.caption; %]
-	<h4[% IF data_table.caption_id %] id="[% data_table.caption_id %]"[% END; %]>
+	<h5[% IF data_table.caption_id %] id="[% data_table.caption_id %]"[% END; %]>
 		[% data_table.caption %]
-	</h4>
+	</h5>
 [%
 END;
 %]
@@ -28,13 +35,43 @@ END;
 	IF data_table.arr;
 		FOREACH datum IN data_table.arr;
 			attr = datum.first;
-			if_present = datum.last || 0;
+			if_present = datum.1 || 0;
 			## only print if there is data
 			IF ( ! if_present ) || ( if_present && obj.$attr ); %]
 		<dt class='[% dl_class %]__attr'>
 [%				labeller( attr ) %]
 		</dt><dd class='[% dl_class %]__value'>
-			[%	obj.$attr %]
+			[%	IF obj.$attr;
+					obj.$attr;
+					IF data_table.with_units;
+						units( attr );
+					END;
+				END; %]
+		</dd>
+[%			END;
+		END; # FOREACH datum in data_table.arr
+	END;
+
+	#	Prefixed array -- apply the data_table.prefix to each member of the array
+	#
+	#
+
+	IF data_table.prefix_arr;
+		prefix = data_table.prefix;
+		FOREACH datum IN data_table.prefix_arr;
+			attr = prefix _ datum.first;
+			if_present = datum.1 || 0;
+			## only print if there is data
+			IF ( ! if_present ) || ( if_present && obj.$attr ); %]
+		<dt class='[% dl_class %]__attr'>
+[%				labeller( datum.first ) %]
+		</dt><dd class='[% dl_class %]__value'>
+			[%	IF obj.$attr;
+					obj.$attr;
+					IF data_table.with_units;
+						units( attr );
+					END;
+				END; %]
 		</dd>
 [%			END;
 		END; # FOREACH datum in data_table.arr
@@ -166,7 +203,7 @@ IF data_table.tbody.size > 0;
 			IF headers.enum_map.$th;
 				headers.enum_map.$th;
 			ELSIF 'cbox' != th;
-				th | ucfirst;
+				labeller( th );
 			END; %]
 		</th>
 [%			END;

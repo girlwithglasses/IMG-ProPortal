@@ -79,10 +79,10 @@ my $external_links = {
 	'ipr_base_url3' => 'http://prosite.expasy.org/',
 	'ipr_base_url4' => 'http://smart.embl-heidelberg.de/smart/do_annotation.pl?ACC=',
 	'jgi_project_qa_base_url' => 'http://cayman.jgi-psf.org/prod/data/QA/Reports/QD/',
-	'kegg_module_url' => 'http://www.genome.jp/dbget-bin/www_bget?md+',
+	'kegg_module_url' =>    'http://www.genome.jp/dbget-bin/www_bget?md+',
 	'kegg_orthology_url' => 'http://www.genome.jp/dbget-bin/www_bget?ko+',
-	'kegg_reaction_url' => 'http://www.genome.jp/dbget-bin/www_bget?rn+',
-	'ko_base_url' => 'http://www.genome.ad.jp/dbget-bin/www_bget?ko+',
+	'kegg_reaction_url' =>  'http://www.genome.jp/dbget-bin/www_bget?rn+',
+	'ko_base_url' =>        'http://www.genome.ad.jp/dbget-bin/www_bget?ko+',
 	'metacyc_url' => 'http://biocyc.org/META/NEW-IMAGE?object=',
 	'mgi_base_url' => 'http://www.informatics.jax.org/searches/accession_report.cgi?id=MGI:',
 	'ncbi_bioproject' => 'http://www.ncbi.nlm.nih.gov/bioproject/',
@@ -121,7 +121,20 @@ my $external_links = {
 	'uniprot_base_url' => 'http://uniprot.org/uniprot/'
 };
 
+# 	KEGG_ENZYME
+# 	'http://www.genome.jp/dbget-bin/www_bget?'    => 'enzyme_base_url',
+# 	KEGG_ORTHOLOGY
+# 	'http://www.genome.jp/dbget-bin/www_bget?ko+' => 'kegg_orthology_url',
+# 	KEGG_PATHWAY
+# 	'http://www.genome.jp/dbget-bin/www_bget?path:ot00020' => 'kegg_pathway_url',
+# 	KEGG_MODULE
+# 	'http://www.genome.jp/dbget-bin/www_bget?md+' => 'kegg_module_url',
+# 	KEGG_REACTION
+# 	'http://www.genome.jp/dbget-bin/www_bget?rn+' => 'kegg_reaction_url',
 
+$external_links->{KEGG_MODULE} = $external_links->{kegg_module_url};
+$external_links->{KEGG_PATHWAY} = $external_links->{ko_base_url};
+$external_links->{KO_TERM} = $external_links->{kegg_orthology_url};
 
 $external_links->{GI} = $external_links->{ncbi_entrez_base_url};
 $external_links->{GenBank} = $external_links->{ncbi_entrez_base_url};
@@ -134,6 +147,9 @@ $external_links->{GeneID} = $external_links->{geneid_base_url};
 # 	$s .= "; ";
 # }
 
+$external_links->{GO} = $external_links->{enzyme_base_url};
+$external_links->{EC} = $external_links->{enzyme_base_url};
+$external_links->{TC} = 'http://www.tcdb.org/tcdb/index.php?tc=';
 $external_links->{InterPro} = $external_links->{ipr_base_url};
 $external_links->{SUPERFAMILY} = $external_links->{ipr_base_url2};
 $external_links->{ProSiteProfiles} = $external_links->{ipr_base_url3};
@@ -148,6 +164,11 @@ $external_links->{UniProt} = $external_links->{nice_prot_base_url};
 $external_links->{UniProtKB} = $external_links->{uniprot_base_url};
 $external_links->{'UniProt/TrEMBL'} = $external_links->{uniprot_base_url};
 $external_links->{'UniProtKB/TrEMBL'} = $external_links->{uniprot_base_url};
+
+$external_links->{'NCBI/RefSeq'} = 'http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=';
+
+$external_links->{TC} = $external_links->{ tcdb };
+$external_links->{TIGRFam} = $external_links->{tigrfam_base_url};
 
 $external_links->{SEED} = 'http://pseed.theseed.org/seedviewer.cgi?page=BrowseGenome&feature=';
 $external_links->{UniGene} = sub {
@@ -191,12 +212,19 @@ return {
 	'http://www.ebi.ac.uk/Tools/pfa/iprscan/' => 'ebi_iprscan_url',
 	'http://www.gene.ucl.ac.uk/nomenclature/data/get_data.php?hgnc_id=' => 'hgnc_base_url',
 	'http://www.geneontology.org/GO.evidence.shtml' => 'go_evidence_url',
-	'http://www.genome.ad.jp/dbget-bin/www_bget?ko+' => 'ko_base_url',
 
-	'http://www.genome.jp/dbget-bin/www_bget?' => 'enzyme_base_url',
+	'http://www.genome.ad.jp/dbget-bin/www_bget?ko+' => 'ko_base_url',
+	# KEGG_ENZYME
+	'http://www.genome.jp/dbget-bin/www_bget?'    => 'enzyme_base_url',
+	# KEGG_ORTHOLOGY
 	'http://www.genome.jp/dbget-bin/www_bget?ko+' => 'kegg_orthology_url',
+	# KEGG_PATHWAY
+	'http://www.genome.jp/dbget-bin/www_bget?path:ot00020' => 'kegg_pathway_url',
+	# KEGG_MODULE
 	'http://www.genome.jp/dbget-bin/www_bget?md+' => 'kegg_module_url',
+	# KEGG_REACTION
 	'http://www.genome.jp/dbget-bin/www_bget?rn+' => 'kegg_reaction_url',
+
 	'http://www.informatics.jax.org/searches/accession_report.cgi?id=MGI:' => 'mgi_base_url',
 	# JCVI_TIGRFAMS
 	'http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc=' => 'tigrfam_base_url',

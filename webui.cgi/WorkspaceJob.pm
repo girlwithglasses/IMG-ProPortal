@@ -186,7 +186,7 @@ sub printJobMainForm {
     #my $jgi_user = Workspace::getIsJgiUser($sid);
 
     opendir( DIR, "$workspace_dir/$sid/$folder" )
-      or webDie("failed to open folder list");
+      or WebUtil::webDie("failed to open folder list");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -218,7 +218,7 @@ sub printJobMainForm {
     my $sd = $it->getSdDelim();
 
     opendir( DIR, $job_dir )
-      or webDie("failed to read files");
+      or WebUtil::webDie("failed to read files");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -337,6 +337,8 @@ sub showJobDetail {
     my $dtype;
     my $functype;
     my $share_func_set_name;
+    my $use_blast_db = '';
+    my $evalue = '';
     while ( my $line = $res->getline() ) {
         chomp $line;
         if ( $lineno == 0 ) {
@@ -363,6 +365,10 @@ sub showJobDetail {
                 $datatype = $val;
             } elsif ( $tag eq "--dtype" ) {
                 $dtype = $val;
+            } elsif($tag eq "--use_blast_db" ) {
+                $use_blast_db = $val;
+            } elsif($tag eq '--evalue') {
+                $evalue = $val;
             }
             print "$line<br/>\n";
         }
@@ -417,6 +423,9 @@ sub showJobDetail {
         || $job_type eq 'Gene Save Function Gene' 
         || $job_type eq 'Scaffold Save Function Gene' ) {
         showSaveFuncGeneDetail( $sid, $job_name, \@set_names, $datatype );
+    } elsif ($job_type eq 'Sequence blast') {
+        require WorkspaceBlast;
+        WorkspaceBlast::printResults($job_name, $use_blast_db, $evalue);
     }
 
     print end_form();
@@ -773,7 +782,7 @@ sub showKmerJobDetail {
 
     my $job_file_dir = "$workspace_dir/$sid/job/$job_name";
     opendir( DIR, $job_file_dir )
-      or webDie("failed to read $job_file_dir files");
+      or WebUtil::webDie("failed to read $job_file_dir files");
     my @files = readdir(DIR);
     closedir(DIR);
 
@@ -1347,7 +1356,7 @@ sub saveSelectedJobFunctions {
 
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select one or more functions");
+        WebUtil::webError("Please select one or more functions");
         return;
     }
 
@@ -1357,7 +1366,7 @@ sub saveSelectedJobFunctions {
     $filename =~ s/\W+/_/g;
     #print "filename: $filename<br/>\n";
     if ( !$filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -1370,7 +1379,7 @@ sub saveSelectedJobFunctions {
 
     # check if filename already exist
     if ( -e "$workspace_dir/$sid/$folder/$filename" ) {
-        webError("File name $filename already exists. Please enter a new file name.");
+        WebUtil::webError("File name $filename already exists. Please enter a new file name.");
         return;
     }
 
@@ -1402,7 +1411,7 @@ sub saveSelectedJobFuncGenes {
 
     my @func_ids = param('func_id');
     if ( scalar(@func_ids) == 0 ) {
-        webError("Please select one or more functions");
+        WebUtil::webError("Please select one or more functions");
         return;
     }
     my %func_h;
@@ -1419,7 +1428,7 @@ sub saveSelectedJobFuncGenes {
     $filename =~ s/\W+/_/g;
     #print "filename: $filename<br/>\n";
     if ( !$filename ) {
-        webError("Please enter a workspace file name.");
+        WebUtil::webError("Please enter a workspace file name.");
         return;
     }
 
@@ -1432,13 +1441,13 @@ sub saveSelectedJobFuncGenes {
 
     # check if filename already exist
     if ( -e "$workspace_dir/$sid/$folder/$filename" ) {
-        webError("File name $filename already exists. Please enter a new file name.");
+        WebUtil::webError("File name $filename already exists. Please enter a new file name.");
         return;
     }
 
     my $job_file_dir = "$workspace_dir/$sid/job/$job_name";
     if ( !( -e "$job_file_dir/list.txt" ) ) {
-        webError("No result.");
+        WebUtil::webError("No result.");
         return;
     }
     my $res = newWriteFileHandle("$workspace_dir/$sid/$folder/$filename");
@@ -1622,7 +1631,7 @@ sub showJobResultList {
 sub printConfirmDelete {
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -1663,7 +1672,7 @@ sub deleteResult {
     
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -1682,7 +1691,7 @@ sub deleteResult {
         
         if ( -e $job_file_dir ) {    
             opendir( DIR, "$job_file_dir" )
-              or webDie("failed to read files");
+              or WebUtil::webDie("failed to read files");
             my @files = readdir(DIR);
             closedir(DIR);
             #print "deleteResult() job files=@files<br/>\n";
@@ -1717,7 +1726,7 @@ sub downloadResult {
     
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -1743,7 +1752,7 @@ sub downloadResult {
         #print "downloadResult() job_file_dir=$job_file_dir<br/>\n";
         if ( -e $job_file_dir ) {    
             opendir( DIR, "$job_file_dir" )
-              or webDie("failed to read files");
+              or WebUtil::webDie("failed to read files");
             my @files = readdir(DIR);
             closedir(DIR);
             #print "downloadResult() job files=@files<br/>\n";
@@ -1766,7 +1775,7 @@ sub downloadResult2 {
     
     my $sid = getContactOid();
     if ( blankStr($sid) ) {
-        webError("Your login has expired.");
+        WebUtil::webError("Your login has expired.");
         return;
     }
 
@@ -1794,7 +1803,7 @@ sub downloadResult2 {
             #print "\n";
 
             opendir( DIR, $job_file_dir )
-              or webDie("failed to read files");
+              or WebUtil::webDie("failed to read files");
             my @files = grep(!/^\.\.?/, readdir(Dir));
             print "downloadResult() job 0 files=@files<br/>\n";
             closedir(DIR);

@@ -2,7 +2,7 @@
 # AbundanceComparisons.pm - Tool to allow for multiple pairwise
 #   genome abundance comparisons.
 #        --es 06/11/2007
-# $Id: AbundanceComparisonsSub.pm 34199 2015-09-04 21:13:24Z klchu $
+# $Id: AbundanceComparisonsSub.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package AbundanceComparisonsSub;
 
@@ -83,12 +83,12 @@ sub getPageTitle {
 
 sub getAppHeaderData {
     my($self) = @_;
-    
+
     my @a = ();
     if (WebUtil::paramMatch("noHeader") ne "") {
         return @a;
     } else {
-        
+
         require GenomeListJSON;
         my $template = HTML::Template->new( filename => "$base_dir/genomeHeaderJson.html" );
         $template->param( base_url => $base_url );
@@ -346,10 +346,10 @@ sub printAbundanceResults {
     my $nQueryGenomes     = @queryGenomes;
     my $nReferenceGenomes = @referenceGenomes;
     if ( $nQueryGenomes == 0 ) {
-        webError("Please select one query genome.<br/>\n");
+        WebUtil::webError("Please select one query genome.<br/>\n");
     }
     if ( $nReferenceGenomes == 0 ) {
-        webError( "Please select 1 to $max_reference_taxons reference genomes.<br/>\n" );
+        WebUtil::webError( "Please select 1 to $max_reference_taxons reference genomes.<br/>\n" );
     }
 
     printMainForm();
@@ -945,7 +945,7 @@ sub sortAbundanceFile {
     my $pagerFileIdx  = "$pagerFileRoot.idx";
     if ( !( -e $pagerFileRows ) || !( -e $pagerFileIdx ) ) {
         webLog("Expired session file '$pagerFileRows' or '$pagerFileIdx'\n");
-        webError("Session file expired.<br/>Please start your 'Function Comparison' study from the beginning.\n");
+        WebUtil::webError("Session file expired.<br/>Please start your 'Function Comparison' study from the beginning.\n");
     }
 
     my $rfh = newReadFileHandle( $pagerFileRows, "sortAbudanceFile" );
@@ -1035,19 +1035,19 @@ sub printOnePage {
     my $pagerFileXls  = "$pagerFileRoot.xls";
     if ( !-e ($pagerFileIdx) ) {
         warn("$pagerFileIdx not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
     if ( !-e ($pagerFileRows) ) {
         warn("$pagerFileRows not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
     if ( !-e ($pagerFileMeta) ) {
         warn("$pagerFileMeta not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
     if ( !-e ($pagerFileXls) ) {
         warn("$pagerFileXls not found\n");
-        webError("Session expired for this page.  Please start again.");
+        WebUtil::webError("Session expired for this page.  Please start again.");
     }
 
     my %metaData      = loadMetaData($pagerFileMeta);
@@ -2415,7 +2415,7 @@ sub printAbundanceDownload {
 
     #webLog("printAbundanceDownload path: $path\n");
     if ( !( -e $path ) ) {
-        webErrorHeader( "Session of download has expired. " . "Please start again." );
+        WebUtil::webErrorHeader( "Session of download has expired. " . "Please start again." );
     }
     my $sz = fileSize($path);
 
@@ -2541,7 +2541,7 @@ sub getDScores_old {
         $n2 += $cnt;
     }
     if ( $nKeys1 != $nKeys2 ) {
-        webDie("getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match\n");
+        WebUtil::webDie("getDScores: nKeys1=$nKeys1 nKeys2=$nKeys2 do not match\n");
     }
     if ( $n1 < 1 || $n2 < 1 ) {
         webLog("getDScores: n1=$n1 n2=$n2: no hits to calculate\n");
@@ -2704,7 +2704,7 @@ sub getPvalues {
         my @keys        = sort( keys(%$dscores_ref) );
         my $nFuncs2     = @keys;
         if ( $nFuncs > 0 && $nFuncs != $nFuncs2 ) {
-            webDie( "getPvalues: taxon_oid=$taxon_oid " . "nFuncs=$nFuncs nFuncs2=$nFuncs2\n" );
+            WebUtil::webDie( "getPvalues: taxon_oid=$taxon_oid " . "nFuncs=$nFuncs nFuncs2=$nFuncs2\n" );
         }
 
         ## Store order of funcIds
@@ -2753,7 +2753,7 @@ sub getPvalues {
         my @pvalues = split( / /, $s );
         my $nPvalues = @pvalues;
         if ( $nPvalues != $nFuncs ) {
-            webDie("getPvalues: nPvalues=$nPvalues nFuncs=$nFuncs\n");
+            WebUtil::webDie("getPvalues: nPvalues=$nPvalues nFuncs=$nFuncs\n");
         }
         my %funcPvalues;
         for ( my $i = 0 ; $i < $nPvalues ; $i++ ) {

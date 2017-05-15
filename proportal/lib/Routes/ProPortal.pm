@@ -76,6 +76,19 @@ sub output_csv {
 	content_type 'text/plain';
 	my ($io, $io_name) = tempfile();
 
+# my $dbh = DBI->connect (...);
+# my $sql = "select * from foo";
+#
+# # using your own loop
+# open my $fh, ">", "foo.csv" or die "foo.csv: $!\n";
+# my $csv = Text::CSV_XS->new ({ binary => 1, eol => "\r\n" });
+# my $sth = $dbh->prepare ($sql); $sth->execute;
+# $csv->print ($fh, $sth->{NAME_lc});
+# while (my $row = $sth->fetch) {
+#     $csv->print ($fh, $row);
+#     }
+#
+
 	if ( 'list' eq $rslt_type ) {
 		my $first = $obj->next;
 		my @cols = grep { '__schema' ne $_ } sort keys %$first;
@@ -143,17 +156,22 @@ sub dispatch {
 	my $cntrl = $args->{cntrl} || $args->{prefix} . '::' . $args->{domain};
 	my $mode = $args->{output_format} || 'html';
 
+	my $controller_args = {
+		output_format => $mode
+	};
+
 	log_debug { 'mode: ' . $mode };
 
-#	$h->{ $args->{prefix} } . '::' . $h->{ $args->{domain} };
+	# page number
+	if ( $args->{q_params} && $args->{q_params}->get( 'page_index' ) ) {
+		$controller_args->{page_index} = $args->{q_params}->get( 'page_index' );
+	}
 
-	bootstrap( $cntrl, { output_format => $mode } );
+	bootstrap( $cntrl, $controller_args );
 
 	if ( $args->{filters} ) {
 		img_app->set_filters( $args->{filters} );
 	}
-
-	my $output;
 
 	# branch off to the API here
 	if ( 'html' eq $mode ) {
@@ -272,6 +290,8 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 			redirect $mode . '/details/taxon/' . route_parameters->get('taxon_oid'), 301;
 		};
 
+		#	LIST pages
+
 		prefix '/list' => sub {
 
 			for my $domain ( @domains ) {
@@ -283,7 +303,8 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 							prefix => 'list',
 							domain => $domain,
 							filters => query_parameters,
-							output_format => $output_fmt->{url}{$mode}
+							output_format => $output_fmt->{url}{$mode},
+							q_params => query_parameters
 						});
 					};
 

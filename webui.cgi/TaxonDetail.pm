@@ -6,7 +6,7 @@
 #  from the statistics page.
 #      --es 09/17/2004
 # - new gold field
-# $Id: TaxonDetail.pm 36612 2017-03-01 18:40:47Z klchu $
+# $Id: TaxonDetail.pm 37058 2017-05-08 19:45:30Z klchu $
 ############################################################################
 package TaxonDetail;
 my $section = "TaxonDetail";
@@ -16,6 +16,8 @@ use strict;
 use CGI qw( :standard );
 use Data::Dumper;
 use DBI;
+use Storable;
+
 use WebConfig;
 use WebUtil;
 use HtmlUtil;
@@ -91,7 +93,7 @@ my $in_file                           = $env->{in_file};
 #my $in_file                           = $env->{in_file};
 my $img_edu                           = $env->{img_edu};
 my $enable_download                   = $env->{enable_download};
-
+my $goldCacheDir = $env->{gold_cache_dir};
 my $enable_genbank                    = 0;
 my $top_base_url = $env->{top_base_url};
 # Inner table sort delimiter
@@ -139,13 +141,13 @@ sub getAppHeaderData {
     my ($self) = @_;
     my $page = param('page');
     my @a = ();
-    
+
         if ( $page eq 'taxonArtemisForm' ) {
             @a = ( "FindGenomes", '', '', '', '', 'GenerateGenBankFile.pdf' );
         } elsif(WebUtil::paramMatch("noHeader") eq "") {
             @a = ("FindGenomes");
-        }    
-    
+        }
+
     return @a;
 }
 
@@ -179,13 +181,13 @@ sub dispatch {
     } elsif ( paramMatch("viewArtemisFile") ne "" ) {
         my $st = downloadArtemisFile(0);
         if ( !$st ) {
-            webError("Session for viewing expired.  Please try again.");
+            WebUtil::webError("Session for viewing expired.  Please try again.");
         }
         WebUtil::webExit(0);
     } elsif ( paramMatch("downloadArtemisFile") ne "" ) {
         my $st = downloadArtemisFile(1);
         if ( !$st ) {
-            webError("Session for download expired.  Please try again.");
+            WebUtil::webError("Session for download expired.  Please try again.");
         }
     } elsif ( paramMatch("downloadTaxonFaaFile") ne "" ) {
 
@@ -236,11 +238,7 @@ sub dispatch {
         # cgi cache
         HtmlUtil::cgiCacheStart() or return;
 
-        if ($use_img_gold) {
-            printTaxonDetail_ImgGold();
-        } else {                 # always use GOLD metadata +BSJ 09/18/12
-            printTaxonDetail_ImgGold();
-        }
+        printTaxonDetail_ImgGold();
 
         HtmlUtil::cgiCacheStop();
 
@@ -711,7 +709,7 @@ sub printCrisprDetails {
         $imgClause
     };
     #print "printCrisprDetails() sql: $sql<br/>\n";
-    
+
     my $cur = execSql( $dbh, $sql, $verbose, $taxon_oid );
 
     my $it = new InnerTable( 1, "Crispr$$", "Crispr", 0 );
@@ -1162,7 +1160,7 @@ sub printTaxonDetail_ImgGold {
     my $taxon_oid      = param("taxon_oid");
     my $taxon_oid_orig = $taxon_oid;
     if ( $taxon_oid eq "" ) {
-        webDie("taxon_oid not set");
+        WebUtil::webDie("taxon_oid not set");
     }
     my $dbh = dbLogin();
 
@@ -1246,7 +1244,7 @@ sub printTaxonDetail_ImgGold {
         printStatusLine( "Error.", 2 );
 
         #$dbh->disconnect();
-        webError("Taxon object identifier $taxon_oid not found\n");
+        WebUtil::webError("Taxon object identifier $taxon_oid not found\n");
     }
 
     printMainForm();
@@ -1405,7 +1403,7 @@ sub printTaxonDetail_ImgGold {
 
     if ( !$taxon_oid ) {
         printStatusLine( "Error.", 2 );
-        webError("Genome for taxon_oid='$taxon_oid_orig' not found\n");
+        WebUtil::webError("Genome for taxon_oid='$taxon_oid_orig' not found\n");
     }
 
     my $lineage;
@@ -1891,7 +1889,7 @@ END_MAP
     # publications
     TaxonDetailUtil::printTaxonPublications($dbh, $taxon_oid,
 			    "Genome Publication",
-			    "gold_sp_genome_publications\@imgsg_dev");
+			    "gold_sp_genome_publications");
 
     # inferred phenotypes
     my $d1 = substr( $domain, 0, 1 );
@@ -2759,33 +2757,33 @@ sub printScaffoldSearchResults {
         && blankStr($loRange)
         && blankStr($hiRange) )
     {
-        webError("Please enter a search term or substring or ranges.");
+        WebUtil::webError("Please enter a search term or substring or ranges.");
     }
     if ( !WebUtil::isInt($searchTerm) && $searchType eq "scaffold_oid" ) {
-        webError("Please enter a positive integer for scaffold_oid.\n");
+        WebUtil::webError("Please enter a positive integer for scaffold_oid.\n");
     }
     if ( !blankStr($loRange) || !blankStr($hiRange) ) {
         if ( $loRange < 0 ) {
-            webError("Invalid low range.  Enter a number greater than zero.");
+            WebUtil::webError("Invalid low range.  Enter a number greater than zero.");
         }
         if ( $hiRange < 0 ) {
-            webError("Invalid high range. Enter a number greater than zero.");
+            WebUtil::webError("Invalid high range. Enter a number greater than zero.");
         }
         if ( $loRange > $hiRange ) {
-            webError( "Low range greater than high range. " . "Reverse this order." );
+            WebUtil::webError( "Low range greater than high range. " . "Reverse this order." );
         }
         if ( $rangeType eq "gc_percent" ) {
             if ( $loRange > 1.00 || $hiRange > 1.00 ) {
-                webError("Enter number between 0.00 and 1.00.");
+                WebUtil::webError("Enter number between 0.00 and 1.00.");
             }
         }
         if ( $rangeType eq "seq_length" ) {
             if ( !WebUtil::isInt($loRange) || !WebUtil::isInt($hiRange) ) {
-                webError("Enter integers for low and high range.");
+                WebUtil::webError("Enter integers for low and high range.");
             }
         } else {
             if ( !isNumber($loRange) || !isNumber($hiRange) ) {
-                webError("Enter decimal numbers for low and high range.");
+                WebUtil::webError("Enter decimal numbers for low and high range.");
             }
             $loRange = sprintf( "%.2f", $loRange );
             $hiRange = sprintf( "%.2f", $hiRange );
@@ -2795,7 +2793,7 @@ sub printScaffoldSearchResults {
     #    if ( !blankStr($searchTerm)
     #         && ( $searchTerm =~ /%/ || $searchTerm =~ /_/ ) )
     #    {
-    #        webError("Search term has illegal characters '%' or '_'.\n");
+    #        WebUtil::webError("Search term has illegal characters '%' or '_'.\n");
     #    }
 
     my $searchTermLower = $searchTerm;
@@ -3070,7 +3068,7 @@ sub printScaffolds {
     }
 
     if ( $pageSize == 0 ) {
-        webDie("printScaffolds: invalid pageSize='$pageSize'\n");
+        WebUtil::webDie("printScaffolds: invalid pageSize='$pageSize'\n");
     }
     my $dbh = dbLogin();
 
@@ -3114,7 +3112,7 @@ sub printScaffolds {
         }
     }
     if ( $taxon_oid eq "" ) {
-        webDie("printScaffolds: taxon_oid not specified");
+        WebUtil::webDie("printScaffolds: taxon_oid not specified");
     }
 
     my $scaffold_count = scaffoldCount( $dbh, $taxon_oid, $scaffold_oid );
@@ -3980,7 +3978,7 @@ sub printScaffoldsByGeneCount {
     }
 
     if ( $pageSize == 0 ) {
-        webDie("printScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
+        WebUtil::webDie("printScaffoldsByGeneCount: invalid pageSize='$pageSize'\n");
     }
     my $dbh = dbLogin();
 
@@ -5243,7 +5241,7 @@ sub printParalogClusterGeneList {
     my @cluster_ids = param("cluster_id");
 
     if ( scalar(@cluster_ids) == 0 ) {
-        webError("No Cluster has been selected.");
+        WebUtil::webError("No Cluster has been selected.");
     }
 
     printMainForm();
@@ -6360,7 +6358,7 @@ sub printCKogGeneList {
         @ckog_ids = param("func_id");
     }
     if ( scalar(@ckog_ids) == 0 ) {
-        webError("No $OG has been selected.");
+        WebUtil::webError("No $OG has been selected.");
     }
 
     printMainForm();
@@ -6495,7 +6493,7 @@ sub printEnzymeGeneList {
         @ec_ids = param("func_id");
     }
     if ( scalar(@ec_ids) == 0 ) {
-        webError("No enzyme has been selected.");
+        WebUtil::webError("No enzyme has been selected.");
     }
 
     printMainForm();
@@ -6748,7 +6746,7 @@ sub printImgTermGeneList {
         }
     }
     if ( scalar(@term_oids) == 0 ) {
-        webError("No IMG Term has been selected.");
+        WebUtil::webError("No IMG Term has been selected.");
     }
 
     printMainForm();
@@ -7016,7 +7014,7 @@ sub printImgPwayGeneList {
         }
     }
     if ( scalar(@pathway_oids) == 0 ) {
-        webError("No IMG Pathway has been selected.");
+        WebUtil::webError("No IMG Pathway has been selected.");
     }
 
     printMainForm();
@@ -7182,7 +7180,7 @@ sub printImgPlistGenes {
         }
     }
     if ( scalar(@parts_list_oids) == 0 ) {
-        webError("No IMG Parts List has been selected.");
+        WebUtil::webError("No IMG Parts List has been selected.");
     }
 
     printMainForm();
@@ -7615,7 +7613,7 @@ sub printPfamGeneList {
     }
 
     if ( scalar(@pfam_ids) == 0 ) {
-        webError("No Pfam has been selected.");
+        WebUtil::webError("No Pfam has been selected.");
     }
 
     printMainForm();
@@ -8286,7 +8284,7 @@ sub printTIGRfamGeneList {
     }
 
     if ( scalar(@tigrfam_ids) == 0 ) {
-        webError("No TIGRfam has been selected.");
+        WebUtil::webError("No TIGRfam has been selected.");
     }
 
     printMainForm();
@@ -8459,7 +8457,7 @@ sub printInterProGeneList {
         @ipr_ids = param("func_id");
     }
     if ( scalar(@ipr_ids) == 0 ) {
-        webError("No InterPro has been selected.");
+        WebUtil::webError("No InterPro has been selected.");
     }
 
     printMainForm();
@@ -8682,7 +8680,7 @@ sub printKeggPathwayGenes {
     my $pathway_oid = param("pathway_oid");
 
     if ( $pathway_oid eq '' ) {
-        webError("No KEGG has been selected.");
+        WebUtil::webError("No KEGG has been selected.");
     }
 
     printMainForm();
@@ -8755,11 +8753,6 @@ sub printConfigTable {
 
     my $name = "_section_${section}_$param";
 
-#    main::submit(
-#        -name  => $name,
-#        -value => "Display Again",
-#        -class => "meddefbutton"
-#    );
     print "<input type='submit' class='meddefbutton' name='$name' value='Display again' />\n"
       . "<input id='sel' type=button name='selectAll' value='Select All' "
       . "onClick='selectAllOutputCol(1)' class='smbutton' />\n"
@@ -9277,7 +9270,7 @@ sub printMetacycGenes {
         }
     }
     if ( scalar(@metacyc_ids) == 0 ) {
-        webError("No MetaCyc Pathway has been selected.");
+        WebUtil::webError("No MetaCyc Pathway has been selected.");
     }
 
     printMainForm();
@@ -9497,7 +9490,7 @@ sub printKoGenes {
     }
 
     if ( scalar(@ko_ids) == 0 ) {
-        webError("No KO has been selected.");
+        WebUtil::webError("No KO has been selected.");
     }
 
     printMainForm();
@@ -9634,7 +9627,7 @@ sub printTcGenes {
         @tc_ids = param("func_id");
     }
     if ( scalar(@tc_ids) == 0 ) {
-        webError("No Transport Classification has been selected.");
+        WebUtil::webError("No Transport Classification has been selected.");
     }
 
     printMainForm();
@@ -10489,7 +10482,7 @@ sub printRevisedGenes {
 sub downloadFastaFile {
     my ( $taxon_oid, $dir, $fileExt ) = @_;
     my $displayType = param("type");
-    my $fileSuffix  = lastPathTok($dir);
+    my $fileSuffix  =  WebUtil::lastPathTok($dir);
 
     timeout( 60 * 180 );    # 3 hours
 
@@ -10522,7 +10515,7 @@ sub downloadFastaFile {
     #$dbh->disconnect();
     my $path = "$dir/$taxon_oid.$fileExt";
     if ( !-e $path ) {
-        webErrorHeader("File does not exist for download.");
+        WebUtil::webErrorHeader("File does not exist for download.");
     }
     my $sz = fileSize($path);
 
@@ -10724,7 +10717,7 @@ sub downloadTaxonAnnotFile {
     my $sid  = getSessionId();
     my $path = "$cgi_tmp_dir/$taxon_oid.$sid.annot.xls";
     if ( !( -e $path ) ) {
-        webErrorHeader( "Session of annotation download has expired. " . "Please start again." );
+        WebUtil::webErrorHeader( "Session of annotation download has expired. " . "Please start again." );
     }
     my $sz = fileSize($path);
 
@@ -10755,7 +10748,7 @@ sub downloadTaxonInfoFile {
     my $sid  = getSessionId();
     my $path = "$cgi_tmp_dir/$taxon_oid.$sid.info.xls";
     if ( !( -e $path ) ) {
-        webErrorHeader( "Session of information download has expired. " . "Please start again." );
+        WebUtil::webErrorHeader( "Session of information download has expired. " . "Please start again." );
     }
     my $sz = fileSize($path);
 
@@ -10870,16 +10863,18 @@ sub printTaxonExtLinks {
     my $rclause   = WebUtil::urClause('t.taxon_oid');
     my $imgClause = WebUtil::imgClauseNoTaxon('t.taxon_oid');
 
-    # contact oid 400 - no download button - special user sets
-    my $sql1 = qq{
-select s.contact
-from taxon t, submission s
-where t.SUBMISSION_ID = s.submission_id
-and t.taxon_oid = ?
-    };
-    my $cur = execSql( $dbh, $sql1, $verbose, $taxon_oid );
-    my ( $gbpContactId ) = $cur->fetchrow();
+#    # contact oid 400 - no download button - special user sets
+#    my $sql1 = qq{
+#select s.contact
+#from taxon t, submission s
+#where t.SUBMISSION_ID = s.submission_id
+#and t.taxon_oid = ?
+#    };
+#    my $cur = execSql( $dbh, $sql1, $verbose, $taxon_oid );
+#    my ( $gbpContactId ) = $cur->fetchrow();
 
+    my $href_gbp = retrieve($goldCacheDir . "gbpTaxons");
+    my $gbpContactId = $href_gbp->{$taxon_oid} // ''; 
 
     my $sql = qq{
         select distinct t.db_name, t.id, t.custom_url
@@ -11849,20 +11844,30 @@ sub getShortDomain {
 #
 sub getGeneCalling {
     my($dbh, $submission_id) = @_;
-    my $sql = qq{
-select s.gene_calling_flag
-from submission s
-where s.submission_id = ?
-and s.contact = 361
-    };
+    
+    my $href = retrieve($goldCacheDir . "ncbiGeneCallingTaxons");
+    my $geneCalling = $href->{$submission_id} // 'No';
 
-    my $cur = execSql( $dbh, $sql, $verbose, $submission_id );
-    my ($geneCalling) = $cur->fetchrow();
-
-    if($geneCalling =~ /^No/ || $geneCalling eq '') {
+    if($geneCalling =~ /^No/) {
+        # some values have more than No eg 'No .. blah...' - ken
         $geneCalling = 'No';
     }
-
+    
+    
+#    my $sql = qq{
+#select s.gene_calling_flag
+#from submission s
+#where s.submission_id = ?
+#and s.contact = 361
+#    };
+#
+#    my $cur = execSql( $dbh, $sql, $verbose, $submission_id );
+#    my ($geneCalling) = $cur->fetchrow();
+#
+#    if($geneCalling =~ /^No/ || $geneCalling eq '') {
+#        $geneCalling = 'No';
+#    }
+#
     return $geneCalling;
 }
 

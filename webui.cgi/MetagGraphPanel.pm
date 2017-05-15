@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: MetagGraphPanel.pm 29739 2014-01-07 19:11:08Z klchu $
+# $Id: MetagGraphPanel.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package MetagGraphPanel;
 my $section = "ScaffoldPanel";
@@ -78,19 +78,19 @@ sub new {
 	# Width of panel.
 	my $coord_length = $self->{end_coord} - $self->{start_coord};
 	if($coord_length == 0) {
-	    webError("There is no data to plot!");
+	    WebUtil::webError("There is no data to plot!");
 	}
 	$self->{scale} = $self->{x_width} / $coord_length;
 
 
-	my $im = new GD::Image( $self->{x_width} + 2, $self->{y_height} + 2 );
+	my $im = GD::Image->new( $self->{x_width} + 2, $self->{y_height} + 2 );
 	$self->{im} = $im;
 	$self->colorAllocates();
 	$self->setBrush();
 	my @a;
 	$self->{gene_map} = \@a;
 
-    
+
     $self->{title_color} = $self->{color_blue};
     if ($args->{title_color} ne "") {
         $self->{title_color} = $self->{"color_" . $args->{title_color} };
@@ -100,17 +100,17 @@ sub new {
 	$im->string( gdSmallFont, 1, 0, $self->{title}, $self->{title_color} );
 
 	my $ratio = $self->{y_pos_offset} + $self->{y_neg_offset};
-	
+
 	#if($ratio != 0) {
 	#	$ratio =  $self->{y_pos_offset} / $ratio;
 	#} else {
 		$ratio = 0.4; # make the -ve strand bigger to avoid coord lablels
 	#}
-		
-		
+
+
 	my $mid_yheight = $self->{y_height} * $ratio; #0.5;
 	#if(($self->{y_height} - $mid_yheight) < 20) {
-		
+
 #		$mid_yheight = $mid_yheight - 20; # make room for axis
 #	}
 	$self->{mid_yheight} = $mid_yheight;
@@ -121,13 +121,13 @@ sub new {
 
 	$im->line( 0, $mid_yheight, $self->{x_width}, $mid_yheight,
 			   $self->{color_black} );
-	
+
 	my $text_y = $mid_yheight + 2;
 	#$text_y = 0 if $self->{title} eq "";
-	
+
 	# draw coords
 	for (
-		my $i = $self->{start_coord} ;                     
+		my $i = $self->{start_coord} ;
 		$i <= $self->{end_coord} ;
 		$i += $self->{coord_incr}
 	  )
@@ -248,7 +248,7 @@ sub setBrush {
 	my ($self) = @_;
 
 	my $im = $self->{im};
-	my $brush = new GD::Image( 1, 1 );
+	my $brush = GD::Image->new( 1, 1 );
 	$brush->colorAllocate( 255, 255, 255 );    # white
 	$brush->colorAllocate( 0,   0,   0 );      # black
 	$brush->transparent( $self->{color_white} );
@@ -276,7 +276,7 @@ sub addGene {
 
 	my $scale       = $self->{scale};
 	my $mid_yheight = $self->{mid_yheight};
-	my $arrow       = new GD::Polygon;
+	my $arrow       = GD::Polygon->new;
 	my $ptrOffset   = 5;
 	my $arrowHeight = 10;
 
@@ -288,9 +288,9 @@ sub addGene {
 	my $gene_strand   = $strand;
 
 	if ( $gene_strand eq "+" ) {
-	    
+
 	    #webLog("++++   $gene_oid\n") if $offset > 20;
-	    
+
 		$arrow->addPt( 0,                        0 );
 		$arrow->addPt( $arrowWidth - $ptrOffset, 0 );
 		$arrow->addPt( $arrowWidth,              $arrowHeight * 0.5 );
@@ -307,7 +307,7 @@ sub addGene {
 				. "$label" );
 	} else {
 	    #webLog("----   $gene_oid\n") if $offset > 20;
-	    
+
 		$offset += 10; # to avoid corrd label
 		$arrow->addPt( $ptrOffset,  0 );
 		$arrow->addPt( $arrowWidth, 0 );
@@ -502,11 +502,11 @@ sub makeMapString {
 
         if ( $uselib eq "overlib" ) {
             $s .= "onMouseOver=\"return overlib('$label_esc')\" ";
-            $s .= "onMouseOut=\"return nd()\" "; 
-        } else { 
-            $s .= "onMouseOver=\"$x; Tip('$label_esc');\" "; 
+            $s .= "onMouseOut=\"return nd()\" ";
+        } else {
+            $s .= "onMouseOver=\"$x; Tip('$label_esc');\" ";
             $s .= "onMouseOut=\"UnTip();\" ";
-        } 
+        }
 	$s .= " />\n";
     }
     $s .= "</map>\n";

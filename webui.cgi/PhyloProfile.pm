@@ -11,7 +11,7 @@
 #    3: bin_oid
 #    4: gene_count
 #
-# $Id: PhyloProfile.pm 34555 2015-10-21 18:22:11Z klchu $
+# $Id: PhyloProfile.pm 36954 2017-04-17 19:34:04Z klchu $
 ############################################################################
 package PhyloProfile;
 my $section = "PhyloProfile";
@@ -88,7 +88,7 @@ sub new {
     bless( $self, $myType );
     my $stateFile = $self->getStateFile( $type, $procId );
     if ( param("sortIdx") ne "" && !-e ($stateFile) ) {
-        webError( "Phylogenetic profile session expired. " 
+        WebUtil::webError( "Phylogenetic profile session expired. " 
 		. "Please start over again." );
     }
     if ( -e $stateFile ) {
