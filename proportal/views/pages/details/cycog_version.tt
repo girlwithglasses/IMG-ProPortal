@@ -4,7 +4,6 @@
 
 	PROCESS 'inc/generic/attr_value_table.tt';
 
-<<<<<<< HEAD
 	BLOCK cycog_version_details;
 
 		obj = {
@@ -32,16 +31,9 @@
 		data_table.id = 'cycog_version_cycog_list_table';
 		data_table.class = 'cycog_version_cycog_list';
 		data_table.tbody = results.cycog_arr;
-=======
-	surtitle = 'CyCOG release';
-	# cycog release
-	article_title = 'CyCOG version v' _ self.version;
->>>>>>> b0cf042e5a0ac112c98e471cec98541f52a28f48
 
-	PROCESS 'inc/generic/title.tt';
-	PROCESS 'inc/generic/container_macros.tt';
+		PROCESS 'inc/generic/table.tt';
 
-<<<<<<< HEAD
 	END; # end cycog_version_cycog_list block
 
 
@@ -52,47 +44,9 @@
 		data_table.id = 'cycog_version_taxon_list';
 #		data_table.caption = 'Taxa used to generate release v' _ self.version;
 		data_table.tbody = results.taxon_arr;
-=======
-	table_arr = [];
-	
-	BLOCK cycog_version_details;
-		version = self.version _ '. <i>See <a href="http://img-proportal.dev/legacy">Legacy Data</a> section for older versions.</i>';
-		n_clusters = '<a href=#cycog_version_cycog_list>' _ results.cycog_arr.size _ '</a>';
-		n_taxa = '<a href=#cycog_version_taxon_list>' _ results.taxon_arr.size _ '</a>';
-		
-		data_table.id = 'cycog-version-details';
-		data_table.class = 'cycog-version-details';
-		data_table.tbody => [
-				[ 'Version',  version ],
-				[ 'Date created', self.date_created ],
-				[ 'Comments', self.comments ],
-				[ 'Number of clusters', n_clusters ],
-				[ 'Number of taxa', n_taxa ]
-			];
-		
-		PROCESS 'inc/generic/attr_value_table.tt';
-		attr_value_table( data_table );
-	END;
-	
-	BLOCK cycog_version_cycog_list;
-	
-#		WRAPPER 'inc/cart/function_add.tt';
-			data_table = results.cycog_table;
-			data_table.id = 'cycog-version-cycog-list';
-# 			data_table.class = 'function-list';
-#			data_table.caption = 'CyCOGs in release v' _ self.version;
-			data_table.tbody = results.cycog_arr;
-				
-			PROCESS 'inc/generic/table.tt';
 
-			table_arr.push(data_table.id);
-#		END; # end wrapper
+		PROCESS 'inc/generic/table.tt';
 
->>>>>>> b0cf042e5a0ac112c98e471cec98541f52a28f48
-
-	END; # end block
-
-<<<<<<< HEAD
 	END; # end cycog_version_taxon_list block
 
 	# page layout
@@ -118,53 +72,11 @@
 	{ 	id => 'cycog_version_taxon_list',
 		title => 'Taxa used to generate release v' _ self.version,
 	}];
-=======
-
-	BLOCK cycog_version_taxon_list;
-
-#		WRAPPER 'inc/cart/taxon_add.tt';
-			data_table = results.taxon_table;
-#			data_table.class = 'taxon-list';
-			data_table.id = 'cycog-version-taxon-list';
-#			data_table.caption = 'Taxa used to generate release v' _ self.version;
-			data_table.tbody = results.taxon_arr;
-
-			PROCESS 'inc/generic/table.tt';
-
-			table_arr.push(data_table.id);
-#		END;	# end wrapper
-	END;
-
-	# page navigation
-
-	sections = [
-		{	id => 'cycog_version_details',
-			content => 'cycog_version_details'
-			title => 'CyCOG version details'
-		},
- 		{	id => 'cycog_version_cycog_list',
- 			title => 'CyCOGs in release v' _ self.version,
- 			content => 'cycog_version_cycog_list'
- 		},
- 		{ 	id => 'cycog_version_taxon_list',
- 			title => 'Taxa used to generate release v' _ self.version,
- 			content => 'cycog_version_taxon_list'
- 		}
-
-	];
->>>>>>> b0cf042e5a0ac112c98e471cec98541f52a28f48
-
-
-	in_page_nav( pagenav = { links => sections } );
 
 	layout_page( sections );
 
-<<<<<<< HEAD
 	table_arr = [ 'cycog_version_cycog_list_table', 'cycog_version_taxon_list_table' ];
 
 	PROCESS 'scripts/datatables.tt';
-=======
- 	PROCESS 'scripts/datatables.tt';
->>>>>>> b0cf042e5a0ac112c98e471cec98541f52a28f48
 
 	END %]
