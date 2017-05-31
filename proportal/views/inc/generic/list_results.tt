@@ -40,7 +40,9 @@
 	};
 	wrapper = 'inc/cart/' _ results.domain _ '_add.tt';
 
-	PROCESS 'inc/generic/table.tt' WRAPPER $wrapper;
+#	WRAPPER $wrapper;
+	PROCESS 'inc/generic/table.tt';
+#	END;
 
 		IF results.paging.page_count > 1;
 
@@ -66,7 +68,8 @@
 
 		PROCESS 'scripts/datatables.tt';
 
-	#	PROCESS 'inc/generic/table.tt'; # WRAPPER 'inc/cart/taxon_add.tt';
+	#	PROCESS 'inc/generic/table.tt';
+	#	WRAPPER 'inc/cart/taxon_add.tt';
 
 	ELSE;
 

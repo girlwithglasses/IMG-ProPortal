@@ -16,7 +16,7 @@
 		PROCESS 'inc/generic/link.tt'; %]
 
 	<ul class="button-bar__container">
-[%		IF button.jbrowse; %]
+[%		IF button.jbrowse && 1 == 0; %]
 			<li class="button-bar__item">
 				<a class="button-bar__link pp-button" rel="external" href="[% link( 'jbrowse', button.jbrowse ); %]">View in JBrowse</a>
 			</li>
@@ -40,7 +40,7 @@
 			</li>
 [%		END;
 
-		IF button.cart; %]
+		IF button.cart && 1 == 0; %]
 			<li class="button-bar__item">
 [%			cart_add( button.cart ); %]
 			</li>

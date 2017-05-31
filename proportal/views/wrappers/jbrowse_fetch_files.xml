@@ -1,8 +1,9 @@
 <tool id="jbrowse_fetch_files" name="Fetch files for JBrowse" version="0.1.0">
 <description>Fetch the sequence and GFF files required to create a JBrowse visualisation for a genome</description>
 <command><![CDATA[
+HOME=/global/homes/w/wwwimg/;
 source \$HOME/perl5/perlbrew/etc/bashrc;
-DANCER_ENVIRONMENT="proportal-galaxy" perl \$HOME/webUI/proportal/script/galaxy/jbrowse_fetch_files.pl -s "$sequence" -g "$gff" -e $__user_email__ -t "$taxon_oid"
+DANCER_ENVIRONMENT="proportal-galaxy" perl \$HOME/svn/webUI/proportal/script/galaxy/jbrowse_fetch_files.pl -s "$sequence" -g "$gff" -e $__user_email__ -t "$taxon_oid"
 ]]></command>
 	<inputs>
 	<param name="taxon_oid" type="text" label="IMG taxon ID">

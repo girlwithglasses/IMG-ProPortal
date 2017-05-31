@@ -1,7 +1,7 @@
 <tool id="img_gene_id_to_fasta" name="Prepare FASTA file from gene IDs" version="0.1.0">
   <description>Retrieve the FASTA sequences for a set of gene IDs</description>
   <command>source $HOME/perl5/perlbrew/etc/bashrc;
-  DANCER_ENVIRONMENT="proportal-galaxy" perl $HOME/webUI/proportal/script/galaxy/img_gene_id_to_fasta.pl
+  DANCER_ENVIRONMENT="proportal-galaxy" perl $HOME/svn/webUI/proportal/script/galaxy/img_gene_id_to_fasta.pl
 --infile
 #if $source.reference_source_selector == "paste":
 "$infile" --infile_format "tsv"

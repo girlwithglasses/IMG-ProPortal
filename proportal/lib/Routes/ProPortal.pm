@@ -182,7 +182,7 @@ sub dispatch {
 	};
 
 	for my $p ( qw( page_index output_format ) ) {
-		$controller_args->{$_} = $args->{params}{$_} if defined $args->{params}{$_};
+		$controller_args->{$p} = $args->{params}{$p} if defined $args->{params}{$p};
 	}
 
 	log_debug { 'controller args: ' . Dumper $controller_args };

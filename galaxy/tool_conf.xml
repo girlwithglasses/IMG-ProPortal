@@ -30,13 +30,12 @@
     <tool file="validation/fix_errors.xml" / -->
   </section>
   <section id="img" name="IMG tools">
-    <tool file="img_tools/env_debug.xml" />
     <tool file="img_tools/img_gene_id_to_fasta.xml" />
     <tool file="img_tools/get_taxon_metadata.xml" />
     <tool file="img_tools/get_gene_metadata.xml" />
     <tool file="img_tools/bioperl_converter.xml" />
     <tool file="img_tools/phyloviewer.xml" />
-    <tool file="img_tools/proportal_vis.xml" />
+    <!-- tool file="img_tools/proportal_vis.xml" / -->
     <tool file="img_tools/jbrowse_fetch_files.xml" />
     <!-- tool file="longhurst_tool/coord2longhurst.xml" / -->
   </section>

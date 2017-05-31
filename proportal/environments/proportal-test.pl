@@ -24,7 +24,8 @@ my $cnf = IMG::Util::ConfigValidator::make_config({
 	schema => 'schema-server',
 	db => 'db-dev',
 	logger => 'logger-local',
-#	debug => 'debug'
+	session => 'session-dev',
+	debug => 'debug'
 });
 
 $cnf->{sso_url_prefix} = 'https://signon.';

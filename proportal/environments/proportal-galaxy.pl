@@ -21,12 +21,12 @@ use IMG::Util::ConfigValidator;
 
 my $cnf = IMG::Util::ConfigValidator::make_config({
 	dir => $dir,
-#	schema => 'schema-server',
-#	db => 'db-dev',
-#	logger => 'logger-galaxy',
-	schema => 'schema-local',
-	db => 'db-local',
-	logger => 'logger-local'
+	schema => 'schema-server',
+	db => 'db-dev',
+	logger => 'logger-galaxy',
+# 	schema => 'schema-local',
+# 	db => 'db-local',
+# 	logger => 'logger-local'
 });
 
 return $cnf;

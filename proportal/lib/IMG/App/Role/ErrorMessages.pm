@@ -3,7 +3,7 @@
 #
 #	Standardised error messages
 #
-#	$Id: ErrorMessages.pm 37114 2017-05-30 14:14:14Z aireland $
+#	$Id: ErrorMessages.pm 37152 2017-05-31 19:55:16Z aireland $
 ############################################################################
 package IMG::App::Role::ErrorMessages;
 

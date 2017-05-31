@@ -762,7 +762,7 @@ $select_queries->{gene_details} = sub {
 	return {
 		schema => 'img_core',
 		join => [ qw[ Gene <=> scaffold <=> gold_tax ] ],
-		-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name', 'scaffold_oid', 'scaffold_name', 'in_file'],
+		-columns => [ 'gene.*', 'taxon_oid', 'taxon_display_name', 'scaffold_oid', 'scaffold_name' ],
 	};
 
 };

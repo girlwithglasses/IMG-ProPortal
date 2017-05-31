@@ -47,7 +47,8 @@ sub get_data {
 	# 638824985
 	# get the genes
 	my $results = $self->_core->run_query({
-		query => 'gene_details_with_infile_check',
+#		query => 'gene_details_with_infile_check',
+		query => 'gene_details',
 		-where => {
 			gene_oid => $args->{gene_oid}
 		}
