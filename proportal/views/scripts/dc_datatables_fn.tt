@@ -1,0 +1,175 @@
+[%	PROCESS 'inc/generic/labels.tt';
+
+#	columnDefs: [ {
+#		orderable: false,
+#		className: 'select-checkbox',
+#		targets:   0
+#	} ],
+
+
+	MACRO datatable_cols( attr, table_cols ) BLOCK;
+	cbox_col_name = 'cbox_' _ attr;
+	has_cbox = 0; %]
+	columns: [
+[%		FOR tc IN table_cols;
+			IF tc != cbox_col_name; %]
+	{	data: '[% tc %]', title: '[% labeller(tc) %]',[% render_text( tc ) %]
+	},
+[%			ELSE;
+		has_cbox = 1; %]
+	{	data: null, defaultContent: '' },
+[%			END;
+		END; %]
+	],
+[%		IF has_cbox == 1; %]
+	columnDefs: [{
+		orderable: false,
+		searchable: false,
+		className: 'select-checkbox',
+		targets: [ 0 ]
+	}],
+[%		END;
+
+	END;
+
+
+	MACRO datatable_scroller BLOCK; %]
+	dom: '<"dt_top"iBf>rt<"dt_bottom">',
+	paging: true,
+	scroller: true,
+	scrollY: "20rem",
+[%	END;
+
+	MACRO datatable_paging( n ) BLOCK;
+		IF n > 100; %]
+	dom: '<"dt_top"iBf>rt<"dt_bottom"lp>',
+	pageLength: 100,
+	lengthMenu: [ [50, 100, 200, -1], [50, 100, 200, "All"] ],
+	paging: true,
+[%		ELSE %]
+	dom: '<"dt_top"iBf>rt<"dt_bottom">',
+	pageLength: 100,
+	paging: false,
+[%		END;
+
+	END;
+
+
+
+	# datatable_buttons( 'taxon_oid' )
+
+	MACRO datatable_buttons( attr ) BLOCK; %]
+	rowId: '[% attr %]',
+	buttons: [
+		'selectAll',
+		'selectNone',
+		{	text: 'Add to Cart',
+			className: 'submit',
+			action: function ( e, dt, node, config ) {
+				// collect the IDs
+				var input = $('input[type=submit]')
+				, form = input.length > 0 ? $(input[0].form) : $()
+				, arr = dt.rows( { selected: true } ).data()
+					.map(function(d){ return d.[% attr %]; });
+				console.log( arr );
+				// cart link
+				// Iterate over all form elements
+// 				$.each( arr, function(){
+// 				// If element doesn't exist in DOM
+// 					if(!$.contains(document, form[this.name])){
+// 						// Create a hidden element
+// 						$(form).append(
+// 							$('<input>')
+// 							.attr('type', 'hidden')
+// 							.attr('name', this.name)
+// 							.val(this.value)
+// 						);
+// 					 }
+// 				});
+			}
+		}
+	],
+[%	END;
+
+
+	BLOCK standard_functions; %]
+function labeller(string) {
+	var labels = {
+		pp_subset: 'ProPortal subset',
+	};
+
+	if ( labels[string] ) {
+		return labels[string];
+	}
+	// split string by '_', uppercase the first character
+	string = string.replace('_',' ');
+	return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function refreshTable() {
+	dc.events.trigger(function () {
+		var table = $('#' + table_id ).DataTable()
+		, sel = table.rows({selected: true })
+			.ids( true )
+			.filter(function(d){
+				return d !== undefined;
+			})
+		, post_sel
+		;
+		table
+		.clear()
+		.rows.add( xf_dim[ table_filter_dim ].top(Infinity) )
+		.draw();
+		post_sel = table.rows( sel ).select();
+		if ( selecn ) {
+			var s = Object.keys( selecn ).filter( function(e){
+				return selecn[e];
+			});
+			table.rows( s ).select();
+		}
+	});
+}
+
+function getLabel(dim,val){
+	if ( label_h[dim] && label_h[dim][val] ) {
+		return label_h[dim][val];
+	}
+	if ( null === val || val.length == 0 ) {
+		return 'unspecified';
+	}
+	return val;
+}
+
+function add_dynamic_filters( slug, fnames ) {
+	// remove the filters, add dynamically-generated filters
+	// note: what to do about absent data sets?
+	d3.selectAll('#' + slug + '-filters__section > *').remove();
+	d3.select('#' + slug + '-filters__section')
+//		.classed('filters', false)
+//		.classed('dynamic_filters', true)
+	;
+
+	// add in the containers for the filters
+	fnames.forEach( function( x ) {
+		// add the container
+		d3.select('#' + slug + '-filters__section')
+//		d3.select('#' + slug + '__section .dynamic_filters')
+			.append('form')
+			.classed( slug + '__filter--' + x, true )
+			.attr( 'id', slug + '__form--' + x )
+			.append('h4')
+			.classed( slug + '__title', true)
+			.text( labeller( x ) );
+		// the menu itself
+		filter_h[x] = dc.cboxMenu('#' + slug + '__form--' + x )
+			.title( function(d){
+				return getLabel( x, d.key ) + ': ' + d.value;
+			})
+			.dimension( xf_dim[x] )
+			.group( xf_dim[x].group() )
+			.multiple(true)
+			.controlsUseVisibility(true);
+	});
+}
+[%	END; # end standard_functions %]
+

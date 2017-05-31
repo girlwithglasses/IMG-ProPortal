@@ -1,0 +1,60 @@
+.overlay, #svgtree, svg {
+    fill: none;
+    pointer-events: all;
+}
+text {
+    font: 10px sans-serif;
+    fill: blue;
+    cursor: pointer;
+}
+text:hover {
+    cursor: pointer;
+    fill: red;
+}
+path {
+  fill: none;
+  stroke: #000;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+#ruler {
+    visibility: hidden;
+    white-space: nowrap;
+    font: 10px Helvetica; /* same as the title which is measured */
+}
+.tooltip {
+    position: absolute;
+    text-align: center;
+    min-width: 100px;
+    max-width: 200px;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lavender;
+    border: solid 1px lightgray;
+    color: gray;
+    opacity: 0;
+}
+.label {
+    fill: gray;
+    font: 10px Helvetica;
+    text-anchor: start;
+}
+/*.node {
+    cursor: pointer;
+}*/
+/*
+.node circle {
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+    cursor: pointer;
+}
+.node text {
+    font: 10px sans-serif;
+    curson: pointer;
+}
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 1.5px;
+}*/

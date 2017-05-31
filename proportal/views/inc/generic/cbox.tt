@@ -7,7 +7,7 @@
 	#      .text
 	#      .class
 
-MACRO checkbox BLOCK;
+MACRO checkbox ( x ) BLOCK;
 
 	IF x.defined('label');
 		IF 'before' == x.label.where || 'around' == x.label.where;
@@ -48,4 +48,28 @@ MACRO checkbox BLOCK;
 [%		END;
 	END;
 
-END; # end MACRO checkbox %]
+END; # end MACRO checkbox
+
+MACRO cbox_taxon ( args ) BLOCK;
+
+	str = 'cbox_' _ args.obj.taxon_oid;
+	checkbox({ id => str, name => 'taxon_oid[]', value => args.obj.taxon_oid });
+
+END;
+
+MACRO cbox_gene ( args ) BLOCK;
+
+	str = 'cbox_' _ args.obj.gene_oid;
+	checkbox({ id => str, name => 'gene_oid[]', value => args.obj.gene_oid });
+
+END;
+
+MACRO cbox_scaffold ( args ) BLOCK;
+
+	str = 'cbox_' _ args.obj.scaffold_oid;
+	checkbox({ id => str, name => 'scaffold_oid[]', value => args.obj.scaffold_oid });
+
+END;
+
+
+%]

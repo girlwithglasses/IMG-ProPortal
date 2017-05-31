@@ -6,6 +6,7 @@
 # .thead.enum     => arrayref of object properties to be included in the table
 # .thead.enum_map => hashref with column titles (corresponding to object properties)
 # .tbody          => arrayref of objects for the table
+# .for_datatables_js  => boolean; for use with datatables.js
 # .transform      => hashref of functions to transform an object value for display
 #                 (e.g. to create a link with a certain value, modify text, etc.)
 
@@ -13,33 +14,13 @@ PROCESS 'inc/generic/cbox.tt';
 PROCESS 'inc/generic/link.tt';
 PROCESS 'inc/generic/labels.tt';
 
-# table cell view
-# if the item is a scalar, prints it out
-# if the item is a hash, gets the 'macro' hash key, runs it, and prints the result
-
-VIEW t_cell;
-
-	BLOCK text;
-		item;
-	END;
-
-	BLOCK hash;
-		mac = item.macro;
-		x = item;
-		TRY;
-			$mac( x );
-		CATCH;
-			USE Dumper( Indent => 1 );
-			'<pre>link error: ' _ Dumper.dump( item ) _ '</pre>';
-			error;
-		END;
-	END;
-END;
-
-
 IF data_table.tbody.size > 0;
 	headers = data_table.thead; %]
-	<table class="[% data_table.class %]__table"[% IF data_table.id %] id="[% data_table.id %]"[% END %]>
+	<table class="[%
+		IF data_table.for_datatables_js;
+			'dataTable display ';
+		END;
+	%][% data_table.class %]__table"[% IF data_table.id %] id="[% data_table.id %]"[% END %]>
 [%	IF data_table.caption %]
 	<caption class="[% data_table.class %]__caption">[% data_table.caption %]</caption>
 [%	END %]
@@ -49,14 +30,19 @@ IF data_table.tbody.size > 0;
 	<th class='[% data_table.class %]__th--[% th %]'>[%
 			IF headers.enum_map.$th;
 				headers.enum_map.$th;
-			ELSIF 'cbox' != th;
+			ELSE;
 				labeller( th );
 			END; %]</th>
 [%		END; %]
 	</tr>
 	</thead>
+
 	<tbody class="[% data_table.class %]__tbody">
-[%		FOREACH datum IN data_table.tbody; %]
+[%		row_arr = data_table.tbody;
+		IF data_table.n_rows;
+			row_arr = data_table.tbody.slice( 0, n_rows );
+		END;
+		FOREACH datum IN row_arr; %]
 		<tr[%
 			IF datum.__id;
 			' id="' _ datum.__id _ '"';
@@ -70,10 +56,9 @@ IF data_table.tbody.size > 0;
 					contents = data_table.transform.$th( datum );
 					t_cell.print( contents );
 				ELSE;
-					t_cell.print( datum.$th );
+					display_datum({ obj => datum, attr => th });
 				END; %]
 					</td>
-
 [%			END; # FOREACH th IN headers.enum %]
 		</tr>
 [%		END; # FOREACH datum in data_table.tbody %]
@@ -85,7 +70,7 @@ IF data_table.tbody.size > 0;
 	<th class='[% data_table.class %]__th--[% th %]'>[%
 			IF headers.enum_map.$th;
 				headers.enum_map.$th;
-			ELSIF 'cbox' != th;
+			ELSE;
 				labeller( th );
 			END; %]</th>
 [%		END; %]
@@ -93,4 +78,4 @@ IF data_table.tbody.size > 0;
 	</tfoot>
 [%	END %]
 	</table>
-[% END # if data_table.tbody.size %]
+[% END; %]

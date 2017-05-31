@@ -6,7 +6,8 @@
 	button = {
 		cart => {
 			form => {
-				type => 'inc/cart/button_add.tt',
+			#	type => 'inc/cart/button_add.tt',
+				type => 'form_as_button',
 				params => { db => self.db, xref => self.xref },
 				domain => 'function'
 			},

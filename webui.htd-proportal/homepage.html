@@ -1,0 +1,103 @@
+<script type="text/javascript" src="<TMPL_VAR NAME=base_url>/homepage.js"></script> 
+<link rel="stylesheet" type="text/css" href="<TMPL_VAR NAME=base_url>/homepage.css" />
+
+<link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="$base_url/proportalmap.js"></script>
+<script type="text/javascript" src="$base_url/markerclusterer.js"></script>
+
+
+<h1><strong>Welcome to IMG/ProPortal</strong>, the Prochlorococcus model system resource.</h1>
+
+<div class='table'>
+<div class='tableTitle'>
+        <span style="padding-left: 5px; ">Browse Data Sets</span> 
+        <span style="float:right; padding-right: 5px;">(Launch Advance Browser)</span>  
+        <span style="clear:both;"></span> 
+</div>
+<table class='byViewer'>
+  <tr>
+  <td>
+     <a class='box' href="javascript:myDisplay('location');" >
+     <div class='rotate'>by Location</div>
+     </a>      
+     <div class='slide' id='location' >
+     <!--<img src='<TMPL_VAR NAME=base_url>/images/yui_progressbar.gif' alt='by location loading' title='by location loading'>
+      -->
+     <div id='locationChart'></div>
+     <div id='locationInfo'></div> 
+     </div>
+  </td>
+
+  <td>
+     <a class='box' href="javascript:myDisplay('type');" >
+     <div class='rotate'>by Data Type</div>
+     </a>
+     <div class='slide' id='type'>
+     <div id='typeChart'></div>
+     <div id='typeInfo'></div>
+     </div>
+  </td>
+
+  <td>
+     <a class='box' href="javascript:myDisplay('depth');" >
+     <div class='rotate'>by Depth</div>
+     </a>   
+     <div class='slide' id='depth' >
+     <div id='depthChart'></div>
+     <div id='depthInfo'></div>
+     </div>
+  </td>
+
+  <td>
+      <a class='box' href="javascript:myDisplay('clade');" >
+      <div class='rotate'>by Clade</div>
+      </a>   
+      <div class='slide' id='clade' >
+      <div id='cladeChart'></div>
+      <div id='cladeInfo'></div>
+      </div>
+  </td>
+  </tr>
+</table>
+</div>
+
+<br><br>
+
+<div style="white-space: nowrap; width: 1100px;">
+<div class='inline'>
+<div class='title' >About IMG/ProPortal</div>
+<p>
+        The marine cyanobacterium <b><i>Prochlorococcus</i></b>, 
+        which is abundant in the oceans, is a key model system in 
+        microbial ecology. 
+        <b>IMG/ProMod</b> provides <i>Prochlorococcus</i> and its closely
+        related <i>Synechococcus</i> and <i>Cyanophage</i> genomes 
+        integrated with a comprehensive set of  publicly 
+        available isolate and single cell genomes, and a rich set 
+        of publicly available metagenome samples. 
+        <b>IMG/ProMod</b>  includes genomic, transcriptomic, 
+
+        metagenomic and population data from both 
+        cultivated strains and wild populations of cyanobacteria 
+        and phage.<br> 
+        <b>IMG/ProPortal</b> relies on IMG's data warehouse 
+        and comparative analysis tools 
+       (<a href="http://nar.oxfordjournals.org/content/42/D1/D560">Nucleic Acids Research, Volume 42 Issue D1</a>) 
+       and  is a descendant of <b>ProPortal</b>  
+       (<a href="http://nar.oxfordjournals.org/content/40/D1/D632">Nucleic Acids Research Volume 40 Issue D1</a>).
+</div>
+
+<div class='inline'>
+<div class='title' >User Guide</div>
+</div>
+
+<div class='inline'>
+<div class='title' >News</div>
+</div>
+
+</div>
+
+
+
+

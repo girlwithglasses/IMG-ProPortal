@@ -3,11 +3,11 @@ use IMG::Util::Import;
 use Dancer2 appname => 'ProPortal';
 use Dancer2::Session::CGISession;
 
-use Sys::Hostname;
 use IMG::App;
 use ProPortal::Util::Factory;
 use AppCorePlugin;
 use IMG::Util::Logger;
+use IMG::Util::Text;
 
 our $VERSION = '0.1.0';
 
@@ -129,7 +129,17 @@ hook before_template_render => sub {
 
 	my $args = get_menu_vars();
 
-	my $tmpl_extras = get_tmpl_vars ( $args );
+	my $tmpl_extras = img_app->get_tmpl_vars( $args );
+
+	if ( session && session->data ) {
+	#	debug "session data: " . Dumper session->data;
+		if ( session('name') ) {
+			log_debug { "session name: " . Dumper session('name') };
+			$_[0]->{name} = session('name');
+		}
+	}
+
+	$tmpl_extras->{sw_version} = $VERSION;
 
 	# merge the two
 	$_[0]->{$_} = $tmpl_extras->{$_} for keys %$tmpl_extras;
@@ -171,48 +181,6 @@ sub get_menu_vars {
 
 }
 
-
-=head3 get_tmpl_vars
-
-Default data to add to the templates
-
-Adds external and internal links, plus navigation data.
-
-@param  $args hashref with  keys
-	core	IMG::App core
-	output	(opt) data hash to add the defaults to
-
-@return $args->{output} with added goodness
-
-=cut
-
-sub get_tmpl_vars {
-
-	my $args = shift;
-	my $output = $args->{output};
-	my $core = $args->{core};
-
-	$output->{link} = sub { return $core->img_link_tt( @_ ) };
-	$output->{ext_link} = sub { return $core->ext_link( @_ ) };
-
-	$output->{img_app_config} = img_app->config;
-	$output->{sw_version} = $VERSION;
-	$output->{server_name} = hostname;
-	$output->{ora_service} = $ENV{ORA_SERVICE} || 'The Oracle is silent';
-	$output->{breadcrumbs}++;
-	$output->{copyright_year} = ( localtime(time) )[5] + 1900;
-
-	if ( session->data ) {
-	#	debug "session data: " . Dumper session->data;
-		if ( session('name') ) {
-			log_debug { "session name: " . Dumper session('name') };
-			$output->{name} = session('name');
-		}
-	}
-
-#	$output->{img_cfg} = $core->img_cfg;
-	return $output;
-}
 
 #	forward login requests to the JGI login page
 

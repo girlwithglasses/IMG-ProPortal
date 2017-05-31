@@ -1,5 +1,6 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Phylogram';
+	page_slug = 'phylogram';
 %]
 	<h2>Phylogram</h2>
 <section class="info--phylogram page-intro">
@@ -18,13 +19,19 @@
 	</p>
 </div>
 </section>
-<section role="complementary" class="sample-data">
-[%	show = { phylogen_class => 1 };
-	WRAPPER 'inc/cart/taxon_add.tt';
-		FOREACH s IN results.array;
-			PROCESS 'inc/taxon_details.tt';
-		END;
-	END; # end wrapper
-%]
-</section> <!-- / end complementary -->
+<section role="complementary" class="[% page_slug %]-table__section">
+[%
+	table_class = page_slug _ '__table';
+	data_table = {
+		class => table_class,
+		id => table_class,
+		for_datatables_js => 1,
+		tbody => results.js.arr,
+		thead => {
+			enum => results.js.table_cols,
+		},
+	};
+
+	PROCESS 'inc/generic/table.tt' WRAPPER 'inc/cart/taxon_add.tt'; %]
+</section>
 [%	END; %]

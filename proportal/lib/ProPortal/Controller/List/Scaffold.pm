@@ -3,10 +3,7 @@ package ProPortal::Controller::List::Scaffold;
 use IMG::Util::Import 'Class';#'MooRole';
 
 extends 'ProPortal::Controller::Filtered';
-with
-qw( ProPortal::Controller::Role::TableHelper
-	ProPortal::Controller::Role::Paged
-);
+with 'ProPortal::Controller::Role::Paged';
 
 use Template::Plugin::JSON::Escape;
 
@@ -18,12 +15,40 @@ has '+page_id' => (
 	default => 'list/scaffold'
 );
 
+has '+tmpl_includes' => (
+	default => sub {
+		return {
+			tt_scripts => qw( datatables ),
+		};
+	}
+);
+
 has '+filter_domains' => (
 	default => sub {
 		return [ qw( taxon_oid pp_subset ) ];
 	}
 );
 
+has 'order_by' => (
+	is => 'rwp',
+	default => 'taxon_oid'
+);
+
+has 'table_cols' => (
+	is => 'ro',
+	default => sub {
+		return [ qw(
+			scaffold_oid
+			scaffold_name
+			mol_type
+			mol_topology
+			db_source
+			ext_accession
+			taxon_display_name
+			pp_subset
+		) ];
+	}
+);
 
 =head3 data_type
 
@@ -33,16 +58,16 @@ has '+filter_domains' => (
 
 sub _render {
 	my $self = shift;
-
+	my $domain = 'scaffold';
 	my $statement = $self->get_data;
-	my $arr = $self->page_me( $statement )->all;
-
+	my $res = $self->page_me( $statement )->all;
 	return { results => {
-		domain => 'scaffold',
-		arr => $arr,
-		n_results => $statement->row_count,
-		n_pages   => $statement->page_count,
-		table => $self->get_table('scaffold'),
+		js => {
+			arr => $res,
+			table_cols => [ 'cbox_' . $domain, @{ $self->table_cols } ]
+		},
+		paging => $self->paging_helper,
+		domain => $domain,
 		params => $self->filters
 	} };
 

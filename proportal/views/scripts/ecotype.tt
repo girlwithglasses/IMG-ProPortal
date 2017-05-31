@@ -1,133 +1,157 @@
-[%	scr_arr = [
-	'/js/d3.min.js',
-	'/js/d3-tip.js',
-	'/js/colorbrewer.js',
-	'https://cdn.plot.ly/plotly-latest.min.js' ];
-	IF scr_arr;
-		FOREACH s IN scr_arr;
-			'<script src="' _ s _ '"></script>';
-		END;
-	END;
+[%	PROCESS 'scripts/dc_datatables_fn.tt';
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
+	scr_arr = [
+		'/js/d3.min.js',
+		'/js/d3-tip.js',
+		'/js/crossfilter.min.js',
+		'/js/dc.min.js',
+		'/js/checkbox-menu.js',
+		'/js/dc-tooltip-mixin.min.js',
+		'/js/datatables.min.js',
+#		'https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.js'
+	];
+	WRAPPER scripts/pageload_wrapper.tt;
 %]
-<script type="text/javascript">
-(function ready(){
-	var res=[%
-	IF results.js.data && results.js.data.size > 0;
-		USE JSON.Escape( convert_blessed => 1 );
-		results.js.data.json;
-		',web_safe_names=';
-		results.js.web_safe_names.json;
-	ELSE;
-		'{}';
-	END;
-	';';
-%]
-/* global d3, getJson */
-/*jshint laxcomma: true */
-
-function fn(){
-
-	"use strict";
-
-	var WIDTH_IN_PERCENT_OF_PARENT = 90
-	, HEIGHT_IN_PERCENT_OF_PARENT = 80
-
-	, gd3 = Plotly.d3.select('#ecotype')
-	.append('div')
-	.style({
-		width: WIDTH_IN_PERCENT_OF_PARENT + '%',
-		'margin-left': (100 - WIDTH_IN_PERCENT_OF_PARENT) / 2 + '%',
-
-		height: HEIGHT_IN_PERCENT_OF_PARENT + 'vh',
-		'margin-top': (100 - HEIGHT_IN_PERCENT_OF_PARENT) / 2 + 'vh'
-	})
-
-	, colors = {
-		'HLI': colorbrewer.Set2[8][0],
-		'HLII': colorbrewer.Set3[12][5],
-		'LLI': colorbrewer.Set2[8][2],
-		'LLII/III': colorbrewer.Set3[12][2], // or colorbrewer.Set3[9]
-		'LLIV': colorbrewer.Set3[12][3]
-	}
-	, gd = gd3.node()
-	, figs = []
-	, data
-	;
-	Object.keys(res)
-	.sort()
-	.forEach(function(e){
-		Object.keys(res[e])
-		.sort()
-		.forEach(function(c){
-			figs.push({
-				count: Object.keys( res[e][c] ).length,
-				label: e + ', clade ' + c,
-				clade: c,
-				color: colors[c] ? colors[c] : '#C8A2C8'
-			});
-		});
-	});
-
-	data = [{
-		type: 'bar',
-		orientation: 'h',
-		x: figs.map(function(c){
-			return c.count;
-		}),
-		y: figs.map(function(c){
-			return c.clade;
-		}),
-		text: figs.map(function(c){
-			return c.label;
-		}),
-		marker: {
-			color: figs.map(function(c){
-				return c.color;
-			}),
-		}
-	}];
-//	gd.parentNode.parentNode.classList.add('populated');
-	Plotly.plot(gd, data, {
-		title: 'Ecotype and Clade classification',
-		font: {
-			size: 16
-		},
-	}, {displaylogo: false});
-
-
-	d3.selectAll('.js_vis_loading')
-		.remove();
-
-	gd.on('plotly_click', function(data){
-		Plotly.d3.selectAll('.ecotype_details')
-			.classed('js_hide', true);
-
-		data.points.forEach( function(e){
-			if ( web_safe_names[ e.y ] ) {
-				Plotly.d3.select( '#' + web_safe_names[ e.y ] )
-					.classed('js_hide', false);
-			}
-		});
-	});
-
-	window.onresize = function() {
-		Plotly.Plots.resize(gd);
-	};
-
+var res = getJson()
+, label_h = { "pp_subset": [% data_filters.schema.pp_subset.enum_map.json %] }
+// data table config
+, data_table_opts = {
+// 	orderFixed: [2, 'asc'],
+// 	rowGroup: {
+// 		dataSrc: 2
+// 	},
+//	columnDefs: [ {
+//		orderable: false,
+//		className: 'select-checkbox',
+//		targets:   0
+//	} ],
+[%
+	datatable_cols( 'taxon', results.js.table_cols );
+	datatable_buttons('taxon_oid');
+	datatable_paging( results.js.arr.size ); %]
+	deferRender: true,
+	data: res.arr,
+	select: {
+		style: 'multi'
+	},
+//	scroller: true,
+//	scrollY: "20rem"
 }
-/* end insert */
-	if (document.readyState !== 'loading'){
-		fn();
-	} else if (document.addEventListener) {
-		document.addEventListener('DOMContentLoaded', function(){
-			fn();
-		});
-	} else {
-		document.attachEvent('onreadystatechange', function() {
-			if (document.readyState !== 'loading'){
-				fn();
-			}
+, colors = {HLI: "#66c2a5", HLII: "#fdb462", LLI: "#8da0cb", 'LLII/III': "#bebada", LLIV: "#fb8072"}
+, slug_name = 'ecotype'
+, table_id = slug_name + '__table'
+, chart = dc.barChart('#' + slug_name + '__vis')
+, ndx = crossfilter(res.arr)
+, xf_dim = new Object()
+, filter_h = new Object()
+, selecn = new Object()
+, table = $('#' + table_id).DataTable(data_table_opts)
+, table_filter_dim = 'clade'
+;
+
+[ 'ecotype', 'clade' ].forEach( function(el){
+	xf_dim[el] = ndx.dimension( function(d) { return d[ el ]; });
+});
+
+add_dynamic_filters( slug_name, [ 'ecotype' ] );
+
+d3.select('#' + slug_name + '__vis .js_vis_loading').remove();
+
+chart
+.width(768)
+.height(480)
+.x( d3.scale.ordinal() )
+.xUnits( dc.units.ordinal )
+.brushOn(false)
+.colorAccessor(function(d){ return colors[ d.key ] || '#999' })
+.xAxisLabel( 'Ecotype' )
+.yAxisLabel('Frequency')
+.dimension( xf_dim.clade )
+.group( xf_dim.clade.group().reduceCount() )
+.barPadding( 0.1 )
+.outerPadding( 0.05 )
+.title( function(d){
+	return d.key + ': ' + d.value + ' genomes';
+} );
+;
+
+/*
+
+.dimension(stateDim)
+.group(eventsByDate, "Age_19_Under")
+
+.stack(eventsByDate, "Age_19_64", function (d) {
+	return d.value.Age_19_64;
+})
+.stack(eventsByDate, "Age_65_84", function (d) {
+	return d.value.Age_65_84;
+})
+
+
+   var stateDim=ndx.dimension(function (d){
+    return d.State_Name;
+   });
+
+   var eventsByDate = stateDim.group().reduce(
+        function (p, v) {
+            p.Age_19_Under += v.Age_19_Under;
+            p.Age_19_64 += v.Age_19_64;
+            p.Age_65_84 += v.Age_65_84;
+            return p;
+        },
+        function (p, v) {
+            p.Age_19_Under -= v.Age_19_Under;
+            p.Age_19_64 -= v.Age_19_64;
+            p.Age_65_84 -= v.Age_65_84;
+            return p;
+        },
+        function () {
+            return {
+                Age_19_Under: 0,
+                Age_19_64: 0,
+                Age_65_84: 0
+            };
+        }
+  );
+
+
+chart
+.stack(
+	xf_dim.clade.group().reduceCount(),
+	'Clade by ecotype',
+	function(d){
+		return d.value;
+	};
+);
+// chart.stack(speedSumGroup, ''+i, sel_stack(i))
+
+chart.render();
+*/
+
+table
+.on( 'select', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			selecn[e] = 1;
 		});
 	}
-}());
-</script>
+})
+.on( 'deselect', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			selecn[e] = 0;
+		});
+	}
+});
+
+for (var i = 0; i < dc.chartRegistry.list().length; i++) {
+	var chartI = dc.chartRegistry.list()[i];
+	chartI.on("filtered", refreshTable);
+}
+
+refreshTable();
+dc.renderAll();
+
+[%	PROCESS standard_functions %]
+
+[%	END # end wrapper %]

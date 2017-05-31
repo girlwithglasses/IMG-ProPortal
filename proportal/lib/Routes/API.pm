@@ -72,7 +72,7 @@ prefix '/api' => sub {
 
 	my @valid_queries = qw( location clade data_type phylogram ecosystem ecotype big_ugly_taxon_table );
 
-	my @pp_subsets = qw( metagenome isolate pro syn other pro_phage syn_phage other_phage );
+	my @pp_subsets = qw( pp_metagenome pp_isolate pro syn other pro_phage syn_phage other_phage );
 
 	my $re = join '|', @valid_queries;
 

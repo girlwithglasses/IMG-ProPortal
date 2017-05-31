@@ -141,11 +141,20 @@ foreach my $middle_chunk_str (@top_chunks){
 }
 
 ## Convert internal object to JSON.
-my $json = JSON::XS->new()->pretty(1);
-#$js->allow_bignum(1); # if needed, go back to ::PP
-my $json_str = $json->encode($database_info);
-chomp $json_str;
-print STDOUT $json_str;
+my $json = JSON::XS->new()->pretty(1)->canonical(1);
+
+## only print those that have URLs
+print STDOUT $json->encode( [
+	map {
+		for my $p ( qw( datatype fullname id name object uri_prefix ) ) {
+			delete $_->{$p};
+		}
+	}
+	grep {
+		$_->{uri_prefix} || $_->{url_example} || $_->{url_syntax};
+	}
+	@$database_info ]
+);
 
 ###
 ### Help.

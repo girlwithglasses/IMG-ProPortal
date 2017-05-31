@@ -1,15 +1,15 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'CyCOG Release';
 	self = results.vers;
-
+	page_slug = 'cycog_version';
 	PROCESS 'inc/generic/attr_value_table.tt';
 
 	BLOCK cycog_version_details;
 
 		obj = {
 			version => self.version _ '. <i>See <a href="http://img-proportal.dev/legacy">Legacy Data</a> section for older versions.</i>',
-			n_clusters => '<a href="#cycog_version_cycog_list">' _ results.cycog_arr.size _ '</a>',
-			n_taxa => '<a href="#cycog_version_taxon_list">' _ results.taxon_arr.size _ '</a>',
+			n_clusters => '<a href="#cycog_version_cycog_list">' _ self.n_clusters _ '</a>',
+			n_taxa => '<a href="#cycog_version_taxon_list">' _ self.n_taxa _ '</a>',
 			comments => self.comments,
 			date_created => self.date_created
 		};
@@ -27,10 +27,19 @@
 
 	BLOCK cycog_version_cycog_list;
 
-		data_table = results.cycog_table;
-		data_table.id = 'cycog_version_cycog_list_table';
-		data_table.class = 'cycog_version_cycog_list';
-		data_table.tbody = results.cycog_arr;
+		table_class = page_slug _ '_cycog_list_table';
+		form_id = page_slug _ '_function-cart';
+		data_table = {
+			class => table_class,
+			id => table_class,
+			form_id => form_id,
+			for_datatables_js => 1,
+			tbody => results.js.cycog_arr,
+			thead => {
+				enum => [ 'cycog_id', 'cycog_description' ],
+			},
+			n_rows => 100
+		};
 
 		PROCESS 'inc/generic/table.tt';
 
@@ -39,13 +48,21 @@
 
 	BLOCK cycog_version_taxon_list;
 
-		data_table = results.taxon_table;
-		data_table.class = 'cycog_version_taxon_list_table';
-		data_table.id = 'cycog_version_taxon_list';
-#		data_table.caption = 'Taxa used to generate release v' _ self.version;
-		data_table.tbody = results.taxon_arr;
+		table_class = page_slug _ '_taxon_list_table';
+		form_id = page_slug _ '_taxon-cart';
+		data_table = {
+			class => table_class,
+			id => table_class,
+			form_id => form_id,
+			for_datatables_js => 1,
+			tbody => results.js.taxon_arr,
+			thead => {
+				enum => [ 'cbox_taxon', 'taxon_oid', 'taxon_display_name' ],
+			},
+			n_rows => 100
+		};
 
-		PROCESS 'inc/generic/table.tt';
+		PROCESS 'inc/generic/table.tt' WRAPPER 'inc/cart/taxon_add.tt';
 
 	END; # end cycog_version_taxon_list block
 
@@ -74,9 +91,5 @@
 	}];
 
 	layout_page( sections );
-
-	table_arr = [ 'cycog_version_cycog_list_table', 'cycog_version_taxon_list_table' ];
-
-	PROCESS 'scripts/datatables.tt';
 
 	END %]

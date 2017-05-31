@@ -1,0 +1,3109 @@
+---
+schema:
+  procedures: {}
+  tables:
+    GOLD_ANALYSIS_PROJECT:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - gold_analysis_project_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 0
+          expression: ''
+          fields:
+            - reference_gold_ap_id
+          match_type: ''
+          name: GOLD_ANALYSIS_PROJECT_fk_reference_gold_ap_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_analysis_project_id
+          reference_table: GOLD_ANALYSIS_PROJECT
+          type: FOREIGN KEY
+      fields:
+        analysis_product_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: analysis_product_name
+          order: 6
+          size:
+            - 255
+        analysis_project_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: analysis_project_name
+          order: 3
+          size:
+            - 512
+        binning_method:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: binning_method
+          order: 39
+          size:
+            - 1024
+        comments:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: comments
+          order: 27
+          size:
+            - 1024
+        completion_date:
+          data_type: timestamp
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: completion_date
+          order: 38
+          size:
+            - 0
+        contig_count:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: contig_count
+          order: 35
+          size:
+            - 126
+        cultured:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: cultured
+          order: 54
+          size:
+            - 10
+        domain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: domain
+          order: 8
+          size:
+            - 255
+        ecosystem:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem
+          order: 17
+          size:
+            - 256
+        ecosystem_category:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem_category
+          order: 18
+          size:
+            - 256
+        ecosystem_subtype:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem_subtype
+          order: 19
+          size:
+            - 256
+        ecosystem_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem_type
+          order: 25
+          size:
+            - 255
+        genbank_low_quality_annotation:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: genbank_low_quality_annotation
+          order: 36
+          size:
+            - 3
+        genbank_low_quality_genome:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: genbank_low_quality_genome
+          order: 37
+          size:
+            - 3
+        gene_calling_method:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gene_calling_method
+          order: 40
+          size:
+            - 1024
+        gene_count:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gene_count
+          order: 32
+          size:
+            - 126
+        gene_primp_date:
+          data_type: timestamp
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gene_primp_date
+          order: 45
+          size:
+            - 0
+        genome_size:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: genome_size
+          order: 31
+          size:
+            - 126
+        genome_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: genome_type
+          order: 51
+          size:
+            - 40
+        gold_analysis_project_id:
+          data_type: numeric
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: gold_analysis_project_id
+          order: 1
+          size:
+            - 126
+        gold_analysis_project_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_analysis_project_type
+          order: 15
+          size:
+            - 80
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 30
+          size:
+            - 16
+        gold_proposal_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_proposal_name
+          order: 16
+          size:
+            - 4000
+        img_analysis_complete:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: img_analysis_complete
+          order: 42
+          size:
+            - 3
+        img_dataset_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: img_dataset_id
+          order: 5
+          size:
+            - 255
+        is_assembled:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_assembled
+          order: 50
+          size:
+            - 16
+        is_decontamination:
+          data_type: varchar2
+          default_value: No
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_decontamination
+          order: 46
+          size:
+            - 3
+        is_gene_primp:
+          data_type: varchar2
+          default_value: No
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_gene_primp
+          order: 44
+          size:
+            - 3
+        is_img_annotation:
+          data_type: varchar2
+          default_value: No
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_img_annotation
+          order: 47
+          size:
+            - 3
+        its_analysis_project_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: its_analysis_project_id
+          order: 2
+          size:
+            - 126
+        its_analysis_project_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: its_analysis_project_name
+          order: 34
+          size:
+            - 512
+        its_annotation_at_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: its_annotation_at_id
+          order: 48
+          size:
+            - 126
+        its_assembly_at_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: its_assembly_at_id
+          order: 49
+          size:
+            - 126
+        jgi_sequenced:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: jgi_sequenced
+          order: 55
+          size:
+            - 10
+        locus_tag:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: locus_tag
+          order: 53
+          size:
+            - 20
+        mod_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: mod_date
+          order: 58
+          size:
+            - 0
+        ncbi_class:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_class
+          order: 10
+          size:
+            - 255
+        ncbi_family:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_family
+          order: 12
+          size:
+            - 255
+        ncbi_genus:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_genus
+          order: 13
+          size:
+            - 255
+        ncbi_order:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_order
+          order: 11
+          size:
+            - 255
+        ncbi_phylum:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_phylum
+          order: 9
+          size:
+            - 255
+        ncbi_species:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_species
+          order: 14
+          size:
+            - 255
+        ncbi_tax_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_tax_id
+          order: 4
+          size:
+            - 126
+        pi_email:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pi_email
+          order: 23
+          size:
+            - 256
+        pi_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pi_name
+          order: 22
+          size:
+            - 256
+        reference_gold_ap_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: reference_gold_ap_id
+          order: 29
+          size:
+            - 126
+        reference_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: reference_gold_id
+          order: 56
+          size:
+            - 20
+        reference_img_experiment_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: reference_img_experiment_id
+          order: 28
+          size:
+            - 126
+        reference_img_oid:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: reference_img_oid
+          order: 21
+          size:
+            - 126
+        review_status:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: review_status
+          order: 61
+          size:
+            - 40
+        scaffold_count:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: scaffold_count
+          order: 33
+          size:
+            - 126
+        specific_ecosystem:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: specific_ecosystem
+          order: 20
+          size:
+            - 256
+        specimen:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: specimen
+          order: 26
+          size:
+            - 64
+        status:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: status
+          order: 43
+          size:
+            - 64
+        strain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: strain
+          order: 57
+          size:
+            - 255
+        study_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: study_gold_id
+          order: 52
+          size:
+            - 20
+        submission_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: submission_id
+          order: 41
+          size:
+            - 126
+        submission_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: submission_type
+          order: 59
+          size:
+            - 20
+        submitter_contact_oid:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: submitter_contact_oid
+          order: 24
+          size:
+            - 126
+        submitter_email:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: submitter_email
+          order: 60
+          size:
+            - 255
+        visibility:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: visibility
+          order: 7
+          size:
+            - 32
+      indices:
+        - fields:
+            - reference_gold_ap_id
+          name: GOLD_ANALYSIS_PROJECT_idx_reference_gold_ap_id
+          options: []
+          type: NORMAL
+      name: GOLD_ANALYSIS_PROJECT
+      options: []
+      order: 1
+    GOLD_ANALYSIS_PROJECT_LOOKUP2:
+      constraints: []
+      fields:
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 20
+        its_spid:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: its_spid
+          order: 2
+          size:
+            - 0
+        pmo_project_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pmo_project_id
+          order: 6
+          size:
+            - 0
+        project_oid:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: project_oid
+          order: 3
+          size:
+            - 0
+        sample_oid:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sample_oid
+          order: 4
+          size:
+            - 0
+        sp_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sp_gold_id
+          order: 5
+          size:
+            - 20
+      indices: []
+      name: GOLD_ANALYSIS_PROJECT_LOOKUP2
+      options: []
+      order: 2
+    GOLD_AP_GENBANK:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - gold_analysis_project_id
+            - genbank_id
+          match_type: ''
+          name: gold_ap_genbank_1
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: UNIQUE
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_analysis_project_id
+          match_type: ''
+          name: GOLD_AP_GENBANK_fk_gold_analysis_project_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_analysis_project_id
+          reference_table: GOLD_ANALYSIS_PROJECT
+          type: FOREIGN KEY
+      fields:
+        assembly_accession:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: assembly_accession
+          order: 4
+          size:
+            - 64
+        genbank_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 1
+          name: genbank_id
+          order: 3
+          size:
+            - 1024
+        gold_analysis_project_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 1
+          name: gold_analysis_project_id
+          order: 2
+          size:
+            - 126
+        id:
+          data_type: numeric
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 126
+      indices:
+        - fields:
+            - gold_analysis_project_id
+          name: GOLD_AP_GENBANK_idx_gold_analysis_project_id
+          options: []
+          type: NORMAL
+      name: GOLD_AP_GENBANK
+      options: []
+      order: 6
+    GOLD_SEQUENCING_PROJECT:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+      fields:
+        add_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: add_date
+          order: 26
+          size:
+            - 0
+        altitude:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: altitude
+          order: 35
+          size:
+            - 255
+        bioproject_accession:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: bioproject_accession
+          order: 60
+          size:
+            - 64
+        biosample_accession:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: biosample_accession
+          order: 61
+          size:
+            - 128
+        biotic_rel:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: biotic_rel
+          order: 40
+          size:
+            - 255
+        cell_shape:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: cell_shape
+          order: 18
+          size:
+            - 255
+        clade:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: clade
+          order: 14
+          size:
+            - 255
+        comments:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: comments
+          order: 23
+          size:
+            - 4000
+        contact_oid:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: contact_oid
+          order: 29
+          size:
+            - 0
+        culture_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: culture_type
+          order: 59
+          size:
+            - 64
+        cultured:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: cultured
+          order: 57
+          size:
+            - 16
+        date_collected:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: date_collected
+          order: 31
+          size:
+            - 255
+        depth:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: depth
+          order: 67
+          size:
+            - 255
+        display_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: display_name
+          order: 2
+          size:
+            - 1000
+        domain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: domain
+          order: 6
+          size:
+            - 255
+        ecosystem:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem
+          order: 45
+          size:
+            - 256
+        ecosystem_category:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem_category
+          order: 46
+          size:
+            - 256
+        ecosystem_subtype:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem_subtype
+          order: 48
+          size:
+            - 256
+        ecosystem_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecosystem_type
+          order: 47
+          size:
+            - 256
+        ecotype:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ecotype
+          order: 71
+          size:
+            - 80
+        funding_program:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: funding_program
+          order: 43
+          size:
+            - 255
+        geo_location:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: geo_location
+          order: 32
+          size:
+            - 1000
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        gram_stain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gram_stain
+          order: 36
+          size:
+            - 255
+        hmp_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: hmp_id
+          order: 41
+          size:
+            - 0
+        host_gender:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: host_gender
+          order: 38
+          size:
+            - 255
+        host_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: host_name
+          order: 37
+          size:
+            - 255
+        host_ncbi_taxid:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: host_ncbi_taxid
+          order: 39
+          size:
+            - 0
+        img_taxon_oid:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: img_taxon_oid
+          order: 25
+          size:
+            - 0
+        iso_country:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: iso_country
+          order: 30
+          size:
+            - 255
+        isolation:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: isolation
+          order: 16
+          size:
+            - 4000
+        its_spid:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: its_spid
+          order: 62
+          size:
+            - 126
+        latitude:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: latitude
+          order: 33
+          size:
+            - 255
+        legacy_project_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: legacy_project_type
+          order: 65
+          size:
+            - 40
+        locus_tag:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: locus_tag
+          order: 42
+          size:
+            - 80
+        longhurst_code:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: longhurst_code
+          order: 72
+          size:
+            - 80
+        longhurst_description:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: longhurst_description
+          order: 73
+          size:
+            - 255
+        longitude:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: longitude
+          order: 34
+          size:
+            - 255
+        mod_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: mod_date
+          order: 27
+          size:
+            - 0
+        modified_by:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: modified_by
+          order: 28
+          size:
+            - 0
+        motility:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: motility
+          order: 19
+          size:
+            - 255
+        mrn:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: mrn
+          order: 52
+          size:
+            - 126
+        ncbi_class:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_class
+          order: 9
+          size:
+            - 255
+        ncbi_family:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_family
+          order: 11
+          size:
+            - 255
+        ncbi_genus:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_genus
+          order: 12
+          size:
+            - 255
+        ncbi_kingdom:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_kingdom
+          order: 7
+          size:
+            - 255
+        ncbi_order:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_order
+          order: 10
+          size:
+            - 255
+        ncbi_phylum:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_phylum
+          order: 8
+          size:
+            - 255
+        ncbi_project_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_project_id
+          order: 15
+          size:
+            - 0
+        ncbi_species:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_species
+          order: 13
+          size:
+            - 255
+        ncbi_taxon_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_taxon_id
+          order: 5
+          size:
+            - 0
+        oxygen_req:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: oxygen_req
+          order: 17
+          size:
+            - 255
+        phylogeny:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: phylogeny
+          order: 4
+          size:
+            - 1000
+        pi_email:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pi_email
+          order: 63
+          size:
+            - 255
+        pi_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pi_name
+          order: 64
+          size:
+            - 255
+        pm_email:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pm_email
+          order: 69
+          size:
+            - 255
+        pm_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pm_name
+          order: 70
+          size:
+            - 255
+        pmo_project_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pmo_project_id
+          order: 55
+          size:
+            - 0
+        project_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: project_id
+          order: 56
+          size:
+            - 0
+        project_status:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: project_status
+          order: 74
+          size:
+            - 255
+        replicate_num:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: replicate_num
+          order: 54
+          size:
+            - 126
+        salinity:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: salinity
+          order: 22
+          size:
+            - 255
+        sample_body_site:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sample_body_site
+          order: 50
+          size:
+            - 255
+        sample_body_subsite:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sample_body_subsite
+          order: 51
+          size:
+            - 255
+        seq_quality:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: seq_quality
+          order: 66
+          size:
+            - 80
+        seq_status:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: seq_status
+          order: 24
+          size:
+            - 255
+        sequencing_strategy:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sequencing_strategy
+          order: 68
+          size:
+            - 255
+        specific_ecosystem:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: specific_ecosystem
+          order: 49
+          size:
+            - 256
+        sporulation:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sporulation
+          order: 20
+          size:
+            - 255
+        strain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: strain
+          order: 3
+          size:
+            - 500
+        temp_range:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: temp_range
+          order: 21
+          size:
+            - 255
+        type_strain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: type_strain
+          order: 44
+          size:
+            - 10
+        uncultured_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: uncultured_type
+          order: 58
+          size:
+            - 64
+        visit_num:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: visit_num
+          order: 53
+          size:
+            - 126
+      indices: []
+      name: GOLD_SEQUENCING_PROJECT
+      options: []
+      order: 3
+    GOLD_SP_CELL_ARRANGEMENT:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_CELL_ARRANGEMENT_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        cell_arrangement:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: cell_arrangement
+          order: 2
+          size:
+            - 255
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_CELL_ARRANGEMENT_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_CELL_ARRANGEMENT
+      options: []
+      order: 7
+    GOLD_SP_COLLABORATOR:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_COLLABORATOR_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        country:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: country
+          order: 3
+          size:
+            - 255
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 2
+          size:
+            - 255
+        url:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: url
+          order: 4
+          size:
+            - 500
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_COLLABORATOR_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_COLLABORATOR
+      options: []
+      order: 8
+    GOLD_SP_DISEASE:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_DISEASE_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        disease:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: disease
+          order: 2
+          size:
+            - 255
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_DISEASE_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_DISEASE
+      options: []
+      order: 9
+    GOLD_SP_ENERGY_SOURCE:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_ENERGY_SOURCE_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        energy_source:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: energy_source
+          order: 2
+          size:
+            - 255
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_ENERGY_SOURCE_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_ENERGY_SOURCE
+      options: []
+      order: 10
+    GOLD_SP_GENOME_PUBLICATIONS:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_GENOME_PUBLICATIONS_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        doi:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: doi
+          order: 9
+          size:
+            - 255
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        issue:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: issue
+          order: 5
+          size:
+            - 40
+        journal_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: journal_name
+          order: 3
+          size:
+            - 255
+        page:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: page
+          order: 6
+          size:
+            - 80
+        publication_date:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: publication_date
+          order: 8
+          size:
+            - 80
+        pubmed_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: pubmed_id
+          order: 2
+          size:
+            - 0
+        title:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: title
+          order: 7
+          size:
+            - 500
+        volume:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: volume
+          order: 4
+          size:
+            - 40
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_GENOME_PUBLICATIONS_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_GENOME_PUBLICATIONS
+      options: []
+      order: 11
+    GOLD_SP_HABITAT:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_HABITAT_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        habitat:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: habitat
+          order: 2
+          size:
+            - 255
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_HABITAT_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_HABITAT
+      options: []
+      order: 12
+    GOLD_SP_METABOLISM:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_METABOLISM_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        metabolism:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: metabolism
+          order: 2
+          size:
+            - 255
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_METABOLISM_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_METABOLISM
+      options: []
+      order: 13
+    GOLD_SP_PHENOTYPE:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_PHENOTYPE_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        phenotype:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: phenotype
+          order: 2
+          size:
+            - 255
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_PHENOTYPE_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_PHENOTYPE
+      options: []
+      order: 14
+    GOLD_SP_RELEVANCE:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_RELEVANCE_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        relevance:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: relevance
+          order: 2
+          size:
+            - 255
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_RELEVANCE_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_RELEVANCE
+      options: []
+      order: 15
+    GOLD_SP_SEQ_CENTER:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_SEQ_CENTER_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        country:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: country
+          order: 3
+          size:
+            - 255
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 2
+          size:
+            - 255
+        url:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: url
+          order: 4
+          size:
+            - 500
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_SEQ_CENTER_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_SEQ_CENTER
+      options: []
+      order: 16
+    GOLD_SP_SEQ_METHOD:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_SEQ_METHOD_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        seq_method:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: seq_method
+          order: 2
+          size:
+            - 255
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_SEQ_METHOD_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_SEQ_METHOD
+      options: []
+      order: 17
+    GOLD_SP_STUDY_GOLD_ID:
+      constraints:
+        - deferrable: 0
+          expression: ''
+          fields:
+            - gold_id
+          match_type: ''
+          name: GOLD_SP_STUDY_GOLD_ID_fk_gold_id
+          on_delete: NO ACTION
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 1
+          size:
+            - 50
+        study_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: study_gold_id
+          order: 2
+          size:
+            - 50
+      indices:
+        - fields:
+            - gold_id
+          name: GOLD_SP_STUDY_GOLD_ID_idx_gold_id
+          options: []
+          type: NORMAL
+      name: GOLD_SP_STUDY_GOLD_ID
+      options: []
+      order: 18
+    IMG_GROUP:
+      constraints: []
+      fields:
+        add_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: add_date
+          order: 4
+          size:
+            - 0
+        comments:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: comments
+          order: 5
+          size:
+            - 1000
+        group_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: group_id
+          order: 1
+          size:
+            - 0
+        group_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: group_name
+          order: 2
+          size:
+            - 255
+        lead:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: lead
+          order: 3
+          size:
+            - 0
+      indices: []
+      name: IMG_GROUP
+      options: []
+      order: 4
+    IMG_GROUP_NEWS:
+      constraints: []
+      fields:
+        add_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: add_date
+          order: 6
+          size:
+            - 0
+        description:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: description
+          order: 4
+          size:
+            - 4000
+        group_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: group_id
+          order: 1
+          size:
+            - 0
+        is_public:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_public
+          order: 8
+          size:
+            - 10
+        mod_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: mod_date
+          order: 7
+          size:
+            - 0
+        news_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: news_id
+          order: 2
+          size:
+            - 0
+        posted_by:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: posted_by
+          order: 5
+          size:
+            - 0
+        release_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: release_date
+          order: 10
+          size:
+            - 0
+        released_by:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: released_by
+          order: 9
+          size:
+            - 0
+        title:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: title
+          order: 3
+          size:
+            - 255
+      indices: []
+      name: IMG_GROUP_NEWS
+      options: []
+      order: 5
+    TAXON:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - taxon_oid
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - analysis_project_id
+          match_type: ''
+          name: TAXON_fk_analysis_project_id
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields:
+            - gold_analysis_project_id
+          reference_table: GOLD_ANALYSIS_PROJECT
+          type: FOREIGN KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - sequencing_gold_id
+          match_type: ''
+          name: TAXON_fk_sequencing_gold_id
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields:
+            - gold_id
+          reference_table: GOLD_SEQUENCING_PROJECT
+          type: FOREIGN KEY
+      fields:
+        add_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: add_date
+          order: 28
+          size:
+            - 0
+        analysis_project_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: analysis_project_id
+          order: 59
+          size:
+            - 50
+        ani_species:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ani_species
+          order: 61
+          size:
+            - 255
+        combined_sample_flag:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: combined_sample_flag
+          order: 53
+          size:
+            - 10
+        comments:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: comments
+          order: 14
+          size:
+            - 1000
+        distmatrix_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: distmatrix_date
+          order: 58
+          size:
+            - 0
+        domain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: domain
+          order: 8
+          size:
+            - 255
+        edit_flag:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: edit_flag
+          order: 41
+          size:
+            - 10
+        env_sample:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: env_sample
+          order: 15
+          size:
+            - 16
+            - 0
+        family:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: family
+          order: 12
+          size:
+            - 255
+        funding_agency:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: funding_agency
+          order: 21
+          size:
+            - 255
+        gbk_project_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gbk_project_id
+          order: 45
+          size:
+            - 126
+        genome_type:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: genome_type
+          order: 36
+          size:
+            - 255
+        genus:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: genus
+          order: 3
+          size:
+            - 500
+        gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gold_id
+          order: 26
+          size:
+            - 50
+        gram_stain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: gram_stain
+          order: 37
+          size:
+            - 10
+        high_quality_flag:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: high_quality_flag
+          order: 54
+          size:
+            - 10
+        host_ncbi_taxon_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: host_ncbi_taxon_id
+          order: 31
+          size:
+            - 0
+        img_ec_flag:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: img_ec_flag
+          order: 20
+          size:
+            - 10
+        img_product_flag:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: img_product_flag
+          order: 43
+          size:
+            - 10
+        img_version:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: img_version
+          order: 23
+          size:
+            - 50
+        in_file:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: in_file
+          order: 51
+          size:
+            - 10
+        ir_class:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ir_class
+          order: 10
+          size:
+            - 255
+        ir_order:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ir_order
+          order: 11
+          size:
+            - 255
+        is_big_euk:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_big_euk
+          order: 30
+          size:
+            - 10
+        is_low_quality:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_low_quality
+          order: 46
+          size:
+            - 10
+        is_pangenome:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_pangenome
+          order: 40
+          size:
+            - 10
+        is_proxygene_set:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_proxygene_set
+          order: 38
+          size:
+            - 10
+        is_public:
+          data_type: varchar2
+          default_value: No
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: is_public
+          order: 18
+          size:
+            - 10
+        is_replaced:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_replaced
+          order: 19
+          size:
+            - 10
+        is_std_reference:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: is_std_reference
+          order: 32
+          size:
+            - 10
+        jgi_project_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: jgi_project_id
+          order: 22
+          size:
+            - 16
+            - 0
+        jgi_species_code:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: jgi_species_code
+          order: 13
+          size:
+            - 50
+        legacy_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: legacy_gold_id
+          order: 60
+          size:
+            - 50
+        lock_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: lock_date
+          order: 57
+          size:
+            - 0
+        locked_by:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: locked_by
+          order: 56
+          size:
+            - 16
+            - 0
+        mod_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: mod_date
+          order: 33
+          size:
+            - 0
+        modified_by:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: modified_by
+          order: 34
+          size:
+            - 16
+            - 0
+        ncbi_bioproject_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_bioproject_id
+          order: 52
+          size:
+            - 20
+        ncbi_project_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_project_id
+          order: 25
+          size:
+            - 16
+            - 0
+        ncbi_species_code:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_species_code
+          order: 24
+          size:
+            - 20
+        ncbi_taxon_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ncbi_taxon_id
+          order: 7
+          size:
+            - 16
+            - 0
+        obsolete_flag:
+          data_type: varchar2
+          default_value: No
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: obsolete_flag
+          order: 39
+          size:
+            - 10
+        ornl_species_code:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: ornl_species_code
+          order: 29
+          size:
+            - 50
+        phylodist_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: phylodist_date
+          order: 47
+          size:
+            - 0
+        phylodist_method:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: phylodist_method
+          order: 50
+          size:
+            - 200
+        phylum:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: phylum
+          order: 9
+          size:
+            - 255
+        project:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: project
+          order: 35
+          size:
+            - 16
+            - 0
+        proposal_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: proposal_name
+          order: 48
+          size:
+            - 2000
+        refseq_project_id:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: refseq_project_id
+          order: 44
+          size:
+            - 126
+        release_date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: release_date
+          order: 27
+          size:
+            - 0
+        sample_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sample_gold_id
+          order: 49
+          size:
+            - 50
+        seq_center:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: seq_center
+          order: 17
+          size:
+            - 500
+        seq_status:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: seq_status
+          order: 16
+          size:
+            - 100
+        sequencing_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sequencing_gold_id
+          order: 63
+          size:
+            - 50
+        species:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: species
+          order: 4
+          size:
+            - 500
+        strain:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: strain
+          order: 5
+          size:
+            - 255
+        study_gold_id:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: study_gold_id
+          order: 62
+          size:
+            - 50
+        submission_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: submission_id
+          order: 42
+          size:
+            - 0
+        taxon_display_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: taxon_display_name
+          order: 6
+          size:
+            - 1000
+        taxon_name:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: taxon_name
+          order: 2
+          size:
+            - 1000
+        taxon_oid:
+          data_type: numeric
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: taxon_oid
+          order: 1
+          size:
+            - 16
+            - 0
+        taxonomy_lock:
+          data_type: varchar2
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: taxonomy_lock
+          order: 55
+          size:
+            - 10
+      indices:
+        - fields:
+            - analysis_project_id
+          name: TAXON_idx_analysis_project_id
+          options: []
+          type: NORMAL
+        - fields:
+            - sequencing_gold_id
+          name: TAXON_idx_sequencing_gold_id
+          options: []
+          type: NORMAL
+      name: TAXON
+      options: []
+      order: 19
+  triggers: {}
+  views: {}
+translator:
+  add_drop_table: 0
+  filename: ~
+  no_comments: 0
+  parser_args:
+    sources:
+      - GoldAnalysisProject
+      - GoldAnalysisProjectLookup2
+      - GoldApGenbank
+      - GoldSequencingProject
+      - GoldSpCellArrangement
+      - GoldSpCollaborator
+      - GoldSpDisease
+      - GoldSpEnergySource
+      - GoldSpGenomePublication
+      - GoldSpHabitat
+      - GoldSpMetabolism
+      - GoldSpPhenotype
+      - GoldSpRelevance
+      - GoldSpSeqCenter
+      - GoldSpSeqMethod
+      - GoldSpStudyGoldId
+      - ImgGroup
+      - ImgGroupNews
+      - Taxon
+  parser_type: SQL::Translator::Parser::DBIx::Class
+  producer_args: {}
+  producer_type: SQL::Translator::Producer::YAML
+  show_warnings: 0
+  trace: 0
+  version: 0.11021

@@ -136,10 +136,10 @@
 			class => 'taxon-scaffold-details',
 			caption => 'Genome and Scaffold Details',
 			tbody => [
-				[ 'Taxon ID', taxon_id_link( {}, self ) ],
-				[ 'Taxon name', taxon_name_link( {}, self ) ],
-				[ 'Scaffold ID', scaffold_id_link( {}, self ) ],
-				[ 'Scaffold name', scaffold_name_link( {}, self ) ],
+				[ 'Taxon ID', taxon_id_link({ obj => self }) ],
+				[ 'Taxon name', taxon_name_link({ obj => self }) ],
+				[ 'Scaffold ID', scaffold_id_link({ obj => self }) ],
+				[ 'Scaffold name', scaffold_name_link({ obj => self }) ],
 			]
 		};
 		attr_value_dl( data_table );
@@ -219,7 +219,7 @@
 		# add in a list of paralogs
 		arr = [];
 		FOR p IN fn.get_paralogs;
-			arr.push( gene_id_link( {}, { gene_oid => p } ) );
+			arr.push( gene_id_link({ obj => { gene_oid => p } }) );
 		END;
 		IF arr.size > 0;
 			'; paralogs: ' _ arr.join(", ");
@@ -256,8 +256,8 @@ link('biosyn_cluster_detail', { taxon_oid => self.taxon_oid, cluster => fn.clust
 		IF self.gene_sig_peptides.0.count != 0;
 		%]<a href="[% link('signalp', { gene_oid => self.gene_oid } ) %]">[% self.gene_sig_peptides.0.count %]; details</a>[% END %]</dd>
 		<dt>Transmembrane helices</dt>
-		<dd>[%	IF self.gene_tmhmm_hits.count > 0;
-		%]<a href="[% link( 'tmhelix', { gene_oid => self.gene_oid } ) %]">[% self.gene_tmhmm_hits.count %] found</a>[% ELSE %]none[% END %]</dd>
+		<dd>[%	IF self.gene_tmhmm_hits.0.count > 0;
+		%]<a href="[% link( 'tmhelix', { gene_oid => self.gene_oid } ) %]">[% self.gene_tmhmm_hits.0.count %] found</a>[% ELSE %]none[% END %]</dd>
 	</dl>
 [%
 	END;
@@ -323,8 +323,8 @@ link('biosyn_cluster_detail', { taxon_oid => self.taxon_oid, cluster => fn.clust
 
 	fn_arr = [
 		[ 'KEGG Orthology', 'ko_terms' ], # self.gene_ko_terms
-		[ 'KEGG Pathways', 'ko_pathways' ],
-		[ 'KEGG Modules', 'ko_modules' ],
+		[ 'KEGG Pathways', 'kegg_pathways' ],
+		[ 'KEGG Modules', 'kegg_modules' ],
 		[ 'BioCyc Pathways', 'biocyc_pathways' ],
 		[ 'IMG Pathways', 'img_pathways' ],
 	];

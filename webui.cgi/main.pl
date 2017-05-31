@@ -2,7 +2,7 @@
 #   for displaying appropriate CGI pages.
 #      --es 09/19/2004
 #
-# $Id: main.pl 36986 2017-04-24 20:21:19Z klchu $
+# $Id: main.pl 37087 2017-05-18 17:25:52Z klchu $
 ##########################################################################
 use strict;
 use feature ':5.16';
@@ -455,6 +455,15 @@ if ( param() ) {
 }
 
 WebPrint::printContentEnd();
+
+#print $TempFile::TMPDIRECTORY . "<br>";
+#print $CGITempFile::TMPDIRECTORY . "<br>";
+#print $ENV{'SQLITE_TMPDIR'}  . "<br>";
+#print $ENV{'TMPDIR'}  . "<br>";
+#print $ENV{'TEMPDIR'}  . "<br>";
+#print $ENV{'TMP'}  . "<br>";
+#print $ENV{'TEMP'}  . "<br>";
+#print $ENV{'TESTDIR'}  . "<br>";
 
 # catch all if loading still showing
 WebPrint::printMainFooter($homePage);

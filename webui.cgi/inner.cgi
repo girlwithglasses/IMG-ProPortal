@@ -6,6 +6,13 @@
 
 PERL5LIB=`pwd`
 export PERL5LIB
+
+export TMP="/opt/img/temp"
+export TEMP="/opt/img/temp"
+export TEMPDIR="/opt/img/temp"
+export TMPDIR="/opt/img/temp"
+export SQLITE_TMPDIR="/opt/img/temp" 
+
 /webfs/projectdirs/microbial/img/bin/imgEnv2 perl -T inner.pl
 
 if [ $? != "0" ] 

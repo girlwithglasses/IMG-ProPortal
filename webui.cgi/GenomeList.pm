@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: GenomeList.pm 37058 2017-05-08 19:45:30Z klchu $
+# $Id: GenomeList.pm 37125 2017-05-30 16:47:50Z klchu $
 ############################################################################
 package GenomeList;
 
@@ -162,7 +162,7 @@ my @genomeColumnsOrder = (
     
     "to_char(t.release_date, 'yyyy-mm-dd')",    
     't.strain',
-    'gap.submission_type',                   
+    'gap.submission_type',               
 );
 
 if ($user_restricted_site) {
@@ -172,6 +172,7 @@ if ( getSuperUser() eq 'Yes' ) {
     push( @genomeColumnsOrder, 't.in_file' );
     push( @genomeColumnsOrder, 't.is_nr' );
     push( @genomeColumnsOrder, 'c.submittername' );
+    push( @genomeColumnsOrder, 't.jgi_rnd_flag' );
 }
 
 # genome file db column names and ui display label
@@ -228,6 +229,7 @@ if ( getSuperUser() eq 'Yes' ) {
     $genomeColumns{'t.in_file'}       = '** In File';
     $genomeColumns{'t.is_nr'}         = '** Is NR';
     $genomeColumns{'c.submittername'} = '** Submitter Name';
+    $genomeColumns{'t.jgi_rnd_flag'}         = '**  R&D project';
 }
 
 # how to align data in the display table
@@ -274,6 +276,7 @@ my %genomeColumnsAlign = (
     't.genome_completion'                      => 'char asc left',
     't.analysis_product_name'  => 'char asc left',
     't.analysis_project_type'  => 'char asc left',
+    't.jgi_rnd_flag'                                  => 'char asc left',
 
 );
 

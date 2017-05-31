@@ -1,4 +1,5 @@
 [%
+	PROCESS 'inc/cart/cart_add_macro.tt';
 #	A generic form element to wrap any content to be added to a cart
 #	includes controls at the top and bottom
 #
@@ -17,16 +18,18 @@
 	IF form.id %]id="[% form.id %]" [% END;
 	%]method="POST" class="[% form.class %]__form">
 <fieldset class="[% form.class %]__main-fieldset">
-[%	FOR h IN form.params.keys %]
+[%
+	FOR h IN form.params.keys %]
 <input type="hidden" name="[% h %]" value="[% form.params.$h %]" />
-[%	END;
+[%
+	END;
 
 	control_class = form.class _ '--top';
-	PROCESS 'inc/cart/controls.tt';
+	buttons( { class => control_class } );
 
 	content;
 
 	control_class = form.class _ '--base';
-	PROCESS 'inc/cart/controls.tt'; %]
+	buttons( { class => control_class } ); %]
 </fieldset>
 </form>

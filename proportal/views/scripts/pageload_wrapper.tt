@@ -1,6 +1,6 @@
 [%	IF scr_arr;
 		FOREACH s IN scr_arr;
-			'<script type="text/javascript" src="' _ settings.pp_assets _ s _ '"></script>';
+			'<script type="text/javascript" src="' _ s _ '"></script>';
 		END;
 	END;
 %]
@@ -10,21 +10,14 @@
 	var fn=function(){
 [%	content %]
 		function getJson(){
-			return { results:[%
+			return [%
 	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
 	IF results.js;
 		results.js.json;
 	ELSE;
 		'{}';
 	END;
-		%],filters:[%
-	IF data_filters;
-		data_filters.json;
-	ELSE;
-		'{}';
-	END;
-%]
-			};
+	%];
 		}
 	}
 	if (document.readyState !== 'loading'){

@@ -1,0 +1,72 @@
+#<VirtualHost *:443>
+#	UseCanonicalName Off
+#	ServerAdmin imgsupp@lists.jgi-psf.org
+#
+#	SSLEngine on
+#	SSLCertificateFile ${APACHE_DEFAULT_DIR}/certs/star_jgi.doe.gov/star_jgi_doe_gov.crt
+#	SSLCertificateKeyFile ${APACHE_DEFAULT_DIR}/certs/star_jgi.doe.gov/star_jgi_doe_gov.key
+#	SSLCertificateChainFile ${APACHE_DEFAULT_DIR}/certs/star_jgi.doe.gov/caroot.crt
+#
+#                ### IMG Specific ###
+#
+#        <Directory "${APACHE_CONTENT_DIR}/vhosts/*/htdocs/hmp_catalog">
+#                AllowOverride FileInfo Indexes Limit
+#                AddHandler cgi-script .cgi
+#                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+#                <Files ~ "\.(pm|pl)$">
+#                        Order Allow,Deny
+#                        Deny from all
+#                </Files>
+#        </Directory>
+#
+#        <Directory "${APACHE_CONTENT_DIR}/vhosts/*/htdocs/img_scratch">
+#                AllowOverride FileInfo Indexes Limit
+#                <Files ~ "\.(gif|jpe?g|png|bmp|tif?f|pdf)$">
+#                        Order Allow,Deny
+#                        Allow from all
+#                </Files>
+#                Order Deny,Allow
+#                Deny from All
+#        </Directory>
+#
+#                ### Common ###
+#
+#        <Directory "${APACHE_CONTENT_DIR}/vhosts/*/htdocs">
+#                AllowOverride FileInfo Indexes Limit
+#                Options Indexes FollowSymLinks MultiViews
+#                Order allow,deny
+#                allow from all
+#
+#		<IfModule mod_expires.c> 
+# 		ExpiresActive On 
+# 		ExpiresDefault "access plus 1 second" 
+# 		ExpiresByType image/gif "access plus 60 minutes" 
+# 		ExpiresByType image/jpeg "access plus 60 minutes" 
+# 		ExpiresByType image/png "access plus 60 minutes" 
+# 		ExpiresByType image/x-icon "access plus 60 minutes" 
+# 		ExpiresByType text/css "access plus 60 minutes" 
+# 		ExpiresByType text/javascript "access plus 60 minutes" 
+# 		ExpiresByType application/javascript "access plus 60 minutes" 
+#		</IfModule>
+#        </Directory>
+#
+#        <Directory "${APACHE_CONTENT_DIR}/vhosts/*/cgi-bin">
+#                AllowOverride FileInfo Indexes Limit
+#                AddHandler cgi-script .cgi
+#                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+#                Order allow,deny
+#                allow from all
+#        </Directory>
+#
+#	ErrorLog ${APACHE_LOGS_DIR}/${HOSTNAME}-vhosts_error.log
+#
+#	# Possible values include: debug, info, notice, warn, error, crit,
+#	# alert, emerg.
+#	LogLevel info
+#
+#	CustomLog ${APACHE_LOGS_DIR}/${HOSTNAME}-vhosts_access.log vhost_combined
+#
+#	VirtualDocumentRoot ${APACHE_CONTENT_DIR}/vhosts/%0/htdocs
+#	VirtualScriptAlias ${APACHE_CONTENT_DIR}/vhosts/%0/cgi-bin
+#
+#</VirtualHost>

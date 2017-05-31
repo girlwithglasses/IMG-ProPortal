@@ -35,25 +35,67 @@ has 'active_components' => (
 	}
 );
 
-# { status => 'success | warning | error',
-#	error => ...
-#	n_results =>
-#	data => [ ... ]
-# }
+
+sub get_output_fmt {
+	my $args = shift;
+	log_debug { 'args to get_output_fmt: ' . Dumper $args };
+	my $output_fmt = {
+		url => {
+			'/api'     => 'json',
+			'/csv_api' => 'csv',
+			'/tab_api' => 'tab',
+			''         => 'html'
+		},
+		fmt => {
+			html => '',
+			json => '/api',
+			csv  => '/csv_api',
+			tab  => '/tab_api'
+		}
+	};
+
+	if ( defined $args->{url} ) {
+		return $output_fmt->{url}{ $args->{url} } || 'html';
+	}
+
+	return $output_fmt->{fmt}{ $args->{fmt} } || '';
+
+}
+
 
 sub no_data_err {
 	return { 'status' => 'error', 'message' => 'No data returned by query' };
 }
 
-
 sub output_json {
 	my $type = shift;
 	my $output = shift;
-	if ( 'list' eq $type ) {
+
+	if ( 'details' ne $type ) {
 		$output = $output->all;
 	}
-	log_debug { 'output: ' . Dumper $output };
+#	log_debug { 'output: ' . Dumper $output };
 	send_as JSON => $output;
+}
+
+sub output_for_datatables {
+	my $type = shift;
+	my $stt = shift;
+
+#	"error": "optional"
+#	"draw": 1,
+#	"recordsTotal": 57,
+#	"recordsFiltered": 57,
+#	"data": [ (from query) ]
+	my $out = {
+		recordsFiltered => $stt->something,
+		recordsTotal => $stt->row_count,
+		data => $stt->all,
+#		DT_RowId => 'taxon_oid'
+	};
+
+	send_as JSON => $out;
+
 }
 
 sub output_csv {
@@ -73,38 +115,13 @@ sub output_csv {
 
 	my $csv = Text::CSV_XS->new ( $csv_args );
 
-	content_type 'text/plain';
 	my ($io, $io_name) = tempfile();
+	my $sth = $obj->select( -result_as => 'sth' );
 
-# my $dbh = DBI->connect (...);
-# my $sql = "select * from foo";
-#
-# # using your own loop
-# open my $fh, ">", "foo.csv" or die "foo.csv: $!\n";
-# my $csv = Text::CSV_XS->new ({ binary => 1, eol => "\r\n" });
-# my $sth = $dbh->prepare ($sql); $sth->execute;
-# $csv->print ($fh, $sth->{NAME_lc});
-# while (my $row = $sth->fetch) {
-#     $csv->print ($fh, $row);
-#     }
-#
-
-	if ( 'list' eq $rslt_type ) {
-		my $first = $obj->next;
-		my @cols = grep { '__schema' ne $_ } sort keys %$first;
-
-		$csv->print( $io, \@cols );
-		$csv->print( $io, [ map { $first->{$_} } @cols  ] );
-		while ( my $row = $obj->next ) {
-			$csv->print( $io, [ map { $row->{$_} } @cols ] );
-		}
+	$csv->print( $io, $sth->{NAME_lc} );
+	while ( my $row = $sth->fetch ) {
+		$csv->print ( $io, $row );
 	}
-	else {
-		my @cols = grep { '__schema' ne $_ } sort keys %$obj;
-		$csv->print( $io, \@cols );
-		$csv->print( $io, [ map { $obj->{$_} } keys %$obj ] );
-	}
-
 
 	output_file( $io_name );
 }
@@ -152,34 +169,39 @@ sub dispatch {
 	my $args = shift;
 
 	log_debug { 'args to dispatcher: ' . Dumper $args };
+	log_debug { 'mode: ' . $args->{mode} };
+
+	my $out = get_output_fmt({ url => $args->{mode} });
+	$args->{params} //= {};
 
 	my $cntrl = $args->{cntrl} || $args->{prefix} . '::' . $args->{domain};
-	my $mode = $args->{output_format} || 'html';
+#	my $mode = $args->{output_format} || 'html';
 
 	my $controller_args = {
-		output_format => $mode
+		params => $args->{params}
 	};
 
-	log_debug { 'mode: ' . $mode };
-
-	# page number
-	if ( $args->{q_params} && $args->{q_params}->get( 'page_index' ) ) {
-		$controller_args->{page_index} = $args->{q_params}->get( 'page_index' );
+	for my $p ( qw( page_index output_format ) ) {
+		$controller_args->{$_} = $args->{params}{$_} if defined $args->{params}{$_};
 	}
+
+	log_debug { 'controller args: ' . Dumper $controller_args };
 
 	bootstrap( $cntrl, $controller_args );
 
-	if ( $args->{filters} ) {
-		img_app->set_filters( $args->{filters} );
-	}
+	log_debug { 'filters: ' . Dumper img_app->filters };
+
+
+#	if ( $args->{filters} ) {
+#		img_app->set_filters( $args->{filters} );
+#	}
 
 	# branch off to the API here
-	if ( 'html' eq $mode ) {
+	if ( '' eq $args->{mode} ) {
 		img_app->current_query->_set_page_params({
 			page_id => img_app->controller->page_id,
 			menu_group => $args->{menu_group} || undef
 		});
-
 		return template img_app->controller->tmpl, img_app->controller->render( $args->{params} || {} );
 	}
 
@@ -187,14 +209,10 @@ sub dispatch {
 
 	# check that we have results
 	if ( $cntrl =~ /list/i && $cntrl !~ /file/i ) {
-		if ( 0 == $rslts->row_count ) {
-			# do something
-			log_debug { 'No results for query!' };
-		}
-		$mode .= '_list';
+		$out .= '_list';
 	}
 
-	return $output_sub->{ $mode }->( $rslts );
+	return $output_sub->{ $out }->( $rslts );
 
 }
 
@@ -222,6 +240,26 @@ sub make_mini_apps {
 }
 
 
+any '/datatables' => sub {
+
+# 	query_parameters->get('draw') # goes straight to output
+#
+# 	start => # same as page_index
+# 	length => # page_size
+# 	search =>
+# 	columns
+# 	order
+# 	search[value]
+# 	search[regex]
+#
+# 	columns[i] - an array defining all columns in the table.
+#
+# 	order[i] -- array of cols that ordering is performed on
+# 	order[i][column]
+# 	order[i][asc|desc]
+
+};
+
 # log_debug { 'config: ' . Dumper config };
 
 get '/' => sub {
@@ -233,25 +271,273 @@ any '/offline' => sub {
 	return template 'pages/offline';
 };
 
-my $output_fmt = {
-	url => {
-		'/api'     => 'json',
-		'/csv_api' => 'csv',
-		'/tab_api' => 'tab',
-		''         => 'html'
-	},
-	fmt => {
-		html => '',
-		json => '/api',
-		csv  => '/csv_api',
-		tab  => '/tab_api'
-	}
-};
-
 my @domains = ( qw( gene taxon function scaffold ) );
 my @pp_viz  = ( qw( clade data_type ecosystem ecotype location longhurst phylogram big_ugly_taxon_table ) );
 
 for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
+
+	prefix $mode => sub {
+
+		#	LIST pages
+		prefix '/list' => sub {
+
+			for my $domain ( @domains ) {
+				prefix '/' . $domain => sub {
+					# standard ? query
+					get '?' => sub {
+						pass if ! scalar query_parameters->keys;
+						return dispatch({
+							mode   => $mode,
+							prefix => 'list',
+							domain => $domain,
+							params => query_parameters,
+# 							filters => query_parameters,
+# 							output_format => get_output_fmt({ url => $mode }),
+						});
+					};
+				};
+			}
+		};
+
+		# details
+		prefix '/details' => sub {
+			# CyCOG version details
+			get '/cycog_version/:version' => sub {
+				my $q_params = query_parameters->clone;
+				$q_params->set(
+					cycog_version => route_parameters->get( 'version' )
+				);
+				return dispatch({
+					mode => $mode,
+					prefix => 'details',
+					domain => 'cycog_version',
+					params => $q_params
+#					output_format => get_output_fmt({ url => $mode })
+				});
+			};
+
+			prefix '/function' => sub {
+
+				get '/:db/:xref' => sub {
+					my $q_params = query_parameters->clone;
+					$q_params->set( db => route_parameters->get( 'db' ) );
+					$q_params->set( xref => route_parameters->get( 'xref' ) );
+					log_debug { Dumper $q_params };
+					return dispatch({
+						mode   => $mode,
+						prefix => 'details',
+						domain => 'function',
+						params => $q_params
+	#					output_format => get_output_fmt({ url => $mode })
+					});
+				};
+				get '/:dbxref' => sub {
+					my @xrefs = split ":", route_parameters->get('dbxref'), 2;
+					if ( 2 == scalar @xrefs ) {
+						my $q_params = query_parameters->clone;
+						$q_params->set( db => $xrefs[0] );
+						$q_params->set( xref => $xrefs[1] );
+						log_debug { Dumper $q_params };
+						return dispatch({
+							mode   => $mode,
+							prefix => 'details',
+							domain => 'function',
+							params => $q_params,
+						});
+					}
+					else {
+						# 500 error
+						err({
+							err => 'message',
+							message => 'Function queries should be in the form <code>/function/db/xref</code>'
+						});
+					}
+				};
+			};
+
+			for my $domain ( qw[ gene taxon scaffold ] ) {
+				get '/' . $domain . '/:oid' => sub {
+					log_debug { 'matched ' . $mode . '/' . $domain };
+					my $q_params = query_parameters->clone;
+					$q_params->set( $domain . '_oid' => route_parameters->get('oid') );
+					log_debug { Dumper $q_params };
+					return dispatch({
+						mode   => $mode,
+						prefix => 'details',
+						domain => $domain,
+						params => $q_params
+#						output_format => get_output_fmt({ url => $mode })
+					});
+				};
+			}
+		};
+
+		my $re = join '|', @pp_viz;
+		prefix '/proportal' => sub {
+			any qr{
+				/ (?<query> $re )
+				}x => sub {
+
+				log_debug { 'matched /proportal/<query>' } ;
+				return dispatch({
+					mode => $mode,
+					prefix => 'ProPortal',
+					domain => captures->{query},
+					params => query_parameters
+					menu_group => 'proportal',
+# 					filters => query_parameters,
+# 					output_format => get_output_fmt({ url => $mode })
+				});
+			};
+		};
+
+
+		prefix '/file' => sub {
+
+			any '?' => sub {
+				if ( ! scalar query_parameters->keys ) {
+					log_debug { 'no query params!' };
+					pass;
+				}
+
+				if ( query_parameters->{taxon_oid} && query_parameters->{file_type} ) {
+					log_debug { 'matched /file with params taxon_oid and file_type' };
+					return dispatch({
+						mode => 'file',
+						prefix => 'details',
+						domain => 'file',
+						params => {
+							taxon_oid => query_parameters->{taxon_oid},
+							file_type => query_parameters->{file_type}
+						},
+					});
+				}
+				else {
+
+	 				log_debug { 'incomplete params' };
+	# 				bootstrap( 'List::File' );
+	# 				img_app->set_filters( query_parameters );
+	# 				if ( '/api/' eq $mode ) {
+	# 					return output_json( img_app->controller->get_data );
+	# 				}
+	# 				return template img_app->controller->tmpl, img_app->controller->render;
+
+					return dispatch({
+						mode  => $mode,
+						prefix => 'list',
+						domain => 'file',
+						params => query_parameters,
+# 						filters => query_parameters,
+# 						output_format => get_output_fmt({ url => $mode })
+					});
+				}
+			};
+		};
+
+#		my $re = join '|', @pp_viz;
+		prefix '/proportal' => sub {
+			any qr{
+				/ (?<query> $re )
+				}x => sub {
+
+				log_debug { 'matched /proportal/<query>' } ;
+				return dispatch({
+					mode   => $mode,
+					prefix => 'ProPortal',
+					domain => captures->{query},
+					params => query_parameters,
+					menu_group => 'proportal',
+				#	filters => query_parameters,
+				#	output_format => get_output_fmt({ url => $mode })
+				});
+			};
+#			get '/' => sub {
+			any qr{^/?$}x => sub {
+
+				log_debug { 'matched $mode/proportal /?' } ;
+
+				if ( ! $mode ) {
+					return dispatch({
+						cntrl => 'Home',
+						menu_group => 'proportal',
+						mode => ''
+					});
+				}
+				# API home page
+				# create the list of valid queries
+				# for each query, set the controller
+				# get the valid_filters
+				img_app->current_query->_set_page_params({
+					page_id => 'proportal',
+					menu_group => 'proportal'
+				});
+
+				return template 'pages/api/proportal.tt', {
+					queries => [ @pp_viz ],
+					apps => make_mini_apps( \@pp_viz ),
+					output_format => get_output_fmt({ url => $mode }),
+#					$output_fmt->{url}{$mode},
+					url_prefix => $mode
+				};
+			};
+		};
+
+		post '/query_runner' => sub {
+
+			log_debug { 'matching the query runner!' };
+
+			my $b_params = body_parameters;
+			my $query_params = query_parameters;
+
+			log_debug { 'query: ' . Dumper $query_params };
+			log_debug { 'body: ' . Dumper $b_params };
+
+			my $params = {
+				domain => [ qw( function gene scaffold taxon ) ],
+				prefix => [ qw( file list details proportal ) ],
+			};
+
+			# body: bless( {
+			#   domain => "taxon",
+			#   prefix => "details",
+			#   taxon_oid => 637000212
+			# }, 'Hash::MultiValue' )
+			for my $reqd ( 'domain', 'prefix' ) {
+				if ( ! param $reqd ) {
+					# invalid query
+
+				}
+				elsif ( ! grep { $_ eq param $reqd } @{$params->{$reqd}} ) {
+					# invalid parameter
+				}
+			}
+			# now we have the appropriate args, redirect
+	#		forward $mode . param "prefix" . '/' . param "domain" .
+
+
+			return dispatch({
+				mode   => $mode,
+				prefix => param 'prefix',
+				domain => param 'domain',
+				params => query_parameters
+			#	filters => query_parameters,
+			#	output_format => get_output_fmt({ url => $mode })
+			});
+
+
+	# 		return dispatch({
+	# 			prefix => param "prefix",
+	# 			domain => param "domain",
+	#
+	# 			mode => 'file'
+	# 		});
+		};
+#=cut
+
+
+	};
+
+
 
 	any qr{^
 		$mode
@@ -263,51 +549,20 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 # 		redirect $mode . '/', 302 if $mode;
 		log_debug { 'matched ' . $mode . '/?' };
 		return template 'pages/api/home.tt', {
-			output_format => $output_fmt->{url}{$mode}
+			output_format => get_output_fmt({ url => $mode })
+			#$output_fmt->{url}{$mode}
 		};
 	};
 
-# 	any qr{
-# 	^$mode
-# 	/proportal
-# 	/?
-# 	$}x => sub {
-# 		pass if '' eq $mode;
-# 		# proportal API index page here
-# 	};
 
-#	for my $q_type ( qw( list details file proportal ) ) {
-#		any $mode . '/' . $q_type => sub {
-#			log_debug { 'forwarding to ' . $mode . '/' . $q_type . '/' };
-#			forward $mode . '/' . $q_type . '/';
-#		};
-#	}
+
+
 
 	prefix $mode => sub {
-
-		# taxon redirects
-		any '/taxon/:taxon_oid' => sub {
-			redirect $mode . '/details/taxon/' . route_parameters->get('taxon_oid'), 301;
-		};
-
 		#	LIST pages
-
 		prefix '/list' => sub {
-
 			for my $domain ( @domains ) {
 				prefix '/' . $domain => sub {
-					# standard ? query
-					get '?' => sub {
-						pass if ! scalar query_parameters->keys;
-						return dispatch({
-							prefix => 'list',
-							domain => $domain,
-							filters => query_parameters,
-							output_format => $output_fmt->{url}{$mode},
-							q_params => query_parameters
-						});
-					};
-
 					# base query
 					any qr{.*}x => sub {
 
@@ -318,7 +573,8 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 							schema => img_app->filter_schema(':all'),
 							queries => [ 'list::' . $domain ],
 							apps => make_mini_apps( [ 'list::' . $domain ] ),
-							output_format => $output_fmt->{url}{$mode},
+							output_format => get_output_fmt({ url => $mode }),
+#							output_format => $output_fmt->{url}{$mode},
 							url_prefix => $mode
 						};
 					};
@@ -340,7 +596,8 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 					queries => $ids,
 					apps => make_mini_apps( $ids ),
 					schema => img_app->filter_schema(':all'),
-					output_format => $output_fmt->{url}{$mode},
+					output_format => get_output_fmt({ url => $mode }),
+#					output_format => $output_fmt->{url}{$mode},
 					url_prefix => $mode
 				};
 			};
@@ -355,7 +612,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 					params => {
 						version => route_parameters->get( 'version' ),
 					},
-					output_format => $output_fmt->{url}{$mode}
+					output_format => get_output_fmt({ url => $mode })
 				});
 			};
 
@@ -367,7 +624,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 						db => route_parameters->get( 'db' ),
 						xref => route_parameters->get( 'xref' )
 					},
-					output_format => $output_fmt->{url}{$mode}
+					output_format => get_output_fmt({ url => $mode })
 				});
 			};
 
@@ -392,7 +649,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 						prefix => 'details',
 						domain => $domain,
 						params => $params,
-						output_format => $output_fmt->{url}{$mode}
+						output_format => get_output_fmt({ url => $mode })
 					});
 				};
 
@@ -408,7 +665,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 						queries => [ 'details::' . $domain ],
 						apps => make_mini_apps( [ 'details::' . $domain ] ),
 						schema => img_app->filter_schema(':all'),
-						output_format => $output_fmt->{url}{$mode},
+						output_format => get_output_fmt({ url => $mode }),
 						url_prefix => $mode
 					};
 				}
@@ -424,7 +681,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 					queries => $ids,
 					apps => make_mini_apps( $ids ),
 					schema => img_app->filter_schema(':all'),
-					output_format => $output_fmt->{url}{$mode},
+					output_format => get_output_fmt({ url => $mode }),
 					url_prefix => $mode
 				};
 			};
@@ -477,7 +734,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 						prefix => 'list',
 						domain => 'file',
 						filters => query_parameters,
-						output_format => $output_fmt->{url}{$mode}
+						output_format => get_output_fmt({ url => $mode })
 					});
 				}
 			};
@@ -493,7 +750,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 						base_url => 'file',
 						app => img_app,
 					},
-					output_format => $output_fmt->{url}{$mode},
+					output_format => get_output_fmt({ url => $mode }),
 					url_prefix => $mode
 				};
 			};
@@ -512,7 +769,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 # 					base_url => 'file',
 # 					app => img_app,
 # 				},
-# 				output_format => $output_fmt->{url}{$mode},
+# 				output_format => get_output_fmt({ url => $mode }),
 # 				url_prefix => $mode
 # 			};
 # 		};
@@ -525,10 +782,11 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 
 				log_debug { 'matched /proportal/<query>' } ;
 				return dispatch({
-					cntrl => captures->{query},
+					prefix => 'ProPortal',
+					domain => captures->{query},
 					menu_group => 'proportal',
 					filters => query_parameters,
-					output_format => $output_fmt->{url}{$mode}
+					output_format => get_output_fmt({ url => $mode })
 				});
 			};
 #			get '/' => sub {
@@ -555,7 +813,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 				return template 'pages/api/proportal.tt', {
 					queries => [ @pp_viz ],
 					apps => make_mini_apps( \@pp_viz ),
-					output_format => $output_fmt->{url}{$mode},
+					output_format => get_output_fmt({ url => $mode }),
 					url_prefix => $mode
 				};
 			};
@@ -607,7 +865,7 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 			return template 'pages/api ' . $page, {
 				queries => [ @pp_viz ],
 				apps => make_mini_apps( \@pp_viz ),
-				output_format => $output_fmt->{url}{$mode},
+				output_format => get_output_fmt({ url => $mode }),
 				url_prefix => $mode
 			};
 		};
@@ -620,53 +878,10 @@ for my $mode ( '', '/api', '/csv_api', '/tab_api' ) {
 			return template 'pages/api/home.tt', {
 				queries => [ @pp_viz ],
 				apps => make_mini_apps( [ @pp_viz ] ),
-				output_format => $output_fmt->{url}{$mode},
+				output_format => get_output_fmt({ url => $mode }),
 				url_prefix => $mode
 			};
 		};
-
-
-
-		post '/query_runner' => sub {
-
-			log_debug { 'matching the query runner!' };
-
-			my $b_params = body_parameters;
-			my $q_params = query_parameters;
-
-			log_debug { 'query: ' . Dumper $q_params };
-			log_debug { 'body: ' . Dumper $b_params };
-
-			my $params = {
-				domain => [ qw( function gene scaffold taxon ) ],
-				prefix => [ qw( file list details ) ],
-			};
-
-			# body: bless( {
-			#   domain => "taxon",
-			#   prefix => "details",
-			#   taxon_oid => 637000212
-			# }, 'Hash::MultiValue' )
-			for my $reqd ( 'domain', 'prefix' ) {
-				if ( ! param $reqd ) {
-					# invalid query
-
-				}
-				elsif ( ! grep { $_ eq param $reqd } @{$params->{$reqd}} ) {
-					# invalid parameter
-				}
-			}
-			# now we have the appropriate args, redirect
-	#		forward $mode . param "prefix" . '/' . param "domain" .
-
-	# 		return dispatch({
-	# 			prefix => param "prefix",
-	# 			domain => param "domain",
-	#
-	# 			mode => 'file'
-	# 		});
-		};
-#=cut
 
 		any '/query_runner' => sub {
 			return 'Not a valid page!';

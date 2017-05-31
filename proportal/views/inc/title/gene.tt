@@ -6,12 +6,13 @@
 		surtitle = self.locus_type;
 	END;
 	article_title = self.gene_display_name;
-	subtitle = 'from ' _ taxon_name_link( {}, self );
+	subtitle = 'from ' _ taxon_name_link({ obj => self });
 
 	button = {
 		cart => {
 			form => {
-				type => 'inc/cart/button_add.tt',
+			#	type => 'inc/cart/button_add.tt',
+				type => 'form_as_button',
 				params => { gene_oid => self.gene_oid },
 				domain => 'gene'
 			},

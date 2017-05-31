@@ -1,0 +1,89 @@
+{
+   "might_have" : {
+      "fetch" : 0
+   },
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "sets" : [
+      {
+         "class" : "GoldSpPhenotype",
+         "quantity" : "all"
+      },
+      {
+         "class" : "GoldAnalysisProject",
+         "quantity" : "all"
+      },
+      {
+         "class" : "ImgGroup",
+         "quantity" : "all"
+      },
+      {
+         "class" : "GoldSpRelevance",
+         "quantity" : "all"
+      },
+      {
+         "class" : "GoldSpGenomePublication",
+         "quantity" : "all"
+      },
+      {
+         "class" : "GoldSpCollaborator",
+         "quantity" : "all"
+      },
+      {
+         "class" : "GoldSpStudyGoldId",
+         "quantity" : "all"
+      },
+      {
+         "class" : "GoldSpSeqMethod",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "GoldApGenbank"
+      },
+      {
+         "quantity" : "all",
+         "class" : "GoldSpCellArrangement"
+      },
+      {
+         "class" : "GoldSequencingProject",
+         "quantity" : "all"
+      },
+      {
+         "class" : "GoldAnalysisProjectLookup2",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Taxon"
+      },
+      {
+         "quantity" : "all",
+         "class" : "GoldSpMetabolism"
+      },
+      {
+         "class" : "GoldSpEnergySource",
+         "quantity" : "all"
+      },
+      {
+         "class" : "ImgGroupNews",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "GoldSpDisease"
+      },
+      {
+         "quantity" : "all",
+         "class" : "GoldSpHabitat"
+      },
+      {
+         "class" : "GoldSpSeqCenter",
+         "quantity" : "all"
+      }
+   ],
+   "has_many" : {
+      "fetch" : 0
+   }
+}

@@ -17,7 +17,8 @@
 	button = {
 		cart => {
 			form => {
-				type => 'inc/cart/button_add.tt',
+			#	type => 'inc/cart/button_add.tt',
+				type => 'form_as_button',
 				params => { taxon_oid => self.taxon_oid },
 				domain => 'taxon'
 			},

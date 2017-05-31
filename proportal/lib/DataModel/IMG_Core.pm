@@ -4,6 +4,10 @@ use IMG::Util::Import 'LogErr';
 use DBIx::DataModel;
 use IMG::Model::UnitConverter;
 
+sub schema_id {
+	return 'img_core';
+}
+
 DBIx::DataModel  # no semicolon (intentional)
 
 #---------------------------------------------------------------------#
@@ -265,7 +269,7 @@ DBIx::DataModel  # no semicolon (intentional)
 #->Table(qw/PpSubset                    PP_SUBSET                      unknown_pk         /)
 ->Table(qw/TaxonProdVw                 TAXON_PROD_VW                  unknown_pk         /)
 ->Table(qw/TaxonStatsProdVw            TAXON_STATS_PROD_VW            unknown_pk         /)
-->Table(qw/VwGoldTaxon                 VW_GOLD_TAXON                  unknown_pk         /)
+# ->Table(qw/VwGoldTaxon                 VW_GOLD_TAXON                  unknown_pk         /)
 ->Table(qw/VwTaxon                     VW_TAXON                       unknown_pk         /)
 ->Table(qw/VwTaxonSc                   VW_TAXON_SC                    unknown_pk         /)
 
@@ -647,20 +651,20 @@ DBIx::DataModel  # no semicolon (intentional)
 	[qw/Gene			gene			1	gene_oid /],
 	[qw/AnnotImgTerm	annot_img_terms	*	gene_oid /])
 
-->Table(qw/AnnotKoModule	ANNOT_KO_MODULE	unknown_pk /)
+->Table(qw/AnnotKeggModule	ANNOT_KEGG_MODULE	unknown_pk /)
 ->Association(
 	[qw/Gene			gene				1	gene_oid /],
-	[qw/AnnotKoModule	annot_ko_modules	*	gene_oid /])
+	[qw/AnnotKeggModule	annot_kegg_modules	*	gene_oid /])
 
-->Table(qw/AnnotKoPathway	ANNOT_KO_PATHWAY	unknown_pk /)
+->Table(qw/AnnotKeggPathway	ANNOT_KEGG_PATHWAY	unknown_pk /)
 ->Association(
 	[qw/Gene			gene				1	gene_oid /],
-	[qw/AnnotKoPathway	annot_ko_pathways	*	gene_oid /])
+	[qw/AnnotKeggPathway	annot_kegg_pathways	*	gene_oid /])
 
-->Table(qw/AnnotKoTerm	ANNOT_KO_TERM	unknown_pk /)
+->Table(qw/AnnotKo	ANNOT_KO	unknown_pk /)
 ->Association(
 	[qw/Gene			gene			1	gene_oid /],
-	[qw/AnnotKoTerm		annot_ko_terms	*	gene_oid /])
+	[qw/AnnotKo		annot_ko_terms	*	gene_oid /])
 
 ->Table(qw/AnnotKog		ANNOT_KOG	unknown_pk /)
 ->Association(
@@ -887,7 +891,7 @@ DBIx::DataModel  # no semicolon (intentional)
 
 ->Association(
   [qw/Gene                        gene                             1    gene_oid             /],
-  [qw/ParalogGroupGenes           paralog_group_genes              *    genes                /])
+  [qw/ParalogGroupGenes           paralog_grp_genes              *    genes                /])
 
 ->Association(
   [qw/Gene                        gene                             1    gene_oid             /],
@@ -906,6 +910,10 @@ DBIx::DataModel  # no semicolon (intentional)
   [qw/GeneFragCoords              gene_frag_coords                 *    gene_oid  /])
 
 ->Association(
+  [qw/GeneCassette                gene_cassette                    1    cassette_oid             /],
+  [qw/GeneCassetteGenes           gene_cassette_genes              *    cassette_oid             /])
+
+->Association(
   [qw/Gene                        gene                             1    gene_oid  /],
   [qw/BioClusterFeaturesNew       bio_cluster_features_new         *    gene_oid  /])
 
@@ -914,8 +922,8 @@ DBIx::DataModel  # no semicolon (intentional)
   [qw/BioClusterFeaturesNew       bio_cluster_features_new         *    cluster_id  /])
 
 ->Composition(
-  [qw/ParalogGroup                paralog_group                    1    group_oid            /],
-  [qw/ParalogGroupGenes           paralog_group_genes              *    group_oid            /])
+  [qw/ParalogGroup                paralog_grp                    1    group_oid            /],
+  [qw/ParalogGroupGenes           paralog_grp_genes              *    group_oid            /])
 
 ->Association(
   [qw/RnaCluster                  rna_cluster                      1    cluster_id           /],
@@ -1091,7 +1099,7 @@ DBIx::DataModel  # no semicolon (intentional)
 
 ->Association(
   [qw/Taxon                       taxon                            1    taxon_oid            /],
-  [qw/ParalogGroup                paralog_groups                   *    taxon                /])
+  [qw/ParalogGroup                paralog_grps                   *    taxon                /])
 
 ->Association(
   [qw/Taxon                       taxon                            1    taxon_oid            /],
@@ -1246,42 +1254,64 @@ DBIx::DataModel  # no semicolon (intentional)
   [qw/GeneKogGroups               gene_kog_groups                  *    kog_id          /])
 ;
 
-# ->Table(qw/DtBc2ec                     DT_BC2EC                       unknown_pk         /)
-# ->Table(qw/DtCog                       DT_COG                         cog_id         /)
-# ->Table(qw/DtCogStats                  DT_COG_STATS                   taxon_oid          /)
-# ->Table(qw/DtDbStatus                  DT_DB_STATUS                   unknown_pk         /)
-# ->Table(qw/DtFuncsObs                  DT_FUNCS_OBS                   unknown_pk         /)
-# ->Table(qw/DtFuncCombo4iterms          DT_FUNC_COMBO_4ITERMS          unknown_pk         /)
-# ->Table(qw/DtFuncCombo4ko              DT_FUNC_COMBO_4KO              unknown_pk         /)
-# ->Table(qw/DtFuncComboGenes4iterms     DT_FUNC_COMBO_GENES_4ITERMS    unknown_pk         /)
-# ->Table(qw/DtFuncComboGenes4ko         DT_FUNC_COMBO_GENES_4KO        unknown_pk         /)
-# ->Table(qw/DtGeneKoModulePwys          DT_GENE_KO_MODULE_PWYS         unknown_pk         /)
-# ->Table(qw/DtHtHits                    DT_HT_HITS                     unknown_pk         /)
-# ->Table(qw/DtImgGeneProtPepSample      DT_IMG_GENE_PROT_PEP_SAMPLE    unknown_pk         /)
-# ->Table(qw/DtImgTermPath               DT_IMG_TERM_PATH               term_oid         /)
-# ->Table(qw/DtIntergenic                DT_INTERGENIC                  unknown_pk         /)
-# ->Table(qw/DtKo                        DT_KO                          ko_id         /)
-# ->Table(qw/DtKogStats                  DT_KOG_STATS                   taxon_oid          /)
-# ->Table(qw/DtKoTermComboStats          DT_KO_TERM_COMBO_STATS         unknown_pk         /)
-# ->Table(qw/DtKoTermParalogStats        DT_KO_TERM_PARALOG_STATS       unknown_pk         /)
-# ->Table(qw/DtMvcTaxonomy               DT_MVC_TAXONOMY                unknown_pk         /)
-# ->Table(qw/DtPfam                      DT_PFAM                        pfam_id         /)
-# ->Table(qw/DtPhylodistNewTaxons        DT_PHYLODIST_NEW_TAXONS        unknown_pk         /)
-# ->Table(qw/DtPhylumDistGenes           DT_PHYLUM_DIST_GENES           unknown_pk         /)
-# ->Table(qw/DtPhylumDistStats           DT_PHYLUM_DIST_STATS           unknown_pk         /)
-# ->Table(qw/DtScogs                     DT_SCOGS                       unknown_pk         /)
-# ->Table(qw/DtScogGenes                 DT_SCOG_GENES                  unknown_pk         /)
-# ->Table(qw/DtTaxonBbhCluster           DT_TAXON_BBH_CLUSTER           unknown_pk         /)
-# ->Table(qw/DtTaxonKmoduleMcr           DT_TAXON_KMODULE_MCR           unknown_pk         /)
-# ->Table(qw/DtTaxonNodeLite             DT_TAXON_NODE_LITE             unknown_pk         /)
-# ->Table(qw/DtTemp                      DT_TEMP                        unknown_pk         /)
-# ->Table(qw/DtTemp2                     DT_TEMP_2                      unknown_pk         /)
-# ->Table(qw/DtTfam                      DT_TFAM                        tfam_id         /)
-# ->Table(qw/DtViralsFromMetag           DT_VIRALS_FROM_METAG           unknown_pk         /)
-# ->Table(qw/DtViralClusters             DT_VIRAL_CLUSTERS              unknown_pk         /)
-# ->Table(qw/DtViralHostAssignment       DT_VIRAL_HOST_ASSIGNMENT       unknown_pk         /)
-# ->Table(qw/DtViralSpacer               DT_VIRAL_SPACER                unknown_pk         /)
+DataModel::IMG_Core->metadm->define_type(
+	name     => 'Distance',
+	handlers => {
+		from_DB  => sub {
+			my ($col_val, $obj, $col_name, $handler) = @_;
+			if ($col_val) {
+				my $nor_m = IMG::Model::UnitConverter::distance_in_m( $col_val );
+				if ($nor_m) {
+					$_[0] = $nor_m;
+				}
+				else {
+					$obj->{ $col_name ."_string"} = $col_val;
+					$_[0] = undef;
+				}
+			}
+		},
+#    to_DB    => sub { },
+#    validate => sub {$_[0] =~ /1?\d?\d/}),
+  });
 
+DataModel::IMG_Core->metadm->define_type(
+	name  => 'GenericClade',
+	handlers => {
+		from_DB => sub {
+			my ($col_val, $obj, $col_name, $handler) = @_;
+			if ($col_val) {
+				log_debug { "args: col value: $col_val, col name: $col_name, handler: $handler, obj: " . Dumper $obj; };
+				if ($col_name eq 'generic_clade') {
+					$col_val = DataModel::IMG_Core::coerce_clade( $col_val );
+				}
+				$_[0] = $col_val;
+			}
+		},
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'LatLng',
+	handlers => {
+		from_DB => sub { $_[0] = IMG::Model::UnitConverter::convertLatLong( $_[0] ) if $_[0]; },
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'EcoNorm',
+	handlers => {
+		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
+	});
+
+DataModel::IMG_Core->metadm->define_type(
+	name => 'Date',
+	handlers => {
+		fromDB => sub {
+#			my $t = Time::Piece->strptime( shift, '%Y-%m-%d' );
+			my $t = Time::Piece->strptime( shift, '%d-%b-%Y' );
+			log_debug { 'col handler for date; t: ' . $t; };
+
+			return $t->strftime('%d %b %Y');
+		}
+	});
 
 # DataModel::IMG_Core->metadm->define_table(
 # 	class       => 'GoTerms',
@@ -1341,34 +1371,17 @@ DataModel::IMG_Core->metadm->define_table(
 
 =cut
 
-# DataModel::IMG_Core->metadm->define_table(
-# 	class       => 'VwGoldTaxon',
-# 	db_name     => 'VW_GOLD_TAXON',
-# 	primary_key => 'gold_id',
-# 	column_types => {
-# 		GenericClade => [ qw( clade ) ],
-# 		Distance     => [ qw( altitude depth ) ],
-# 		LatLng       => [ qw( latitude longitude )],
-# 		EcoNorm      => [ qw( ecosystem_subtype )],
-# 	},
-# );
-#
-# DataModel::IMG_Core->metadm->define_table(
-# 	class       => 'TaxonTypeVw',
-# 	db_name     => 'VW_TAXON_TYPE',
-# );
-#
-# DataModel::IMG_Core->metadm->define_table(
-# 	class       => 'GoldDataTypeVw',
-# 	db_name     => 'PP_DATA_TYPE_VIEW',
-# );
-#
-# DataModel::IMG_Core->metadm->define_table(
-# 	class   => '',
-# 	db_name =>
-#
-#
-# );
+DataModel::IMG_Core->metadm->define_table(
+	class       => 'VwGoldTaxon',
+	db_name     => 'VW_GOLD_TAXON',
+	primary_key => 'gold_id',
+	column_types => {
+#		GenericClade => [ qw( clade generic_clade ) ],
+		Distance     => [ qw( altitude depth ) ],
+		LatLng       => [ qw( latitude longitude )],
+		EcoNorm      => [ qw( ecosystem_subtype )],
+	},
+);
 
 =cut
 
@@ -1391,6 +1404,13 @@ DataModel::IMG_Core
 #---------------------------------------------------------------------#
 #     Class                      Role                         Mult Join
 #     =====                      ====                         ==== ====
+
+# gap.submission_type, gap.gold_analysis_project_type
+# from gold_analysis_project gap
+# where gap.gold_id = ?
+->Association(
+  [qw/GoldAnalysisProject        analysis_project            0..1 gold_id  /],
+  [qw/GoldSequencingProject      sequencing_project          *    gold_id  /])
 
 ->Association(
   [qw/GoldAnalysisProject        reference_gold_ap            0..1 gold_analysis_project_id/],
@@ -1517,6 +1537,13 @@ DataModel::IMG_Core
   [qw/VwGoldTaxon                gold_tax                     1    taxon_oid      /],
   [qw/Scaffold                   scaffold                     *    taxon          /])
 
+->Association(
+  [qw/PpDataTypeView             dataset_type                 1    taxon_oid      /],
+  [qw/Taxon                      taxa                         1    taxon_oid      /])
+
+->Association(
+  [qw/PpDataTypeView             dataset_type                 1    taxon_oid      /],
+  [qw/VwGoldTaxon                gold_tax                     1    taxon_oid      /])
 ;
 
 # DataModel::IMG_Core->metadm->define_join(
@@ -1554,69 +1581,25 @@ DataModel::IMG_Core
 #	fromDB => sub {  },
 
 #=cut
+#DataModel::IMG_Core::Taxon->metadm->define_column_type(Date => qw[
+DataModel::IMG_Core::Taxon->metadm->define_column_type( Date => qw[
+	RELEASE_DATE
+	ADD_DATE
+	MOD_DATE
+	PHYLODIST_DATE
+	LOCK_DATE
+	DISTMATRIX_DATE
+] );
 
+DataModel::IMG_Core::GoldSequencingProject->metadm->define_column_type( Date => qw[
+	ADD_DATE
+	MOD_DATE
+] );
 
-DataModel::IMG_Core->metadm->define_type(
-	name     => 'Distance',
-	handlers => {
-		from_DB  => sub {
-			my ($col_val, $obj, $col_name, $handler) = @_;
-			if ($col_val) {
-				my $nor_m = IMG::Model::UnitConverter::distance_in_m( $col_val );
-				if ($nor_m) {
-					$_[0] = $nor_m;
-				}
-				else {
-					$obj->{ $col_name ."_string"} = $col_val;
-					$_[0] = undef;
-				}
-			}
-		},
-#    to_DB    => sub { },
-#    validate => sub {$_[0] =~ /1?\d?\d/}),
-  });
+## date_collected will be YYYY | YYYY-MM | YYYY-MM-DD
 
-DataModel::IMG_Core->metadm->define_type(
-	name  => 'GenericClade',
-	handlers => {
-		from_DB => sub {
-			my ($col_val, $obj, $col_name, $handler) = @_;
-			if ($col_val) {
-#				say "args: col value: $col_val, col name: $col_name, handler: $handler, obj: " . Dumper $obj;
-				if ($col_name eq 'generic_clade') {
-					$col_val = coerce_clade( $col_val );
-				}
-				$_[0] = $col_val;
-			}
-		},
-	});
-
-DataModel::IMG_Core->metadm->define_type(
-	name => 'LatLng',
-	handlers => {
-		from_DB => sub { $_[0] = IMG::Model::UnitConverter::convertLatLong( $_[0] ) if $_[0]; },
-	});
-
-DataModel::IMG_Core->metadm->define_type(
-	name => 'EcoNorm',
-	handlers => {
-		from_DB => sub { $_[0] = ucfirst( lc($_[0]) ) if $_[0] },
-	});
-
-DataModel::IMG_Core->metadm->define_type(
-	name => 'Date',
-	handlers => {
-		fromDB => sub {
-#			my $t = Time::Piece->strptime( shift, '%Y-%m-%d' );
-			my $t = Time::Piece->strptime( shift, '%d-%b-%Y' );
-			log_debug { 'col handler for date; t: ' . $t; };
-
-			return $t->strftime('%d %b %Y');
-		}
-	});
-
-DataModel::IMG_Core::Scaffold->metadm->define_column_type(Date => qw/add_date last_update/);
-DataModel::IMG_Core::ScaffoldStats->metadm->define_column_type(Date => qw/ mod_date /);
+DataModel::IMG_Core::Scaffold->metadm->define_column_type( Date => qw[add_date last_update] );
+DataModel::IMG_Core::ScaffoldStats->metadm->define_column_type( Date => qw[ mod_date ] );
 
 package DataModel::IMG_Core::Gene;
 use IMG::Util::Import 'LogErr';
@@ -1751,7 +1734,7 @@ sub longhurst {
 sub latlong {
 	my $self = shift;
 
-	log_debug { 'self: ' . Dumper $self };
+#	log_debug { 'self: ' . Dumper $self };
 
 	if ( defined $self->{latitude} && defined $self->{longitude} ) {
 		return $self->{latitude} . "&#176;N, " . $self->{longitude} . "&#176;E";
@@ -1766,7 +1749,7 @@ use IMG::Util::Import 'LogErr';
 
 sub without_function {
 	my $self = shift;
-	log_debug { 'self: ' . Dumper $self };
+#	log_debug { 'self: ' . Dumper $self };
 	if ( ! $self->{without_function} ) {
 		$self->{without_function} = $self->{cds_genes} - $self->{genes_w_func_pred};
 	}
@@ -1851,6 +1834,92 @@ sub has_direct_measurements {
 	return 0;
 }
 
+sub generic_clade {
+	my $self = shift;
+	if ( ! $self->{generic_clade} ) {
+		my $c = $self->{clade} || '';
+		$c =~ s/^(\d\.\d[A-Z]?).*/$1/g;
+		$self->{generic_clade} = $c;
+	}
+	return $self->{generic_clade};
+}
+
+1;
+
+package DataModel::IMG_Core::Taxon;
+use IMG::Util::Import 'LogErr';
+
+sub class {
+	my $self = shift;
+	if ( ! $self->{class} ) {
+		$self->{class} = $self->{ir_class};
+	}
+	return $self->{class} || undef;
+}
+
+sub order {
+	my $self = shift;
+	if ( ! $self->{order} ) {
+		$self->{order} = $self->{ir_order};
+	}
+	return $self->{order} || undef;
+}
+
+1;
+
+package DataModel::IMG_Core::VwGoldTaxon;
+use IMG::Util::Import 'LogErr';
+
+sub generic_clade {
+	my $self = shift;
+	if ( ! $self->{generic_clade} ) {
+		my $c = $self->{clade} || '';
+		$c =~ s/^(\d\.\d[A-Z]?).*/$1/g;
+		$self->{generic_clade} = $c;
+	}
+	return $self->{generic_clade};
+}
+
+sub domain {
+	my $self = shift;
+	if ( ! $self->{domain} ) {
+		$self->{domain} = $self->{img_domain};
+	}
+	return $self->{domain} || undef;
+}
+
+sub phylum {
+	my $self = shift;
+	if ( ! $self->{phylum} ) {
+		$self->{phylum} = $self->{img_phylum};
+	}
+	return $self->{phylum} || undef;
+}
+
+sub family {
+	my $self = shift;
+	if ( ! $self->{family} ) {
+		$self->{family} = $self->{img_family};
+	}
+	return $self->{family} || undef;
+}
+
+sub class {
+	my $self = shift;
+	if ( ! $self->{class} ) {
+		$self->{class} = $self->{ir_class} || $self->{img_class};
+	}
+	return $self->{class} || undef;
+}
+
+sub order {
+	my $self = shift;
+	if ( ! $self->{order} ) {
+		$self->{order} = $self->{ir_order} || $self->{img_order};
+	}
+	return $self->{order} || undef;
+}
+
 1;
 
 =cut
@@ -1906,16 +1975,5 @@ My::Schema->metadm->define_type(
   });
 
 =cut
-
-sub coerce_clade {
-	my $c = shift // return;
-#	say 'clade: "' . $c . '"';
-	$c =~ s/^(\d\.\d[A-Z]?).*/$1/g;
-	return $c;
-}
-
-sub schema_id {
-	return 'img_core';
-}
 
 1;

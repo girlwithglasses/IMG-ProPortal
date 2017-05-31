@@ -23,7 +23,7 @@
 
 	surtitle = 'Files';
 	article_title = 'Downloads';
-	subtitle = 'for ' _ taxon_name_link( {}, self );
+	subtitle = 'for ' _ taxon_name_link({ obj => self });
 
 	PROCESS 'inc/generic/title.tt';
 

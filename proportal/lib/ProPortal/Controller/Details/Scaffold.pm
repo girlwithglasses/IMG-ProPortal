@@ -47,7 +47,7 @@ sub get_data {
 
 	my $res = $self->_core->run_query({
 		query => 'scaffold_details',
-		where => $args
+		-where => $args
 	});
 
 	if ( scalar @$res != 1 ) {

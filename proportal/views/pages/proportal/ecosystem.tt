@@ -1,8 +1,9 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Ecosystem Browser';
+	page_slug = 'ecosystem';
 %]
 <h2>Sample Distribution by Ecosystem</h2>
-<section class="info--ecosystem init page-intro">
+<section class="info--[% page_slug %] init page-intro">
 <p>
 	Browse the distribution of samples by the ecosystem in which they are found. Segments of the chart represent an environment classification, and these become more granular from left to right; the vertical height of each segment represents the proportion of the data set found in that environment. The rightmost rectangles represent the samples found in that environment.
 </p>
@@ -10,9 +11,11 @@
 	Hover over a segment to view a tooltip identifying it. Click on a segment to zoom in on it; click it again to zoom back out, or click on the left-most segment to zoom out. Clicking on a taxon will display the sample details below the chart; information is shown below the visualisation (but will be displayed more attractively in future iterations of the tool).
 </p>
 </section>
-[%	IF data_filters;
+[%
+	IF data_filters;
 		PROCESS 'inc/filters.tt';
-	END %]
+	END;
+%]
 <section class="visualisation cf clear">
 <div id="partition">
 	<p class="js_vis_loading">
@@ -20,34 +23,19 @@
 	</p>
 </div>
 </section>
-<section role="complementary" class="sample-data--partition">
-[%	# recursive tree display
-	# not currently used
+<section id="[% page_slug %]__section" class="[% page_slug %]__section">
+[%	table_class = page_slug _ '__table';
+	data_table = {
+		class => table_class,
+		id => table_class,
+		for_datatables_js => 1,
+		tbody => results.js.arr,
+		thead => {
+			enum => results.js.table_cols,
+		},
+	};
 
-	MACRO tree_recurse BLOCK;
-
-		FOREACH m IN item;
-			IF m.children; %]
-		<div id="[% m.path || 'all' %]">
-			<h4>[% results.js.class_type_h.$depth %]: [% m.name %]</h4>
-[%				tree_recurse( item = m.children, depth = depth+1 );
-		'</div>';
-			ELSIF m.data;
-				s = m.data;
-				env_sample( s );
-			END; # end
-		END;  # END foreach
-	END;
-
-#	tree_recurse( item = [ results.js.tree ], depth=0 );
-
-	show = { ecosystem => 1 };
-	WRAPPER 'inc/cart/taxon_add.tt';
-		FOREACH s IN results.array;
-			PROCESS 'inc/taxon_details.tt';
-		END;
-	END; # end wrapper
-	%]
-</section> <!-- / end complementary -->
+	PROCESS 'inc/generic/table.tt' WRAPPER 'inc/cart/taxon_add.tt'; %]
+</section>
 </article>
 [%	END; %]

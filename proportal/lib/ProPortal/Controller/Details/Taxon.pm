@@ -4,8 +4,6 @@ use IMG::Util::Import 'Class'; #'MooRole';
 
 extends 'ProPortal::Controller::Filtered';
 
-with 'IMG::Model::DataManager';
-
 has '+page_id' => (
 	default => 'details/taxon'
 );
@@ -33,7 +31,6 @@ sub _render {
 	return {
 		results => {
 			taxon => $self->get_data( @_ ),
-			label_data => $self->get_label_data
 		}
 	};
 }
@@ -62,7 +59,12 @@ sub get_data {
 	}
 	$res = $res->[0];
 
+	my $extra_args = {
+		scaffolds => { -columns => [ 'scaffold_oid', 'scaffold_name' ], -order_by => 'scaffold_oid' },
+	};
+
 	my $associated = [ qw(
+		analysis_project
 		gold_sp_cell_arrangements
 		gold_sp_collaborators
 		gold_sp_diseases
@@ -83,9 +85,10 @@ sub get_data {
 
 	for my $assoc ( @$associated ) {
 		if ( $res->can( $assoc ) ) {
-			$res->expand( $assoc );
+			$res->expand( $assoc, ( %{ $extra_args->{$assoc} || {} } ) );
 		}
 	}
+
 	return $res;
 }
 

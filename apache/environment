@@ -1,0 +1,14 @@
+# environment - default environment variables for apache2ctl
+
+export APACHE_RUN_USER=wwwimg
+export APACHE_RUN_GROUP=imgweb
+export APACHE_ADMIN_DIR=$HOME/apache/admin
+export APACHE_TEMP_DIR=$HOME/apache/temp
+export APACHE_CONTENT_DIR=$HOME/apache/content
+export APACHE_LOGS_DIR=$HOME/apache/logs
+export APACHE_RUN_DIR=$HOME/apache/temp
+
+export APACHE_DEFAULT_DIR=${APACHE_ADMIN_DIR}/DEFAULT
+export APACHE_PID_FILE=${APACHE_TEMP_DIR}/apache2.pid
+export HOSTNAME=`hostname`
+umask 0002

@@ -59,15 +59,27 @@
 
 	BLOCK gene_counts;
 
-	cats = [ 'protein_coding', 'with_function', 'without_function', 'fused', 'signalp', 'transmembrane', 'rna', 'rrna', '5s_rrna', '16s_rrna', '23s_rrna', 'trna', 'xrna', 'pseudogene' ];
+	cats = [ 'protein_coding', 'with_function', 'without_function', 'pseudogene', 'rna', 'rrna', '5s_rrna', '16s_rrna', '23s_rrna', 'trna', 'xrna', 'fused', 'signalp', 'transmembrane', 'cassette', 'total_cassettes', 'biosynthetic_cluster', 'total_biosynthetic' ];
+
+	label_h = data_filters.full_schema.category.enum_map;
+	label_h.total_gene_count = 'Total genes';
+	label_h.total_cassettes = 'Chromosomal cassettes';
+	label_h.cassette = 'Genes in chromosomal cassettes';
+	label_h.total_biosynthetic = 'Biosynthetic clusters';
+	label_h.biosynthetic_cluster = 'Genes in biosynthetic clusters';
+
+	no_link = {
+		fused => 1,
+		total_cassettes => 1,
+		total_biosynthetic => 1,
+	};
+
 
 	cat_count = {
 		protein_coding => 'cds_genes',
 		with_function => 'genes_w_func_pred',
 		without_function => 'without_function',
-		fused => 'fused_genes',
-		signalp => 'genes_signalp',
-		transmembrane => 'genes_transmembrane',
+		pseudogene => 'pseudo_genes',
 		rna => 'rna_genes',
 		rrna => 'rrna_genes',
 		'5s_rrna'  => 'rrna5s_genes',
@@ -75,42 +87,41 @@
 		'23s_rrna' => 'rrna23s_genes',
 		trna => 'trna_genes',
 		xrna => 'other_rna_genes',
-		pseudogene => 'pseudo_genes'
+		biosynthetic_cluster => 'genes_in_biosynthetic'
+		fused => 'fused_genes',
+		signalp => 'genes_signalp',
+		cassette => 'genes_in_cassettes',
+		transmembrane => 'genes_transmembrane',
+		total_biosynthetic => 'total_biosynthetic',
+		total_cassettes => 'total_cassettes',
 	};
 
+	c = 'total_gene_count';
 	%]
 
-<table class="condensed">
+<table class="taxon-gene-list display dataTable">
 	<tbody>
 	<tr class="taxon-gene-list__row--total">
-	<td class="taxon-gene-list__attr--total">Total Genes</td>
-	<td class="taxon-gene-list__val"><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_stats.total_gene_count %]</a></td></tr>
+	<td class="taxon-gene-list__attr--total">[% labeller( c ) %]</td>
+	<td class="taxon-gene-list__val"><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid } ) %]">[% self.taxon_stats.$c  %]</a></td></tr>
 [%
 
 	FOR c IN cats; %]
 <tr class="taxon-gene-list__row--[% c %]">
-	<td class="taxon-gene-list__attr--[% c %]">[% data_filters.full_schema.category.enum_map.$c %]</td>
+	<td class="taxon-gene-list__attr--[% c %]">[% labeller( c ) %]</td>
 	<td class="taxon-gene-list__val">
-	[%	IF self.taxon_stats.${cat_count.$c} && self.taxon_stats.${cat_count.$c} > 0; %]
+	[%	IF self.taxon_stats.${cat_count.$c} && self.taxon_stats.${cat_count.$c} > 0;
+			IF no_link.$c;
+				self.taxon_stats.${cat_count.$c};
+			ELSE; %]
 		<a href="[% link( 'list', { domain = 'gene', taxon_oid => self.taxon_oid, category => c } ) %]">[% self.taxon_stats.${cat_count.$c} %]</a>
-	[%	ELSE;
+[%			END;
+		ELSE;
 			'0';
 		END; %]
 	</td>
 </tr>
 [%	END %]
-<tr><td>Chromosomal cassettes</td>
-<td class="taxon-gene-list__val"><!-- a href="[% link( 'chr_cassette_genes', { taxon_oid => self.taxon_oid } ) %]"-->[% self.taxon_stats.total_cassettes %]</td></tr>
-<tr><td>Genes in chromosomal cassettes</td>
-<td class="taxon-gene-list__val"><!-- a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'cassette' } ) %]" -->[% self.taxon_stats.genes_in_cassettes %]
-</td></tr>
-
-	<tr>
-	<td class="taxon-gene-list__attr--[% c %]">Biosynthetic clusters</td>
-	<td class="taxon-gene-list__val"><!-- a href="[% link( 'biosyn_cluster_genes', { taxon_oid => self.taxon_oid } ) %]" -->[% self.taxon_stats.total_biosynthetic %]<!-- /a --></td></tr>
-	<tr>
-	<td class="taxon-gene-list__attr--[% c %]">Genes in biosynthetic clusters</td>
-	<td class="taxon-gene-list__val"><a href="[% link( 'list', { domain => 'gene', taxon_oid => self.taxon_oid, category => 'biosynthetic_cluster' } ) %]">[% self.taxon_stats.genes_in_biosynthetic %]</a></td></tr>
 </tbody>
 </table>
 
@@ -158,9 +169,9 @@
 				obj => self,
 				class => 'taxon_clade_ecotype',
 				arr =>
-				[	'strain',
-					'clade',
-					'ecotype'
+				[	[ 'strain', 1 ],
+					[ 'clade', 1 ],
+					[ 'ecotype', 1 ]
 				]
 			};
 			attr_value_dl( clade_eco );
@@ -169,10 +180,9 @@
 				caption => 'NCBI Taxonomy',
 				class => 'taxon_ncbi_taxonomy',
 				obj => self,
-				prefix_arr => [ 'kingdom', 'order', 'phylum', 'class', 'family', 'genus', 'species' ],
+				prefix_arr => [ ['kingdom', 1], 'order', 'phylum', 'class', 'family', 'genus', 'species' ],
 				prefix => 'ncbi_'
 			};
-
 			attr_value_dl( ncbi_tax );
 
 		END; # end if self.genome_type == 'isolate'
@@ -190,8 +200,8 @@
 		};
 		attr_value_dl( basic_data );
 %]
-
 		<h6 class="tableTitle">GOLD Details</h6>
+		<dl class="tabular">
 		[%	gold_details = {
 				obj => self,
 				arr => [
@@ -200,9 +210,7 @@
 					'analysis_project_id'
 				]
 			};
-		%]
-		<dl class="tabular">
-[%			FOR e IN gold_details.arr; %]
+			FOR e IN gold_details.arr; %]
 			<dt>[% labeller( e ) %]</dt>
 			<dd>[%
 				IF self.$e;
@@ -212,42 +220,20 @@
 [%			END; %]
 		</dl>
 
-
-		<dl class="tabular">
-			<dt>Study ID</dt>
-			<dd>[%	IF self.study_gold_id %]
-					<a rel="external" href="[% ext_link('gold_base_url_study') %][% self.study_gold_id %]">[% self.study_gold_id %]</a>
-					[%	END %]
-			</dd>
-			<dt>Sequencing Project ID</dt>
-			<dd>
-				<a rel="external" href="[% ext_link('gold_base_url_project') %][% self.gold_id %]">[% self.gold_id %]</a>
-			</dd>
-			<dt>Analysis Project ID</dt>
-			<dd>[% IF self.analysis_project_id %]
-				<a rel="external" href="[% ext_link('gold_base_url_analysis') %][% self.analysis_project_id %]">[% self.analysis_project_id %]</a>
-				[%	END; %]
-			</dd>
-		</dl>
-
 		<h6 class="tableTitle">External Links</h6>
 		<dl class="tabular">
-			[%	ext_urls = [
-				'bioproject_accession',
-				'biosample_accession',
-				'ncbi_taxon_id',
-				'ncbi_project_id',
-			];
+			[%
+				ext_urls = [
+					'bioproject_accession',
+					'biosample_accession',
+					'ncbi_taxon_id',
+					'ncbi_project_id',
+		#			'refseq_project_id'
+				];
 			FOR e in ext_urls; %]
 			<dt>[% labeller( e ) %]</dt><dd>[%
 				IF self.$e;
-					IF results.label_data.$e && results.label_data.$e.ext_link;
-						link_url = results.label_data.$e.ext_link;
-						%]
-						<a rel="external" href="[% ext_link( results.label_data.$e.ext_link ) %][% self.$e %]">[% self.$e %]</a>
-				[%	ELSE;
-						self.$e;
-					END;
+					linker( e, self );
 				END; %]
 			</dd>
 [%			END;
@@ -332,8 +318,10 @@
 			obj => self,
 			caption => 'Curation Details',
 			arr =>
-			[	'submission_type',
+			[	'analysis_project.gold_analysis_project_type',
+				'analysis_project.submission_type',
 				'img_version',
+				[ 'comments', 1 ],
 				'release_date',
 				'add_date',
 				[ 'mod_date', 1 ],
@@ -343,10 +331,10 @@
 		attr_value_dl( cur_deets );
 
 		IF self.scaffolds && self.scaffolds.size > 0; %]
-		<h6 class="tableTitle">Scaffolds</h6>
+		<h6 class="tableTitle">Scaffolds ([% self.taxon_stats.n_scaffolds %])</h6>
 		<ul>
 [%			FOR s IN self.scaffolds; %]
-				<li>[% scaffold_name_link ( {}, s ) %]</li>
+				<li>[% scaffold_name_link ({ obj => s }) %]</li>
 [%			END; %]
 		</ul>
 [%		END; %]
@@ -369,7 +357,7 @@
 	include_block = {
 		nat_iso_info => 1,
 		gene_counts => 1,
-		environment => 1,
+		environment => 0,
 		phyl_info => 1,
 		id_ext_links => 1,
 		seq_info => 1

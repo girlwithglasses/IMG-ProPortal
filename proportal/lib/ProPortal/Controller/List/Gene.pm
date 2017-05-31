@@ -3,10 +3,7 @@ package ProPortal::Controller::List::Gene;
 use IMG::Util::Import 'Class'; #'MooRole';
 
 extends 'ProPortal::Controller::Filtered';
-with
-qw( ProPortal::Controller::Role::TableHelper
-	ProPortal::Controller::Role::Paged
-);
+with 'ProPortal::Controller::Role::Paged';
 
 has '+page_id' => (
 	default => 'list/gene'
@@ -22,6 +19,25 @@ has '+filter_domains' => (
 	}
 );
 
+has '+tmpl_includes' => (
+	default => sub {
+		return {
+			tt_scripts => qw( datatables ),
+		};
+	}
+);
+
+has 'order_by' => (
+	is => 'rwp',
+	default => 'gene_oid'
+);
+
+has 'table_cols' => (
+	is => 'ro',
+	default => sub {
+		return [ qw( gene_oid gene_display_name gene_symbol taxon_display_name product_name description locus_type locus_tag scaffold_name pp_subset ) ];
+	}
+);
 =head3 render
 
 List of genes, filtered in some manner
@@ -31,18 +47,16 @@ List of genes, filtered in some manner
 sub _render {
 	my $self = shift;
 
+	my $domain = 'gene';
 	my $statement = $self->get_data;
-
-	log_debug { 'statement: ' . $statement };
-
-	my $arr = $self->page_me( $statement )->all;
-
+	my $res = $self->page_me( $statement )->all;
 	return { results => {
-		domain => 'gene',
-		arr => $arr,
-		n_results => $statement->row_count,
-		n_pages   => $statement->page_count,
-		table => $self->get_table('gene'),
+		js => {
+			arr => $res,
+			table_cols => [ 'cbox_' . $domain, @{ $self->table_cols } ]
+		},
+		paging => $self->paging_helper,
+		domain => $domain,
 		params => $self->filters
 	} };
 
@@ -69,14 +83,37 @@ sub get_data {
 	my $q_args = {
 		query => 'gene_list',
 		filters => $self->filters,
+		-columns => [ @{$self->table_cols}, 'scaffold_oid', 'taxon_oid' ],
+		-order_by => $self->order_by,
 		-result_as => 'statement'
 	};
 
-	# for scaffold and taxon filters, get the scaffold/taxon and pull up the genes from it
+	# for scaffold and taxon filters,
+	# we don't need to filter by subset
 	if ( $self->filters->{scaffold_oid} || $self->filters->{taxon_oid} ) {
 		delete $self->filters->{pp_subset};
-	#	$q_args->{query} = 'gene_list_by_scaffold';
 	}
+
+	## TODO!!
+
+# 	first check the taxon/scaffold
+# 	if ( $self->filters->{scaffold_oid} ) {
+# 		$self->_core->run_query({
+# 			query => 'scaffold_with_taxon_infile'
+#
+#
+# 		});
+#
+# 	}
+# 	elsif ( $self->filters->{taxon_oid} ) {
+# 		$self->_core->schema('img_core')->table('Taxon')
+# 			->select({
+# 				-columns => [ qw( is_obsolete in_file taxon_oid taxon_display_name is_public ) ],
+# 				-where => { taxon_oid => $self->filters->{taxon_oid} },
+# 				-result_as => 'statement'
+# 			});
+#
+# 	}
 
 	return $self->_core->run_query( $q_args );
 

@@ -1,8 +1,0 @@
-[%	# Enzymes
-	# gene.gene_enzymes <=> gene_ko_enzymes.enzymes = enzyme.ec_number
-
-	PROCESS 'inc/generic/link.tt';
-
-	external_link( x = { db => 'EC', xref => fn.xref, text => fn.ec_number } ) _ ': ' _ fn.name;
-
-%]

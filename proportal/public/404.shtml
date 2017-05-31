@@ -1,0 +1,12 @@
+<!--#include file="header.shtml" -->
+	<article class="content cf" role="main">
+		<h2>Page Not Found</h2>
+		<h3>Error 404</h3>
+		<p class="error">
+			Page not found! Are you sure that you typed the URL correctly?
+		</p>
+		<p>Document requested: https://<!--#echo var="HTTP_X_FORWARDED_HOST"--><!--#echo var="REQUEST_URI"--></p>
+	</article>
+<!--#include file="footer.shtml" -->
+
+

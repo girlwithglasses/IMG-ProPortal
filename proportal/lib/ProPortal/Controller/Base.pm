@@ -1,7 +1,8 @@
 package ProPortal::Controller::Base;
 
 use IMG::Util::Import 'Class';
-with 'IMG::App::Role::ErrorMessages', 'ProPortal::Controller::Role::OutputFormat';
+with 'IMG::App::Role::ErrorMessages';
+#'ProPortal::Controller::Role::OutputFormat';
 
 =head3 _core
 
@@ -111,5 +112,6 @@ sub render {
 	}
 	return $output;
 }
+
 
 1;

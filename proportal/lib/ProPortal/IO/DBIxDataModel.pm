@@ -64,7 +64,7 @@ The queries themselves are in ProPortal::IO::DBIxDataModelQueryLib
                   }
 
     -where     the query parameter(s), e.g.
-              { taxon_oid => [ 123, 456, 789 ] }
+               { taxon_oid => [ 123, 456, 789 ] }
 
     -return_as    (optional) return the statement object in a specific
                   format, e.g. result_as => 'flat_arrayref'
@@ -97,39 +97,27 @@ sub run_query {
 	my $stt = $self->get_query( $args );
 
 	return unless defined $stt;
-#	log_debug { 'statement: ' . Dumper $stt };
-
-	# add filters
-	if ($args->{filters}) {
-		$stt = $self->add_filters({
-			filters => $args->{filters},
-			query => $args->{query},
-			statement => $stt,
-		});
-	}
-
-	my @valid_result_as = ( qw( rows firstrow hashref sth sql subquery statement
-		flat_arrayref fast_statement ) );
-
-	log_debug { 'result as: ' . Dumper $args->{result_as} };
-
-	if ( $args->{result_as} && 'html' ne $args->{result_as} ) {
-#		if ( 'csv' eq $args->{result_as} ) {
-			return $stt->refine( -result_as => 'statement' );
-#		}
-#		elsif ( grep { $_ eq $args->{result_as} } @valid_result_as ) {
-#			return $stt->refine( -result_as => $args->{result_as} );
-#		}
-	}
-	elsif ( $args->{-result_as} ) {
-		return $stt->refine( -result_as => $args->{-result_as} );
-	}
+#	log_debug { 'statement status: ' . $stt->status };
 
 	if ( $args->{check_results} ) {
 		return $self->check_results({
 			results => $stt->all,
 			%{$args->{check_results}}
 		});
+	}
+
+	## is this stuff even used any more?!
+	my @valid_result_as = ( qw( rows firstrow hashref sth sql subquery statement
+		flat_arrayref fast_statement ) );
+
+#	log_debug { 'result as: ' . Dumper $args->{result_as} };
+#	log_debug { 'statement is a ' . $stt };
+
+	if ( $args->{result_as} && 'html' ne $args->{result_as} ) {
+		return $stt->refine( -result_as => 'statement' );
+	}
+	elsif ( $args->{-result_as} ) {
+		return $stt->refine( -result_as => $args->{-result_as} );
 	}
 
 #	log_debug { 'statement: ' . Dumper $stt };
@@ -192,45 +180,5 @@ sub check_results {
 	}
 	return $results;
 }
-
-
-=head2 add_filters
-
-Add the filters for the query
-
-@param $args    hashref with keys
-
-	statement   - the DBIx::DataModel statement object
-	filters     - whatever filters are to be applied
-	              (see ProPortal::IO::ProPortalFilters for examples)
-
-@return  $stt   modified statement object
-
-=cut
-
-sub add_filters {
-	my $self = shift;
-	my $args = shift;
-
-	if ( ! $args->{statement} ) {
-		$self->choke({
-			err => 'missing',
-			subject => 'DBIxDataModel statement object'
-		});
-	}
-
-	if ( ! $args->{filters} ) {
-		return $args->{statement};
-	}
-
-	## This is implemented by ProPortal::IO::ProPortalFilters
-	my $f = $self->filter_sqlize( $args );
-
-	$args->{statement}->refine( -where => $f );
-
-	return $args->{statement};
-
-}
-
 
 1;

@@ -1,39 +1,89 @@
-<script type="text/javascript">
-(function ready(){
-[%
-#    INCLUDE 'bower/crossfilter/crossfilter.min.js';
-#	INCLUDE 'bower/dcjs/dc.min.js';
-#	INCLUDE 'bower/d3/d3.min.js';
-#	INCLUDE 'bower/d3-tip/index.js';
+[%	PROCESS 'scripts/dc_datatables_fn.tt';
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
+	scr_arr = [
+		'/js/d3.min.js',
+#		'/code/crossfilter/crossfilter.min.js',
+#		'/code/dc.js/dc.js',
+#		'/code/dc.js/checkbox-menu.js',
+#		'/code/DataTables/datatables.min.js',
+		'/js/crossfilter.min.js',
+		'/js/dc.min.js',
+		'/js/checkbox-menu.js',
+#		'/js/dc-tooltip-mixin.min.js',
+		'/js/datatables.min.js',
+#		'https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.js'
+	];
+	WRAPPER scripts/pageload_wrapper.tt;
+
 %]
+var res=getJson()
+, label_h = { "pp_subset": [% data_filters.schema.pp_subset.enum_map.json; %]
+, "dataset_type": [% data_filters.schema.dataset_type.enum_map.json %] }
+, data_table_opts = {
+// 	orderFixed: [2, 'asc'],
+// 	rowGroup: {
+// 		dataSrc: 2
+// 	},
 
-	var res=[%
-	IF results.array && results.array.size > 0;
-		USE JSON.Escape( convert_blessed => 1 );
-		results.array.json;
-	ELSE;
-		'[]';
-	END;
-	';'; %]
+//	columnDefs: [ {
+//		orderable: false,
+//		className: 'select-checkbox',
+//		targets:   0
+//	} ],
+[%
+	datatable_cols( 'taxon', results.js.table_cols );
+	datatable_buttons('taxon_oid');
+	datatable_paging( results.js.arr.size ); %]
+	deferRender: true,
+	data: res.arr,
+	select: {
+		style: 'multi'
+	},
+//	scroller: true,
+//	scrollY: "20rem"
+}
+, slug_name = 'dataset_type'
+, table_id = slug_name + '__table'
+, ndx = crossfilter( res.arr )
+, xf_dim = new Object()
+, filter_h = new Object()
+, selecn = new Object()
+, table_filter_dim = 'pp_subset'
+, table = $('#' + table_id ).DataTable(data_table_opts)
+;
 
-	var fn = function(res,document){
-//		var cf = crossfilter(res),
-//		by_ecosys_type = cd.dimension('ecosystem_type'),
-//		by_ecosys_subtype = cd.dimension('ecosystem_subtype'),
-//		by_ncbi_genus = cd.dimension('ncbi_genus');
-	};
-	if (document.readyState !== 'loading'){
-		fn();
-	} else if (document.addEventListener) {
-		document.addEventListener('DOMContentLoaded', function(){
-			fn();
-		});
-	} else {
-		document.attachEvent('onreadystatechange', function() {
-			if (document.readyState !== 'loading'){
-				fn();
-			}
+[ 'pp_subset', 'dataset_type' ].forEach( function(el){
+	xf_dim[el] = ndx.dimension( function(d) { return d[ el ]; });
+//		xf_grp[el] = xf_dim[el].group().reduceCount();
+});
+
+add_dynamic_filters( slug_name, [ 'pp_subset', 'dataset_type' ] );
+
+
+for (var i = 0; i < dc.chartRegistry.list().length; i++) {
+	var chartI = dc.chartRegistry.list()[i];
+	chartI.on("filtered", refreshTable);
+}
+
+table
+.on( 'select', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			selecn[e] = 1;
 		});
 	}
-}());
-</script>
+})
+.on( 'deselect', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			selecn[e] = 0;
+		});
+	}
+});
+
+refreshTable();
+dc.renderAll();
+
+[%	PROCESS standard_functions %]
+
+[%	END # end wrapper %]

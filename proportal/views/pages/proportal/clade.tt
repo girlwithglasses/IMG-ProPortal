@@ -1,8 +1,10 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Clade Graph';
+	page_slug = 'clade';
+
 %]
 <h2>Sample Distribution by Clade</h2>
-<section class="info--clade init page-intro">
+<section class="info--clade init page-intro cf">
 <p>
 	This visualisation shows part of the taxonomic structure of the Prochlorococcus and Synechococcus species. Only <i>Prochlorococcus</i> and <i>Synechococcus</i> are classified into clades.
 </p>
@@ -14,34 +16,32 @@
 		PROCESS 'inc/filters.tt';
 	END;
 %]
-<section class="visualisation cf">
-<div id="clade">
-	<p class="js_vis_loading">
-		Please wait while the visualisation loads.
-	</p>
-</div>
-<div id="plotly" class="hide">
-</div>
+<section id="[% page_slug %]__section" class="[% page_slug %]__section visualisation cf">
+	<div id="[% page_slug %]__vis">
+		<p class='reset' style='visibility: hidden;'>
+			Current filter: <span class='filter'></span>
+		</p>
+	</div>
+	<div id="[% page_slug %]__vis2">
+		<p class='reset' style='visibility: hidden;'>
+			Current filter: <span class='filter'></span>
+		</p>
+	</div>
+
 </section>
-<section role="complementary" class="clade-data">
-[%	WRAPPER 'inc/cart/taxon_add.tt'; %]
-<ul class="noDot">
-[%	FOREACH genus IN results.js.data.keys.sort;
-	FOREACH clade IN results.js.data.$genus.keys.sort;
-		c = results.js.data.$genus.$clade; %]
-<li id="[% c.id %]" class="clade_details">
-	<h4 class="clade-details__genus">Genus [% c.genus %]</h4>
-	<h5 class="clade-details__clade">Clade [% c.label || 'unspecified' %], [% c.genomes.size %] species</h5>
-	<!-- p><a class="clade-details__link--genome_list_clade" href="[% link('genome_list_clade', { clade => c.label } ) %]">View species in table browser</a></p -->
-	<ul>
-	[%		FOREACH s IN c.genomes %]
-		<li><input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% s.taxon_oid %]" id="cbox_[% s.taxon_oid %]" /> <a class="clade-details__link--taxon" href="[% link('details', { domain => 'taxon', taxon_oid => s.taxon_oid }) %]">[% s.taxon_display_name %]</a></li>
-	[%		END %]
-	</ul>
-</li>
-[%	END;
-	END; # end foreach genus %]
-</ul>
-[%	END; # end cart/taxon_add wrapper %]
+<section role="complementary" class="[% page_slug %]-table__section">
+[%
+	table_class = page_slug _ '__table';
+	data_table = {
+		class => table_class,
+		id => table_class,
+		for_datatables_js => 1,
+		tbody => results.js.arr,
+		thead => {
+			enum => results.js.table_cols,
+		},
+	};
+
+	PROCESS 'inc/generic/table.tt' WRAPPER 'inc/cart/taxon_add.tt'; %]
 </section>
 [%	END; %]

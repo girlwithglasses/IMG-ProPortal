@@ -1,10 +1,18 @@
-[%	WRAPPER scripts/pageload_wrapper.tt;
-	scr_arr =  [
+[%	PROCESS 'scripts/dc_datatables_fn.tt';
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
+	scr_arr = [
 		'/js/d3.min.js',
 		'/js/d3.chart.min.js',
 		'/js/d3.chart.tooltip.js',
 		'/js/d3.chart.layout.hierarchy-ext.js',
+		'/js/crossfilter.min.js',
+		'/js/dc.min.js',
+		'/js/checkbox-menu.js',
+		'/js/datatables.min.js',
+#		'https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.js'
 	];
+	WRAPPER scripts/pageload_wrapper.tt;
+
 %]
 
 d3.chart("TippedVisualisation", {
@@ -38,7 +46,6 @@ d3.chart("TippedVisualisation", {
 	},
 
 	tooltip: function( args ){
-
 		var func = function(d) {
 			return d[ args ] || 'no data for ' + args;
 		};
@@ -76,39 +83,124 @@ d3.chart("TippedVisualisation", {
 });
 
 
-		var json = getJson()
-		, class_type_h = json.results.class_type_h
-		, container = d3.select("#partition")
-			.style('height', '500px')
-			.append("svg")
+var res = getJson()
+, label_h = {
+	pp_subset: [% data_filters.schema.pp_subset.enum_map.json %]
+}
+, class_type_h = res.class_type_h
+, container = d3.select("#partition")
+	.style('height', '500px')
+	.append("svg")
+	.attr('width', '100%' )
+	.attr('height', 500)
 
-		, text_fn = function(d,i,tip) {
-			if ( d.data && d.data.taxon_display_name) {
-				return d.data.taxon_display_name;
-			}
-			if( d.depth ) {
-				return class_type_h[ d.depth ] + ': ' + d.name + ', ' + ( d.value || d.values.length ) + ' samples';
-			}
-			return 'all ecosystem classifications';
+, text_fn = function(d,i,tip) {
+	if ( d.data && d.data.taxon_display_name) {
+		return d.data.taxon_display_name;
+	}
+	if( d.depth ) {
+		return class_type_h[ d.depth ] + ': ' + d.name + ', ' + ( d.value || d.values.length ) + ' samples';
+	}
+	return 'all ecosystem classifications';
+}
+
+, vis = container.chart("TippedVisualisation", {
+		chart_type: 'partition.rectangle'
+		, tooltip: {
+			selector: '.partition'
+			, text: text_fn
 		}
+	})
+, data_table_opts = {
+// 	orderFixed: [2, 'asc'],
+// 	rowGroup: {
+// 		dataSrc: 2
+// 	},
 
-		, vis = container.chart("TippedVisualisation", {
-				chart_type: 'partition.rectangle'
-				, tooltip: {
-					selector: '.partition'
-					, text: text_fn
-				}
-			});
+//	columnDefs: [ {
+//		orderable: false,
+//		className: 'select-checkbox',
+//		targets:   0
+//	} ],
+[%
+	datatable_cols( 'taxon', results.js.table_cols );
+	datatable_buttons('taxon_oid');
+	datatable_paging( results.js.arr.size ); %]
+	deferRender: true,
+	data: res.arr,
+	select: {
+		style: 'multi'
+	},
+//	scroller: true,
+//	scrollY: "20rem"
+}
+, slug_name = 'ecosystem'
+, table_id = slug_name + '__table'
+, ndx = crossfilter( res.arr )
+, xf_dim = new Object()
+, filter_h = new Object()
+, selecn = new Object()
+, table = $('#' + table_id).DataTable(data_table_opts)
+, env_dim_arr = [ 'ecosystem', 'ecosystem_category', 'ecosystem_type', 'ecosystem_subtype', 'specific_ecosystem' ]
+, table_filter_dim = 'pp_subset'
+, e
+;
 
-		vis.value( '_COUNT_' )
-		.sortable( '_ASC_' )
-		.collapsible();
+for ( e = 0; e < env_dim_arr.length; e++ ) {
+	xf_dim[ env_dim_arr[e] ] = ndx.dimension(function(d){
+//		return d[ env_dim_arr[e] ];
+		return env_dim_arr.slice( 0 , e+1 )
+		.map( function(el) { return d[ el ]; } )
+		.join('__');
+	});
+}
+xf_dim[ 'pp_subset' ] = ndx.dimension(function(d){ return d.pp_subset });
 
-		d3.selectAll('.js_vis_loading')
-			.remove();
+add_dynamic_filters( slug_name, env_dim_arr );
+add_dynamic_filters( slug_name, [ 'pp_subset' ] );
 
-		vis.draw( json.results.tree );
+env_dim_arr.forEach( function(e) {
+	filter_h[e].title(function(d){
+//		var x = d.key.split('__').pop();
+		return ( d.key == '' ? 'unspecified' : d.key ) + ': ' + d.value;
+	});
+});
 
-//		make_chart_two(json.tree,json.class_types);
+d3.selectAll('.js_vis_loading')
+	.remove();
 
-[%	END %]
+vis.value( '_COUNT_' )
+.sortable( '_ASC_' )
+.collapsible();
+
+vis.draw( res.tree );
+
+for (var i = 0; i < dc.chartRegistry.list().length; i++) {
+	var chartI = dc.chartRegistry.list()[i];
+	chartI.on("filtered", refreshTable);
+}
+
+table
+.on( 'select', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			selecn[e] = 1;
+		});
+	}
+})
+.on( 'deselect', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			delete selecn[e];
+		});
+	}
+});
+
+refreshTable();
+dc.renderAll();
+
+[%	PROCESS 'scripts/dc_datatables_fn.tt' %]
+
+[%	PROCESS standard_functions %]
+
+[%	END # end wrapper %]

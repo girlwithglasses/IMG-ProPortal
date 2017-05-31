@@ -63,7 +63,7 @@ sub run {
 	# check taxon is public
 	my $t_data = $self->run_query({
 		query => 'taxon_name_public',
-		where => {
+		-where => {
 			taxon_oid => $self->args->{taxon_oid},
 		}
 	});

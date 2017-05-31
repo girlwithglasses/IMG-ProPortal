@@ -32,11 +32,6 @@ sub _render {
 	my $table = {
 		thead => {
 			enum => [ 'taxon_oid', 'taxon_display_name', 'dataset_type', 'pp_subset', @{$self->query_filter_schema->{file_type}{enum}} ],
-			enum_map => {
-				taxon_oid => 'Taxon ID',
-				pp_subset => 'ProPortal subset',
-#				%{ $self->query_filter_schema->{file_type}{enum_map} },
-			}
 		},
 		transform => {
 			taxon_oid => sub {

@@ -66,36 +66,27 @@ package ProPortal::App::PhyloViewerPageGenerator;
 
 use IMG::Util::Import 'Class';
 use ScriptAppArgs;
-use AppCore;
 extends 'IMG::App';
 with qw(
 	IMG::App::Role::Controller
 	ProPortal::IO::DBIxDataModel
 	ProPortal::Controller::PhyloViewer::Pipeline
 	IMG::Util::ScriptApp
-	IMG::App::Role::Templater
 );
-
-# has 'controller' => (
-# 	is => 'ro',
-# 	default => 'ProPortal::Controller::PhyloViewer::Results'
-# );
 
 sub run {
 	my $self = shift;
-
-	log_debug { 'I am here!' };
 
 	my $rslts = $self->controller->render( $self->args );
 	log_debug { 'Done rendering!' };
 
 	$rslts->{settings} = $self->config;
 	$rslts->{page_wrapper} = 'layouts/contents_only.tt';
-	$rslts = AppCore::get_tmpl_vars({ core => $self, output => $rslts });
+	$rslts = $self->get_tmpl_vars({ output => $rslts });
 
 	print { $self->args->outfile } $self->render_template({
 		tmpl_args => {
-			%{ $self->config->{engines}{template}{template_toolkit} },
+			%{$self->config->{engines}{template}{template_toolkit}},
 			INCLUDE_PATH => $self->config->{views}
 		},
 		tmpl_data => $rslts,

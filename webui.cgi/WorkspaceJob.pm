@@ -243,11 +243,11 @@ sub printJobMainForm {
                     $p2 .= $line . " ";
                     next;
                 }
-                $r .= $line . $sd . $line . "\t";
+                $r .= $line . $sd . $line . "\t"; # type col and start time col
             }
             close $fh;
 
-            $r .= $p2 . $sd . $p2 . "\t";
+            $r .= $p2 . $sd . $p2 . "\t"; # parameters
         } else {
             $it->addRow($r);
             next;
@@ -265,7 +265,7 @@ sub printJobMainForm {
             chomp $error_code;
             my $line = $fh->getline();
             chomp $line;
-            $r .= $line . $sd . $line . "\t";
+            $r .= $line . $sd . $line . "\t"; # end time
             $r .= "error ($error_code)" . $sd . "error ($error_code)" . "\t";
             close $fh;
         } else {
@@ -339,6 +339,7 @@ sub showJobDetail {
     my $share_func_set_name;
     my $use_blast_db = '';
     my $evalue = '';
+    my $blast_program = '';
     while ( my $line = $res->getline() ) {
         chomp $line;
         if ( $lineno == 0 ) {
@@ -369,6 +370,8 @@ sub showJobDetail {
                 $use_blast_db = $val;
             } elsif($tag eq '--evalue') {
                 $evalue = $val;
+            } elsif($tag eq '--blast_program') {
+                $blast_program = $val;
             }
             print "$line<br/>\n";
         }
@@ -425,7 +428,7 @@ sub showJobDetail {
         showSaveFuncGeneDetail( $sid, $job_name, \@set_names, $datatype );
     } elsif ($job_type eq 'Sequence blast') {
         require WorkspaceBlast;
-        WorkspaceBlast::printResults($job_name, $use_blast_db, $evalue);
+        WorkspaceBlast::printResults($job_name, $use_blast_db, $evalue, $blast_program);
     }
 
     print end_form();

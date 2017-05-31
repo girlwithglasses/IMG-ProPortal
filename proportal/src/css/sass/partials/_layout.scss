@@ -43,7 +43,7 @@ article {
 #home-quick-search {
 	border: $element-border-width solid $element-border-color;
 	height: 400px;
-	
+
 }
 
 #home-quick-search-form {
@@ -55,7 +55,7 @@ article {
     background-repeat: no-repeat;
 	background-position: center center;
     overflow: hidden; /* Creates a new block format context, which will make this tag fill the remaining width */
-    height: 400px;    
+    height: 400px;
 }
 
 
@@ -73,7 +73,7 @@ article {
 	#home-quick-search {
 		// margin: 50px 0;
 	}
-	
+
 	#home-gallery-caption {
 		background: black;
 		opacity: 0.6;
@@ -81,12 +81,12 @@ article {
 		float: left;
 		width: 100%;
 		padding: 20px;
-	
+
 		&:hover {
 			opacity: 0.8;
 		}
 	}
-		
+
 	.content, #tool-input__section, #tool-info__section {
 		width: 100%;
 		padding: 0;
@@ -103,7 +103,7 @@ article {
 		padding: $line-ht $gutter;
 		margin-top: $gutter;
 	}
-	
+
 	#home-quick-search {
 		margin: 50px 0;
 	}
@@ -115,7 +115,7 @@ article {
 		float: left;
 		width: 100%;
 		padding: 20px;
-	
+
 		&:hover {
 			opacity: 0.8;
 		}
@@ -147,9 +147,9 @@ article {
 	.footer {
 		clear: both;
 	}
-	
+
 		// homepage sections.
-		
+
 	#home-quick-search {
 		width: 400px;
 		float: left;
@@ -159,33 +159,34 @@ article {
 		height: 400px;
 	}
 
-#home-gallery-caption {
-	background: black;
-	opacity: 0.6;
-	color: white;
-	float: right;
-	width: 200px;
-	height: 400px;
-	padding: 10px 20px;
-	
-	&:hover {
-		opacity: 0.8;
+	#home-gallery-caption {
+		background: black;
+		opacity: 0.6;
+		color: white;
+		float: right;
+		width: 200px;
+		height: 400px;
+		padding: 10px 20px;
+
+		&:hover {
+			opacity: 0.8;
+		}
 	}
-}			
+
 	#home-about, #home-news, #home-stats {
 		width: 32%;
 		float: left;
 		padding: $line-ht $gutter;
 		margin-left: $gutter;
 	}
-	
+
 	#home-stats {
 		clear: both;
 		margin-left: 0;
 	}
-	
+
 	.page-intro {
-		float: left;
+//		float: left;
 		padding: 0 $gutter;
 		margin-bottom: $line-ht;
 	}

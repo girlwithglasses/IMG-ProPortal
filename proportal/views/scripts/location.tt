@@ -1,6 +1,6 @@
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=[% settings.googlemapsapikey %]"></script>
-<script type="text/javascript" src="[% settings.pp_assets %]/js/markerclustererplus.min.js"></script>
-<script type="text/javascript" src="[% settings.pp_assets %]/js/map.js"></script>
+<script type="text/javascript" src="/js/markerclustererplus.min.js"></script>
+<script type="text/javascript" src="/js/map.js"></script>
 
 <script type="text/javascript">
 (function ready(){
@@ -11,7 +11,7 @@
 	ELSE;
 		'[]';
 	END;
-	',int_links='; # this should be links.taxon
+	',int_links='; # this should be the taxon details link
 
         t_link = { taxon => settings.pp_app _ '/details/taxon' };
 

@@ -1,158 +1,3 @@
-{
-	package ProPortal::IO::ProPortalFilter::pp_subset;
-
-	use IMG::Util::Import 'Class';
-	extends 'IMG::Model::EnumFilter';
-
-	has '+id' => (
-		default => 'pp_subset'
-	);
-
-	# the current query value
-	has '+current' => (
-		default => 'all_proportal'
-	);
-
-	# all valid values
-	has '+valid' => (
-		default => sub {
-			return [ qw( pro syn other pro_phage syn_phage other_phage isolate metagenome all_proportal ) ];
-		}
-	);
-
-	sub schema {
-		my $self = shift;
-		return {
-			id => $self->id,
-			type  => 'enum',
-			title => $self->title,
-			control => 'checkbox',
-			enum => $self->valid,
-			enum_map => {
-				pro => 'Prochlorococcus',
-				syn => 'Synechococcus',
-				other => 'Other bacteria',
-				pro_phage => 'Prochlorococcus phage',
-				syn_phage => 'Synechococcus phage',
-				other_phage => 'Other phages',
-				coccus => 'Prochlorococcus and Synechococcus',
-				bacteria => 'Prochlorococcus, Synechococcus, and other bacteria',
-				phage => 'Phages from Prochlorococcus, Synechococcus, and others',
-				isolate => 'All ProPortal isolates',
-				metagenome => 'Marine metagenomes',
-				pp_isolate => 'All ProPortal isolates',
-				pp_metagenome => 'Marine metagenomes',
-				proportal => 'All isolates and metagenomes',
-				all_proportal => 'All isolates and metagenomes'
-			}
-		};
-	}
-
-	sub sql_filter {
-		my $self = shift;
-		my $f_name = shift // $self->choke({
-			err => 'missing',
-			subject => 'filter'
-		});
-
-		my $filters;
-
-		for ( qw( pro syn other pro_phage syn_phage other_phage ) ) {
-			$filters->{$_} = $_;
-		}
-
-		$filters->{coccus} = [ qw( pro syn ) ];
-		$filters->{bacteria} = [ qw( pro syn other ) ];
-		$filters->{phage} = [ qw( pro_phage syn_phage other_phage ) ];
-
-		$filters->{isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
-		$filters->{isolates} = $filters->{isolate};
-		$filters->{metagenome} = 'metagenome';
-		$filters->{metagenomes} = $filters->{metagenome};
-		$filters->{all_proportal} = { '!=' => undef };
-
-	#	$filters->{pp_metagenome} = 'metagenome';
-	#	$filters->{pp_isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
-	#	$filters->{pp_isolates} = $filters->{pp_isolate};
-	#	$filters->{pp_metagenomes} = $filters->{pp_metagenome};
-	#	$filters->{proportal} = { '!=' => undef };
-
-		$self->choke({
-			err => 'invalid',
-			type => 'pp_subset filter',
-			subject => $f_name
-		}) unless defined $filters->{$f_name};
-
-	#	log_debug { 'Filters: ' . Dumper $filters };
-
-
-
-		return { pp_subset => $filters->{$f_name} };
-
-	}
-
-	1;
-}
-
-
-{
-	package ProPortal::IO::ProPortalFilter::dataset_type;
-
-	use IMG::Util::Import 'Class';
-	use IMG::Model::Filter;
-	extends 'IMG::Model::EnumFilter';
-
-	has '+id' => (
-		default => 'dataset_type'
-	);
-
-	sub sql_filter {
-		my $self = shift;
-		my $f_name = shift // $self->choke({
-			err => 'missing',
-			subject => 'filter'
-		});
-
-		$self->choke({
-			err => 'invalid',
-			type => 'data type filter',
-			subject => $f_name
-		}) unless grep { $f_name eq $_ } @{ $self->valid };
-
-		return { dataset_type => $f_name };
-	}
-
-	sub default {
-		return;
-	}
-
-	sub valid {
-		return [ qw( isolate single_cell metagenome metatranscriptome transcriptome ) ];
-	}
-
-	sub schema {
-		my $self = shift;
-		return {
-			id => 'dataset_type',
-			type => 'enum',
-			title => 'data type',
-			control => 'checkbox',
-			enum => $self->valid,
-			enum_map => {
-				'single cell' => 'Single cell',
-				single_cell => 'Single cell',
-				isolate => 'Isolate',
-				metagenome => 'Metagenome',
-				transcriptome => 'Transcriptome',
-				metatranscriptome => 'Metatranscriptome'
-			}
-		};
-	}
-
-	1;
-}
-
-
 
 package ProPortal::IO::ProPortalFilters;
 
@@ -198,7 +43,6 @@ my $schema = {
 		control => 'checkbox',
 		enum => dataset_type_valid(),
 		enum_map => {
-			'single cell' => 'Single cell',
 			single_cell => 'Single cell',
 			isolate => 'Isolate',
 			metagenome => 'Metagenome',
@@ -213,7 +57,6 @@ my $schema = {
 		title => 'Taxon ID',
 		type => 'number'
 	},
-
 	gene_oid => {
 		id => 'gene_oid',
 		title => 'Gene ID',
@@ -227,6 +70,15 @@ my $schema = {
 	scaffold => {
 		id => 'scaffold',
 		type => 'number'
+	},
+	version => {
+		id => 'version',
+		type => 'string'
+	},
+	cycog_version => {
+		id => 'cycog_version',
+		title => 'CyCOG version',
+		type => 'string'
 	},
 	taxon => {
 		id => 'taxon',
@@ -417,11 +269,15 @@ sub pp_subset_filter {
 	$filters->{bacteria} = [ qw( pro syn other ) ];
 	$filters->{phage} = [ qw( pro_phage syn_phage other_phage ) ];
 
-	$filters->{isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
-	$filters->{isolates} = $filters->{isolate};
-	$filters->{metagenome} = 'metagenome';
-	$filters->{metagenomes} = $filters->{metagenome};
+	$filters->{pp_isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
+	$filters->{pp_metagenome} = 'metagenome';
+
 	$filters->{all_proportal} = { '!=' => undef };
+
+	$filters->{isolate} = $filters->{pp_isolate};
+	$filters->{isolates} = $filters->{pp_isolate};
+	$filters->{metagenome} = $filters->{pp_metagenome};
+	$filters->{metagenomes} = $filters->{pp_metagenome};
 
 #	$filters->{pp_metagenome} = 'metagenome';
 #	$filters->{pp_isolate} = { '!=' => [ -and => undef, 'metagenome' ] };
@@ -468,85 +324,41 @@ sub dataset_type_filter {
 	});
 }
 
-# 	proteinCodingGenes
-#	{ locus_type => 'CDS', obsolete_flag => 'No' }
+sub db_filter {
+	my $self = shift;
+	my $args = shift;
+	if ( $args->{query} =~ /cycog/ ) {
+		return {};
+	}
+}
 
-#	withFunc -- genes with function:
-
-# 	select distinct g.gene_oid
-# 	from gene g
-# 	where g.taxon = ?
-# 	and g.locus_type = 'CDS'
-# 	and g.obsolete_flag = 'No'
-# 	and not (
-# 		lower( g.gene_display_name ) like '%hypothetical%' or
-# 		lower( g.gene_display_name ) like '%unknown%' or
-# 		lower( g.gene_display_name ) like '%unnamed%' or
-# 		lower( g.gene_display_name ) like '%predicted protein%' or
-# 		g.gene_display_name is null
-# 	)
-
-#	withoutFunc -- genes without function
-# 	select distinct g.gene_oid
-# 	from gene g
-# 	where g.taxon = ?
-# 	{	locus_type => 'CDS',
-#		obsolete_flag => 'No',
-# 		-or => {
-# 			'lower( gene_display_name )' => { like => [
-# 			qw( %hypothetical% %unknown% %unnamed% ), '%predicted protein%' ]
-# 			},
-# 			gene_display_name => undef
-# 		}
-#	}
-
-# 	and g.obsolete_flag = 'No'
-# 	and (
-# 		lower( g.gene_display_name ) like '%hypothetical%' or
-# 		lower( g.gene_display_name ) like '%unknown%' or
-# 		lower( g.gene_display_name ) like '%unnamed%' or
-# 		lower( g.gene_display_name ) like '%predicted protein%' or
-# 		g.gene_display_name is null
-# 	)
-
-# 	rna
-#	{ locus_type => { 'like' => '%RNA' } }
-
-
-# 	geneCassette
-
-
-
-# 	biosynthetic_genes
-
-# 		select distinct bcf.feature_id
-# 		from bio_cluster_features_new bcf, bio_cluster_new g
-# 		where bcf.feature_type = 'gene'
-# 		and bcf.cluster_id = g.cluster_id
-# 		and g.taxon = $taxon_oid
-# 		$rclause
-# 		$imgClause
-
-
-# 	pseudogene
-# 	select distinct g0.gene_oid, g0.gene_display_name
-# 	from gene g0
-# 	where g0.taxon = ?
-# 	and( g0.is_pseudogene = 'Yes'
-# 		or g0.img_orf_type like '%pseudo%'
-# 		or g0.locus_type = 'pseudo' )
-# 	and g0.obsolete_flag = 'No'
+sub cycog_version_filter {
+	my $self = shift;
+	my $args = shift;
+	return { version => $args->{filter_value} };
+}
 
 sub taxon_oid_filter {
 	my $self = shift;
 	my $args = shift;
 	my $query = $args->{query};
+
 	if ( $query =~ /gene_list/ ) {
+		if ( $query =~ /gene_list_cassette/ ) {
+			return { 'gene_cassette.taxon' => $args->{filter_value} };
+		}
 		return { 'gene.taxon' => $args->{filter_value} };
 	}
 	if ( $query =~ /scaffold/ ) {
 		return { 'scaffold.taxon' => $args->{filter_value} };
 	}
+	if ( $query =~ /^fn_/ ) {
+		return { taxon => $args->{filter_value} };
+	}
+	if ( $query =~ /cycog/ ) {
+		return { taxon_oid => $args->{filter_value} };
+	}
+
 	return { 'taxon.taxon_oid' => $args->{filter_value} };
 }
 
@@ -556,6 +368,9 @@ sub scaffold_oid_filter {
 	my $query = $args->{query};
 	if ( $query =~ /gene_list/ ) {
 		return { 'gene.scaffold' => $args->{filter_value} };
+	}
+	elsif ( $query =~ /^fn_/ ) {
+		return { 'scaffold' => $args->{filter_value} };
 	}
 	return { scaffold_oid => $args->{filter_value} };
 }
@@ -631,6 +446,7 @@ sub category_filter {
 #		{ gene_fusion_components.gene_oid => gene.gene_oid },
 
 		# cassette
+		cassette => {},
 
 		# biosynthetic_cluster
 		biosynthetic_cluster => {}
@@ -672,7 +488,7 @@ sub pp_subset_default {
 
 sub pp_subset_valid {
 
-	return [ qw( pro syn other pro_phage syn_phage other_phage isolate metagenome all_proportal ) ];
+	return [ qw( pro syn other pro_phage syn_phage other_phage pp_isolate pp_metagenome all_proportal ) ];
 
 }
 

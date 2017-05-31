@@ -7,7 +7,7 @@
 #
 # use recap keys for email submit
 #
-# $Id: forgot.cgi 35780 2016-06-15 20:41:20Z klchu $
+# $Id: forgot.cgi 37087 2017-05-18 17:25:52Z klchu $
 #
 use strict;
 use CGI qw( :standard  );
@@ -23,7 +23,7 @@ my $cgi = new CGI;
 
 print header( -type => "text/html" );
 
-printForm();
+#printForm();
 
 
 exit 0;

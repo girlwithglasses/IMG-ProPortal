@@ -15,8 +15,6 @@ BEGIN {
 		jbrowse/src/perl5
 		jbrowse/extlib/lib/perl5
 	);
-#	my $home = dirname( $dir );
-#	unshift @dir_arr,  catdir( $home, 'ken-branch/webui.cgi' );
 }
 use lib @dir_arr;
 use IMG::Util::Logger;

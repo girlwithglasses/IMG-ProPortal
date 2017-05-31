@@ -17,6 +17,10 @@ webui.cgi/util/
 webui.cgi/psu_diagram/
 
 WebFarm/
+abc/
+coffee/
+docs/
+images/
 bc/
 doc.src-abc/
 doc.src-edu/
@@ -40,36 +44,35 @@ webui.htd-geba/
 webui.htd-hmp/
 webui.htd-metag-mw/
 webui.htd-metag/
-webui.htd-proportal/
+# webui.htd-proportal/
 webui.htd/
 worker.cgi/
 MANIFEST*
 cover_db/
-proportal/lib/DBIC/
 
 # proportal specific stuff:
 proportal/MANIFEST
 proportal/MANIFEST.SKIP
-proportal/Makefile.PL
-proportal/config.pl
-proportal/bin/async.psgi
-proportal/bin/stream_test.psgi
+# proportal/Makefile.PL
+# proportal/config.pl
+# proportal/bin/async.psgi
+# proportal/bin/stream_test.psgi
 
-proportal/environments/db.pl
-proportal/docs/
+# proportal/environments/db.pl
+# proportal/docs/
 proportal/log/
 proportal/node_modules/
-proportal/public/assets/
+# proportal/public/assets/
 proportal/public/bower/
-proportal/image-sprite/
+# proportal/image-sprite/
 # proportal/icomoon/
-proportal/share/
+# proportal/share/
 proportal/tmp/
 proportal/IMG_Core-full/
 proportal/IMG_SG_Dev-as-core/
-proportal/lib/PodServer.pm
-proportal/script/podserver
-proportal/lib/ProPortal/Model/Methods.pm
+# proportal/lib/PodServer.pm
+# proportal/script/podserver
+# proportal/lib/ProPortal/Model/Methods.pm
 
 proportal/src/.sass-cache
 

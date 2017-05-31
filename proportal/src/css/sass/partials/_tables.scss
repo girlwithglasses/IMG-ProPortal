@@ -19,43 +19,32 @@ table {
 
 }
 
-table.condensed {
-	td {
-		padding: .25rem 0 .25rem 0;
-	}
+.condensed td {
+	padding: .25rem 0;
 }
 
-table.lined {
-	td {
-		@include b_border(1px, $border-lighter);
-	}
+.lined td {
+	@include b_border(1px, $border-lighter);
 }
 
-.col1 {
-	width: 200px;
-}
-
-.subheader {
-	margin-top: .5rem;
-}
+//.col1 {
+//	width: 200px;
+//}
+//
+//.subheader {
+//	margin-top: .5rem;
+//}
 
 .taxon-gene-list {
-
-	&__row--total {
+	&__row--total, &__row--rna {
 		font-weight: bold;
 	}
-
 	&__attr {
-		&--rna {
+		&--total_biosynthetic, &--total_cassettes, &--rrna, &--trna, &--xrna {
 			text-indent: 1rem;
 		}
-
-		&--rrna, &--trna, &--xrna {
-			text-indent: 2rem;
-		}
-
 		&--5s_rrna, &--16s_rrna, &--23s_rrna {
-			text-indent: 3rem;
+			text-indent: 2rem;
 		}
 	}
 	&__val {
@@ -96,33 +85,53 @@ caption {
 
 
 // table header font, background colour
-thead tr {
-	@if variable-exists(thead) {
-		color: $thead;
-	}
-	@if variable-exists(thead-bg) {
-		background-color: $thead-bg;
-	}
-}
+//thead tr {
+//	@if variable-exists(thead) {
+//		color: $thead;
+//	}
+//	@if variable-exists(thead-bg) {
+//		background-color: $thead-bg;
+//	}
+//}
+//
+//tbody tr:nth-child(even) {
+//	@if variable-exists(tr) {
+//		color: $tr;
+//	}
+//	@if variable-exists(tr-bg) {
+//		background-color: $tr-bg;
+//	}
+//}
+//
+//tbody tr:nth-child(odd) {
+//	@if variable-exists(tr-odd) {
+//		color: $tr-odd;
+//	}
+//	@if variable-exists(tr-odd-bg) {
+//		background-color: $tr-odd-bg;
+//	}
+//}
 
-tbody tr:nth-child(even) {
-	@if variable-exists(tr) {
-		color: $tr;
-	}
-	@if variable-exists(tr-bg) {
-		background-color: $tr-bg;
-	}
-}
 
-tbody tr:nth-child(odd) {
-	@if variable-exists(tr-odd) {
-		color: $tr-odd;
+.paging {
+	&__container {}
+	&__list {
+		list-style: none;
 	}
-	@if variable-exists(tr-odd-bg) {
-		background-color: $tr-odd-bg;
-	}
-}
+	&__item {
+		display: inline-block;
+		padding: .5rem .75rem;
+		margin-right: .5rem;
 
+		&--current_page {
+			font-weight: bold;
+		}
+	}
+	&__dots {}
+
+
+
+}
 
 .home-stats {
 

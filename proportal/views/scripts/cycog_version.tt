@@ -1,0 +1,61 @@
+[%	PROCESS 'scripts/dc_datatables_fn.tt';
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
+	scr_arr = [
+		'/js/d3.min.js',
+		'/js/crossfilter.min.js',
+		'/js/dc.min.js',
+		'/js/datatables.min.js',
+#		'https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.js'
+	];
+	WRAPPER scripts/pageload_wrapper.tt;
+
+%]
+var res=getJson()
+[%	# cycog table %]
+, cycog_table_opts = {
+//	columnDefs: [
+//	{	orderable: false,
+//		className: "select-checkbox",
+//		targets:   [ 0 ]
+//	}],
+	columns: [
+//	{	data: null, defaultContent: '' },
+	{	data: 'cycog_id',
+		label: 'ID',
+		render: function( d, t, r ){
+		return '<a href="/details/function/cycog/' + r.cycog_id + '">' + 'CyCOG:' + d + '</a>';
+		},
+	},
+	{	data: 'cycog_description',
+		label: 'Description',
+		render: function( d, t, r ){
+		return '<a href="/details/function/cycog/' + r.cycog_id + '">' + d + '</a>';
+		},
+	}],
+[%
+	datatable_buttons('id');
+	datatable_scroller(); %]
+	deferRender: true,
+	data: res.cycog_arr,
+	select: {
+		style: 'multi'
+	},
+}
+, taxon_table_opts = {
+[%
+	datatable_cols( 'taxon', results.js.taxon_table_cols );
+	datatable_buttons('taxon_oid');
+	datatable_scroller(); %]
+	deferRender: true,
+	data: res.taxon_arr,
+	select: {
+		style: 'multi'
+	},
+}
+, slug_name = 'cycog_version'
+, cycog_table = $('#' + slug_name + '_cycog_list_table' ).DataTable( cycog_table_opts )
+, taxon_table = $('#' + slug_name + '_taxon_list_table' ).DataTable( taxon_table_opts )
+;
+
+
+[%	END # end wrapper %]

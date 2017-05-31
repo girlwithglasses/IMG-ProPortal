@@ -1,6 +1,12 @@
 [%	MACRO d_table_init( scr_name ) BLOCK;
 
 #	table set up: '<"dt_top"ilBf>rt<"dt_bottom"p>'
+#	i = information
+#	l = length
+#	B = buttons
+#	f = filter
+#	p = pagination
+#
 #    <div class="dt_top">
 #      {information}
 #      {length}
@@ -24,7 +30,7 @@ $('#[% scr_name %]').DataTable( {
 	select: {
 		style: 'multi'
 	},
-	dom: '<"dt_top"ilBf>rt<"dt_bottom"p>',
+	dom: '<"dt_top"iBf>rt<"dt_bottom">',
 	buttons: [
 		'selectAll',
 		'selectNone',
@@ -33,16 +39,17 @@ $('#[% scr_name %]').DataTable( {
 			action: function() {}
 		}
 	],
-	pageLength: 100,
-	lengthMenu: [ [50, 100, 200, -1], [50, 100, 200, "All"] ],
-	paging: true
+//	pageLength: 100,
+//	lengthMenu: [ [50, 100, 200, -1], [50, 100, 200, "All"] ],
+//	paging: true
+	scroller: true,
+	deferRender: true,
+	scrollY: "20rem"
 });
 [%  END; # end macro d_table_init %]
 <!-- these links contain jQuery, datatables base package, and buttons and select extensions -->
 
 <!-- script type="text/javascript" src="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.js"></script -->
-
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/sc-1.4.2/se-1.2.2/datatables.min.css" />
 
 <!-- link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.4/dt-1.10.15/b-1.3.1/se-1.2.2/datatables.min.css"/ -->
 [%
@@ -50,7 +57,7 @@ $('#[% scr_name %]').DataTable( {
 		scr_arr = [];
 	END;
 
-scr_arr.unshift( "https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/sc-1.4.2/se-1.2.2/datatables.min.js" );
+scr_arr.unshift( "https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.js" );
 	FOREACH s IN scr_arr;
 		'<script type="text/javascript" src="' _ s _ '"></script>';
 	END;

@@ -1,0 +1,47 @@
+[%	WRAPPER 'inc/page_wrapper.tt';
+	title = 'Demo IDs';
+	PROCESS 'inc/generic/link.tt';
+
+%]
+<h2>Gene page demo IDs</h2>
+
+<ul>
+[%	x = {};
+	examples = [
+		[ 640702414, 'obsolete gene' ],
+		[ 640722858, 'tRNA' ],
+		[ 636540200, 'unmapped' ],
+	];
+	FOR ex IN examples; %]
+	<li>
+[%	gene_name_link({ obj => { gene_oid => ex.first, gene_display_name => ex.last } }); %]
+	</li>
+[%	END; %]
+</ul>
+
+<h2>Gene lists</h2>
+<ul>
+[%	examples = [
+	{	text => 'missing xref params for gene list by function',
+		type => 'list',
+		params => { domain => 'gene', db => 'cycog' }
+	},
+	{	text => 'invalid domain for gene list',
+		type => 'list',
+		params => { domain => 'gene', db => 'cog', xref => '0000001' }
+	},
+	{
+
+
+	}
+	];
+
+	FOR ex IN examples; %]
+	<li>
+	[%	generic_link( ex ) %]
+	</li>
+[%	END; %]
+</ul>
+
+[%	END; %]
+

@@ -4,13 +4,13 @@
 %]
 <h2>Internal Error</h2>
 <p class="error">
-	Uh-oh! Something went wrong internally.
+	Uh-oh! Something went wrong:
 </p>
-
-<pre>
+<p>[% exception %]</p>
+<!-- pre>
 message  : [% message %]
 status   : [% status %]
 title    : [% title %]
 exception: [% exception %]
-</pre>
+</pre -->
 [%	END; %]

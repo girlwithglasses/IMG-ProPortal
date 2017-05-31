@@ -8,7 +8,7 @@ BEGIN {
 	while ( 'webUI' ne basename( $dir ) ) {
 		$dir = dirname( $dir );
 	}
-	@dir_arr = map { catdir( $dir, $_ ) } qw( webui.cgi proportal/lib );
+	@dir_arr = map { catdir( $dir, $_ ) } qw( proportal/lib );
 }
 
 use lib @dir_arr;
@@ -16,6 +16,7 @@ use IMG::Util::Import 'LogErr';
 use Dancer2;
 use ProPortal::App::PhyloViewerPageGenerator;
 use Getopt::Long;
+use Carp::Always;
 
 my $args = {};
 GetOptions(

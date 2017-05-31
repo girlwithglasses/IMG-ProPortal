@@ -30,6 +30,7 @@ prefix '/jbrowse' => sub {
 			ProPortal::Util::JBrowseFilePrep
 		);
 
+#		bootstrap( $cntrl, $controller_args );
 		Role::Tiny->apply_roles_to_object( $pp, @roles );
 		$pp->_set_taxon_oid( $taxon_oid );
 		$pp->run();
@@ -38,5 +39,8 @@ prefix '/jbrowse' => sub {
 
 	};
 };
+
+
+
 
 1;

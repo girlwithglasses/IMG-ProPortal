@@ -1,0 +1,603 @@
+/******************************************************
+lnading page div-v33.css
+*/
+
+body#body_frame {
+    width: 950px;
+    margin: 0 auto 0 10px;
+    position: absolute;
+    font-family: "Karla", Helvetica, arial, sans-serif;
+}
+
+/*
+ * used to clear the float css
+ */
+div#myclear {
+    clear: both;
+}
+
+/* -----------------------------------------------------------
+ *
+ * header frame
+ *
+ * -----------------------------------------------------------
+ */
+div#header_frame {
+    height: auto;
+    background: #003366;
+}
+
+/*
+ * jgi logo div top left corner
+ */
+div#jgi_logo {
+    height: 93px;
+    background: white;
+    float: left;
+}
+
+
+/* -----------------------------------------------------------
+ *
+ * img logo div - image just above the menu bar
+ *
+ * -----------------------------------------------------------
+ */
+div#jgi_logo2 {
+    padding-top: 5px;
+    /*width: 950px;*/
+    background: white;
+    /*height: 50px;*/
+}
+
+div#jgi_logo2 a{
+    text-decoration: none;
+    color: white;
+}
+
+
+div#jgi_logo2 img {
+    width: 950px;
+}
+
+/* -----------------------------------------------------------
+ *
+ * main page - home page and non-home pages
+ *
+ * -----------------------------------------------------------
+ */
+div#container, div#content {
+    font: normal Palatino, Georgia, "Times New Roman", Times, serif;
+}
+
+div#container {
+    height: auto;
+    background: white;
+    display: block;
+    border: none;
+}
+
+
+/* -----------------------------------------------------------
+ *
+ * non - home page content
+ *
+ * ----------------------------------------------------------- 
+ */
+div#content_other {
+    height: auto;
+    background: white;
+    display: block;
+    margin: 10px 0 10px 10px;
+}
+
+/*
+ the td here is not nested and is general to all td
+*/
+div#content_other p, td {
+    font-size: 12px;
+    line-height: 1.4em;
+}
+
+
+
+/*
+ * error frame - hidden by default but to display set an in-line style:
+ *  style="display: block" to override the default css
+ */
+div#error_frame {
+    background: white;
+    border: 2px solid red;
+    padding: 10px 10px 10px 10px;
+    margin: 0 0 10px 0;
+    display: none;
+}
+
+div#error_frame  div#error_content {
+    color: red;
+}
+
+div.message_frame {
+    background: none repeat scroll 0 0 white;
+    border: 2px solid #FF8888;
+    border-radius: 5px 5px 5px 5px;
+    color: black;
+    display: none;
+    font-size: 15px;
+    margin: 0 0 10px;
+    padding: 5px;
+}
+
+.shadow {
+    box-shadow: 2px 2px 4px #888888;
+}
+.shadow_full {
+    box-shadow: 0 0 5px #888888;
+}
+
+/* -----------------------------------------------------------
+ *
+ * page footer frame - copyright
+ *
+ * -----------------------------------------------------------
+ */
+#footer_frame {
+    font-size: 11px;
+    border-top: 1px solid #999999;
+    /*background-color: #e9e9e9;*/
+    padding-top: 5px;
+    display: block;
+    margin-top: 5px
+    
+}
+
+#footer_inner_left {
+    float: left;
+    padding-left: 5px;
+    color: #5a5a5a;
+}
+
+#footer_inner_left a{
+    color: #5a5a5a;
+    text-decoration: underline;
+}
+
+
+#footer_inner_right a {
+	text-decoration: none;
+}
+
+#footer_inner_right {
+    float: right; 
+}
+
+
+div.left {
+    float: left;
+    width: 450px;
+    height: 100%;
+    display: block;
+}
+
+#news {
+    background: white;
+    font-size: 14px;
+    line-height: 25px;
+    width: 400px;
+    height: 100%;
+    padding: 5px; 
+    border: 1px solid #eeeeee;
+    -moz-border-radius : 5px;
+    border-radius : 5px;    
+}
+
+
+/******************************************************
+lnading page  img-v33.css
+*/
+
+/*
+padding:25px 50px 75px 100px;
+
+    * top padding is 25px
+    * right padding is 50px
+    * bottom padding is 75px
+    * left padding is 100px
+*/
+
+h1 {
+    font-size: 1.50em;
+    font-weight: normal;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+h2 {
+    font-size: 1.25em;
+    font-weight: normal;
+    color: #003366;
+}
+
+h3 {
+    font-size: 1.2em;
+    color: #336699;
+    font-style: normal;
+    font-weight: 600;
+}
+
+h4 {
+    font-size: 1.2em;
+    font-weight: normal;
+    font-style: italic;
+    font-weight: normal;
+}
+
+div#content_other ul,div#content_other ol,div#content_other p {
+    font-size: 12px;
+    line-height: 1.4em;
+}
+
+div#content_other option,div#content_other input {
+    font-size: 12px;
+}
+
+table.img {
+   border: 0px;
+    width: 950px;
+    padding:0;
+    margin:0;
+    border: 1px solid #99CCFF;
+}
+table.img tbody, table.img tr{
+   border: 0px;
+    padding:0;
+    margin:0;
+    border: 0;
+}
+table.img th, table.img td {
+    padding: 10px;
+    }
+/*
+td.img a {
+    text-decoration: none;
+}
+*/
+
+
+table.tooltip {
+    border: 0px;
+}
+
+table.tooltip td {
+    padding: 0;
+    border: 0px;
+}
+
+td.img {
+    padding: 5px 4px 0px 0px;
+    border: 0px;
+    font-size: 12px;
+    vertical-align: top;
+
+}
+
+
+td.img img {
+    height: 54px;
+    border: 0px; 
+    width: 77px; 
+    vertical-align: top;
+}
+
+
+th.img {
+    font-size: 12px;
+    font-weight: bold;
+    padding-bottom: 6px;
+    padding-top: 10px;
+    padding-left: 3px;
+    padding-right: 3px;
+    text-align: left;
+    border: 1px solid #99ccff;
+    background-color: #e8f3fb
+}
+
+td.checkbox {
+    padding: 0px 4px;
+    border: 1px solid #99ccff;
+}
+
+td.frame {
+    padding-bottom: 1px;
+    padding-top: 1px;
+    text-align: left;
+    border: 1px solid #99ccff;
+}
+
+input.checkbox {
+    border: 2px solid #99ccff;
+}
+
+th.subhead {
+    font-size: .75em;
+    font-weight: bold;
+    padding-bottom: 1px;
+    padding-top: 1px;
+    text-align: left;
+    border: 1px solid #99ccff;
+}
+
+th.noborder {
+    font-size: .75em;
+    font-weight: bold;
+    padding-bottom: 6px;
+    padding-top: 10px;
+    padding-right: 5px;
+    /* text-align: left; */
+    border: 0px;
+}
+
+tr.highlight {
+    background-color: #e8f3fb;
+}
+
+
+input.tobutton {
+    background-image: url("../images/tobutton_blue.jpg");
+    background-repeat: no-repeat;
+    background-color: white;
+    border: 0;
+    width: 50px;
+    height: 40px;
+    margin: 5px 2px;
+}
+
+input.khakibutton {
+    background-image: url("../images/khakibutton.gif");
+    background-repeat: no-repeat;
+    background-color: white;
+    border: 0;
+    width: 96px;
+    height: 27px;
+    margin: 8px 4px;
+}
+
+input.tinybutton {
+    background-color: #ffffff;
+    border: 1px solid #99ccff;
+    border-top: 2px solid #99ccff;
+    height: 17px;
+    margin: 0px 2px;
+    font-size: 9px;
+    line-height: 9px;
+    padding: 0px 2px;
+}
+
+input.smbutton {
+    background-image: url("../images/smbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 138px;
+    height: 29px;
+    line-height: 29px;
+    margin: 10px 0px;
+}
+
+input.smdefbutton {
+/*    background-image: url("../images/smdefbutton.gif");*/
+  background: url("../images/button_bg.png") repeat-x scroll left center #F9FDFE;
+    border-radius: 5px 5px 5px 5px;
+    border-style: solid;
+    border-width: 1px;
+    clear: left;
+    color: #000000;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 5px 0;
+    overflow: visible;
+    padding: 7px 10px;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+
+input.smbutton:hover, input.smdefbutton:hover, input.medbutton:hover, input.meddefbutton:hover, input.lgbutton:hover, input.lgdefbutton:hover, input.tinybutton:hover, div.smbutton a:hover, div.medbutton a:hover, div.lgbutton a:hover, div.smdefbutton a:hover, div.meddefbutton a:hover, div.lgdefbutton a:hover {
+    background: url("../images/button_bg_over.png") repeat-x scroll left center #F9FDF8;
+    border-color: #ADE2B9 #6DC07C #6DC07C #ADE2B9;
+    border-left: 1px solid #ADE2B9;
+    border-style: solid;
+    border-width: 1px;
+    cursor: pointer;
+}
+
+input.medbutton {
+    background-image: url("../images/medbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 184px;
+    height: 29px;
+    line-height: 29px;
+    margin: 10px 0px;
+}
+
+input.meddefbutton {
+    background-image: url("../images/meddefbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 184px;
+    height: 29px;
+    line-height: 29px;
+    margin: 10px 0px;
+}
+
+input.lgbutton {
+    background-image: url("../images/lgbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 258px;
+    height: 29px;
+    line-height: 29px;
+    margin: 10px 0px;
+}
+
+input.lgdefbutton {
+    background-image: url("../images/lgdefbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 258px;
+    height: 29px;
+    line-height: 29px;
+    margin: 10px 0px;
+}
+
+div.lgbutton {
+    background-image: url("../images/lgbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 258px;
+    height: 29px;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+div.lgbutton a,div.medbutton a,div.smbutton a {
+    text-decoration: none;
+    color: #000000;
+    padding: 0px;
+    margin: 0;
+    line-height: 29px;
+    font-size: 12px;
+}
+
+div.medbutton {
+    background-image: url("../images/medbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 184px;
+    height: 29px;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+div.smbutton {
+    background-image: url("../images/smbutton.gif");
+    background-repeat: no-repeat;
+    border: 0;
+    width: 138px;
+    height: 29px;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+div#hint {
+    width: 577px;
+    margin: 0;
+    padding: 0px;
+    margin-left: 1px;
+    margin-top: 20px;
+    vertical-align: bottom;
+}
+
+div#hint img {
+    float: left;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    left: -10px;
+    top: 0px;
+    z-index: 3;
+}
+
+div#hint p {
+    font-style: italic;
+    font-size: .75em;
+    margin: 0px;
+    padding: 6px 10px;
+    border: 2px solid #99ccff;
+    line-height: 16px;
+}
+
+div.pdflink {
+    
+}
+
+div.pdflink a {
+    background: url("../images/icon_pdf.gif") no-repeat scroll left top
+        transparent;
+    display: block;
+    min-height: 21px;
+    padding-left: 25px;
+    text-decoration: none;
+}
+
+a.pdflink2 {
+    background: url("../images/icon_pdf.gif") no-repeat scroll left top
+        transparent;
+    display: block;
+    min-height: 21px;
+    padding-left: 25px;
+    text-decoration: none;
+}
+
+#message { 
+   width: 577px;
+   margin: 0; 
+   padding: 0px; 
+   margin-left: 1px;  
+   margin-top: 20px;  
+   vertical-align: bottom;
+}   
+#message p { 
+   font-style: italic;
+   font-size: .75em; 
+   margin: 0px;
+   padding: 6px 10px;
+   border: 2px solid #99ccff;
+   line-height: 16px;
+}  
+
+.arrowimg {
+    border:0 none;
+}
+
+/* hmp stuff */
+
+#hmp_logo {
+    float: left;
+    height: 125px;
+    position: absolute;
+    width: 141px;
+    z-index: 100;
+    border: medium none;
+}
+
+span.boldTitle{
+    font-size: 14px;
+    font-weight: bold;
+}
+.message {
+    display: block;
+    font-size: 12px;
+    margin: 0px 10px 20px 10px;
+    padding: 0px;
+    white-space: normal;
+    vertical-align:middle;
+    /*float:right;*/
+    float:left;
+    height: auto;
+}
+.message img{
+    border: 0;
+    margin: 0;
+    padding: 0 5px 0 0;
+    vertical-align: top;
+}
+
+
+
+

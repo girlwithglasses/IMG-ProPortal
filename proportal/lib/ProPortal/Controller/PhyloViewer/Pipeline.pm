@@ -67,8 +67,24 @@ sub get_taxon_oid_for_genes {
 	return $self->run_query({
 #		query => 'gene_oid_taxon_oid',
 		query => 'gene_details',
-		where => {
-			gene_oid => $args->{gene_oid}
+		-cols => [ qw(
+			gene_oid
+			gene_symbol
+			gene_display_name
+			product_name
+			description
+			locus_tag
+			locus_type
+			dna_seq_length
+			aa_seq_length
+			gene.taxon|taxon_oid
+			taxon_display_name
+			gene.scaffold|scaffold_oid
+			scaffold_name
+			pp_subset
+		) ],
+		-where => {
+			'gene.gene_oid' => $args->{gene_oid}
 		},
 		check_results => {
 			param => 'gene_oid',
@@ -102,8 +118,8 @@ sub get_metadata_for_taxa {
 
 	return $self->run_query({
 		query => 'taxon_metadata',
-		where => {
-			taxon_oid => $args->{taxon_oid}
+		-where => {
+			'taxon.taxon_oid' => $args->{taxon_oid}
 		},
 		check_results => {
 			param => 'taxon_oid',

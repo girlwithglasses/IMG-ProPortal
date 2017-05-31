@@ -5,7 +5,7 @@
 #
 # see xml.pl
 #
-# $Id: xml.cgi 37048 2017-05-04 21:21:49Z klchu $
+# $Id: xml.cgi 37087 2017-05-18 17:25:52Z klchu $
 #
 # Control the environment from here for security and other reasons.
 #
@@ -21,6 +21,13 @@ export LD_LIBRARY_PATH
 
 PERL5LIB=`pwd`
 export PERL5LIB
+
+export TMP="/opt/img/temp"
+export TEMP="/opt/img/temp"
+export TEMPDIR="/opt/img/temp"
+export TMPDIR="/opt/img/temp"
+export SQLITE_TMPDIR="/opt/img/temp" 
+
 /webfs/projectdirs/microbial/img/bin/imgEnv2 perl -T xml.pl  
 
 

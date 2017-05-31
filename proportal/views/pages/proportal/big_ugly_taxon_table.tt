@@ -1,5 +1,10 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Data Table';
+	PROCESS 'inc/generic/link.tt';
+	PROCESS 'inc/generic/labels.tt';
+	PROCESS 'inc/paged.tt';
+
+	page_slug = 'big_ugly_taxon_table';
 %]
 <h2>Data Type Inventory</h2>
 <section class="info--data_type page-intro">
@@ -10,37 +15,47 @@
 		PROCESS 'inc/filters.tt';
 	END;
 %]
-<section>
-	<h3>Data Type</h3>
-[%	IF results.js.array && results.js.array.size > 0;
-		headers = results.js.cols; %]
-	<table>
-	<caption>Taxonomic data and sample metadata</caption>
-	<thead>
-	<tr><th class='taxon_display_name'>Taxon</th>
-[%		FOREACH th IN headers; %]
-	<th class='[% IF th.size == 1; th; ELSE; th.0; END; %]'>[% IF th.size == 1; th; ELSE; th.0; END; %]</th>
-[%		END; %]
-	</tr>
-	</thead>
-	<tbody class="data-table__tbody">
-[%		FOREACH t IN results.js.array; %]
-		<tr id="taxon_oid_[% t.taxon_oid %]">
-			<td><a href="[% link( 'details', { domain => 'taxon', taxon_oid => t.taxon_oid } ) %]">[% t.taxon_display_name %]</a></td>
-[%			FOREACH th IN headers; %]
-			<td>[%
-				IF th.size == 1;
-					t.$th || '';
-				ELSE;
-					t.${th.0} || t.${th.1};
-				END; %]</td>
-[%			END; %]
-		</tr>
-[%		END; %]
-	</tbody>
-	</table>
+<section role="complementary" class="[% page_slug %]-table__section">
+[%
+	table_class = page_slug _ '__table';
+	data_table = {
+		class => table_class,
+		id => table_class,
+		for_datatables_js => 1,
+		tbody => results.js.arr,
+		thead => {
+			enum => results.js.table_cols,
+		},
+	};
 
-	<div id="table"></div>
-[% END %]
+	PROCESS 'inc/generic/table.tt'; # WRAPPER 'inc/cart/taxon_add.tt';
+
+	IF results.paging.page_count > 1;
+
+		page({
+			class => 'paging',
+			url => 'proportal/big_ugly_taxon_table',
+			params => { page_index => 1 }
+		});
+
+	END;
+%]
+[%#
+draw: ...
+recordsTotal: results.js.total,
+recordsFiltered:
+data: results.js.arr
+DT_RowId: taxon_oid
+integer	Total records, after filtering (i.e. the total number of records after filtering has been applied - not just the number of records being returned for this page of data).
+
+error	string	Optional: If an error occurs during the running of the server-side processing script, you can inform the user of this error by passing back the error message to be displayed using this parameter. Do not include if there is no error.
+
+
+Parameter name	Type	Description
+DT_RowId	string	Set the ID property of the tr node to this value
+DT_RowClass	string	Add this class to the tr node
+DT_RowData	object	Add the data contained in the object to the row using the jQuery data() method to set the data, which can also then be used for later retrieval (for example on a click event).
+DT_RowAttr
+	%]
 </section>
 [% END %]

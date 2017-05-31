@@ -4,7 +4,8 @@ use IMG::Util::Import 'Class'; #'MooRole';
 
 extends 'ProPortal::Controller::Filtered';
 
-with 'IMG::Model::DataManager', 'ProPortal::Controller::Role::TableHelper';
+with 'IMG::Model::DataManager',
+'ProPortal::Controller::Role::TableHelper';
 
 has '+page_id' => (
 	default => 'details/function'
@@ -62,9 +63,7 @@ sub get_data {
 
 	my $res = $self->_core->run_query({
 		query => 'cycog_details',
-		where => {
-			id => $args->{xref}
-		}
+		-where => { id => $args->{xref} }
 	});
 
 	if ( scalar @$res != 1 ) {

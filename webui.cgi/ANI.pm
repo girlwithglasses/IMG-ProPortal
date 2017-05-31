@@ -1,4 +1,4 @@
-# $Id: ANI.pm 36954 2017-04-17 19:34:04Z klchu $
+# $Id: ANI.pm 37112 2017-05-29 22:03:14Z aratner $
 package ANI;
 use strict;
 use CGI qw(:standard);
@@ -70,8 +70,7 @@ sub getAppHeaderData {
         $js = $template->output;
     }
 
-    my @a = ();
-    push(@a, "CompareGenomes", '', '', $js);
+    my @a = ( "CompareGenomes", '', '', $js, '', "ANI.pdf" );
     return @a;
 }
 
@@ -197,7 +196,8 @@ sub printLandingPage {
 }
 
 sub printOverview {
-    print "<h1>ANI Cliques</h1>";
+    WebUtil::printHeaderWithInfo
+	("ANI Cliques", "", "", "ANI Cliques Info", 0, "ANI.pdf");
 
     require TabHTML;
     TabHTML::printTabAPILinks("cliquesTab");
@@ -958,9 +958,8 @@ sub printPairwiseTable {
     my $title       = "Pairwise ANI";
 
     WebUtil::printHeaderWithInfo
-	($title, $description, 
-	  "show info for this tool", 
-	  "Pairwise ANI Info", 0, "ANI.pdf");
+	($title, "", "",
+	 "Pairwise ANI Info", 0, "ANI.pdf");
     
     if ($msg && $msg ne "") {
         print "<p style='width: 650px;'>";
@@ -1333,12 +1332,8 @@ sub printPairwiseWithUploadTable {
     my ($taxon2name_href, $dataRecs_aref, $notitle, $msg) = @_;
 
     if (!$notitle) {
-        my $description = "Pairwise ANI is ...";
-        my $title       = "Pairwise ANI with Upload";
-
         WebUtil::printHeaderWithInfo
-	    ($title, $description, 
-	     "show info for this tool", 
+	    ("Pairwise ANI", "", "",
 	     "Pairwise ANI Info", 0, "ANI.pdf");
 
         if ($msg) {
@@ -1449,7 +1444,10 @@ sub uploadLocalFile {
 }
 
 sub printSameSpeciesPairwiseForm {
-    print "<h1>Same Species Pairwise</h1>";
+    WebUtil::printHeaderWithInfo
+	("Same Species Pairwise", "", "",
+	 "Same Species Pairwise Info", 0, "ANI.pdf");
+
     print "<p>";
     print "Please select no more than 100 species to analyze using pairwise ANI. ";
     print "<br/>Please note that it may not be possible to display the plot for species that have more than 200 genomes.";
@@ -1561,7 +1559,15 @@ sub plotSameSpeciesPairwise {
     my $div_id = "samespeciesplot";
     my $txurl = "$main_cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=";
 
-    print "<h1>ANI Same Species Plot</h1>";
+    if ($include_metagenomes) {
+        WebUtil::printHeaderWithInfo
+            ("ANI Same Species Plot", "", "",
+	     "ANI Same Species Plot Info", 1, "ANI.pdf");
+    } else {
+        WebUtil::printHeaderWithInfo
+            ("ANI Same Species Plot", "", "",
+	     "ANI Same Species Plot Info", 0, "ANI.pdf");
+    }
     my $hint = "The plot can be repositioned using mouse-drag and zoomed using mouse-wheel.<br/>"
 	. "Click on a dot for options to add component genomes to cart.";
     printHint($hint);

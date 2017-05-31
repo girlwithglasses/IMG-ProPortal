@@ -3,9 +3,9 @@ package ProPortal::Controller::List::Taxon;
 use IMG::Util::Import 'Class';#'MooRole';
 
 extends 'ProPortal::Controller::Filtered';
-with
-qw( ProPortal::Controller::Role::TableHelper
+with qw(
 	ProPortal::Controller::Role::Paged
+	ProPortal::Controller::Role::CommonQueries
 );
 
 use Template::Plugin::JSON::Escape;
@@ -18,25 +18,31 @@ has '+page_id' => (
 	default => 'list/taxon'
 );
 
-has '+filter_domains' => (
+has '+tmpl_includes' => (
 	default => sub {
-		return [ qw( pp_subset dataset_type ) ];
+		return {
+			tt_scripts => qw( datatables ),
+		};
 	}
 );
 
-# has '+valid_filters' => (
-# 	default => sub {
-# 		return {
-# 			pp_subset => {
-# 				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
-# 			},
-# 			dataset_type => {
-# 				enum => [ qw( isolate single_cell metagenome transcriptome metatranscriptome ) ]
-# 			},
-# 		};
-# 	}
-# );
+has '+filter_domains' => (
+	default => sub {
+		return [ qw( pp_subset dataset_type cycog_version ) ];
+	}
+);
 
+has 'order_by' => (
+	is => 'rwp',
+	default => 'taxon_oid'
+);
+
+has 'table_cols' => (
+	is => 'ro',
+	default => sub {
+		return [ qw( taxon_oid taxon_display_name dataset_type pp_subset ) ];
+	}
+);
 
 =head3 taxon_list
 
@@ -47,15 +53,24 @@ has '+filter_domains' => (
 sub _render {
 	my $self = shift;
 
+	my $domain = 'taxon';
 	my $statement = $self->get_data;
-	my $arr = $self->page_me( $statement )->all;
-
+	my $res;
+# 	if ( 'ARRAY' eq ref $statement ) {
+# 		# don't try to page it
+# 		$res = $statement;
+# 		$self->_set_n_results( scalar
+# 	}
+# 	else {
+		$res = $self->page_me( $statement )->all;
+# 	}
 	return { results => {
-		domain => 'taxon',
-		arr => $arr,
-		n_results => $statement->row_count,
-		n_pages   => $statement->page_count,
-		table => $self->get_table('taxon'),
+		js => {
+			arr => $res,
+			table_cols => [ 'cbox_' . $domain, @{ $self->table_cols } ]
+		},
+		paging => $self->paging_helper,
+		domain => $domain,
 		params => $self->filters
 	} };
 
@@ -65,11 +80,17 @@ sub _render {
 sub get_data {
 	my $self = shift;
 
+	if ( $self->filters->{cycog_version} ) {
+		return $self->taxon_list_by_cycog_version;
+	}
+
 	# get basic taxon info for each of the members
 	return $self->_core->run_query({
 		query => 'taxon_dataset_type',
 		filters => $self->filters,
-		-result_as => 'statement'
+		-result_as => 'statement',
+		-order_by => $self->order_by,
+		-columns => $self->table_cols
 	});
 }
 

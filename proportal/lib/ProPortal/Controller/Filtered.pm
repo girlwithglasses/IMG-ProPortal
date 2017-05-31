@@ -7,6 +7,21 @@ use Hash::MultiValue;
 
 extends 'ProPortal::Controller::Base';
 
+has 'params' => (
+	is => 'ro',
+	trigger => 1,
+);
+
+sub _build_params {
+	return {};
+}
+
+sub _trigger_params {
+	my $self = shift;
+	log_debug { 'running trigger query params!' };
+	$self->set_filters( $self->params );
+}
+
 =head3 filters
 
 The filters on the current query. Use $app->set_filters( $f ) to set filters.
@@ -26,7 +41,6 @@ has 'filters' => (
 			return $args;
 		}
 		else {
-#			my %hash = %$args;
 			return Hash::MultiValue->new( %$args );
 		}
 	},
@@ -55,7 +69,7 @@ has 'valid_filters' => (
 	default => sub {
 		return {
 			pp_subset => {
-				enum => [ qw( pro pro_phage syn syn_phage other other_phage isolate metagenome all_proportal ) ]
+				enum => [ qw( pro pro_phage syn syn_phage other other_phage pp_isolate pp_metagenome all_proportal ) ]
 			},
 		};
 	}
@@ -96,7 +110,7 @@ sub _build_query_filter_schema {
 
 Set the filters for a query. Checks that the filter setting is valid and throws an error if it is not.
 
-@param  $filters      filter hash in the form { param => value }, e.g. { pp_subset => 'isolate' }
+@param  $filters      filter hash in the form { param => value }, e.g. { pp_subset => 'pp_isolate' }
 
 @output dies if there is an error; otherwise filters are set on the controller
 
@@ -149,8 +163,6 @@ sub set_filters {
 	}
 
 	log_debug { 'filters post-setting: ' . Dumper $self->filters };
-
-#	die;
 
 	return;
 }

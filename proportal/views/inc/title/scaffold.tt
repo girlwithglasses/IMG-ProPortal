@@ -1,17 +1,18 @@
 [%	PROCESS 'inc/generic/link.tt';
 	surtitle = 'scaffold' | ucfirst;
 	article_title = self.scaffold_name;
-	subtitle = 'from ' _ taxon_name_link( {}, self.taxon );
+	subtitle = 'from ' _ taxon_name_link({ obj => self.taxon });
 
 	button = {
 		cart => {
 			form => {
-				type => 'inc/cart/button_add.tt',
+			#	type => 'inc/cart/button_add.tt',
+				type => 'form_as_button',
 				params => { scaffold_oid => self.scaffold_oid },
 				domain => 'scaffold'
 			},
 		},
-		jbrowse => { taxon_oid => self.taxon_oid },
+	#	jbrowse => { taxon_oid => self.taxon_oid },
 		export => [
 		{	type   => 'details',
 			params => {

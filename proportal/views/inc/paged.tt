@@ -1,26 +1,37 @@
-[%	# A generic paging component %]
-[%	IF ! paging.defined('class');
-		paging.class = 'paging';
+[%	# A generic paging component
+
+# 	page({
+# 		page_data => results.paging,
+# 		class => 'paging',
+#		params => {}  # any params for the link
+# 	});
+
+	MACRO page( args ) BLOCK;
+
+	link_params = args.params || {};
+	args.params.page_index = 0;
+
+	IF ! args.defined('class');
+		args.class = 'paging';
 	END;
 
-	# paging.url
-	# paging.params
-
-
-
-	%]
-<div class="[% paging.class %]__container">
-<ul class="[% paging.class %]__list">
-[%
-
-
-start + 2
-
-current +- 2
-
-end - 2
-	FOR page_number IN paging.to_do %]
-<li class="[% paging.class %]__item"><a class="[% paging.class %]__link" href="[% link( paging.url, paging.params ) %]&amp;page_index=[% page_number %]">[% page_number %]</a></li>
+%]
+<div class="[% args.class %]__container">
+<ul class="[% args.class %]__list">
+[%	prev_page = 0;
+	FOR page_number IN args.page_data.page_ix_arr;
+		IF prev_page + 1 != page_number %]
+<li class="[% args.class %]__item [% args.class %]__dots">...</li>
+[%		END;
+		link_params.page_index = page_number; %]
+<li class="[% args.class %]__item[%
+		IF page_number == args.page_data.page_index;
+			' ' _ args.class _ '__item--current_page';
+		END;
+%]"><a class="[% args.class %]__link" href="[% link( args.page_data.page_id, link_params ) %]">[% page_number %]</a></li>
+[%		prev_page = page_number; %]
+<!-- link params: id: [% args.page_data.page_id %], params: [% USE Dumper; Dumper.dump( link_params ) %]-->
 [%	END %]
 </ul>
 </div>
+[%	END; %]

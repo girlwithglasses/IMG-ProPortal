@@ -1,7 +1,7 @@
 ############################################################################
 # Help.pm - site map for all documents in IMG
 #
-# $Id: Help.pm 37064 2017-05-08 21:14:00Z imachen $
+# $Id: Help.pm 37105 2017-05-25 22:12:29Z imachen $
 ############################################################################
 package Help;
 use strict;
@@ -734,7 +734,13 @@ sub printFindFunctionsMap {
 	<td class='img'>
         Browse and find COG functions
 	</td>
-	<td class='img'></td>
+        <td class='img' rowspan='5'>
+                <a href='$base_url/../docs/COG.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+        </td>
     </tr>
 
             <tr class='img' valign='top'>
@@ -745,7 +751,6 @@ sub printFindFunctionsMap {
                 <td class='img'>
                 Browse all COG functions in IMG. 
                 </td>
-                <td class='img'></td>
             </tr>
                 
             <tr class='img' valign='top'>
@@ -756,7 +761,6 @@ sub printFindFunctionsMap {
                 <td class='img'>
                 Browse all COG functions in a table display.
                 </td>
-                <td class='img'></td>
             </tr>
                 
             <tr class='img' valign='top'>
@@ -768,7 +772,6 @@ sub printFindFunctionsMap {
                 Browse COG function list with associated isolate genome and metagenome counts<br/>
                 in IMG.
                 </td>
-                <td class='img'></td>
             </tr>
                 
             <tr class='img' valign='top'>
@@ -779,7 +782,6 @@ sub printFindFunctionsMap {
                 <td class='img'>
                 Browse COG functions and associated COG categories. 
                 </td>
-                <td class='img'></td>
             </tr>
 
     <tr class='img' valign='top'>
@@ -1432,8 +1434,14 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
 	        <a href="$main_cgi?section=MetagPhyloDist&page=top">
 		    <b>Phylogenetic Distribution</b> </a>
 	        </td>
-		<td class='img'></td>
-		<td class='img'></td>
+		<td class='img'>Phylogenetic distribution analysis of isolate genomes and metagenomes</td>
+                <td class='img' rowspan='4'>
+                <a href='$base_url/../docs/PhyloDist.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+                </td>
 	    </tr>
 	    
 	    <tr class='img' valign="top">
@@ -1443,7 +1451,6 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
 		    Metagenomes vs. Genomes </a>
 	        </td>
 		<td class='img'>Phylogenetic Distribution of Metagenomes</td>
-		<td class='img'></td>
 	    </tr>
 
             <tr class='img' valign="top">
@@ -1452,7 +1459,6 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
                     <a href="main.cgi?section=GenomeHits"> Genome vs Metagenomes </a>
                 </td>
                 <td class='img'>Single Genome vs. Metagenomes Analysis</td>
-                <td class='img'></td>
             </tr>
 
 	<tr class='img' valign="top">
@@ -1462,7 +1468,6 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
                     
 	    </td>
 	    <td class='img'> Radial Phylogenetic Tree </td>
-	    <td class='img'> </td>
 	</tr>
     };
 
@@ -1572,7 +1577,13 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
 	    <td class='img'>
 	    Cluster samples (genomes) based on similar COG, Pfam, or enzyme profiles.
 	    </td>
-	    <td class='img'></td>
+	    <td class='img'>
+                <a href='$base_url/../docs/GenomeClustering.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
 	</tr>
     };
 
@@ -1597,7 +1608,13 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
                 <a href="$main_cgi?section=GenomeGeneOrtholog"> Genome Gene Best Homologs </a>
             </td>
             <td class='img'>Find best gene homologs among selected genomes.</td>
-            <td class='img'></td>
+	    <td class='img'>
+                <a href='$base_url/../docs/GenomeGeneBestHomologs.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+            </td>
         </tr>
     };
 
@@ -1612,7 +1629,13 @@ qq{<a href='$base_url/../docs/userGuide.pdf#page=51' target='_help' onClick="_ga
 		<td class='img'>
 		Show genome alignment against phylogenetic marker COGs.
 		</td>
-		<td class='img'></td>
+  	        <td class='img'>
+                <a href='$base_url/../docs/PhyloMarkerCOG.pdf' target='_help'>
+                <img width="20" height="14" border="0" 
+		style="margin-left: 20px; vertical-align:middle" 
+		src="$base_url/images/help_book.gif"> 
+                </a>
+                </td>
 	    </tr>
         };
     }

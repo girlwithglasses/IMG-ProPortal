@@ -9,14 +9,12 @@ BEGIN {
 	while ( 'webUI' ne basename( $dir ) ) {
 		$dir = dirname( $dir );
 	}
+#		webui.cgi
 	@dir_arr = map { catdir( $dir, $_ ) } qw(
-		webui.cgi
 		proportal/lib
 		jbrowse/src/perl5
 		jbrowse/extlib/lib/perl5
 	);
-	my $home = dirname( $dir );
-	unshift @dir_arr,  catdir( $home, 'ken-branch/webui.cgi' );
 }
 use lib @dir_arr;
 use IMG::Util::Logger;
@@ -39,11 +37,10 @@ use Dancer2;
 	use AppCorePlugin;
 
 #	use Routes::Ajax;
-	use Routes::MenuPages;
 #	use Routes::JBrowse;
-	use Routes::IMG;
+#	use Routes::IMG;
+	use Routes::MenuPages;
 	use Routes::ProPortal;
-	use Routes::TestStuff;
 
 	1;
 }

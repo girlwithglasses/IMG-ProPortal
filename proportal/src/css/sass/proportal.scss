@@ -21,6 +21,7 @@
 @import "partials/forms";
 @import "partials/login-form";
 @import "partials/tables";
+@import "partials/datatables";
 @import "partials/nav"; // general navigation layout, etc.
 @import "partials/nav_jgi-links";
 @import "partials/nav_horiz-bar";
@@ -37,14 +38,13 @@
 @import "partials/pageTitle";
 @import "partials/buttonBar";
 // @import "partials/pageHeader";
-@import "partials/grid";
-@import "partials/list-page";
-@import "partials/datatables";
+//@import "partials/grid";
+//@import "partials/list-page";
 
 //Partials for list pages.
-//@import "partials/generic-tables";	@include generic-tables;
-
-@import "partials/generic-carts";	//@include generic-carts;
+//@import "partials/generic-tables";
+//@include generic-tables;
+//@import "partials/generic-carts";	//@include generic-carts;
 
 // print style
 @import "partials/print";

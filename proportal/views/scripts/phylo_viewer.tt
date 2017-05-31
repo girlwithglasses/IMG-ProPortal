@@ -1,5 +1,9 @@
-[%	WRAPPER scripts/pageload_wrapper.tt;
-	scr_arr =  [
+[%	scr_arr = [];
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
+	FOR x IN inc_arr;
+		scr_arr.push( img_app_config.base_url _ x );
+	END;
+	inc_arr =  [
 		'/js/d3.min.js',
 #		'/js/d3-tip.js',
 #		'/js/d3.chart.min.js',
@@ -9,6 +13,7 @@
 		'/js/d3.phyloviewer.js',
 #		'/js/heatmap.js'
 	];
+	WRAPPER scripts/pageload_wrapper.tt;
 %]
 		var json = getJson()
 
@@ -20,18 +25,18 @@
 // 			n_leaves => $leaves,
 
 		// TREE INITIAL VARIABLES
-		var numLeaves = json.results.n_leaves
+		var numLeaves = json.n_leaves
 		, rowHeight = 25
 		, rightPaneEdge = 600
 		, totalWidth = 2000
 		;
 
 		d3.phylogram.build('#phyloviewer',
-		json.results.tree, {
-			all_data: json.results,
+		json.tree, {
+			all_data: json,
 			width: totalWidth,
 			treeWidth: 400,
-			height: (json.results.n_leaves * rowHeight),	// ensures the genes are always the same distance from each other
+			height: (json.n_leaves * rowHeight),	// ensures the genes are always the same distance from each other
 			rowHeight: rowHeight,
 			rightPaneEdge: rightPaneEdge,		// offsets the elements right of the tree (heatmap etc)
 
@@ -39,36 +44,36 @@
 			showDistRuler: false,
 			treeType: "phylogram",
 			heatmap: {
-//				data: json.results,
+//				data: json,
 				cols: {
 					"latitude":
 					{ 'label': 'Latitude',
 						'fn': function(d){
-							return json.results.taxon_data[ json.results.gene_data[d].taxon_oid ].latitude || 0;
+							return json.taxon_data[ json.gene_data[d].taxon_oid ].latitude || 0;
 						}
 					},
 					"longitude":
 					{ 'label': 'Longitude',
 						'fn': function(d){
-							return json.results.taxon_data[ json.results.gene_data[d].taxon_oid ].longitude || 0;
+							return json.taxon_data[ json.gene_data[d].taxon_oid ].longitude || 0;
 						}
 					},
 					"depth":
 					{ 'label': 'Depth',
 						'fn': function(d){
-							return json.results.taxon_data[ json.results.gene_data[d].taxon_oid ].depth || 0;
+							return json.taxon_data[ json.gene_data[d].taxon_oid ].depth || 0;
 						}
 					},
 // 					"seq_length":
 // 					{ 'label': "DNA Sequence Length (bp)",
 // 						'fn': function(d){
-// 							return json.results.gene_data[ d.gene_oid ].
+// 							return json.gene_data[ d.gene_oid ].
 //
 // 					}
 // 					"aa_seq_length":
 // 					{ 'label': "Amino Acid Sequence Length (aa)",
 // 						'fn': function(d){
-// 							return json.results.gene_data[d.gene_oid].
+// 							return json.gene_data[d.gene_oid].
 // 					}
 				},
 				showText: true

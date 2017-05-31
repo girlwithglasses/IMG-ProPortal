@@ -1,10 +1,15 @@
 package ProPortal::Controller::Details::CycogVersion;
 
 use IMG::Util::Import 'Class'; #'MooRole';
+use List::MoreUtils qw( natatime );
 
 extends 'ProPortal::Controller::Filtered';
 
-with 'IMG::Model::DataManager', 'ProPortal::Controller::Role::TableHelper';
+with qw(
+	IMG::Model::DataManager
+	ProPortal::Controller::Role::TableHelper
+	ProPortal::Controller::Role::CommonQueries
+);
 
 has '+page_id' => (
 	default => 'details/cycog_version'
@@ -14,11 +19,19 @@ has '+page_wrapper' => (
 	default => 'layouts/default_wide.tt'
 );
 
-# has '+filter_domains' => (
-# 	default => sub {
-# 		return [ qw( version ) ];
-# 	}
-# );
+has '+tmpl_includes' => (
+	default => sub {
+		return {
+			tt_scripts => qw( cycog_version ),
+		};
+	}
+);
+
+has '+filter_domains' => (
+	default => sub {
+		return [ qw( cycog_version ) ];
+	}
+);
 
 =head3 render
 
@@ -33,12 +46,11 @@ sub _render {
 
 	my $results = $self->get_data( @_ );
 
-	$results->{cycog_table} = $self->get_table('cycog');
-	# remove the 'version' string from the table
-	$results->{cycog_table}{thead}{enum} = [ qw( cbox id description ) ];
+#	return { vers => $vers, taxon_arr => $tax_objs, cycog_arr => $cycog_list };
 
-	$results->{taxon_table} = $self->get_table('taxon');
-	$results->{taxon_table}{thead}{enum} = [ qw( cbox taxon_oid taxon_display_name ) ];
+	# remove the 'version' string from the table
+	$results->{js}{cycog_table_cols} = [ qw( cycog_id cycog_description ) ];
+	$results->{js}{taxon_table_cols} = [ qw( cbox_taxon taxon_oid taxon_display_name ) ];
 
 	return { results => $results };
 }
@@ -47,77 +59,40 @@ sub get_data {
 	my $self = shift;
 	my $args = shift;
 
-	if ( ! $args || ! $args->{version} ) {
+	if ( ! $args || ! $args->{cycog_version} ) {
 		$self->choke({
 			err => 'missing',
 			subject => 'CyCOG release'
 		});
 	}
 
-# 	$self->choke({
-# 		err => 'not_implemented'
-# 	}) unless 'cycog' eq $args->{db};
+	log_debug { 'filters: ' . Dumper $self->filters };
 
-	my $res;
+	my $vers = $self->get_cycog_version;
 
-	if ( 'latest' eq lc( $args->{version} ) ) {
-		# retrieve the latest schema
-		$res = $self->_core->run_query({
-			query => 'cycog_version_latest'
-		});
-	}
-	else {
-		$res = $self->_core->run_query({
-			query => 'cycog_version',
-			-where => { version => $args->{version} }
-		});
-	}
+	my $tax_objs = $self->taxon_list_by_cycog_version({ version_object => $vers });
 
-	if ( scalar @$res != 1 ) {
-		$self->choke({
-			err => 'no_results',
-			subject => 'CyCOG version ' . $args->{version}
-		});
-	}
+	# cycog count
+	my $count = $self->_core->schema('cycog')->table('GeneCycogGroups')
+	->select(
+		-columns => 'count(distinct(id))|count',
+		-where => { version => $vers->{version} },
+	);
+	$vers->{n_clusters} = $count->[0]{count};
 
-	my $vers = $res->[0];
-
-	# get the taxon and cycog lists and populate the data
-
+	# cycog list
 	my $cycog_list = $self->_core->run_query({
 		query =>   'cycog_by_annotation',
 		-where =>   { version => $vers->{version} },
-		-columns   => [ map { 'cycog.'.$_ } qw( id description ) ],
-		-group_by  => [ map { 'cycog.'.$_ } qw( id description ) ],
+		-columns   => [ 'cycog.id|cycog_id', 'cycog.description|cycog_description' ],
+		-group_by  => [ 'cycog.id', 'cycog.description' ],
 		-order_by  => 'cycog.id',
+#		-page_size => 100
 	});
-
-	log_debug { $cycog_list };
-#   "cycog_oid" TEXT,
-#   "name" TEXT,
-#   "cluster_size" TEXT,
-#   "unique_taxa" TEXT,
-#   "duplication_events" TEXT,
-#   "description" TEXT
-
-
-	log_debug { 'version object: ' . Dumper $vers };
-
-	# get the taxon list
-	$vers->expand( 'taxa', ( -columns => 'taxon_oid' ) );
-
-	my $taxon_list = $self->_core->schema( 'img_core' )->table( 'Taxon' )
-		->select(
-			-columns => [ qw( taxon_oid taxon_display_name ) ],
-			-where => { taxon_oid => [ map { $_->{taxon_oid} } @{ $vers->taxa } ] },
-			-order_by => 'taxon_display_name',
-			-result_as => 'statement'
-		)->all;
 
 #	log_debug { 'results: ' . Dumper $gene_list };
 
-	return { vers => $vers, taxon_arr => $taxon_list, cycog_arr => $cycog_list };
-
+	return { vers => $vers, js => { taxon_arr => $tax_objs, cycog_arr => $cycog_list  } };
 }
 
 sub examples {
@@ -125,8 +100,8 @@ sub examples {
 		url => '/details/cycog_version/$vers',
 		desc => 'release metadata for CyCOG <var>$vers</var>'
 	},{
-		url => '/details/cycog_version/$vers',
-		desc => 'metadata for CyCOG release v0.0'
+		url => '/details/cycog_version/latest',
+		desc => 'metadata for the latest CyCOG release v0.0'
 	}];
 }
 

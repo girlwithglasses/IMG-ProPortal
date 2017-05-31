@@ -22,7 +22,8 @@ requires 'Data::Dumper::Concise', 0;
 requires 'DBD::Oracle', 0;					# IMG server only!
 
 requires 'DBD::SQLite', 0;
-requires 'DBIx::Connector', '0.50';
+# requires 'DBIx::Connector', '0.50';
+requires 'DBIx::RetryOverDisconnects', 0;
 requires 'DBIx::Class', 0;
 requires 'DBIx::DataModel', '2.46';
 requires 'HTML::Template', 0;

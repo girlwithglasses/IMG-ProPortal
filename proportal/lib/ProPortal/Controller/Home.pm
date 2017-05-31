@@ -8,7 +8,7 @@ has '+valid_filters' => (
 	default => sub {
 		return {
 			pp_subset => {
-				enum => [ qw( pro syn pro_phage syn_phage other other_phage isolate ) ],
+				enum => [ qw( pro syn pro_phage syn_phage other other_phage pp_isolate ) ],
 			}
 		};
 	}

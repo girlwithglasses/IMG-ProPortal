@@ -101,9 +101,7 @@ sub run {
 	# this dies if it does not return results
 	my $rslts = $self->run_query({
 		query => 'gene_details',
-		where => {
-			gene_oid => $ixes
-		},
+		-where => { gene_oid => $ixes },
 # 		check_results => {
 # 			param => 'gene_oid',
 # 			query => $args->{gene_oid},

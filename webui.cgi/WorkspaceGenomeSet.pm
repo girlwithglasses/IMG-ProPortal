@@ -1,6 +1,6 @@
 ###########################################################################
 # WorkspaceGenomeSet.pm
-# $Id: WorkspaceGenomeSet.pm 37032 2017-05-01 20:04:30Z klchu $
+# $Id: WorkspaceGenomeSet.pm 37097 2017-05-23 17:49:20Z klchu $
 ############################################################################
 package WorkspaceGenomeSet;
 
@@ -58,7 +58,7 @@ my $cgi_tmp_dir       = $env->{cgi_tmp_dir};
 my $cgi_url           = $env->{cgi_url};
 my $enable_ani        = $env->{enable_ani};
 
-my $blast_max_genome = $env->{blast_max_genome};
+my $blast_max_genome = 500;
 
 my $preferences_url    = "$main_cgi?section=MyIMG&form=preferences";
 my $maxGeneListResults = 1000;

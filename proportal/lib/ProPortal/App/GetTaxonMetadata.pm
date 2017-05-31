@@ -110,13 +110,6 @@ sub run {
 		data_arr => $rslts
 	});
 
-	# write out the file
-#	IMG::Util::File::write_csv({
-#		fh       => $self->args->outfh,
-#		cols     => [ qw( taxon_oid taxon_display_name ), @cols ],
-#		data_arr => $rslts
-#	});
-
 }
 
 1;

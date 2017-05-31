@@ -1,0 +1,14 @@
+/* Additional styles needed for IMG documentation pages */
+
+#content {width: 740px;}
+#content p.caption {
+	font-size: .7em; 
+	font-weight: 800;
+	position: relative; 
+	top: -1em;
+}
+img.screen{border: 1px solid #000000;}
+h2 a {position: relative;
+	left: 1em;
+	}
+

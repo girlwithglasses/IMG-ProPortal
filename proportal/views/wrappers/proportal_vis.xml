@@ -17,45 +17,44 @@ DANCER_ENVIRONMENT="proportal-galaxy" perl $HOME/webUI/proportal/script/galaxy/p
 	</param>
 	<when value="clade">
 		<param name="pp_subset" type="select" label="Select the subset to visualise">
-			<option value="isolate">All ProPortal isolates</option>
-			<option value="prochlor">Prochlorococcus species</option>
-			<option value="synech">Synechococcus species</option>
+			<option value="pp_isolate">All ProPortal isolates</option>
+			<option value="pro">Prochlorococcus species</option>
+			<option value="syn">Synechococcus species</option>
 		</param>
 	</when>
 	<when value="ecosystem">
 		<param name="pp_subset" type="select" label="Select the subset to visualise">
 			<option value="all_proportal">All isolates and metagenomes</option>
-			<option value="isolate">All ProPortal isolates</option>
-			<option value="prochlor">Prochlorococcus species</option>
-			<option value="synech">Synechococcus species</option>
-			<option value="prochlor_phage">Prochlorococcus phage species</option>
-			<option value="synech_phage">Synechococcus phage species</option>
-			<option value="metagenome">Marine metagenomes</option>
+			<option value="pp_isolate">All ProPortal isolates</option>
+			<option value="pro">Prochlorococcus species</option>
+			<option value="syn">Synechococcus species</option>
+			<option value="pro_phage">Prochlorococcus phage species</option>
+			<option value="syn_phage">Synechococcus phage species</option>
+			<option value="pp_metagenome">Marine metagenomes</option>
 		</param>
 	</when>
 	<when value="ecotype">
 		<param name="pp_subset" type="select" label="Select the subset to visualise">
-			<option value="prochlor">Prochlorococcus species</option>
+			<option value="pro">Prochlorococcus species</option>
 		</param>
 	</when>
 	<when value="location">
 		<param name="pp_subset" type="select" label="Select the subset to visualise">
 			<option value="all_proportal">All isolates and metagenomes</option>
-			<option value="isolate">All ProPortal isolates</option>
-			<option value="prochlor">Prochlorococcus species</option>
-			<option value="prochlor">Prochlorococcus species</option>
-			<option value="synech">Synechococcus species</option>
-			<option value="prochlor_phage">Prochlorococcus phage species</option>
-			<option value="synech_phage">Synechococcus phage species</option>
+			<option value="pp_isolate">All ProPortal isolates</option>
+			<option value="pro">Prochlorococcus species</option>
+			<option value="syn">Synechococcus species</option>
+			<option value="pro_phage">Prochlorococcus phage species</option>
+			<option value="syn_phage">Synechococcus phage species</option>
 		</param>
 	</when>
 	<when value="phylogram">
 		<param name="pp_subset" type="select" label="Select the subset to visualise">
-			<option value="isolate">All ProPortal isolates</option>
-			<option value="prochlor">Prochlorococcus species</option>
-			<option value="synech">Synechococcus species</option>
-			<option value="prochlor_phage">Prochlorococcus phage species</option>
-			<option value="synech_phage">Synechococcus phage species</option>
+			<option value="pp_isolate">All ProPortal isolates</option>
+			<option value="pro">Prochlorococcus species</option>
+			<option value="syn">Synechococcus species</option>
+			<option value="pro_phage">Prochlorococcus phage species</option>
+			<option value="syn_phage">Synechococcus phage species</option>
 		</param>
 	</when>
 	</conditional>

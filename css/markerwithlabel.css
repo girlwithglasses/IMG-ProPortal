@@ -1,0 +1,11 @@
+.maplabel {
+    color: red;
+    background-color: lightgray;
+    font-family: "Lucida Grande", "Arial", sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    width: 30px;
+    border: 1px solid black;
+    white-space: nowrap;
+}

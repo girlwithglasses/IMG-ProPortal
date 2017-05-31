@@ -2,19 +2,24 @@
 	#	unless specified with form_type, the template 'inc/cart/generic_add.tt'
 	#	will be used
 
-	form_action = img_app_config.main_cgi_url;
-	hidden_params = {
-		section => 'GenomeCart',
-		page => 'genomeCart'
+	form = {
+		action => img_app_config.main_cgi_url,
+		params => {
+			section => 'GenomeCart',
+			page => 'genomeCart'
+		},
+		class => form_class || 'taxon-cart',
+		id => form_id || 'taxon-cart'
 	};
 
-	IF ! form_class;
-		form_class = 'taxon-cart';
-	END;
+# 	IF ! form_class;
+# 		form_class = 'taxon-cart';
+# 	END;
 
 	IF ! form_type;
 		form_type = 'inc/cart/generic_add.tt';
 	END;
 
 	PROCESS $form_type;
+
 %]

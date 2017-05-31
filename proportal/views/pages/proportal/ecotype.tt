@@ -1,8 +1,9 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Ecotype Browser';
+	page_slug = 'ecotype';
 %]
 <h2>Sample Distribution by Ecotype</h2>
-<section class="info--ecotype init page-intro">
+<section class="info--[% page_slug %] init page-intro">
 <p>
 	Browse the distribution of samples by ecotype. Click on the bars of the chart to view the species in each subset.
 </p>
@@ -11,31 +12,29 @@
 		PROCESS 'inc/filters.tt';
 	END %]
 <section class="visualisation cf clear">
-<div id="ecotype">
+<div id="[% page_slug %]__vis">
 	<p class="js_vis_loading">
 		Please wait while the visualisation loads.
 	</p>
+	<p class='reset'>
+		Current filter: <span class='filter'></span>
+	</p>
 </div>
 </section>
-<section role="complementary" class="ecotype-data">
-[% WRAPPER 'inc/cart/taxon_add.tt'; %]
-<ul class="noDot">
-[%	FOREACH ecotype IN results.js.data.keys.sort; %]
-[%		FOREACH clade IN results.js.data.$ecotype.keys.sort; %]
-	<li id="[% results.js.web_safe_names.$clade %]" class="ecotype_details">
-	<h4>Clade [% clade %], ecotype [% ecotype %]</h4>
-[%			FOREACH taxid IN results.js.data.$ecotype.$clade.sort;
-				s = results.js.data.$ecotype.$clade.$taxid;
-				show = { ecotype => 1, h_level => 'h5' };
-				PROCESS 'inc/taxon_details.tt';
-			END;
-		END;
-	'</li>';
-	END;
-'</ul>';
-END; # end wrapper
-%]
+<section role="complementary" class="[% page_slug %]-table__section">
+[%
+	table_class = page_slug _ '__table';
+	data_table = {
+		class => table_class,
+		id => table_class,
+		for_datatables_js => 1,
+		tbody => results.js.arr,
+		thead => {
+			enum => results.js.table_cols,
+		},
+	};
 
+	PROCESS 'inc/generic/table.tt' WRAPPER 'inc/cart/taxon_add.tt'; %]
 </section>
 </article>
 [%	END; %]

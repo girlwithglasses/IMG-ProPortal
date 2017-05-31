@@ -50,7 +50,7 @@ my $test = Plack::Test->create( Routes::ProPortal->to_app );
 
 debug 'server: ' . ( $ENV{PLACK_SERVER} || 'undefined' );
 
-my @filters = qw( prochlor synech prochlor_phage synech_phage isolate metagenome all_proportal );
+my @filters = qw( prochlor synech prochlor_phage synech_phage pp_isolate pp_metagenome all_proportal );
 
 my $obj = Routes::ProPortal->new;
 

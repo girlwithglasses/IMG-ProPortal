@@ -3,7 +3,7 @@
 #   This handles the BLAST option under the "Find Genes" menu option.
 #  --es 07/07/2005
 #
-# $Id: FindGenesBlast.pm 36998 2017-04-26 21:19:12Z klchu $
+# $Id: FindGenesBlast.pm 37098 2017-05-23 20:38:51Z klchu $
 ############################################################################
 package FindGenesBlast;
 my $section = "FindGenesBlast";
@@ -12,10 +12,14 @@ use strict;
 use CGI qw( :standard );
 use DBI;
 use Data::Dumper;
+use Storable;
+use HTML::Template;
+use File::Copy;
+use LwpHandle;
+
 use ScaffoldPanel;
 use WebConfig;
 use WebUtil;
-use LwpHandle;
 use OracleUtil;
 use Mblast;
 use GenomeListFilter;
@@ -27,8 +31,7 @@ use MetaUtil;
 use QueryUtil;
 use Command;
 use GenomeListJSON;
-use HTML::Template;
-use File::Copy;
+use InnerTable;
 
 $| = 1;
 
@@ -873,12 +876,12 @@ sub printGeneSearchBlastForm {
         } elsif ( $s =~ /__genomeListFilter__/ ) {
 
             if ($useGenomeSet) {
-                print submit(
-                    -name    => $submitNameText,
-                    -value   => "Run Blast",
-                    -class   => "meddefbutton",
-                    -onClick => $submitOnClickText
-                );
+#                print submit(
+#                    -name    => $submitNameText,
+#                    -value   => "Run Blast",
+#                    -class   => "meddefbutton",
+#                    -onClick => $submitOnClickText
+#                );
             } else {
                 my $hideViruses = getSessionParam("hideViruses");
                 $hideViruses = ( $hideViruses eq "" || $hideViruses eq "Yes" ) ? 0 : 1;
@@ -911,7 +914,7 @@ sub printGeneSearchBlastForm {
             }
 
         } elsif ( $s =~ /__hint__/ ) {
-            printPageHint($useGenomeSet);
+            printPageHint() if(!$useGenomeSet);
         } elsif ( $s =~ /__userRestrictedBlastMessage__/ ) {
             if ( $user_restricted_site && !$no_restricted_message ) {
 
@@ -962,6 +965,8 @@ sub printGeneSearchBlastResults {
     my $blast_program = param("blast_program");
     my $evalue        = param("blast_evalue");
     my $fasta         = param("fasta");
+    my $use_db = param('use_db');
+        
     if ( blankStr($fasta) ) {
         WebUtil::webError("Query sequence not specified.");
     }
@@ -998,14 +1003,18 @@ sub printGeneSearchBlastResults {
     my $nReadDbs  = @readDbs;
     my $nMybinDbs = @mybinDbs;
 
-    my $all;
-    if ( $nTaxons <= 0 && $nReadDbs <= 0 && $nMybinDbs <= 0 ) {
+    my $all = 0;
+    if($use_db ) {
         $all = 1;
+    } elsif ( $nTaxons <= 0 && $nReadDbs <= 0 && $nMybinDbs <= 0 ) {
+        
+        WebUtil::webError("Please select a genome or metagenome.");
     }
 
     # if user selected more than 100 genomes use all feature instead
     if ( $#imgBlastDbs > $blast_max_genome ) {
-        $all = 1;
+        #$all = 1;
+        WebUtil::webError("You cannot selection more than $blast_max_genome genomes or metagenomes.");
     }
 
     #print "printGeneSearchBlastResults() all=$all<br>\n";
@@ -1018,16 +1027,18 @@ sub printGeneSearchBlastResults {
     print "<p>\n";
     print "Program: " . $blast_program . "<br>\n";
     print "E-value: " . $evalue . "<br>\n";
-    my $use_db = param('use_db');
+
     if ( $use_db ) {
+        my $tmp = $use_db;
+        $tmp = 'allFaa' if($use_db eq 'allFna' 
+            && ($blast_program eq 'blastp' ||$blast_program eq 'blastx' ));
         print qq{
             <font color='green'>
                 Blast Database: $use_db
             </font>
             <br>\n
         };
-    }
-    elsif ($all) {
+    } elsif ($all) {
         print qq{
             <font color='red'>
                 <u>All IMG isolate genomes</u> were used. 
@@ -1065,7 +1076,7 @@ sub printGeneSearchBlastResults {
             printEnvBlastForDbs( \@readDbs );
         } elsif ( $nMybinDbs > 0 ) {
 
-            # TODO my bins -ken
+            #  my bins -ken
             printEnvBlastForDbs( \@mybinDbs );
         }
         HtmlUtil::cgiCacheStop() if ($cgi_blast_cache_enable);
@@ -1092,7 +1103,7 @@ sub printGeneSearchBlastResults {
             WebUtil::webError("Read databases do not suppport proteins.");
         } elsif ( $nMybinDbs > 0 ) {
 
-            # TODO my bins -ken
+            #  my bins -ken
             #WebUtil::webError("My bins databases do not suppport proteins yet.");
             printEnvBlastForDbs( \@mybinDbs, 1 );
         }
@@ -1563,8 +1574,6 @@ print "$reportFile<br>\n" if ($img_ken);
 	       $use_db = 'allFna';
 	   }
 
-    # TODO 16s 10000 to 1000?
-
         # --es 08/30/08
         # Heuristic to discover IMG (Oracle) database name.
         my $database = $img_lid_blastdb;
@@ -1677,16 +1686,76 @@ print "$reportFile<br>\n" if ($img_ken);
         WebUtil::printGeneCartFooter();
     }
 
-    print "<pre><font color='blue'>\n";
-    my $dbh = WebUtil::dbLogin();
 
-    if( $page eq 'blast16sResults') {
-        processDnaSearchResult16s($dbh, \@lines);
+    #  table or raw - save raw file somewhere?
+    # save @lines;
+    my $blastSessionDir = WebUtil::getSessionCgiTmpDir('blast');
+    my $blastfile = saveRawBlastFile("blastDnaAll_", \@lines);
+
+    # my $aref = retrieve("$filename");
+    my $outputFormat = param('outputformat');
+    if($page eq 'blast16sResults') {
+        $outputFormat = 'table';
     } else {
-        my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( $dbh, \@lines, '', 0, $evalue );
+        # TODO fix
+        $outputFormat = 'raw';
+    }
+    
+    
+    # print button to view raw blast output
+    # new tab
+
+    
+    if($outputFormat eq 'table') {
+        my $urlview = "main.cgi?section=Blast16s" 
+        . "&page=output"
+        . "&outputformat=raw"
+        . "&file=$blastfile"
+        . "&blast_program=$blast_pgm";
+        $urlview .= "&use_db=$use_db" if($use_db);
+        $urlview .= "&blast16sResults=blast16sResults";
+    	$urlview .= "&outputformat=raw";
+    	#  . "&blast_evalue=$evalue"
+    	
+        print qq{
+            <br>
+<a href='$urlview' target="_blank"> View raw Blast data file</a><br>
+<br>
+        };     
+    }             
+    
+
+    
+    if($img_ken) {
+    	print qq{
+    	    <p>
+output format $outputFormat<br>
+raw file $blastSessionDir  $blastfile
+page $page
+    	};
     }
 
-    print "</font></pre>\n";
+    print "<pre><font color='blue'>\n" if ($outputFormat ne 'table');
+    my $dbh = WebUtil::dbLogin();
+
+    
+    if( $page eq 'blast16sResults') {
+    	if($outputFormat eq 'table') {
+    		#print "TODO 1 nice html table <br>\n";
+    		
+    		processDnaSearchResult16sHtml($dbh, \@lines);
+    	} else {
+            processDnaSearchResult16s($dbh, \@lines);
+    	}
+    } else {
+    	#if($outputFormat eq 'table') {
+    	#	print "TODO 2 nice html table <br>\n";
+    	#} else {
+            my ( $query_coords_ref, $subjt_coords_ref ) = processDnaSearchResult( $dbh, \@lines, '', 0, $evalue );
+    	#}
+    }
+
+    print "</font></pre>\n" if ($outputFormat ne 'table');
 
     if ($anyHits) {
 	   if ( $use_db ne 'viral_spacers' && $page ne 'blast16sResults' &&
@@ -1710,6 +1779,31 @@ print "$reportFile<br>\n" if ($img_ken);
     
     #webLog "BLAST Done for IMG DB process=$$ " . currDateTime() . "\n" if $verbose >= 1;
 }
+
+# save the raw blast output
+#
+# $prefix_filename - pref fix file name
+#
+# return final filename 
+#
+sub saveRawBlastFile {
+    my($prefix_filename, $lines_aref) = @_;
+    my $blastSessionDir = WebUtil::getSessionCgiTmpDir('blast');
+    my $blastfile = $prefix_filename . "_" . $$;
+    store $lines_aref, $blastSessionDir . '/' . $blastfile;
+    return $blastfile;
+}
+
+#
+# get raw blast file
+#
+sub getRawBlastFile {
+    my($filename) = @_;
+    my $blastSessionDir = WebUtil::getSessionCgiTmpDir('blast');
+    my $aref = retrieve($blastSessionDir . '/' . $filename);
+    return $aref;
+}
+
 
 ############################################################################
 # writeNalFile - Write list of BLAST databases.
@@ -2392,22 +2486,15 @@ sub printGenomeSelectionMessage {
         print qq{
             Find matches in genomes of selected genome sets.
             <br>
-            The total selection can not be more than <b>$blast_max_genome</b> genomes / metagenomes.
+            The set selected cannot be more than <b>500</b> genomes / metagenomes.
             <br>
         };
     } else {
         print qq{
-            <br>Find matches in genomes selected below.
-            <br><br>
-<span style="font-size: 14px; font-weight: bold;">All isolate genomes in IMG will be used: </span>
-(This was equivalent to the old 'All IMG Genes - one large database' option)
-    <ul style="font-size: 13px;">
-        <li> If there is no genome(s) or metagenome(s) selected. 
-        </li>
-        <li> If the selection is more than <b>$blast_max_genome</b> 
-             genomes / metagenomes.
-        </li>
-    </ul>
+            <br>Find matches in genomes selected below.<br>
+            The total selection cannot be more than <b>$blast_max_genome</b> genomes / metagenomes.<br>
+            To BLAST against a large set of genomes please see 
+            <a href='main.cgi?section=Workspace&page=genome'>Workspace Genome Set Blast</a>
         };
     }
 }
@@ -2563,7 +2650,7 @@ sub printEnvBlast {
         $dbFile = "$taxon_reads_fna_dir/$imgBlastDb.reads.fna";
     } elsif ( $imgBlastDb =~ /^bin_/ ) {
 
-        # TODO my bins - ken
+        #  my bins - ken
         $imgBlastDb =~ s/^bin_//;
         $dbFile = "$mybin_blast_dir/$imgBlastDb.fna";
         if ($proteinFlag) {
@@ -2644,7 +2731,7 @@ sub printEnvBlast {
       if $verbose >= 1;
 }
 
-# TODO 16s
+# 16s
 # 
 # this is for the new blast all 16s isolate, metagenome
 # 2017-03-21
@@ -2670,7 +2757,7 @@ sub printEnvBlast {
 sub processDnaSearchResult16s {
     my ( $dbh, $lines_ref, $use_db_workspace  ) = @_;
 
-    # isolate16s.fna metaa16s.fna meta1.fna
+    # isolate16s.fna metaa16s.fna
     my $use_db = param('use_db');   
     if($use_db_workspace) {
         $use_db = $use_db_workspace;
@@ -2700,7 +2787,7 @@ sub processDnaSearchResult16s {
             
             # see Blast16s::printForm for dbn names - ken
             #
-            if($use_db eq 'metaa16s.fna' || $use_db eq 'metau16s.fn') {
+            if($use_db eq 'metaa16s.fna' ) {
                 my ($taxon_oid, $gene_oid, $g_t_str, $data_type) = findIds16s($tmp, 1);
                 $data_type = "assembled" if($data_type eq 'a');
                 $data_type = "uassembled" if($data_type eq 'u');
@@ -2732,7 +2819,7 @@ sub processDnaSearchResult16s {
             $inScore = 0;
             
             # # lcl|640703712_637000059_1481_16S  pcr09 rRNA 16S 16S ribosomal RN...  2736    0.0 
-            if($use_db eq 'metaa16s.fna' || $use_db eq 'metau16s.fna') {
+            if($use_db eq 'metaa16s.fna') {
                 my ($taxon_oid, $gene_oid, $g_t_str, $data_type) = findIds16s($s, 1);
                 
                 $data_type = "assembled" if($data_type eq 'a');
@@ -2750,6 +2837,303 @@ sub processDnaSearchResult16s {
         }
         print "$s\n";
     }
+}
+
+
+#
+# print output as an html table
+#
+sub processDnaSearchResult16sHtml {
+    my ( $dbh, $lines_ref, $use_db_workspace  ) = @_;
+
+    # isolate16s.fna metaa16s.fna meta1.fna
+    my $use_db = param('use_db');   
+    if($use_db_workspace) {
+        $use_db = $use_db_workspace;
+    }
+    
+    my $inSummary = 0;
+
+    my %isoGeneIds = (); # isolate gene ids => {taxon => '', locus type => '', data_type => ''} 
+    my %metaGeneIds = (); # metagenome gene ids => {taxon => '', locus type => '', data_type => ''} 
+
+    my $query_start_coord = 0;
+    my $query_end_coord = 0;
+    my $subject_start_coord = 0;
+    my $subject_end_coord = 0;
+    my $last_gene_oid = 0;
+
+    foreach my $s (@$lines_ref) {
+        chomp $s;
+            
+        if ( $s =~ /^Sequences producing significant alignments/ ) {
+            $inSummary = 1;
+            #$inScore = 0;
+
+        } elsif ( $s =~ /^>/ ) {
+#>lcl|2631417223_2630968343_1476_16S Ga0069308_11765 rRNA 16S 16S rRNA. Archaeal SSU 751947..753422(-) 
+#[Methanobacterium formicicum BRM9]
+#Length=1476
+#
+# Score =  664 bits (359),  Expect = 0.0
+# Identities = 1113/1459 (76%), Gaps = 124/1459 (8%)
+# Strand=Plus/Plus
+#
+#Query  75    GGCATACGGCTCAGTAACGCGTAG-TCAACCT-ACCCTATGGACAAGAATAATCTC-GGG  131
+#             ||| |||||||||||||| ||| | | ||||| ||| || ||||  | |||| | | |||
+#Sbjct  80    GGCGTACGGCTCAGTAACACGTGGAT-AACCTAACCTTA-GGACTGGGATAA-CCCTGGG  136
+
+# query is the user's pasted seq
+# subj is the hit gene
+            
+            
+            $inSummary = 0;
+            my $tmp = $s;
+            $tmp =~ s/>//;
+            
+            # see Blast16s::printForm for dbn names - ken
+            #
+            if($use_db eq 'metaa16s.fna') {
+                my ($taxon_oid, $gene_oid, $g_t_str, $data_type) = findIds16s2($tmp, 1);
+                $data_type = "assembled" if($data_type eq 'a');
+                #my $url = alink("main.cgi?section=MetaGeneDetail&page=metaGeneDetail&taxon_oid=$taxon_oid&gene_oid=$gene_oid&locus_type=rRNA&data_type=$data_type", $g_t_str);
+                #$s =~ s/$g_t_str/$url/;                
+                
+                if($query_start_coord) {
+                    # previous gene
+                    my $href = $metaGeneIds{$last_gene_oid};
+                    $href->{'query_start_coord'} = $query_start_coord;
+                    $href->{'query_end_coord'} = $query_end_coord;
+                    $href->{'subject_start_coord'} = $subject_start_coord;
+                    $href->{'subject_end_coord'} = $subject_end_coord;
+                    
+                    # reset
+                    $query_start_coord = 0;
+                    $query_end_coord = 0;
+                    $subject_start_coord = 0;
+                    $subject_end_coord = 0;                    
+                }
+
+                #my $href = $metaGeneIds{$gene_oid};
+                #$href->{'subject_start_end_coords'} = $subject_start_end_coords;                
+                $last_gene_oid = $gene_oid;
+            } else {
+                my ($taxon_oid, $gene_oid, $g_t_str, $subject_start_end_coords) = findIds16s2($tmp, 0);
+                #my $url = alink("main.cgi?section=GeneDetail&page=geneDetail&gene_oid=$gene_oid", $g_t_str);
+                #$s =~ s/$g_t_str/$url/;
+                
+                if($query_start_coord) {
+                    # previous gene
+                    my $href = $isoGeneIds{$last_gene_oid};
+                    $href->{'query_start_coord'} = $query_start_coord;
+                    $href->{'query_end_coord'} = $query_end_coord;
+                    $href->{'subject_start_coord'} = $subject_start_coord;
+                    $href->{'subject_end_coord'} = $subject_end_coord;
+                    
+                    # reset
+                    $query_start_coord = 0;
+                    $query_end_coord = 0;
+                    $subject_start_coord = 0;
+                    $subject_end_coord = 0;                    
+                }
+
+                my $href = $isoGeneIds{$gene_oid};
+                $href->{'subject_start_end_coords'} = $subject_start_end_coords;
+                $last_gene_oid = $gene_oid;
+            }
+    
+        } elsif(!$inSummary && $s =~ /^Length=/) {
+            my($label, $length) = split(/=/, $s);
+            
+            my $href = $metaGeneIds{$last_gene_oid};
+            $href->{'length'} = $length;
+            
+        } elsif(!$inSummary && $s =~ /^Query/) {
+            my @a = split(/\s+/, $s);
+            $query_start_coord = $a[1] if(!$query_start_coord);
+            $query_end_coord = $a[$#a];
+        } elsif(!$inSummary && $s =~ /^Sbjct/) {
+            my @a = split(/\s+/, $s);
+            $subject_start_coord = $a[1] if(!$subject_start_coord);
+            $subject_end_coord = $a[$#a];                       
+        }  elsif ( $inSummary && !WebUtil::blankStr($s) ) {
+            #$inScore = 0;
+            
+            # # lcl|640703712_637000059_1481_16S  pcr09 rRNA 16S 16S ribosomal RN...  2736    0.0 
+            if($use_db eq 'metaa16s.fna') {
+                my ($taxon_oid, $gene_oid, $g_t_str, $data_type, $bit_score, $e_value) = findIds16s($s, 1);
+                
+                $data_type = "assembled" if($data_type eq 'a');
+
+                #my $url = alink("main.cgi?section=MetaGeneDetail&page=metaGeneDetail&taxon_oid=$taxon_oid&gene_oid=$gene_oid&locus_type=rRNA&data_type=$data_type", $g_t_str);
+                #$s =~ s/$g_t_str/$url/;
+                # print "<input name='gene_oid' value='$taxon_oid $data_type $gene_oid' type='checkbox'>";
+                
+                my %tmp = (
+                    taxon_oid => $taxon_oid,
+                    data_type => $data_type,
+                    locus_type => 'rRNA',
+                    bit_score => $bit_score,
+                    e_value => $e_value, 
+                    'length' => '',                   
+                );
+                $metaGeneIds{$gene_oid} = \%tmp;
+                      
+            } else {
+            
+                my ($taxon_oid, $gene_oid, $g_t_str, $bit_score, $e_value, $length) = findIds16s($s, 0);
+                #my $url = alink("main.cgi?section=GeneDetail&page=geneDetail&gene_oid=$gene_oid", $g_t_str);
+                #$s =~ s/$g_t_str/$url/;
+                #print "<input name='gene_oid' value='$gene_oid' type='checkbox'>";
+                
+                my %tmp = (
+                    taxon_oid => $taxon_oid,
+                    locus_type => 'rRNA',
+                    bit_score => $bit_score,
+                    e_value => $e_value,
+                    'length' => $length,
+                );
+                
+                $isoGeneIds{$gene_oid} = \%tmp;
+            }            
+        }
+        #print "$s\n";
+    } # end for loop
+    
+    if($query_start_coord) {
+        # last gene
+        my $href = $isoGeneIds{$last_gene_oid};
+        $href->{'query_start_coord'} = $query_start_coord;
+        $href->{'query_end_coord'} = $query_end_coord;
+        $href->{'subject_start_coord'} = $subject_start_coord;
+        $href->{'subject_end_coord'} = $subject_end_coord;
+    }
+    
+    my @geneoids = keys %isoGeneIds;
+    
+    if($#geneoids > -1) {
+        require OracleUtil;
+        my $clause = OracleUtil::getNumberIdsInClause($dbh, @geneoids);
+        # gene isolate gene names
+        my $sql = qq{
+select gene_oid, gene_display_name
+from gene
+where gene_oid in($clause)
+        };
+        
+        my $cur = execSql( $dbh, $sql, $verbose );
+        for(;;) {
+            my ($goid, $name) = $cur->fetchrow();
+            last if(!$goid);
+            my $href = $isoGeneIds{$goid};  
+            $href->{'name'} = $name; 
+        }
+             
+    }
+    
+#   print "<pre>\n";
+#    
+#    print Dumper \%isoGeneIds;
+#    
+#   print Dumper \%metaGeneIds;
+#    
+#    print "</pre>\n";
+    
+    
+    my $it          = new InnerTable( 1, "blast16$$", "blast16", 1 );
+    my $sd          = $it->getSdDelim();  
+    
+    $it->addColSpec( "Select" );
+    $it->addColSpec( "Gene ID",           "asc", "center" );
+    $it->addColSpec( "Gene Product Name", "asc", "left" );
+    $it->addColSpec( "Genome ID",         "asc", "left" );
+    #$it->addColSpec( "Genome Name",            "asc", "left" );
+    $it->addColSpec( "Query Start Coord", "asc", "right" );
+    $it->addColSpec( "Query End Coord", "asc", "right" );
+    $it->addColSpec( "Subject Start Coord", "asc", "right" );
+    $it->addColSpec( "Subject End Coord", "asc", "right" );
+    $it->addColSpec( "Bit Score", "asc", "right" );
+    $it->addColSpec( "E-value", "asc", "right" );
+    $it->addColSpec( "Subject Length", "asc", "right" );
+
+    foreach my $gene_oid (keys %isoGeneIds) {
+        my $href = $isoGeneIds{$gene_oid};  
+        
+        my $query_start_coord  = $href->{'query_start_coord'};
+        my $query_end_coord = $href->{'query_end_coord'};
+        my $subject_start_coord = $href->{'subject_start_coord'};
+        my $subject_end_coord = $href->{'subject_end_coord'};
+        my $taxon_oid = $href->{'taxon_oid'};
+        my $bit_score = $href->{'bit_score'};
+        my $evalue = $href->{'e_value'};
+        my $length = $href->{'length'} // '';
+        my $name = $href->{'name'} // '';
+
+
+        my $row;
+        $row .= $sd . "<input type='checkbox' name='gene_oid' " . "value='$gene_oid' />\t";      
+        
+        my $url = alink("main.cgi?section=GeneDetail&page=geneDetail&gene_oid=$gene_oid", $gene_oid);
+        $row .= $gene_oid . $sd . $url . "\t";
+        
+        $row .= $name . $sd . $name . "\t";
+        
+        my $url2 = alink("main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=$taxon_oid", $taxon_oid);
+      $row .= $taxon_oid . $sd . $url2 . "\t";
+      
+      $row .= $query_start_coord . $sd . $query_start_coord . "\t";
+      $row .= $query_end_coord . $sd . $query_end_coord . "\t";
+      $row .= $subject_start_coord . $sd . $subject_start_coord . "\t";
+      $row .= $subject_end_coord . $sd . $subject_end_coord . "\t";
+      
+      $row .= $bit_score . $sd . $bit_score . "\t";
+      $row .= $evalue . $sd . $evalue . "\t";
+      $row .= $length . $sd . $length . "\t";
+      
+        $it->addRow($row);
+    }
+    
+    # metagenomes
+    foreach my $gene_oid (keys %metaGeneIds) {
+        my $href = $metaGeneIds{$gene_oid};  
+        
+        my $query_start_coord  = $href->{'query_start_coord'};
+        my $query_end_coord = $href->{'query_end_coord'};
+        my $subject_start_coord = $href->{'subject_start_coord'};
+        my $subject_end_coord = $href->{'subject_end_coord'};
+        my $taxon_oid = $href->{'taxon_oid'};
+        my $bit_score = $href->{'bit_score'};
+        my $evalue = $href->{'e_value'};
+        my $length = $href->{'length'} // '';
+        my $name = $href->{'name'} // '';
+
+        # there is only assembled
+        my $workspace_id = "$taxon_oid assembled $gene_oid";
+        my $row;
+        $row .= $sd . "<input type='checkbox' name='gene_oid' " . "value='$workspace_id' />\t";      
+        
+        my $url = alink("main.cgi?section=MetaGeneDetail&page=metaGeneDetail&taxon_oid=$taxon_oid&gene_oid=$gene_oid&locus_type=rRNA&data_type=assembled", $gene_oid);
+        $row .= $gene_oid . $sd . $url . "\t";
+        
+        $row .= $name . $sd . $name . "\t";
+        
+        my $url2 = alink("main.cgi?section=MetaDetail&page=metaDetail&taxon_oid=$taxon_oid", $taxon_oid);
+      $row .= $taxon_oid . $sd . $url2 . "\t";
+      
+      $row .= $query_start_coord . $sd . $query_start_coord . "\t";
+      $row .= $query_end_coord . $sd . $query_end_coord . "\t";
+      $row .= $subject_start_coord . $sd . $subject_start_coord . "\t";
+      $row .= $subject_end_coord . $sd . $subject_end_coord . "\t";
+      
+      $row .= $bit_score . $sd . $bit_score . "\t";
+      $row .= $evalue . $sd . $evalue . "\t";
+      $row .= $length . $sd . $length . "\t";
+      
+        $it->addRow($row);
+    } 
+    
+    
+    $it->printOuterTable(1);
 }
 
 # summary section
@@ -2770,6 +3154,49 @@ sub findIds16s  {
         my $data_type = '';
     
         my($gene_taxon, @junk) = split(/\s/, $line);
+         my $last_index = $#junk;
+        my $bit_score = $junk[$last_index - 1];
+        my $e_value = $junk[$last_index];        
+        
+        my $idx = index($gene_taxon, '|');
+        $gene_taxon = substr($gene_taxon, ($idx + 1));
+        ($taxon_oid, $data_type, $gene_oid) = split(/\./, $gene_taxon);        
+    
+        return ($taxon_oid, $gene_oid, $gene_taxon, $data_type, $bit_score, $e_value);
+    } else {
+        my $gene_oid = 0;
+        my $taxon_oid = 0;
+        my $length = 0;
+        my($gene_taxon, @junk) = split(/\s/, $line);
+        my $last_index = $#junk;
+        my $bit_score = $junk[$last_index - 1];
+        my $e_value = $junk[$last_index];
+        
+        my $idx = index($gene_taxon, '|');
+        $gene_taxon = substr($gene_taxon, ($idx + 1));
+        ($gene_oid, $taxon_oid, $length, @junk) = split(/_/, $gene_taxon);
+    
+        return ($taxon_oid, $gene_oid, $gene_taxon, $bit_score, $e_value, $length);
+    }
+}
+
+#
+# detail section
+#
+sub findIds16s2  {
+    my($line, $isMetagenome) = @_;
+    
+    $line =~ s/\s+/ /g;
+    
+    if($isMetagenome) {
+        my $gene_oid = 0;
+        my $taxon_oid = 0;
+        my $data_type = '';
+    
+        my($gene_taxon, @junk) = split(/\s/, $line);
+        
+        
+        
         my $idx = index($gene_taxon, '|');
         $gene_taxon = substr($gene_taxon, ($idx + 1));
         ($taxon_oid, $data_type, $gene_oid) = split(/\./, $gene_taxon);        
@@ -2778,15 +3205,25 @@ sub findIds16s  {
     } else {
         my $gene_oid = 0;
         my $taxon_oid = 0;
-    
+        my $length = 0;
         my($gene_taxon, @junk) = split(/\s/, $line);
+        my $last_index = $#junk;
+       
+        # subject - the hit gene
+        my $start_end_coords = $junk[$last_index];
+        if($start_end_coords !~ /^\d/) {
+             # 2502870202 short name, name is the object
+            $start_end_coords = $junk[$last_index - 1];
+        }
+        
         my $idx = index($gene_taxon, '|');
         $gene_taxon = substr($gene_taxon, ($idx + 1));
-        ($gene_oid, $taxon_oid, @junk) = split(/_/, $gene_taxon);
+        ($gene_oid, $taxon_oid, $length, @junk) = split(/_/, $gene_taxon);
     
-        return ($taxon_oid, $gene_oid, $gene_taxon);
+        return ($taxon_oid, $gene_oid, $gene_taxon, $start_end_coords);
     }
 }
+
 
 ############################################################################
 # processDnaSearchResult - Add links to scaffold regions in chromosome
@@ -3527,7 +3964,7 @@ sub getScaffoldCoordSql {
 # processProteinBlastResult - Process the result of protein blast
 ############################################################################
 sub processProteinBlastResult {
-    my ( $lines_ref, $taxon_oid, $scaffold_oid, $in_file ) = @_;
+    my ( $lines_ref, $taxon_oid, $scaffold_oid, $in_file, $use_db_workspace ) = @_;
 
     my @query_coords;
     my @subjt_coords;

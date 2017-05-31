@@ -1,0 +1,458 @@
+/*CSS for most pages in IMG system */
+	
+body {
+	margin: 0;
+	background-color: #fff;
+	font-family: "Karla", Helvetica, arial, sans-serif;
+	}
+#jgilogo, #jgilogo a img {
+	position: absolute; 
+	top: 0; 
+	left: 0; 
+	width: 100%; 
+	height:93px;
+	padding:0;
+	background-color: #036;
+	z-index: 8;
+}
+/* necessary to get correct #jgilogo height for IE*/
+#jgilogo a img {
+	width: 169px; 
+}
+#title {
+	position: absolute; 
+	top: 98px;
+	left: 0; 
+	width: 100%; 
+	height: 50px;
+	background-color: #fff; 
+}
+#search {
+	position: absolute;
+	top: 20px; 
+	left: 595px; 
+	width: 165px; 
+	padding: 0; 
+	margin: 0;
+}
+#search p{padding: 0; margin: 0;
+	font-size: 10px;}
+#search a{color: white;}
+#search input{padding:0; margin: 0; vertical-align: bottom;}
+
+#login {
+    position: absolute;
+    top: 70px; 
+    left: 595px; 
+    padding: 0; 
+    margin: 0;
+    z-index: 10;
+}
+#login p{
+    padding: 0; margin: 0; 
+    font-size: 12px;
+}
+#login a{
+	color: white;
+    text-decoration:none;
+}
+
+#genomes {
+    position: absolute; 
+	top: 30px; 
+    left: 450px;
+    z-index: 9; 
+    padding: 1px; 
+    margin: 0;
+	background-color:white;
+	width:100px;
+}
+#genomes p{margin: 0; padding: 0;  font-size: 11px;}
+#genomes span{font-size: 12px; font-weight: bold; color: #3399cc;}
+
+/************* begin globalNav styles ****************/
+
+table#globalLink{
+	position: absolute;
+	/*top:9.6em;*/
+	top:0;
+	left:.6em;
+	width:790px;
+	border-style:none;
+	z-index:7;
+}
+/*controls height of nav table spacer row */
+#globalLink tr td#spacerrow {
+	height:155px;
+	border-style:none;
+	z-index: 1;
+}
+#globalLink tr td {
+	padding: .3em .4em .2em .5em;
+	border-style:none;
+	border-top: 2px solid #999;
+	border-left: 2px solid #999;
+	border-bottom: 2px solid #999;
+	white-space: nowrap;
+}
+
+/* "rollover" padding */
+td a.glink, td a.glink:visited {
+	font-size:0.9em;
+	color:#000;
+	text-decoration:none;
+}
+td a.glink:hover{
+	text-decoration:underline;
+}
+
+/*********************** OFF ***********************************/
+
+td#gl1, td#gl2, td#gl3, td#gl4, td#gl5, td#gl6, td#gl7, td#gl8, td#gl9, td#g20 {
+	background-color:#fff;
+}
+
+/*IE needs the a:hover value*/
+td#gl1 a:hover, td#gl2 a:hover, td#gl3 a:hover, td#gl4 a:hover, td#gl5 a:hover, td#gl6 a:hover, td#gl7 a:hover, td#gl8 a:hover, td#gl9 a:hover, td#g20 a:hover {
+	color:#000;
+}
+
+/**********************************************************/
+
+/*********************** ON ***********************************/
+
+tr td#gl1on, tr td#gl2on, tr td#gl3on, tr td#gl4on, tr td#gl5on, tr td#gl6on, tr td#gl7on, tr td#gl8on, tr td#gl9on, tr td#g20on {
+	background-color: #69c;
+	border-bottom:2px solid #69c;
+}
+
+td#gl1on a.glink, td#gl2on a.glink, td#gl3on a.glink, td#gl4on a.glink, td#gl5on a.glink, td#gl6on a.glink, td#gl7on a.glink, td#gl8on a.glink, td#gl9on a.glink, td#g20on a.glink {
+	color: #fff;
+}
+
+tr td#gl1on, tr td#gl2on, tr td#gl3on, tr td#gl4on tr td#gl5on, tr td#gl6on, tr td#gl7on, tr td#gl8on, tr td#gl9on, tr td#g20on {
+	border-bottom:2px solid #69c;
+}
+
+/**********************************************************/
+
+/* finish off right-side end of nav table*/
+tr td#g20, tr td#g20on {
+	border-right:2px solid #999;
+}
+
+/* glink 10 - navigation spacer */
+td.glink#gl0 {
+	padding:0;
+	border-top:none;
+}
+
+.skipLinks {display: none;}
+
+/************ end globalNav styles *******************/ 
+
+/************ begin subglobalNav styles **************/
+
+.subglobalNav {
+	left:0;
+	padding:0;
+	visibility: hidden;
+	color: #fff;
+}
+.subglobalNav a:link, .subglobalNav a:visited {
+  	font-size:0.9em;
+	color: #fff;
+	text-decoration:none;
+	/* --es Make more space for menus
+	padding-left:10px;
+	padding-right:10px;
+	*/
+	padding-left:5px;
+	padding-right:5px;
+}
+.subglobalNav a:hover {
+	color: #fff;
+	text-decoration:underline;
+}
+
+/* internal anchor display */
+tr.subglobalNav#subglobal1on td, tr.subglobalNav#subglobal8on td, tr.subglobalNav#subglobal9on td, tr.subglobalNav#subglobal20on td {
+	border-top: none;
+	padding:0;
+	border-right: 2px solid #999;
+}
+#subglobal1on td, #subglobal8on td, #subglobal9on td, #subglobal20on td {
+	background-color:#69c;
+	/* --es 10/01/2005
+	background-color:#28c;
+	*/
+	height:.3em;
+}
+tr.subglobalNav#subglobal1on td, tr.subglobalNav#subglobal2on td, tr.subglobalNav#subglobal3on td, tr.subglobalNav#subglobal4on td, tr.subglobalNav#subglobal5on td, tr.subglobalNav#subglobal6on td, tr.subglobalNav#subglobal7on td{
+	background-color:#69c;
+	border-top: none;
+	border-right: 2px solid #999;
+}
+
+/* help pages nav */
+#subglobal1on, #subglobal7on, #subglobal2on, #subglobal3on, #subglobal4on, #subglobal5on, #subglobal6on, #subglobal8on, #subglobal9on, #subglobal20, #subglobal20on {
+	visibility:visible;
+	text-decoration:none;
+}
+
+/* subglobal help pages divs 
+#subglobal8, #subglobal8on {
+	position: absolute;
+	top:9.909em;
+	background-color:#9c6;
+	border-style: none;
+	width:169px;
+	height: auto;
+	padding:.3em;
+	left:621px;
+	color: #fff;
+	line-height:150%;
+}
+#subglobal9, #subglobal9on {
+	position: absolute;
+	top:9.909em;
+	background-color:#6cf;
+	border-style: none;
+	color: #fff;
+	left: 560px;
+	width:220px;
+	height: auto;
+	padding:.6em;
+	margin:0;
+}*/
+#subglobal8on ul {
+	list-style-type:none;
+	padding:0 0 .7em 0;
+	margin:0;
+	font-size:.85em;
+}
+#subglobal9on h2 a{
+	font-size:.6em;
+	font-weight:bold;
+}
+#subglobal9on ul li a{
+	padding:0 0 .7em 0;
+	margin:0;
+	font-size:.7em;
+}
+#subglobal9on ul li {
+	list-style-type:disc;
+}
+/*
+#subglobal20, #subglobal20on {
+	position: absolute;
+	top:9.909em;
+	background-color:#f90;
+	border-style: none;
+	left:620px;
+	width:171px;
+	color: #fff;
+	height: auto;
+	padding-right:.5em;
+	margin:0;
+}
+#subglobal20on {
+	border-style:none;
+}*/
+#subglobal20on ul li a{
+	padding:0 0 .7em 0;
+	margin:0;
+	font-size:.7em;
+}
+#subglobal20on ul li {
+	list-style-type:disc;
+}
+/************* end sub globalNav styles *************/
+
+#content {
+		position: absolute; 
+        /*        z-index: 10;*/
+		/* --es 10/01/2005 seems to be best for all browsers. */
+		/*top: 190px; --er need more top room for larger JGI logo*/
+		top: 220px;
+		left: 10px; 
+		width: 98%;
+		background-color: #ffffff; 
+		padding: 0px; 
+		margin: 0px; 
+		}
+
+/*help page div - needs to narrower to allow for menu */
+#contentHelp {
+		position: absolute; 
+		top: 200px;
+		left: 10px; 
+		width: 525px; 
+		background-color: #fff; 
+		padding: 0px; 
+		margin: 0px; 
+		}
+
+#nowrap { white-space: nowrap; }
+
+a:link{
+	color: #000099;
+	text-decoration: underline;
+	}
+a:visited{
+	color: #6666cc;
+	text-decoration: underline;
+	}
+a:hover{
+	color: #cc3300;
+	text-decoration: underline;
+	}
+h1{
+	font-size: 1.50em;
+	
+	font-weight: normal;
+	padding-top: 0;
+	margin-top: 0;
+	}
+h2{
+	font-size: 1.25em;
+	
+	font-weight: normal;
+	color: #003366;
+	}
+h3{
+	font-size: 1.2em;
+	
+	color: #336699;
+	/* --es 10/01/2005
+	font-style: italic;
+	*/
+	font-style: normal;
+	font-weight: 600;
+	}
+h4{
+	font-size: 1.2em;
+	
+	font-weight: normal;
+	font-style: italic;
+	font-weight: normal;
+	}
+#content ul, #content ol, #content p, td, contentHelp{
+	font-size: 12px;
+	
+	line-height: 1.4em;
+	}
+#contentHelp ul, #contentHelp ol, #contentHelp p, td{
+	font-size: 12px;
+	
+	line-height: 1.4em;
+	}
+#content option, #content input{
+	
+	font-size: 12px;
+	}
+
+span.boldTitle{
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#footer p{
+		margin-top: 40px;
+         
+        font-size: .8em;
+        line-height: 1.2em;
+        color: #999999;
+        width: 30em;
+		}
+	
+.alignleft{
+	float: left;
+	margin: .25em 30px 20px 0px;
+	padding: 0px;
+	}
+
+
+table.img { border: 2px solid #99ccff;}
+table.tooltip{border: 0px;}
+table.tooltip td {padding: 0; border: 0px;}
+td.img { padding: 0px 4px; border: 1px solid #99ccff; }
+th.img { 
+	font-size: 12px; font-weight: bold;
+	padding-bottom: 6px;
+	padding-top: 10px;
+	padding-left: 3px;
+	padding-right: 3px;
+	text-align: center;
+	border: 1px solid #99ccff;
+	}
+
+/* --es 10/17/2006 not use
+td.checkbox{border: 0; padding-right: 20px;}
+*/
+td.checkbox {padding: 0px 4px; border: 1px solid #99ccff;}
+td.frame{ padding-bottom: 1px; padding-top: 1px; text-align: left; border: 1px solid #99ccff;}
+
+input.checkbox{border: 2px solid #99ccff;}
+/* --es try without
+th.subhead{ padding-bottom: 2px; padding-top: 2px; text-align: left;}
+*/
+th.subhead{ font-size: .75em; font-weight: bold; padding-bottom: 1px; padding-top: 1px; text-align: left; border: 1px solid #99ccff;}
+th.noborder{ 
+   
+   font-size: .75em; 
+   font-weight: bold; 
+   padding-bottom: 6px; 
+   padding-top: 10px; 
+   padding-right: 5px; 
+   /* text-align: left; */
+   border: 0px;
+}
+
+tr.highlight { background-color: #e8f3fb; }
+
+input.tobutton{background-image:  url("../images/tobutton_blue.jpg"); background-repeat: no-repeat; background-color: white; border: 0; width: 50px; height: 40px; margin: 5px 2px;}
+input.khakibutton{background-image:  url("../images/khakibutton.gif"); background-repeat: no-repeat; background-color: white; border: 0; width: 96px; height: 27px; margin: 8px 4px;}
+input.tinybutton{background-color: #ffffff; border: 1px solid #99ccff; border-top: 2px solid #99ccff; height: 17px; margin: 0px 2px; font-size: 9px; line-height: 9px; padding: 0px 2px;}
+input.smbutton{background-image:  url("../images/smbutton.gif"); background-repeat: no-repeat; border: 0; width: 138px; height: 29px; line-height: 29px; margin: 10px 0px;}
+input.smdefbutton{background-image:  url("../images/smdefbutton.gif"); background-repeat: no-repeat; border: 0; width: 138px; height: 29px; line-height: 29px; margin: 10px 0px;}
+input.medbutton{background-image:  url("../images/medbutton.gif"); background-repeat: no-repeat; border: 0; width: 184px; height: 29px; line-height: 29px; margin: 10px 0px;}
+input.meddefbutton{background-image:  url("../images/meddefbutton.gif"); background-repeat: no-repeat; border: 0; width: 184px; height: 29px; line-height: 29px; margin: 10px 0px;}
+input.lgbutton{background-image:  url("../images/lgbutton.gif"); background-repeat: no-repeat; border: 0; width: 258px; height: 29px; line-height: 29px; margin: 10px 0px;}
+input.lgdefbutton{background-image:  url("../images/lgdefbutton.gif"); background-repeat: no-repeat; border: 0; width: 258px; height: 29px; line-height: 29px; margin: 10px 0px;}
+div.lgbutton{background-image:  url("../images/lgbutton.gif"); background-repeat: no-repeat; border: 0; width: 258px; height: 29px; margin: 0; padding: 0; text-align: center;}
+div.lgbutton a, div.medbutton a, div.smbutton a{text-decoration: none; color: #000000; padding: 0px; margin: 0; line-height: 29px;font-size: 12px; }
+div.medbutton{background-image:  url("../images/medbutton.gif"); background-repeat: no-repeat; border: 0; width: 184px; height: 29px; margin: 0; padding: 0; text-align: center;}
+div.smbutton{background-image:  url("../images/smbutton.gif"); background-repeat: no-repeat; border: 0; width: 138px; height: 29px; margin: 0; padding: 0; text-align: center;}
+
+div.error { width: 577px; margin: 0; padding: 0px; margin-left: 1px; margin-top: 20px; vertical-align: bottom;}
+div.error img{float: left; padding: 0; margin: 0; position: relative; left: -10px; top: -8px; z-index: 3;}
+#content div.error p{ font-style: italic; font-size: .75em; margin: 0px; padding: 6px 10px; border: 2px solid #ff9999; line-height: 16px;}
+
+div.hint { width: 577px; margin: 0; padding: 0px; margin-left: 1px; margin-top: 20px; vertical-align: bottom;}
+div.hint img{float: left;  padding: 0; margin: 0; position: relative; left: -10px; top: 0px; z-index: 3;}
+#content div.hint p { font-style: italic; font-size: .75em; margin: 0px; padding: 6px 10px; border: 2px solid #99ccff; line-height: 16px;}
+
+div.clear {clear: left; padding: 0; margin: 0; margin-bottom: 20px;}
+
+#loading {position: absolute; top: 150px; left: 607px; width: 153px; z-index: 3; color: #6699cc; font-style: italic; font-size: .75em; line-height: 1.3em;}
+
+#numretrieved {position: absolute; top: 150px; left: 607px; width: 153px; z-index: 4; color: #6699cc; background-color: #ffffff;  font-style: italic; font-size: .75em; line-height: 1.3em;}
+
+div.pdflink {
+}
+div.pdflink a {
+    background:url("../images/icon_pdf.gif") no-repeat scroll left top transparent;
+display:block;
+min-height:21px;
+padding-left:25px;
+text-decoration:none;    
+}
+a.pdflink2 {
+    background:url("../images/icon_pdf.gif") no-repeat scroll left top transparent;
+display:block;
+min-height:21px;
+padding-left:25px;
+text-decoration:none;
+}
+

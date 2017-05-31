@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Flattened Pack Example</title>
+    <script src="../node_modules/d3/d3.js"></script>
+    <script src="../node_modules/d3.chart/d3.chart.js"></script>
+    <script src="../d3.chart.layout.hierarchy.js"></script>
+    <style>
+      html {
+        display: table;
+        margin: auto;
+        width: 100%; }
+
+      #vis {
+        width: 100%;
+        height: 700px;
+        margin: auto; }
+
+      .pack circle {
+        stroke: #AAA; }
+
+      .pack text {
+        font: 12px sans-serif;
+        text-anchor: middle;
+        pointer-events: none; }
+    </style>
+  </head>
+  <body>
+
+    <div id="vis"></div>
+
+    <script>
+      (function() {
+
+        function classes(root) {
+          var classes = [];
+
+          function recurse(name, node) {
+            if (node.children) {
+              node.children.forEach(function(child) { recurse(node.name, child); });
+            } else {
+              var newNode = {packageName: name, className: node.name, value: node.size};
+              for (var attr in node) { newNode[attr] = node[attr]; }
+              classes.push(newNode);
+            }
+          }
+
+          recurse(null, root);
+          return {children: classes};
+        }
+
+
+        d3.json("data/flare.json", function(error, json) {
+
+          var pack = d3.select("#vis").append("svg")
+
+            .chart("pack.flattened")
+
+              //.diameter(200)
+              .name("className")
+              .bubble({
+                  flatten : classes,
+                  title   : function(d) { return d.packageName + ": " + d3.format(",d")(d.value); },
+                  pack    : function(d) { return d.packageName; }
+              })
+              .zoomable([0.1, 4])
+              //.colors(['#FF0000', '#00FF00', '#0000FF'])
+              ;
+
+          pack.draw(json);
+
+        });
+      }());
+    </script>
+  </body>
+</html>

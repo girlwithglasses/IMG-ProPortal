@@ -1,0 +1,46 @@
+.logo-doe-sc-col, .logo-doe-sc-bw, .logo-mit, .logo-chisholm-lab-bw, .logo-chisholm-lab-col, .logo-moore-fnd-bw, .logo-moore-fnd-col{
+	background: url(sprites.png) no-repeat;
+}
+
+.logo-doe-sc-col{
+	background-position: 0 -75px ;
+	width: 350px;
+	height: 59px;
+}
+
+.logo-doe-sc-bw{
+	background-position: 0 0;
+	width: 350px;
+	height: 59px;
+}
+
+.logo-mit{
+	background-position: -750px 0;
+	width: 56px;
+	height: 60px;
+}
+
+.logo-chisholm-lab-bw{
+	background-position: -360px 0;
+	width: 199px;
+	height: 35px;
+}
+
+.logo-chisholm-lab-col{
+	background-position: -360px -75px ;
+	width: 199px;
+	height: 35px;
+}
+
+.logo-moore-fnd-bw{
+	background-position: -570px 0;
+	width: 155px;
+	height: 60px;
+}
+
+.logo-moore-fnd-col{
+	background-position: -570px -75px ;
+	width: 155px;
+	height: 60px;
+}
+

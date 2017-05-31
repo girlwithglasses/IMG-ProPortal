@@ -1,497 +1,122 @@
-[%	scr_arr = [ '/js/d3.min.js', '/js/d3-tip.js', 'https://cdn.plot.ly/plotly-latest.min.js' ];
-	IF scr_arr;
-		FOREACH s IN scr_arr;
-			'<script src="' _ s _ '"></script>';
-		END;
-	END;
+[%	PROCESS 'scripts/dc_datatables_fn.tt';
+	USE JSON.Escape( allow_blessed => 1, convert_blessed => 1 );
+	scr_arr = [
+		'/js/d3.min.js',
+		'/js/d3-tip.js',
+#		'/code/crossfilter/crossfilter.min.js',
+#		'/code/dc.js/dc.min.js',
+#		'/code/dc.js/checkbox-menu.js',
+#		'/code/dc-addons/dist/tooltip/dc-tooltip-mixin.min.js',
+#		'/code/DataTables/datatables.min.js',
+		'/js/crossfilter.min.js',
+		'/js/dc.min.js',
+		'/js/checkbox-menu.js',
+		'/js/dc-tooltip-mixin.min.js',
+		'/js/datatables.min.js',
+#		'https://cdn.datatables.net/v/dt/jqc-1.12.4/jszip-3.1.3/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.js'
+	];
+	WRAPPER scripts/pageload_wrapper.tt;
+
 %]
-<script type="text/javascript">
-(function ready(){
-	var res=[%
-	IF results.js.data && results.js.data.size > 0;
-		USE JSON.Escape( convert_blessed => 1 );
-		results.js.data.json;
-		',clade_arr=';
-		results.js.clade_arr.json;
-	ELSE;
-		'{}';
-	END;
-	';';
-%]
-/* global d3, getJson */
-/*jshint laxcomma: true */
-
-function fn(){
-
-	"use strict";
-
-	function makeTree(root) {
-
-		// Compute the new tree layout.
-		var nodes = tree.nodes(root).reverse(),
-			links = tree.links(nodes);
-
-		// Normalize for fixed-depth.
-		nodes.forEach(function(d) {
-			d.y = d.depth * 12;
-			if(d.x0) {
-				d.x = d.x0;
-			}
-		});
-
-		var i = 0;
-
-		// Declare the nodes
-		var node = svg.selectAll("g.node")
-			.data(nodes, function(d) {
-				return d.id || (d.id = ++i);
-			});
-
-		// Enter the nodes.
-		var nodeEnter = node.enter().append("g")
-			.attr("class", "node")
-			.attr("transform", function(d) {
-				return "translate(" + d.y + "," + d.x + ")";
-			});
-
-		//	nodeEnter.append("circle")
-		//	 .attr("r", 10)
-		//	 .style("fill", "#fff");
-
-		nodeEnter.append("text")
-			.attr("x", function(d) {
-				return d.children || d._children ? -13 : 13;
-			})
-			.attr("dy", ".35em")
-			.attr("text-anchor", function(d) {
-				return d.children || d._children ? "end" : "start";
-			})
-			.text(function(d) {
-				return '';
-			})
-			.style("fill-opacity", 1);
-
-		// the horizonal lines
-	//	var link1 =
-		svg.selectAll(".link")
-			.data(links)
-			.enter().append("line")
-			.attr("class", "link")
-			.attr("x1", function(d) {
-				return d.source.y;
-			})
-			.attr("y1", function(d) {
-				return d.target.x;
-			})
-			.attr("x2", function(d) {
-				if(d.target.children) {
-					return d.target.y;
-				} else {
-					return 80;
-				}
-			})
-			.attr("y2", function(d) {
-				return d.target.x;
-			});
-
-		// the vertical lines
-	//	var link2 =
-		svg.selectAll(".link2")
-			.data(links)
-			.enter().append("line")
-			.attr("class", "link")
-			.style("fill", "#99ccff")
-			.attr("x1", function(d) {
-				return d.source.y;
-			})
-			.attr("y1", function(d) {
-				return d.source.x;
-			})
-			.attr("x2", function(d) {
-				return d.source.y;
-			})
-			.attr("y2", function(d) {
-				return d.target.x;
-			});
-
-	}
-
-	function makeGenusBoxes( vis ){
-		// genus gray boxes and text
-		var genusData = [{
-			name: "Prochlorococcus",
-			y0  : 32,
-			h0  : 170,
-			x1  : 185
-		}, {
-			name: "Synechococcus",
-			y0  : 215,
-			h0  : 140,
-			x1  : 20
-		}];
-
-		vis.selectAll("rect2")
-			.data(genusData)
-			.enter()
-			.append("rect")
-			.attr("x", "90")
-			.attr("y", function(d) {
-				return d.y0;
-			})
-			.attr("width", "30")
-			.attr("height", function(d) {
-				return d.h0;
-			})
-			.attr("fill", "lightgray");
-
-		vis.selectAll("text2")
-			.data(genusData)
-			.enter()
-			.append("text")
-			.text(function(d) {
-				return d.name;
-			})
-			.attr("x", function(d) {
-				return d.x1;
-			})
-			.attr("y", "60")
-			.attr("text-anchor", "middle")
-			.attr("font-family", "sans-serif")
-			.attr("font-size", "12px")
-			.attr("fill", "black")
-			.attr("transform", "translate(50,300)rotate(270)");
-	}
-
-	// create a bar chart
-	function makeBarChart( cd, vis ) {
-
-		// bar chart
-		var color = d3.scale.category20b(),
-		width  = 300,
-		height = 360,
-		barHeight = 24,
-		offset = 190,
-//		genus = ['Prochlorococcus', 'Synechococcus'],
-		chart,
-		clades = ['', 'HLI', 'HLII', 'LLI', 'LLII/III', 'LLIV', '5.1A', '5.1B', '5.2', '5.3'],
-		sortedCladeData = clades.map(function(c){
-			for ( var g in cd ) {
-				if( this[g][c] ) {
-					this[g][c].count = this[g][c]['genomes'].length;
-					return this[g][c];
-				}
-			}
-			return { id: "", count: 0 };
-		}, cd),
-
-		x = d3.scale.linear()
-			.domain([0, d3.max(sortedCladeData,function(d){ return d.count; } )])
-			.range([0, width]),
-
-		y = d3.scale.linear()
-			.domain([0, clades.length])
-			.range([0, height]),
-	//	y = d3.scale.ordinal()
-	//		.domain( cladeData.map(function(d){ return d.id }) )
-	//		.rangeBands([0, height]),
-
-		tip = d3.tip()
-			.attr('class', 'd3-tip')
-			.direction('e')
-			.offset([0, 10])
-			.html(function(d) {
-				return "Genome count: " + d.count;
-			}),
-	/*
-		grid = d3.range(25).map(function(i) {
-			return {
-				'x1': 0,
-				'y1': 0,
-				'x2': 0,
-				'y2': height
-			};
-		}),
-
-		// tick values: 10, 20, 30, ...
-		tickVals = grid.map(function(d, i) {
-			return i * 10;
-		}),
-
-		grids = vis.append('g')
-			.attr('id', 'grid')
-			.attr('transform', 'translate(' + offset + ',10)')
-			.selectAll('line')
-			.data(grid)
-		  .enter()
-			.append('line')
-			.attr({
-				'x1': function(d, i) {
-					return i * 30;
-				},
-				'y1': function(d) {
-					return d.y1;
-				},
-				'x2': function(d, i) {
-					return i * 30;
-				},
-				'y2': function(d) {
-					return d.y2;
-				},
-			})
-			.style({
-				'stroke': '#adadad',
-				'stroke-width': '1px'
-			}),
-
-		xAxis = d3.svg.axis(),
-		yAxis = d3.svg.axis(),
-		chart;
-
-		xAxis
-			.orient('bottom')
-			.scale(x)
-			.tickValues(tickVals);
-	*/
-		yAxis = d3.svg.axis();
-		yAxis
-			.orient('left')
-			.scale(y)
-			.tickSize(2)
-			.tickFormat(function(d,i) {
-				if(clades[i]) {
-					return clades[i];
-				} else {
-					return '';
-				}
-			})
-			.tickValues(d3.range(17));
-
-
-		// show clades
-		vis.append('g')
-			.attr("transform", "translate(" + offset + ",10)")
-			.attr('id', 'yaxis')
-			.call(yAxis);
-
-		chart = vis.append('g')
-			.attr("transform", "translate(" + offset + ",0)")
-			.attr('id', 'bars')
-			.selectAll('rect')
-			.data(sortedCladeData)
-		  .enter()
-			.append('rect')
-			.attr('height', barHeight)
-			.attr('x', 0)
-			.attr('y', function(d, i) {
-				return y(i) + 2;
-			})
-			.attr('width', function(d) {
-				return x(d.count);
-			})
-			.style('fill', function(d, i) {
-				return color(i % 20);
-			})
-			.on('mouseover', tip.show)
-			.on('mouseout', tip.hide)
-			.on('click', function(d) {
-				d3.selectAll('.clade_details')
-					.classed('js_hide', true);
-				d3.select( '#' + d.id )
-					.classed('js_hide', false);
-			});
-
-		vis.call(tip);
-
-	}
-
-
-//	d3.selectAll('.clade_details')
-//		.classed('js_hide',true);
-
-	// tree
-	var treeData = [{
-		name: "Level 1",
-		parent: "null",
-		x0: 320,
-		children: [{
-			name: "Level 1.1",
-			parent: "Top Level",
-			x0: 250,
-			children: [{
-					name: "Level 1.1.1",
-					parent: "Level 1.1",
-					x0: 206,
-					children: [{
-						name: "P",
-						parent: "Level 1.1.1",
-						x0: 160,
-						children: [{
-							name: "P1",
-							parent: "P",
-							x0: 126,
-							children: [{
-								name: "P2",
-								parent: "P1",
-								x0: 100,
-								children: [{
-									name: "P3",
-									parent: "P2",
-									x0: 64,
-									children: [{
-										name: "HLI",
-										parent: "P3",
-										x0: 46
-									}, {
-										name: "HLII",
-										parent: "P3",
-										x0: 82
-									}]
-								}, {
-									name: "LLI",
-									parent: "P2",
-									x0: 120
-								}]
-							}, {
-								name: "LLII/III",
-								parent: "P1",
-								x0: 158
-							}]
-						}, {
-							name: "LLIV",
-							parent: "P",
-							x0: 190
-						}]
-					}, {
-						name: "S1",
-						parent: "Level 1.1.1",
-						x0: 248,
-						children: [{
-							name: "5.1A",
-							parent: "Level 1.1.1",
-							x0: 226
-						}, {
-							name: "5.1B",
-							parent: "Level 1.1.1",
-							x0: 265
-						}]
-					}]
-				},
-
-				{
-					name: "5.2",
-					parent: "Level 1.1",
-					x0: 300
-				}
-			]
-		}, {
-			name: "5.3",
-			parent: "Top Level",
-			x0: 336
-		}]
-	}]
-
-	, root = treeData[0]
-
-	, margin = {
-		top: 10,
-		right: 20,
-		bottom: 10,
-		left: 20
-	}
-
-	, width = 500 - margin.right - margin.left
-	, height = 500 - margin.top - margin.bottom
-
-	, sidebar = d3.select('.clade-data')
-		.classed('populated', true)
-
-	, container = d3.select('#clade')
-
-	, tree = d3.layout.tree()
-		.size([height, width])
-
-	, diagonal = d3.svg.diagonal()
-		.projection(function(d) {
-			return [d.y, d.x];
-		})
-
-	, svg = container
-		.append('svg')
-		.attr("id","cladogram")
-		.attr("width", 500)
-		.attr("height", 380)
-		.append("g")
-		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	container.node().parentNode.classList.add('populated');
-
-	d3.selectAll('.js_vis_loading')
-		.remove();
-
-	makeTree(root);
-
-	makeGenusBoxes( svg );
-
-	makeBarChart( res, svg );
-
-/*	var WIDTH_IN_PERCENT_OF_PARENT = 90
-	, HEIGHT_IN_PERCENT_OF_PARENT = 80
-
-	, gd3 = Plotly.d3.select('#plotly')
-	.append('div')
-	.style({
-		width: WIDTH_IN_PERCENT_OF_PARENT + '%',
-		'margin-left': (100 - WIDTH_IN_PERCENT_OF_PARENT) / 2 + '%',
-
-		height: HEIGHT_IN_PERCENT_OF_PARENT + 'vh',
-		'margin-top': (100 - HEIGHT_IN_PERCENT_OF_PARENT) / 2 + 'vh',
-	})
-
-	, gd = gd3.node()
-	, figs = clade_arr.map(function(c){
-			for ( var g in this ) {
-				if( this[g][c] ) {
-					this[g][c].count = this[g][c]['genomes'].length;
-					return this[g][c].count;
-				}
-			}
-			return 0;
-		}, res)
-	;
-
-	Plotly.plot(gd, [{
-		type: 'bar',
-		x: figs,
-		y: clade_arr,
-		orientation: 'h',
-		marker: {
-			color: '#C8A2C8'
-		}
-	}], {
-		title: 'Clade distribution',
-		font: {
-			size: 16
-		}
-	});
-
-	window.onresize = function() {
-		Plotly.Plots.resize(gd);
-	};
-*/
+var res=getJson()
+, label_h={"pp_subset":[% data_filters.schema.pp_subset.enum_map.json  %]}
+, data_table_opts = {
+// 	orderFixed: [2, 'asc'],
+// 	rowGroup: {
+// 		dataSrc: 2
+// 	},
+[%
+	datatable_cols( 'taxon', results.js.table_cols );
+	datatable_buttons('taxon_oid');
+	datatable_paging( results.js.arr.size ); %]
+	deferRender: true,
+	data: res.arr,
+	select: {
+		style: 'multi'
+	},
+//	scroller: true,
+//	scrollY: "20rem"
 }
-/* end insert */
-	if (document.readyState !== 'loading'){
-		fn();
-	} else if (document.addEventListener) {
-		document.addEventListener('DOMContentLoaded', function(){
-			fn();
-		});
-	} else {
-		document.attachEvent('onreadystatechange', function() {
-			if (document.readyState !== 'loading'){
-				fn();
-			}
+[%#
+	# these colours roughly correspond to the standard colours used for Pro. diagrams
+	'HLI': colorbrewer.Set2[8][0],
+	'HLII': colorbrewer.Set3[12][5],
+	'LLI': colorbrewer.Set2[8][2],
+	'LLII/III': colorbrewer.Set3[12][2], // or colorbrewer.Set3[9]
+	'LLIV': colorbrewer.Set3[12][3]
+
+%]
+, colors = {HLI: "#66c2a5", HLII: "#fdb462", LLI: "#8da0cb", 'LLII/III': "#bebada", LLIV: "#fb8072"}
+, slug_name = '[% page_slug %]'
+, table_id = slug_name + '__table'
+, barchart = dc.barChart('#' + slug_name + '__vis')
+, rowchart = dc.pieChart('#' + slug_name + '__vis2')
+, ndx = crossfilter(res.arr)
+, xf_dim = new Object()
+, filter_h = new Object()
+, selecn = new Object()
+, table = $('#' + table_id).DataTable(data_table_opts)
+, table_filter_dim = 'pp_subset'
+;
+
+[ 'pp_subset', 'clade', 'generic_clade' ].forEach( function(el){
+	xf_dim[el] = ndx.dimension( function(d) { return d[ el ]; });
+});
+
+add_dynamic_filters( slug_name, [ 'pp_subset' ] );
+filter_h.pp_subset.multiple( false );
+
+barchart
+.width(768)
+.height(480)
+.x( d3.scale.ordinal() )
+.xUnits( dc.units.ordinal )
+.brushOn(false)
+.xAxisLabel('Clade', 24 )
+.yAxisLabel('Frequency', 24 )
+.dimension( xf_dim.generic_clade )
+.group( xf_dim.generic_clade.group().reduceCount() )
+.colorAccessor(function(d){
+	return colors[ d.key ] || '#999'
+})
+.barPadding(0.1)
+.outerPadding(0.05)
+.title( function(d){ return d.key + ': ' + d.value + ' genomes'; });
+;
+
+rowchart
+.width( 300 )
+.height( 300 )
+.dimension( xf_dim.pp_subset )
+.group( xf_dim.pp_subset.group().reduceCount() )
+.title( function(d){ return getLabel( 'pp_subset', d.key ) + ': ' + d.value ; });
+
+table
+.on( 'select', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			selecn[e] = 1;
 		});
 	}
-}());
-</script>
+})
+.on( 'deselect', function ( e, dt, type, indexes ) {
+	if ( type === 'row' ) {
+		table.rows( indexes ).ids( true ).each(function(e){
+			selecn[e] = 0;
+		});
+	}
+});
+
+for (var i = 0; i < dc.chartRegistry.list().length; i++) {
+	var chartI = dc.chartRegistry.list()[i];
+	chartI.on("filtered", refreshTable);
+}
+
+refreshTable();
+dc.renderAll();
+dc.tooltipMixin( barchart );
+dc.tooltipMixin( rowchart );
+
+[%	PROCESS standard_functions %]
+
+[%	END # end wrapper %]

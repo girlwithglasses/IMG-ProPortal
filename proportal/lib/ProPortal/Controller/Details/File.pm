@@ -54,7 +54,7 @@ sub get_data {
 		# check the user has permission to get the file
 		my $results = $self->_core->run_query({
 			query => 'taxon_name_public',
-			where => {
+			-where => {
 				taxon_oid => $args->{taxon_oid}
 			}
 		});

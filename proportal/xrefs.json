@@ -1,0 +1,2536 @@
+[
+   {
+      "abbreviation" : "AgBase",
+      "database" : "AgBase resource for functional analysis of agricultural plant and animal gene products",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : null,
+      "generic_url" : "http://www.agbase.msstate.edu/",
+      "synonym" : [],
+      "url_example" : null,
+      "url_syntax" : "http://www.agbase.msstate.edu/cgi-bin/getEntry.pl?db_pick=[ChickGO/MaizeGO]&uid=[example_id]"
+   },
+   {
+      "abbreviation" : "AGI_LocusCode",
+      "database" : "Arabidopsis Genome Initiative",
+      "description" : "Comprises TAIR, TIGR and MIPS",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "AGI_LocusCode:At2g17950",
+      "generic_url" : "http://www.arabidopsis.org",
+      "local_id_syntax" : "A[Tt][MmCc0-5][Gg][0-9]{5}(\\.[0-9]{1})?",
+      "synonym" : [],
+      "url_example" : "http://arabidopsis.org/servlets/TairObject?type=locus&name=At2g17950",
+      "url_syntax" : "http://arabidopsis.org/servlets/TairObject?type=locus&name=[example_id]"
+   },
+   {
+      "abbreviation" : "ApiDB_PlasmoDB",
+      "database" : "PlasmoDB Plasmodium Genome Resource",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "ApiDB_PlasmoDB:PF11_0344",
+      "generic_url" : "http://plasmodb.org/",
+      "synonym" : [],
+      "url_example" : "http://www.plasmodb.org/gene/PF11_0344",
+      "url_syntax" : "http://www.plasmodb.org/gene/[example_id]"
+   },
+   {
+      "abbreviation" : "APSNET",
+      "database" : "APSNET Common Names of Plant Diseases",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "APSNET:AfricanDaisy",
+      "generic_url" : "http://www.mobot.org/mobot/research/apweb/",
+      "synonym" : [],
+      "url_example" : "http://www.apsnet.org/publications/commonnames/Pages/AfricanDaisy.aspx",
+      "url_syntax" : "http://www.apsnet.org/publications/commonnames/Pages/[example_id].aspx"
+   },
+   {
+      "abbreviation" : "APweb",
+      "database" : "Angiosperm Phylogeny Website",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "APweb:Glossary",
+      "generic_url" : "http://www.mobot.org/mobot/research/apweb/",
+      "synonym" : [],
+      "url_example" : "http://www.mobot.org/mobot/research/apweb/top/glossarya_h.html",
+      "url_syntax" : "http://www.mobot.org/mobot/research/apweb/top/glossarya_h.html"
+   },
+   {
+      "abbreviation" : "AraCyc",
+      "database" : "AraCyc metabolic pathway database for Arabidopsis thaliana",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "AraCyc:PWYQT-62",
+      "generic_url" : "http://www.arabidopsis.org/biocyc/index.jsp",
+      "synonym" : [],
+      "url_example" : "http://www.arabidopsis.org:1555/ARA/NEW-IMAGE?type=NIL&object=PWYQT-62",
+      "url_syntax" : "http://www.arabidopsis.org:1555/ARA/NEW-IMAGE?type=NIL&object=[example_id]"
+   },
+   {
+      "abbreviation" : "ASAP",
+      "database" : "A Systematic Annotation Package for Community Analysis of Genomes",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "ASAP:ABE-0000008",
+      "generic_url" : "https://asap.ahabs.wisc.edu/annotation/php/ASAP1.htm",
+      "synonym" : [],
+      "url_example" : "https://asap.ahabs.wisc.edu/annotation/php/feature_info.php?FeatureID=ABE-0000008",
+      "url_syntax" : "https://asap.ahabs.wisc.edu/annotation/php/feature_info.php?FeatureID=[example_id]"
+   },
+   {
+      "abbreviation" : "AspGD",
+      "database" : "Aspergillus Genome Database",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "AspGD:ASPL0000067538",
+      "generic_url" : "http://www.aspergillusgenome.org/",
+      "local_id_syntax" : "ASPL[0-9]{10}",
+      "synonym" : [
+         "AspGDID"
+      ],
+      "url_example" : "http://www.aspergillusgenome.org/cgi-bin/locus.pl?dbid=ASPL0000067538",
+      "url_syntax" : "http://www.aspergillusgenome.org/cgi-bin/locus.pl?dbid=[example_id]"
+   },
+   {
+      "abbreviation" : "AspGD_LOCUS",
+      "database" : "Aspergillus Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "AspGD_LOCUS:AN10942",
+      "generic_url" : "http://www.aspergillusgenome.org/",
+      "synonym" : [],
+      "url_example" : "http://www.aspergillusgenome.org/cgi-bin/locus.pl?locus=AN10942",
+      "url_syntax" : "http://www.aspergillusgenome.org/cgi-bin/locus.pl?locus=[example_id]"
+   },
+   {
+      "abbreviation" : "AspGD_REF",
+      "database" : "Aspergillus Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "AspGD_REF:90",
+      "generic_url" : "http://www.aspergillusgenome.org/",
+      "synonym" : [],
+      "url_example" : "http://www.aspergillusgenome.org/cgi-bin/reference/reference.pl?dbid=90",
+      "url_syntax" : "http://www.aspergillusgenome.org/cgi-bin/reference/reference.pl?dbid=[example_id]"
+   },
+   {
+      "abbreviation" : "BFO",
+      "database" : "Basic Formal Ontology",
+      "description" : "An upper ontology used by Open Bio Ontologies (OBO) Foundry. BFO contains upper-level classes as well as core relations such as part_of (BFO_0000050)",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "BFO:0000066",
+      "generic_url" : "http://purl.obolibrary.org/obo/bfo",
+      "synonym" : [],
+      "url_example" : "http://purl.obolibrary.org/obo/BFO_0000066",
+      "url_syntax" : "http://purl.obolibrary.org/obo/BFO_[example_id]"
+   },
+   {
+      "abbreviation" : "BioCyc",
+      "database" : "BioCyc collection of metabolic pathway databases",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "BioCyc:PWY-5271",
+      "generic_url" : "http://biocyc.org/",
+      "synonym" : [],
+      "url_example" : "http://biocyc.org/META/NEW-IMAGE?type=PATHWAY&object=PWY-5271",
+      "url_syntax" : "http://biocyc.org/META/NEW-IMAGE?type=PATHWAY&object=[example_id]"
+   },
+   {
+      "abbreviation" : "BIOMD",
+      "database" : "BioModels Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "BIOMD:BIOMD0000000045",
+      "generic_url" : "http://www.ebi.ac.uk/biomodels/",
+      "synonym" : [
+         "BIOMDID"
+      ],
+      "url_example" : "http://www.ebi.ac.uk/compneur-srv/biomodels-main/publ-model.do?mid=BIOMD0000000045",
+      "url_syntax" : "http://www.ebi.ac.uk/compneur-srv/biomodels-main/publ-model.do?mid=[example_id]"
+   },
+   {
+      "abbreviation" : "BRENDA",
+      "database" : "BRENDA, The Comprehensive Enzyme Information System",
+      "entity_type" : "GO:0003824 ! catalytic activity",
+      "example_id" : "BRENDA:4.2.1.3",
+      "generic_url" : "http://www.brenda-enzymes.info",
+      "synonym" : [],
+      "url_example" : "http://www.brenda-enzymes.info/php/result_flat.php4?ecno=4.2.1.3",
+      "url_syntax" : "http://www.brenda-enzymes.info/php/result_flat.php4?ecno=[example_id]"
+   },
+   {
+      "abbreviation" : "Broad_MGG",
+      "database" : "Magnaporthe grisea Database",
+      "description" : "Magnaporthe grisea Database at the Broad Institute",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Broad_MGG:MGG_05132.5",
+      "generic_url" : "http://www.broad.mit.edu/annotation/genome/magnaporthe_grisea/Home.html",
+      "synonym" : [],
+      "url_example" : "http://www.broad.mit.edu/annotation/genome/magnaporthe_grisea/GeneLocus.html?sp=SMGG_05132",
+      "url_syntax" : "http://www.broad.mit.edu/annotation/genome/magnaporthe_grisea/GeneLocus.html?sp=S[example_id]"
+   },
+   {
+      "abbreviation" : "Broad_NEUROSPORA",
+      "database" : "Neurospora crassa Database",
+      "description" : "Neurospora crassa database at the Broad Institute",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "BROAD_NEUROSPORA:7000007580576824",
+      "generic_url" : "http://www.broadinstitute.org/annotation/genome/neurospora/MultiHome.html",
+      "synonym" : [],
+      "url_example" : "http://www.broadinstitute.org/annotation/genome/neurospora/GeneDetails.html?sp=S7000007580576824",
+      "url_syntax" : "http://www.broadinstitute.org/annotation/genome/neurospora/GeneDetails.html?sp=S[example_id]"
+   },
+   {
+      "abbreviation" : "CACAO",
+      "database" : "Community Assessment of Community Annotation with Ontologies",
+      "description" : "The Community Assessment of Community Annotation with Ontologies (CACAO) is a project to do large-scale manual community annotation of gene function using the Gene Ontology as a multi-institution student competition.",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MYCS2:A0QNF5",
+      "generic_url" : "http://gowiki.tamu.edu/wiki/index.php/Category:CACAO",
+      "synonym" : [],
+      "url_example" : "http://gowiki.tamu.edu/wiki/index.php/MYCS2:A0QNF5",
+      "url_syntax" : "http://gowiki.tamu.edu/wiki/index.php/[example_id]"
+   },
+   {
+      "abbreviation" : "CASGEN",
+      "database" : "Catalog of Fishes genus database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CASGEN:1040",
+      "generic_url" : "http://research.calacademy.org/research/ichthyology/catalog/fishcatsearch.html",
+      "synonym" : [
+         "CAS_GEN"
+      ],
+      "url_example" : "http://research.calacademy.org/research/ichthyology/catalog/getname.asp?rank=Genus&id=1040",
+      "url_syntax" : "http://research.calacademy.org/research/ichthyology/catalog/getname.asp?rank=Genus&id=[example_id]"
+   },
+   {
+      "abbreviation" : "CASREF",
+      "database" : "Catalog of Fishes publications database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CASREF:2031",
+      "generic_url" : "http://research.calacademy.org/research/ichthyology/catalog/fishcatsearch.html",
+      "synonym" : [],
+      "url_example" : "http://research.calacademy.org/research/ichthyology/catalog/getref.asp?id=2031",
+      "url_syntax" : "http://research.calacademy.org/research/ichthyology/catalog/getref.asp?id=[example_id]"
+   },
+   {
+      "abbreviation" : "CASSPC",
+      "database" : "Catalog of Fishes species database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : null,
+      "generic_url" : "http://research.calacademy.org/research/ichthyology/catalog/fishcatsearch.html",
+      "synonym" : [
+         "CAS_SPC"
+      ],
+      "url_example" : "http://research.calacademy.org/research/ichthyology/catalog/getname.asp?rank=Species&id=1979",
+      "url_syntax" : "http://research.calacademy.org/research/ichthyology/catalog/getname.asp?rank=Species&id=[example_id]"
+   },
+   {
+      "abbreviation" : "CAZY",
+      "database" : "Carbohydrate Active EnZYmes",
+      "description" : "The CAZy database describes the families of structurally-related catalytic and carbohydrate-binding modules (or functional domains) of enzymes that degrade, modify, or create glycosidic bonds.",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CAZY:PL11",
+      "generic_url" : "http://www.cazy.org/",
+      "local_id_syntax" : "(CE|GH|GT|PL)\\d+",
+      "synonym" : [],
+      "url_example" : "http://www.cazy.org/PL11.html",
+      "url_syntax" : "http://www.cazy.org/[example_id].html"
+   },
+   {
+      "abbreviation" : "CBS",
+      "database" : "Center for Biological Sequence Analysis",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CBS:TMHMM",
+      "generic_url" : "http://www.cbs.dtu.dk/",
+      "synonym" : [],
+      "url_example" : "http://www.cbs.dtu.dk/services/[example_id]/",
+      "url_syntax" : null
+   },
+   {
+      "abbreviation" : "CDD",
+      "database" : "Conserved Domain Database at NCBI",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CDD:34222",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=cdd",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=34222",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=[example_id]"
+   },
+   {
+      "abbreviation" : "CGD",
+      "database" : "Candida Genome Database",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "CGD:CAL0005516",
+      "generic_url" : "http://www.candidagenome.org/",
+      "local_id_syntax" : "(CAL|CAF)[0-9]{7}",
+      "synonym" : [
+         "CGDID"
+      ],
+      "url_example" : "http://www.candidagenome.org/cgi-bin/locus.pl?dbid=CAL0005516",
+      "url_syntax" : "http://www.candidagenome.org/cgi-bin/locus.pl?dbid=[example_id]"
+   },
+   {
+      "abbreviation" : "CGD_LOCUS",
+      "database" : "Candida Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CGD_LOCUS:HWP1",
+      "generic_url" : "http://www.candidagenome.org/",
+      "synonym" : [],
+      "url_example" : "http://www.candidagenome.org/cgi-bin/locus.pl?locus=HWP1",
+      "url_syntax" : "http://www.candidagenome.org/cgi-bin/locus.pl?locus=[example_id]"
+   },
+   {
+      "abbreviation" : "CGD_REF",
+      "database" : "Candida Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CGD_REF:1490",
+      "generic_url" : "http://www.candidagenome.org/",
+      "synonym" : [],
+      "url_example" : "http://www.candidagenome.org/cgi-bin/reference/reference.pl?dbid=1490",
+      "url_syntax" : "http://www.candidagenome.org/cgi-bin/reference/reference.pl?dbid=[example_id]"
+   },
+   {
+      "abbreviation" : "CGSC",
+      "database" : "CGSC",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CGSC:rbsK",
+      "generic_url" : "http://cgsc.biology.yale.edu/",
+      "synonym" : [],
+      "url_example" : "http://cgsc.biology.yale.edu/Site.php?ID=315",
+      "url_syntax" : null
+   },
+   {
+      "abbreviation" : "CHEBI",
+      "database" : "Chemical Entities of Biological Interest",
+      "entity_type" : "CHEBI:24431 ! chemical entity",
+      "example_id" : "CHEBI:17234",
+      "generic_url" : "http://www.ebi.ac.uk/chebi/",
+      "local_id_syntax" : "[0-9]{1,6}",
+      "synonym" : [
+         "ChEBI"
+      ],
+      "url_example" : "http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17234",
+      "url_syntax" : "http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:[example_id]"
+   },
+   {
+      "abbreviation" : "CL",
+      "database" : "Cell Type Ontology",
+      "entity_type" : "GO:0005623 ! cell",
+      "example_id" : "CL:0000041",
+      "generic_url" : "http://cellontology.org",
+      "local_id_syntax" : "[0-9]{7}",
+      "synonym" : [],
+      "url_example" : "http://purl.obolibrary.org/obo/CL_0000041",
+      "url_syntax" : "http://purl.obolibrary.org/obo/CL_[example_id]"
+   },
+   {
+      "abbreviation" : "CO_125",
+      "database" : "Crop Ontology CGIAR Musa Anatomy",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CO_125:0000002",
+      "generic_url" : "http://www.cropontology.org/ontology/CO_125/Musa Anatomy",
+      "synonym" : [],
+      "url_example" : "url_example",
+      "url_syntax" : null
+   },
+   {
+      "abbreviation" : "COG_Cluster",
+      "database" : "NCBI COG cluster",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "COG_Cluster:COG0001",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/COG/",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/COG/new/release/cow.cgi?cog=COG0001",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/COG/new/release/cow.cgi?cog=[example_id]"
+   },
+   {
+      "abbreviation" : "COG_Function",
+      "database" : "NCBI COG function",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "COG_Function:H",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/COG/",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/COG/grace/shokog.cgi?fun=H",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/COG/grace/shokog.cgi?fun=[example_id]"
+   },
+   {
+      "abbreviation" : "COG_Pathway",
+      "database" : "NCBI COG pathway",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "COG_Pathway:14",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/COG/",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/COG/new/release/coglist.cgi?pathw=14",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/COG/new/release/coglist.cgi?pathw=[example_id]"
+   },
+   {
+      "abbreviation" : "CORIELL",
+      "database" : "Coriell Institute for Medical Research",
+      "description" : "The Coriell Cell Repositories provide essential research reagents to the scientific community by establishing, verifying, maintaining, and distributing cell cultures and DNA derived from cell cultures. These collections, supported by funds from the National Institutes of Health (NIH) and several foundations, are extensively utilized by research scientists around the world.",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GM07892",
+      "generic_url" : "http://ccr.coriell.org/",
+      "synonym" : [],
+      "url_example" : "http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM07892",
+      "url_syntax" : "http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=[example_id]"
+   },
+   {
+      "abbreviation" : "CORUM",
+      "database" : "CORUM - the Comprehensive Resource of Mammalian protein complexes",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "CORUM:837",
+      "generic_url" : "http://mips.gsf.de/genre/proj/corum/",
+      "synonym" : [],
+      "url_example" : "http://mips.gsf.de/genre/proj/corum/complexdetails.html?id=837",
+      "url_syntax" : "http://mips.gsf.de/genre/proj/corum/complexdetails.html?id=[example_id]"
+   },
+   {
+      "abbreviation" : "cosmoss_PpV1.2",
+      "database" : "plantco.de|cosmoss.org",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "cosmoss_PpV1.2:Pp1s47_77V2.1",
+      "generic_url" : "https://www.cosmoss.org/annotation/genonaut",
+      "synonym" : [],
+      "url_example" : "https://www.cosmoss.org/annotation/genonaut?accession=Pp1s53_22V2.1&version=V1.2",
+      "url_syntax" : "https://www.cosmoss.org/annotation/genonaut?accession=[example_id]&version=V1.2"
+   },
+   {
+      "abbreviation" : "cribi_vitis",
+      "database" : "database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "example_id",
+      "generic_url" : "http://genomes.cribi.unipd.it",
+      "synonym" : [],
+      "url_example" : "url_example",
+      "url_syntax" : "http://genomes.cribi.unipd.it/cgi-bin/pqs2/report.pl?gene_name=[example_id]&release=v1"
+   },
+   {
+      "abbreviation" : "dbSNP",
+      "database" : "NCBI dbSNP",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "dbSNP:rs3131969",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/projects/SNP",
+      "local_id_syntax" : "\\d+",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=rs3131969",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=[example_id]"
+   },
+   {
+      "abbreviation" : "DDBJ",
+      "database" : "DNA Databank of Japan",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "DDBJ:AA816246",
+      "generic_url" : "http://www.ddbj.nig.ac.jp/",
+      "synonym" : [],
+      "url_example" : "http://arsa.ddbj.nig.ac.jp/arsa/ddbjSplSearch?KeyWord=AA816246",
+      "url_syntax" : "http://arsa.ddbj.nig.ac.jp/arsa/ddbjSplSearch?KeyWord=[example_id]"
+   },
+   {
+      "abbreviation" : "dictyBase",
+      "database" : "dictyBase",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "dictyBase:DDB_G0277859",
+      "generic_url" : "http://dictybase.org",
+      "local_id_syntax" : "DDB_G[0-9]{7}",
+      "synonym" : [
+         "DDB",
+         "DictyBase"
+      ],
+      "url_example" : "http://dictybase.org/gene/DDB_G0277859",
+      "url_syntax" : "http://dictybase.org/gene/[example_id]"
+   },
+   {
+      "abbreviation" : "dictyBase_gene_name",
+      "database" : "dictyBase",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "dictyBase_gene_name:mlcE",
+      "generic_url" : "http://dictybase.org",
+      "synonym" : [],
+      "url_example" : "http://dictybase.org/gene/mlcE",
+      "url_syntax" : "http://dictybase.org/gene/[example_id]"
+   },
+   {
+      "abbreviation" : "dictyBase_REF",
+      "database" : "dictyBase literature references",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "dictyBase_REF:10157",
+      "generic_url" : "http://dictybase.org",
+      "synonym" : [
+         "DDB_REF"
+      ],
+      "url_example" : "http://dictybase.org/db/cgi-bin/dictyBase/reference/reference.pl?refNo=10157",
+      "url_syntax" : "http://dictybase.org/db/cgi-bin/dictyBase/reference/reference.pl?refNo=[example_id]"
+   },
+   {
+      "abbreviation" : "DOI",
+      "database" : "Digital Object Identifier",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "DOI:10.1016/S0963-9969(99)00021-6",
+      "generic_url" : "http://dx.doi.org/",
+      "local_id_syntax" : "10\\.[0-9]+\\/.*",
+      "synonym" : [],
+      "url_example" : "http://dx.doi.org/10.1016/S0963-9969(99)00021-6",
+      "url_syntax" : "http://dx.doi.org/[example_id]"
+   },
+   {
+      "abbreviation" : "EC",
+      "database" : "Enzyme Commission",
+      "entity_type" : "GO:0003824 ! catalytic activity",
+      "example_id" : "EC:1.4.3.6",
+      "generic_url" : "http://www.chem.qmul.ac.uk/iubmb/enzyme/",
+      "synonym" : [],
+      "url_example" : "http://www.expasy.org/enzyme/1.4.3.6",
+      "url_syntax" : "http://www.expasy.org/enzyme/[example_id]"
+   },
+   {
+      "abbreviation" : "EchoBASE",
+      "database" : "EchoBASE post-genomic database for Escherichia coli",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "EchoBASE:EB0231",
+      "generic_url" : "http://www.ecoli-york.org/",
+      "local_id_syntax" : "EB[0-9]{4}",
+      "synonym" : [],
+      "url_example" : "http://www.biolws1.york.ac.uk/echobase/Gene.cfm?recordID=EB0231",
+      "url_syntax" : "http://www.biolws1.york.ac.uk/echobase/Gene.cfm?recordID=[example_id]"
+   },
+   {
+      "abbreviation" : "ECK",
+      "database" : "EcoGene Database of Escherichia coli Sequence and Function",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "ECK:ECK3746",
+      "generic_url" : "http://www.ecogene.org/",
+      "local_id_syntax" : "ECK[0-9]{4}",
+      "synonym" : [],
+      "url_example" : "http://www.ecogene.org/geneInfo.php?eck_id=ECK3746",
+      "url_syntax" : "http://www.ecogene.org/geneInfo.php?eck_id=[example_id]"
+   },
+   {
+      "abbreviation" : "EcoCyc",
+      "database" : "Encyclopedia of E. coli metabolism",
+      "entity_type" : "GO:0008150 ! biological_process",
+      "example_id" : "EcoCyc:P2-PWY",
+      "generic_url" : "http://ecocyc.org/",
+      "local_id_syntax" : "EG[0-9]{5}",
+      "synonym" : [],
+      "url_example" : "http://biocyc.org/ECOLI/NEW-IMAGE?type=PATHWAY&object=P2-PWY",
+      "url_syntax" : "http://biocyc.org/ECOLI/NEW-IMAGE?type=PATHWAY&object=[example_id]"
+   },
+   {
+      "abbreviation" : "EcoCyc_REF",
+      "database" : "Encyclopedia of E. coli metabolism",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "EcoCyc_REF:COLISALII",
+      "generic_url" : "http://ecocyc.org/",
+      "synonym" : [
+         "ECOCYC_REF"
+      ],
+      "url_example" : "http://biocyc.org/ECOLI/reference.html?type=CITATION-FRAME&object=COLISALII",
+      "url_syntax" : "http://biocyc.org/ECOLI/reference.html?type=CITATION-FRAME&object=[example_id]"
+   },
+   {
+      "abbreviation" : "ECOGENE",
+      "database" : "EcoGene Database of Escherichia coli Sequence and Function",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "ECOGENE:EG10818",
+      "generic_url" : "http://www.ecogene.org/",
+      "local_id_syntax" : "EG[0-9]{5}",
+      "synonym" : [],
+      "url_example" : "http://www.ecogene.org/geneInfo.php?eg_id=EG10818",
+      "url_syntax" : "http://www.ecogene.org/geneInfo.php?eg_id=[example_id]"
+   },
+   {
+      "abbreviation" : "EMAPA",
+      "database" : "Mouse gross anatomy and development, abstract",
+      "description" : "A time-independent Mouse Anatomical Dictionary; part of Gene Expression Database",
+      "entity_type" : "CARO:0000000 ! anatomical entity",
+      "example_id" : "EMAPA:16032",
+      "generic_url" : "http://emouseatlas.org/",
+      "local_id_syntax" : "[0-9]{5}",
+      "synonym" : [],
+      "url_example" : "http://www.informatics.jax.org/vocab/gxd/anatomy/EMAPA:16894",
+      "url_syntax" : "http://www.informatics.jax.org/vocab/gxd/anatomy/EMAPA:[example_id]"
+   },
+   {
+      "abbreviation" : "EMBL",
+      "database" : "EMBL Nucleotide Sequence Database",
+      "description" : "International nucleotide sequence database collaboration, comprising EMBL-EBI nucleotide sequence data library (EMBL-Bank), DNA DataBank of Japan (DDBJ), and NCBI GenBank",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "EMBL:AA816246",
+      "generic_url" : "http://www.ebi.ac.uk/embl/",
+      "local_id_syntax" : "([A-Z]{1}[0-9]{5})|([A-Z]{2}[0-9]{6})|([A-Z]{4}[0-9]{8,9})",
+      "synonym" : [],
+      "url_example" : "http://www.ebi.ac.uk/cgi-bin/emblfetch?style=html&Submit=Go&id=AA816246",
+      "url_syntax" : "http://www.ebi.ac.uk/cgi-bin/emblfetch?style=html&Submit=Go&id=[example_id]"
+   },
+   {
+      "abbreviation" : "ENA",
+      "database" : "European Nucleotide Archive",
+      "description" : "ENA is made up of a number of distinct databases that includes EMBL-Bank, the newly established Sequence Read Archive (SRA) and the Trace Archive. International nucleotide sequence database collaboration, comprising ENA-EBI nucleotide sequence data library (EMBL-Bank), DNA DataBank of Japan (DDBJ), and NCBI GenBank",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "ENA:AA816246",
+      "generic_url" : "http://www.ebi.ac.uk/ena/",
+      "local_id_syntax" : "([A-Z]{1}[0-9]{5})|([A-Z]{2}[0-9]{6})|([A-Z]{4}[0-9]{8,9})",
+      "synonym" : [],
+      "url_example" : "http://www.ebi.ac.uk/ena/data/view/AA816246",
+      "url_syntax" : "http://www.ebi.ac.uk/ena/data/view/[example_id]"
+   },
+   {
+      "abbreviation" : "ENSEMBL",
+      "database" : "Ensembl database of automatically annotated genomic data",
+      "entity_type" : "SO:0000673 ! transcript",
+      "example_id" : "ENSEMBL:ENSP00000265949",
+      "generic_url" : "http://www.ensembl.org/",
+      "local_id_syntax" : "ENS[A-Z0-9]{10,17}",
+      "synonym" : [
+         "Ensembl"
+      ],
+      "url_example" : "http://www.ensembl.org/id/ENSP00000265949",
+      "url_syntax" : "http://www.ensembl.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "ENSEMBL_GeneID",
+      "database" : "Ensembl database of automatically annotated genomic data",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "ENSEMBL_GeneID:ENSG00000126016",
+      "generic_url" : "http://www.ensembl.org/",
+      "local_id_syntax" : "ENSG[0-9]{9,16}",
+      "synonym" : [],
+      "url_example" : "http://www.ensembl.org/id/ENSG00000126016",
+      "url_syntax" : "http://www.ensembl.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "ENSEMBL_ProteinID",
+      "database" : "Ensembl database of automatically annotated genomic data",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "ENSEMBL_ProteinID:ENSP00000361027",
+      "generic_url" : "http://www.ensembl.org/",
+      "local_id_syntax" : "ENSP[0-9]{9,16}",
+      "synonym" : [],
+      "url_example" : "http://www.ensembl.org/id/ENSP00000361027",
+      "url_syntax" : "http://www.ensembl.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "ENSEMBL_TranscriptID",
+      "database" : "Ensembl database of automatically annotated genomic data",
+      "entity_type" : "SO:0000673 ! transcript",
+      "example_id" : "ENSEMBL_TranscriptID:ENST00000371959",
+      "generic_url" : "http://www.ensembl.org/",
+      "local_id_syntax" : "ENST[0-9]{9,16}",
+      "synonym" : [],
+      "url_example" : "http://www.ensembl.org/id/ENST00000371959",
+      "url_syntax" : "http://www.ensembl.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "EnsemblFungi",
+      "database" : "Ensembl Fungi, the Ensembl database for accessing genome-scale data from fungi.",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "EnsemblFungi:YOR197W",
+      "generic_url" : "http://fungi.ensembl.org/",
+      "synonym" : [],
+      "url_example" : "http://www.ensemblgenomes.org/id/YOR197W",
+      "url_syntax" : "http://www.ensemblgenomes.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "EnsemblMetazoa",
+      "database" : "Ensembl Metazoa, the Ensembl database for accessing genome-scale data from non-vertebrate metazoa.",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "EnsemblMetazoa:FBgn0052693",
+      "generic_url" : "http://metazoa.ensembl.org/",
+      "synonym" : [],
+      "url_example" : "http://www.ensemblgenomes.org/id/FBgn0052693",
+      "url_syntax" : "http://www.ensemblgenomes.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "EnsemblPlants",
+      "database" : "Ensembl Plants, the Ensembl database for accessing genome-scale data from plants.",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "EnsemblPlants:LOC_Os01g22954",
+      "generic_url" : "http://plants.ensembl.org/",
+      "synonym" : [
+         "EnsemblPlants/Gramene"
+      ],
+      "url_example" : "http://www.ensemblgenomes.org/id/LOC_Os01g22954",
+      "url_syntax" : "http://www.ensemblgenomes.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "EnsemblProtists",
+      "database" : "Ensembl Protists, the Ensembl database for accessing genome-scale data from protists.",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "EnsemblProtists:PFL2550w",
+      "generic_url" : "http://protists.ensembl.org/",
+      "synonym" : [],
+      "url_example" : "http://www.ensemblgenomes.org/id/PFL2550w",
+      "url_syntax" : "http://www.ensemblgenomes.org/id/[example_id]"
+   },
+   {
+      "abbreviation" : "ENZYME",
+      "database" : "Swiss Institute of Bioinformatics enzyme database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "ENZYME:EC 1.1.1.1",
+      "generic_url" : "http://www.expasy.ch/",
+      "synonym" : [],
+      "url_example" : "http://www.expasy.ch/cgi-bin/nicezyme.pl?1.1.1.1",
+      "url_syntax" : "http://www.expasy.ch/cgi-bin/nicezyme.pl?[example_id]"
+   },
+   {
+      "abbreviation" : "EO_GIT",
+      "database" : "GitHub",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "EO_GIT:76",
+      "generic_url" : "https://github.com/Planteome/plant-environment-ontology",
+      "synonym" : [],
+      "url_example" : "https://github.com/Planteome/plant-environment-ontology/issues/76",
+      "url_syntax" : "https://github.com/Planteome/plant-environment-ontology/issues/[example_id]"
+   },
+   {
+      "abbreviation" : "EuPathDB",
+      "database" : "The Eukaryotic Pathogen Database",
+      "entity_type" : "BET:0000000 ! gene",
+      "example_id" : "EuPathDB:LtaP17.1490",
+      "generic_url" : "http://eupathdb.org",
+      "synonym" : [],
+      "url_example" : "http://eupathdb.org/gene/LtaP17.1490",
+      "url_syntax" : "http://eupathdb.org/gene/[example_id]"
+   },
+   {
+      "abbreviation" : "FB",
+      "database" : "FlyBase",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "FB:FBgn0000024",
+      "generic_url" : "http://flybase.org/",
+      "local_id_syntax" : "FBgn[0-9]{7}",
+      "synonym" : [
+         "FlyBase",
+         "FLYBASE"
+      ],
+      "url_example" : "http://flybase.org/reports/FBgn0000024.html",
+      "url_syntax" : "http://flybase.org/reports/[example_id].html"
+   },
+   {
+      "abbreviation" : "FBbt",
+      "database" : "Drosophila gross anatomy",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "FBbt:00005177",
+      "generic_url" : "http://flybase.org/",
+      "synonym" : [],
+      "url_example" : "http://flybase.org/cgi-bin/fbcvq.html?query=FBbt:00005177",
+      "url_syntax" : "http://flybase.org/cgi-bin/fbcvq.html?query=FBbt:[example_id]"
+   },
+   {
+      "abbreviation" : "GDB",
+      "database" : "Human Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GDB:306600",
+      "generic_url" : "http://www.gdb.org/",
+      "synonym" : [],
+      "url_example" : "http://www.gdb.org/gdb-bin/genera/accno?accessionNum=GDB:306600",
+      "url_syntax" : "http://www.gdb.org/gdb-bin/genera/accno?accessionNum=GDB:[example_id]"
+   },
+   {
+      "abbreviation" : "GenBank",
+      "database" : "GenBank",
+      "description" : "The NIH genetic sequence database, an annotated collection of all publicly available DNA sequences.",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "GB:AA816246",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/Genbank/",
+      "local_id_syntax" : "([A-Z]{2}[0-9]{6})|([A-Z]{1}[0-9]{5})",
+      "synonym" : [
+         "GB"
+      ],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?db=nucleotide&val=AA816246",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?db=nucleotide&val=[example_id]"
+   },
+   {
+      "abbreviation" : "Gene3D",
+      "database" : "Domain Architecture Classification",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Gene3D:G3DSA:3.30.390.30",
+      "generic_url" : "http://gene3d.biochem.ucl.ac.uk/Gene3D/",
+      "synonym" : [],
+      "url_example" : "http://gene3d.biochem.ucl.ac.uk/superfamily/?accession=G3DSA%3A3.30.390.30",
+      "url_syntax" : "http://gene3d.biochem.ucl.ac.uk/superfamily/?accession=[example_id]"
+   },
+   {
+      "abbreviation" : "GeneDB",
+      "database" : "GeneDB",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "PF3D7_1467300",
+      "generic_url" : "http://www.genedb.org/gene/",
+      "local_id_syntax" : "((LmjF|LinJ|LmxM)\\.[0-9]{2}\\.[0-9]{4})|(PF3D7_[0-9]{7})|(Tb[0-9]+\\.[A-Za-z0-9]+\\.[0-9]+)|(TcCLB\\.[0-9]{6}\\.[0-9]+)",
+      "synonym" : [],
+      "url_example" : "http://www.genedb.org/gene/PF3D7_1467300",
+      "url_syntax" : "http://www.genedb.org/gene/[example_id]"
+   },
+   {
+      "abbreviation" : "Genesys-pgr",
+      "database" : "Gene DB, Genesys",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Genesys-pgr:CM1015-16",
+      "generic_url" : "https://www.genesys-pgr.org/",
+      "synonym" : [],
+      "url_example" : "https://www.genesys-pgr.org/acn/search?q=CM1015-16",
+      "url_syntax" : "https://www.genesys-pgr.org/acn/search?q=[example_id]"
+   },
+   {
+      "abbreviation" : "GEO",
+      "database" : "NCBI Gene Expression Omnibus",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GEO:GDS2223",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/geo/",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/sites/GDSbrowser?acc=GDS2223",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/sites/GDSbrowser?acc=[example_id]"
+   },
+   {
+      "abbreviation" : "GO",
+      "database" : "Gene Ontology Database",
+      "entity_type" : "GO:0032991 ! macromolecular complex",
+      "example_id" : "GO:0004352",
+      "generic_url" : "http://amigo.geneontology.org/",
+      "local_id_syntax" : "\\d{7}",
+      "synonym" : [],
+      "url_example" : "http://amigo.geneontology.org/amigo/term/GO:0004352",
+      "url_syntax" : "http://amigo.geneontology.org/amigo/term/GO:[example_id]"
+   },
+   {
+      "abbreviation" : "GO_REF",
+      "database" : "Gene Ontology Database references",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "0000001",
+      "generic_url" : "http://purl.obolibrary.org/obo/go/references/",
+      "local_id_syntax" : "\\d{7}",
+      "synonym" : [],
+      "url_example" : "http://purl.obolibrary.org/obo/go/references/0000001",
+      "url_syntax" : "http://purl.obolibrary.org/obo/go/references/[example_id]"
+   },
+   {
+      "abbreviation" : "GONUTS",
+      "database" : "Gene Ontology Normal Usage Tracking System (GONUTS)",
+      "description" : "Third party documentation for GO and community annotation system.",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GONUTS:MOUSE:CD28",
+      "generic_url" : "http://gowiki.tamu.edu",
+      "synonym" : [],
+      "url_example" : "http://gowiki.tamu.edu/wiki/index.php/MOUSE:CD28",
+      "url_syntax" : "http://gowiki.tamu.edu/wiki/index.php/[example_id]"
+   },
+   {
+      "abbreviation" : "GOLD",
+      "database" : "Genomes Online Database",
+      "description" : "GOLD analysis project",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Ga0003757",
+      "generic_url" : "https://gold.jgi-psf.org/",
+      "local_id_syntax" : "Ga[0-9]{7+}",
+      "synonym" : [
+      	"GOLD_analysis"
+      ],
+      "url_example" : "https://gold.jgi.doe.gov/analyis_projects?id=Ga0003757",
+      "url_syntax" : "https://gold.jgi.doe.gov/analyis_projects?id=[example_id]"
+   },
+   {
+      "abbreviation" : "GOLD",
+      "database" : "Genomes Online Database",
+      "description" : "GOLD study",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Gs0003757",
+      "generic_url" : "https://gold.jgi-psf.org/",
+      "local_id_syntax" : "Gs[0-9]{7+}",
+      "synonym" : [
+      "GOLD_study"
+      ],
+      "url_example" : "https://gold.jgi.doe.gov/study?id=Gs0003757",
+      "url_syntax" : "https://gold.jgi.doe.gov/study?id=[example_id]"
+   },
+   {
+      "abbreviation" : "GOLD",
+      "database" : "Genomes Online Database",
+      "description" : "GOLD sequencing project",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Gp0000444",
+      "generic_url" : "https://gold.jgi-psf.org/",
+      "local_id_syntax" : "Gp[0-9]{7+}",
+      "synonym" : [
+      	"GOLD_sequencing"
+      ],
+      "url_example" : "https://gold.jgi.doe.gov/projects?id=Gp0000444",
+      "url_syntax" : "https://gold.jgi.doe.gov/projects?id=[example_id]"
+   },
+   {
+      "abbreviation" : "GR",
+      "database" : "Gramene",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "GR:sd1",
+      "generic_url" : "http://www.gramene.org/",
+      "local_id_syntax" : "[A-Z][0-9][A-Z0-9]{3}[0-9]",
+      "synonym" : [],
+      "url_example" : "http://www.gramene.org/db/searches/browser?search_type=All&RGN=on&query=sd1",
+      "url_syntax" : "http://www.gramene.org/db/searches/browser?search_type=All&RGN=on&query=[example_id]"
+   },
+   {
+      "abbreviation" : "GR_GENE",
+      "database" : "Gramene",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GR_GENE:GR:0060198",
+      "generic_url" : "http://www.gramene.org/",
+      "synonym" : [
+         "GR_gene"
+      ],
+      "url_example" : "http://www.gramene.org/db/genes/search_gene?acc=GR:0060198",
+      "url_syntax" : "http://www.gramene.org/db/genes/search_gene?acc=[example_id]"
+   },
+   {
+      "abbreviation" : "GR_MUT",
+      "database" : "A Comparative Mapping Resource for Grains",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GR_MUT:GR:0060198",
+      "generic_url" : "http://www.gramene.org/",
+      "synonym" : [],
+      "url_example" : "http://www.gramene.org/db/genes/search_gene?acc=GR:0060198",
+      "url_syntax" : "http://www.gramene.org/db/genes/search_gene?acc=[example_id]"
+   },
+   {
+      "abbreviation" : "GR_PROTEIN",
+      "database" : "Gramene",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "GR_PROTEIN:Q6VSV0",
+      "generic_url" : "http://www.gramene.org/",
+      "local_id_syntax" : "[A-Z][0-9][A-Z0-9]{3}[0-9]",
+      "synonym" : [
+         "GR_protein"
+      ],
+      "url_example" : "http://www.gramene.org/db/protein/protein_search?acc=Q6VSV0",
+      "url_syntax" : "http://www.gramene.org/db/protein/protein_search?acc=[example_id]"
+   },
+   {
+      "abbreviation" : "GR_QTL",
+      "database" : "Gramene",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GR_QTL:CQU7",
+      "generic_url" : "http://www.gramene.org/",
+      "synonym" : [],
+      "url_example" : "http://www.gramene.org/db/qtl/qtl_display?qtl_accession_id=CQU7",
+      "url_syntax" : "http://www.gramene.org/db/qtl/qtl_display?qtl_accession_id=[example_id]"
+   },
+   {
+      "abbreviation" : "GR_REF",
+      "database" : "Gramene",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "GR_REF:659",
+      "generic_url" : "http://www.gramene.org/",
+      "synonym" : [],
+      "url_example" : "http://www.gramene.org/db/literature/pub_search?ref_id=659",
+      "url_syntax" : "http://www.gramene.org/db/literature/pub_search?ref_id=[example_id]"
+   },
+   {
+      "abbreviation" : "GRIMS",
+      "database" : "IRRI Genetic Resources Information Management System",
+      "entity_type" : "BET:0000000 ! germplasm",
+      "example_id" : "GRIMS:90637",
+      "generic_url" : "https://www.genesys-pgr.org",
+      "synonym" : [
+         "irri"
+      ],
+      "url_example" : "https://www.genesys-pgr.org/acn/search2?q=IRGC+90637",
+      "url_syntax" : "https://www.genesys-pgr.org/acn/search2?q=IRGC+[example_id]"
+   },
+   {
+      "abbreviation" : "GRIN",
+      "database" : "Germplasm Resources Information Network",
+      "entity_type" : "BET:0000000 ! germplasm",
+      "example_id" : "GRIN:1882640",
+      "generic_url" : "http://www.ars-grin.gov/",
+      "synonym" : [
+         "grin"
+      ],
+      "url_example" : "https://npgsweb.ars-grin.gov/gringlobal/accessiondetail.aspx?id=1882640",
+      "url_syntax" : "https://npgsweb.ars-grin.gov/gringlobal/accessiondetail.aspx?id=[example_id]"
+   },
+   {
+      "abbreviation" : "GRINDesc",
+      "database" : "Germplasm Resources Information Network",
+      "entity_type" : "BET:0000000 ! germplasm descriptors",
+      "example_id" : "GRINdesc:89033",
+      "generic_url" : "http://www.ars-grin.gov/",
+      "synonym" : [],
+      "url_example" : "https://npgsweb.ars-grin.gov/gringlobal/descriptordetail.aspx?id=89033",
+      "url_syntax" : "https://npgsweb.ars-grin.gov/gringlobal/descriptordetail.aspx?id=[example_id]"
+   },
+   {
+      "abbreviation" : "H-invDB_cDNA",
+      "database" : "H-invitational Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "H-invDB_cDNA:AK093148",
+      "generic_url" : "http://www.h-invitational.jp/",
+      "synonym" : [],
+      "url_example" : "http://www.h-invitational.jp/hinv/spsoup/transcript_view?acc_id=AK093149",
+      "url_syntax" : "http://www.h-invitational.jp/hinv/spsoup/transcript_view?acc_id=[example_id]"
+   },
+   {
+      "abbreviation" : "H-invDB_locus",
+      "database" : "H-invitational Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "H-invDB_locus:HIX0014446",
+      "generic_url" : "http://www.h-invitational.jp/",
+      "synonym" : [],
+      "url_example" : "http://www.h-invitational.jp/hinv/spsoup/locus_view?hix_id=HIX0014446",
+      "url_syntax" : "http://www.h-invitational.jp/hinv/spsoup/locus_view?hix_id=[example_id]"
+   },
+   {
+      "abbreviation" : "HAMAP",
+      "database" : "High-quality Automated and Manual Annotation of microbial Proteomes",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "HAMAP:MF_00031",
+      "generic_url" : "http://hamap.expasy.org/",
+      "synonym" : [],
+      "url_example" : "http://hamap.expasy.org/unirule/MF_00131",
+      "url_syntax" : "http://hamap.expasy.org/unirule/[example_id]"
+   },
+   {
+      "abbreviation" : "HGNC",
+      "database" : "HUGO Gene Nomenclature Committee",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "HGNC:29",
+      "generic_url" : "http://www.genenames.org/",
+      "local_id_syntax" : "[0-9]+",
+      "synonym" : [],
+      "url_example" : "http://www.genenames.org/data/hgnc_data.php?hgnc_id=HGNC:29",
+      "url_syntax" : "http://www.genenames.org/data/hgnc_data.php?hgnc_id=HGNC:[example_id]"
+   },
+   {
+      "abbreviation" : "HGNC_gene",
+      "database" : "HUGO Gene Nomenclature Committee",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "HGNC_gene:ABCA1",
+      "generic_url" : "http://www.genenames.org/",
+      "synonym" : [],
+      "url_example" : "http://www.genenames.org/data/hgnc_data.php?app_sym=ABCA1",
+      "url_syntax" : "http://www.genenames.org/data/hgnc_data.php?app_sym=[example_id]"
+   },
+   {
+      "abbreviation" : "HPA",
+      "database" : "Human Protein Atlas tissue profile information",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "HPA:HPA000237",
+      "generic_url" : "http://www.proteinatlas.org/",
+      "synonym" : [],
+      "url_example" : "http://www.proteinatlas.org/tissue_profile.php?antibody_id=HPA000237",
+      "url_syntax" : "http://www.proteinatlas.org/tissue_profile.php?antibody_id=[example_id]"
+   },
+   {
+      "abbreviation" : "HPA_antibody",
+      "database" : "Human Protein Atlas antibody information",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "HPA_antibody:HPA000237",
+      "generic_url" : "http://www.proteinatlas.org/",
+      "synonym" : [],
+      "url_example" : "http://www.proteinatlas.org/antibody_info.php?antibody_id=HPA000237",
+      "url_syntax" : "http://www.proteinatlas.org/antibody_info.php?antibody_id=[example_id]"
+   },
+   {
+      "abbreviation" : "IMG",
+      "database" : "Integrated Microbial Genomes; JGI web site for genome annotation",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "IMG:640008772",
+      "generic_url" : "http://img.jgi.doe.gov",
+      "synonym" : [],
+      "url_example" : "http://img.jgi.doe.gov/cgi-bin/pub/main.cgi?section=GeneDetail&page=geneDetail&gene_oid=640008772",
+      "url_syntax" : "http://img.jgi.doe.gov/cgi-bin/pub/main.cgi?section=GeneDetail&page=geneDetail&gene_oid=[example_id]"
+   },
+   {
+      "abbreviation" : "IntAct",
+      "database" : "IntAct protein interaction database",
+      "entity_type" : "GO:0043234 ! protein complex",
+      "example_id" : "IntAct:EBI-17086",
+      "generic_url" : "http://www.ebi.ac.uk/intact/",
+      "local_id_syntax" : "EBI-[0-9]+",
+      "synonym" : [],
+      "url_example" : "http://www.ebi.ac.uk/intact/search/do/search?searchString=EBI-17086",
+      "url_syntax" : "http://www.ebi.ac.uk/intact/search/do/search?searchString=[example_id]"
+   },
+   {
+      "abbreviation" : "InterPro",
+      "database" : "InterPro database of protein domains and motifs",
+      "entity_type" : "SO:0000839 ! polypeptide region",
+      "example_id" : "InterPro:IPR000001",
+      "generic_url" : "http://www.ebi.ac.uk/interpro/",
+      "local_id_syntax" : "IPR\\d{6}",
+      "synonym" : [
+         "INTERPRO",
+         "IPR"
+      ],
+      "url_example" : "http://www.ebi.ac.uk/interpro/entry/IPR015421",
+      "url_syntax" : "http://www.ebi.ac.uk/interpro/entry/[example_id]"
+   },
+   {
+      "abbreviation" : "IRIC",
+      "database" : "International Rice Research Institute",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "IRIS%20313-11252",
+      "generic_url" : "http://oryzasnp.org",
+      "synonym" : [],
+      "url_example" : "http://oryzasnp.org/iric-portal/_variety.zul?irisid=IRIS%20313-11252",
+      "url_syntax" : "http://oryzasnp.org/iric-portal/_variety.zul?irisid=[example_id]"
+   },
+   {
+      "abbreviation" : "IRGC",
+      "database" : "International Rice Genebank Collection",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "IRGC:10012",
+      "generic_url" : "https://www.genesys-pgr.org",
+      "synonym" : [],
+      "url_example" : "https://www.genesys-pgr.org/acn/search?q=IRGC+10013",
+      "url_syntax" : "https://www.genesys-pgr.org/acn/search?q=IRGC+[example_id]"
+   },
+   {
+      "abbreviation" : "ISBN",
+      "database" : "International Standard Book Number",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "ISBN:0781702534",
+      "generic_url" : "http://isbntools.com/",
+      "synonym" : [],
+      "url_example" : "http://openisbn.com/search.php?q=0781702534&isbn=1/",
+      "url_syntax" : "http://openisbn.com/search.php?q=[example_id]&isbn=1/"
+   },
+   {
+      "abbreviation" : "ISRR",
+      "database" : "International Society for Root Research",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "ISRR:Richard Zobel",
+      "generic_url" : "http://www.rootresearch.org/",
+      "synonym" : [],
+      "url_example" : "http://wiki.plantontology.org/index.php/ISRR_references",
+      "url_syntax" : "http://wiki.plantontology.org/index.php/ISRR_references"
+   },
+   {
+      "abbreviation" : "IUPHAR_GPCR",
+      "database" : "International Union of Pharmacology",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "IUPHAR_GPCR:1279",
+      "generic_url" : "http://www.iuphar.org/",
+      "synonym" : [],
+      "url_example" : "http://www.iuphar-db.org/DATABASE/FamilyMenuForward?familyId=13",
+      "url_syntax" : "http://www.iuphar-db.org/DATABASE/FamilyMenuForward?familyId=[example_id]"
+   },
+   {
+      "abbreviation" : "IUPHAR_RECEPTOR",
+      "database" : "International Union of Pharmacology",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "IUPHAR_RECEPTOR:2205",
+      "generic_url" : "http://www.iuphar.org/",
+      "synonym" : [],
+      "url_example" : "http://www.iuphar-db.org/DATABASE/ObjectDisplayForward?objectId=56",
+      "url_syntax" : "http://www.iuphar-db.org/DATABASE/ObjectDisplayForward?objectId=[example_id]"
+   },
+   {
+      "abbreviation" : "Jaiswal_Lab",
+      "database" : "Jaiswal_Lab",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Jaiswal_Lab:gene00002",
+      "generic_url" : "http://wiki.plantontology.org/index.php/PO_REF:00008",
+      "synonym" : [],
+      "url_example" : "http://wiki.plantontology.org/index.php/PO_REF:00008",
+      "url_syntax" : "http://wiki.plantontology.org/index.php/PO_REF:00008"
+   },
+   {
+      "abbreviation" : "JCVI_CMR",
+      "database" : "EGAD database at the J. Craig Venter Institute",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "JCVI_CMR:VCA0557",
+      "generic_url" : "http://cmr.jcvi.org/",
+      "synonym" : [
+         "TIGR_CMR",
+         "TIGR_EGAD"
+      ],
+      "url_example" : "http://cmr.jcvi.org/cgi-bin/CMR/shared/GenePage.cgi?locus=VCA0557",
+      "url_syntax" : "http://cmr.jcvi.org/cgi-bin/CMR/shared/GenePage.cgi?locus=[example_id]"
+   },
+   {
+      "abbreviation" : "JCVI_EGAD",
+      "database" : "JCVI CMR Egad",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "JCVI_EGAD:74462",
+      "generic_url" : "http://cmr.jcvi.org/",
+      "synonym" : [],
+      "url_example" : "http://cmr.jcvi.org/cgi-bin/CMR/EgadSearch.cgi?search_string=74462",
+      "url_syntax" : "http://cmr.jcvi.org/cgi-bin/CMR/EgadSearch.cgi?search_string=[example_id]"
+   },
+   {
+      "abbreviation" : "JCVI_GenProp",
+      "database" : "Genome Properties database at the J. Craig Venter Institute",
+      "entity_type" : "GO:0008150 ! biological_process",
+      "example_id" : "JCVI_GenProp:GenProp0120",
+      "generic_url" : "http://cmr.jcvi.org/",
+      "local_id_syntax" : "GenProp[0-9]{4}",
+      "synonym" : [
+         "TIGR_GenProp"
+      ],
+      "url_example" : "http://cmr.jcvi.org/cgi-bin/CMR/shared/GenomePropDefinition.cgi?prop_acc=GenProp0120",
+      "url_syntax" : "http://cmr.jcvi.org/cgi-bin/CMR/shared/GenomePropDefinition.cgi?prop_acc=[example_id]"
+   },
+   {
+      "abbreviation" : "JCVI_Medtr",
+      "database" : "Medicago truncatula genome database at the J. Craig Venter Institute",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "JCVI_Medtr:Medtr5g024510",
+      "generic_url" : "http://medicago.jcvi.org/cgi-bin/medicago/overview.cgi",
+      "synonym" : [],
+      "url_example" : "http://medicago.jcvi.org/cgi-bin/medicago/search/shared/ORF_infopage.cgi?orf=Medtr5g024510",
+      "url_syntax" : "http://medicago.jcvi.org/cgi-bin/medicago/search/shared/ORF_infopage.cgi?orf=[example_id]"
+   },
+   {
+      "abbreviation" : "JCVI_REF",
+      "database" : "J. Craig Venter Institute",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "JCVI_REF:GO_ref",
+      "generic_url" : "http://cmr.jcvi.org/",
+      "synonym" : [
+         "TIGR_REF"
+      ],
+      "url_example" : "http://cmr.jcvi.org/CMR/AnnotationSops.shtml",
+      "url_syntax" : null
+   },
+   {
+      "abbreviation" : "JCVI_TIGRFAMS",
+      "database" : "TIGRFAMs HMM collection at the J. Craig Venter Institute",
+      "entity_type" : "SO:0000839 ! polypeptide region",
+      "example_id" : "JCVI_TIGRFAMS:TIGR00254",
+      "generic_url" : "http://search.jcvi.org/",
+      "synonym" : [
+         "TIGR_TIGRFAMS",
+         "TIGRFAM"
+      ],
+      "url_example" : "http://search.jcvi.org/search?p&q=TIGR00254",
+      "url_syntax" : "http://search.jcvi.org/search?p&q=[example_id]"
+   },
+   {
+      "abbreviation" : "JSTOR",
+      "database" : "Digital archive of scholarly articles",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "JSTOR:3093870",
+      "generic_url" : "http://www.jstor.org/",
+      "synonym" : [],
+      "url_example" : "http://www.jstor.org/stable/3093870",
+      "url_syntax" : "http://www.jstor.org/stable/[example_id]"
+   },
+   {
+      "abbreviation" : "KEGG_ENZYME",
+      "database" : "KEGG Enzyme Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "KEGG_ENZYME:2.1.1.4",
+      "generic_url" : "http://www.genome.jp/dbget-bin/www_bfind?enzyme",
+      "local_id_syntax" : "\\d(\\.\\d{1,2}){2}\\.\\d{1,3}",
+      "synonym" : [],
+      "url_example" : "http://www.genome.jp/dbget-bin/www_bget?ec:2.1.1.4",
+      "url_syntax" : "http://www.genome.jp/dbget-bin/www_bget?ec:[example_id]"
+   },
+   {
+      "abbreviation" : "KEGG_LIGAND",
+      "database" : "KEGG LIGAND Database",
+      "entity_type" : "CHEBI:24431 ! chemical entity",
+      "example_id" : "KEGG_LIGAND:C00577",
+      "generic_url" : "http://www.genome.ad.jp/kegg/docs/upd_ligand.html",
+      "local_id_syntax" : "C\\d{5}",
+      "synonym" : [],
+      "url_example" : "http://www.genome.jp/dbget-bin/www_bget?cpd:C00577",
+      "url_syntax" : "http://www.genome.jp/dbget-bin/www_bget?cpd:[example_id]"
+   },
+   {
+      "abbreviation" : "KEGG_MODULE",
+      "database" : "KEGG Module Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "KEGG_MODULE:R02328",
+      "generic_url" : "http://www.kegg.jp/kegg/module.html",
+      "local_id_syntax" : "M\\d+",
+      "synonym" : [],
+      "url_example" : "http://www.genome.jp/dbget-bin/www_bget?md:M00360",
+      "url_syntax" : "http://www.genome.jp/dbget-bin/www_bget?md:[example_id]"
+   },
+   {
+      "abbreviation" : "KO",
+      "database" : "KEGG Orthology",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "KO:ot00020",
+      "generic_url" : "http://www.genome.jp/kegg/ko.html",
+      "synonym" : [],
+      "url_example" : "http://www.kegg.jp/dbget-bin/www_bget?ko:K01803",
+      "url_syntax" : "http://www.kegg.jp/dbget-bin/www_bget?ko:[example_id]"
+   },
+   {
+      "abbreviation" : "KEGG_PATHWAY",
+      "database" : "KEGG Pathways Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "KEGG_PATHWAY:ot00020",
+      "generic_url" : "http://www.genome.jp/kegg/pathway.html",
+      "synonym" : [],
+      "url_example" : "http://www.genome.jp/dbget-bin/www_bget?path:ot00020",
+      "url_syntax" : "http://www.genome.jp/dbget-bin/www_bget?path:[example_id]"
+   },
+   {
+      "abbreviation" : "KEGG_REACTION",
+      "database" : "KEGG Reaction Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "KEGG:R02328",
+      "generic_url" : "http://www.genome.jp/kegg/reaction/",
+      "local_id_syntax" : "R\\d+",
+      "synonym" : [],
+      "url_example" : "http://www.genome.jp/dbget-bin/www_bget?rn:R02328",
+      "url_syntax" : "http://www.genome.jp/dbget-bin/www_bget?rn:[example_id]"
+   },
+   {
+      "abbreviation" : "LIFEdb",
+      "database" : "LifeDB",
+      "description" : "LifeDB is a database for information on protein localization, interaction, functional assays and expression.",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "LIFEdb:DKFZp564O1716",
+      "generic_url" : "http://www.lifedb.de/",
+      "synonym" : [],
+      "url_example" : "http://www.dkfz.de/LIFEdb/LIFEdb.aspx?ID=DKFZp564O1716",
+      "url_syntax" : "http://www.dkfz.de/LIFEdb/LIFEdb.aspx?ID=[example_id]"
+   },
+   {
+      "abbreviation" : "LIS",
+      "database" : "Legume Information System",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "LIS:Medtr5g030920",
+      "generic_url" : "http://legumeinfo.org/",
+      "synonym" : [],
+      "url_example" : "http://legumeinfo.org/feature/Medicago/truncatula/gene/Medtr5g030920.JCVIMt4.0v1",
+      "url_syntax" : "http://legumeinfo.org/feature/Medicago/truncatula/gene/[example_id].JCVIMt4.0v1"
+   },
+   {
+      "abbreviation" : "MA",
+      "database" : "Adult Mouse Anatomical Dictionary",
+      "description" : "Adult Mouse Anatomical Dictionary; part of Gene Expression Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MA:0000003",
+      "generic_url" : "http://www.informatics.jax.org/",
+      "synonym" : [],
+      "url_example" : "http://www.informatics.jax.org/searches/AMA.cgi?id=MA:0000003",
+      "url_syntax" : "http://www.informatics.jax.org/searches/AMA.cgi?id=MA:[example_id]"
+   },
+   {
+      "abbreviation" : "MACSC_REF",
+      "database" : "Maize Genetics and Genomics Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MACSC_REF:78112",
+      "generic_url" : "http://www.maizegdb.org/cgi-bin/id_search.cgi?id=$acc_no",
+      "synonym" : [],
+      "url_example" : "http://www.maizegdb.org/cgi-bin/displaytraitrecord.cgi?id=78112",
+      "url_syntax" : "http://www.maizegdb.org/cgi-bin/displaytraitrecord.cgi?id=[example_id]"
+   },
+   {
+      "abbreviation" : "MaizeGDB",
+      "database" : "MaizeGDB",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MaizeGDB:12098",
+      "generic_url" : "http://www.maizegdb.org",
+      "synonym" : [],
+      "url_example" : "http://maizegdb.org/gene_center/gene/12098",
+      "url_syntax" : "http://maizegdb.org/gene_center/gene/[example_id]"
+   },
+   {
+      "abbreviation" : "MaizeGDB_Locus",
+      "database" : "MaizeGDB",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "MaizeGDB_Locus:ZmPK1",
+      "generic_url" : "http://www.maizegdb.org",
+      "local_id_syntax" : "[A-Za-z][A-Za-z0-9]*",
+      "synonym" : [],
+      "url_example" : "http://www.maizegdb.org/cgi-bin/displaylocusresults.cgi?term=ZmPK1",
+      "url_syntax" : "http://www.maizegdb.org/cgi-bin/displaylocusresults.cgi?term=[example_id]"
+   },
+   {
+      "abbreviation" : "MaizeGDB_QTL",
+      "database" : "Maize Genetics and Genomics Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MaizeGDB_QTL:78112",
+      "generic_url" : "http://www.maizegdb.org/",
+      "synonym" : [],
+      "url_example" : "http://www.maizegdb.org/data_center/trait?id=78112",
+      "url_syntax" : "http://www.maizegdb.org/data_center/trait?id=[example_id]"
+   },
+   {
+      "abbreviation" : "MaizeGDB_REF",
+      "database" : "Maize Genetics and Genomics Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MaizeGDB_REF:9021423",
+      "generic_url" : "http://www.maizegdb.org/",
+      "synonym" : [],
+      "url_example" : "http://maizegdb.org/data_center/reference?id=9021423",
+      "url_syntax" : "http://maizegdb.org/data_center/reference?id=[example_id]"
+   },
+   {
+      "abbreviation" : "MaizeGDB_stock",
+      "database" : "Maize Genetics and Genomics Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MaizeGDB_stock:12098",
+      "generic_url" : "http://www.maizegdb.org/",
+      "synonym" : [],
+      "url_example" : "http://maizegdb.org/data_center/stock?id=12098",
+      "url_syntax" : "http://maizegdb.org/data_center/stock?id=[example_id]"
+   },
+   {
+      "abbreviation" : "MEROPS",
+      "database" : "MEROPS peptidase database",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "MEROPS:A08.001",
+      "generic_url" : "http://merops.sanger.ac.uk/",
+      "synonym" : [],
+      "url_example" : "http://merops.sanger.ac.uk/cgi-bin/pepsum?mid=A08.001",
+      "url_syntax" : "http://merops.sanger.ac.uk/cgi-bin/pepsum?mid=[example_id]"
+   },
+   {
+      "abbreviation" : "MEROPS_fam",
+      "database" : "MEROPS peptidase database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MEROPS_fam:M18",
+      "generic_url" : "http://merops.sanger.ac.uk/",
+      "synonym" : [],
+      "url_example" : "http://merops.sanger.ac.uk/cgi-bin/famsum?family=m18",
+      "url_syntax" : "http://merops.sanger.ac.uk/cgi-bin/famsum?family=[example_id]"
+   },
+   {
+      "abbreviation" : "MeSH",
+      "database" : "Medical Subject Headings",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MeSH:D017209",
+      "generic_url" : "https://www.nlm.nih.gov/mesh/MBrowser.html",
+      "synonym" : [],
+      "url_example" : "http://www.nlm.nih.gov/cgi/mesh/2015/MB_cgi?view=expanded&field=uid&term=D017209",
+      "url_syntax" : "http://www.nlm.nih.gov/cgi/mesh/2015/MB_cgi?view=expanded&field=uid&term=[example_id]"
+   },
+   {
+      "abbreviation" : "MetaCyc",
+      "database" : "Metabolic Encyclopedia of metabolic and other pathways",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MetaCyc:GLUTDEG-PWY",
+      "generic_url" : "http://metacyc.org/",
+      "synonym" : [
+         "METACYC"
+      ],
+      "url_example" : "http://biocyc.org/META/NEW-IMAGE?type=NIL&object=GLUTDEG-PWY",
+      "url_syntax" : "http://biocyc.org/META/NEW-IMAGE?type=NIL&object=[example_id]"
+   },
+   {
+      "abbreviation" : "MGCSC_GENETIC_STOCKS",
+      "database" : "Maize Genetics and Genomics Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MGCSC_GENETIC_STOCKS:78112",
+      "generic_url" : "http://www.maizegdb.org",
+      "synonym" : [],
+      "url_example" : "http://www.maizegdb.org/cgi-bin/displaytraitrecord.cgi?id=78112",
+      "url_syntax" : "http://www.maizegdb.org/cgi-bin/displaystockrecord.cgi?id=[example_id]"
+   },
+   {
+      "abbreviation" : "MGI",
+      "database" : "Mouse Genome Informatics",
+      "entity_type" : "VariO:0001 ! variation",
+      "example_id" : "MGI:MGI:80863",
+      "generic_url" : "http://www.informatics.jax.org/",
+      "local_id_syntax" : "MGI:[0-9]{5,}",
+      "synonym" : [],
+      "url_example" : "http://www.informatics.jax.org/accession/MGI:80863",
+      "url_syntax" : "http://www.informatics.jax.org/accession/[example_id]"
+   },
+   {
+      "abbreviation" : "MIPS_funcat",
+      "database" : "MIPS Functional Catalogue",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MIPS_funcat:11.02",
+      "generic_url" : "http://mips.gsf.de/proj/funcatDB/",
+      "synonym" : [],
+      "url_example" : "http://mips.gsf.de/cgi-bin/proj/funcatDB/search_advanced.pl?action=2&wert=11.02",
+      "url_syntax" : "http://mips.gsf.de/cgi-bin/proj/funcatDB/search_advanced.pl?action=2&wert=[example_id]"
+   },
+   {
+      "abbreviation" : "MO",
+      "database" : "MGED Ontology",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MO:Action",
+      "generic_url" : "http://mged.sourceforge.net/ontologies/MGEDontology.php",
+      "synonym" : [],
+      "url_example" : "http://mged.sourceforge.net/ontologies/MGEDontology.php#Action",
+      "url_syntax" : "http://mged.sourceforge.net/ontologies/MGEDontology.php#[example_id]"
+   },
+   {
+      "abbreviation" : "ModBase",
+      "database" : "ModBase comprehensive Database of Comparative Protein Structure Models",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "ModBase:P10815",
+      "generic_url" : "http://modbase.compbio.ucsf.edu/",
+      "synonym" : [],
+      "url_example" : "http://salilab.org/modbase/searchbyid?databaseID=P04848",
+      "url_syntax" : "http://salilab.org/modbase/searchbyid?databaseID=[example_id]"
+   },
+   {
+      "abbreviation" : "NASC_code",
+      "database" : "Nottingham Arabidopsis Stock Centre Seeds Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "NASC_code:N3371",
+      "generic_url" : "http://arabidopsis.info",
+      "synonym" : [
+         "NASC"
+      ],
+      "url_example" : "http://seeds.nottingham.ac.uk/NASC/stockatidb.lasso?code=N3371",
+      "url_syntax" : "http://seeds.nottingham.ac.uk/NASC/stockatidb.lasso?code=[example_id]"
+   },
+   {
+      "abbreviation" : "NCBI_Gene",
+      "database" : "NCBI Gene",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "NCBI_Gene:4771",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/",
+      "local_id_syntax" : "\\d+",
+      "synonym" : [
+         "GeneID",
+         "LocusID",
+         "NCBIGene"
+      ],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/gene/4771",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/gene/[example_id]"
+   },
+   {
+      "abbreviation" : "NCBI_gi",
+      "database" : "NCBI databases",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "NCBI_gi:113194944",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/",
+      "local_id_syntax" : "[0-9]{6,}",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=113194944",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=[example_id]"
+   },
+   {
+      "abbreviation" : "NCBI_GP",
+      "database" : "NCBI GenPept",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "NCBI_GP:EAL72968",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/",
+      "local_id_syntax" : "[A-Z]{3}[0-9]{5}(\\.[0-9]+)?",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?db=protein&val=EAL72968",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?db=protein&val=[example_id]"
+   },
+	{
+      "abbreviation" : "NCBI_BioProject",
+      "database" : "NCBI BioProject",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "NCBI_BioProject:PRJNA122",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/bioproject/",
+      "local_id_syntax" : "PRJNA[0-9]+",
+      "synonym" : [
+      "BioProject"
+      ],
+      "url_example" : "https://www.ncbi.nlm.nih.gov/bioproject/122",
+      "url_syntax" : "https://www.ncbi.nlm.nih.gov/bioproject/[example_id]"
+   },
+	{
+      "abbreviation" : "NCBI_BioSample",
+      "database" : "NCBI BioSample",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "NCBI_BioSample:SAMN02646748",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/biosample/",
+      "local_id_syntax" : "SAMN[0-9]+",
+      "synonym" : [
+      "BioSample"
+      ],
+      "url_example" : "https://www.ncbi.nlm.nih.gov/biosample/SAMN02646748",
+      "url_syntax" : "https://www.ncbi.nlm.nih.gov/biosample/[example_id]"
+   },
+
+					'biosample_accession',
+					'ncbi_taxon_id',
+					'ncbi_project_id',
+		#			'refseq_project_id'
+
+   {
+      "abbreviation" : "NIF_Subcellular",
+      "database" : "Neuroscience Information Framework standard ontology, subcellular hierarchy",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "NIF_Subcellular:sao1186862860",
+      "generic_url" : "http://www.neurolex.org/wiki",
+      "synonym" : [],
+      "url_example" : "http://www.neurolex.org/wiki/sao1770195789",
+      "url_syntax" : "http://www.neurolex.org/wiki/[example_id]"
+   },
+   {
+      "abbreviation" : "NMPDR",
+      "database" : "National Microbial Pathogen Data Resource",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "NMPDR:fig|306254.1.peg.183",
+      "generic_url" : "http://www.nmpdr.org",
+      "synonym" : [],
+      "url_example" : "http://www.nmpdr.org/linkin.cgi?id=fig|306254.1.peg.183",
+      "url_syntax" : "http://www.nmpdr.org/linkin.cgi?id=[example_id]"
+   },
+   {
+      "abbreviation" : "OBO_SF_PO",
+      "database" : "Source Forge OBO Plant Ontology (PO) term request tracker",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "OBO_SF_PO:3184921",
+      "generic_url" : "http://sourceforge.net/tracker/?func=browse&group_id=76834&atid=835555",
+      "synonym" : [],
+      "url_example" : "https://sourceforge.net/tracker/index.php?func=detail&aid=3184921&group_id=76834&atid=835555",
+      "url_syntax" : "https://sourceforge.net/tracker/index.php?func=detail&aid=[example_id]&group_id=76834&atid=835555"
+   },
+   {
+      "abbreviation" : "OBO_SF2_PO",
+      "database" : "Source Forge OBO Plant Ontology (PO) term request tracker",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "OBO_SF2_PO:500",
+      "generic_url" : "generic_url",
+      "synonym" : [],
+      "url_example" : "http://sourceforge.net/p/obo/plant-ontology-po-term-requests/500",
+      "url_syntax" : "http://sourceforge.net/p/obo/plant-ontology-po-term-requests/[example_id]"
+   },
+   {
+      "abbreviation" : "OMIM",
+      "database" : "Mendelian Inheritance in Man",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "OMIM:190198",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=OMIM",
+      "synonym" : [
+         "MIM"
+      ],
+      "url_example" : "http://omim.org/entry/190198",
+      "url_syntax" : "http://omim.org/entry/[example_id]"
+   },
+   {
+      "abbreviation" : "PAINT_REF",
+      "database" : "Phylogenetic Annotation INference Tool References",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PAINT_REF:PTHR10046",
+      "generic_url" : "http://www.pantherdb.org/",
+      "synonym" : [],
+      "url_example" : "http://www.geneontology.org/gene-associations/submission/paint/PTHR10046/PTHR10046.txt",
+      "url_syntax" : "http://www.geneontology.org/gene-associations/submission/paint/[example_id]/[example_id].txt"
+   },
+   {
+      "abbreviation" : "PAMGO_GAT",
+      "database" : "Genome Annotation Tool (Agrobacterium tumefaciens C58); PAMGO Interest Group",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PAMGO_GAT:Atu0001",
+      "generic_url" : "http://agro.vbi.vt.edu/public/",
+      "synonym" : [],
+      "url_example" : "http://agro.vbi.vt.edu/public/servlet/GeneEdit?&Search=Search&level=2&genename=atu0001",
+      "url_syntax" : "http://agro.vbi.vt.edu/public/servlet/GeneEdit?&Search=Search&level=2&genename=[example_id]"
+   },
+   {
+      "abbreviation" : "PAMGO_MGG",
+      "database" : "Magnaporthe grisea database",
+      "description" : "Magnaporthe grisea database at North Carolina State University; member of PAMGO Interest Group",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PAMGO_MGG:MGG_05132",
+      "generic_url" : "http://scotland.fgl.ncsu.edu/smeng/GoAnnotationMagnaporthegrisea.html",
+      "synonym" : [],
+      "url_example" : "http://scotland.fgl.ncsu.edu/cgi-bin/adHocQuery.cgi?adHocQuery_dbName=smeng_goannotation&Action=Data&QueryName=Functional+Categorization+of+MGG+GO+Annotation&P_KeyWord=MGG_05132",
+      "url_syntax" : "http://scotland.fgl.ncsu.edu/cgi-bin/adHocQuery.cgi?adHocQuery_dbName=smeng_goannotation&Action=Data&QueryName=Functional+Categorization+of+MGG+GO+Annotation&P_KeyWord=[example_id]"
+   },
+   {
+      "abbreviation" : "PAMGO_VMD",
+      "database" : "Virginia Bioinformatics Institute Microbial Database",
+      "description" : "Virginia Bioinformatics Institute Microbial Database; member of PAMGO Interest Group",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PAMGO_VMD:109198",
+      "generic_url" : "http://phytophthora.vbi.vt.edu",
+      "synonym" : [],
+      "url_example" : "http://vmd.vbi.vt.edu/cgi-bin/browse/go_detail.cgi?gene_id=109198",
+      "url_syntax" : "http://vmd.vbi.vt.edu/cgi-bin/browse/go_detail.cgi?gene_id=[example_id]"
+   },
+   {
+      "abbreviation" : "PANTHER",
+      "database" : "Protein ANalysis THrough Evolutionary Relationships Classification System",
+      "entity_type" : "NCIT:C20130 ! protein family",
+      "example_id" : "PANTHER:PTHR11455",
+      "generic_url" : "http://www.pantherdb.org/",
+      "local_id_syntax" : "PTN[0-9]{9}|PTHR[0-9]{5}_[A-Z0-9]+",
+      "synonym" : [],
+      "url_example" : "http://www.pantherdb.org/panther/lookupId.jsp?id=PTHR10000",
+      "url_syntax" : "http://www.pantherdb.org/panther/lookupId.jsp?id=[example_id]"
+   },
+   {
+      "abbreviation" : "PATRIC",
+      "database" : "PathoSystems Resource Integration Center",
+      "description" : "PathoSystems Resource Integration Center at the Virginia Bioinformatics Institute",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PATRIC:cds.000002.436951",
+      "generic_url" : "http://patric.vbi.vt.edu",
+      "synonym" : [],
+      "url_example" : "http://patric.vbi.vt.edu/gene/overview.php?fid=cds.000002.436951",
+      "url_syntax" : "http://patric.vbi.vt.edu/gene/overview.php?fid=[example_id]"
+   },
+   {
+      "abbreviation" : "PDB",
+      "database" : "Protein Data Bank",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "PDB:1A4U",
+      "generic_url" : "http://www.rcsb.org/pdb/",
+      "local_id_syntax" : "[A-Za-z0-9]{4}",
+      "synonym" : [],
+      "url_example" : "http://www.rcsb.org/pdb/cgi/explore.cgi?pdbId=1A4U",
+      "url_syntax" : "http://www.rcsb.org/pdb/cgi/explore.cgi?pdbId=[example_id]"
+   },
+   {
+      "abbreviation" : "Pfam",
+      "database" : "Pfam database of protein families",
+      "description" : "Pfam is a collection of protein families represented by sequence alignments and hidden Markov models (HMMs)",
+      "entity_type" : "SO:0000839 ! polypeptide region",
+      "example_id" : "Pfam:PF00046",
+      "generic_url" : "http://pfam.xfam.org",
+      "local_id_syntax" : "PF[0-9]{5}",
+      "synonym" : [],
+      "url_example" : "http://pfam.xfam.org/family/PF00069",
+      "url_syntax" : "http://pfam.xfam.org/family/[example_id]"
+   },
+   {
+      "abbreviation" : "PharmGKB",
+      "database" : "Pharmacogenetics and Pharmacogenomics Knowledge Base",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PharmGKB:PA267",
+      "generic_url" : "http://www.pharmgkb.org",
+      "synonym" : [],
+      "url_example" : "http://www.pharmgkb.org/do/serve?objId=PA267",
+      "url_syntax" : "http://www.pharmgkb.org/do/serve?objId=[example_id]"
+   },
+   {
+      "abbreviation" : "PIR",
+      "database" : "Protein Information Resource",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "PIR:I49499",
+      "generic_url" : "http://pir.georgetown.edu/",
+      "local_id_syntax" : "[A-Z]{1}[0-9]{5}",
+      "synonym" : [],
+      "url_example" : "http://pir.georgetown.edu/cgi-bin/pirwww/nbrfget?uid=I49499",
+      "url_syntax" : "http://pir.georgetown.edu/cgi-bin/pirwww/nbrfget?uid=[example_id]"
+   },
+   {
+      "abbreviation" : "PIRSF",
+      "database" : "PIR Superfamily Classification System",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PIRSF:SF002327",
+      "generic_url" : "http://pir.georgetown.edu/pirsf/",
+      "synonym" : [],
+      "url_example" : "http://pir.georgetown.edu/cgi-bin/ipcSF?id=SF002327",
+      "url_syntax" : "http://pir.georgetown.edu/cgi-bin/ipcSF?id=[example_id]"
+   },
+   {
+      "abbreviation" : "Planteome_gene",
+      "database" : "Generic planteome genes without homes",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Planteome_gene:AC148152.3_FGT008",
+      "generic_url" : "http://www.google.com",
+      "synonym" : [],
+      "url_example" : "https://www.google.com/search?q=AC148152.3_FGT008",
+      "url_syntax" : "https://www.google.com/search?q=[example_id]"
+   },
+   {
+      "abbreviation" : "PlantSystematics_image_archive",
+      "database" : "PlantSystematics.org",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PlantSystematics_image_archivee:37658",
+      "generic_url" : "http://plantsystematics.org",
+      "synonym" : [],
+      "url_example" : "http://www.plantsystematics.org/imagebyid_37658.html",
+      "url_syntax" : "http://www.plantsystematics.org/imagebyid_[example_id].html"
+   },
+   {
+      "abbreviation" : "PMCID",
+      "database" : "Pubmed Central",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PMCID:PMC201377",
+      "generic_url" : "http://www.pubmedcentral.nih.gov/",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/sites/entrez?db=pmc&cmd=search&term=PMC201377",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/sites/entrez?db=pmc&cmd=search&term=[example_id]"
+   },
+   {
+      "abbreviation" : "PMID",
+      "database" : "PubMed",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PMID:4208797",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/PubMed/",
+      "local_id_syntax" : "[0-9]+",
+      "synonym" : [
+         "PUBMED",
+         "PubMed"
+      ],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/pubmed/4208797",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/pubmed/[example_id]"
+   },
+   {
+      "abbreviation" : "PO",
+      "database" : "Plant Ontology",
+      "entity_type" : "PO:0009012 ! plant structure development stage",
+      "example_id" : "PO:0025131",
+      "generic_url" : "http://www.planteome.org/",
+      "local_id_syntax" : "[0-9]{7}",
+      "synonym" : [],
+      "url_example" : "http://browser.planteome.org/amigo/term/PO:0025131",
+      "url_syntax" : "http://browser.planteome.org/amigo/term/PO:[example_id]"
+   },
+   {
+      "abbreviation" : "PO_GIT",
+      "database" : "GitHub",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PO_GIT:626",
+      "generic_url" : "https://github.com/Planteome/plant-ontology",
+      "synonym" : [],
+      "url_example" : "https://github.com/Planteome/plant-ontology/issues/626",
+      "url_syntax" : "https://github.com/Planteome/plant-ontology/issues/[example_id]"
+   },
+   {
+      "abbreviation" : "PO_REF",
+      "database" : "Plant Ontology custom references",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PO_REF:00001",
+      "generic_url" : "http://planteome.org/po_ref",
+      "synonym" : [],
+      "url_example" : "http://planteome.org/po_ref/00001",
+      "url_syntax" : "http://planteome.org/po_ref/[example_id]"
+   },
+   {
+      "abbreviation" : "PomBase",
+      "database" : "PomBase",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "PomBase:SPBC11B10.09",
+      "generic_url" : "http://www.pombase.org/",
+      "local_id_syntax" : "S\\w+(\\.)?\\w+(\\.)?",
+      "synonym" : [],
+      "url_example" : "http://www.pombase.org/spombe/result/SPBC11B10.09",
+      "url_syntax" : "http://www.pombase.org/spombe/result/[example_id]"
+   },
+   {
+      "abbreviation" : "PR",
+      "database" : "Protein Ontology",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "PR:000025380",
+      "generic_url" : "http://www.proconsortium.org/pro/pro.shtml",
+      "local_id_syntax" : "([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}){1}(-[0-9]+){0,1}|[0-9]{9}",
+      "synonym" : [
+         "PRO"
+      ],
+      "url_example" : "http://purl.obolibrary.org/obo/PR_000025380",
+      "url_syntax" : "http://purl.obolibrary.org/obo/PR_[example_id]"
+   },
+   {
+      "abbreviation" : "PRINTS",
+      "database" : "PRINTS compendium of protein fingerprints",
+      "entity_type" : "SO:0000839 ! polypeptide region",
+      "example_id" : "PRINTS:PR00025",
+      "generic_url" : "http://www.bioinf.manchester.ac.uk/dbbrowser/PRINTS/",
+      "synonym" : [],
+      "url_example" : "http://www.bioinf.manchester.ac.uk/cgi-bin/dbbrowser/sprint/searchprintss.cgi?display_opts=Prints&category=None&queryform=false&regexpr=off&prints_accn=PR00025",
+      "url_syntax" : "http://www.bioinf.manchester.ac.uk/cgi-bin/dbbrowser/sprint/searchprintss.cgi?display_opts=Prints&category=None&queryform=false&regexpr=off&prints_accn=[example_id]"
+   },
+   {
+      "abbreviation" : "ProDom",
+      "database" : "ProDom protein domain families",
+      "description" : "ProDom protein domain families automatically generated from UniProtKB",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "ProDom:PD000001",
+      "generic_url" : "http://prodom.prabi.fr/prodom/current/html/home.php",
+      "synonym" : [],
+      "url_example" : "http://prodom.prabi.fr/prodom/current/cgi-bin/request.pl?question=DBEN&query=PD000001",
+      "url_syntax" : "http://prodom.prabi.fr/prodom/current/cgi-bin/request.pl?question=DBEN&query=[example_id]"
+   },
+   {
+      "abbreviation" : "Prosite",
+      "database" : "Prosite database of protein families and domains",
+      "entity_type" : "SO:0000839 ! polypeptide region",
+      "example_id" : "Prosite:PS00365",
+      "generic_url" : "http://www.expasy.ch/prosite/",
+      "synonym" : [],
+      "url_example" : "http://www.expasy.ch/cgi-bin/prosite-search-ac?PS00365",
+      "url_syntax" : "http://www.expasy.ch/cgi-bin/prosite-search-ac?[example_id]"
+   },
+   {
+      "abbreviation" : "PseudoCAP",
+      "database" : "Pseudomonas Genome Project",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PseudoCAP:PA4756",
+      "generic_url" : "http://v2.pseudomonas.com/",
+      "synonym" : [],
+      "url_example" : "http://v2.pseudomonas.com/getAnnotation.do?locusID=PA4756",
+      "url_syntax" : "http://v2.pseudomonas.com/getAnnotation.do?locusID=[example_id]"
+   },
+   {
+      "abbreviation" : "PSO_GIT",
+      "database" : "GitHub",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PSO_GIT:169",
+      "generic_url" : "https://github.com/Planteome/plant-stress-ontology",
+      "synonym" : [],
+      "url_example" : "https://github.com/Planteome/plant-stress-ontology/issues/169",
+      "url_syntax" : "https://github.com/Planteome/plant-stress-ontology/issues/[example_id]"
+   },
+   {
+      "abbreviation" : "PSI-MOD",
+      "database" : "Proteomics Standards Initiative protein modification ontology",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "MOD:00219",
+      "generic_url" : "http://psidev.sourceforge.net/mod/",
+      "synonym" : [
+         "MOD"
+      ],
+      "url_example" : "http://www.ebi.ac.uk/ontology-lookup/?termId=MOD:00219",
+      "url_syntax" : "http://www.ebi.ac.uk/ontology-lookup/?termId=MOD:[example_id]"
+   },
+   {
+      "abbreviation" : "PubChem_BioAssay",
+      "database" : "NCBI PubChem database of bioassay records",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "PubChem_BioAssay:177",
+      "generic_url" : "http://pubchem.ncbi.nlm.nih.gov/",
+      "synonym" : [],
+      "url_example" : "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid=177",
+      "url_syntax" : "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid=[example_id]"
+   },
+   {
+      "abbreviation" : "PubChem_Compound",
+      "database" : "NCBI PubChem database of chemical structures",
+      "entity_type" : "CHEBI:24431 ! chemical entity",
+      "example_id" : "PubChem_Compound:2244",
+      "generic_url" : "http://pubchem.ncbi.nlm.nih.gov/",
+      "local_id_syntax" : "[0-9]+",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?CMD=search&DB=pccompound&term=2244",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?CMD=search&DB=pccompound&term=[example_id]"
+   },
+   {
+      "abbreviation" : "PubChem_Substance",
+      "database" : "NCBI PubChem database of chemical substances",
+      "entity_type" : "CHEBI:24431 ! chemical entity",
+      "example_id" : "PubChem_Substance:4594",
+      "generic_url" : "http://pubchem.ncbi.nlm.nih.gov/",
+      "local_id_syntax" : "[0-9]{4,}",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?CMD=search&DB=pcsubstance&term=4594",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?CMD=search&DB=pcsubstance&term=[example_id]"
+   },
+   {
+      "abbreviation" : "Reactome",
+      "database" : "Reactome - a curated knowledgebase of biological pathways",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Reactome:R-HSA-109582",
+      "generic_url" : "http://www.reactome.org/",
+      "local_id_syntax" : "R-[A-Z]{3}-[0-9]+(-[0-9]+){0,1}(\\.[0-9]+){0,1}",
+      "synonym" : [
+         "REACTOME",
+         "REAC"
+      ],
+      "url_example" : "www.reactome.org/content/detail/R-HSA-109582",
+      "url_syntax" : "www.reactome.org/content/detail/[example_id]"
+   },
+   {
+      "abbreviation" : "REBASE",
+      "database" : "REBASE restriction enzyme database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "REBASE:EcoRI",
+      "generic_url" : "http://rebase.neb.com/rebase/rebase.html",
+      "synonym" : [],
+      "url_example" : "http://rebase.neb.com/rebase/enz/EcoRI.html",
+      "url_syntax" : "http://rebase.neb.com/rebase/enz/[example_id].html"
+   },
+   {
+      "abbreviation" : "RefSeq",
+      "database" : "RefSeq",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "RefSeq:XP_001068954",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/RefSeq/",
+      "local_id_syntax" : "(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|ZP)_[0-9]+(\\.[0-9]+){0,1}",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=XP_001068954",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=[example_id]"
+   },
+   {
+      "abbreviation" : "Rfam",
+      "database" : "Rfam database of RNA families",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Rfam:RF00012",
+      "generic_url" : "http://rfam.sanger.ac.uk/",
+      "synonym" : [],
+      "url_example" : "http://rfam.sanger.ac.uk/family/RF00012",
+      "url_syntax" : "http://rfam.sanger.ac.uk/family/[example_id]"
+   },
+   {
+      "abbreviation" : "RGD",
+      "database" : "Rat Genome Database",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "RGD:2004",
+      "generic_url" : "http://rgd.mcw.edu/",
+      "local_id_syntax" : "[0-9]{4,7}",
+      "synonym" : [
+         "RAD",
+         "RGDID"
+      ],
+      "url_example" : "http://rgd.mcw.edu/generalSearch/RgdSearch.jsp?quickSearch=1&searchKeyword=2004",
+      "url_syntax" : "http://rgd.mcw.edu/generalSearch/RgdSearch.jsp?quickSearch=1&searchKeyword=[example_id]"
+   },
+   {
+      "abbreviation" : "RHEA",
+      "database" : "Rhea, the Annotated Reactions Database",
+      "description" : "Rhea is a freely available, manually annotated database of chemical reactions created in collaboration with the Swiss Institute of Bioinformatics (SIB).",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "RHEA:25811",
+      "generic_url" : "http://www.ebi.ac.uk/rhea/",
+      "synonym" : [],
+      "url_example" : "http://www.ebi.ac.uk/rhea/reaction.xhtml?id=25811",
+      "url_syntax" : "http://www.ebi.ac.uk/rhea/reaction.xhtml?id=[example_id]"
+   },
+   {
+      "abbreviation" : "RiceSES",
+      "database" : "Rice Knowledge Bank",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "RiceSES:bakanae-diseases-bak",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/PubMed/",
+      "synonym" : [],
+      "url_example" : "http://www.knowledgebank.irri.org/extension/crop-damage-diseases/bakanae-diseases-bak.html",
+      "url_syntax" : "http://www.knowledgebank.irri.org/extension/crop-damage-diseases/[example_id].html"
+   },
+   {
+      "abbreviation" : "RNAcentral",
+      "database" : "RNAcentral",
+      "description" : "An international database of ncRNA sequences",
+      "entity_type" : "CHEBI:33697 ! ribonucleic acid",
+      "example_id" : "RNAcentral:URS000047C79B_9606",
+      "generic_url" : "http://rnacentral.org",
+      "local_id_syntax" : "URS[0-9A-F]{10}([_\\/][0-9]+){0,1}",
+      "synonym" : [],
+      "url_example" : "http://rnacentral.org/rna/URS000047C79B_9606",
+      "url_syntax" : "http://rnacentral.org/rna/[example_id]"
+   },
+   {
+      "abbreviation" : "RNAmods",
+      "database" : "RNA Modification Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "RNAmods:037",
+      "generic_url" : "http://s59.cas.albany.edu/RNAmods/",
+      "synonym" : [
+         "RNAMDB"
+      ],
+      "url_example" : "http://s59.cas.albany.edu/RNAmods/cgi-bin/rnashow.cgi?091",
+      "url_syntax" : "http://s59.cas.albany.edu/RNAmods/cgi-bin/rnashow.cgi?[example_id]"
+   },
+   {
+      "abbreviation" : "RO",
+      "database" : "OBO Relation Ontology Ontology",
+      "description" : "A collection of relations used across OBO ontologies",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "RO:0002211",
+      "generic_url" : "http://purl.obolibrary.org/obo/ro",
+      "synonym" : [],
+      "url_example" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "url_syntax" : "http://purl.obolibrary.org/obo/RO_[example_id]"
+   },
+   {
+      "abbreviation" : "SABIO-RK",
+      "database" : "SABIO Reaction Kinetics",
+      "description" : "The SABIO-RK (System for the Analysis of Biochemical Pathways - Reaction Kinetics) is a web-based application based on the SABIO relational database that contains information about biochemical reactions, their kinetic equations with their parameters, and the experimental conditions under which these parameters were measured.",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SABIO-RK:1858",
+      "generic_url" : "http://sabio.villa-bosch.de/",
+      "synonym" : [],
+      "url_example" : "http://sabio.villa-bosch.de/reacdetails.jsp?reactid=1858",
+      "url_syntax" : "http://sabio.villa-bosch.de/reacdetails.jsp?reactid=[example_id]"
+   },
+   {
+      "abbreviation" : "SEED",
+      "database" : "The SEED;",
+      "description" : "Project to annotate the first 1000 sequenced genomes, develop detailed metabolic reconstructions, and construct the corresponding stoichiometric matrices",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SEED:fig|83331.1.peg.1",
+      "generic_url" : "http://www.theseed.org",
+      "synonym" : [],
+      "url_example" : "http://www.theseed.org/linkin.cgi?id=fig|83331.1.peg.1",
+      "url_syntax" : "http://www.theseed.org/linkin.cgi?id=[example_id]"
+   },
+   {
+      "abbreviation" : "SGD",
+      "database" : "Saccharomyces Genome Database",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "SGD:S000006169",
+      "generic_url" : "http://www.yeastgenome.org/",
+      "local_id_syntax" : "S[0-9]{9}",
+      "synonym" : [
+         "SGDID"
+      ],
+      "url_example" : "http://www.yeastgenome.org/locus/S000006169/overview",
+      "url_syntax" : "http://www.yeastgenome.org/locus/[example_id]/overview"
+   },
+   {
+      "abbreviation" : "SGD_LOCUS",
+      "database" : "Saccharomyces Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SGD_LOCUS:GAL4",
+      "generic_url" : "http://www.yeastgenome.org/",
+      "synonym" : [],
+      "url_example" : "http://www.yeastgenome.org/locus/S000006169/overview",
+      "url_syntax" : "http://www.yeastgenome.org/locus/[example_id]/overview"
+   },
+   {
+      "abbreviation" : "SGD_REF",
+      "database" : "Saccharomyces Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SGD_REF:S000049602",
+      "generic_url" : "http://www.yeastgenome.org/",
+      "synonym" : [],
+      "url_example" : "http://www.yeastgenome.org/reference/S000049602/overview",
+      "url_syntax" : "http://www.yeastgenome.org/reference/[example_id]/overview"
+   },
+   {
+      "abbreviation" : "SGN",
+      "database" : "Sol Genomics Network",
+      "entity_type" : "SO:0000704 ! gene",
+      "example_id" : "SGN_gene:7740",
+      "generic_url" : "http://www.sgn.cornell.edu/",
+      "synonym" : [
+         "SGN_gene"
+      ],
+      "url_example" : "http://solgenomics.net/phenome/locus_display.pl?locus_id=7740",
+      "url_syntax" : "http://www.sgn.cornell.edu/phenome/locus_display.pl?locus_id=[example_id]"
+   },
+   {
+      "abbreviation" : "SGN_ref",
+      "database" : "Sol Genomics Network",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SGN_ref:861",
+      "generic_url" : "http://www.sgn.cornell.edu/",
+      "synonym" : [],
+      "url_example" : "http://www.sgn.cornell.edu/chado/publication.pl?pub_id=861",
+      "url_syntax" : "http://www.sgn.cornell.edu/chado/publication.pl?pub_id=[example_id]"
+   },
+   {
+      "abbreviation" : "SGN_germplasm",
+      "database" : "Sol Genomics Network",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SGN_germplasm:6583",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/PubMed/",
+      "synonym" : [],
+      "url_example" : "http://solgenomics.net/stock/6583/view/",
+      "url_syntax" : "http://solgenomics.net/stock/[example_id]/view/"
+   },
+   {
+      "abbreviation" : "SMART",
+      "database" : "Simple Modular Architecture Research Tool",
+      "entity_type" : "SO:0000839 ! polypeptide region",
+      "example_id" : "SMART:SM00005",
+      "generic_url" : "http://smart.embl-heidelberg.de/",
+      "synonym" : [],
+      "url_example" : "http://smart.embl-heidelberg.de/smart/do_annotation.pl?BLAST=DUMMY&DOMAIN=SM00005",
+      "url_syntax" : "http://smart.embl-heidelberg.de/smart/do_annotation.pl?BLAST=DUMMY&DOMAIN=[example_id]"
+   },
+   {
+      "abbreviation" : "SO",
+      "database" : "Sequence Ontology",
+      "entity_type" : "SO:0000110 ! sequence feature",
+      "example_id" : "SO:0000195",
+      "generic_url" : "http://sequenceontology.org/",
+      "local_id_syntax" : "\\d{7}",
+      "synonym" : [],
+      "url_example" : "http://www.sequenceontology.org/browser/current_svn/term/SO:0001850",
+      "url_syntax" : "http://www.sequenceontology.org/browser/current_svn/term/SO:[example_id]"
+   },
+   {
+      "abbreviation" : "Soy_gene",
+      "database" : "SoyBase",
+      "entity_type" : "BET:0000000 ! gene",
+      "example_id" : "Glyma18g02210",
+      "generic_url" : "http://soybase.org/",
+      "synonym" : [],
+      "url_example" : "http://www.soybase.org/sbt/search/search_results.php?category=FeatureName&search_term=Glyma18g02210",
+      "url_syntax" : "http://www.soybase.org/sbt/search/search_results.php?category=FeatureName&search_term=[example_id]"
+   },
+   {
+      "abbreviation" : "SOY_QTL",
+      "database" : "SoyBase",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Seedling, abnormal+1-1",
+      "generic_url" : "http://soybase.org/",
+      "synonym" : [],
+      "url_example" : "http://www.soybase.org/sbt/search/search_results.php?category=QTLName&search_term=Seedling,+abnormal+1-1",
+      "url_syntax" : "http://soybase.org/sbt/search/search_results.php?category=QTLName&search_term=[example_id]"
+   },
+   {
+      "abbreviation" : "SOY_ref",
+      "database" : "SoyBase",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SOY ref:SoyBase6597900",
+      "generic_url" : "http://soybase.org/",
+      "synonym" : [],
+      "url_example" : "http://www.soybase.org/sbt/search/search_results.php?category=Soybase_ID&search_term=SoyBase3142000126",
+      "url_syntax" : "http://www.soybase.org/sbt/search/search_results.php?category=Soybase_ID&search_term=[example_id]"
+   },
+   {
+      "abbreviation" : "SPD",
+      "database" : "Schizosaccharomyces pombe Postgenome Database at RIKEN; includes Orfeome Localisation data",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SPD:05/05F01",
+      "generic_url" : "http://www.riken.jp/SPD/",
+      "local_id_syntax" : "[0-9]{2}/[0-9]{2}[A-Z][0-9]{2}",
+      "synonym" : [],
+      "url_example" : "http://www.riken.jp/SPD/05/05F01.html",
+      "url_syntax" : "http://www.riken.jp/SPD/[example_id].html"
+   },
+   {
+      "abbreviation" : "SPTR",
+      "database" : "SRS database at EBI",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SPTR:12345",
+      "generic_url" : "http://srs.ebi.ac.uk",
+      "synonym" : [
+         "SP"
+      ],
+      "url_example" : "http://srs.ebi.ac.uk/srs6bin/cgi-bin/wgetz?-e+[SWALL-acc:12345]",
+      "url_syntax" : "http://srs.ebi.ac.uk/srs6bin/cgi-bin/wgetz?-e+[SWALL-acc:[example_id]]"
+   },
+   {
+      "abbreviation" : "SUPERFAMILY",
+      "database" : "SUPERFAMILY protein annotation database",
+      "description" : "A database of structural and functional protein annotations for completely sequenced genomes",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SUPERFAMILY:51905",
+      "generic_url" : "http://supfam.cs.bris.ac.uk/SUPERFAMILY/index.html",
+      "synonym" : [],
+      "url_example" : "http://supfam.cs.bris.ac.uk/SUPERFAMILY/cgi-bin/scop.cgi?ipid=SSF51905",
+      "url_syntax" : "http://supfam.cs.bris.ac.uk/SUPERFAMILY/cgi-bin/scop.cgi?ipid=SSF[example_id]"
+   },
+   {
+      "abbreviation" : "SWALL",
+      "database" : "ExPASY Bioinformatics Resource Portal",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "SWALL:12345",
+      "generic_url" : "http://ca.expasy.org",
+      "synonym" : [],
+      "url_example" : "http://ca.expasy.org/cgi-bin/sprot-search-de?S=1&amp;T=1&amp;SEARCH=12345",
+      "url_syntax" : "http://ca.expasy.org/cgi-bin/sprot-search-de?S=1&amp;T=1&amp;SEARCH=[example_id]"
+   },
+   {
+      "abbreviation" : "Swiss-Prot",
+      "database" : "Swiss-Prot protein database.",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Swiss-Prot:P45867",
+      "generic_url" : "http://ca.expasy.org/sprot/",
+      "synonym" : [],
+      "url_example" : "http://www.ebi.uniprot.org/uniprot-srv/uniProtView.do?proteinac=P45867",
+      "url_syntax" : "http://www.ebi.uniprot.org/uniprot-srv/uniProtView.do?proteinac=[example_id]"
+   },
+   {
+      "abbreviation" : "TAIR",
+      "database" : "The Arabidopsis Information Resource",
+      "entity_type" : "SO:0000185 ! primary transcript",
+      "example_id" : "TAIR:locus:2146653",
+      "generic_url" : "http://www.arabidopsis.org/",
+      "local_id_syntax" : "locus:[0-9]{7}",
+      "synonym" : [],
+      "url_example" : "http://arabidopsis.org/servlets/TairObject?accession=locus:2146653",
+      "url_syntax" : "http://arabidopsis.org/servlets/TairObject?accession=[example_id]"
+   },
+   {
+      "abbreviation" : "taxon",
+      "database" : "NCBI Taxonomy",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "taxon:7227",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/taxonomy/",
+      "synonym" : [
+         "NCBITaxon",
+         "ncbi_taxid"
+      ],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/taxonomy/3702",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/taxonomy/[example_id]"
+   },
+   {
+      "abbreviation" : "TC",
+      "database" : "Transport Protein Database",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "TC:9.A.4.1.1",
+      "generic_url" : "http://www.tcdb.org/",
+      "synonym" : [],
+      "url_example" : "http://www.tcdb.org/tcdb/index.php?tc=9.A.4.1.1",
+      "url_syntax" : "http://www.tcdb.org/tcdb/index.php?tc=[example_id]"
+   },
+   {
+      "abbreviation" : "TGD_LOCUS",
+      "database" : "Tetrahymena Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "TGD_LOCUS:PDD1",
+      "generic_url" : "http://www.ciliate.org/",
+      "synonym" : [],
+      "url_example" : "http://db.ciliate.org/cgi-bin/locus.pl?locus=PDD1",
+      "url_syntax" : "http://db.ciliate.org/cgi-bin/locus.pl?locus=[example_id]"
+   },
+   {
+      "abbreviation" : "TGD_REF",
+      "database" : "Tetrahymena Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "TGD_REF:T000005818",
+      "generic_url" : "http://www.ciliate.org/",
+      "synonym" : [],
+      "url_example" : "http://db.ciliate.org/cgi-bin/reference/reference.pl?dbid=T000005818",
+      "url_syntax" : "http://db.ciliate.org/cgi-bin/reference/reference.pl?dbid=[example_id]"
+   },
+   {
+      "abbreviation" : "TO_GIT",
+      "database" : "GitHub",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "TO_GIT:381",
+      "generic_url" : "https://github.com/Planteome/plant-trait-ontology",
+      "synonym" : [],
+      "url_example" : "https://github.com/Planteome/plant-trait-ontology/issues/381",
+      "url_syntax" : "https://github.com/Planteome/plant-trait-ontology/issues/[example_id]"
+   },
+   {
+      "abbreviation" : "TR",
+      "database" : "TREMBL",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "TrEMBL:Q00177",
+      "generic_url" : "http://www.ebi.ac.uk/swissprot/",
+      "synonym" : [
+         "SPTREMBL",
+         "TREMBL",
+         "TrEMBL"
+      ],
+      "url_example" : "http://srs.ebi.ac.uk/srs6bin/cgi-bin/wgetz?-e+[SWALL-acc:Q00177]",
+      "url_syntax" : "http://srs.ebi.ac.uk/srs6bin/cgi-bin/wgetz?-e+[SWALL-acc:[example_id]]"
+   },
+   {
+      "abbreviation" : "TreeGenes",
+      "database" : "Forest Tree Genome Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "TreeGenes:254",
+      "generic_url" : "http://dendrome.ucdavis.edu/treegenes/",
+      "synonym" : [],
+      "url_example" : "http://dendrome.ucdavis.edu/treegenes/protein/view_protein.php?id=254",
+      "url_syntax" : "http://dendrome.ucdavis.edu/treegenes/protein/view_protein.php?id=[example_id]"
+   },
+   {
+      "abbreviation" : "UBERON",
+      "database" : "Uber-anatomy ontology",
+      "description" : "A multi-species anatomy ontology",
+      "entity_type" : "UBERON:0000105 ! life cycle stage",
+      "example_id" : "UBERON:0000069",
+      "generic_url" : "http://uberon.org",
+      "local_id_syntax" : "[0-9]{7}",
+      "synonym" : [],
+      "url_example" : "http://purl.obolibrary.org/obo/UBERON_0002398",
+      "url_syntax" : "http://purl.obolibrary.org/obo/UBERON_[example_id]"
+   },
+   {
+      "abbreviation" : "UM-BBD_enzymeID",
+      "database" : "EAWAG Biocatalysis/Biodegradation Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UM-BBD_enzymeID:e0413",
+      "generic_url" : "http://eawag-bbd.ethz.ch/",
+      "synonym" : [],
+      "url_example" : "http://eawag-bbd.ethz.ch/servlets/pageservlet?ptype=ep&enzymeID=e0230",
+      "url_syntax" : "http://eawag-bbd.ethz.ch/servlets/pageservlet?ptype=ep&enzymeID=[example_id]"
+   },
+   {
+      "abbreviation" : "UM-BBD_pathwayID",
+      "database" : "EAWAG Biocatalysis/Biodegradation Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UM-BBD_pathwayID:acr",
+      "generic_url" : "http://eawag-bbd.ethz.ch/",
+      "synonym" : [],
+      "url_example" : "http://eawag-bbd.ethz.ch/acr/acr_map.html",
+      "url_syntax" : "http://eawag-bbd.ethz.ch/[example_id]/[example_id]_map.html"
+   },
+   {
+      "abbreviation" : "UM-BBD_reactionID",
+      "database" : "EAWAG Biocatalysis/Biodegradation Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UM-BBD_reactionID:r0129",
+      "generic_url" : "http://eawag-bbd.ethz.ch/",
+      "synonym" : [],
+      "url_example" : "http://eawag-bbd.ethz.ch/servlets/pageservlet?ptype=r&reacID=r0129",
+      "url_syntax" : "http://eawag-bbd.ethz.ch/servlets/pageservlet?ptype=r&reacID=[example_id]"
+   },
+   {
+      "abbreviation" : "UM-BBD_ruleID",
+      "database" : "EAWAG Biocatalysis/Biodegradation Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UM-BBD_ruleID:bt0330",
+      "generic_url" : "http://eawag-bbd.ethz.ch/",
+      "synonym" : [],
+      "url_example" : "http://eawag-bbd.ethz.ch/servlets/rule.jsp?rule=bt0330",
+      "url_syntax" : "http://eawag-bbd.ethz.ch/servlets/rule.jsp?rule=[example_id]"
+   },
+   {
+      "abbreviation" : "UniGene",
+      "database" : "UniGene",
+      "description" : "NCBI transcript cluster database, organized by transcriptome. Each UniGene entry is a set of transcript sequences that appear to come from the same transcription locus (gene or expressed pseudogene).",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UniGene:Hs.212293",
+      "generic_url" : "http://www.ncbi.nlm.nih.gov/UniGene",
+      "synonym" : [],
+      "url_example" : "http://www.ncbi.nlm.nih.gov/UniGene/clust.cgi?ORG=Hs&CID=212293",
+      "url_syntax" : "http://www.ncbi.nlm.nih.gov/UniGene/clust.cgi?ORG=[organism_abbreviation]&CID=[cluster_id]"
+   },
+   {
+      "abbreviation" : "UniMod",
+      "database" : "UniMod",
+      "description" : "protein modifications for mass spectrometry",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UniMod:1287",
+      "generic_url" : "http://www.unimod.org/",
+      "synonym" : [],
+      "url_example" : "http://www.unimod.org/modifications_view.php?editid1=1287",
+      "url_syntax" : "http://www.unimod.org/modifications_view.php?editid1=[example_id]"
+   },
+   {
+      "abbreviation" : "UniParc",
+      "database" : "UniProt Archive",
+      "description" : "A non-redundant archive of protein sequences extracted from Swiss-Prot, TrEMBL, PIR-PSD, EMBL, Ensembl, IPI, PDB, RefSeq, FlyBase, WormBase, European Patent Office, United States Patent and Trademark Office, and Japanese Patent Office",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UniParc:UPI000000000A",
+      "generic_url" : "http://www.uniprot.org/uniparc/",
+      "synonym" : [],
+      "url_example" : "http://www.uniprot.org/uniparc/UPI000000000A",
+      "url_syntax" : "http://www.uniprot.org/uniparc/[example_id]"
+   },
+   {
+      "abbreviation" : "UniPathway",
+      "database" : "UniPathway",
+      "description" : "UniPathway is a a metabolic door to UniProtKB/Swiss-Prot, a curated resource of metabolic pathways for the UniProtKB/Swiss-Prot knowledgebase.",
+      "entity_type" : "GO:0008150 ! biological_process",
+      "example_id" : "UniPathway:UPA00155",
+      "generic_url" : "http://www.grenoble.prabi.fr/obiwarehouse/unipathway",
+      "synonym" : [],
+      "url_example" : "http://www.grenoble.prabi.fr/obiwarehouse/unipathway/upa?upid=UPA00155",
+      "url_syntax" : "http://www.grenoble.prabi.fr/obiwarehouse/unipathway/upa?upid=[example_id]"
+   },
+   {
+      "abbreviation" : "UniProtKB",
+      "database" : "Universal Protein Knowledgebase",
+      "description" : "A central repository of protein sequence and function created by joining the information contained in Swiss-Prot, TrEMBL, and PIR database",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "UniProtKB:P51587",
+      "generic_url" : "http://www.uniprot.org",
+      "local_id_syntax" : "([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z]([0-9][A-Z][A-Z0-9]{2}){1,2}[0-9])((-[0-9]+)|:PRO_[0-9]{10}|:VAR_[0-9]{6}){0,1}",
+      "synonym" : [
+         "UniProt"
+      ],
+      "url_example" : "http://www.uniprot.org/uniprot/P51587",
+      "url_syntax" : "http://www.uniprot.org/uniprot/[example_id]"
+   },
+   {
+      "abbreviation" : "UniProtKB-KW",
+      "database" : "UniProt Knowledgebase keywords",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UniProtKB-KW:KW-0812",
+      "generic_url" : "http://www.uniprot.org/keywords/",
+      "synonym" : [
+         "SP_KW"
+      ],
+      "url_example" : "http://www.uniprot.org/keywords/KW-0812",
+      "url_syntax" : "http://www.uniprot.org/keywords/[example_id]"
+   },
+   {
+      "abbreviation" : "UniProtKB-SubCell",
+      "database" : "UniProt Knowledgebase Subcellular Location vocabulary",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UniProtKB-SubCell:SL-0012",
+      "generic_url" : "http://www.uniprot.org/locations/",
+      "synonym" : [
+         "SP_SL"
+      ],
+      "url_example" : "http://www.uniprot.org/locations/SL-0012",
+      "url_syntax" : "http://www.uniprot.org/locations/[example_id]"
+   },
+   {
+      "abbreviation" : "UniRule",
+      "database" : "Manually curated rules for automatic annotation of UniProtKB unreviewed entries",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "UniRule:UR000107224",
+      "generic_url" : "http://www.uniprot.org/unirule",
+      "local_id_syntax" : "UR[0-9]{9}",
+      "synonym" : [],
+      "url_example" : "http://www.uniprot.org/unirule/UR000107224",
+      "url_syntax" : "http://www.uniprot.org/unirule/[example_id]"
+   },
+   {
+      "abbreviation" : "VBRC",
+      "database" : "Viral Bioinformatics Resource Center",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "VBRC:F35742",
+      "generic_url" : "http://vbrc.org",
+      "synonym" : [],
+      "url_example" : "http://vbrc.org/query.asp?web_id=VBRC:F35742",
+      "url_syntax" : "http://vbrc.org/query.asp?web_id=VBRC:[example_id]"
+   },
+   {
+      "abbreviation" : "VEGA",
+      "database" : "Vertebrate Genome Annotation database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "VEGA:OTTHUMP00000000661",
+      "generic_url" : "http://vega.sanger.ac.uk/index.html",
+      "synonym" : [],
+      "url_example" : "http://vega.sanger.ac.uk/id/OTTHUMP00000000661",
+      "url_syntax" : "http://vega.sanger.ac.uk/id/[example_id]"
+   },
+   {
+      "abbreviation" : "VMD",
+      "database" : "Virginia Bioinformatics Institute Microbial Database",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "VMD:109198",
+      "generic_url" : "http://phytophthora.vbi.vt.edu",
+      "synonym" : [],
+      "url_example" : "http://vmd.vbi.vt.edu/cgi-bin/browse/browserDetail_new.cgi?gene_id=109198",
+      "url_syntax" : "http://vmd.vbi.vt.edu/cgi-bin/browse/browserDetail_new.cgi?gene_id=[example_id]"
+   },
+   {
+      "abbreviation" : "VZ",
+      "database" : "ViralZone",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "VZ:957",
+      "generic_url" : "http://viralzone.expasy.org/",
+      "synonym" : [],
+      "url_example" : "http://viralzone.expasy.org/all_by_protein/957.html",
+      "url_syntax" : "http://viralzone.expasy.org/all_by_protein/[example_id].html"
+   },
+   {
+      "abbreviation" : "WB",
+      "database" : "WormBase database of nematode biology",
+      "entity_type" : "PR:000000001 ! protein",
+      "example_id" : "WB:WBGene00003001",
+      "generic_url" : "http://www.wormbase.org/",
+      "local_id_syntax" : "(WP:CE[0-9]{5})|(WB(Gene|Var|RNAi|Transgene)[0-9]{8})",
+      "synonym" : [
+         "WormBase"
+      ],
+      "url_example" : "http://www.wormbase.org/db/get?class=Gene;name=WBGene00003001",
+      "url_syntax" : "http://www.wormbase.org/db/gene/gene?name=[example_id]"
+   },
+   {
+      "abbreviation" : "WB_REF",
+      "database" : "WormBase database of nematode biology",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "WB_REF:WBPaper00004823",
+      "generic_url" : "http://www.wormbase.org/",
+      "synonym" : [],
+      "url_example" : "http://www.wormbase.org/db/misc/paper?name=WBPaper00004823",
+      "url_syntax" : "http://www.wormbase.org/db/misc/paper?name=[example_id]"
+   },
+   {
+      "abbreviation" : "WBPhenotype",
+      "database" : "WormBase phenotype ontology",
+      "entity_type" : "PATO:0000001 ! quality",
+      "example_id" : "WBPhenotype:0002117",
+      "generic_url" : "http://www.wormbase.org/",
+      "local_id_syntax" : "[0-9]{7}",
+      "synonym" : [],
+      "url_example" : "http://www.wormbase.org/species/c_elegans/phenotype/WBPhenotype:0000154",
+      "url_syntax" : "http://www.wormbase.org/species/c_elegans/phenotype/WBPhenotype:[example_id]"
+   },
+   {
+      "abbreviation" : "Wikipedia",
+      "database" : "Wikipedia",
+      "entity_type" : "BET:0000000 ! entity",
+      "example_id" : "Wikipedia:Endoplasmic_reticulum",
+      "generic_url" : "http://en.wikipedia.org/",
+      "synonym" : [],
+      "url_example" : "http://en.wikipedia.org/wiki/Endoplasmic_reticulum",
+      "url_syntax" : "http://en.wikipedia.org/wiki/[example_id]"
+   },
+   {
+      "abbreviation" : "ZFIN",
+      "database" : "Zebrafish Information Network",
+      "entity_type" : "VariO:0001 ! variation",
+      "example_id" : "ZFIN:ZDB-GENE-990415-103",
+      "generic_url" : "http://zfin.org/",
+      "local_id_syntax" : "ZDB-(GENE|GENO|MRPHLNO)-[0-9]{6}-[0-9]+",
+      "synonym" : [],
+      "url_example" : "http://zfin.org/cgi-bin/ZFIN_jump?record=ZDB-GENE-990415-103",
+      "url_syntax" : "http://zfin.org/cgi-bin/ZFIN_jump?record=[example_id]"
+   }
+]

@@ -20,9 +20,18 @@ has '+page_id' => (
 
 has '+filter_domains' => (
 	default => sub {
-		return [ qw( db gene_oid scaffold_oid taxon_oid ) ];
+		return [ qw( db gene_oid taxon_oid cycog_version ) ];
 	}
 );
+
+has '+tmpl_includes' => (
+	default => sub {
+		return {
+			tt_scripts => qw( datatables ),
+		};
+	}
+);
+
 
 =head3 function list
 
@@ -35,52 +44,79 @@ Currently only functions for CyCOGs
 sub _render {
 	my $self = shift;
 
-# 	count for paging?
-# 	my $count = $self->_core->run_query({
-# 		query => 'function_list_count',
-# 		filters => $self->filters
-# 	});
+	my $tcols = [ qw( cycog_id cycog_description cluster_size unique_taxa duplication_events ) ];
 
+	my $domain = 'function';
 	my $statement = $self->get_data;
-	my $arr = $self->page_me( $statement )->all;
+	my $res = $self->page_me( $statement )->all;
+	return {
+		results => {
+			js => {
+				arr => $res,
+				table_cols => [ 'cbox_' . $domain, @$tcols ]
+			},
+			paging => $self->paging_helper,
+			domain => $domain,
+			params => $self->filters,
+#			table => $self->get_table('cycog'),
+		}
+	};
 
-	return { results => {
-		domain => 'function',
-		arr => $arr,
-		n_results => $statement->row_count,
-		n_pages   => $statement->page_count,
-		table => $self->get_table('cycog'),
-		params => $self->filters,
-	} };
+#   "id" TEXT,
+#   "cluster_size" TEXT,
+#   "unique_taxa" TEXT,
+#   "duplication_events" TEXT,
+#   "description" TEXT
 
 }
 
 sub get_data {
 	my $self = shift;
 
-	my @valid_prefixes = ( qw( cycog ) );
+	if ( ! $self->filters->{db} ) {
+		$self->choke({
+			err => 'missing',
+			subject => 'required "db" query parameters'
+		});
+	}
 
-	# get basic function info
+	log_debug { 'filters: ' . Dumper $self->filters };
+
+	if ( $self->filters->{cycog_version}
+		|| $self->filters->{taxon_oid}
+		|| $self->filters->{gene_oid} ) {
+		return $self->_core->run_query({
+			query =>   'cycog_by_annotation',
+			-columns   => [ map { 'cycog.'.$_ } qw( id|cycog_id description|cycog_description cluster_size unique_taxa duplication_events ) ],
+			-group_by  => [ map { 'cycog.'.$_ } qw( id description cluster_size unique_taxa duplication_events ) ],
+			-order_by  => 'cycog.id',
+			-result_as => 'statement',
+			filters => $self->filters
+		});
+	}
+
+	# otherwise, get the proportal subset
 	return $self->_core->run_query({
 		query => 'cycog_list',
-		-result_as => 'statement'
+		-columns   => [ map { 'cycog.'.$_ } qw( id|cycog_id description|cycog_description cluster_size unique_taxa duplication_events ) ],
+		-result_as => 'statement',
 	});
 }
 
 sub examples {
 
 	return [{
-		url => '/list/function?taxon_oid=640069325',
-		desc => 'list all functions for taxon 640069325, <i>Prochlorococcus</i> NATL2A'
+		url => '/list/function?db=cycog&taxon_oid=2606217312',
+		desc => 'list all CyCOGs for taxon 2606217312'
 	},{
-		url => '/list/function?gene_oid=xxxxxxx',
-		desc => 'list all functions of gene xxxxxx'
+		url => '/list/function?db=cycog&gene_oid=2650965738',
+		desc => 'list all CyCOGs associated with gene 2650965738'
 	},{
 		url => '/list/function?db=cycog',
 		desc => 'retrieve list of all CyCOG functions in ProPortal'
 	},{
-		url => '/list/function?taxon_oid=640069325&db=KEGG',
-		desc => 'list all KEGG functions associated with taxon NATL2A'
+		url => '/list/function?db=cycog&cycog_version=0.0',
+		desc => 'list all CyCOGs in CyCOG version 0.0'
 	}];
 
 }

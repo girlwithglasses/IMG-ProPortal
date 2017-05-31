@@ -1,8 +1,9 @@
 [%	WRAPPER 'inc/page_wrapper.tt';
 	title = 'Data Type Inventory';
+	page_slug = 'dataset_type';
 %]
 <h2>Data Type Inventory</h2>
-<section class="info--data_type page-intro">
+<section class="info--dataset_type page-intro">
 	<p>This page provides an overview of the data in IMG relevant to the ProPortal project. This comprises <i>Prochlorococcus</i>, <i>Synechococcus</i>, cyanophage species and metagenomes from marine environments.
 	</p>
 </section>
@@ -10,85 +11,20 @@
 		PROCESS 'inc/filters.tt';
 	END;
 %]
-<section id="primary">
+<section role="complementary" class="[% page_slug %]-table__section">
 	<h3>Data Type</h3>
-[%
-	WRAPPER 'inc/cart/taxon_add.tt';
+[%	table_class = page_slug _ '__table';
+	data_table = {
+		class => table_class,
+		id => table_class,
+		for_datatables_js => 1,
+		tbody => results.js.arr,
+		thead => {
+			enum => results.js.table_cols,
+		},
+	};
 
-	USE Dumper;
-	'<pre>' _ Dumper.dump( data_filters ) _ '</pre>';
-
-	# how results are sorted
-	sort_by = results.sort_by;
-	sorted_data = results.data.subset_dataset_type;
-	alt_sorted_data = results.data.dataset_type_subset;
-
-	# indexed by data type then pp_subset
-	# active filters are in data_filters.active.TYPE.NAME => 1
-
-	FOR dt IN results.display_filters.${sort_by.0};
-#		IF sort_by.0 == 'pp_subset' && data_filters.active.${sort_by.0}.defined('all_proportal');
-			## IGNORE THIS!
-#		ELSE;
-
-#		IF data_filters.active.${sort_by.0} && ! data_filters.active.${sort_by.0}.defined( 'all_proportal' );
-
-	%]
-	<h4>[% data_filters.schema.${sort_by.0}.enum_map.$dt | ucfirst %]</h4>
-[%		IF sorted_data.$dt && sorted_data.$dt.keys.size > 0; %]
-	<ul role="tree">
-[%			FOR pps IN results.display_filters.${sort_by.1};
-				IF sorted_data.$dt.$pps; %]
-		<li>[% data_filters.schema.${sort_by.1}.enum_map.$pps %] ([% sorted_data.$dt.$pps.size %])
-			<ul>
-[%					FOR t IN sorted_data.$dt.$pps;
-						taxon = results.data.ix.$t; %]
-				<li>
-				<input type="checkbox" class="sample-data__cbox" name="taxon_oid[]" value="[% taxon.taxon_oid %]" id="cbox_[% taxon.taxon_oid %]" />
-				<a href="[% link( 'details', { domain => 'taxon', taxon_oid => taxon.taxon_oid } ) %]">[% taxon.taxon_display_name %]</a> <!-- a href="[% link( 'jbrowse', { taxon_oid => taxon.taxon_oid } ) %]">JBrowse</a -->
-				</li>
-[%					END %]
-			</ul>
-		</li>
-[%				END; # end IF sorted_data.$dt.$pps
-			END; # end FOR pps %]
-	</ul>
-[%		ELSE; # END if... %]
-<p>No genomes found</p>
-[%		END;
-	END; # end FOR dt IN ...
-	END; # end wrapper %]
+	PROCESS 'inc/generic/table.tt' WRAPPER 'inc/cart/taxon_add.tt'; %]
 </section>
-<section id="info" role="complementary">
-	<h3>Information</h3>
-	<p>The left panel lists public marine isolate genomes and metagenomes (excluding combined samples) in IMG. Click on the list to expand.
-	</p>
 
-	<table>
-	<caption>IMG ProPortal Statistics</caption>
-	<thead>
-	<tr><th class="L">Genomes</th><th class="L">Count</th></tr>
-	</thead>
-	<tbody>
-[%	FOR dt IN data_filters.schema.${sort_by.1}.enum; %]
-	<tr>
-		<td><strong>[% data_filters.schema.${sort_by.1}.enum_map.$dt | ucfirst %]</strong></td>
-		<td></td>
-	</tr>
-[%		IF alt_sorted_data.$dt && alt_sorted_data.$dt.keys.size > 0;
-			FOR pps IN data_filters.schema.${sort_by.0}.enum;
-				IF alt_sorted_data.$dt.$pps; %]
-	<tr>
-		<td>[% data_filters.schema.${sort_by.0}.enum_map.$pps %]</td>
-		<td>[% alt_sorted_data.$dt.$pps.size %]</td>
-	</tr>
-[%				END; # end IF sorted_data.$dt.$pps
-			END; # end FOR pps
-		ELSE; # END if... %]
-<tr><td colspan="2">No genomes found</td></tr>
-[%		END;
-	END; # end FOR dt IN ... %]
-	</tbody>
-	</table>
-</section>
 [% END %]

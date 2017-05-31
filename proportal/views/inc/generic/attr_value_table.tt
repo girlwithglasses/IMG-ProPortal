@@ -16,7 +16,7 @@
 	PROCESS 'inc/generic/labels.tt';
 
 	MACRO attr_value_dl( data_table ) BLOCK;
-		dl_class = data_table.class or 'tabular';
+		dl_class = data_table.class;
 		obj = data_table.obj;
 
 		IF data_table.caption; %]
@@ -26,7 +26,7 @@
 [%
 END;
 %]
-	<dl class="[% dl_class %]"[%
+	<dl class="tabular [% dl_class %]"[%
 		IF data_table.id;
 		%] id="[% data_table.id %]"[%
 		END;

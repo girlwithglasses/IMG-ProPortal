@@ -29,7 +29,7 @@ sub get_taxon_name_public {
 
 	my $results = $self->run_query({
 		query => 'taxon_name_public',
-		where => {
+		-where => {
 			taxon_oid => $args->{taxon_oid},
 		}
 	});
@@ -83,7 +83,7 @@ sub check_taxon_permissions {
 
 	my $results = $self->run_query({
 		query => 'taxon_permissions_by_contact_oid',
-		where => {
+		-where => {
 			taxon_permissions => $args->{taxon_oid} // $self->taxon_oid,
 			contact_oid => $self->user->contact_oid
 		}

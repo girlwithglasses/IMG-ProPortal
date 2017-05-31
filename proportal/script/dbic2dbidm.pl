@@ -69,7 +69,7 @@ for my $x ( @dbs ) {
 				LongTruncOk => 1,
 			}
 		});
-		$conn->mode('fixup');
+	#	$conn->mode('fixup');
 
 	#	$generator->fromDBI(@dbi_connection_args, $catalog, $schema, $type);
 	#	$type = "'TABLE','VIEW','SYNONYM'" | 'TABLE' | etc

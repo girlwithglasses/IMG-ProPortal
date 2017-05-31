@@ -1,0 +1,86 @@
+table.dataTable.select tbody tr, table.dataTable thead th:first-child {
+  cursor: pointer;
+}
+
+body, input{
+    font-family: Calibri, Arial;
+    margin: 0px;
+}
+
+table.dataTable {
+    width: 300px;
+    border: 1px solid lightgray;
+    margin: 10px 0px 0px 5px;
+}
+
+table.dataTable.no-footer {
+  border-bottom: 1px solid lightgray;
+}
+
+table.dataTable tfoot th {
+    border-top: 1px solid lightgray;
+    border-bottom: 1px solid #CBCBCB;
+    border-right: 1px solid #CBCBCB;
+}
+
+/* add space on top of table */
+.dataTables_length {
+    margin-bottom: 2px;
+    padding-left: 3em;
+    font-size: 0.8em;
+}
+
+.dt-buttons {
+    padding-left: 0.2em;
+    margin-bottom: 2px;
+    float: left;
+    text-align: left;
+    font-size: 0.8em;
+}
+
+.dataTables_paginate {
+    font-size: 0.8em;
+    float: left;
+    text-align: left;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.2em 0.5em;  
+}
+
+.dataTables_wrapper .dataTables_paginate,
+.dataTables_wrapper .dataTables_info {
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+    padding-left: 0.2em;
+    margin-left: 5px;
+    font-size: 0.8em;
+    float: left;
+    text-align: left;
+}
+
+.dataTables_wrapper .dataTables_processing {
+    background: url(../images/loading.gif) no-repeat center center;
+    background-size: 60px 60px;
+    position: fixed;
+}
+
+button.dt-button, a.dt-button, div.dt-button {
+    padding: 0.2em 0.5em;
+    font-size: 1em;
+}
+
+table.dataTable thead th {
+    padding: 5px;
+    background-color: #adc1d2;
+    border-bottom: 1px none #111;
+    color: white;
+}
+
+span.select-info {
+    background-color: palegoldenrod;
+}
+
+.ui-dialog .ui-dialog-buttonpane button {
+    font-size: 0.9em;
+}

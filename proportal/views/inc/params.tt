@@ -5,8 +5,8 @@
 [%	# filter domain
 	IF results.params;
 
-		USE Dumper( Indent => 1 );
-		'<pre>' _ Dumper.dump( results.params ) _ '</pre>';
+#		USE Dumper( Indent => 1 );
+#		'<pre>' _ Dumper.dump( results.params ) _ '</pre>';
 
 
 		IF 'gene' == results.domain; %]

@@ -5,7 +5,7 @@
 #   The tree results are precomputed.
 #    --es 12/04/2006
 #
-# $Id: PhyloCogs.pm 36954 2017-04-17 19:34:04Z klchu $
+# $Id: PhyloCogs.pm 37091 2017-05-22 19:44:48Z imachen $
 ############################################################################
 package PhyloCogs;
 my $section = "PhyloCogs";
@@ -412,47 +412,29 @@ sub printPhyloCogsTaxonForm {
         $txclause = " and tx.taxon_oid in ($taxonStr) ";
     }
 
-    my %taxon_in_file;
-    if ($in_file) {
-        my $rclause   = WebUtil::urClause('tx');
-        my $imgClause = WebUtil::imgClause('tx');
-        my $sql2 = qq{
-            select tx.taxon_oid 
-            from taxon tx 
-            where tx.in_file = 'Yes'
-            $txclause
-            $rclause
-            $imgClause
-        };
-        my $cur2 = execSql( $dbh, $sql2, $verbose );
-        for ( ; ; ) {
-            my ($t2) = $cur2->fetchrow();
-            last if !$t2;
-            $taxon_in_file{$t2} = 1;
-        }
-        $cur2->finish();
-    }
-    my @file_taxons = keys %taxon_in_file;
-    my $nFileTxs    = scalar @file_taxons;
-
     print "<p>\n";
     print "Please select metagenomes to be included in alignment\n";
     print "against phylogenetic marker COGs.";
-    print "<br/>*Showing only genomes from genome cart." if ( $nTaxons > 0 );
-    print "<br/>*Showing only genomes with assembled genes."
-	if ( $nFileTxs > 0 );
+    if ( $nTaxons > 0 ) {
+	print "<br/>*Showing only metagenomes from genome cart with assembled genes." 
+    }
+    else {
+	print "<br/>*Showing only metagenomes with assembled genes."
+    }
     print "</p>\n";
 
     my $rclause   = WebUtil::urClause('tx');
     my $imgClause = WebUtil::imgClause('tx');
     my $sql = qq{
-        select tx.taxon_oid, tx.taxon_display_name
-        from taxon tx
+        select unique tx.taxon_oid, tx.taxon_display_name
+        from taxon tx, taxon_stats_merfs st
         where tx.genome_type = 'metagenome'
+        and tx.taxon_oid = st.taxon_oid
+        and st.datatype = 'assembled'
+        and st.total_gene_count > 0
         $rclause
         $imgClause
         $txclause
-        order by tx.taxon_display_name
     };
 
     printMainForm();
@@ -473,19 +455,27 @@ sub printPhyloCogsTaxonForm {
 
         my $url = "$main_cgi?section=TaxonDetail"
 	        . "&page=taxonDetail&taxon_oid=$taxon_oid";
-        if ( $taxon_in_file{$taxon_oid} ) {
-            next if ( !MetaUtil::hasAssembled($taxon_oid) );
-            $taxon_name .= " (MER-FS)";
-            $taxon_name .= " (assembled)";
-            $url = "$main_cgi?section=MetaDetail"
-		 . "&page=metaDetail&taxon_oid=$taxon_oid";
-        }
+	$taxon_name .= " (assembled)";
+	$url = "$main_cgi?section=MetaDetail"
+	    . "&page=metaDetail&taxon_oid=$taxon_oid";
         $row .= $taxon_name . $sd . alink( $url, $taxon_name ) . "\t";
         $it->addRow($row);
         $count++;
     }
     $cur->finish();
     #$dbh->disconnect();
+
+    if ( $count <= 0 ) {
+	if ( $nTaxons > 0 ) {
+	    print "<h5>Genome cart does not have metagenomes with assembled genes.</h5<\n";
+	}
+	else {
+	    print "<h5>No metagenomes with assembled genes.</h5>\n";
+	}
+
+	print end_form();
+	return;
+    }
 
     if ( $count > 10 ) {
         my $name = "_section_${section}_phyloCogsForm";

@@ -44,21 +44,21 @@ sub get_data {
 		});
 	}
 
-# 638824985
-
-
-
-
-
+	# 638824985
 	# get the genes
 	my $results = $self->_core->run_query({
-		query => 'gene_details',
-		where => {
+		query => 'gene_details_with_infile_check',
+		-where => {
 			gene_oid => $args->{gene_oid}
 		}
 	});
 
+	log_debug { Dumper $results };
+
 	if ( ! scalar @$results ) {
+
+		#	TODO: add a check for in_file flag
+
 		$self->choke({
 			err => 'no_results',
 			subject => 'IMG gene ' . ( $args->{gene_oid} || 'unspecified' )
@@ -78,17 +78,6 @@ sub get_data {
 		gene_tmhmm_hits
 		bio_cluster_features_new
 
-		gene_cog_groups
-		gene_enzymes
-		gene_ext_links
-		gene_go_terms
-		gene_img_interpro_hits
-		gene_kog_groups
-		gene_pdb_xrefs
-		gene_tc_families
-		gene_tigrfams
-		gene_xref_families
-
 		scaffold
 
 		annot_cogs
@@ -101,12 +90,23 @@ sub get_data {
 		annot_xrefs
 		annot_biocyc_pathways
 		annot_img_terms
-		annot_ko_modules
-		annot_ko_pathways
+		annot_kegg_modules
+		annot_kegg_pathways
 		annot_ko_terms
 		annot_seeds
 	)];
 
+# 		gene_cog_groups
+# 		gene_enzymes
+# 		gene_ext_links
+# 		gene_go_terms
+# 		gene_img_interpro_hits
+# 		gene_kog_groups
+# 		gene_pdb_xrefs
+# 		gene_tc_families
+# 		gene_tigrfams
+# 		gene_xref_families
+#
 
 
 # 		gene_rna_clusters
