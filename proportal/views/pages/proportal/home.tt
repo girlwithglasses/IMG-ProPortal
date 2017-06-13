@@ -97,7 +97,7 @@ div.site-message {
 				<td class="home-stats__cell--content">
 [%					x = {
 						type => 'list',
-						params => { domain => 'taxon', pp_subset => 'metagenome'  },
+						params => { domain => 'taxon', pp_subset => 'pp_metagenome'  },
 						text => 'Marine metagenomes'
 					};
 					generic_link( x ); %]

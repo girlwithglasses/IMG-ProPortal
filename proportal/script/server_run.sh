@@ -50,11 +50,6 @@ cd $APP_HOME
 # Here you could even do something like this to ensure deps are there:
 # cpanm --installdeps .
 
-# start_server --port=5000 --pid-file="app_pid.txt" --status-file="status.txt" --log-file="log/proportal-local.log" --daemonize -- plackup -MMoo -MDancer2 -MDBIx::DataModel -MPlack -L Shotgun -s Starman --workers=10 bin/app.psgi
-
-#alias ssdev="start_server --dir=$HOME/svn/webUI/proportal --port=5009 --pid-file=$HOME/proportal_dev.pid --status-file=$HOME/proportal_dev.status --log-file=$HOME/apache/logs/proportal-dev.psgi.log --daemonize -- plackup -E proportal-dev -s Starman --workers=5 bin/server-app-dev.psgi"
-#alias sstest="start_server --dir=$HOME/webUI/proportal --port=5013 --pid-file=$HOME/proportal_test.pid --status-file=$HOME/proportal_test.status --log-file=$HOME/apache/logs/proportal-test.psgi.log --daemonize -- plackup -E proportal-test -s Starman --workers=5 bin/server-app-test.psgi"
-
 if [ -r $PIDFILE ]; then
 	echo 'Found a PIDFILE; running restart'
 	$DAEMON --restart $DAEMON_OPTS

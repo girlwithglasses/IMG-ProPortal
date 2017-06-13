@@ -1,7 +1,8 @@
 <tool id="get_gene_metadata" name="Get gene metadata" version="0.1.0">
   <description>Retrieve the details for a set of gene IDs</description>
-  <command>source $HOME/perl5/perlbrew/etc/bashrc;
-DANCER_ENVIRONMENT="proportal-galaxy" perl $HOME/svn/webUI/proportal/script/galaxy/get_gene_metadata.pl
+   <command detect_errors="aggressive"><![CDATA[
+	sh $__tool_directory__/script_runner.sh
+--script get_gene_metadata
 --infile
 #if $source.reference_source_selector == "paste":
 "$infile" --infile_format "tsv"
@@ -10,7 +11,8 @@ DANCER_ENVIRONMENT="proportal-galaxy" perl $HOME/svn/webUI/proportal/script/gala
 #elif $source.reference_source_selector == "tab":
 "$tab_sepd" --infile_format "tsv"
 #end if
---outfile "$output"</command>
+--outfile "$output"
+  ]]></command>
   <inputs>
 	<conditional name="source">
 		<param name="reference_source_selector" type="select" label="Select a set of IMG gene IDs">

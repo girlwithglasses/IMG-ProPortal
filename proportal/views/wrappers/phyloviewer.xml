@@ -1,12 +1,13 @@
 <tool id="phyloviewer" name="PhyloViewer" version="0.1.0">
 <description>PhyloViewer phylogeny and metadata viewer</description>
-<command>source \$HOME/perl5/perlbrew/etc/bashrc;
-DANCER_ENVIRONMENT="proportal-galaxy" perl \$HOME/webUI/proportal/script/galaxy/phyloviewer_page_gen.pl
+   <command detect_errors="aggressive"><![CDATA[
+	sh $__tool_directory__/script_runner.sh
+--script phyloviewer_page_gen
 	--newick "$newick"
 	--gene_taxon_file "$gene_taxon_file"
 	--metadata "$metadata_file"
 	--outfile "$outfile"
-</command>
+  ]]></command>
   <inputs>
 	<param name="newick" type="data" format="nhx" label="Newick file" />
 	<param name="gene_taxon_file" type="data" format="tsv" label="Gene metadata" />

@@ -46,7 +46,7 @@
 			<td><strong>Patterns and implications of gene gain and loss in the evolution of Prochlorococcus.</strong> Kettler, G. C., Martiny, A. C., Huang, K., Zucker, J., Coleman, M. L., Rodrigue, S., ... & Steglich, C. (2007). PLoS Genet, 3(12), e231.</td>
 			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/18159947">18159947</a></td>
 			<td>
-<!-- 
+<!--
 				<ul>
 					<li><a href="">(pgen.0030231.st001.xls)</a></li>  // not sure where this file is...
 				</ul>
@@ -73,7 +73,7 @@
 			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/25977791">25977791</a></td>
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/scientificdata/Prochlorococcus_COGS_annotations.txt">Prochlorococcus_COGS_annotations.txt</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/Prochlorococcus_COGS_annotations.txt">Prochlorococcus_COGS_annotations.txt</a></li>
 				</ul>
 			</td>
 		</tr>
@@ -84,7 +84,7 @@
 			<td><a href="https://www.ncbi.nlm.nih.gov/pubmed/27137127">27137127</a></td>
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/2545/CyCOGs_version_5.dat">CyCOGs_version_5</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/CyCOGs_version_5.dat">CyCOGs_version_5</a></li>
 				</ul>
 			</td>
 		</tr>
@@ -111,8 +111,8 @@
 			<td></td>
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16980454/MD4-9313a520062.cdf">MD4-9313a520062.cdf</a> </li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16980454/cel_files.tar.gz">cell_files.tar.gz</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16980454/MD4-9313a520062.cdf">MD4-9313a520062.cdf</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16980454/cel_files.tar.gz">cell_files.tar.gz</a> </li>
 				</ul>
 			</td>
 		</tr>
@@ -123,10 +123,10 @@
 			<td></td>
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_17016519/MD4-9313a520062.cdf">MD4-9313a520062.cdf</a> </li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_17016519/N_experiment_arrayexpress_namekey.xls"> N_experiment_arrayexpress_namekey.xls</a> </li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_17016519/README%20Anne's%20notes%20about%20N%20arrays.txt">README Anne's notes about N arrays.txt</a> </li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_17016519/cel_files.tar.gz">cel_files.tar.gz</a> (rename this) </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_17016519/MD4-9313a520062.cdf">MD4-9313a520062.cdf</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_17016519/N_experiment_arrayexpress_namekey.xls"> N_experiment_arrayexpress_namekey.xls</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_17016519/README.txt">README.txt - notes about N arrays.txt</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_17016519/cel_files.tar.gz">cel_files.tar.gz</a></li>
 				</ul>
 			</td>
 		</tr>
@@ -137,10 +137,10 @@
 			<td></td>
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16895994/MD4-9313a520062.cdf">MD4-9313a520062.cdf</a> </li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16895994/P_normalized.xls"> P_normalized.xls</a> </li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16895994/med4_cel_files.tar.gz">med4_cel_files.tar.gz</a> </li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16895994/mit9313_cel_files.tar.gz">mit9313_cel_files.tar.gz</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16895994/MD4-9313a520062.cdf">MD4-9313a520062.cdf</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16895994/P_normalized.xls"> P_normalized.xls</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16895994/med4_cel_files.tar.gz">med4_cel_files.tar.gz</a> </li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16895994/mit9313_cel_files.tar.gz">mit9313_cel_files.tar.gz</a> </li>
 				</ul>
 			</td>
 		</tr>
@@ -213,10 +213,10 @@
 			</td>
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16556835/Prochlorococcus%20strain%20LIGHT%20growth%20rates.xls">Prochlorococcus_strain_LIGHT_growth_rates.xls</a></li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16556835/Prochlorococcus%20strain%20LIGHT%20growth%20rates.pdf">Prochlorococcus_strain_LIGHT_growth_rates.pdf</a></li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16556835/Prochlorococcus%20strain%20TEMPERATURE%20growth%20rates.pdf">Prochlorococcus_strain_TEMPERATURE_growth_rates.xls</a></li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_16556835/Prochlorococcus%20strain%20TEMPERATURE%20growth%20rates.xls">Prochlorococcus_strain_TEMPERATURE_growth_rates.pdf</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16556835/Prochlorococcus_strain_LIGHT_growth_rates.xls">Prochlorococcus_strain_LIGHT_growth_rates.xls</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16556835/Prochlorococcus_strain_LIGHT_growth_rates.pdf">Prochlorococcus_strain_LIGHT_growth_rates.pdf</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16556835/Prochlorococcus_strain_TEMPERATURE_growth_rates.pdf">Prochlorococcus_strain_TEMPERATURE_growth_rates.xls</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_16556835/Prochlorococcus_strain_TEMPERATURE_growth_rates.xls">Prochlorococcus_strain_TEMPERATURE_growth_rates.pdf</a></li>
 				</ul>
 			</td>
 		</tr>
@@ -240,9 +240,9 @@
 			<td><strong>Taxonomic resolution, ecotypes and the biogeography of Prochlorococcus.</strong> Martiny, A. C., Tai, A. P., Veneziano, D., Primeau, F., & Chisholm, S. W. (2009). Environmental microbiology, 11(4), 823-832.</td>
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_19021692/Pro_ITS.ARF">Pro_ITS.ARF</a></li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_19021692/Pro_ITS.arb">Pro_ITS.arb</a></li>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_19021692/Pro_ITS.fasta">Pro_ITS.fasta</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_19021692/Pro_ITS.ARF">Pro_ITS.ARF</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_19021692/Pro_ITS.arb">Pro_ITS.arb</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_19021692/Pro_ITS.fasta">Pro_ITS.fasta</a></li>
 				</ul>
 			</td>
 		</tr>
@@ -252,7 +252,7 @@
 
 			<td>
 				<ul>
-					<li><a href="http://proportal.mit.edu/pubdownload/papers/pubmed_19724646/Prochlorococcus_MED4ax_single-cell_E05.tar.gz">Prochlorococcus_MED4ax_single-cell_E05.tar.gz</a></li>
+					<li><a href="[% img_app_config.base_url %]/legacy_data/pubmed_19724646/Prochlorococcus_MED4ax_single-cell_E05.tar.gz">Prochlorococcus_MED4ax_single-cell_E05.tar.gz</a></li>
 				</ul>
 			</td>
 		</tr>

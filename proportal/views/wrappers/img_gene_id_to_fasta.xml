@@ -1,7 +1,8 @@
 <tool id="img_gene_id_to_fasta" name="Prepare FASTA file from gene IDs" version="0.1.0">
   <description>Retrieve the FASTA sequences for a set of gene IDs</description>
-  <command>source $HOME/perl5/perlbrew/etc/bashrc;
-  DANCER_ENVIRONMENT="proportal-galaxy" perl $HOME/svn/webUI/proportal/script/galaxy/img_gene_id_to_fasta.pl
+   <command detect_errors="aggressive"><![CDATA[
+	sh $__tool_directory__/script_runner.sh
+--script img_gene_id_to_fasta
 --infile
 #if $source.reference_source_selector == "paste":
 "$infile" --infile_format "tsv"
@@ -12,7 +13,8 @@
 #end if
 --outfile "$output"
 --gene_taxon_file "$gene_taxon_file"
---seq_type $seq_type</command>
+--seq_type $seq_type
+  ]]></command>
   <inputs>
 	<conditional name="source">
 		<param name="reference_source_selector" type="select" label="Select a set of IMG taxon IDs">

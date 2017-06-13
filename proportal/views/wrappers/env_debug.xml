@@ -1,7 +1,10 @@
 <tool id="env_debug" name="Env Debug" version="0.1.0">
 <description>Print out Perl environment</description>
-<command>source $HOME/perl5/perlbrew/etc/bashrc; perl $HOME/webUI/proportal/script/env_diag.pl
-	--outfile "$outfile"</command>
+   <command detect_errors="aggressive"><![CDATA[
+	sh $__tool_directory__/script_runner.sh
+	--script env_debug
+	--outfile "$outfile"
+  ]]></command>
   <outputs>
     <data name="outfile" format="txt" label="Environment" />
   </outputs>
