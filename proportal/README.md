@@ -110,35 +110,38 @@ The configuration included sets up a ProPortal server at `http://img-proportal.d
 
 You should get a ProPortal-themed 404 page.
 
-## Launching the server
+## Launching the server ##
 
-`cd` to the distribution directory `proportal` and run the launch script using `plackup bin/app.psgi`. You'll see a message like `HTTP::Server::PSGI: Accepting connections at http://0:5000/`. Visit `http://localhost:5000` in your browser to view the site.
+The ProPortal distribution comes with a script for starting and restarting the server using the [Server::Starter] module. This takes care of activating the perlbrew environment (which loads the correct version of Perl and @INC) and daemonising the server process. The paths in this script are specific to the gpweb37 server, and will need to be altered if the ProPortal is run elsewhere.
 
-If you have set up Apache as previously suggested, you should be able to go to http://img-proportal.dev to view the ProPortal pages.
+To start or restart the ProPortal, `cd` to the distribution directory `proportal` and run the command
 
-See the `plackup` documentation on options for running different Plack/PSGI servers. Starman is a good option for standard use. Sample launch instructions:
+`sh script/server_run.sh`
 
-`plackup -E development -s Starman --workers=10 bin/app.psgi`
+This will launch the ProPortal and serve it on port 5009. To launch the test server, use the command
 
-By default, Plack reads `app.psgi` once and keeps the application in memory. To allow live development, you can use the Shotgun loader, which will reload the application if any of the source files have changed. To do this, launch the app with the following command:
+`sh script/server_run.sh test`
 
-`plackup -L Shotgun  -E development -s Starman --workers=10 bin/app.psgi`
+(N.b. this script requires bash 4.0 or greater; it works on the gpweb servers but may not work on personal machines).
 
-The `-L Shotgun` parameter is the reloader.
+The server may take a little while to start up as it loads various files.
 
-To prevent the reloading of all the perl modules, you can use the standard `-M` switch:
+The error logs for the start up process can be found in `$HOME/logs/proportal_(dev|test).error.log`. If there is an error during start up, the starter script will continue to try to start new server processes, so check the error log to ensure that the server has started correctly.
 
-`plackup -MMoo -MDancer2 -MDBIx::DataModel -MPlack -L Shotgun -E development -s Starman --workers=10 bin/app.psgi`
+Once running, the PID of the ProPortal server is held in the file `proportal_(dev|test).pid`.
 
-This will preload `Moo`, `Dancer2`, `DBIx::DataModel`, and `Plack` and reload any other modules, including those in the `proportal/lib` and `webui.cgi` directories.
-
-
+The same script will also restart the server; although the script outputs a message about being unable to use port xxxx because it is already in use, in practice it appears to restart correctly.
 
 
+## Killing the server ##
+
+The ProPortal server can be killed via the PID in `proportal_(dev|test).pid` or by using `ps -ef | grep starman` to pick out the server processes, and killing the process marked `starman master`.
+
+
+### IN PROGRESS -- the documentation below is still in progress! ###
 
 ## Set up to include the cgi-based installation (Genepool server only) ##
 
-### IN PROGRESS! ###
 
 * WebConfig.pm and WebConfigCommon.pm need to be edited to provide the correct parameters. Anything that previously pointed to the Apache cgi-bin directory needs to point at $base/webUI/webui.cgi, and the htdocs directory should now be $base/webUI/webui.htd. If there are two .htd directories for an installation (e.g. for proportal), the files should be combined into a single directory.
 
@@ -150,11 +153,11 @@ Set $base to the directory that the webUI installation is installed in. The foll
     https_cgi_url => "https://<server-name>/cgi-bin/main.cgi",
     tmp_url       => "https://<server-name>/tmp",
 
-    base_dir      => $base . "/webUI/webui.htd",
-    cgi_dir       => $base . "/webUI/webui.cgi",
-    scriptEnv_script => $base . "/webUI/webui.cgi/bin/scriptEnv.sh",
-    tmp_dir       => $base . "/tmp",
-    top_base_url  => "https://img.jgi.doe.gov/",
+#    base_dir      => $base . "/webUI/webui.htd",
+#    cgi_dir       => $base . "/webUI/webui.cgi",
+#    scriptEnv_script => $base . "/webUI/webui.cgi/bin/scriptEnv.sh",
+#    tmp_dir       => $base . "/tmp",
+#    top_base_url  => "https://img.jgi.doe.gov/",
 
 This is not a comprehensive list but will suffice for simple usage.
 
@@ -236,6 +239,27 @@ http://www.benjamenwhite.com/2015/07/biojs2galaxy-a-step-by-step-guide/
 
 
 
+
+## File Locations
+
+The ProPortal installation runs out of its folder in SVN. The SVN directory is located at
+
+/global/homes/w/wwwimg/svn/webUI
+
+Galaxy:
+
+/webfs/projectdirs/microbial/img/external/galaxy/
+
+IMG Galaxy tools/wrappers:
+
+source dir: webUI/proportal/views/wrappers/
+
+symlinked to /webfs/projectdirs/microbial/img/external/galaxy/tools/img_tools/
+
+
+JBrowse:
+
+/webfs/projectdirs/microbial/img/external/JBrowse-1.12.1/
 
 
 ## Usage
