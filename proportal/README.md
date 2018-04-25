@@ -71,7 +71,7 @@ https://www.dropbox.com/s/hm3xne8hc3d3vq7/dbschema-img_core.db?dl=0
 
 ### Apache and dnsmasq ###
 
-The GitHub repository includes a sample Apache configuration file (see `proportal/apache/sample_server.conf`) for setting up a test server on your computer with the domain name http://img-proportal.dev. The config file requires Apache 2.4; to check the version of your Apache, run
+The GitHub repository includes a sample Apache configuration file (see `proportal/apache/sample_server.conf`) for setting up a test server on your computer with the domain name http://img-proportal.test. The config file requires Apache 2.4; to check the version of your Apache, run
 
 	apachectl -v
 
@@ -104,9 +104,9 @@ Restart the server to activate the new server configuration using the command
 
 	sudo apachectl -k restart
 
-The configuration included sets up a ProPortal server at `http://img-proportal.dev`. Check it is working by visiting this URL:
+The configuration included sets up a ProPortal server at `http://img-proportal.test`. Check it is working by visiting this URL:
 
-	http://img-proportal.dev/404.html
+	http://img-proportal.test/404.html
 
 You should get a ProPortal-themed 404 page.
 

@@ -36,19 +36,19 @@ my $conf = {
 #	$e->{show_sql_verbosity_level} = 1;
 #	verbose => 3,
 
-	domain_name => 'img-proportal.dev',
-	base_url => 'http://img-proportal.dev',
+	domain_name => 'img-proportal.test',
+	base_url => 'http://img-proportal.test',
 
-	jbrowse => 'http://img-jbrowse.dev',
-	galaxy => 'http://img-galaxy.dev',
+	jbrowse => 'http://img-jbrowse.test',
+	galaxy => 'http://img-galaxy.test',
 	galaxy_local => 'https://localhost:5011',
 
-	pp_app => "http://img-proportal.dev/",
+	pp_app => "http://img-proportal.test/",
 	# home of css, js, images folders. Should end with "/"
-	pp_assets => "http://img-proportal.dev/",
+	pp_assets => "http://img-proportal.test/",
 
 	# main.cgi location
-	main_cgi_url => 'http://img-proportal.dev/cgi-bin/main.cgi',
+	main_cgi_url => 'http://img-proportal.test/cgi-bin/main.cgi',
 
 	cgi_tmp_dir => '/tmp/cgi_tmp_dir',
 	base_dir => catdir( $webui_dir, 'webui.htd' ),

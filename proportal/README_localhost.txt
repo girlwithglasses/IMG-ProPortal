@@ -8,7 +8,7 @@ This was tested on xubuntu 16 LTS
 > source ~/perl5/etc/bashrc
 
 # for help
-> perlbrew 
+> perlbrew
 
 > perlbrew install-cpanm
 > perlbrew install-patchperl
@@ -40,7 +40,7 @@ This was tested on xubuntu 16 LTS
 
 # edit /etc/hosts
 chu@kchu-laptop:~$ more  /etc/hosts
-127.0.0.1 localhost img-proportal.dev img-galaxy.dev
+127.0.0.1 localhost img-proportal.test img-galaxy.test
 127.0.1.1 kchu-laptop
 
 
@@ -56,7 +56,7 @@ sudo apachectl configtest
 sudo service apache2 restart
 
 # this works
-http://img-proportal.dev/404.html 
+http://img-proportal.test/404.html
 
 
 #
@@ -87,27 +87,27 @@ in kchu/public_html/jbrowse to ../JB....
 
 ran setup.sh under the local perl install
 failed
-kchu@kchu-laptop:~/public_html/jbrowse$ ./setup.sh 
+kchu@kchu-laptop:~/public_html/jbrowse$ ./setup.sh
 Installing Perl prerequisites ... failed.  See setup.log file for error messages. As a first troubleshooting step, make sure development libraries and header files for GD, Zlib, and libpng are installed and try again.
 
 
 # /home/kchu/.cpanm/work/1481224369.23102/build.log
 # BerkeleyDB failed
 
-cpanm 'BerkeleyDB' 
+cpanm 'BerkeleyDB'
 # failed
 
 cpanm 'Class::HPLOO::Base'
 cpanm 'DBD'
-ubuntu install libdb.... 
+ubuntu install libdb....
 cpanm 'DB_File'
-cpanm 'BerkeleyDB' 
-# back to to jbrowse setup 
+cpanm 'BerkeleyDB'
+# back to to jbrowse setup
 # ok installed ok
 plackup bin/app.psgi
 # failed again
  reinstall Bio perl again
- 
+
 kchu@kchu-laptop:~/JBrowse-1.12.1/extlib/lib/perl5/Bio$ cp -r * /home/kchu/.perlbrew/libs/perl-5.18.4@std/lib/perl5/Bio
 kchu@kchu-laptop:~/Dev/svn/webUI$ ln -s ~kchu/JBrowse-1.12.1 jbrowse
 cpanm 'TestApp'

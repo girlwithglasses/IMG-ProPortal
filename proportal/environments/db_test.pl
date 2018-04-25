@@ -83,20 +83,20 @@ return { %$conf, %$hash };
 
 	# URL of the ProPortal app
 #	pp_app => "http://localhost:5000/",
-	pp_app => 'http://img-proportal.dev/',
-	base_url => 'http://img-proportal.dev',
+	pp_app => 'http://img-proportal.test/',
+	base_url => 'http://img-proportal.test',
 
 	# home of css, js, images folders. Should end with "/"
-	pp_assets => 'http://img-proportal.dev/',
+	pp_assets => 'http://img-proportal.test/',
 
 	# main.cgi location
 #	main_cgi_url => 'http://localhost:5000/cgi-bin/main.cgi',
-	main_cgi_url => 'http://img-proportal.dev/cgi-bin/main.cgi',
+	main_cgi_url => 'http://img-proportal.test/cgi-bin/main.cgi',
 
-	assets => 'http://img-proportal.dev/pristine_assets/',
+	assets => 'http://img-proportal.test/pristine_assets/',
 
 #	jbrowse_assets => 'http://localhost:5000/jbrowse_assets/',
-	jbrowse_assets => 'http://img-proportal.dev/jbrowse_assets/',
+	jbrowse_assets => 'http://img-proportal.test/jbrowse_assets/',
 
 #	scratch_dir => '/tmp/jbrowse',
 #	web_data_dir => '/Users/gwg/webUI/proportal/t/files/img_web_data',

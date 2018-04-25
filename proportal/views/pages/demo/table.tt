@@ -10,8 +10,8 @@
 
 
 
-<script src="http://img-proportal.dev/node_modules/d3/d3.min.js"></script>
-<script src="http://img-proportal.dev/js/d3.chart.table.js"></script>
+<script src="http://img-proportal.test/node_modules/d3/d3.min.js"></script>
+<script src="http://img-proportal.test/js/d3.chart.table.js"></script>
 <script src="table.js"></script>
 <script src="/js/d3.min.js"></script>
 <script src="/js/d3.table.js"></script>

@@ -70,9 +70,9 @@ sub make_derivatives {
 sub get_env_tmpl {  ## COPIED FROM WebConfig-img-dev-mer
 	my $args = shift;
 
-# 	domain_name => 'img-proportal.dev',
-# 	jbrowse => 'https://img-jbrowse.dev',
-# 	galaxy => 'https://img-galaxy.dev',
+# 	domain_name => 'img-proportal.test',
+# 	jbrowse => 'https://img-jbrowse.test',
+# 	galaxy => 'https://img-galaxy.test',
 # 	in_place => 1,
 # 	webUI_dir => '/global/homes/a/aireland/webUI',
 # 	scratch_dir => '/tmp/jbrowse',

@@ -7,7 +7,7 @@
 	BLOCK cycog_version_details;
 
 		obj = {
-			version => self.version _ '. <i>See <a href="http://img-proportal.dev/legacy">Legacy Data</a> section for older versions.</i>',
+			version => self.version _ '. <i>See <a href="http://img-proportal.test/legacy">Legacy Data</a> section for older versions.</i>',
 			n_clusters => '<a href="#cycog_version_cycog_list">' _ self.n_clusters _ '</a>',
 			n_taxa => '<a href="#cycog_version_taxon_list">' _ self.n_taxa _ '</a>',
 			comments => self.comments,

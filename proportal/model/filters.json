@@ -1,5 +1,5 @@
 {
-    "id": "https://img-proportal.dev/entry-schema#",
+    "id": "https://img-proportal.test/entry-schema#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for ProPortal subset filters",
     "type": "object",
